@@ -126,47 +126,48 @@ internal static class Topology {
         local.TryGetValue("1.0.8802.1.1.2.1.3.3.0", out string hostname);
         local.TryGetValue("1.0.8802.1.1.2.1.3.4.0", out string description);
 
-        Dictionary<int, string> localPortIdSuptype = new Dictionary<int, string>();
-        Dictionary<int, string> localPortId        = new Dictionary<int, string>();
+        List<(int, string)> localPortIdSuptype = new List<(int, string)>();
+        List<(int, string)> localPortId        = new List<(int, string)>();
 
-        Dictionary<int, string> remoteChassisIdSuptype = new Dictionary<int, string>();
-        Dictionary<int, string> remoteChassisId = new Dictionary<int, string>();
-        Dictionary<int, string> remotePortIdSuptype = new Dictionary<int, string>();
-        Dictionary<int, string> remotePortId        = new Dictionary<int, string>();
-        Dictionary<int, string> remoteSystemName    = new Dictionary<int, string>();
+        List<(int, string)> remoteChassisIdSuptype = new List<(int, string)>();
+        List<(int, string)> remoteChassisId        = new List<(int, string)>();
+        List<(int, string)> remotePortIdSuptype    = new List<(int, string)>();
+        List<(int, string)> remotePortId           = new List<(int, string)>();
+        List<(int, string)> remoteSystemName       = new List<(int, string)>();
 
         foreach (KeyValuePair<string, string> pair in local) {
             if (!int.TryParse(pair.Key.Split('.')[^1], out int index)) continue;
 
             if (pair.Key.StartsWith("1.0.8802.1.1.2.1.3.7.1.2")) {
-                localPortIdSuptype.Add(index, pair.Value);
+                localPortIdSuptype.Add((index, pair.Value));
             }
             else if (pair.Key.StartsWith("1.0.8802.1.1.2.1.3.7.1.3")) {
-                localPortId.Add(index, pair.Value);
+                localPortId.Add((index, pair.Value));
             }
         }
 
         foreach (KeyValuePair<string, string> pair in remote) {
-            if (!int.TryParse(pair.Key.Split('.')[^1], out int index)) continue;
+            if (!int.TryParse(pair.Key.Split('.')[^2], out int index)) continue;
 
             if (pair.Key.StartsWith("1.0.8802.1.1.2.1.4.1.1.4")) {
-                remoteChassisIdSuptype.Add(index, pair.Value);
+                remoteChassisIdSuptype.Add((index, pair.Value));
             }
             else if (pair.Key.StartsWith("1.0.8802.1.1.2.1.4.1.1.5")) {
-                remoteChassisId.Add(index, pair.Value);
+                remoteChassisId.Add((index, pair.Value));
             }
             if (pair.Key.StartsWith("1.0.8802.1.1.2.1.4.1.1.6")) {
-                remotePortIdSuptype.Add(index, pair.Value);
+                remotePortIdSuptype.Add((index, pair.Value));
             }
             else if (pair.Key.StartsWith("1.0.8802.1.1.2.1.4.1.1.7")) {
-                remotePortId.Add(index, pair.Value);
+                remotePortId.Add((index, pair.Value));
             }
             else if (pair.Key.StartsWith("1.0.8802.1.1.2.1.4.1.1.9")) {
-                remoteSystemName.Add(index, pair.Value);
+                remoteSystemName.Add((index, pair.Value));
             }
         }
 
-        return null;
+        //TODO:
+        return System.Text.Encoding.UTF8.GetBytes($"{{\"snmp\":\"{file}\"}}");
     }
 
 }

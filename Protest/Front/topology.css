@@ -28,51 +28,10 @@
 	-webkit-user-select: text; user-select: text;
 }
 
-.topology-device {
-	position: absolute;
-	border-radius: 4px;
-	color: var(--clr-light);
-	max-width: 72px;
-}
-
-.topology-device-icon {
-	width: 72px;
-	height: 64px;
-	background-color: var(--clr-light);
-	mask-repeat: no-repeat;
-	mask-position: center;
-	mask-size: 56px;
-
-	transition: .8s;
-}
-
-.topology-device-label {
-	color: var(--clr-light);
-	font-size: x-small;
-	text-align: center;
-	overflow: hidden;
-	text-overflow: ellipsis;
-	direction: rtl;
-}
-
-.topology-selected {
-	background-color: color-mix(in srgb, var(--clr-select) 50%, transparent 50%);
-	outline: 2px solid var(--clr-select);
-	z-index: 1;
-}
-
-.topology-pending {
-	background-color: #c0c0c080;
+.topology-selected > rect:first-child {
+	fill: color-mix(in srgb, var(--clr-select) 60%, transparent 40%);
 }
 
 .topology-loading {
-	background-size: 150px 150px;
-	background-color: #c0c0c080;
-	background-image: linear-gradient(45deg, transparent 40%, #c0c0c0 50%, transparent 60%);
-	animation: topology-pulse 2s infinite;
-}
-
-@keyframes topology-pulse {
-	0%   {background-position: -50% 50%;}
-	100% {background-position: 155% 50%;}
+	fill: url(#loadGradient) !important;
 }

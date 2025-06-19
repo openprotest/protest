@@ -42,6 +42,8 @@ class Topology extends Window {
 		this.content.style.overflow = "auto";
 		this.content.style.overflow = "auto";
 
+		this.InitializeSvg();
+
 		this.workspace.onmousedown = event=> {
 			event.stopPropagation();
 			this.BringToFront();
@@ -49,7 +51,7 @@ class Topology extends Window {
 			this.sideBar.textContent = "";
 			
 			if (this.selected) {
-				this.selected.classList.remove("topology-selected");
+				this.selected.element.root.classList.remove("topology-selected");
 				this.selected = null;
 			}
 		};
@@ -67,8 +69,11 @@ class Topology extends Window {
 
 			const x = this.offsetX - this.x0 + event.clientX;
 			const y = this.offsetY - this.y0 + event.clientY;
-			this.dragging.style.left = `${Math.max(x,0)}px`;
-			this.dragging.style.top = `${Math.max(y,0)}px`;
+
+			this.dragging.element.root.style.transform = `translate(${x}px,${y}px)`;
+
+			this.dragging.element.x = x;
+			this.dragging.element.y = y;
 		};
 
 		this.content.onmouseup = ()=> {
@@ -77,6 +82,94 @@ class Topology extends Window {
 
 		this.startButton.onclick = ()=> this.StartDialog();
 		this.stopButton.onclick = ()=> this.Stop();
+	}
+
+	InitializeSvg() {
+		this.svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+		this.svg.setAttribute("width", 1);
+		this.svg.setAttribute("height", 1);
+		this.workspace.appendChild(this.svg);
+
+		const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
+		this.svg.appendChild(defs);
+
+		const loadGradient = document.createElementNS("http://www.w3.org/2000/svg", "linearGradient");
+		loadGradient.setAttribute("id", "loadGradient");
+		loadGradient.setAttribute("x1", "0");
+		loadGradient.setAttribute("y1", "0");
+		loadGradient.setAttribute("x2", "1");
+		loadGradient.setAttribute("y2", "1");
+		defs.appendChild(loadGradient);
+
+		const loadingStop1 = document.createElementNS("http://www.w3.org/2000/svg", "stop");
+		loadingStop1.setAttribute("offset", ".15");
+		loadingStop1.setAttribute("stop-color", "#c0c0c080");
+		loadGradient.appendChild(loadingStop1);
+
+		const loadingStop2 = document.createElementNS("http://www.w3.org/2000/svg", "stop");
+		loadingStop2.setAttribute("offset", ".45");
+		loadingStop2.setAttribute("stop-color", "#c0c0c0");
+		loadGradient.appendChild(loadingStop2);
+
+		const loadingStop3 = document.createElementNS("http://www.w3.org/2000/svg", "stop");
+		loadingStop3.setAttribute("offset", ".55");
+		loadingStop3.setAttribute("stop-color", "#c0c0c0");
+		loadGradient.appendChild(loadingStop3);
+
+		const loadingStop4 = document.createElementNS("http://www.w3.org/2000/svg", "stop");
+		loadingStop4.setAttribute("offset", ".85");
+		loadingStop4.setAttribute("stop-color", "#c0c0c080");
+		loadGradient.appendChild(loadingStop4);
+
+		const animateTransform = document.createElementNS("http://www.w3.org/2000/svg", "animateTransform");
+		animateTransform.setAttribute("attributeName", "gradientTransform");
+		animateTransform.setAttribute("type", "rotate");
+		animateTransform.setAttribute("from", "0 .5 .5");
+		animateTransform.setAttribute("to", "360 .5 .5");
+		animateTransform.setAttribute("dur", "2s");
+		animateTransform.setAttribute("repeatCount", "indefinite");
+		loadGradient.appendChild(animateTransform);
+
+		const switchMask = document.createElementNS("http://www.w3.org/2000/svg", "mask");
+		switchMask.setAttribute("id", "switchMask");
+		switchMask.setAttribute("mask-type", "alpha");
+		this.svg.appendChild(switchMask);
+		const switchImage = document.createElementNS("http://www.w3.org/2000/svg", "image");
+		switchImage.setAttribute("x", 4);
+		switchImage.setAttribute("y", 4);
+		switchImage.setAttribute("width", 88);
+		switchImage.setAttribute("height", 88);
+		switchImage.setAttribute("href", "mono/switch.svg?light");
+		switchMask.appendChild(switchImage);
+
+		const routerMask = document.createElementNS("http://www.w3.org/2000/svg", "mask");
+		routerMask.setAttribute("id", "routerMask");
+		routerMask.setAttribute("mask-type", "alpha");
+		this.svg.appendChild(routerMask);
+		const routerImage = document.createElementNS("http://www.w3.org/2000/svg", "image");
+		routerImage.setAttribute("x", 4);
+		routerImage.setAttribute("y", 4);
+		routerImage.setAttribute("width", 88);
+		routerImage.setAttribute("height", 88);
+		routerImage.setAttribute("href", "mono/router.svg?light");
+		routerMask.appendChild(routerImage);
+
+		const firewallMask = document.createElementNS("http://www.w3.org/2000/svg", "mask");
+		firewallMask.setAttribute("id", "firewallMask");
+		firewallMask.setAttribute("mask-type", "alpha");
+		this.svg.appendChild(firewallMask);
+		const firewallImage = document.createElementNS("http://www.w3.org/2000/svg", "image");
+		firewallImage.setAttribute("x", 4);
+		firewallImage.setAttribute("y", 4);
+		firewallImage.setAttribute("width", 88);
+		firewallImage.setAttribute("height", 88);
+		firewallImage.setAttribute("href", "mono/firewall.svg?light");
+		firewallMask.appendChild(firewallImage);
+
+		this.linksGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
+		this.linksGroup.setAttribute("stroke", "#c0c0c0");
+		this.linksGroup.setAttribute("stroke-width", 3);
+		this.svg.appendChild(this.linksGroup);
 	}
 
 	StartDialog() {
@@ -216,11 +309,11 @@ class Topology extends Window {
 						file: json.initial[i].file,
 						type: json.initial[i].type,
 						name: json.initial[i].hostname,
-						left: 16 + (count % 10) * 112,
-						top: 16 + Math.floor(count / 10) * 112
+						x: 16 + (count % 10) * 128,
+						y: 16 + Math.floor(count / 10) * 128
 					});
 
-					element.icon.classList.add("topology-pending");
+					element.icon.style.fill = "#c0c0c080";
 
 					this.devices[json.initial[i].file] = {
 						element: element,
@@ -239,16 +332,19 @@ class Topology extends Window {
 			else if (json.nosnmp) {
 				const device = this.devices[json.nosnmp];
 				if (device) {
-					device.element.icon.classList.remove("topology-pending");
 					device.element.icon.classList.remove("topology-loading");
-					device.element.icon.style.backgroundColor = "var(--clr-error)";
+					setTimeout(()=>{
+						device.element.icon.style.fill = "var(--clr-error)";
+					}, 10);
 				}
 			}
 			else if (json.snmp) {
 				const device = this.devices[json.snmp];
 				if (device) {
-					device.element.icon.classList.remove("topology-pending");
 					device.element.icon.classList.remove("topology-loading");
+					setTimeout(()=>{
+						device.element.icon.style.fill = "#c0c0c0";
+					}, 10);
 				}
 			}
 		};
@@ -265,50 +361,75 @@ class Topology extends Window {
 	}
 
 	CreateDevice(options) {
-		const device = document.createElement("div");
-		device.className = "topology-device";
-		device.style.left = options.left + "px";
-		device.style.top = options.top + "px";
-		device.setAttribute("file", options.file);
-		this.workspace.appendChild(device);
+		const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+		g.style.transform = `translate(${options.x}px,${options.y}px)`;
+		g.setAttribute("file", options.file);
+		this.svg.appendChild(g);
 
-		const icon = document.createElement("div");
-		icon.className = "topology-device-icon";
-		icon.style.maskImage = `url(${Topology.deviceIcons[options.type.toLowerCase()]}?light)`;
-		device.appendChild(icon);
+		const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+		rect.setAttribute("rx", 8);
+		rect.setAttribute("ry", 8);
+		rect.setAttribute("width", 96);
+		rect.setAttribute("height", 96);
+		rect.setAttribute("fill", "transparent");
+		g.appendChild(rect);
 
-		const label = document.createElement("div");
-		label.className = "topology-device-label";
-		label.textContent = options.name;
-		device.appendChild(label);
+		const icon = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+		icon.setAttribute("x", 4);
+		icon.setAttribute("y", 4);
+		icon.setAttribute("width", 88);
+		icon.setAttribute("height", 88);
+		icon.setAttribute("fill", "#c0c0c0");
+		icon.setAttribute("mask", "url(#switchMask)");
+		icon.style.transition = "fill .8s";
+		g.appendChild(icon);
 
-		device.onmousedown = event=> {
+		const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
+		label.innerHTML = options.name;
+		label.setAttribute("y", 104);
+		label.setAttribute("x", 48);
+		label.setAttribute("font-size", "11");
+		label.setAttribute("font-weight", "600");
+		label.setAttribute("dominant-baseline", "middle");
+		label.setAttribute("text-anchor", "middle");
+		label.setAttribute("fill", "#c0c0c0");
+		g.appendChild(label);
+
+		g.addEventListener("mousedown", event=> {
 			event.stopPropagation();
+			const element = this.devices[options.file].element;
 
-			this.offsetX = device.offsetLeft;
-			this.offsetY = device.offsetTop;
+			this.offsetX = element.x;
+			this.offsetY = element.y;
 			this.x0 = event.clientX;
 			this.y0 = event.clientY;
 
-			this.SelectDevice(device, options.file);
-		};
+			this.svg.appendChild(g);
+			this.SelectDevice(options.file);
+		});
+
+		this.svg.setAttribute("width", Math.max(this.workspace.offsetWidth, options.x + 150));
+		this.svg.setAttribute("height", Math.max(this.workspace.offsetHeight, options.y + 150));
 
 		return {
-			root: device,
+			root: g,
+			rect: rect,
 			icon: icon,
-			label: label
+			label: label,
+			x: options.x,
+			y: options.y
 		};
 	}
 
-	SelectDevice(element, file) {
+	SelectDevice(file) {
 		if (this.selected) {
-			this.selected.classList.remove("topology-selected");
+			this.selected.element.root.classList.remove("topology-selected");
 		}
 
-		element.classList.add("topology-selected");
+		this.devices[file].element.root.classList.add("topology-selected");
 
-		this.selected = element;
-		this.dragging = element;
+		this.selected = this.devices[file];
+		this.dragging = this.devices[file];
 
 		this.sideBar.textContent = "";
 
@@ -337,5 +458,4 @@ class Topology extends Window {
 		ipLabel.textContent = initial.ip;
 		grid.appendChild(ipLabel);
 	}
-
 }
