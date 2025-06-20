@@ -166,8 +166,14 @@ internal static class Topology {
             }
         }
 
-        //TODO:
-        return System.Text.Encoding.UTF8.GetBytes($"{{\"snmp\":\"{file}\"}}");
+        byte[] payload = JsonSerializer.SerializeToUtf8Bytes(new {
+            switchInfo = new {
+                localPortIdSuptype = localPortIdSuptype,
+                localPortId        = localPortId
+            }
+        });
+
+        return payload;
     }
 
 }

@@ -30,6 +30,8 @@
 
 .topology-selected > rect:first-child {
 	fill: color-mix(in srgb, var(--clr-select) 60%, transparent 40%);
+	stroke: var(--clr-select);
+	stroke-width: 2px;
 }
 
 .topology-loading {

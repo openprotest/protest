@@ -74,6 +74,8 @@ class Topology extends Window {
 
 			this.dragging.element.x = x;
 			this.dragging.element.y = y;
+
+			this.AdjustSvgSize();
 		};
 
 		this.content.onmouseup = ()=> {
@@ -82,6 +84,10 @@ class Topology extends Window {
 
 		this.startButton.onclick = ()=> this.StartDialog();
 		this.stopButton.onclick = ()=> this.Stop();
+	}
+
+	AfterResize() { //override
+		this.AdjustSvgSize();
 	}
 
 	InitializeSvg() {
@@ -103,7 +109,7 @@ class Topology extends Window {
 
 		const loadingStop1 = document.createElementNS("http://www.w3.org/2000/svg", "stop");
 		loadingStop1.setAttribute("offset", ".15");
-		loadingStop1.setAttribute("stop-color", "#c0c0c080");
+		loadingStop1.setAttribute("stop-color", "#c0c0c060");
 		loadGradient.appendChild(loadingStop1);
 
 		const loadingStop2 = document.createElementNS("http://www.w3.org/2000/svg", "stop");
@@ -118,7 +124,7 @@ class Topology extends Window {
 
 		const loadingStop4 = document.createElementNS("http://www.w3.org/2000/svg", "stop");
 		loadingStop4.setAttribute("offset", ".85");
-		loadingStop4.setAttribute("stop-color", "#c0c0c080");
+		loadingStop4.setAttribute("stop-color", "#c0c0c060");
 		loadGradient.appendChild(loadingStop4);
 
 		const animateTransform = document.createElementNS("http://www.w3.org/2000/svg", "animateTransform");
@@ -386,7 +392,7 @@ class Topology extends Window {
 
 		const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
 		label.innerHTML = options.name;
-		label.setAttribute("y", 104);
+		label.setAttribute("y", 106);
 		label.setAttribute("x", 48);
 		label.setAttribute("font-size", "11");
 		label.setAttribute("font-weight", "600");
@@ -408,8 +414,7 @@ class Topology extends Window {
 			this.SelectDevice(options.file);
 		});
 
-		this.svg.setAttribute("width", Math.max(this.workspace.offsetWidth, options.x + 150));
-		this.svg.setAttribute("height", Math.max(this.workspace.offsetHeight, options.y + 150));
+		this.AdjustSvgSize();
 
 		return {
 			root: g,
@@ -457,5 +462,16 @@ class Topology extends Window {
 		ipLabel.style.gridArea = "3 / 2";
 		ipLabel.textContent = initial.ip;
 		grid.appendChild(ipLabel);
+	}
+
+	AdjustSvgSize() {
+		let maxX = this.workspace.offsetWidth, maxY = this.workspace.offsetHeight;
+		for (const file in this.devices) {
+			if (this.devices[file].element.x + 100 > maxX) maxX = this.devices[file].element.x + 100;
+			if (this.devices[file].element.y + 128 > maxY) maxY = this.devices[file].element.y + 128;
+		}
+		
+		this.svg.setAttribute("width", maxX === this.workspace.offsetWidth ? Math.max(maxX - 20, 1) : maxX);
+		this.svg.setAttribute("height", maxY === this.workspace.offsetHeight ? Math.max(maxY - 20, 1) : maxY);
 	}
 }
