@@ -20,6 +20,20 @@
 	overflow-y: auto;
 }
 
+.topology-interface-list {
+	margin-top: 16px;
+}
+
+.topology-interface-list > div {
+	margin: 2px;
+	padding: 4px;
+	border-radius: 2px;
+}
+
+.topology-interface-list > div:hover {
+	background-color: var(--clr-highlight);
+}
+
 .topology-sidebar-grid {
 	display: grid;
 

@@ -246,7 +246,7 @@ internal static partial class Polling {
         }
     }
 
-    public static Dictionary<string, string> ParseResponse(IList<Variable> result) {
+    public static Dictionary<string, string>ParseResponse(IList<Variable> result, bool preserveOctet = false) {
         if (result is null || result.Count == 0) {
             return null;
         }
@@ -254,31 +254,37 @@ internal static partial class Polling {
         Dictionary<string, string> data = new Dictionary<string, string>();
 
         for (int i = 0; i < result.Count; i++) {
-            string value;
-            if (result[i].Data.TypeCode == SnmpType.Null ||
-                result[i].Data.TypeCode == SnmpType.NoSuchObject ||
-                result[i].Data.TypeCode == SnmpType.NoSuchInstance) {
-                continue;
+            string value = ParseVariable(result[i], preserveOctet);
+            if (value is null) continue;
+            data.Add(result[i].Id.ToString(), value);
+        }
+
+        return data;
+    }
+
+    public static string ParseVariable(Variable variable, bool preserveOctet = false) {
+        if (variable.Data.TypeCode == SnmpType.Null ||
+            variable.Data.TypeCode == SnmpType.NoSuchObject ||
+            variable.Data.TypeCode == SnmpType.NoSuchInstance) {
+            return null;
+        }
+        else if (variable.Data.TypeCode == SnmpType.OctetString) {
+            if (preserveOctet) {
+                return variable.Data.ToString();
             }
-            else if (result[i].Data.TypeCode == SnmpType.OctetString) {
-                byte[] bytes = result[i].Data.ToBytes();
+            else {
+                byte[] bytes = variable.Data.ToBytes();
                 for (int j = 0; j < bytes.Length; j++) {
                     if (bytes[j] < 32) { bytes[j] = (byte)' '; }
                     else if (bytes[j] > 126) { bytes[j] = (byte)' '; }
                 }
 
-                value = Encoding.UTF8.GetString(bytes).Trim();
+                return Encoding.UTF8.GetString(bytes).Trim();
             }
-            else {
-                value = result[i].Data.ToString().Trim();
-            }
-
-            if (String.IsNullOrEmpty(value)) { continue; }
-
-            data.Add(result[i].Id.ToString(), value);
         }
-
-        return data;
+        else {
+            return variable.Data.ToString().Trim();
+        }
     }
 
     private static byte[] ParseResponseToBytes(IList<Variable> result) {

@@ -345,8 +345,10 @@ class Topology extends Window {
 				}
 			}
 			else if (json.snmp) {
-				const device = this.devices[json.snmp];
+				const device = this.devices[json.snmp.file];
 				if (device) {
+					device.snmp = json.snmp;
+
 					device.element.icon.classList.remove("topology-loading");
 					setTimeout(()=>{
 						device.element.icon.style.fill = "#c0c0c0";
@@ -462,6 +464,18 @@ class Topology extends Window {
 		ipLabel.style.gridArea = "3 / 2";
 		ipLabel.textContent = initial.ip;
 		grid.appendChild(ipLabel);
+
+		if (file in this.devices && this.devices[file].snmp) {
+			const intList = document.createElement("div");
+			intList.className = "topology-interface-list";
+			this.sideBar.appendChild(intList);
+
+			for (let i=0; i<this.devices[file].snmp.localPortName.length; i++) {
+				const interfaceBox = document.createElement("div");
+				interfaceBox.textContent = this.devices[file].snmp.localPortName[i];
+				intList.appendChild(interfaceBox);
+			}
+		}
 	}
 
 	AdjustSvgSize() {
