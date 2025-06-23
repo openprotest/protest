@@ -177,6 +177,12 @@ class Topology extends Window {
 		this.svg.appendChild(this.linksGroup);
 	}
 
+	Clear() {
+		this.devices = {};
+		this.workspace.textContent = "";
+		this.sideBar.textContent = "";
+	}
+
 	StartDialog() {
 		const dialog = this.DialogBox("280px");
 		if (dialog === null) return;
@@ -268,6 +274,9 @@ class Topology extends Window {
 		setTimeout(()=>okButton.focus(), 200);
 
 		okButton.onclick = async ()=> {
+			this.Clear();
+			this.InitializeSvg();
+
 			dialog.Close();
 
 			const devices = [];
@@ -431,8 +440,8 @@ class Topology extends Window {
 	ComputeLinks(device) {
 		device.links = {};
 
-		for (let i=0; i<ldap.localPortName.length; i++) {
-			console.log(ldap.localPortName[i]);
+		for (let i=0; i<device.lldp.localPortName.length; i++) {
+			
 		}
 	}
 
