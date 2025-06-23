@@ -17,7 +17,6 @@ class Topology extends Window {
 		this.ws = null;
 
 		this.devices = {};
-		this.links = [];
 
 		this.AddCssDependencies("topology.css");
 
@@ -51,7 +50,7 @@ class Topology extends Window {
 			this.sideBar.textContent = "";
 			
 			if (this.selected) {
-				this.selected.element.root.classList.remove("topology-selected");
+				this.selected.element.rect.classList.remove("topology-selected");
 				this.selected = null;
 			}
 		};
@@ -335,8 +334,8 @@ class Topology extends Window {
 					device.element.icon.classList.add("topology-loading");
 				}
 			}
-			else if (json.nosnmp) {
-				const device = this.devices[json.nosnmp];
+			else if (json.nolldp) {
+				const device = this.devices[json.nolldp];
 				if (device) {
 					device.element.icon.classList.remove("topology-loading");
 					setTimeout(()=>{
@@ -344,10 +343,11 @@ class Topology extends Window {
 					}, 10);
 				}
 			}
-			else if (json.snmp) {
-				const device = this.devices[json.snmp.file];
+			else if (json.lldp) {
+				const device = this.devices[json.lldp.file];
 				if (device) {
-					device.snmp = json.snmp;
+					device.lldp = json.lldp;
+					this.ComputeLinks(device);
 
 					device.element.icon.classList.remove("topology-loading");
 					setTimeout(()=>{
@@ -428,12 +428,20 @@ class Topology extends Window {
 		};
 	}
 
+	ComputeLinks(device) {
+		device.links = {};
+
+		for (let i=0; i<ldap.localPortName.length; i++) {
+			console.log(ldap.localPortName[i]);
+		}
+	}
+
 	SelectDevice(file) {
 		if (this.selected) {
-			this.selected.element.root.classList.remove("topology-selected");
+			this.selected.element.rect.classList.remove("topology-selected");
 		}
 
-		this.devices[file].element.root.classList.add("topology-selected");
+		this.devices[file].element.rect.classList.add("topology-selected");
 
 		this.selected = this.devices[file];
 		this.dragging = this.devices[file];
@@ -465,15 +473,57 @@ class Topology extends Window {
 		ipLabel.textContent = initial.ip;
 		grid.appendChild(ipLabel);
 
-		if (file in this.devices && this.devices[file].snmp) {
+		if (file in this.devices && this.devices[file].lldp) {
+			const id = this.devices[file].lldp.localChassisId;
+			const idLabel = document.createElement("div");
+			if (id && initial.hostname != id && initial.ip != id) {
+				idLabel.style.gridArea = "4 / 2";
+				idLabel.textContent = id;
+				grid.appendChild(idLabel);
+			}
+
+			const systemName = this.devices[file].lldp.localHostname;
+			if (systemName) {
+				hostnameLabel.textContent = systemName;
+				hostnameLabel.style.gridArea = "1 / 2";
+				ipLabel.style.gridArea = "2 / 2";
+				idLabel.style.gridArea = "3 / 2";
+			}
+
 			const intList = document.createElement("div");
 			intList.className = "topology-interface-list";
 			this.sideBar.appendChild(intList);
 
-			for (let i=0; i<this.devices[file].snmp.localPortName.length; i++) {
+			for (let i=0; i<this.devices[file].lldp.localPortName.length; i++) {
 				const interfaceBox = document.createElement("div");
-				interfaceBox.textContent = this.devices[file].snmp.localPortName[i];
+				const localPort = document.createElement("div");
+				const remotePort = document.createElement("div");
+
+				let localPortName = this.devices[file].lldp.localPortName[i];
+				if (!localPortName || localPortName.length === 0) {
+					localPortName = `(${i+1})`;
+					localPort.style.color = "#404040";
+					localPort.style.fontStyle = "italic";
+				}
+
+				let remotePortName = "";
+				if (i in this.devices[file].lldp.remoteSystemName) {
+					const remoteName = this.devices[file].lldp.remoteSystemName[i];
+					if (remoteName.length === 1) {
+						remotePortName = remoteName[0];
+					}
+					else {
+						remotePortName = "[...]";
+					}
+				}
+
 				intList.appendChild(interfaceBox);
+
+				localPort.textContent = localPortName;
+				interfaceBox.appendChild(localPort);
+
+				remotePort.textContent = remotePortName;
+				interfaceBox.appendChild(remotePort);
 			}
 		}
 	}

@@ -3742,10 +3742,10 @@ class DeviceView extends View {
 	}
 
 	GetVlanColor(vlan) {
-		if (!vlan || vlan === "") return null;
+		if (!vlan || vlan == "") return null;
 
 		for (let i=0; i<KEEP.zones.length; i++) {
-			if (KEEP.zones[i].vlan === vlan) {
+			if (KEEP.zones[i].vlan == vlan) {
 				return KEEP.zones[i].color;
 			}
 		}

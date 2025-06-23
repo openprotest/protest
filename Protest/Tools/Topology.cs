@@ -13,6 +13,17 @@ namespace Protest.Tools;
 
 internal static class Topology {
 
+    private static bool Push(this Dictionary<int, List<string>> dic, int key, string value) {
+        if (dic.TryGetValue(key, out List<string> list)) {
+            list.Add(value);
+        }
+        else {
+            dic.Add(key, new List<string> { value });
+        }
+
+        return true;
+    }
+
     private static async Task WsWriteText(WebSocket ws, string data) {
         if (ws.State == WebSocketState.Open) {
             await ws.SendAsync(new ArraySegment<byte>(Encoding.ASCII.GetBytes(data), 0, data.Length), WebSocketMessageType.Text, true, CancellationToken.None);
@@ -96,7 +107,7 @@ internal static class Topology {
                     //Dictionary<string, string> remote = Polling.ParseResponse(rawRemote, true);
 
                     if (rawLocal is null || rawLocal.Count == 0 || rawRemote is null || rawRemote.Count == 0) {
-                        await WsWriteText(ws, System.Text.Encoding.UTF8.GetBytes($"{{\"nosnmp\":\"{candidates[i].filename}\"}}"));
+                        await WsWriteText(ws, System.Text.Encoding.UTF8.GetBytes($"{{\"nolldp\":\"{candidates[i].filename}\"}}"));
                     }
                     else {
                         byte[] response = ComputeSnmpResponse(candidates[i].filename, rawLocal, rawRemote);
@@ -133,17 +144,17 @@ internal static class Topology {
         local.TryGetValue("1.0.8802.1.1.2.1.3.1.0", out Variable localChassisIdSuptype);
         local.TryGetValue("1.0.8802.1.1.2.1.3.2.0", out Variable localChassisId);
         local.TryGetValue("1.0.8802.1.1.2.1.3.3.0", out Variable localHostname);
-        local.TryGetValue("1.0.8802.1.1.2.1.3.4.0", out Variable localDescription);
+        //local.TryGetValue("1.0.8802.1.1.2.1.3.4.0", out Variable localDescription);
 
         List<(int, string)> localPortIdSuptype = new List<(int, string)>();
         List<(int, string)> localPortId        = new List<(int, string)>();
         List<(int, string)> localPortName      = new List<(int, string)>();
 
-        List<(int, string)> remoteChassisIdSuptype = new List<(int, string)>();
-        List<(int, string)> remoteChassisId        = new List<(int, string)>();
-        List<(int, string)> remotePortIdSuptype    = new List<(int, string)>();
-        List<(int, string)> remotePortId           = new List<(int, string)>();
-        List<(int, string)> remoteSystemName       = new List<(int, string)>();
+        Dictionary<int, List<string>> remoteChassisIdSuptype = new Dictionary<int, List<string>>();
+        Dictionary<int, List<string>> remoteChassisId        = new Dictionary<int, List<string>>();
+        Dictionary<int, List<string>> remotePortIdSuptype    = new Dictionary<int, List<string>>();
+        Dictionary<int, List<string>> remotePortId           = new Dictionary<int, List<string>>();
+        Dictionary<int, List<string>> remoteSystemName       = new Dictionary<int, List<string>>();
 
         foreach (KeyValuePair<string, Variable> pair in local) {
             if (!int.TryParse(pair.Key.Split('.')[^1], out int index)) continue;
@@ -152,7 +163,13 @@ internal static class Topology {
                 localPortIdSuptype.Add((index, pair.Value.Data.ToString()));
             }
             else if (pair.Key.StartsWith("1.0.8802.1.1.2.1.3.7.1.3")) {
-                localPortId.Add((index, pair.Value.Data.ToString()));
+                string typeString = pair.Key.Replace("1.0.8802.1.1.2.1.3.7.1.3", "1.0.8802.1.1.2.1.3.7.1.2");
+                if (local.TryGetValue(typeString, out Variable typeValue)) {
+                    localPortId.Add((index, GetPortId(typeValue.Data.ToString(), pair.Value.Data)));
+                }
+                else {
+                    localPortId.Add((index, pair.Value.Data.ToString()));
+                }
             }
             else if (pair.Key.StartsWith("1.0.8802.1.1.2.1.3.7.1.4")) {
                 localPortName.Add((index, pair.Value.Data.ToString()));
@@ -163,29 +180,51 @@ internal static class Topology {
             if (!int.TryParse(pair.Key.Split('.')[^2], out int index)) continue;
 
             if (pair.Key.StartsWith("1.0.8802.1.1.2.1.4.1.1.4")) {
-                remoteChassisIdSuptype.Add((index, pair.Value.Data.ToString()));
+                remoteChassisIdSuptype.Push(index - 1, pair.Value.Data.ToString());
             }
             else if (pair.Key.StartsWith("1.0.8802.1.1.2.1.4.1.1.5")) {
-                remoteChassisId.Add((index, pair.Value.Data.ToString()));
+                string typeString = pair.Key.Replace("1.0.8802.1.1.2.1.4.1.1.5", "1.0.8802.1.1.2.1.4.1.1.4");
+                if (remote.TryGetValue(typeString, out Variable typeValue)) {
+                    remoteChassisId.Push(index - 1, GetChassisId(typeValue.Data.ToString(), pair.Value.Data));
+                }
+                else {
+                    remoteChassisId.Push(index - 1, pair.Value.Data.ToString());
+                }
             }
             if (pair.Key.StartsWith("1.0.8802.1.1.2.1.4.1.1.6")) {
-                remotePortIdSuptype.Add((index, pair.Value.Data.ToString()));
+                remotePortIdSuptype.Push(index - 1, pair.Value.Data.ToString());
             }
             else if (pair.Key.StartsWith("1.0.8802.1.1.2.1.4.1.1.7")) {
-                remotePortId.Add((index, pair.Value.Data.ToString()));
+                string typeString = pair.Key.Replace("1.0.8802.1.1.2.1.4.1.1.7", "1.0.8802.1.1.2.1.4.1.1.6");
+                if (remote.TryGetValue(typeString, out Variable typeValue)) {
+                    remotePortId.Push(index - 1, GetPortId(typeValue.Data.ToString(), pair.Value.Data));
+                }
+                else {
+                    remotePortId.Push(index - 1, pair.Value.Data.ToString());
+                }
             }
             else if (pair.Key.StartsWith("1.0.8802.1.1.2.1.4.1.1.9")) {
-                remoteSystemName.Add((index, pair.Value.Data.ToString()));
+                remoteSystemName.Push(index - 1, pair.Value.Data.ToString());
             }
         }
 
         byte[] payload = JsonSerializer.SerializeToUtf8Bytes(new {
-            snmp = new {
-                file               = file,
+            lldp = new {
+                file = file,
+
                 localChassisId     = GetChassisId(localChassisIdSuptype.Data.ToString(), localChassisId.Data),
+                localHostname      = localHostname.Data.ToString(),
+                //localDescription   = localDescription.Data.ToString(),
+
                 localPortIdSuptype = localPortIdSuptype.Select(o=>o.Item2),
                 localPortId        = localPortId.Select(o=>o.Item2),
-                localPortName      = localPortName.Select(o=>o.Item2)
+                localPortName      = localPortName.Select(o=>o.Item2),
+
+                remoteChassisIdSuptype = remoteChassisIdSuptype,
+                remoteChassisId        = remoteChassisId,
+                remotePortIdSuptype    = remotePortIdSuptype,
+                remotePortId           = remotePortId,
+                remoteSystemName       = remoteSystemName,
             }
         });
 
@@ -198,7 +237,7 @@ internal static class Topology {
         switch (subtype) {
         case "4": //mac address
             if (bytes.Length - 2 == 6) {
-                return $"{(bytes[2]).ToString("X2")}:{(bytes[3]).ToString("X2")}:{(bytes[4]).ToString("X2")}:{(bytes[5]).ToString("X2")}:{(bytes[6]).ToString("X2")}:{(bytes[7]).ToString("X2")}";
+                return $"{(bytes[2]).ToString("x2")}{(bytes[3]).ToString("x2")}{(bytes[4]).ToString("x2")}{(bytes[5]).ToString("x2")}{(bytes[6]).ToString("x2")}{(bytes[7]).ToString("x2")}";
             }
             return value.ToString();
 
@@ -221,6 +260,39 @@ internal static class Topology {
             return value.ToString();
 
         default: return value.ToString();
+        }
+    }
+
+    private static string GetPortId(string subtype, ISnmpData value) {
+        byte[] bytes = value.ToBytes();
+
+        switch (subtype) {
+        case "3": // mac address
+            if (bytes.Length - 2 == 6) {
+                return $"{(bytes[2]).ToString("x2")}{(bytes[3]).ToString("x2")}{(bytes[4]).ToString("x2")}{(bytes[5]).ToString("x2")}{(bytes[6]).ToString("x2")}{(bytes[7]).ToString("x2")}";
+            }
+            return value.ToString();
+
+        case "4": //network address
+            if (bytes.Length - 2 == 4) {
+                return $"{bytes[2]}.{bytes[3]}.{bytes[4]}.{bytes[5]}";
+            }
+            else if (bytes.Length - 2 == 16) {
+                return $"""
+                {bytes[2].ToString("x2")}){bytes[3].ToString("x2")}:
+                {bytes[4].ToString("x2")}){bytes[5].ToString("x2")}:
+                {bytes[6].ToString("x2")}){bytes[7].ToString("x2")}:
+                {bytes[8].ToString("x2")}){bytes[9].ToString("x2")}:
+                {bytes[10].ToString("x2")}){bytes[11].ToString("x2")}:
+                {bytes[12].ToString("x2")}){bytes[13].ToString("x2")}:
+                {bytes[14].ToString("x2")}){bytes[15].ToString("x2")}:
+                {bytes[16].ToString("x2")}){bytes[17].ToString("x2")}
+                """;
+            }
+            return value.ToString();
+
+        default:
+            return value.ToString();
         }
     }
 

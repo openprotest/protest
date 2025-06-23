@@ -20,29 +20,58 @@
 	overflow-y: auto;
 }
 
+.topology-sidebar-grid {
+	display: grid;
+	grid-template-columns: 88px auto;
+	grid-template-rows: 16px 16px 16px 16px;
+	margin-bottom: 16px;
+	-webkit-user-select: text; user-select: text;
+}
+
 .topology-interface-list {
 	margin-top: 16px;
 }
 
-.topology-interface-list > div {
-	margin: 2px;
-	padding: 4px;
-	border-radius: 2px;
-}
-
-.topology-interface-list > div:hover {
-	background-color: var(--clr-highlight);
-}
-
-.topology-sidebar-grid {
-	display: grid;
-
-	grid-template-columns: 88px auto;
-	grid-template-rows: 12px 20px 20px 12px;
+.topology-interface-list > div > div {
+	display: inline-block;
+	box-sizing: border-box;
+	background-color: var(--clr-control);
+	width: calc(50% - 8px);
+	min-height: 24px;
+	padding: 2px 4px;
+	margin: 2px 0;
+	border-radius: 4px;
+	text-align: center;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
 	-webkit-user-select: text; user-select: text;
 }
 
-.topology-selected > rect:first-child {
+.topology-interface-list > div > div:nth-child(1) {
+	margin-right: 8px;
+}
+
+.topology-interface-list > div > div:nth-child(2) {
+	margin-left: 8px;
+}
+
+.topology-interface-list > div > div:nth-child(2)::before {
+	content: "";
+	position: absolute;
+	background-color: var(--clr-control);
+	width: 16px;
+	height: 4px;
+	left: calc(50% - 8px);
+	transform: translateY(8px);
+}
+
+.topology-interface-list > div:hover > div,
+.topology-interface-list > div:hover > div:nth-child(2)::before {
+	background-color: var(--clr-select);
+}
+
+.topology-selected {
 	fill: color-mix(in srgb, var(--clr-select) 60%, transparent 40%);
 	stroke: var(--clr-select);
 	stroke-width: 2px;
