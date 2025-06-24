@@ -438,10 +438,43 @@ class Topology extends Window {
 	}
 
 	ComputeLinks(device) {
+		if (!device.lldp) return;
+
 		device.links = {};
 
-		for (let i=0; i<device.lldp.localPortName.length; i++) {
-			
+		for (const key in device.lldp.remoteChassisIdSubtype) {
+
+			if (device.lldp.remoteChassisIdSubtype.length === 1) {
+				device.links[key] = {};
+			}
+			else if (device.lldp.remoteChassisIdSubtype.length > 1) {
+				device.links[key] = {};
+			}
+
+			for (let i=0; i<device.lldp.remoteChassisIdSubtype[key].length; i++) {
+				switch (device.lldp.remoteChassisIdSubtype[key][i]) {
+				case 1: //chassis component
+				case 2: //interface alias
+				case 3: //port name
+				case 4: //mac address
+				case 5: //network name
+				case 6: //int name
+				case 7: //local
+				}
+			}
+
+			for (let i=0; i<device.lldp.remotePortIdSubtype[key].length; i++) {
+				switch (device.lldp.remotePortIdSubtype[key][i]) {
+					case 1: //interface alias
+					case 2: //port component
+					case 3: //mac address
+					case 4: //network name
+					case 5: //int name
+					case 6: //agent circuit ID
+					case 7: //local
+				}
+			}
+
 		}
 	}
 

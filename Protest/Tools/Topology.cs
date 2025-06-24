@@ -20,7 +20,16 @@ internal static class Topology {
         else {
             dic.Add(key, new List<string> { value });
         }
+        return true;
+    }
 
+    private static bool Push(this Dictionary<int, List<int>> dic, int key, int value) {
+        if (dic.TryGetValue(key, out List<int> list)) {
+            list.Add(value);
+        }
+        else {
+            dic.Add(key, new List<int> { value });
+        }
         return true;
     }
 
@@ -141,26 +150,26 @@ internal static class Topology {
             remote.Add(rawRemote[i].Id.ToString(), rawRemote[i]);
         }
 
-        local.TryGetValue("1.0.8802.1.1.2.1.3.1.0", out Variable localChassisIdSuptype);
+        local.TryGetValue("1.0.8802.1.1.2.1.3.1.0", out Variable localChassisIdSubtype);
         local.TryGetValue("1.0.8802.1.1.2.1.3.2.0", out Variable localChassisId);
         local.TryGetValue("1.0.8802.1.1.2.1.3.3.0", out Variable localHostname);
         //local.TryGetValue("1.0.8802.1.1.2.1.3.4.0", out Variable localDescription);
 
-        List<(int, string)> localPortIdSuptype = new List<(int, string)>();
+        List<(int, string)> localPortIdSubtype = new List<(int, string)>();
         List<(int, string)> localPortId        = new List<(int, string)>();
         List<(int, string)> localPortName      = new List<(int, string)>();
 
-        Dictionary<int, List<string>> remoteChassisIdSuptype = new Dictionary<int, List<string>>();
-        Dictionary<int, List<string>> remoteChassisId        = new Dictionary<int, List<string>>();
-        Dictionary<int, List<string>> remotePortIdSuptype    = new Dictionary<int, List<string>>();
-        Dictionary<int, List<string>> remotePortId           = new Dictionary<int, List<string>>();
-        Dictionary<int, List<string>> remoteSystemName       = new Dictionary<int, List<string>>();
+        Dictionary<int, List<int>> remoteChassisIdSubtype = new Dictionary<int, List<int>>();
+        Dictionary<int, List<string>> remoteChassisId     = new Dictionary<int, List<string>>();
+        Dictionary<int, List<int>> remotePortIdSubtype    = new Dictionary<int, List<int>>();
+        Dictionary<int, List<string>> remotePortId        = new Dictionary<int, List<string>>();
+        Dictionary<int, List<string>> remoteSystemName    = new Dictionary<int, List<string>>();
 
         foreach (KeyValuePair<string, Variable> pair in local) {
             if (!int.TryParse(pair.Key.Split('.')[^1], out int index)) continue;
 
             if (pair.Key.StartsWith("1.0.8802.1.1.2.1.3.7.1.2")) {
-                localPortIdSuptype.Add((index, pair.Value.Data.ToString()));
+                localPortIdSubtype.Add((index, pair.Value.Data.ToString()));
             }
             else if (pair.Key.StartsWith("1.0.8802.1.1.2.1.3.7.1.3")) {
                 string typeString = pair.Key.Replace("1.0.8802.1.1.2.1.3.7.1.3", "1.0.8802.1.1.2.1.3.7.1.2");
@@ -180,7 +189,7 @@ internal static class Topology {
             if (!int.TryParse(pair.Key.Split('.')[^2], out int index)) continue;
 
             if (pair.Key.StartsWith("1.0.8802.1.1.2.1.4.1.1.4")) {
-                remoteChassisIdSuptype.Push(index - 1, pair.Value.Data.ToString());
+                remoteChassisIdSubtype.Push(index - 1, int.TryParse(pair.Value.Data.ToString(), out int subtype) ? subtype : -1);
             }
             else if (pair.Key.StartsWith("1.0.8802.1.1.2.1.4.1.1.5")) {
                 string typeString = pair.Key.Replace("1.0.8802.1.1.2.1.4.1.1.5", "1.0.8802.1.1.2.1.4.1.1.4");
@@ -192,7 +201,7 @@ internal static class Topology {
                 }
             }
             if (pair.Key.StartsWith("1.0.8802.1.1.2.1.4.1.1.6")) {
-                remotePortIdSuptype.Push(index - 1, pair.Value.Data.ToString());
+                remotePortIdSubtype.Push(index - 1, int.TryParse(pair.Value.Data.ToString(), out int subtype) ? subtype : -1);
             }
             else if (pair.Key.StartsWith("1.0.8802.1.1.2.1.4.1.1.7")) {
                 string typeString = pair.Key.Replace("1.0.8802.1.1.2.1.4.1.1.7", "1.0.8802.1.1.2.1.4.1.1.6");
@@ -212,17 +221,17 @@ internal static class Topology {
             lldp = new {
                 file = file,
 
-                localChassisId     = GetChassisId(localChassisIdSuptype.Data.ToString(), localChassisId.Data),
+                localChassisId     = GetChassisId(localChassisIdSubtype.Data.ToString(), localChassisId.Data),
                 localHostname      = localHostname.Data.ToString(),
                 //localDescription   = localDescription.Data.ToString(),
 
-                localPortIdSuptype = localPortIdSuptype.Select(o=>o.Item2),
+                localPortIdSubtype = localPortIdSubtype.Select(o=>o.Item2),
                 localPortId        = localPortId.Select(o=>o.Item2),
                 localPortName      = localPortName.Select(o=>o.Item2),
 
-                remoteChassisIdSuptype = remoteChassisIdSuptype,
+                remoteChassisIdSubtype = remoteChassisIdSubtype,
                 remoteChassisId        = remoteChassisId,
-                remotePortIdSuptype    = remotePortIdSuptype,
+                remotePortIdSubtype    = remotePortIdSubtype,
                 remotePortId           = remotePortId,
                 remoteSystemName       = remoteSystemName,
             }
