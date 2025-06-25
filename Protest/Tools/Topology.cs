@@ -221,11 +221,12 @@ internal static class Topology {
             lldp = new {
                 file = file,
 
-                localChassisId     = GetChassisId(localChassisIdSubtype.Data.ToString(), localChassisId.Data),
-                localHostname      = localHostname.Data.ToString(),
-                //localDescription   = localDescription.Data.ToString(),
+                localChassisIdSubtype = int.TryParse(localChassisIdSubtype.Data.ToString(), out int localChassisIdSubtypeInt) ? localChassisIdSubtypeInt : -1,
+                localChassisId        = GetChassisId(localChassisIdSubtype.Data.ToString(), localChassisId.Data),
+                localHostname         = localHostname.Data.ToString(),
+                //localDescription      = localDescription.Data.ToString(),
 
-                localPortIdSubtype = localPortIdSubtype.Select(o=>o.Item2),
+                localPortIdSubtype = localPortIdSubtype.Select(o=>int.TryParse(o.Item2, out int localPortIdSubtypeInt) ? localPortIdSubtypeInt : -1),
                 localPortId        = localPortId.Select(o=>o.Item2),
                 localPortName      = localPortName.Select(o=>o.Item2),
 
@@ -251,19 +252,19 @@ internal static class Topology {
             return value.ToString();
 
         case "5": //network address
-            if (bytes.Length - 2 == 4) {
-                return $"{bytes[2]}.{bytes[3]}.{bytes[4]}.{bytes[5]}";
+            if (bytes.Length - 3 == 4) {
+                return $"{bytes[3]}.{bytes[4]}.{bytes[5]}.{bytes[6]}";
             }
-            else if (bytes.Length - 2 == 16) {
+            else if (bytes.Length - 3 == 16) {
                 return $"""
-                {bytes[2].ToString("x2")}){bytes[3].ToString("x2")}:
-                {bytes[4].ToString("x2")}){bytes[5].ToString("x2")}:
-                {bytes[6].ToString("x2")}){bytes[7].ToString("x2")}:
-                {bytes[8].ToString("x2")}){bytes[9].ToString("x2")}:
-                {bytes[10].ToString("x2")}){bytes[11].ToString("x2")}:
-                {bytes[12].ToString("x2")}){bytes[13].ToString("x2")}:
-                {bytes[14].ToString("x2")}){bytes[15].ToString("x2")}:
-                {bytes[16].ToString("x2")}){bytes[17].ToString("x2")}
+                {bytes[3].ToString("x2")}){bytes[4].ToString("x2")}:
+                {bytes[5].ToString("x2")}){bytes[6].ToString("x2")}:
+                {bytes[7].ToString("x2")}){bytes[8].ToString("x2")}:
+                {bytes[9].ToString("x2")}){bytes[10].ToString("x2")}:
+                {bytes[11].ToString("x2")}){bytes[12].ToString("x2")}:
+                {bytes[13].ToString("x2")}){bytes[14].ToString("x2")}:
+                {bytes[15].ToString("x2")}){bytes[16].ToString("x2")}:
+                {bytes[17].ToString("x2")}){bytes[18].ToString("x2")}
                 """;
             }
             return value.ToString();
@@ -283,19 +284,19 @@ internal static class Topology {
             return value.ToString();
 
         case "4": //network address
-            if (bytes.Length - 2 == 4) {
-                return $"{bytes[2]}.{bytes[3]}.{bytes[4]}.{bytes[5]}";
+            if (bytes.Length - 3 == 4) {
+                return $"{bytes[3]}.{bytes[4]}.{bytes[5]}.{bytes[6]}";
             }
-            else if (bytes.Length - 2 == 16) {
+            else if (bytes.Length - 3 == 16) {
                 return $"""
-                {bytes[2].ToString("x2")}){bytes[3].ToString("x2")}:
-                {bytes[4].ToString("x2")}){bytes[5].ToString("x2")}:
-                {bytes[6].ToString("x2")}){bytes[7].ToString("x2")}:
-                {bytes[8].ToString("x2")}){bytes[9].ToString("x2")}:
-                {bytes[10].ToString("x2")}){bytes[11].ToString("x2")}:
-                {bytes[12].ToString("x2")}){bytes[13].ToString("x2")}:
-                {bytes[14].ToString("x2")}){bytes[15].ToString("x2")}:
-                {bytes[16].ToString("x2")}){bytes[17].ToString("x2")}
+                {bytes[3].ToString("x2")}){bytes[4].ToString("x2")}:
+                {bytes[5].ToString("x2")}){bytes[6].ToString("x2")}:
+                {bytes[7].ToString("x2")}){bytes[8].ToString("x2")}:
+                {bytes[9].ToString("x2")}){bytes[10].ToString("x2")}:
+                {bytes[11].ToString("x2")}){bytes[12].ToString("x2")}:
+                {bytes[13].ToString("x2")}){bytes[14].ToString("x2")}:
+                {bytes[15].ToString("x2")}){bytes[16].ToString("x2")}:
+                {bytes[17].ToString("x2")}){bytes[18].ToString("x2")}
                 """;
             }
             return value.ToString();
