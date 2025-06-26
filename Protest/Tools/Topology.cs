@@ -110,10 +110,7 @@ internal static class Topology {
                     await WsWriteText(ws, System.Text.Encoding.UTF8.GetBytes($"{{\"retrieve\":\"{candidates[i].filename}\"}}"));
 
                     IList<Variable> rawLocal = Polling.SnmpQuery(ipAddress, snmpProfile, [Oid.LLDP_LOCAL_SYS_DATA], Polling.SnmpOperation.Walk);
-                    //Dictionary<string, string> local = Polling.ParseResponse(rawLocal, true);
-
                     IList<Variable> rawRemote = Polling.SnmpQuery(ipAddress, snmpProfile, [Oid.LLDP_REMOTE_SYS_DATA], Polling.SnmpOperation.Walk);
-                    //Dictionary<string, string> remote = Polling.ParseResponse(rawRemote, true);
 
                     if (rawLocal is null || rawLocal.Count == 0 || rawRemote is null || rawRemote.Count == 0) {
                         await WsWriteText(ws, System.Text.Encoding.UTF8.GetBytes($"{{\"nolldp\":\"{candidates[i].filename}\"}}"));

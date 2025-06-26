@@ -98,43 +98,6 @@ class Topology extends Window {
 		const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
 		this.svg.appendChild(defs);
 
-		const loadGradient = document.createElementNS("http://www.w3.org/2000/svg", "linearGradient");
-		loadGradient.setAttribute("id", "loadGradient");
-		loadGradient.setAttribute("x1", "0");
-		loadGradient.setAttribute("y1", "0");
-		loadGradient.setAttribute("x2", "1");
-		loadGradient.setAttribute("y2", "1");
-		defs.appendChild(loadGradient);
-
-		const loadingStop1 = document.createElementNS("http://www.w3.org/2000/svg", "stop");
-		loadingStop1.setAttribute("offset", ".15");
-		loadingStop1.setAttribute("stop-color", "#c0c0c060");
-		loadGradient.appendChild(loadingStop1);
-
-		const loadingStop2 = document.createElementNS("http://www.w3.org/2000/svg", "stop");
-		loadingStop2.setAttribute("offset", ".45");
-		loadingStop2.setAttribute("stop-color", "#c0c0c0");
-		loadGradient.appendChild(loadingStop2);
-
-		const loadingStop3 = document.createElementNS("http://www.w3.org/2000/svg", "stop");
-		loadingStop3.setAttribute("offset", ".55");
-		loadingStop3.setAttribute("stop-color", "#c0c0c0");
-		loadGradient.appendChild(loadingStop3);
-
-		const loadingStop4 = document.createElementNS("http://www.w3.org/2000/svg", "stop");
-		loadingStop4.setAttribute("offset", ".85");
-		loadingStop4.setAttribute("stop-color", "#c0c0c060");
-		loadGradient.appendChild(loadingStop4);
-
-		const animateTransform = document.createElementNS("http://www.w3.org/2000/svg", "animateTransform");
-		animateTransform.setAttribute("attributeName", "gradientTransform");
-		animateTransform.setAttribute("type", "rotate");
-		animateTransform.setAttribute("from", "0 .5 .5");
-		animateTransform.setAttribute("to", "360 .5 .5");
-		animateTransform.setAttribute("dur", "2s");
-		animateTransform.setAttribute("repeatCount", "indefinite");
-		loadGradient.appendChild(animateTransform);
-
 		const switchMask = document.createElementNS("http://www.w3.org/2000/svg", "mask");
 		switchMask.setAttribute("id", "switchMask");
 		switchMask.setAttribute("mask-type", "alpha");
@@ -322,6 +285,8 @@ class Topology extends Window {
 		this.ws.onclose = ()=> {
 			this.startButton.disabled = false;
 			this.stopButton.disabled = true;
+
+			this.ComputeAllLinks();
 		};
 
 		this.ws.onmessage = event=> {
@@ -339,8 +304,6 @@ class Topology extends Window {
 						y: 16 + Math.floor(count / 10) * 128
 					});
 
-					element.icon.style.fill = "#c0c0c080";
-
 					this.devices[json.initial[i].file] = {
 						element: element,
 						initial: json.initial[i]
@@ -352,27 +315,27 @@ class Topology extends Window {
 			else if (json.retrieve) {
 				const device = this.devices[json.retrieve];
 				if (device) {
-					device.element.icon.classList.add("topology-loading");
+					device.element.spinner.style.visibility = "visible";
+					device.element.spinner.style.opacity = "1";
 				}
 			}
 			else if (json.nolldp) {
 				const device = this.devices[json.nolldp];
 				if (device) {
-					device.element.icon.classList.remove("topology-loading");
-					setTimeout(()=>{
-						device.element.icon.style.fill = "var(--clr-error)";
-					}, 10);
+					device.element.spinner.style.visibility = "hidden";
+					device.element.spinner.style.opacity = "0";
+					device.element.fill.style.fill = "var(--clr-error)";
 				}
 			}
 			else if (json.lldp) {
 				const device = this.devices[json.lldp.file];
 				if (device) {
 					device.lldp = json.lldp;
-					this.ComputeLinks(device);
 
-					device.element.icon.classList.remove("topology-loading");
+					device.element.spinner.style.visibility = "hidden";
+					device.element.spinner.style.opacity = "0";
+					device.element.fill.style.fill = "rgb(88,166,32)";
 					setTimeout(()=>{
-						device.element.icon.style.fill = "#c0c0c0";
 					}, 10);
 				}
 			}
@@ -403,6 +366,15 @@ class Topology extends Window {
 		rect.setAttribute("fill", "transparent");
 		g.appendChild(rect);
 
+		const fill = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+		fill.setAttribute("x", 12);
+		fill.setAttribute("y", 12);
+		fill.setAttribute("width", 72);
+		fill.setAttribute("height", 72);
+		fill.setAttribute("fill", "transparent");
+		fill.style.transition = "fill .4s";
+		g.appendChild(fill);
+
 		const icon = document.createElementNS("http://www.w3.org/2000/svg", "rect");
 		icon.setAttribute("x", 4);
 		icon.setAttribute("y", 4);
@@ -412,6 +384,22 @@ class Topology extends Window {
 		icon.setAttribute("mask", "url(#switchMask)");
 		icon.style.transition = "fill .8s";
 		g.appendChild(icon);
+
+		const spinner = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+		spinner.setAttribute("cx", 74);
+		spinner.setAttribute("cy", 74);
+		spinner.setAttribute("r", 12);
+		spinner.setAttribute("fill", "none");
+		spinner.setAttribute("stroke", "rgb(88,166,32)");
+		spinner.setAttribute("stroke", "var(--clr-accent)");
+		spinner.setAttribute("stroke-width", 6);
+		spinner.setAttribute("stroke-linecap", "round");
+		spinner.setAttribute("stroke-dasharray", "8 16.5");
+		spinner.style.visibility = "hidden";
+		spinner.style.opacity = "0";
+		spinner.style.transition = ".4s";
+		spinner.style.animation = "topology-spinner-animation 1s linear infinite";
+		g.appendChild(spinner);
 
 		const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
 		label.innerHTML = options.name;
@@ -442,7 +430,9 @@ class Topology extends Window {
 		return {
 			root: g,
 			highlight: rect,
+			fill: fill,
 			icon: icon,
+			spinner: spinner,
 			label: label,
 			x: options.x,
 			y: options.y
@@ -499,12 +489,21 @@ class Topology extends Window {
 			y: options.y
 		};
 
+		//TODO:
 		this.devices[uuid] = {
 			element: element,
-			initial: {type: "switch", unmanaged: true}
+			initial: {file: uuid, type: "switch", unmanaged: true}
 		};
 
 		return element;
+	}
+
+	ComputeAllLinks() {
+		for (const file in this.devices) {
+			const device = this.devices[file];
+			if (!device.lldp) continue;
+			this.ComputeLinks(device);
+		}
 	}
 
 	ComputeLinks(device) {
@@ -512,26 +511,34 @@ class Topology extends Window {
 
 		device.links = {};
 
-console.log(device.initial.hostname);
+		//console.log(device.initial.hostname);
 
 		for (const key in device.lldp.remoteChassisIdSubtype) {
 
 			if (device.lldp.remoteChassisIdSubtype[key].length === 1) {
-console.log(
-key,
-device.lldp.remoteSystemName[key][0],
-device.lldp.remotePortIdSubtype[key][0],
-device.lldp.remotePortId[key][0],
-device.lldp.remoteChassisIdSubtype[key][0],
-device.lldp.remoteChassisId[key][0]);
+				/*
+				console.log(
+				key,
+				device.lldp.remoteSystemName[key][0],
+				device.lldp.remotePortIdSubtype[key][0],
+				device.lldp.remotePortId[key][0],
+				device.lldp.remoteChassisIdSubtype[key][0],
+				device.lldp.remoteChassisId[key][0]);
+				*/
 
 				const remoteDevice = null;
-				//TODO:
-				device.links[key] = {device:remoteDevice, port:null};
+				for (file in this.devices) {
+					//TODO: find remote device in devices
+					
+				}
+
+				const remoteDeviceFile = remoteDevice?.initial?.file ?? null;
+				device.links[key] = {device:remoteDeviceFile, port:null};
 			}
 			else if (device.lldp.remoteChassisIdSubtype[key].length > 1) {
-				const unmanagedDevice = this.CreateUnmanagedSwitchElement({x: 100, y: 100});
-				device.links[key] = {device:unmanagedDevice, port:null};
+				const unmanagedDevice = this.CreateUnmanagedSwitchElement({x:100, y:100});
+				const remoteDeviceFile = unmanagedDevice.root.getAttribute("file");
+				device.links[key] = {device:remoteDeviceFile, port:null};
 			}
 
 			for (let i=0; i<device.lldp.remoteChassisIdSubtype[key].length; i++) {
@@ -621,7 +628,7 @@ device.lldp.remoteChassisId[key][0]);
 			intList.className = "topology-interface-list";
 			this.sideBar.appendChild(intList);
 
-
+			if (!device.links) return;
 
 			for (let i=0; i<device.lldp.localPortName.length; i++) {
 				const interfaceBox = document.createElement("div");
@@ -636,8 +643,10 @@ device.lldp.remoteChassisId[key][0]);
 				}
 
 				let remotePortName = "";
+
 				if (i in device.links && device.links[i].device) {
-					remotePortName = device.links[i].device.initial.hostname;
+					const remote = this.devices[device.links[i].device];
+					remotePortName = remote.initial.hostname;
 				}
 
 				intList.appendChild(interfaceBox);
