@@ -527,7 +527,7 @@ class Topology extends Window {
 				*/
 
 				const remoteDevice = null;
-				for (file in this.devices) {
+				for (const file in this.devices) {
 					//TODO: find remote device in devices
 					
 				}

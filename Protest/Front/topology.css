@@ -79,5 +79,5 @@
 
 @keyframes topology-spinner-animation {
 	0%  { stroke-dashoffset: 0px; }
-	100%{ stroke-dashoffset: 24.5px; }
+	100%{ stroke-dashoffset: -24.5px; }
 }
