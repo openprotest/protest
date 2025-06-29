@@ -83,6 +83,8 @@ class Topology extends Window {
 
 		this.startButton.onclick = ()=> this.StartDialog();
 		this.stopButton.onclick = ()=> this.Stop();
+
+		this.StartDialog();
 	}
 
 	AfterResize() { //override
@@ -511,38 +513,24 @@ class Topology extends Window {
 
 		device.links = {};
 
-		//console.log(device.initial.hostname);
+		for (const port in device.lldp.remoteChassisIdSubtype) {
 
-		for (const key in device.lldp.remoteChassisIdSubtype) {
-
-			if (device.lldp.remoteChassisIdSubtype[key].length === 1) {
-				/*
-				console.log(
-				key,
-				device.lldp.remoteSystemName[key][0],
-				device.lldp.remotePortIdSubtype[key][0],
-				device.lldp.remotePortId[key][0],
-				device.lldp.remoteChassisIdSubtype[key][0],
-				device.lldp.remoteChassisId[key][0]);
-				*/
-
-				const remoteDevice = null;
-				for (const file in this.devices) {
-					//TODO: find remote device in devices
-					
-				}
+			if (device.lldp.remoteChassisIdSubtype[port].length === 1) {
+				const remoteDevice =
+					this.GetRemoteDevice(device, port)
+					?? this.GetRemoteDeviceOnDatabase(device, port);
 
 				const remoteDeviceFile = remoteDevice?.initial?.file ?? null;
-				device.links[key] = {device:remoteDeviceFile, port:null};
+				device.links[port] = {device:remoteDeviceFile, port:null};
 			}
-			else if (device.lldp.remoteChassisIdSubtype[key].length > 1) {
+			else if (device.lldp.remoteChassisIdSubtype[port].length > 1) {
 				const unmanagedDevice = this.CreateUnmanagedSwitchElement({x:100, y:100});
 				const remoteDeviceFile = unmanagedDevice.root.getAttribute("file");
-				device.links[key] = {device:remoteDeviceFile, port:null};
+				device.links[port] = {device:remoteDeviceFile, port:null};
 			}
 
-			for (let i=0; i<device.lldp.remoteChassisIdSubtype[key].length; i++) {
-				switch (device.lldp.remoteChassisIdSubtype[key][i]) {
+			for (let i=0; i<device.lldp.remoteChassisIdSubtype[port].length; i++) {
+				switch (device.lldp.remoteChassisIdSubtype[port][i]) {
 				case 1: //chassis component
 				case 2: //interface alias
 				case 3: //port name
@@ -553,8 +541,8 @@ class Topology extends Window {
 				}
 			}
 
-			for (let i=0; i<device.lldp.remotePortIdSubtype[key].length; i++) {
-				switch (device.lldp.remotePortIdSubtype[key][i]) {
+			for (let i=0; i<device.lldp.remotePortIdSubtype[port].length; i++) {
+				switch (device.lldp.remotePortIdSubtype[port][i]) {
 				case 1: //interface alias
 				case 2: //port component
 				case 3: //mac address
@@ -566,6 +554,76 @@ class Topology extends Window {
 			}
 
 		}
+	}
+
+	GetRemoteDevice(device, port) {
+		if (!device.lldp || !device.lldp.remoteChassisIdSubtype[port]) return null;
+
+		for (const file in this.devices) {
+			const remoteDevice = this.devices[file];
+			if (!remoteDevice.lldp) continue;
+
+			if (remoteDevice.lldp.localChassisId === device.lldp.remoteChassisId[port][0]) {
+				return remoteDevice;
+			}
+		}
+
+		//if not in the topology, but has a remote port ID subtype of 5 (interface name),
+		//meaning it is a remote switch
+
+		if (device.lldp.remotePortIdSubtype[port][0] === 5) {
+			const remoteHostname = device.lldp.remoteSystemName[port][0];
+
+			for (const file in this.devices) {
+				const remoteDevice = this.devices[file];
+				if (remoteDevice.initial.hostname === remoteHostname) {
+					return remoteDevice;
+				}
+			}
+
+			const remoteFile = Object.entries(LOADER.devices.data)
+				.find(([, data]) => (data.hostname?.v || null) === remoteHostname)?.[0];
+
+			if (remoteFile) {
+				const type = LOADER.devices.data[remoteFile]?.type?.v || "switch";
+
+				const newDeviceElement = this.CreateDeviceElement({
+					file: remoteFile,
+					type: type,
+					name: remoteHostname,
+					x: 300,
+					y: 300,
+				});
+
+				newDeviceElement.fill.style.fill = "rgb(32, 112, 166)";
+
+				this.devices[remoteFile] = {
+					element: newDeviceElement,
+					initial: {
+						file    : remoteFile,
+						hostname: remoteHostname,
+						type    : type
+					}
+				};
+
+				return this.devices[remoteFile];
+			}
+		}
+
+		return null;
+	}
+
+	GetRemoteDeviceOnDatabase(device, port) {
+		for (const file in LOADER.devices.data) {
+			const data = LOADER.devices.data[file];
+			
+			const mac      = data["mac address"]?.v || null;
+			const ip       = data["ip"]?.v          || null;
+			const hostname = data["hostname"]?.v    || null;
+			//TODO:
+		}
+
+		return null;
 	}
 
 	SelectDevice(file) {
@@ -667,7 +725,7 @@ class Topology extends Window {
 			if (this.devices[file].element.y + 128 > maxY) maxY = this.devices[file].element.y + 128;
 		}
 		
-		this.svg.setAttribute("width", maxX === this.workspace.offsetWidth ? Math.max(maxX - 20, 1) : maxX);
-		this.svg.setAttribute("height", maxY === this.workspace.offsetHeight ? Math.max(maxY - 20, 1) : maxY);
+		this.svg.setAttribute("width", maxX === this.workspace.offsetWidth ? Math.max(maxX - 20, 1) - 20 : maxX - 20);
+		this.svg.setAttribute("height", maxY === this.workspace.offsetHeight ? Math.max(maxY - 20, 1) - 20: maxY - 20);
 	}
 }
