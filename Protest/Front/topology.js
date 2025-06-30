@@ -514,13 +514,13 @@ class Topology extends Window {
 		device.links = {};
 
 		for (const port in device.lldp.remoteChassisIdSubtype) {
-
 			if (device.lldp.remoteChassisIdSubtype[port].length === 1) {
 				const remoteDevice =
 					this.GetRemoteDevice(device, port)
 					?? this.GetRemoteDeviceOnDatabase(device, port);
 
 				const remoteDeviceFile = remoteDevice?.initial?.file ?? null;
+
 				device.links[port] = {device:remoteDeviceFile, port:null};
 			}
 			else if (device.lldp.remoteChassisIdSubtype[port].length > 1) {
@@ -528,32 +528,14 @@ class Topology extends Window {
 				const remoteDeviceFile = unmanagedDevice.root.getAttribute("file");
 				device.links[port] = {device:remoteDeviceFile, port:null};
 			}
-
-			for (let i=0; i<device.lldp.remoteChassisIdSubtype[port].length; i++) {
-				switch (device.lldp.remoteChassisIdSubtype[port][i]) {
-				case 1: //chassis component
-				case 2: //interface alias
-				case 3: //port name
-				case 4: //mac address
-				case 5: //network name
-				case 6: //int name
-				case 7: //local
-				}
-			}
-
-			for (let i=0; i<device.lldp.remotePortIdSubtype[port].length; i++) {
-				switch (device.lldp.remotePortIdSubtype[port][i]) {
-				case 1: //interface alias
-				case 2: //port component
-				case 3: //mac address
-				case 4: //network name
-				case 5: //int name
-				case 6: //agent circuit ID
-				case 7: //local
-				}
-			}
-
 		}
+	}
+
+	GetPortIndex(localDevice, remoteDevice, port) {
+		if (!remoteDevice.lldp) return null;
+		console.log(localDevice.lldp);
+		console.log(remoteDevice.lldp);
+		console.log(port);
 	}
 
 	GetRemoteDevice(device, port) {
@@ -564,19 +546,20 @@ class Topology extends Window {
 			if (!remoteDevice.lldp) continue;
 
 			if (remoteDevice.lldp.localChassisId === device.lldp.remoteChassisId[port][0]) {
+				this.GetPortIndex(device, remoteDevice, port)
 				return remoteDevice;
 			}
 		}
 
 		//if not in the topology, but has a remote port ID subtype of 5 (interface name),
 		//meaning it is a remote switch
-
 		if (device.lldp.remotePortIdSubtype[port][0] === 5) {
 			const remoteHostname = device.lldp.remoteSystemName[port][0];
 
 			for (const file in this.devices) {
 				const remoteDevice = this.devices[file];
 				if (remoteDevice.initial.hostname === remoteHostname) {
+					this.GetPortIndex(device, remoteDevice, port)
 					return remoteDevice;
 				}
 			}
@@ -585,29 +568,34 @@ class Topology extends Window {
 				.find(([, data]) => (data.hostname?.v || null) === remoteHostname)?.[0];
 
 			if (remoteFile) {
-				const type = LOADER.devices.data[remoteFile]?.type?.v || "switch";
+				const remoteType = LOADER.devices.data[remoteFile]?.type?.v || "switch";
 
 				const newDeviceElement = this.CreateDeviceElement({
 					file: remoteFile,
-					type: type,
+					type: remoteType,
 					name: remoteHostname,
-					x: 300,
-					y: 300,
+					x   : 300,
+					y   : 300
 				});
 
-				newDeviceElement.fill.style.fill = "rgb(32, 112, 166)";
+				newDeviceElement.fill.style.fill = "rgb(32,112,166)";
 
 				this.devices[remoteFile] = {
 					element: newDeviceElement,
 					initial: {
 						file    : remoteFile,
-						hostname: remoteHostname,
-						type    : type
+						type    : remoteType,
+						hostname: remoteHostname
 					}
 				};
 
+				this.GetPortIndex(device, this.devices[remoteFile], port)
 				return this.devices[remoteFile];
 			}
+		}
+
+		if (device.lldp.remotePortIdSubtype[port][0] === 3) { //mac address
+			//TODO:
 		}
 
 		return null;
@@ -710,10 +698,8 @@ class Topology extends Window {
 				intList.appendChild(interfaceBox);
 
 				localPort.textContent = localPortName;
-				interfaceBox.appendChild(localPort);
-
 				remotePort.textContent = remotePortName;
-				interfaceBox.appendChild(remotePort);
+				interfaceBox.append(localPort, remotePort);
 			}
 		}
 	}
