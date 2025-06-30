@@ -49,10 +49,12 @@
 }
 
 .topology-interface-list > div > div:nth-child(1) {
+	font-size: small;
 	margin-right: 8px;
 }
 
 .topology-interface-list > div > div:nth-child(2) {
+	font-size: small;
 	margin-left: 8px;
 }
 

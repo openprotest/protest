@@ -39,7 +39,6 @@ class Topology extends Window {
 		this.content.appendChild(this.sideBar);
 
 		this.content.style.overflow = "auto";
-		this.content.style.overflow = "auto";
 
 		this.InitializeSvg();
 
@@ -508,6 +507,11 @@ class Topology extends Window {
 		}
 	}
 
+	DrawLink(a, b) {
+		return `M ${a.x} ${a.y} C ${a.x + 50} ${a.y} ${b.x - 50} ${b.y} ${b.x} ${b.y}`;
+		//return "M " + x1 + " " + y1 + " C " + x2 + " " + y2 + " " + x3 + " " + y3 + " " + x4 + " " + y4;
+	}
+
 	ComputeLinks(device) {
 		if (!device.lldp) return;
 
@@ -515,13 +519,19 @@ class Topology extends Window {
 
 		for (const port in device.lldp.remoteChassisIdSubtype) {
 			if (device.lldp.remoteChassisIdSubtype[port].length === 1) {
-				const remoteDevice =
-					this.GetRemoteDevice(device, port)
-					?? this.GetRemoteDeviceOnDatabase(device, port);
+				const remoteDevice = this.GetRemoteDevice(device, port) || this.GetRemoteDeviceOnDatabase(device, port);
+				const remoteDeviceFile = remoteDevice?.remoteDevice?.initial?.file ?? null;
 
-				const remoteDeviceFile = remoteDevice?.initial?.file ?? null;
+				if (remoteDevice && remoteDevice.remoteDevice) {
+					console.log(device, remoteDevice.remoteDevice);
+				}
 
-				device.links[port] = {device:remoteDeviceFile, port:null};
+				const linkElement = this.container = document.createElementNS("http://www.w3.org/2000/svg", "path");
+				linkElement.setAttribute("d", this.DrawLine(device.element, remoteDevice.remoteDevice.element));
+				this.linksGroup.appendChild(linkElement);
+
+				device.links[port] = {device:remoteDeviceFile, portIndex:remoteDevice?.remotePort ?? null};
+
 			}
 			else if (device.lldp.remoteChassisIdSubtype[port].length > 1) {
 				const unmanagedDevice = this.CreateUnmanagedSwitchElement({x:100, y:100});
@@ -533,21 +543,38 @@ class Topology extends Window {
 
 	GetPortIndex(localDevice, remoteDevice, port) {
 		if (!remoteDevice.lldp) return null;
-		console.log(localDevice.lldp);
-		console.log(remoteDevice.lldp);
-		console.log(port);
+
+		const remotePortId = localDevice.lldp.remotePortId[port];
+		if (!remotePortId || remotePortId.length === 0) return null;
+
+		const portIndex = remoteDevice.lldp.localPortId.indexOf(remotePortId[0]);
+		return portIndex;
+
+/*		switch (remoteDevice.lldp.remotePortIdSubtype[port][i]) {
+		case 1: //interface alias
+		case 2: //port component
+		case 3: //mac address
+		case 4: //network name
+		case 5: //int name
+		case 6: //agent circuit ID
+		case 7: //local
+		default: //unknown
+			return null;
+		}*/
 	}
 
 	GetRemoteDevice(device, port) {
-		if (!device.lldp || !device.lldp.remoteChassisIdSubtype[port]) return null;
+		//if (!device.lldp || !device.lldp.remoteChassisIdSubtype[port]) return null;
 
 		for (const file in this.devices) {
 			const remoteDevice = this.devices[file];
 			if (!remoteDevice.lldp) continue;
 
 			if (remoteDevice.lldp.localChassisId === device.lldp.remoteChassisId[port][0]) {
-				this.GetPortIndex(device, remoteDevice, port)
-				return remoteDevice;
+				return {
+					remoteDevice: remoteDevice,
+					remotePort  : this.GetPortIndex(device, remoteDevice, port)
+				};
 			}
 		}
 
@@ -559,8 +586,10 @@ class Topology extends Window {
 			for (const file in this.devices) {
 				const remoteDevice = this.devices[file];
 				if (remoteDevice.initial.hostname === remoteHostname) {
-					this.GetPortIndex(device, remoteDevice, port)
-					return remoteDevice;
+					return {
+						remoteDevice: remoteDevice,
+						remotePort  : this.GetPortIndex(device, remoteDevice, port),
+					};
 				}
 			}
 
@@ -580,7 +609,7 @@ class Topology extends Window {
 
 				newDeviceElement.fill.style.fill = "rgb(32,112,166)";
 
-				this.devices[remoteFile] = {
+				const remoteDevice = {
 					element: newDeviceElement,
 					initial: {
 						file    : remoteFile,
@@ -589,8 +618,12 @@ class Topology extends Window {
 					}
 				};
 
-				this.GetPortIndex(device, this.devices[remoteFile], port)
-				return this.devices[remoteFile];
+				this.devices[remoteFile] = remoteDevice;
+
+				return {
+					remoteDevice: remoteDevice,
+					remotePort  : this.GetPortIndex(device, remoteDevice, port),
+				};
 			}
 		}
 
@@ -689,10 +722,11 @@ class Topology extends Window {
 				}
 
 				let remotePortName = "";
-
 				if (i in device.links && device.links[i].device) {
-					const remote = this.devices[device.links[i].device];
-					remotePortName = remote.initial.hostname;
+					const remoteDevice = this.devices[device.links[i].device];
+					const remotePortIndex = device.links[i].portIndex;
+					remotePortName = remoteDevice.initial.hostname;
+					//remotePortName = remoteDevice.initial.hostname + "/" + remotePortIndex;
 				}
 
 				intList.appendChild(interfaceBox);
@@ -707,8 +741,8 @@ class Topology extends Window {
 	AdjustSvgSize() {
 		let maxX = this.workspace.offsetWidth, maxY = this.workspace.offsetHeight;
 		for (const file in this.devices) {
-			if (this.devices[file].element.x + 100 > maxX) maxX = this.devices[file].element.x + 100;
-			if (this.devices[file].element.y + 128 > maxY) maxY = this.devices[file].element.y + 128;
+			if (this.devices[file].element.x + 128 > maxX) maxX = this.devices[file].element.x + 128;
+			if (this.devices[file].element.y + 148 > maxY) maxY = this.devices[file].element.y + 148;
 		}
 		
 		this.svg.setAttribute("width", maxX === this.workspace.offsetWidth ? Math.max(maxX - 20, 1) - 20 : maxX - 20);
