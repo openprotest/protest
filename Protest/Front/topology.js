@@ -355,7 +355,7 @@ class Topology extends Window {
 					device.element.fill.style.fill = "var(--clr-error)";
 				}
 			}
-			else if (json.lldp) {
+			else if (json.lldp && !["__proto__", "constructor", "prototype"].includes(json.lldp.file)) {
 				const device = this.devices[json.lldp.file];
 				if (device && typeof json.lldp === "object") {
 					device.lldp = json.lldp;
@@ -363,8 +363,6 @@ class Topology extends Window {
 					device.element.spinner.style.visibility = "hidden";
 					device.element.spinner.style.opacity = "0";
 					device.element.fill.style.fill = "rgb(88,166,32)";
-					setTimeout(()=>{
-					}, 10);
 				}
 			}
 		};
