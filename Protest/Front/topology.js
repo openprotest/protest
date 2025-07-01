@@ -357,7 +357,7 @@ class Topology extends Window {
 			}
 			else if (json.lldp) {
 				const device = this.devices[json.lldp.file];
-				if (device && json.lldp !== "__proto__" && json.lldp !== "constructor" && json.lldp !== "prototype") {
+				if (device && typeof json.lld === "object") {
 					device.lldp = json.lldp;
 
 					device.element.spinner.style.visibility = "hidden";
