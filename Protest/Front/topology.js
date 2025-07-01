@@ -17,6 +17,7 @@ class Topology extends Window {
 		this.ws = null;
 
 		this.devices = {};
+		this.links = {};
 
 		this.AddCssDependencies("topology.css");
 
@@ -42,52 +43,83 @@ class Topology extends Window {
 
 		this.InitializeSvg();
 
-		this.workspace.onmousedown = event=> {
-			event.stopPropagation();
-			this.BringToFront();
-
-			this.sideBar.textContent = "";
-			
-			if (this.selected) {
-				this.selected.element.highlight.classList.remove("topology-selected");
-				this.selected = null;
-			}
-		};
-
-		this.content.onmousemove = event=> {
-			if (!this.dragging) return;
-			if (event.buttons !== 1) {
-				this.dragging = null;
-				return;
-			}
-
-			const dx = Math.abs(event.clientX - this.x0);
-			const dy = Math.abs(event.clientY - this.y0);
-			if (Math.sqrt(dx*dx + dy*dy) < 4) return;
-
-			const x = this.offsetX - this.x0 + event.clientX;
-			const y = this.offsetY - this.y0 + event.clientY;
-
-			this.dragging.element.root.style.transform = `translate(${x}px,${y}px)`;
-
-			this.dragging.element.x = x;
-			this.dragging.element.y = y;
-
-			this.AdjustSvgSize();
-		};
-
-		this.content.onmouseup = ()=> {
-			this.dragging = null;
-		};
+		this.workspace.onmousedown = event=> this.Topology_onmousedown(event);
+		this.content.onmousemove   = event=> this.Topology_onmousemove(event);
+		this.content.onmouseup     = event=> this.Topology_onmouseup(event);
 
 		this.startButton.onclick = ()=> this.StartDialog();
-		this.stopButton.onclick = ()=> this.Stop();
+		this.stopButton.onclick  = ()=> this.Stop();
 
 		this.StartDialog();
 	}
 
 	AfterResize() { //override
 		this.AdjustSvgSize();
+	}
+
+	AdjustSvgSize() {
+		let maxX = this.workspace.offsetWidth, maxY = this.workspace.offsetHeight;
+		for (const file in this.devices) {
+			if (this.devices[file].element.x + 128 > maxX) maxX = this.devices[file].element.x + 128;
+			if (this.devices[file].element.y + 148 > maxY) maxY = this.devices[file].element.y + 148;
+		}
+		
+		this.svg.setAttribute("width", maxX === this.workspace.offsetWidth ? Math.max(maxX - 20, 1) - 20 : maxX - 20);
+		this.svg.setAttribute("height", maxY === this.workspace.offsetHeight ? Math.max(maxY - 20, 1) - 20: maxY - 20);
+	}
+
+	Topology_onmousedown(event) {
+		event.stopPropagation();
+		this.BringToFront();
+
+		this.sideBar.textContent = "";
+			
+		if (this.selected) {
+			this.selected.element.highlight.classList.remove("topology-selected");
+			this.selected = null;
+		}
+	}
+
+	Topology_onmousemove(event) {
+		if (!this.dragging) return;
+		if (event.buttons !== 1) {
+			this.dragging = null;
+			return;
+		}
+
+		const dx = Math.abs(event.clientX - this.x0);
+		const dy = Math.abs(event.clientY - this.y0);
+		if (Math.sqrt(dx*dx + dy*dy) < 4) return;
+
+		const x = this.offsetX - this.x0 + event.clientX;
+		const y = this.offsetY - this.y0 + event.clientY;
+
+		this.dragging.element.root.style.transform = `translate(${x}px,${y}px)`;
+
+		this.dragging.element.x = x;
+		this.dragging.element.y = y;
+
+		for (const port in this.dragging.links) {
+			const link = this.links[this.dragging.links[port].linkKey];
+
+			if (link) {
+				const path = this.DrawLink(this.dragging.element, this.devices[this.dragging.links[port].device].element);
+				link.element.setAttribute("d", path);
+			}
+		}
+
+		this.AdjustSvgSize();
+	}
+
+	Topology_onmouseup(event) {
+		this.dragging = null;
+	}
+
+	Clear() {
+		this.devices = {};
+		this.links = {};
+		this.workspace.textContent = "";
+		this.sideBar.textContent = "";
 	}
 
 	InitializeSvg() {
@@ -148,15 +180,10 @@ class Topology extends Window {
 		l2switchMask.appendChild(l2switchImage);
 
 		this.linksGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
-		this.linksGroup.setAttribute("stroke", "#c0c0c0");
+		this.linksGroup.setAttribute("fill", "none");
+		this.linksGroup.setAttribute("stroke", "#a0a0a0");
 		this.linksGroup.setAttribute("stroke-width", 3);
 		this.svg.appendChild(this.linksGroup);
-	}
-
-	Clear() {
-		this.devices = {};
-		this.workspace.textContent = "";
-		this.sideBar.textContent = "";
 	}
 
 	StartDialog() {
@@ -330,7 +357,7 @@ class Topology extends Window {
 			}
 			else if (json.lldp) {
 				const device = this.devices[json.lldp.file];
-				if (device) {
+				if (device && json.lldp !== "__proto__") {
 					device.lldp = json.lldp;
 
 					device.element.spinner.style.visibility = "hidden";
@@ -391,7 +418,6 @@ class Topology extends Window {
 		spinner.setAttribute("cy", 74);
 		spinner.setAttribute("r", 12);
 		spinner.setAttribute("fill", "none");
-		spinner.setAttribute("stroke", "rgb(88,166,32)");
 		spinner.setAttribute("stroke", "var(--clr-accent)");
 		spinner.setAttribute("stroke-width", 6);
 		spinner.setAttribute("stroke-linecap", "round");
@@ -403,7 +429,7 @@ class Topology extends Window {
 		g.appendChild(spinner);
 
 		const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
-		label.innerHTML = options.name;
+		label.textContent = options.name;
 		label.setAttribute("y", 106);
 		label.setAttribute("x", 48);
 		label.setAttribute("font-size", "11");
@@ -440,9 +466,7 @@ class Topology extends Window {
 		};
 	}
 
-	CreateUnmanagedSwitchElement(options) {
-		const uuid = UI.GenerateUuid();
-		
+	CreateUnmanagedSwitchElement(options, uuid) {
 		const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
 		g.style.transform = `translate(${options.x}px,${options.y}px)`;
 		g.setAttribute("file", uuid);
@@ -490,12 +514,6 @@ class Topology extends Window {
 			y: options.y
 		};
 
-		//TODO:
-		this.devices[uuid] = {
-			element: element,
-			initial: {file: uuid, type: "switch", unmanaged: true}
-		};
-
 		return element;
 	}
 
@@ -505,11 +523,6 @@ class Topology extends Window {
 			if (!device.lldp) continue;
 			this.ComputeLinks(device);
 		}
-	}
-
-	DrawLink(a, b) {
-		return `M ${a.x} ${a.y} C ${a.x + 50} ${a.y} ${b.x - 50} ${b.y} ${b.x} ${b.y}`;
-		//return "M " + x1 + " " + y1 + " C " + x2 + " " + y2 + " " + x3 + " " + y3 + " " + x4 + " " + y4;
 	}
 
 	ComputeLinks(device) {
@@ -523,22 +536,73 @@ class Topology extends Window {
 				const remoteDeviceFile = remoteDevice?.remoteDevice?.initial?.file ?? null;
 
 				if (remoteDevice && remoteDevice.remoteDevice) {
-					console.log(device, remoteDevice.remoteDevice);
+					const linkKey = device.initial.file > remoteDeviceFile ? `${device.initial.file}-${remoteDeviceFile}` : `${remoteDeviceFile}-${device.initial.file}`;
+
+					let linkElement;
+					if (linkKey in this.links) {
+						linkElement = this.links[linkKey].element;
+					}
+					else {
+						linkElement = this.container = document.createElementNS("http://www.w3.org/2000/svg", "path");
+						linkElement.setAttribute("d", this.DrawLink(device.element, remoteDevice.remoteDevice.element));
+						this.linksGroup.appendChild(linkElement);
+
+						this.links[linkKey] = {
+							element : linkElement,
+							deviceA : device.initial.file,
+							deviceB : remoteDeviceFile
+						};
+					}
+
+					device.links[port] = {
+						linkKey  : linkKey,
+						device   : remoteDeviceFile,
+						portIndex: remoteDevice?.remotePort ?? null
+					};
 				}
-
-				const linkElement = this.container = document.createElementNS("http://www.w3.org/2000/svg", "path");
-				linkElement.setAttribute("d", this.DrawLine(device.element, remoteDevice.remoteDevice.element));
-				this.linksGroup.appendChild(linkElement);
-
-				device.links[port] = {device:remoteDeviceFile, portIndex:remoteDevice?.remotePort ?? null};
-
 			}
 			else if (device.lldp.remoteChassisIdSubtype[port].length > 1) {
-				const unmanagedDevice = this.CreateUnmanagedSwitchElement({x:100, y:100});
+				const uuid = UI.GenerateUuid();
+				const unmanagedDevice = this.CreateUnmanagedSwitchElement({x:100, y:100}, uuid);
 				const remoteDeviceFile = unmanagedDevice.root.getAttribute("file");
-				device.links[port] = {device:remoteDeviceFile, port:null};
+
+				this.devices[uuid] = {
+					element: unmanagedDevice,
+					initial: {file: uuid, type: "switch", unmanaged: true}
+				};
+
+				const linkKey = device.initial.file > remoteDeviceFile ? `${device.initial.file}-${remoteDeviceFile}` : `${remoteDeviceFile}-${device.initial.file}`;
+
+				let linkElement;
+				if (linkKey in this.links) {
+					linkElement = this.links[linkKey].element;
+				}
+				else {
+					linkElement = this.container = document.createElementNS("http://www.w3.org/2000/svg", "path");
+					linkElement.setAttribute("d", this.DrawLink(device.element, unmanagedDevice));
+					this.linksGroup.appendChild(linkElement);
+
+					this.links[linkKey] = {
+						element : linkElement,
+						deviceA : device.initial.file,
+						deviceB : remoteDeviceFile
+					};
+				}
+
+				device.links[port] = {
+					linkKey  : linkKey,
+					device   : remoteDeviceFile,
+					portIndex: -1
+				};
+
 			}
 		}
+	}
+
+	DrawLink(a, b) {
+		return `M ${a.x} ${a.y} ${b.x} ${b.y}`;
+		//return `M ${a.x} ${a.y} C ${a.x + 50} ${a.y} ${b.x - 50} ${b.y} ${b.x} ${b.y}`;
+		//return "M " + x1 + " " + y1 + " C " + x2 + " " + y2 + " " + x3 + " " + y3 + " " + x4 + " " + y4;
 	}
 
 	GetPortIndex(localDevice, remoteDevice, port) {
@@ -736,16 +800,5 @@ class Topology extends Window {
 				interfaceBox.append(localPort, remotePort);
 			}
 		}
-	}
-
-	AdjustSvgSize() {
-		let maxX = this.workspace.offsetWidth, maxY = this.workspace.offsetHeight;
-		for (const file in this.devices) {
-			if (this.devices[file].element.x + 128 > maxX) maxX = this.devices[file].element.x + 128;
-			if (this.devices[file].element.y + 148 > maxY) maxY = this.devices[file].element.y + 148;
-		}
-		
-		this.svg.setAttribute("width", maxX === this.workspace.offsetWidth ? Math.max(maxX - 20, 1) - 20 : maxX - 20);
-		this.svg.setAttribute("height", maxY === this.workspace.offsetHeight ? Math.max(maxY - 20, 1) - 20: maxY - 20);
 	}
 }

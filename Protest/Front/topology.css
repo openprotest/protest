@@ -6,6 +6,12 @@
 	overflow: auto;
 }
 
+.topology-workspace > svg > g > path:hover {
+	stroke: var(--clr-accent);
+	stroke-width: 4px;
+	transition: .4s;
+}
+
 .topology-sidebar {
 	position: absolute;
 	right: 8px;
