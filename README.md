@@ -53,7 +53,7 @@ Pro-test includes a wide range of tools and utilities designed for system admini
   - **Protest-CacheGenerator:** A source-generator that embeds the front-end UI into the backend executable.
   - **Protest-MacLookupGenerator:** A source-generator that embeds the the mac-to-vendor database into the executable.
   - **Protest Agent:** A tool to enable the browser to communicate with the client's computer using a local communication protocol (`protest://`).
-  - 
+
 ### Continuous Integration
 ![build](https://img.shields.io/github/actions/workflow/status/openprotest/protest/dotnet.yml?label=Build&style=for-the-badge)
 ![code-analyze](https://img.shields.io/github/actions/workflow/status/openprotest/protest/codeql.yml?label=Analyze%20Back-end&style=for-the-badge)
