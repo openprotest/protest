@@ -101,7 +101,6 @@ class Topology extends Window {
 
 		for (const port in this.dragging.links) {
 			const link = this.links[this.dragging.links[port].linkKey];
-
 			if (link) {
 				const path = this.DrawLink(this.dragging.element, this.devices[this.dragging.links[port].device].element);
 				link.element.setAttribute("d", path);
@@ -519,88 +518,97 @@ class Topology extends Window {
 		for (const file in this.devices) {
 			const device = this.devices[file];
 			if (!device.lldp) continue;
-			this.ComputeLinks(device);
+			
+			device.links = {};
+
+			for (const port in device.lldp.remoteChassisIdSubtype) {
+				this.ComputePortLinks(device, port);
+			}
 		}
 	}
 
-	ComputeLinks(device) {
-		if (!device.lldp) return;
+	ComputePortLinks(device, port) {
+		const remoteInfo = device.lldp.remoteChassisIdSubtype[port];
+		if (!remoteInfo || remoteInfo.length === 0) return;
 
-		device.links = {};
+		let remoteDeviceFile, link, linkElement;
 
-		for (const port in device.lldp.remoteChassisIdSubtype) {
-			if (device.lldp.remoteChassisIdSubtype[port].length === 1) {
-				const remoteDevice = this.GetRemoteDevice(device, port) || this.GetRemoteDeviceOnDatabase(device, port);
-				const remoteDeviceFile = remoteDevice?.remoteDevice?.initial?.file ?? null;
+		if (remoteInfo.length === 1) {
+			link = this.GetRemoteDevice(device, port) || this.GetRemoteDeviceOnDatabase(device, port);
+			remoteDeviceFile = link?.remoteDevice?.initial?.file ?? null;
 
-				if (remoteDevice && remoteDevice.remoteDevice) {
-					const linkKey = device.initial.file > remoteDeviceFile ? `${device.initial.file}-${remoteDeviceFile}` : `${remoteDeviceFile}-${device.initial.file}`;
+			if (!link || !link.remoteDevice) return;
+		}
+		else { //multiple LLDP entries — treat as unmanaged switch
+			const uuid = UI.GenerateUuid();
+			const unmanagedDevice = this.CreateUnmanagedSwitchElement({ x: 100, y: 100 }, uuid);
+			remoteDeviceFile = unmanagedDevice.root.getAttribute("file");
 
-					let linkElement;
-					if (linkKey in this.links) {
-						linkElement = this.links[linkKey].element;
-					}
-					else {
-						linkElement = this.container = document.createElementNS("http://www.w3.org/2000/svg", "path");
-						linkElement.setAttribute("d", this.DrawLink(device.element, remoteDevice.remoteDevice.element));
-						this.linksGroup.appendChild(linkElement);
+			this.devices[uuid] = {
+				element: unmanagedDevice,
+				initial: { file: uuid, type: "switch", unmanaged: true }
+			};
 
-						this.links[linkKey] = {
-							element : linkElement,
-							deviceA : device.initial.file,
-							deviceB : remoteDeviceFile
-						};
-					}
+			link = {
+				remoteDevice: this.devices[uuid],
+				remotePort: -1
+			};
+		}
 
-					device.links[port] = {
-						linkKey  : linkKey,
-						device   : remoteDeviceFile,
-						portIndex: remoteDevice?.remotePort ?? null
-					};
-				}
+		const localFile = device.initial.file;
+
+		const linkKey = localFile > remoteDeviceFile
+			? `${localFile}-${remoteDeviceFile}`
+			: `${remoteDeviceFile}-${localFile}`;
+
+		if (linkKey in this.links) {
+			linkElement = this.links[linkKey].element;
+		}
+		else {
+			linkElement = document.createElementNS("http://www.w3.org/2000/svg", "path");
+			linkElement.setAttribute("d", this.DrawLink(device.element, link.remoteDevice.element));
+			this.linksGroup.appendChild(linkElement);
+
+			this.links[linkKey] = {
+				element: linkElement,
+				deviceA: localFile,
+				deviceB: remoteDeviceFile
+			};
+		}
+
+		device.links[port] = {
+			linkKey  : linkKey,
+			device   : remoteDeviceFile,
+			portIndex: link?.remotePort ?? -1
+		};
+
+		if (!link.remoteDevice.lldp) {
+			if (!link.remoteDevice.links) {
+				link.remoteDevice.links = [];
 			}
-			else if (device.lldp.remoteChassisIdSubtype[port].length > 1) {
-				const uuid = UI.GenerateUuid();
-				const unmanagedDevice = this.CreateUnmanagedSwitchElement({x:100, y:100}, uuid);
-				const remoteDeviceFile = unmanagedDevice.root.getAttribute("file");
 
-				this.devices[uuid] = {
-					element: unmanagedDevice,
-					initial: {file: uuid, type: "switch", unmanaged: true}
-				};
-
-				const linkKey = device.initial.file > remoteDeviceFile ? `${device.initial.file}-${remoteDeviceFile}` : `${remoteDeviceFile}-${device.initial.file}`;
-
-				let linkElement;
-				if (linkKey in this.links) {
-					linkElement = this.links[linkKey].element;
-				}
-				else {
-					linkElement = this.container = document.createElementNS("http://www.w3.org/2000/svg", "path");
-					linkElement.setAttribute("d", this.DrawLink(device.element, unmanagedDevice));
-					this.linksGroup.appendChild(linkElement);
-
-					this.links[linkKey] = {
-						element : linkElement,
-						deviceA : device.initial.file,
-						deviceB : remoteDeviceFile
-					};
-				}
-
-				device.links[port] = {
-					linkKey  : linkKey,
-					device   : remoteDeviceFile,
-					portIndex: -1
-				};
-
-			}
+			link.remoteDevice.links.push({
+				linkKey  : linkKey,
+				device   : device.initial.file,
+				portIndex: -1
+			});
 		}
 	}
 
 	DrawLink(a, b) {
-		return `M ${a.x} ${a.y} ${b.x} ${b.y}`;
-		//return `M ${a.x} ${a.y} C ${a.x + 50} ${a.y} ${b.x - 50} ${b.y} ${b.x} ${b.y}`;
-		//return "M " + x1 + " " + y1 + " C " + x2 + " " + y2 + " " + x3 + " " + y3 + " " + x4 + " " + y4;
+		const p = a.x < b.x ? a : b;
+		const s = a.x < b.x ? b : a;
+		const x1 = p.x + 0;
+		const y1 = p.y + 0;
+		const x4 = s.x + 0;
+		const y4 = s.y + 0;
+
+		let minX = Math.min(x1, x4);
+
+		const x2 = minX + (x1-minX)*.7 + (x4-minX)*.3;
+		const x3 = minX + (x1-minX)*.3 + (x4-minX)*.7;
+
+		return `M ${x1} ${y1} C ${x2} ${y1} ${x3} ${y4} ${x4} ${y4}`;
 	}
 
 	GetPortIndex(localDevice, remoteDevice, port) {
@@ -748,7 +756,16 @@ class Topology extends Window {
 		ipLabel.textContent = initial.ip;
 		grid.appendChild(ipLabel);
 
-		if (file in this.devices && device.lldp) {
+		if (device.links && Array.isArray(device.links)) {
+			const intList = document.createElement("div");
+			intList.className = "topology-interface-list";
+			this.sideBar.appendChild(intList);
+
+			for (let i=0; i<device.links.length; i++) {
+				this.CreateInterfaceListItem(intList, device, i, "");
+			}
+		}
+		else if (device.lldp) {
 			const id = device.lldp.localChassisId;
 			const idLabel = document.createElement("div");
 			if (id && initial.hostname != id && initial.ip != id) {
@@ -772,31 +789,35 @@ class Topology extends Window {
 			if (!device.links) return;
 
 			for (let i=0; i<device.lldp.localPortName.length; i++) {
-				const interfaceBox = document.createElement("div");
-				const localPort = document.createElement("div");
-				const remotePort = document.createElement("div");
-
-				let localPortName = device.lldp.localPortName[i];
-				if (!localPortName || localPortName.length === 0) {
-					localPortName = `(${i+1})`;
-					localPort.style.color = "#404040";
-					localPort.style.fontStyle = "italic";
-				}
-
-				let remotePortName = "";
-				if (i in device.links && device.links[i].device) {
-					const remoteDevice = this.devices[device.links[i].device];
-					const remotePortIndex = device.links[i].portIndex;
-					remotePortName = remoteDevice.initial.hostname;
-					//remotePortName = remoteDevice.initial.hostname + "/" + remotePortIndex;
-				}
-
-				intList.appendChild(interfaceBox);
-
-				localPort.textContent = localPortName;
-				remotePort.textContent = remotePortName;
-				interfaceBox.append(localPort, remotePort);
+				this.CreateInterfaceListItem(intList, device, i, device.lldp.localPortName[i]);
 			}
 		}
+	}
+
+	CreateInterfaceListItem(listbox, device, i, portName) {
+		const interfaceBox = document.createElement("div");
+		const localPort = document.createElement("div");
+		const remotePort = document.createElement("div");
+
+		let localPortName = portName;
+		if (!localPortName || localPortName.length === 0) {
+			localPortName = i;
+			localPort.style.color = "#404040";
+			localPort.style.fontStyle = "italic";
+		}
+
+		let remotePortName = "";
+		if (i in device.links && device.links[i].device) {
+			const remoteDevice = this.devices[device.links[i].device];
+			remotePortName = remoteDevice.initial.hostname;
+			//const remotePortIndex = device.links[i].portIndex;
+			//remotePortName = remoteDevice.initial.hostname + "/" + remotePortIndex;
+		}
+
+		listbox.appendChild(interfaceBox);
+
+		localPort.textContent = localPortName;
+		remotePort.textContent = remotePortName;
+		interfaceBox.append(localPort, remotePort);
 	}
 }
