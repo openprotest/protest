@@ -102,7 +102,7 @@ class Topology extends Window {
 		for (const port in this.dragging.links) {
 			const link = this.links[this.dragging.links[port].linkKey];
 			if (link) {
-				const path = this.DrawLink(this.dragging.element, this.devices[this.dragging.links[port].device].element);
+				const path = this.DrawLink(this.dragging, this.devices[this.dragging.links[port].device]);
 				link.element.setAttribute("d", path);
 			}
 		}
@@ -180,7 +180,7 @@ class Topology extends Window {
 
 		this.linksGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
 		this.linksGroup.setAttribute("fill", "none");
-		this.linksGroup.setAttribute("stroke", "#a0a0a0");
+		this.linksGroup.setAttribute("stroke", "#c0c0c0");
 		this.linksGroup.setAttribute("stroke-width", 3);
 		this.svg.appendChild(this.linksGroup);
 	}
@@ -566,7 +566,7 @@ class Topology extends Window {
 		}
 		else {
 			linkElement = document.createElementNS("http://www.w3.org/2000/svg", "path");
-			linkElement.setAttribute("d", this.DrawLink(device.element, link.remoteDevice.element));
+			linkElement.setAttribute("d", this.DrawLink(device, link.remoteDevice));
 			this.linksGroup.appendChild(linkElement);
 
 			this.links[linkKey] = {
@@ -596,15 +596,35 @@ class Topology extends Window {
 	}
 
 	DrawLink(a, b) {
-		const p = a.x < b.x ? a : b;
-		const s = a.x < b.x ? b : a;
-		const x1 = p.x + 0;
-		const y1 = p.y + 0;
-		const x4 = s.x + 0;
-		const y4 = s.y + 0;
+		const p = a.element.x < b.element.x ? a : b;
+		const s = a.element.x < b.element.x ? b : a;
+
+		let pox, poy, sox, soy;
+
+		if (p.initial.unmanaged) {
+			pox = 24;
+			poy = 24;
+		}
+		else {
+			pox = p.element.x > s.element.x + 44 ? 0 : 96;
+			poy = 16;
+		}
+
+		if (s.initial.unmanaged) {
+			sox = 24;
+			soy = 24;
+		}
+		else {
+			sox = p.element.x > s.element.x + 44 ? 96 : 0;
+			soy = 16;
+		}
+
+		const x1 = p.element.x + pox;
+		const y1 = p.element.y + poy;
+		const x4 = s.element.x + sox;
+		const y4 = s.element.y + soy;
 
 		let minX = Math.min(x1, x4);
-
 		const x2 = minX + (x1-minX)*.7 + (x4-minX)*.3;
 		const x3 = minX + (x1-minX)*.3 + (x4-minX)*.7;
 
@@ -634,8 +654,6 @@ class Topology extends Window {
 	}
 
 	GetRemoteDevice(device, port) {
-		//if (!device.lldp || !device.lldp.remoteChassisIdSubtype[port]) return null;
-
 		for (const file in this.devices) {
 			const remoteDevice = this.devices[file];
 			if (!remoteDevice.lldp) continue;

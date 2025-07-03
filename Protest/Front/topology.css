@@ -8,7 +8,7 @@
 
 .topology-workspace > svg > g > path:hover {
 	stroke: var(--clr-accent);
-	stroke-width: 4px;
+	stroke-width: 6px;
 	transition: .4s;
 }
 
