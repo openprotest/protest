@@ -596,39 +596,53 @@ class Topology extends Window {
 	}
 
 	DrawLink(a, b) {
-		const p = a.element.x < b.element.x ? a : b;
-		const s = a.element.x < b.element.x ? b : a;
+		const [p, s] = a.element.x < b.element.x ? [a, b] : [b, a];
 
-		let pox, poy, sox, soy;
+		const center = node => (
+			node.initial.unmanaged
+			? { x: node.element.x + 24, y: node.element.y + 24 }
+			: { x: node.element.x + 48, y: node.element.y + 48 }
+		);
+
+		const pc = center(p);
+		const sc = center(s);
+
+		let px = pc.x, py = pc.y;
+		let sx = sc.x, sy = sc.y;
 
 		if (p.initial.unmanaged) {
-			pox = 24;
-			poy = 24;
+			const angle = Math.atan2(sc.y - pc.y, sc.x - pc.x);
+			px = pc.x + 24 * Math.cos(angle);
+			py = pc.y + 24 * Math.sin(angle);
 		}
 		else {
-			pox = p.element.x > s.element.x + 44 ? 0 : 96;
-			poy = 16;
+			px += p.element.x > s.element.x ? -48 : 48;
 		}
 
 		if (s.initial.unmanaged) {
-			sox = 24;
-			soy = 24;
+			const angle = Math.atan2(pc.y - sc.y, pc.x - sc.x);
+			sx = sc.x + 24 * Math.cos(angle);
+			sy = sc.y + 24 * Math.sin(angle);
 		}
 		else {
-			sox = p.element.x > s.element.x + 44 ? 96 : 0;
-			soy = 16;
+			sx += p.element.x > s.element.x ? 48 : -48;
 		}
 
-		const x1 = p.element.x + pox;
-		const y1 = p.element.y + poy;
-		const x4 = s.element.x + sox;
-		const y4 = s.element.y + soy;
+		if (Math.abs(pc.x - sc.x) < 88) {
+			if (!p.initial.unmanaged) {
+				py = pc.y + (pc.y < sc.y ? 48 : -48);
+				px = (pc.x + sc.x) / 2;
+			}
+			if (!s.initial.unmanaged) {
+				sy = sc.y + (pc.y < sc.y ? -48 : 48);
+				sx = (pc.x + sc.x) / 2;
+			}
+		}
 
-		let minX = Math.min(x1, x4);
-		const x2 = minX + (x1-minX)*.7 + (x4-minX)*.3;
-		const x3 = minX + (x1-minX)*.3 + (x4-minX)*.7;
-
-		return `M ${x1} ${y1} C ${x2} ${y1} ${x3} ${y4} ${x4} ${y4}`;
+		const minX = Math.min(px, sx);
+		const x1 = p.initial.unmanaged ? px : minX + (px - minX) * 0.7 + (sx - minX) * 0.3;
+		const x2 = s.initial.unmanaged ? sx : minX + (px - minX) * 0.3 + (sx - minX) * 0.7;
+		return `M ${px} ${py} C ${x1} ${py} ${x2} ${sy} ${sx} ${sy}`;
 	}
 
 	GetPortIndex(localDevice, remoteDevice, port) {
