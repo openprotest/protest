@@ -880,7 +880,7 @@ class Topology extends Window {
 
 		let localPortName = portName;
 		if (!localPortName || localPortName.length === 0) {
-			localPortName = i;
+			localPortName = i + 1;
 			localPort.style.color = "#404040";
 			localPort.style.fontStyle = "italic";
 		}
