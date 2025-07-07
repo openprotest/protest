@@ -520,6 +520,10 @@ class Topology extends Window {
 		return element;
 	}
 
+	CreateEndPointElement() {
+		
+	}
+
 	ComputeAllLinks() {
 		for (const file in this.devices) {
 			const device = this.devices[file];
@@ -545,20 +549,29 @@ class Topology extends Window {
 
 			if (!link || !link.remoteDevice) return;
 		}
-		else { //multiple LLDP entries, treat as unmanaged switch
-			const uuid = UI.GenerateUuid();
-			const unmanagedDevice = this.CreateUnmanagedSwitchElement({x:100, y:100}, uuid);
-			remoteDeviceFile = unmanagedDevice.root.getAttribute("file");
+		else { //multiple LLDP entries, treat as unmanaged switch+
 
-			this.devices[uuid] = {
+			/*if (!this.HasDuplicates(device.lldp.remoteChassisIdSubtype[port])) {
+				this.ComputePortLinks(device, port, true);
+				return;
+			}*/
+
+			remoteDeviceFile = UI.GenerateUuid();
+			const unmanagedDevice = this.CreateUnmanagedSwitchElement({x:100, y:100}, remoteDeviceFile);
+
+			const remoteDevice = {
 				element: unmanagedDevice,
-				initial: {file: uuid, type: "switch", unmanaged: true}
+				initial: {file: remoteDeviceFile, type: "switch", unmanaged: true}
 			};
+
+			this.devices[remoteDeviceFile] = remoteDevice;
 
 			link = {
-				remoteDevice: this.devices[uuid],
+				remoteDevice: remoteDevice,
 				remotePort: -1
 			};
+
+			this.ComputeUnmanagedPortLinks(remoteDevice, port, device.lldp);
 		}
 
 		const localFile = device.initial.file;
@@ -599,15 +612,12 @@ class Topology extends Window {
 
 			/*linkElement.onmousedown = event=> {
 				event.stopPropagation();
-
 				if (this.selected === device) {
 					this.SelectDevice(remoteDeviceFile);
 				}
 				else {
 					this.SelectDevice(localFile);
 				}
-
-				//console.log(port, link?.remotePort);
 			};*/
 
 			this.links[linkKey] = {
@@ -636,7 +646,37 @@ class Topology extends Window {
 				portIndex: -1
 			});
 		}
-		
+	}
+
+	ComputeUnmanagedPortLinks(device, parentPort, parentLldp) {
+		for (const i in parentLldp.remoteChassisIdSubtype[parentPort]) {
+			switch (parentLldp.remoteChassisIdSubtype[parentPort][i]) {
+
+			case 1: //interface alias
+
+			case 2: //port component
+
+			case 3: //mac address
+
+			case 4: //network name
+
+			case 5: //int name
+
+			case 6: //agent circuit ID
+
+			case 7: //local
+				//device.links.push({});
+				break;
+
+			default: //unknown
+				return null;
+			}
+
+		}
+	}
+
+	HasDuplicates(array) {
+		return new Set(array).size !== array.length;
 	}
 
 	DrawLink(a, b) {
