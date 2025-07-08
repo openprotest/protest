@@ -94,7 +94,7 @@ internal static class Topology {
                     type     = device.attributes.TryGetValue("type", out Database.Attribute typeAttr) ? typeAttr.value : "N/A",
                     ip       = device.attributes.TryGetValue("ip", out Database.Attribute ipAttr) ? ipAttr.value : "N/A",
                     hostname = device.attributes.TryGetValue("hostname", out Database.Attribute hostnameAttr) ? hostnameAttr.value : "N/A",
-                    //location = device.attributes.TryGetValue("location", out Database.Attribute locationAttr) ? locationAttr.value : "N/A",
+                    location = device.attributes.TryGetValue("location", out Database.Attribute locationAttr) ? locationAttr.value : "N/A",
                 })
             });
 

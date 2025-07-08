@@ -36,7 +36,6 @@
 	display: inline-block;
 	box-sizing: border-box;
 	background-color: var(--clr-control);
-	width: calc(50% - 8px);
 	min-height: 24px;
 	padding: 2px 4px;
 	margin: 2px 0;
@@ -49,27 +48,36 @@
 }
 
 .topology-interface-list > div > div:nth-child(1) {
+	width: calc(35% - 8px);
 	font-size: small;
 	margin-right: 8px;
 }
 
-.topology-interface-list > div > div:nth-child(2) {
-	font-size: small;
-	margin-left: 8px;
-}
-
-.topology-interface-list > div > div:nth-child(2)::before {
+.topology-interface-list > div > div:nth-child(1)::after {
 	content: "";
 	position: absolute;
 	background-color: var(--clr-control);
-	width: 16px;
+	width: 12px;
 	height: 4px;
-	left: calc(50% - 8px);
+	left: calc(35% - 6px);
 	transform: translateY(8px);
 }
 
+.topology-interface-list > div > div:nth-child(2) {
+	width: calc(65% - 4px);
+	font-size: small;
+	margin-left: 4px;
+}
+
+.topology-interface-list > div > div:nth-child(2)[remote-port]::after {
+	content: attr(remote-port);
+	padding-left: 4px;
+	font-style: italic;
+	color: #404040;
+}
+
 .topology-interface-list > div:hover > div,
-.topology-interface-list > div:hover > div:nth-child(2)::before {
+.topology-interface-list > div:hover > div:nth-child(1)::after {
 	background-color: var(--clr-select);
 }
 
