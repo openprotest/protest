@@ -1,5 +1,5 @@
 class Topology extends Window {
-	static deviceIcons = {
+	static DEVICE_ICON = {
 		"switch": "mono/switch.svg",
 		"router": "mono/router.svg",
 		"firewall": "mono/firewall.svg",
@@ -643,7 +643,7 @@ class Topology extends Window {
 				break;
 			}
 
-			console.log(portName);
+			//console.log(portName);
 			remotePort = portName;
 		}
 
@@ -897,7 +897,7 @@ console.log(
 
 		const icon = document.createElement("div");
 		icon.style.gridArea = "1 / 1 / 5 / 1";
-		icon.style.backgroundImage = `url(${Topology.deviceIcons[initial.type.toLowerCase()]})`;
+		icon.style.backgroundImage = `url(${Topology.DEVICE_ICON[initial.type.toLowerCase()]})`;
 		icon.style.backgroundSize = "64px 64px";
 		icon.style.backgroundPosition = "50% 50%";
 		icon.style.backgroundRepeat = "no-repeat";
