@@ -674,6 +674,8 @@ console.log(
 				remotePort: device.lldp.localPortName[port],
 				portIndex: -1,
 			});
+
+			link.remoteDevice.links = link.remoteDevice.links.sort((a, b) => a.localPort.localeCompare(b.localPort));
 		}
 	}
 
