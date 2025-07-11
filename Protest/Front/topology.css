@@ -9,7 +9,7 @@
 .topology-sidebar {
 	position: absolute;
 	right: 8px;
-	width: 300px;
+	width: 350px;
 	top: 8px;
 	bottom: 8px;
 	color: var(--clr-dark);
@@ -39,7 +39,7 @@
 	min-height: 24px;
 	padding: 2px 4px;
 	margin: 2px 0;
-	border-radius: 4px;
+	font-size: small;
 	text-align: center;
 	overflow: hidden;
 	text-overflow: ellipsis;
@@ -48,32 +48,31 @@
 }
 
 .topology-interface-list > div > div:nth-child(1) {
-	width: calc(35% - 8px);
-	font-size: small;
-	margin-right: 8px;
+	width: 30%;
+	margin-right: 4px;
+	border-radius: 4px;
 }
 
 .topology-interface-list > div > div:nth-child(1)::after {
-	content: "";
 	position: absolute;
+	content: "";
 	background-color: var(--clr-control);
 	width: 12px;
 	height: 4px;
-	left: calc(35% - 6px);
+	left: 30%;
 	transform: translateY(8px);
 }
 
 .topology-interface-list > div > div:nth-child(2) {
-	width: calc(65% - 4px);
-	font-size: small;
+	width: calc(40% - 12px);
 	margin-left: 4px;
+	margin-right: 2px;
+	border-radius: 4px 0 0 4px;
 }
 
-.topology-interface-list > div > div:nth-child(2)[remote-port]::after {
-	content: attr(remote-port);
-	padding-left: 4px;
-	font-style: italic;
-	color: #404040;
+.topology-interface-list > div > div:nth-child(3) {
+	width: calc(30% - 2px);
+	border-radius: 0 4px 4px 0;
 }
 
 .topology-interface-list > div:hover > div,

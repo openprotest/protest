@@ -983,7 +983,13 @@ console.log(
 		interfaceBox.append(localBox, remoteBox);
 
 		if (device.links[i] && device.links[i].remotePort) {
-			remoteBox.setAttribute("remote-port", device.links[i].remotePort);
+			const remotePortBox = document.createElement("div");
+			remotePortBox.textContent = device.links[i].remotePort;
+			interfaceBox.append(remotePortBox);
+		}
+		else {
+			remoteBox.style.width = "calc(70% - 12px)";
+			remoteBox.style.borderRadius = "4px";
 		}
 
 		const linkKey = device.links[i]?.linkKey ?? null;
