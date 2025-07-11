@@ -659,7 +659,7 @@ console.log(
 			device    : remoteDeviceFile,
 			localPort : device.lldp.localPortName[port],
 			remotePort: remotePort,
-			portIndex : link?.remotePort ?? -1,
+			portIndex : link?.remotePort ?? -1
 		};
 
 		if (!link.remoteDevice.lldp) {
@@ -668,11 +668,11 @@ console.log(
 			}
 
 			link.remoteDevice.links.push({
-				linkKey  : linkKey,
-				device   : device.initial.file,
+				linkKey   : linkKey,
+				device    : device.initial.file,
 				localPort : remotePort,
 				remotePort: device.lldp.localPortName[port],
-				portIndex: -1,
+				portIndex: -1
 			});
 
 			link.remoteDevice.links = link.remoteDevice.links.sort((a, b) => a.localPort.localeCompare(b.localPort));
