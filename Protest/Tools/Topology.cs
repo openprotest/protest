@@ -44,6 +44,17 @@ internal static class Topology {
         }
     }
 
+    private static void WsWriteText(WebSocket ws, string text, Lock mutex) {
+        lock (mutex) {
+            WsWriteText(ws, Encoding.UTF8.GetBytes(text), mutex);
+        }
+    }
+    private static void WsWriteText(WebSocket ws, byte[] bytes, Lock mutex) {
+        lock (mutex) {
+            ws.SendAsync(new ArraySegment<byte>(bytes, 0, bytes.Length), WebSocketMessageType.Text, true, CancellationToken.None);
+        }
+    }
+
     internal static async void WebSocketHandler(HttpListenerContext ctx) {
         WebSocket ws;
         try {
@@ -100,27 +111,38 @@ internal static class Topology {
 
             await WsWriteText(ws, message);
 
-            for (int i = 0; i < candidates.Count; i++) {
-                if (!candidates[i].attributes.TryGetValue("ip", out Database.Attribute ipAttr)) continue;
-                if (!candidates[i].attributes.TryGetValue("snmp profile", out Database.Attribute profileAttr)) continue;
-                if (!SnmpProfiles.FromGuid(profileAttr.value, out SnmpProfiles.Profile snmpProfile) || snmpProfile is null) continue;
+            Lock mutex = new Lock();
+
+            IEnumerable<Task> tasks = candidates.Select(async candidate => {
+                if (!candidate.attributes.TryGetValue("ip", out Database.Attribute ipAttr)) return;
+                if (!candidate.attributes.TryGetValue("snmp profile", out Database.Attribute profileAttr)) return;
+                if (!SnmpProfiles.FromGuid(profileAttr.value, out SnmpProfiles.Profile snmpProfile) || snmpProfile is null) return;
 
                 string ipString = ipAttr.value.Split(";")[0].Trim();
-                if (IPAddress.TryParse(ipString, out IPAddress ipAddress)) {
-                    await WsWriteText(ws, System.Text.Encoding.UTF8.GetBytes($"{{\"retrieve\":\"{candidates[i].filename}\"}}"));
+                if (!IPAddress.TryParse(ipString, out IPAddress ipAddress)) return;
+
+                await Task.Delay(1);
+
+                try {
+                    WsWriteText(ws, Encoding.UTF8.GetBytes($"{{\"retrieve\":\"{candidate.filename}\"}}"), mutex);
 
                     IList<Variable> rawLocal = Polling.SnmpQuery(ipAddress, snmpProfile, [Oid.LLDP_LOCAL_SYS_DATA], Polling.SnmpOperation.Walk);
                     IList<Variable> rawRemote = Polling.SnmpQuery(ipAddress, snmpProfile, [Oid.LLDP_REMOTE_SYS_DATA], Polling.SnmpOperation.Walk);
 
                     if (rawLocal is null || rawLocal.Count == 0 || rawRemote is null || rawRemote.Count == 0) {
-                        await WsWriteText(ws, System.Text.Encoding.UTF8.GetBytes($"{{\"nolldp\":\"{candidates[i].filename}\"}}"));
+                        WsWriteText(ws, Encoding.UTF8.GetBytes($"{{\"nolldp\":\"{candidate.filename}\"}}"), mutex);
                     }
                     else {
-                        byte[] response = ComputeSnmpResponse(candidates[i].filename, rawLocal, rawRemote);
-                        await WsWriteText(ws, response);
+                        byte[] response = ComputeSnmpResponse(candidate.filename, rawLocal, rawRemote);
+                        WsWriteText(ws, response, mutex);
                     }
                 }
-            }
+                catch (Exception ex) {
+                    Logger.Error(ex);
+                }
+            });
+
+            await Task.WhenAll(tasks);
 
             await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
         }
