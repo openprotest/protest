@@ -1,6 +1,6 @@
 .topology-workspace {
 	position: absolute;
-	width: calc(100% - 316px);
+	width: calc(100% - 366px);
 	height: 100%;
 	background-color: var(--clr-bg);
 	overflow: auto;
@@ -37,8 +37,9 @@
 	box-sizing: border-box;
 	background-color: var(--clr-control);
 	min-height: 24px;
-	padding: 2px 4px;
+	padding: 2px 0;
 	margin: 2px 0;
+	color: #000;
 	font-size: small;
 	text-align: center;
 	overflow: hidden;
@@ -48,7 +49,7 @@
 }
 
 .topology-interface-list > div > div:nth-child(1) {
-	width: 30%;
+	width: 25%;
 	margin-right: 4px;
 	border-radius: 4px;
 }
@@ -59,19 +60,19 @@
 	background-color: var(--clr-control);
 	width: 12px;
 	height: 4px;
-	left: 30%;
+	left: 25%;
 	transform: translateY(8px);
 }
 
 .topology-interface-list > div > div:nth-child(2) {
-	width: calc(40% - 12px);
+	width: calc(50% - 12px);
 	margin-left: 4px;
 	margin-right: 2px;
 	border-radius: 4px 0 0 4px;
 }
 
 .topology-interface-list > div > div:nth-child(3) {
-	width: calc(30% - 2px);
+	width: calc(25% - 2px);
 	border-radius: 0 4px 4px 0;
 }
 
