@@ -28,6 +28,34 @@
 	-webkit-user-select: text; user-select: text;
 }
 
+.topology-error-message {
+	text-align: center;
+	font-size: bold;
+	color: var(--clr-light) !important;
+	background-color: var(--clr-dark);
+	border-radius: 4px;
+	line-height: 24px;
+}
+
+.topology-error-message::before {
+	position: absolute;
+	width: 12px;
+	height: 12px;
+	content: "";
+	left: 16px;
+	transform: translateY(6px);
+	border-radius: 6px;
+}
+
+.topology-error-message[nosnmp]::before {
+	background-color: var(--clr-error);
+	animation: blink 2s infinite;
+}
+
+.topology-error-message[undocumented]::before {
+	background-color: rgb(32,112,166);
+}
+
 .topology-interface-list {
 	margin-top: 16px;
 }
@@ -45,7 +73,7 @@
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
-	-webkit-user-select: text; user-select: text;
+	-webkit-user-select: all; user-select: all;
 }
 
 .topology-interface-list > div > div:nth-child(1) {
