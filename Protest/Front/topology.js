@@ -261,6 +261,7 @@ class Topology extends Window {
 		switchLabel.style.backgroundSize = "24px";
 		switchLabel.style.backgroundRepeat = "no-repeat";
 		switchInput.checked = true;
+		switchInput.disabled = true;
 
 		const [routerLabel, routerInput] = AddParameter("Routers", "input", "toggle");
 		routerLabel.style.lineHeight = "24px";
@@ -269,6 +270,7 @@ class Topology extends Window {
 		routerLabel.style.backgroundSize = "24px";
 		routerLabel.style.backgroundRepeat = "no-repeat";
 		routerInput.checked = true;
+		routerInput.disabled = true;
 
 		const [firewallLabel, firewallInput] = AddParameter("Firewalls", "input", "toggle");
 		firewallLabel.style.lineHeight = "24px";
@@ -277,6 +279,7 @@ class Topology extends Window {
 		firewallLabel.style.backgroundSize = "24px";
 		firewallLabel.style.backgroundRepeat = "no-repeat";
 		firewallInput.checked = true;
+		firewallInput.disabled = true;
 
 		const [endpointLabel, endpointInput] = AddParameter("End-point Host", "input", "toggle");
 		endpointLabel.style.lineHeight = "24px";
@@ -397,10 +400,12 @@ class Topology extends Window {
 		this.svg.appendChild(g);
 
 		const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+		rect.setAttribute("x", 2);
+		rect.setAttribute("y", 2);
 		rect.setAttribute("rx", 16);
 		rect.setAttribute("ry", 16);
-		rect.setAttribute("width", 96);
-		rect.setAttribute("height", 96);
+		rect.setAttribute("width", 92);
+		rect.setAttribute("height", 92);
 		rect.setAttribute("fill", "transparent");
 		g.appendChild(rect);
 
@@ -486,7 +491,7 @@ class Topology extends Window {
 		const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
 		circle.setAttribute("cx", 24);
 		circle.setAttribute("cy", 24);
-		circle.setAttribute("r", 24);
+		circle.setAttribute("r", 23);
 		circle.setAttribute("fill", "transparent");
 		g.appendChild(circle);
 
@@ -531,16 +536,11 @@ class Topology extends Window {
 
 	CreateEndPointElement(parentDevice, file) {
 		const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-		dot.setAttribute("cx", 0);
-		dot.setAttribute("cy", 0);
-		dot.setAttribute("r", 3);
+		dot.setAttribute("cx", 96);
+		dot.setAttribute("cy", 12);
+		dot.setAttribute("r", 2);
 		dot.setAttribute("fill", "#c0c0c0");
 		parentDevice.element.root.appendChild(dot);
-
-		dot.addEventListener("mousedown", event=> {
-			//event.stopPropagation();
-			//this.SelectDevice(file);
-		});
 
 		return {
 			dot : dot,
@@ -857,7 +857,6 @@ class Topology extends Window {
 		const newEndpointElement = this.CreateEndPointElement(device, remoteFile);
 
 		const remoteDevice = {
-			undocumented: true,
 			isEndpoint  : true,
 			element     : newEndpointElement,
 			initial: {
@@ -1140,34 +1139,40 @@ class Topology extends Window {
 		const linkKey = device.links[i]?.linkKey ?? null;
 
 		interfaceBox.onmouseenter = ()=> {
-			if (!this.links[linkKey]) return;
-			if (this.links[linkKey].isEndpoint) {
-				this.links[linkKey].dot.setAttribute("fill", "var(--clr-accent)");
-				this.links[linkKey].dot.setAttribute("r", 5);
+			const e = this.links[linkKey];
+			if (!e) return;
+			if (e.isEndpoint) {
+				e.dot.setAttribute("fill", "var(--clr-accent)");
+				e.dot.setAttribute("r", 5);
+				device.element.root.appendChild(e.dot);
 			}
 			else {
-				this.links[linkKey].element.setAttribute("stroke", "var(--clr-accent)");
-				this.links[linkKey].element.setAttribute("stroke-width", 5);
-				this.links[linkKey].capElementA.setAttribute("r", 5);
-				this.links[linkKey].capElementA.setAttribute("fill", "var(--clr-accent)");
-				this.links[linkKey].capElementB.setAttribute("r", 5);
-				this.links[linkKey].capElementB.setAttribute("fill", "var(--clr-accent)");
+				e.element.setAttribute("stroke", "var(--clr-accent)");
+				e.element.setAttribute("stroke-width", 5);
+				e.capElementA.setAttribute("r", 5);
+				e.capElementA.setAttribute("fill", "var(--clr-accent)");
+				e.capElementB.setAttribute("r", 5);
+				e.capElementB.setAttribute("fill", "var(--clr-accent)");
+				this.linksGroup.appendChild(e.element);
+				this.linksGroup.appendChild(e.capElementA);
+				this.linksGroup.appendChild(e.capElementB);
 			}
 		};
 
 		interfaceBox.onmouseleave = ()=> {
-			if (!this.links[linkKey]) return;
-			if (this.links[linkKey].isEndpoint) {
-				this.links[linkKey].dot.setAttribute("fill", "#c0c0c0");
-				this.links[linkKey].dot.setAttribute("r", 3);
+			const e = this.links[linkKey];
+			if (!e) return;
+			if (e.isEndpoint) {
+				e.dot.setAttribute("fill", "#c0c0c0");
+				e.dot.setAttribute("r", 2);
 			}
 			else {
-				this.links[linkKey].element.setAttribute("stroke", "#c0c0c0");
-				this.links[linkKey].element.setAttribute("stroke-width", 3);
-				this.links[linkKey].capElementA.setAttribute("r", 3);
-				this.links[linkKey].capElementA.setAttribute("fill", "#c0c0c0");
-				this.links[linkKey].capElementB.setAttribute("r", 3);
-				this.links[linkKey].capElementB.setAttribute("fill", "#c0c0c0");
+				e.element.setAttribute("stroke", "#c0c0c0");
+				e.element.setAttribute("stroke-width", 3);
+				e.capElementA.setAttribute("r", 3);
+				e.capElementA.setAttribute("fill", "#c0c0c0");
+				e.capElementB.setAttribute("r", 3);
+				e.capElementB.setAttribute("fill", "#c0c0c0");
 			}
 		};
 
