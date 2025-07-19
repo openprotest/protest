@@ -633,7 +633,7 @@ class Topology extends Window {
 
 			link = {
 				remoteDevice: remoteDevice,
-				remotePort: -1
+				remotePortIndex: -1
 			};
 
 			for (let i=0; i<remoteInfo.length; i++) {
@@ -654,7 +654,6 @@ class Topology extends Window {
 
 	LinkDevices(deviceA, portA, deviceB, link) {
 		const linkElement = this.CreateLinkElement(deviceA, -1, deviceB, -1);
-
 		const remotePortName = this.ComputePortName(deviceA, portA, deviceB);
 
 		deviceA.links[portA] = {
@@ -662,7 +661,7 @@ class Topology extends Window {
 			device    : deviceB.initial.file,
 			localPort : deviceA.lldp.localPortName[portA],
 			remotePort: remotePortName,
-			portIndex : link?.remotePort ?? -1
+			portIndex : link?.remotePortIndex ?? -1
 		};
 
 		if (!link.remoteDevice.lldp) { //handle links if remote device is unmanaged
@@ -694,7 +693,7 @@ class Topology extends Window {
 			device    : endpoint.initial.file,
 			localPort : device.lldp.localPortName[port],
 			remotePort: remotePortName,
-			portIndex : link?.remotePort ?? -1
+			portIndex : link?.remotePortIndex ?? -1
 		};
 
 		const element = {
@@ -769,7 +768,6 @@ class Topology extends Window {
 	}
 
 	GetNeighborLink(device, port, i) {
-
 		for (const file in this.devices) {
 			const remoteDevice = this.devices[file];
 			if (!remoteDevice.lldp) continue;
@@ -777,8 +775,8 @@ class Topology extends Window {
 			if (remoteDevice.lldp.localChassisIdSubtype, device.lldp.remoteChassisIdSubtype[port][i]
 				&& remoteDevice.lldp.localChassisId === device.lldp.remoteChassisId[port][i]) {
 				return {
-					remoteDevice: remoteDevice,
-					remotePort  : this.GetPortIndex(device, remoteDevice, port)
+					remoteDevice   : remoteDevice,
+					remotePortIndex: this.GetPortIndex(device, remoteDevice, port)
 				};
 			}
 		}
@@ -792,11 +790,13 @@ class Topology extends Window {
 				const remoteDevice = this.devices[file];
 				if (remoteDevice.initial.hostname === remoteHostname) {
 					return {
-						remoteDevice: remoteDevice,
-						remotePort  : this.GetPortIndex(device, remoteDevice, port),
+						remoteDevice   : remoteDevice,
+						remotePortIndex: this.GetPortIndex(device, remoteDevice, port),
 					};
 				}
 			}
+
+			//const remoteFileB = this.GetNeighborLinkOnDatabase(device, port, i);
 
 			let remoteFile = Object.entries(LOADER.devices.data)
 				.find(([file, data]) => (data.hostname?.v || null) === remoteHostname)?.[0];
@@ -827,8 +827,8 @@ class Topology extends Window {
 			this.devices[remoteFile] = remoteDevice;
 
 			return {
-				remoteDevice: remoteDevice,
-				remotePort  : this.GetPortIndex(device, remoteDevice, port),
+				remoteDevice   : remoteDevice,
+				remotePortIndex: this.GetPortIndex(device, remoteDevice, port),
 			};
 		}
 		else {
@@ -869,8 +869,8 @@ class Topology extends Window {
 		this.devices[remoteFile] = remoteDevice;
 
 		return {
-			remoteDevice: remoteDevice,
-			remotePort  : this.GetPortIndex(device, remoteDevice, port),
+			remoteDevice   : remoteDevice,
+			remotePortIndex: this.GetPortIndex(device, remoteDevice, port),
 		};
 	}
 
@@ -928,6 +928,11 @@ class Topology extends Window {
 				if (match(file, "ip address", portId)) return file;
 			}
 			break;
+		}
+
+		const sysName = device.lldp.remoteSystemName[port][i];
+		for (const file in LOADER.devices.data) {
+			if (match(file, "hostname", sysName)) return file;
 		}
 
 		return null;
