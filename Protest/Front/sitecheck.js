@@ -107,6 +107,9 @@ class SiteCheck extends Window {
 
 			this.targetInput.disabled = true;
 			this.checkButton.disabled = true;
+			this.v1Input.disabled = true;
+			this.v2Input.disabled = true;
+			this.v3Input.disabled = true;
 			this.spinner.style.visibility = "visible";
 			this.Check();
 		};
@@ -145,6 +148,9 @@ class SiteCheck extends Window {
 		this.ws.onclose = ()=> {
 			this.targetInput.disabled = false;
 			this.checkButton.disabled = false;
+			this.v1Input.disabled = false;
+			this.v2Input.disabled = false;
+			this.v3Input.disabled = false;
 			this.spinner.style.visibility = "hidden";
 		};
 
@@ -190,7 +196,7 @@ class SiteCheck extends Window {
 		container.appendChild(content);
 
 		if (json.status === "pass") {
-			for (let i = 0; i < json.result.length; i++) {
+			for (let i=0; i<json.result.length; i++) {
 				let line = document.createElement("div");
 				line.style.overflow = "hidden";
 				line.style.textOverflow = "ellipsis";
