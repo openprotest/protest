@@ -71,21 +71,21 @@ class SiteCheck extends Window {
 		this.result = document.createElement("div");
 		this.result.style.textAlign = "left";
 		this.result.style.width = "100%";
-		this.result.style.padding = "8px";
+		this.result.style.padding = "0 max(15%, 40px)";
+		this.result.style.paddingTop = "16px";
 		this.result.style.boxSizing = "border-box";
 		this.result.style.overflowX = "hidden";
-		this.result.style.userSelect = "text";
 		this.content.appendChild(this.result);
 
 		this.spinner = document.createElement("div");
 		this.spinner.className = "spinner";
 		this.spinner.style.textAlign = "left";
 		this.spinner.style.marginBottom = "32px";
-		this.spinner.style.visibility = "hidden";
+		this.spinner.style.display = "none";
 		this.content.appendChild(this.spinner);
 		this.spinner.appendChild(document.createElement("div"));
 
-		this.ws = null; //websocket
+		this.ws = null;
 
 		this.targetInput.onkeydown = event=> {
 			if (event.key === "Enter") this.checkButton.onclick();
@@ -110,7 +110,7 @@ class SiteCheck extends Window {
 			this.v1Input.disabled = true;
 			this.v2Input.disabled = true;
 			this.v3Input.disabled = true;
-			this.spinner.style.visibility = "visible";
+			this.spinner.style.display = "block";
 			this.Check();
 		};
 
@@ -151,7 +151,7 @@ class SiteCheck extends Window {
 			this.v1Input.disabled = false;
 			this.v2Input.disabled = false;
 			this.v3Input.disabled = false;
-			this.spinner.style.visibility = "hidden";
+			this.spinner.style.display = "none";
 		};
 
 		this.ws.onerror = err=> {
@@ -168,11 +168,13 @@ class SiteCheck extends Window {
 
 	CreateResultBox(json) {
 		const container = document.createElement("div");
+		container.style.position = "relative";
 		container.style.backgroundColor = "var(--clr-pane)";
 		container.style.color = "#202020";
 		container.style.margin = "8px 0";
 		container.style.padding = "4px 8px";
 		container.style.borderRadius = "2px";
+		container.style.overflow = "hidden";
 		this.result.appendChild(container);
 
 		const dot = document.createElement("div");
@@ -192,10 +194,26 @@ class SiteCheck extends Window {
 		title.textContent = json.title;
 		container.appendChild(title);
 
+		const toggleButton = document.createElement("div");
+		toggleButton.style.position = "absolute";
+		toggleButton.style.width = "16px";
+		toggleButton.style.height = "16px";
+		toggleButton.style.right = "8px";
+		toggleButton.style.top = "6px";
+		toggleButton.style.backgroundImage = "url(mono/guitarpick.svg)";
+		toggleButton.style.backgroundSize = "16px 16px";
+		toggleButton.style.	transition = ".2s";
+		container.appendChild(toggleButton);
+
 		const content = document.createElement("div");
+		content.style.userSelect = "text";
+		content.style.paddingTop = "4px";
 		container.appendChild(content);
 
+		let expanded = false;
+
 		if (json.status === "pass") {
+			expanded = false;
 			for (let i=0; i<json.result.length; i++) {
 				let line = document.createElement("div");
 				line.style.overflow = "hidden";
@@ -206,9 +224,22 @@ class SiteCheck extends Window {
 			}
 		}
 		else {
+			expanded = true;
 			const error = document.createElement("div");
 			error.textContent = json.error;
 			content.appendChild(error);
 		}
+
+		content.style.display = expanded ? "block" : "none";
+		toggleButton.style.transform = !expanded ? "rotate(90deg)" : "none";
+
+		let toggle = expanded;
+		container.onclick = ()=> {
+			toggle = !toggle;
+			content.style.display = toggle ? "block" : "none";
+			toggleButton.style.transform = !toggle ? "rotate(90deg)" : "none";
+		};
+
+		content.onclick = event => event.stopPropagation();
 	}
 }

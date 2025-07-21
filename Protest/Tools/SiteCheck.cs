@@ -1,10 +1,6 @@
-﻿using Microsoft.Extensions.Options;
-using Protest.Http;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Diagnostics.Metrics;
-using System.DirectoryServices.ActiveDirectory;
 using System.Net;
 using System.Net.Http;
 using System.Net.Security;
@@ -15,6 +11,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using Protest.Http;
 
 namespace Protest.Tools;
 
@@ -151,13 +148,12 @@ internal static class SiteCheck {
     private static async Task DnsCheck(WebSocket ws, string domain, Lock mutex) {
         try {
             StringBuilder result = new StringBuilder();
-            result.Append("{\"title\":\"DNS resolve\",");
+            result.Append("{\"title\":\"DNS\",");
 
             result.Append($"\"result\":[");
             IPAddress[] ips = System.Net.Dns.GetHostAddresses(domain);
             for (int i = 0; i < ips.Length; i++) {
-                if (i > 0)
-                    result.Append(',');
+                if (i > 0) result.Append(',');
                 result.Append($"\"{ips[i].ToString()}\"");
             }
             result.Append("],");
@@ -168,17 +164,16 @@ internal static class SiteCheck {
             WsWriteText(ws, result.ToString(), mutex);
         }
         catch (Exception ex) {
-            string fail = $"{{\"title\":\"DNS resolve\",\"status\":\"failed\",\"error\":\"{Data.EscapeJsonText(ex.Message)}\"}}";
+            string fail = $"{{\"title\":\"DNS\",\"status\":\"failed\",\"error\":\"{Data.EscapeJsonText(ex.Message)}\"}}";
             WsWriteText(ws, fail, mutex);
             await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, null, CancellationToken.None);
-            return;
         }
     }
 
     private static async Task TcpCheck(WebSocket ws , string domain, int port, Lock mutex) {
         try {
             StringBuilder result = new StringBuilder();
-            result.Append("{\"title\":\"TCP connection\",");
+            result.Append("{\"title\":\"TCP\",");
 
             using TcpClient client = new TcpClient();
             await client.ConnectAsync(domain, port);
@@ -191,16 +186,14 @@ internal static class SiteCheck {
             WsWriteText(ws, result.ToString(), mutex);
         }
         catch (SocketException ex) {
-            string fail = $"{{\"title\":\"TCP connection\",\"status\":\"failed\",\"error\":\"{Data.EscapeJsonText(ex.SocketErrorCode.ToString())}\"}}";
+            string fail = $"{{\"title\":\"TCP\",\"status\":\"failed\",\"error\":\"{Data.EscapeJsonText(ex.SocketErrorCode.ToString())}\"}}";
             WsWriteText(ws, fail, mutex);
             await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, null, CancellationToken.None);
-            return;
         }
         catch (Exception ex) {
-            string fail = $"{{\"title\":\"TCP connection\",\"status\":\"failed\",\"error\":\"{Data.EscapeJsonText(ex.Message)}\"}}";
+            string fail = $"{{\"title\":\"TCP\",\"status\":\"failed\",\"error\":\"{Data.EscapeJsonText(ex.Message)}\"}}";
             WsWriteText(ws, fail, mutex);
             await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, null, CancellationToken.None);
-            return;
         }
     }
 
@@ -211,10 +204,9 @@ internal static class SiteCheck {
 
                 using HttpClientHandler handler = new HttpClientHandler();
                 handler.ServerCertificateCustomValidationCallback = (HttpRequestMessage request, X509Certificate2 cert, X509Chain chain, SslPolicyErrors errors) => {
-                    if (result.Length > 0)
-                        return errors == SslPolicyErrors.None;
+                    if (result.Length > 0) return errors == SslPolicyErrors.None;
 
-                    result.Append("{\"title\":\"TLS validation\",");
+                    result.Append("{\"title\":\"TLS\",");
 
                     result.Append($"\"result\":[");
 
@@ -243,8 +235,12 @@ internal static class SiteCheck {
                 }
             }
         }
+        catch (Exception ex) when (ex.HResult == -2146233087) {
+            string fail = "{\"title\":\"TLS\",\"status\":\"failed\",\"error\":\"The remote certificate was rejected\"}";
+            WsWriteText(ws, fail, mutex);
+        }
         catch (Exception ex) {
-            string fail = $"{{\"title\":\"TLS validation\",\"status\":\"failed\",\"error\":\"{Data.EscapeJsonText(ex?.InnerException?.Message ?? "Unknown error")}\"}}";
+            string fail = $"{{\"title\":\"TLS\",\"status\":\"failed\",\"error\":\"{Data.EscapeJsonText(ex?.InnerException?.Message ?? "Unknown error")}\"}}";
             WsWriteText(ws, fail, mutex);
         }
     }
@@ -275,7 +271,7 @@ internal static class SiteCheck {
             resultList.AddRange(response.Headers.Select(h => $"{h.Key}: {string.Join(", ", h.Value)}"));
 
             StringBuilder result = new StringBuilder();
-            result.Append($"{{\"title\":\"HTTP {version} response\",");
+            result.Append($"{{\"title\":\"HTTP {version}\",");
 
             result.Append($"\"result\":[");
             result.Append($"\"HTTP/{response.Version} {(int)response.StatusCode} {response.StatusCode}\"");
@@ -293,11 +289,11 @@ internal static class SiteCheck {
             WsWriteText(ws, result.ToString(), mutex);
         }
         catch (HttpRequestException) {
-            string fail = $"{{\"title\":\"HTTP {version} response\",\"status\":\"failed\",\"error\":\"HTTP request failed\"}}";
+            string fail = $"{{\"title\":\"HTTP {version}\",\"status\":\"failed\",\"error\":\"HTTP request failed\"}}";
             WsWriteText(ws, fail, mutex);
         }
         catch (Exception ex) {
-            string fail = $"{{\"title\":\"HTTP {version} response\",\"status\":\"failed\",\"error\":\"{Data.EscapeJsonText(ex.Message)}\"}}";
+            string fail = $"{{\"title\":\"HTTP {version}\",\"status\":\"failed\",\"error\":\"{Data.EscapeJsonText(ex.Message)}\"}}";
             WsWriteText(ws, fail, mutex);
         }
     }
