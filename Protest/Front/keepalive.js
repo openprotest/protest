@@ -9,6 +9,7 @@ const KEEP = {
 	reconnectCount: 0,
 	redDot: document.createElement("div"),
 	sessionTtlMapping: { 1:1, 2:2, 3:3, 4:4, 5:5, 6:6, 7:7, 8:14, 9:21, 10:28, 11:60, 12:90 },
+	ipv4Regex: /^(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)(?:\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)){3}$/gm,
 
 	Initialize: ()=> {
 		let server = window.location.href.replace("https://", "").replace("http://", "");
@@ -113,6 +114,13 @@ const KEEP = {
 		else {
 			return {};
 		}
+	},
+
+	MatchZone: ip=>{
+		if (!ip.match(KEEP.ipv4Regex)) return null;
+		const split = ip.split(".").map(o=>parseInt(o));
+		const n = split[0]*256*256*256 + split[1]*256*256 + split[2]*256 + split[3];
+		return KEEP.zones.find(o => n >= o.first && n <= o.last)?.color;
 	},
 
 	MessageHandler: message=> {

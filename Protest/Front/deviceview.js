@@ -40,7 +40,6 @@ class DeviceView extends View {
 
 	static PRINTER_TYPES = ["fax", "multiprinter", "ticket printer", "printer"];
 	static SWITCH_TYPES = ["switch", "router", "firewall"];
-	static IPv4_REGEX = /^(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)(?:\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)){3}$/gm;
 
 	constructor(args) {
 		super();
@@ -366,14 +365,8 @@ class DeviceView extends View {
 		let ips = this.link.ip.v.split(";").map(o=>o.trim());
 
 		for (let i=0; i<ips.length; i++) {
-			if (!ips[i].match(DeviceView.IPv4_REGEX)) continue;
-			let split = ips[i].split(".").map(o=>parseInt(o));
-			let n = split[0]*256*256*256 + split[1]*256*256 + split[2]*256 + split[3];
-
-			for (let j=0; j<KEEP.zones.length; j++) {
-				if (n < KEEP.zones[j].first || n > KEEP.zones[j].last) continue;
-				colors.push(KEEP.zones[j].color);
-			}
+			const match = KEEP.MatchZone(ips[i]);
+			if (match) colors.push(match);
 		}
 
 		if (colors.length === 0) { return; }
