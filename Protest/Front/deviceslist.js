@@ -176,6 +176,21 @@ class DevicesList extends List {
 
 		super.InflateElement(element, entry, type);
 
+		if (entry.ip) {
+			const split = entry.ip.v.split(";").map(o=>o.trim());
+			for (let i=0; i<split.length; i++) {
+				const match = KEEP.MatchZone(split[i]);
+				if (!match) continue;
+				
+				const emblem = document.createElement("div");
+				emblem.style.backgroundColor = match;
+				emblem.className = "list-element-emblem";
+				icon.appendChild(emblem);
+
+				break;
+			}
+		}
+
 		if (!element.ondblclick) {
 			element.ondblclick = event=> {
 				event.stopPropagation();

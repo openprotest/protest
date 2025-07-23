@@ -369,7 +369,7 @@ class DeviceView extends View {
 			if (match) colors.push(match);
 		}
 
-		if (colors.length === 0) { return; }
+		if (colors.length === 0) return;
 
 		let gradient = "linear-gradient(";
 		for (let i=0; i<colors.length; i++) {
@@ -1504,7 +1504,7 @@ class DeviceView extends View {
 				if (this.task.childNodes.length < 5) {
 					dot = document.createElement("div");
 					dot.className = "task-icon-dots";
-					dot.style.left = `${1 + dotPingCounter*13}px`;
+					dot.style.right = `${1 + dotPingCounter*13}px`;
 					dot.style.borderBottomColor = UI.PingColor(json.echoReply);
 					this.task.appendChild(dot);
 

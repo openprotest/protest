@@ -16,7 +16,7 @@
 	position: absolute;
 	left: 0;
 	right: 0;
-	top: 0px;
+	top: 0;
 	height: 30px;
 
 	border-radius: 4px 4px 0 0;
@@ -111,6 +111,16 @@
 	width: 28px;
 	height: 28px;
 	background-size: contain;
+	overflow: hidden;
+}
+
+.list-element-emblem {
+	position: absolute;
+	top: 0;
+	right: 0;
+	width: 20px;
+	height: 4px;
+	transform: rotate(-45deg) translate(-12px, -10px);
 }
 
 .list-element > div:not(:first-child) {
@@ -160,7 +170,7 @@
 	bottom: 3px;
 	color: var(--clr-pane);
 	font-weight: 600;
-	padding: 0px 8px;
+	padding: 0 8px;
 	border: 1px solid var(--clr-pane);
 	border-radius: 2px;
 }
@@ -175,7 +185,7 @@
 	border-radius: 50%;
 	border-style: solid;
 	border-color: var(--clr-pane) var(--clr-pane) transparent transparent;
-	border-width: 2px 3px 3px 0px;
+	border-width: 2px 3px 3px 0;
 	box-sizing: border-box;
 
 	animation: spin 1s linear infinite;
