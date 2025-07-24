@@ -338,6 +338,9 @@ class Topology extends Window {
 			if (json.initial) {
 				let count = 0;
 				for (let i=0; i<json.initial.length; i++) {
+
+					if (["__proto__", "constructor", "prototype"].includes(json.initial[i].file)) continue;
+
 					const element = this.CreateDeviceElement({
 						file: json.initial[i].file,
 						type: json.initial[i].type,
@@ -354,14 +357,14 @@ class Topology extends Window {
 					count++;
 				}
 			}
-			else if (json.retrieve) {
+			else if (json.retrieve && !["__proto__", "constructor", "prototype"].includes(json.retrieve)) {
 				const device = this.devices[json.retrieve];
 				if (device) {
 					device.element.spinner.style.visibility = "visible";
 					device.element.spinner.style.opacity = "1";
 				}
 			}
-			else if (json.nolldp) {
+			else if (json.nolldp && !["__proto__", "constructor", "prototype"].includes(json.nolldp)) {
 				const device = this.devices[json.nolldp];
 				if (device) {
 					device.nolldp = true;
@@ -599,7 +602,7 @@ class Topology extends Window {
 		for (const file in this.devices) {
 			const device = this.devices[file];
 			if (!device.lldp) continue;
-			
+
 			device.links = {};
 
 			for (const port in device.lldp.remoteChassisIdSubtype) {
