@@ -1,8 +1,9 @@
 class Topology extends Window {
 	static DEVICE_ICON = {
-		"switch"  : "mono/switch.svg",
-		"router"  : "mono/router.svg",
 		"firewall": "mono/firewall.svg",
+		"router"  : "mono/router.svg",
+		"switch"  : "mono/switch.svg",
+		"ap"      : "mono/accesspoint.svg",
 	};
 
 	constructor(args) {
@@ -238,7 +239,7 @@ class Topology extends Window {
 	}
 
 	StartDialog() {
-		const dialog = this.DialogBox("280px");
+		const dialog = this.DialogBox("320px");
 		if (dialog === null) return;
 
 		const {okButton, innerBox} = dialog;
@@ -249,8 +250,8 @@ class Topology extends Window {
 
 		innerBox.style.padding = "16px 32px";
 		innerBox.style.display = "grid";
-		innerBox.style.gridTemplateColumns = "auto 150px 50px auto auto";
-		innerBox.style.gridTemplateRows = "repeat(5, 34px)";
+		innerBox.style.gridTemplateColumns = "auto 200px 50px auto auto";
+		innerBox.style.gridTemplateRows = "repeat(6, 34px)";
 		innerBox.style.alignItems = "center";
 
 		let counter = 0;
@@ -293,14 +294,14 @@ class Topology extends Window {
 		labelInclude.style.gridArea = `${++counter} / 2`;
 		innerBox.append(labelInclude);
 
-		const [switchLabel, switchInput] = AddParameter("Switches", "input", "toggle");
-		switchLabel.style.lineHeight = "24px";
-		switchLabel.style.paddingLeft = "28px";
-		switchLabel.style.backgroundImage = "url(mono/switch.svg)";
-		switchLabel.style.backgroundSize = "24px";
-		switchLabel.style.backgroundRepeat = "no-repeat";
-		switchInput.checked = true;
-		switchInput.disabled = true;
+		const [firewallLabel, firewallInput] = AddParameter("Firewalls", "input", "toggle");
+		firewallLabel.style.lineHeight = "24px";
+		firewallLabel.style.paddingLeft = "28px";
+		firewallLabel.style.backgroundImage = "url(mono/firewall.svg)";
+		firewallLabel.style.backgroundSize = "24px";
+		firewallLabel.style.backgroundRepeat = "no-repeat";
+		firewallInput.checked = true;
+		firewallInput.disabled = true;
 
 		const [routerLabel, routerInput] = AddParameter("Routers", "input", "toggle");
 		routerLabel.style.lineHeight = "24px";
@@ -311,16 +312,25 @@ class Topology extends Window {
 		routerInput.checked = true;
 		routerInput.disabled = true;
 
-		const [firewallLabel, firewallInput] = AddParameter("Firewalls", "input", "toggle");
-		firewallLabel.style.lineHeight = "24px";
-		firewallLabel.style.paddingLeft = "28px";
-		firewallLabel.style.backgroundImage = "url(mono/firewall.svg)";
-		firewallLabel.style.backgroundSize = "24px";
-		firewallLabel.style.backgroundRepeat = "no-repeat";
-		firewallInput.checked = true;
-		firewallInput.disabled = true;
+		const [switchLabel, switchInput] = AddParameter("Switches", "input", "toggle");
+		switchLabel.style.lineHeight = "24px";
+		switchLabel.style.paddingLeft = "28px";
+		switchLabel.style.backgroundImage = "url(mono/switch.svg)";
+		switchLabel.style.backgroundSize = "24px";
+		switchLabel.style.backgroundRepeat = "no-repeat";
+		switchInput.checked = true;
+		switchInput.disabled = true;
 
-		const [endpointLabel, endpointInput] = AddParameter("End-point Host", "input", "toggle");
+		const [apLabel, apInput] = AddParameter("Wireless access points", "input", "toggle");
+		apLabel.style.lineHeight = "24px";
+		apLabel.style.paddingLeft = "28px";
+		apLabel.style.backgroundImage = "url(mono/accesspoint.svg)";
+		apLabel.style.backgroundSize = "24px";
+		apLabel.style.backgroundRepeat = "no-repeat";
+		apInput.checked = true;
+		apInput.disabled = true;
+
+		const [endpointLabel, endpointInput] = AddParameter("End-point host", "input", "toggle");
 		endpointLabel.style.lineHeight = "24px";
 		endpointLabel.style.paddingLeft = "28px";
 		endpointLabel.style.backgroundImage = "url(mono/gear.svg)";
@@ -337,9 +347,10 @@ class Topology extends Window {
 			dialog.Close();
 
 			const devices = [];
-			if (switchInput.checked) devices.push("switch");
-			if (routerInput.checked) devices.push("router");
 			if (firewallInput.checked) devices.push("firewall");
+			if (routerInput.checked) devices.push("router");
+			if (switchInput.checked) devices.push("switch");
+			if (apInput.checked) devices.push("ap");
 			if (endpointInput.checked) devices.push("endpoint");
 			this.Connect(devices);
 		};
