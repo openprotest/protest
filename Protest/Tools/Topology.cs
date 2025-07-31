@@ -130,7 +130,7 @@ internal static class Topology {
                     IList<Variable> rawRemote = Polling.SnmpQuery(ipAddress, snmpProfile, [Oid.LLDP_REMOTE_SYS_DATA], Polling.SnmpOperation.Walk);
 
                     if (rawLocal is null || rawLocal.Count == 0 || rawRemote is null || rawRemote.Count == 0) {
-                        WsWriteText(ws, Encoding.UTF8.GetBytes($"{{\"nolldp\":\"{candidate.filename}\"}}"), mutex);
+                        WsWriteText(ws, Encoding.UTF8.GetBytes($"{{\"nosnmp\":\"{candidate.filename}\"}}"), mutex);
                     }
                     else {
                         byte[] response = ComputeSnmpResponse(candidate.filename, rawLocal, rawRemote);

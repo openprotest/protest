@@ -166,11 +166,11 @@
 }
 .menufilter-option:hover {
 	background-color: var(--clr-transparent);
-	border: var(--clr-transparent)  1px solid;
+	border: var(--clr-transparent) 1px solid;
 }
 .menufilter-option:active {
 	background-color: color-mix(in hsl shorter hue, var(--clr-transparent) 85%, rgba(0,0,0,.6));
-	border: var(--clr-transparent)  1px solid;
+	border: var(--clr-transparent) 1px solid;
 }
 
 #menufilterdot {

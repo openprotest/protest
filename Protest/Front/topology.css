@@ -2,8 +2,13 @@
 	position: absolute;
 	width: calc(100% - 366px);
 	height: 100%;
-	background-color: var(--clr-bg);
 	overflow: auto;
+}
+
+.topology-workspace > svg {
+	background-image: radial-gradient(rgb(96,96,96) 2px, transparent 0);
+	background-size: 50px 50px;
+	background-position: 23px 23px;
 }
 
 .topology-sidebar {
@@ -30,7 +35,7 @@
 
 .topology-error-message {
 	text-align: center;
-	font-size: bold;
+	font-weight: bold;
 	color: var(--clr-light) !important;
 	background-color: var(--clr-dark);
 	border-radius: 4px;
@@ -70,6 +75,7 @@
 	color: #000;
 	font-size: small;
 	text-align: center;
+	box-sizing: border-box;
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
@@ -88,7 +94,7 @@
 	background-color: var(--clr-control);
 	width: 12px;
 	height: 4px;
-	left: 25%;
+	left: 26%;
 	transform: translateY(8px);
 }
 
@@ -115,7 +121,63 @@
 	stroke-width: 2px;
 }
 
+.topology-info-box {
+	position: absolute;
+	right: 374px;
+	width: 200px;
+	min-height: 100px;
+	padding: 4px;
+	background-color: color-mix(in srgb, var(--clr-pane) 80%, transparent);
+	backdrop-filter: blur(8px) brightness(80%);
+	border: var(--clr-accent) solid 2px;
+	border-radius: 4px;
+	font-size: small;
+	color: #000;
+	transition: .2s;
+}
+
+.topology-info-box > div {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.topology-info-box::after {
+	position: absolute;
+	content: "";
+	border-top: 10px solid transparent;
+	border-bottom: 10px solid transparent;
+	border-left: 11px solid var(--clr-accent);
+	right: -12px;
+	top: 4px;
+	transition: .2s;
+}
+
+.topology-info-box-last::after {
+	top: unset;
+	bottom: 4px;
+}
+
+.topology-info-box-over-up::after {
+	border-top: 0 solid transparent;
+	border-bottom: 12px solid transparent;
+	border-left: 10px solid var(--clr-accent);
+}
+
+.topology-info-box-over-down::after {
+	top: unset;
+	bottom: 4px;
+	border-top: 12px solid transparent;
+	border-bottom: 0 solid transparent;
+	border-left: 10px solid var(--clr-accent);
+}
+
 @keyframes topology-spinner-animation {
 	0%  { stroke-dashoffset: 0px; }
 	100%{ stroke-dashoffset: -24.5px; }
+}
+
+@keyframes topology-device-animation {
+	0%   { opacity: 0; transform: translate(10px, 10px) scale(.6) }
+	100% { opacity: 1; transform: translate(0, 0) scale(1) }
 }

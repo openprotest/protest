@@ -181,7 +181,7 @@ class DevicesList extends List {
 			for (let i=0; i<split.length; i++) {
 				const match = KEEP.MatchZone(split[i]);
 				if (!match) continue;
-				
+
 				const emblem = document.createElement("div");
 				emblem.style.backgroundColor = match;
 				emblem.className = "list-element-emblem";
