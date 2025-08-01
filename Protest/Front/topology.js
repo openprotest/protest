@@ -380,8 +380,6 @@ class Topology extends Window {
 			this.stopButton.disabled = true;
 
 			this.SortBySnmp();
-
-			this.ComputeAllLinks();
 		};
 
 		this.ws.onmessage = event=> {
@@ -523,21 +521,27 @@ class Topology extends Window {
 	ComputeLldpNeighbors(device) {
 		const unmanagedSwitches = {};
 
+		const portCount = Object.keys(device.lldp.localPortId).length;
+
 		for (const port in device.lldp.remotePortId) {
 			const remotePortInfo = device.lldp.remotePortId[port];
 			if (!remotePortInfo || remotePortInfo.length === 0) continue;
 
 			if (remotePortInfo.length === 1) {
-
+				let match = this.MatchDevice(device, port, 0) || this.MatchDbEntry(device, port, 0);
+				if (match) {
+					const offset = 72 * port / portCount;
+					this.CreateEndPointElement(device, match.file, offset);
+				}
 			}
 			else { //multiple LLDP entries, treat as unmanaged switch
-
+				const matches = [];
 				for (let i=0; i<remotePortInfo.length; i++) {
-					const match = this.MatchDbEntry(device, port, i)
-					if (match) {
-
-					}
+					let match = this.MatchDevice(device, port, i) ||  this.MatchDbEntry(device, port, i);
+					matches.push(match);
 				}
+
+				const isSingle = matches[0] !== null && matches.every(o=> o === matches[0]);
 
 				unmanagedSwitches[port] = {
 					remoteChassisIdSubtype: device.lldp.remoteChassisIdSubtype[port],
@@ -608,10 +612,7 @@ class Topology extends Window {
 			const split = value.split(";").map(
 				o=>o.trim()
 				.toLowerCase()
-				.replaceAll(" ", "")
-				.replaceAll(":", "")
-				.replaceAll(".", "")
-				.replaceAll("-", "")
+				.replaceAll(" ", "").replaceAll(":", "").replaceAll(".", "").replaceAll("-", "")
 			);
 
 			return split.includes(string);
@@ -620,19 +621,19 @@ class Topology extends Window {
 		switch (chassisIdSubtype) {
 		case 4: //mac address
 			for (const file in LOADER.devices.data) {
-				if (match(file, "mac address", chassisId)) return file;
+				if (match(file, "mac address", chassisId)) return {file: file};
 			}
 			break;
 		
 		case 5: //network address
 			for (const file in LOADER.devices.data) {
-				if (match(file, "ip address", chassisId)) return file;
+				if (match(file, "ip address", chassisId)) return {file: file};
 			}
 			break;
 
 		case 7: //local
 			for (const file in LOADER.devices.data) {
-				if (match(file, "hostname", chassisId)) return file;
+				if (match(file, "hostname", chassisId)) return {file: file};
 			}
 			break;
 		}
@@ -640,20 +641,20 @@ class Topology extends Window {
 		switch (portIdSubtype) {
 		case 3: //mac address
 			for (const file in LOADER.devices.data) {
-				if (match(file, "mac address", portId)) return file;
+				if (match(file, "mac address", portId)) return {file: file};
 			}
 			break;
 		
 		case 4: //network address
 			for (const file in LOADER.devices.data) {
-				if (match(file, "ip address", portId)) return file;
+				if (match(file, "ip address", portId)) return {file: file};
 			}
 			break;
 		}
 
 		const sysName = device.lldp.remoteSystemName[port][i];
 		for (const file in LOADER.devices.data) {
-			if (match(file, "hostname", sysName)) return file;
+			if (match(file, "hostname", sysName)) return {file: file};
 		}
 
 		return null;
@@ -881,19 +882,17 @@ class Topology extends Window {
 		return element;
 	}
 
-	CreateEndPointElement(parentDevice, file) {
+	CreateEndPointElement(parentDevice, file, offset) {
 		const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
 		dot.setAttribute("cx", 96);
-		dot.setAttribute("cy", 12);
+		dot.setAttribute("cy", 12 + offset);
 		dot.setAttribute("r", 2);
 		dot.setAttribute("fill", "#c0c0c0");
 		parentDevice.element.root.appendChild(dot);
 
 		return {
 			dot : dot,
-			file: file,
-			x   : 0,
-			y   : 0
+			file: file
 		};
 	}
 
@@ -933,10 +932,6 @@ class Topology extends Window {
 		return entry;
 	}
 
-	ComputeAllLinks(device) {
-
-	}
-
 	GetPortName(device, port, remoteDevice) {
 		if (!device.lldp) return null;
 
@@ -966,6 +961,16 @@ class Topology extends Window {
 		}
 
 		return null;
+	}
+
+	GetPortIndex(localDevice, remoteDevice, port) {
+		if (!remoteDevice.lldp) return -1;
+
+		const remotePortId = localDevice.lldp.remotePortId[port];
+		if (!remotePortId || remotePortId.length === 0) return -1;
+
+		const portIndex = remoteDevice.lldp.localPortId.indexOf(remotePortId[0]);
+		return portIndex;
 	}
 
 	DrawPath(a, b) {

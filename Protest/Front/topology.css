@@ -6,9 +6,14 @@
 }
 
 .topology-workspace > svg {
-	background-image: radial-gradient(rgb(96,96,96) 2px, transparent 0);
+	/*background-image: radial-gradient(rgb(96,96,96) 2px, transparent 0);
 	background-size: 50px 50px;
-	background-position: 23px 23px;
+	background-position: 23px 23px;*/
+	
+	background-size: 50px 50px;
+	background-image:
+	linear-gradient(to right, transparent 48px, rgba(96,96,96,.5) 49px, transparent 50px),
+	linear-gradient(to bottom, transparent 48px, rgba(96,96,96,.5) 49px, transparent 50px);
 }
 
 .topology-sidebar {
