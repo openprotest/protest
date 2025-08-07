@@ -703,7 +703,7 @@ class Topology extends Window {
 			device        : fileB,
 			localPortName : portNameB,
 			remotePortName: portNameA
-		}
+		};
 
 		const entryB = {
 			key           : key,

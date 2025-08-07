@@ -9,7 +9,7 @@ class DevicesList extends List {
 			this.defaultColumns = args.columns;
 		}
 		else {
-			const localDefault = localStorage.getItem(`${this.constructor.name.toLowerCase()}_columns`)
+			const localDefault = localStorage.getItem(`${this.constructor.name.toLowerCase()}_columns`);
 			this.defaultColumns = localDefault
  				? JSON.parse(localDefault)
 				: ["name", "type", "ip", "hostname", "mac address", "serial number"];
