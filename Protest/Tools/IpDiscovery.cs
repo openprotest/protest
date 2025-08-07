@@ -485,7 +485,7 @@ internal static class IpDiscovery {
     }
 
     private static async Task<bool[]> PingArrayAsync(List<IPAddress> host, int timeout) {
-        List<Task<bool>> tasks = new List<Task<bool>>();
+        List<Task<bool>> tasks = new List<Task<bool>>(host.Count);
         for (int i = 0; i < host.Count; i++) tasks.Add(PingAsync(host[i], timeout));
         bool[] result = await Task.WhenAll(tasks);
         return result;

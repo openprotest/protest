@@ -341,7 +341,7 @@ internal static class Issues {
             return false;
         }
 
-        List<int> rttValues = new List<int>();
+        List<int> rttValues = new List<int>(lifeline.Length / 10);
 
         long lastTimestamp = 0;
         int lastRtt = 0;
@@ -414,7 +414,7 @@ internal static class Issues {
             return false;
         }
 
-        List<int> values = new List<int>();
+        List<int> values = new List<int>(lifeline.Length / 9);
 
         long lastTimestamp = 0;
         int lastValue = 0;
@@ -473,7 +473,7 @@ internal static class Issues {
             return false;
         }
 
-        List<int> values = new List<int>();
+        List<int> values = new List<int>(lifeline.Length / 24);
 
         long lastTimestamp = 0;
         int lastValue = 0;
@@ -652,7 +652,7 @@ internal static class Issues {
             return false;
         }
 
-        List<int> values = new List<int>();
+        List<int> values = new List<int>(lifeline.Length / 9);
 
         long lastTimestamp = 0;
         int lastValue = 0;

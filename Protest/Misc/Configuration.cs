@@ -21,7 +21,7 @@ internal static class Configuration {
     internal static bool Load() {
         if (!File.Exists(Data.FILE_CONFIG)) return false;
 
-        List<string> httpPrefixes = new List<string>();
+        List<string> httpPrefixes = new List<string>(1);
 
         using StreamReader fileReader = new StreamReader(Data.FILE_CONFIG);
         while (!fileReader.EndOfStream) {

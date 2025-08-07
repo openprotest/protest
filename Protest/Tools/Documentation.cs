@@ -122,14 +122,17 @@ internal static class Documentation {
             builder.Append($"\"{Data.EscapeJsonText(payload[i+2])}\",");
             builder.Append($"\"{Data.EscapeJsonText(payload[i+3])}\"");
 
-            if (!keywords.Contains(payload[i]))
+            if (!keywords.Contains(payload[i])) {
                 keywords.Add(payload[i]); //filename
+            }
 
-            if (!keywords.Contains(payload[i + 2]))
+            if (!keywords.Contains(payload[i + 2])) {
                 keywords.Add(payload[i + 2]); //label1
+            }
 
-            if (!keywords.Contains(payload[i + 3]))
+            if (!keywords.Contains(payload[i + 3])) {
                 keywords.Add(payload[i + 3]); //label2
+            }
         }
         builder.Append(']');
         builder.AppendLine("-->");

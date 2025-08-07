@@ -260,8 +260,6 @@ internal class Mdns {
             index += 4; //skip type, class amd null byte
         }
 
-        List<Answer> result = new List<Answer>();
-
         int totalRecords;
 
         if (additionalString) {
@@ -270,6 +268,8 @@ internal class Mdns {
         else {
             totalRecords = answerCount;
         }
+
+        List<Answer> result = new List<Answer>(totalRecords);
 
         for (int i = 0; i < totalRecords; i++) {
             if (index + 10 >= response.Length) break;

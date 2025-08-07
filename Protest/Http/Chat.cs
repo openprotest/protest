@@ -13,7 +13,7 @@ internal static class Chat {
         public string json;
     }
 
-    private static readonly List<Message> history = new List<Message>();
+    private static readonly List<Message> history = new List<Message>(32);
     private static readonly Lock mutex = new Lock();
 
     public static void TextHandler(ConcurrentDictionary<string, string> dictionary, string origin) {

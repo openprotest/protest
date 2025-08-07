@@ -67,17 +67,23 @@ internal static class DebitNotes {
 
         if (shortTerm) {
             DirectoryInfo dirShort = new DirectoryInfo(Data.DIR_DEBIT_SHORT);
-            if (dirShort.Exists) files.AddRange(dirShort.GetFiles());
+            if (dirShort.Exists) {
+                files.AddRange(dirShort.GetFiles());
+            }
         }
 
         if (longTerm) {
             DirectoryInfo dirLong = new DirectoryInfo(Data.DIR_DEBIT_LONG);
-            if (dirLong.Exists) files.AddRange(dirLong.GetFiles());
+            if (dirLong.Exists) {
+                files.AddRange(dirLong.GetFiles());
+            }
         }
 
         if (returned) {
             DirectoryInfo dirReturned = new DirectoryInfo(Data.DIR_DEBIT_RETURNED);
-            if (dirReturned.Exists) files.AddRange(dirReturned.GetFiles());
+            if (dirReturned.Exists) {
+                files.AddRange(dirReturned.GetFiles());
+            }
         }
 
         files.Sort((a, b) => String.Compare(b.Name, a.Name));

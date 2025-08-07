@@ -34,7 +34,7 @@ internal static class Icmp {
 
         string[] queryArray = query.Split(';');
 
-        List<Task<int>> tasks = new List<Task<int>>();
+        List<Task<int>> tasks = new List<Task<int>>(queryArray.Length);
         foreach (string host in queryArray) {
             tasks.Add(Task.Run(async ()=> {
                 using Ping p = new Ping();
@@ -181,7 +181,7 @@ internal static class Icmp {
         }
     }
     private static async Task<string> PingArrayAsync(string[] name, string[] id, int timeout) {
-        List<Task<string>> tasks = new List<Task<string>>();
+        List<Task<string>> tasks = new List<Task<string>>(name.Length);
         for (int i = 0; i < name.Length; i++) tasks.Add(PingAsync(name[i], id[i], timeout));
         string[] result = await Task.WhenAll(tasks);
         return String.Join((char)127, result);
@@ -215,7 +215,7 @@ internal static class Icmp {
     }
 
     private static async Task<string> ArpPingArrayAsync(string[] name, string[] id) {
-        List<Task<string>> tasks = new List<Task<string>>();
+        List<Task<string>> tasks = new List<Task<string>>(name.Length);
         for (int i = 0; i < name.Length; i++) tasks.Add(ArpPingAsync(name[i], id[i]));
         string[] result = await Task.WhenAll(tasks);
         return String.Join(((char)127).ToString(), result);

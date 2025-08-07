@@ -56,9 +56,11 @@ internal static class Ldap {
         if (result is null || result.Count == 0) return null;
 
         List<string> list = new List<string>();
-        foreach (SearchResult o in result)
-            if (o.Properties.Contains("userPrincipalName") && o.Properties["userPrincipalName"].Count > 0)
+        foreach (SearchResult o in result) {
+            if (o.Properties.Contains("userPrincipalName") && o.Properties["userPrincipalName"].Count > 0) {
                 list.Add(o.Properties["userPrincipalName"][0].ToString());
+            }
+        }
 
         return list.ToArray();
     }

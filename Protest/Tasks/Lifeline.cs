@@ -255,8 +255,8 @@ internal static partial class Lifeline {
         ulong memoryFree = 0, memoryTotal = 0;
 
         List<byte> diskCaption = new List<byte>();
-        List<ulong> diskFree = new List<ulong>();
-        List<ulong> diskTotal = new List<ulong>();
+        List<ulong> diskFree   = new List<ulong>();
+        List<ulong> diskTotal  = new List<ulong>();
 
         ManagementScope scope;
         try {

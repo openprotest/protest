@@ -451,7 +451,7 @@ internal sealed class Listener {
     }
 
     private static bool IsRateLimited(IPAddress clientIP) {
-        List<long> timestamps = rateLimLog.GetOrAdd(clientIP, _ => new List<long>());
+        List<long> timestamps = rateLimLog.GetOrAdd(clientIP, _ => new List<long>(5));
 
         long currentTime = DateTime.UtcNow.Ticks;
         for (int i = timestamps.Count - 1; i >= 0; i--) {

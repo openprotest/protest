@@ -57,7 +57,7 @@ internal static class Update {
 
         string[] parts = formData.Split(new[] { "--" + boundary }, StringSplitOptions.RemoveEmptyEntries);
 
-        List<List<IpEntry>> list = new List<List<IpEntry>>();
+        List<List<IpEntry>> list = new List<List<IpEntry>>(256);
         for (int i = 0; i < 256; i++) {
             list.Add(new List<IpEntry>());
         }
@@ -226,8 +226,8 @@ internal static class Update {
             using BinaryWriter writer = new BinaryWriter(stream);
 
             uint index = 0;
-            List<string> dictionary = new List<string>();
-            List<uint> position = new List<uint>();
+            List<string> dictionary = new List<string>(list.Count);
+            List<uint> position = new List<uint>(list.Count);
 
             uint dictStart = (uint)(4 + (2 + 2 + 2 + 4 + 4 + 4 + 4 + 4) * list[i].Count); //26
 
@@ -307,13 +307,14 @@ internal static class Update {
         Encoding encoding = request.ContentEncoding;
         using StreamReader reader = new StreamReader(body, encoding);
 
+        List<List<ProxyEntry>> list = new List<List<ProxyEntry>>(256);
+        for (int i = 0; i < 256; i++) {
+            list.Add(new List<ProxyEntry>());
+        }
+
         string formData = reader.ReadToEnd();
 
         string[] parts = formData.Split(new[] { "--" + boundary }, StringSplitOptions.RemoveEmptyEntries);
-
-        List<List<ProxyEntry>> list = new List<List<ProxyEntry>>();
-        for (int i = 0; i < 256; i++)
-            list.Add(new List<ProxyEntry>());
 
         foreach (string part in parts) {
             if (!part.Contains("Content-Disposition")) continue;

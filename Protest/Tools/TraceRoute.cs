@@ -93,7 +93,7 @@ internal static class TraceRoute {
                             }
                         }
 
-                    List<Task<string>> tasks = new List<Task<string>>();
+                    List<Task<string>> tasks = new List<Task<string>>(ipList.Count);
                     for (int j = 0; j < ipList.Count; j++) {
                         tasks.Add(Protocols.Dns.NativeReverseDnsLookupAsync(ipList[j]));
                     }

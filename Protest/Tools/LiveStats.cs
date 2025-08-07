@@ -136,7 +136,7 @@ internal static class LiveStats {
             string firstAlive = null;
             PingReply firstReply = null;
             if (pingArray.Length > 0) {
-                List<Task> pingTasks = new List<Task>();
+                List<Task> pingTasks = new List<Task>(pingArray.Length);
 
                 for (int i = 0; i < pingArray.Length; i++) {
                     int index = i;
@@ -543,13 +543,13 @@ internal static class LiveStats {
             }
         }
 
-        List<string> speedList    = new List<string>();
-        List<string> untaggedList = new List<string>();
-        List<string> taggedList   = new List<string>();
-        List<string> statusList   = new List<string>();
-        List<long>   dataList     = new List<long>();
-        List<int>    errorList    = new List<int>();
-        List<string> linkList     = new List<string>();
+        List<string> speedList    = new List<string>(typeDic.Count);
+        List<string> untaggedList = new List<string>(typeDic.Count);
+        List<string> taggedList   = new List<string>(typeDic.Count);
+        List<string> statusList   = new List<string>(typeDic.Count);
+        List<long>   dataList     = new List<long>(typeDic.Count);
+        List<int>    errorList    = new List<int>(typeDic.Count);
+        List<string> linkList     = new List<string>(typeDic.Count);
 
         foreach (KeyValuePair<int, string> pair in typeDic) {
             if (pair.Value != "6") continue; //physical ports only

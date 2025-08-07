@@ -73,9 +73,7 @@ internal class Ssdp {
         List<SsdpDevice> devices = new List<SsdpDevice>();
 
         foreach (IPAddress localAddress in nics) {
-            if (token.IsCancellationRequested) {
-                break;
-            }
+            if (token.IsCancellationRequested) break;
 
             using Socket socket = CreateAndBindSocket(localAddress, timeout, out IPEndPoint remoteEndPoint);
             if (socket == null) continue;

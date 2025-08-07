@@ -429,7 +429,7 @@ internal static class Monitor {
 
         if (result is null || result.Count == 0) return;
 
-        Dictionary<string, List<string>> data = new Dictionary<string, List<string>>() {{ "value", new List<string>() }};
+        Dictionary<string, List<string>> data = new Dictionary<string, List<string>>() {{ "value", new List<string>(result.Count) }};
 
         for (int i = 0; i < result.Count; i++) {
             data["value"].Add(result[i].Data.ToString());

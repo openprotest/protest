@@ -266,11 +266,11 @@ internal sealed class Cache {
 #endif
     }
 
-    private Entry ConstructEntry(string name, byte[] bytes, bool isGzipped, string extension = null) {
+    private Entry ConstructEntry(string name, byte[] bytes, bool isGZipped, string extension = null) {
         extension ??= name.Split('.')[^1];
 
         byte[] raw, gzip;
-        if (isGzipped) {
+        if (isGZipped) {
             gzip = bytes;
             raw = UnGZip(bytes);
         }
@@ -285,7 +285,7 @@ internal sealed class Cache {
 #if BROTLI
         byte[] brotli = Brotli(raw);
 #endif
-        List<KeyValuePair<string, string>> headers = new List<KeyValuePair<string, string>>();
+        List<KeyValuePair<string, string>> headers = new List<KeyValuePair<string, string>>(6);
         if (name.EndsWith(".js")) {
             headers.Add(new KeyValuePair<string, string>("X-Content-Type-Options", "nosniff"));
         }

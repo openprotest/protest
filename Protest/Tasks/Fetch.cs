@@ -613,8 +613,9 @@ internal static class Fetch {
             if (hosts is null) return Data.CODE_FAILED.Array;
         }
         else if (parameters.ContainsKey("update")) {
-            List<string> gist = new List<string>();
-            foreach (Database.Entry entry in DatabaseInstances.devices.dictionary.Values) {
+            IEnumerable<Database.Entry> values = DatabaseInstances.devices.dictionary.Values;
+            List<string> gist = new List<string>(values.Count());
+            foreach (Database.Entry entry in values) {
                 entry.attributes.TryGetValue("ip", out Database.Attribute ip);
                 entry.attributes.TryGetValue("hostname", out Database.Attribute hostname);
                 if (ip is not null) {
@@ -665,7 +666,7 @@ internal static class Fetch {
                 while (queue.Count > 0) {
                     int size = Math.Min(WINDOW, queue.Count);
 
-                    List<Task<ConcurrentDictionary<string, string[]>>> tasks = new List<Task<ConcurrentDictionary<string, string[]>>>();
+                    List<Task<ConcurrentDictionary<string, string[]>>> tasks = new List<Task<ConcurrentDictionary<string, string[]>>>(size);
                     for (int i = 0; i < size; i++) {
                         tasks.Add(SingleDeviceAsync(queue[i], dns, wmi, ldap, snmpProfiles, portScan, false, task.cancellationToken));
                     }
@@ -761,8 +762,9 @@ internal static class Fetch {
         }
 
         if (parameters.ContainsKey("update")) {
-            List<string> users = new List<string>();
-            foreach (Database.Entry entry in DatabaseInstances.users.dictionary.Values) {
+            IEnumerable<Database.Entry> values = DatabaseInstances.users.dictionary.Values;
+            List<string> users = new List<string>(values.Count());
+            foreach (Database.Entry entry in values) {
                 if (!entry.attributes.TryGetValue("type", out Database.Attribute type)) continue;
                 if (!entry.attributes.TryGetValue("username", out Database.Attribute username)) continue;
                 if (type.value != "Domain user") continue;

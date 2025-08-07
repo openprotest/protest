@@ -251,19 +251,22 @@ internal static partial class DeviceConfiguration {
                 if (defname.IndexOf("ether") > -1) {
                     interf = "Ethernet";
                     if (int.TryParse(defname.Replace("ether", String.Empty), out int ether)) {
-                        if (lastEther + 1 < ether)
-                            for (int j = lastEther + 1; j < ether; j++)
+                        if (lastEther + 1 < ether) {
+                            for (int j = lastEther + 1; j < ether; j++) {
                                 interfaces.Add(new string[] { "Ethernet", "N/A", String.Empty, String.Empty });
+                            }
+                        }
                         lastEther = ether;
                     }
-
                 }
                 else if (defname.IndexOf("sfp") > -1) {
                     interf = "SFP";
                     if (int.TryParse(defname.Replace("sfp", String.Empty), out int sfp)) {
-                        if (lastSfp + 1 < sfp)
-                            for (int j = lastSfp + 1; j < sfp; j++)
+                        if (lastSfp + 1 < sfp) {
+                            for (int j = lastSfp + 1; j < sfp; j++) {
                                 interfaces.Add(new string[] { "SFP", "N/A", String.Empty, String.Empty });
+                            }
+                        }
                         lastSfp = sfp;
                     }
                 }

@@ -116,19 +116,18 @@ internal static class PasswordStrength {
         foreach (Database.Entry entry in DatabaseInstances.users.dictionary.Values) {
             List<string> words = new List<string>();
             foreach (KeyValuePair<string, Database.Attribute> pair in entry.attributes) {
-                if (pair.Key.Contains("password"))
-                    continue;
+                if (pair.Key.Contains("password")) continue;
 
                 string[] w = pair.Value.value.ToLower().Split(' ');
                 for (int i = 0; i < w.Length; i++) {
-                    if (w[i].Length > 2 && !words.Contains(w[i]))
+                    if (w[i].Length > 2 && !words.Contains(w[i])) {
                         words.Add(w[i]);
+                    }
                 }
             }
 
             foreach (KeyValuePair<string, Database.Attribute> pair in entry.attributes) {
-                if (!pair.Key.Contains("password"))
-                    continue;
+                if (!pair.Key.Contains("password")) continue;
 
                 string password = pair.Value.value;
                 if (String.IsNullOrEmpty(password)) continue;
@@ -168,23 +167,21 @@ internal static class PasswordStrength {
         foreach (Database.Entry entry in DatabaseInstances.devices.dictionary.Values) {
             List<string> words = new List<string>();
             foreach (KeyValuePair<string, Database.Attribute> pair in entry.attributes) {
-                if (pair.Key.Contains("password"))
-                    continue;
+                if (pair.Key.Contains("password")) continue;
 
                 string[] w = pair.Value.value.ToLower().Split(' ');
                 for (int i = 0; i < w.Length; i++) {
-                    if (w[i].Length > 2 && !words.Contains(w[i]))
+                    if (w[i].Length > 2 && !words.Contains(w[i])) {
                         words.Add(w[i]);
+                    }
                 }
             }
 
             foreach (KeyValuePair<string, Database.Attribute> pair in entry.attributes) {
-                if (!pair.Key.Contains("password"))
-                    continue;
+                if (!pair.Key.Contains("password")) continue;
 
                 string password = pair.Value.value;
-                if (String.IsNullOrEmpty(password))
-                    continue;
+                if (String.IsNullOrEmpty(password)) continue;
 
                 int entropy = (int)Entropy(password, out int length, out int pool, words.ToArray());
                 string ttc = CalculateTtc(length, pool);
@@ -192,18 +189,21 @@ internal static class PasswordStrength {
                 string name = String.Empty;
 
                 if (entry.attributes.TryGetValue("name", out Database.Attribute _name)) {
-                    if (name.Length == 0)
+                    if (name.Length == 0) {
                         name = _name.value;
+                    }
                 }
 
                 if (entry.attributes.TryGetValue("hostname", out Database.Attribute _hostname)) {
-                    if (name.Length == 0)
+                    if (name.Length == 0) {
                         name = _hostname.value;
+                    }
                 }
 
                 if (entry.attributes.TryGetValue("ip", out Database.Attribute _ip)) {
-                    if (name.Length == 0)
+                    if (name.Length == 0) {
                         name = _ip.value;
+                    }
                 }
 
                 if (!first) {
@@ -353,11 +353,10 @@ internal static class PasswordStrength {
         if (username is null) return;
         if (password is null) return;
 
-        List<string> include = new List<string> {
-            "password"
-        };
-        for (int i = 2; i < split.Length; i++)
+        List<string> include = new List<string> { "password" };
+        for (int i = 2; i < split.Length; i++) {
             include.Add(split[i]);
+        }
 
         using SmtpClient smtp = new SmtpClient(server) {
             Port = port,

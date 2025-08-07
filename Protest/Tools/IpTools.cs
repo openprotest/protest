@@ -110,6 +110,7 @@ internal static class IpTools {
         foreach (NetworkInterface adapter in adapters) {
             GatewayIPAddressInformationCollection addresses = adapter.GetIPProperties().GatewayAddresses;
             if (addresses.Count == 0) continue;
+
             foreach (GatewayIPAddressInformation address in addresses) {
                 list.Add(address.Address);
             }
@@ -123,6 +124,7 @@ internal static class IpTools {
         foreach (NetworkInterface adapter in adapters) {
             UnicastIPAddressInformationCollection addresses = adapter.GetIPProperties().UnicastAddresses;
             if (addresses.Count == 0) continue;
+
             foreach (UnicastIPAddressInformation address in addresses) {
                 list.Add(address.Address);
             }

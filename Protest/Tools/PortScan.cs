@@ -283,7 +283,7 @@ internal static class PortScan {
             }
         }
 
-        List<Task<bool>> tasks = new List<Task<bool>>();
+        List<Task<bool>> tasks = new List<Task<bool>>(ports.Length);
         for (int i = 0; i < ports.Length; i++) {
             tasks.Add(PortScanAsync(host, ports[i], timeout));
         }
@@ -303,7 +303,7 @@ internal static class PortScan {
             }
         }
 
-        List<Task<bool>> tasks = new List<Task<bool>>();
+        List<Task<bool>> tasks = new List<Task<bool>>(to - from);
         for (int port = from; port <= to; port++) {
             tasks.Add(PortScanAsync(host, port, timeout));
         }
