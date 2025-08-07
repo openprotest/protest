@@ -12,6 +12,7 @@ class Issues extends List {
 		"Directory"         : "url(mono/directory.svg)",
 		"Password"          : "url(mono/lock.svg)",
 		"Round-trip time"   : "url(mono/ping.svg)",
+		"NIC"               : "url(mono/portscan.svg)",
 		"CPU utilization"   : "url(mono/cpu.svg)",
 		"Memory usage"      : "url(mono/ram.svg)",
 		"Disk space"        : "url(mono/hdd.svg)",

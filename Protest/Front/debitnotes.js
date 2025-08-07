@@ -930,7 +930,7 @@ class DebitNotes extends Window {
 
 					let firstname = LOADER.users.data[file]["first name"]?.v ?? "";
 					let lastname = LOADER.users.data[file]["last name"]?.v ?? "";
-					if (firstname.length=0 || lastname.length === 0) continue;
+					if (firstname.length === 0 || lastname.length === 0) continue;
 
 					let title = LOADER.users.data[file]["title"]?.v ?? "";
 					let department = LOADER.users.data[file]["department"]?.v ?? "";

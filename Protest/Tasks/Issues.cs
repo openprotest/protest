@@ -1,4 +1,8 @@
-﻿using System;
+﻿using Microsoft.Extensions.Hosting;
+using Protest.Http;
+using Protest.Protocols;
+using Protest.Tools;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.DirectoryServices;
@@ -10,9 +14,6 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using Protest.Http;
-using Protest.Protocols;
-using Protest.Tools;
 
 namespace Protest.Tasks;
 
@@ -249,9 +250,15 @@ internal static class Issues {
                 }
             }
 
-            if (CheckDiskIO(device, ipString, out Issue? diskIoIssue))  {
+            if (CheckDiskIO(device, ipString, out Issue? diskIoIssue)) {
                 issues.Add(diskIoIssue.Value);
             }
+
+            if (CheckNicSpeed(device, ipString, out Issue ? nicSpeedIssue)) {
+                issues.Add(nicSpeedIssue.Value);
+            }
+
+
         }
         else if (Data.PRINTER_TYPES.Contains(typeAttribute?.value, StringComparer.OrdinalIgnoreCase)) {
             if (CheckPrinterComponent(device, out Issue[] printerIssues) && printerIssues is not null) {
@@ -692,6 +699,36 @@ internal static class Issues {
                 name       = nameAttribute?.value ?? String.Empty,
                 identifier = host,
                 category   = "Disk I/O",
+                source     = "WMI",
+                file       = device.filename,
+                isUser     = false,
+            };
+            return true;
+        }
+
+        issue = null;
+        return false;
+    }
+
+    public static bool CheckNicSpeed(Database.Entry device, string host, out Issue? issue) {
+        if (!device.attributes.TryGetValue("network adapter speed", out Database.Attribute speedAttr)) {
+            issue = null;
+            return false;
+        }
+
+        string[] split = speedAttr.value
+            .Split(';')
+            .Select(o=>o.Trim()).ToArray();
+
+        if (split.Any(o=> o == "100 Mbps" || o == "10 Mbps")) {
+            device.attributes.TryGetValue("name", out Database.Attribute nameAttribute);
+
+            issue = new Issue {
+                severity   = SeverityLevel.warning,
+                message    = $"Pool ethernet link speed",
+                name       = nameAttribute?.value ?? String.Empty,
+                identifier = host,
+                category   = "NIC",
                 source     = "WMI",
                 file       = device.filename,
                 isUser     = false,
