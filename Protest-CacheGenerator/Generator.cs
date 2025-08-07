@@ -135,8 +135,8 @@ public class Generator : IIncrementalGenerator {
                                      .Replace("} }", "}}")
                                      .Replace(") {", "){")
                                      .Replace("; ", ";")
-                                     .Replace(": ", ":")
-                                     .Replace(" !impossible;", "!impossible;");
+                                     //.Replace(": ", ":")
+                                     .Replace(" !important;", "!important;");
 
             if (softMinify) {
                 result.AppendLine(trimmedLine);

@@ -401,7 +401,7 @@ internal static class Issues {
                 message    = $"RTT spike detected at {spike}ms",
                 name       = nameAttribute?.value ?? String.Empty,
                 identifier = host,
-                category   = "Round-trip time",
+                category   = "Network",
                 source     = "ICMP",
                 file       = device.filename,
                 isUser     = false,
@@ -720,20 +720,23 @@ internal static class Issues {
             .Split(';')
             .Select(o=>o.Trim()).ToArray();
 
-        if (split.Any(o=> o == "100 Mbps" || o == "10 Mbps")) {
-            device.attributes.TryGetValue("name", out Database.Attribute nameAttribute);
+        for (int i = 0; i < split.Length; i++) {
+            if (split[i] == "10 Mbps" || split[i] == "100 Mbps") {
+                device.attributes.TryGetValue("name", out Database.Attribute nameAttribute);
 
-            issue = new Issue {
-                severity   = SeverityLevel.warning,
-                message    = $"Pool ethernet link speed",
-                name       = nameAttribute?.value ?? String.Empty,
-                identifier = host,
-                category   = "NIC",
-                source     = "WMI",
-                file       = device.filename,
-                isUser     = false,
-            };
-            return true;
+                issue = new Issue {
+                    severity   = SeverityLevel.warning,
+                    message    = $"Poor ethernet link speed: {split[i]}",
+                    name       = nameAttribute?.value ?? String.Empty,
+                    identifier = host,
+                    category   = "Network",
+                    source     = "WMI",
+                    file       = device.filename,
+                    isUser     = false,
+                };
+
+                return true;
+            }
         }
 
         issue = null;

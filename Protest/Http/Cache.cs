@@ -351,8 +351,8 @@ internal sealed class Cache {
                                      .Replace("} }", "}}")
                                      .Replace(") {", "){")
                                      .Replace("; ", ";")
-                                     .Replace(": ", ":")
-                                     .Replace(" !impossible;", "!impossible;");
+                                     //.Replace(": ", ":")
+                                     .Replace(" !important;", "!important;");
 
             if (softMinify) {
                 result.AppendLine(trimmedLine);
