@@ -805,6 +805,8 @@ class List extends Window {
 
 			this.SetupColumns(columns);
 			this.UpdateViewport(true);
+
+			this.args.columns = columns;
 		};
 
 		filterInput.onchange = ()=> Refresh();

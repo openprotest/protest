@@ -5,13 +5,17 @@ class UsersList extends List {
 		this.SetTitle("Users");
 		this.SetIcon("mono/users.svg");
 
-		this.defaultColumns = ["first name", "last name", "username", "e-mail"];
+		if (args && args.columns) {
+			this.defaultColumns = args.columns;
+		}
+		else {
+			const localDefault = localStorage.getItem(`${this.constructor.name.toLowerCase()}_columns`);
+			this.defaultColumns = localDefault
+				? JSON.parse(localDefault)
+				: ["first name", "last name", "username", "e-mail"];
+		}
 
-		const columns = localStorage.getItem(`${this.constructor.name.toLowerCase()}_columns`) ?
-			JSON.parse(localStorage.getItem(`${this.constructor.name.toLowerCase()}_columns`)) :
-			this.defaultColumns;
-
-		this.SetupColumns(columns);
+		this.SetupColumns(this.defaultColumns);
 		this.SetupToolbar();
 		this.LinkData(LOADER.users);
 

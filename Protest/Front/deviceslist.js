@@ -5,13 +5,17 @@ class DevicesList extends List {
 		this.SetTitle("Devices");
 		this.SetIcon("mono/devices.svg");
 
-		this.defaultColumns = ["name", "type", "ip", "hostname", "mac address", "serial number"];
+		if (args && args.columns) {
+			this.defaultColumns = args.columns;
+		}
+		else {
+			const localDefault = localStorage.getItem(`${this.constructor.name.toLowerCase()}_columns`)
+			this.defaultColumns = localDefault
+ 				? JSON.parse(localDefault)
+				: ["name", "type", "ip", "hostname", "mac address", "serial number"];
+		}
 
-		const columns = localStorage.getItem(`${this.constructor.name.toLowerCase()}_columns`) ?
-			JSON.parse(localStorage.getItem(`${this.constructor.name.toLowerCase()}_columns`)) :
-			this.defaultColumns;
-
-		this.SetupColumns(columns);
+		this.SetupColumns(this.defaultColumns);
 		this.SetupToolbar();
 		this.LinkData(LOADER.devices);
 
