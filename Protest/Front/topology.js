@@ -131,7 +131,7 @@ class Topology extends Window {
 			for (const key in this.dragging.links) {
 				const l = this.dragging.links[key];
 				const d = this.devices[l.device];
-				if (!d.unmanaged) continue;
+				if (!d.isUnmanaged) continue;
 
 				d.element.x = d.element.x0 + dx;
 				d.element.y = d.element.y0 + dy;
@@ -665,10 +665,10 @@ class Topology extends Window {
 		const element = this.CreateUnmanagedSwitchElement(options, file);
 
 		const device = {
-			unmanaged: true,
-			element  : element,
-			initial  : {file: file, type: "switch"},
-			links    : [],
+			isUnmanaged: true,
+			element    : element,
+			initial    : {file: file, type: "switch"},
+			links      : [],
 		};
 
 		this.devices[file] = device;
@@ -712,14 +712,14 @@ class Topology extends Window {
 			remotePortName: portNameB
 		};
 
-		if (deviceA.unmanaged) {
+		if (deviceA.isUnmanaged) {
 			deviceA.links.push(entryA);
 		}
 		else {
 			deviceA.links[portA] = entryA;
 		}
 
-		if (deviceB.unmanaged) {
+		if (deviceB.isUnmanaged) {
 			deviceB.links.push(entryB);
 		}
 		else {
@@ -977,7 +977,7 @@ class Topology extends Window {
 		const [p, s] = a.element.x < b.element.x ? [a, b] : [b, a];
 
 		const center = node => (
-			node.unmanaged
+			node.isUnmanaged
 				? {x: node.element.x + 24, y: node.element.y + 24}
 				: {x: node.element.x + 48, y: node.element.y + 48}
 		);
@@ -988,7 +988,7 @@ class Topology extends Window {
 		let px = pc.x, py = pc.y;
 		let sx = sc.x, sy = sc.y;
 
-		if (p.unmanaged) {
+		if (p.isUnmanaged) {
 			const angle = Math.atan2(sc.y - pc.y, sc.x - pc.x);
 			px = pc.x + 24 * Math.cos(angle);
 			py = pc.y + 24 * Math.sin(angle);
@@ -997,7 +997,7 @@ class Topology extends Window {
 			px += p.element.x > s.element.x ? -48 : 48;
 		}
 
-		if (s.unmanaged) {
+		if (s.isUnmanaged) {
 			const angle = Math.atan2(pc.y - sc.y, pc.x - sc.x);
 			sx = sc.x + 24 * Math.cos(angle);
 			sy = sc.y + 24 * Math.sin(angle);
@@ -1007,19 +1007,19 @@ class Topology extends Window {
 		}
 
 		if (Math.abs(pc.x - sc.x) < 88) {
-			if (!p.unmanaged) {
+			if (!p.isUnmanaged) {
 				py = pc.y + (pc.y < sc.y ? 48 : -48);
 				px = (pc.x + sc.x) / 2;
 			}
-			if (!s.unmanaged) {
+			if (!s.isUnmanaged) {
 				sy = sc.y + (pc.y < sc.y ? -48 : 48);
 				sx = (pc.x + sc.x) / 2;
 			}
 		}
 
 		const minX = Math.min(px, sx);
-		const x1 = p.unmanaged ? px : minX + (px - minX) * 0.7 + (sx - minX) * 0.3;
-		const x2 = s.unmanaged ? sx : minX + (px - minX) * 0.3 + (sx - minX) * 0.7;
+		const x1 = p.isUnmanaged ? px : minX + (px - minX) * 0.7 + (sx - minX) * 0.3;
+		const x2 = s.isUnmanaged ? sx : minX + (px - minX) * 0.3 + (sx - minX) * 0.7;
 		return {
 			primary  : {x:px, y:py},
 			secondary: {x:sx, y:sy},
@@ -1071,7 +1071,7 @@ class Topology extends Window {
 		const hostnameLabel = document.createElement("div");
 		hostnameLabel.style.gridArea = "2 / 2";
 		hostnameLabel.style.fontWeight = "bold";
-		hostnameLabel.textContent = device.unmanaged ? "unmanaged" : initial.hostname;
+		hostnameLabel.textContent = device.isUnmanaged ? "unmanaged" : initial.hostname;
 		grid.appendChild(hostnameLabel);
 
 		const ipLabel = document.createElement("div");
@@ -1105,7 +1105,7 @@ class Topology extends Window {
 				return;
 			}
 
-			this.selectedInterface.childNodes[0].style.outline = "";
+			this.selectedInterface.className = "";
 
 			const children = intList.childNodes;
 			if (children.length === 0) return;
@@ -1199,7 +1199,7 @@ class Topology extends Window {
 			const remoteDevice = this.devices[device.links[i].device];
 			remoteName = remoteDevice.initial.hostname;
 
-			if (remoteDevice.unmanaged) {
+			if (remoteDevice.isUnmanaged) {
 				remoteName = "unmanaged";
 				remoteBox.style.fontStyle = "italic";
 			}
@@ -1267,10 +1267,10 @@ class Topology extends Window {
 
 		interfaceBox.onclick = ()=> {
 			if (this.selectedInterface) {
-				this.selectedInterface.childNodes[0].style.outline = "";
+				this.selectedInterface.className = "";
 			}
 
-			interfaceBox.childNodes[0].style.outline = "2px solid var(--clr-select)";
+			interfaceBox.className = "topology-interface-list-selected";
 
 			this.selectedInterface = interfaceBox;
 

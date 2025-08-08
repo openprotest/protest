@@ -6,10 +6,6 @@
 }
 
 .topology-workspace > svg {
-	/*background-image: radial-gradient(rgb(96,96,96) 2px, transparent 0);
-	background-size: 50px 50px;
-	background-position: 23px 23px;*/
-	
 	background-size: 50px 50px;
 	background-image:
 	linear-gradient(to right, transparent 48px, rgba(96,96,96,.5) 49px, transparent 50px),
@@ -97,9 +93,10 @@
 	position: absolute;
 	content: "";
 	background-color: var(--clr-control);
-	width: 12px;
+	width: 8px;
 	height: 4px;
-	left: 26%;
+	left: calc(25% + 4px);
+	box-sizing: border-box;
 	transform: translateY(8px);
 }
 
@@ -116,8 +113,19 @@
 }
 
 .topology-interface-list > div:hover > div,
-.topology-interface-list > div:hover > div:nth-child(1)::after {
+.topology-interface-list > div:hover > div:first-child::after {
 	background-color: var(--clr-select);
+}
+
+.topology-interface-list-selected > div {
+	outline: 2px solid var(--clr-select);
+}
+
+.topology-interface-list-selected > div:first-child::after {
+	border-top: 2px solid var(--clr-select);
+	border-bottom: 2px solid var(--clr-select);
+	height: 8px !important;
+	transform: translateY(6px) !important;
 }
 
 .topology-selected {
