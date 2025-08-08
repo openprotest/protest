@@ -931,7 +931,7 @@ class DeviceView extends View {
 						linkIcon.textContent = LOADER.devices.data[link].name.v;
 					}
 					else if (LOADER.devices.data[link].hostname) {
-						linkIcon.textContent = link.hostname.v;
+						linkIcon.textContent = LOADER.devices.data[link].hostname.v;
 					}
 					else if (LOADER.devices.data[link].ip) {
 						linkIcon.textContent = LOADER.devices.data[link].ip.v;
@@ -1657,8 +1657,6 @@ class DeviceView extends View {
 						this.CreateWarning(`Poor ethernet link speed: ${split[i]}`, "WMI");
 					}
 				}
-
-				console.log(split);
 			}
 
 			if (".interfaces" in this.link && "snmp profile" in this.link && !this.switchInfo.success) {
