@@ -174,33 +174,33 @@ internal static class Topology {
         local.TryGetValue("1.0.8802.1.1.2.1.3.3.0", out Variable localHostname);
         //local.TryGetValue("1.0.8802.1.1.2.1.3.4.0", out Variable localDescription);
 
-        List<(int, string)> localPortIdSubtype = new List<(int, string)>();
-        List<(int, string)> localPortId        = new List<(int, string)>();
-        List<(int, string)> localPortName      = new List<(int, string)>();
+        Dictionary<int, int>    localPortIdSubtype = new Dictionary<int, int>();
+        Dictionary<int, string> localPortId        = new Dictionary<int, string>();
+        Dictionary<int, string> localPortName      = new Dictionary<int, string>();
 
-        Dictionary<int, List<int>> remoteChassisIdSubtype = new Dictionary<int, List<int>>();
-        Dictionary<int, List<string>> remoteChassisId     = new Dictionary<int, List<string>>();
-        Dictionary<int, List<int>> remotePortIdSubtype    = new Dictionary<int, List<int>>();
-        Dictionary<int, List<string>> remotePortId        = new Dictionary<int, List<string>>();
-        Dictionary<int, List<string>> remoteSystemName    = new Dictionary<int, List<string>>();
+        Dictionary<int, List<int>>    remoteChassisIdSubtype = new Dictionary<int, List<int>>();
+        Dictionary<int, List<string>> remoteChassisId        = new Dictionary<int, List<string>>();
+        Dictionary<int, List<int>>    remotePortIdSubtype    = new Dictionary<int, List<int>>();
+        Dictionary<int, List<string>> remotePortId           = new Dictionary<int, List<string>>();
+        Dictionary<int, List<string>> remoteSystemName       = new Dictionary<int, List<string>>();
 
         foreach (KeyValuePair<string, Variable> pair in local) {
             if (!int.TryParse(pair.Key.Split('.')[^1], out int index)) continue;
 
             if (pair.Key.StartsWith("1.0.8802.1.1.2.1.3.7.1.2")) {
-                localPortIdSubtype.Add((index, pair.Value.Data.ToString()));
+                localPortIdSubtype.Add(index, int.TryParse(pair.Value.Data.ToString(), out int portIdSubtype) ? portIdSubtype : -1);
             }
             else if (pair.Key.StartsWith("1.0.8802.1.1.2.1.3.7.1.3")) {
                 string typeString = pair.Key.Replace("1.0.8802.1.1.2.1.3.7.1.3", "1.0.8802.1.1.2.1.3.7.1.2");
                 if (local.TryGetValue(typeString, out Variable typeValue)) {
-                    localPortId.Add((index, GetPortId(typeValue.Data.ToString(), pair.Value.Data)));
+                    localPortId.Add(index, GetPortId(typeValue.Data.ToString(), pair.Value.Data));
                 }
                 else {
-                    localPortId.Add((index, pair.Value.Data.ToString()));
+                    localPortId.Add(index, pair.Value.Data.ToString());
                 }
             }
             else if (pair.Key.StartsWith("1.0.8802.1.1.2.1.3.7.1.4")) {
-                localPortName.Add((index, pair.Value.Data.ToString()));
+                localPortName.Add(index, pair.Value.Data.ToString());
             }
         }
 
@@ -208,31 +208,31 @@ internal static class Topology {
             if (!int.TryParse(pair.Key.Split('.')[^2], out int index)) continue;
 
             if (pair.Key.StartsWith("1.0.8802.1.1.2.1.4.1.1.4")) {
-                remoteChassisIdSubtype.Push(index - 1, int.TryParse(pair.Value.Data.ToString(), out int subtype) ? subtype : -1);
+                remoteChassisIdSubtype.Push(index, int.TryParse(pair.Value.Data.ToString(), out int subtype) ? subtype : -1);
             }
             else if (pair.Key.StartsWith("1.0.8802.1.1.2.1.4.1.1.5")) {
                 string typeString = pair.Key.Replace("1.0.8802.1.1.2.1.4.1.1.5", "1.0.8802.1.1.2.1.4.1.1.4");
                 if (remote.TryGetValue(typeString, out Variable typeValue)) {
-                    remoteChassisId.Push(index - 1, GetChassisId(typeValue.Data.ToString(), pair.Value.Data));
+                    remoteChassisId.Push(index, GetChassisId(typeValue.Data.ToString(), pair.Value.Data));
                 }
                 else {
-                    remoteChassisId.Push(index - 1, pair.Value.Data.ToString());
+                    remoteChassisId.Push(index, pair.Value.Data.ToString());
                 }
             }
             if (pair.Key.StartsWith("1.0.8802.1.1.2.1.4.1.1.6")) {
-                remotePortIdSubtype.Push(index - 1, int.TryParse(pair.Value.Data.ToString(), out int subtype) ? subtype : -1);
+                remotePortIdSubtype.Push(index, int.TryParse(pair.Value.Data.ToString(), out int subtype) ? subtype : -1);
             }
             else if (pair.Key.StartsWith("1.0.8802.1.1.2.1.4.1.1.7")) {
                 string typeString = pair.Key.Replace("1.0.8802.1.1.2.1.4.1.1.7", "1.0.8802.1.1.2.1.4.1.1.6");
                 if (remote.TryGetValue(typeString, out Variable typeValue)) {
-                    remotePortId.Push(index - 1, GetPortId(typeValue.Data.ToString(), pair.Value.Data));
+                    remotePortId.Push(index, GetPortId(typeValue.Data.ToString(), pair.Value.Data));
                 }
                 else {
-                    remotePortId.Push(index - 1, pair.Value.Data.ToString());
+                    remotePortId.Push(index, pair.Value.Data.ToString());
                 }
             }
             else if (pair.Key.StartsWith("1.0.8802.1.1.2.1.4.1.1.9")) {
-                remoteSystemName.Push(index - 1, pair.Value.Data.ToString());
+                remoteSystemName.Push(index, pair.Value.Data.ToString());
             }
         }
 
@@ -245,9 +245,9 @@ internal static class Topology {
                 localHostname         = localHostname.Data.ToString(),
                 //localDescription      = localDescription.Data.ToString(),
 
-                localPortIdSubtype = localPortIdSubtype.Select(o=>int.TryParse(o.Item2, out int localPortIdSubtypeInt) ? localPortIdSubtypeInt : -1),
-                localPortId        = localPortId.Select(o=>o.Item2),
-                localPortName      = localPortName.Select(o=>o.Item2),
+                localPortIdSubtype = localPortIdSubtype,
+                localPortId        = localPortId,
+                localPortName      = localPortName,
 
                 remoteChassisIdSubtype = remoteChassisIdSubtype,
                 remoteChassisId        = remoteChassisId,

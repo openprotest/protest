@@ -28,9 +28,12 @@
 
 .topology-sidebar-grid {
 	display: grid;
+	background-color: var(--clr-control);
 	grid-template-columns: 88px auto;
 	grid-template-rows: 16px 16px 16px 16px;
 	margin-bottom: 16px;
+	padding: 8px 0;
+	border-radius: 4px;
 	-webkit-user-select: text; user-select: text;
 }
 
@@ -137,7 +140,7 @@
 .topology-info-box {
 	position: absolute;
 	right: 374px;
-	width: 200px;
+	width: 250px;
 	min-height: 100px;
 	padding: 4px;
 	background-color: color-mix(in srgb, var(--clr-pane) 80%, transparent);
