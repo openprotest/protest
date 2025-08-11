@@ -539,13 +539,12 @@ class Topology extends Window {
 
 			if (remotePortInfo.length === 1) {
 				let match = this.MatchDevice(device, port, 0);
-				const remoteDevice = this.devices[match]
+				const remoteDevice = this.devices[match];
 				//match ??= this.MatchDbEntry(device, port, 0);
 				
-				let remotePortIndex = this.GetPortIndex(device, port, remoteDevice);
-
 				if (match in this.devices) {
-					this.Link(device, port, remoteDevice, remotePortIndex);
+					let remotePort = this.ComputeRemotePort(device, port, 0, remoteDevice);
+					this.Link(device, port, remoteDevice, remotePort?.index ?? -1);
 				}
 				else {
 					this.LinkEndpoint(device, port, match);
@@ -558,16 +557,68 @@ class Topology extends Window {
 		}
 	}
 
+	ComputeRemotePort(device, port, index, remoteDevice) {
+		const remoteLldp = remoteDevice.lldp || {};
+		
+		// Helper to find matching port index from a name
+		const findPortIndex = (name) => {
+			for (const idx in remoteLldp.localPortName) {
+				if (remoteLldp.localPortName[idx] === name) {
+					return idx;
+				}
+			}
+			return -1;
+		};
+
+		if (device.lldp.remoteChassisIdSubtype[port][index] === 6) { //interface name
+			const interfaceName = device.lldp.remoteChassisId[port][index];
+			return {
+				name: interfaceName,
+				index: findPortIndex(interfaceName)
+			};
+		}
+
+		if (device.lldp.remotePortIdSubtype[port][index] === 5) { //interface name
+			const interfaceName = device.lldp.remotePortId[port][index];
+			return {
+				name: interfaceName,
+				index: findPortIndex(interfaceName)
+			};
+		}
+
+		if (device.lldp.remotePortIdSubtype[port][index] === 7) { //local name
+			const portId = device.lldp.remotePortId[port][index];
+			const interfaceName = !isNaN(portId) && remoteLldp.localPortName
+				? remoteLldp.localPortName[portId]
+				: portId;
+			return {
+				index: portId,
+				name: interfaceName
+			};
+		}
+
+		console.log("no match", device.initial.hostname, port);
+		return null;
+	}
+
 	MatchDevice(device, port, index) {
 		for (const file in this.devices) {
-			if (file === device.initial.file) continue;
-
 			const candidate = this.devices[file];
 			if (!candidate.lldp) continue;
 
 			if (candidate.lldp.localChassisIdSubtype === device.lldp.remoteChassisIdSubtype[port][index]
 				&& candidate.lldp.localChassisId === device.lldp.remoteChassisId[port][index]) {
 				return file;
+			}
+		}
+
+		const targetName = device.lldp.remoteSystemName[port][index]?.toUpperCase();
+		if (targetName && targetName.length > 0) {
+			for (const file in this.devices) {
+				const candidate = this.devices[file];
+				if (candidate.initial.hostname.toUpperCase() === targetName) {
+					return file;
+				}
 			}
 		}
 
@@ -936,47 +987,6 @@ class Topology extends Window {
 		};
 
 		return entry;
-	}
-
-	GetPortName(device, port, remoteDevice) {
-		if (!device.lldp) return null;
-
-		for (let i=0; i<device.lldp.remotePortIdSubtype[port].length; i++) {
-			let portName;
-
-			switch (device.lldp.remotePortIdSubtype[port][i]) {
-			//case 3: //mac address
-			//	portName = device.lldp.remotePortId[port][i];
-			//	break;
-
-			case 5: //interface name
-				portName = device.lldp.remotePortId[port][i];
-				break;
-
-			case 7: //local name
-				const portId = device.lldp.remotePortId[port][i];
-				portName = !isNaN(portId) && remoteDevice.lldp
-					? remoteDevice.lldp.localPortName[portId - 1]
-					: portId;
-				break;
-			}
-
-			if (portName && portName.length > 0) {
-				return portName;
-			}
-		}
-
-		return null;
-	}
-
-	GetPortIndex(localDevice, remoteDevice, port) {
-		if (!remoteDevice.lldp) return -1;
-
-		const remotePortId = localDevice.lldp.remotePortId[port];
-		if (!remotePortId || remotePortId.length === 0) return -1;
-
-		const portIndex = remoteDevice.lldp.localPortId.indexOf(remotePortId[0]);
-		return portIndex;
 	}
 
 	DrawPath(a, b) {
