@@ -245,6 +245,7 @@ internal static class Topology {
                 localHostname         = localHostname.Data.ToString(),
                 //localDescription      = localDescription.Data.ToString(),
 
+                localPortCount     = localPortIdSubtype.Count,
                 localPortIdSubtype = localPortIdSubtype,
                 localPortId        = localPortId,
                 localPortName      = localPortName,

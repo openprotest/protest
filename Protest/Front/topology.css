@@ -30,7 +30,7 @@
 	display: grid;
 	background-color: var(--clr-control);
 	grid-template-columns: 88px auto;
-	grid-template-rows: 16px 16px 16px 16px;
+	grid-template-rows: 18px 18px 18px 18px;
 	margin-bottom: 16px;
 	padding: 8px 0;
 	border-radius: 4px;
@@ -104,10 +104,10 @@
 }
 
 .topology-interface-list > div > div:nth-child(2) {
-	width: calc(50% - 12px);
+	width: calc(75% - 12px);
 	margin-left: 4px;
 	margin-right: 2px;
-	border-radius: 4px 0 0 4px;
+	border-radius: 4px;
 }
 
 .topology-interface-list > div > div:nth-child(3) {
