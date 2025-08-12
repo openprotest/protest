@@ -545,14 +545,16 @@ class Topology extends Window {
 				if (match in this.devices) {
 					const remoteDevice = this.devices[match];
 
-					let remotePort = this.ComputeRemotePort(device, port, 0, remoteDevice);
-					let remotePortIndex = remotePort?.index ?? -1;
+					let remotePortName  = this.ComputeRemotePort(device, port, 0, remoteDevice);
+					let remotePortIndex = remotePortName?.index ?? -1;
 
 					if (remoteDevice.isUndocumented) {
 						remotePortIndex = remoteDevice.links.length;
+
 						remoteDevice.lldp.localPortCount        = remotePortIndex;
 						remoteDevice.lldp.localChassisId        = device.lldp.remoteChassisId[port][0];
 						remoteDevice.lldp.localChassisIdSubtype = device.lldp.remoteChassisIdSubtype[port][0];
+
 						remoteDevice.lldp.localPortName[remotePortIndex]      = device.lldp.remotePortId[port][0];
 						remoteDevice.lldp.localPortId[remotePortIndex]        = device.lldp.remoteChassisId[port][0];
 						remoteDevice.lldp.localPortIdSubtype[remotePortIndex] = device.lldp.remoteChassisIdSubtype[port][0];
@@ -577,7 +579,6 @@ class Topology extends Window {
 				const isSingle = matches[0] !== null && matches.every(o=> o === matches[0]);
 				if (isSingle) {
 					//TODO: handle as single device
-					console.log(isSingle);
 				}
 				else {
 					
@@ -612,7 +613,7 @@ class Topology extends Window {
 			const psudoLldp = {
 				file: unmanagedSwitch.initial.file,
 				localPortCount        : length,
-				localPortName         : new Array(length + 1).fill("-"),
+				localPortName         : new Array(length + 1).fill("--"),
 				localPortId           : new Array(length + 1).fill(""),
 				localPortIdSubtype    : new Array(length + 1).fill(0),
 
@@ -625,10 +626,9 @@ class Topology extends Window {
 
 			let subCount = 1;
 			for (const i in unmanagedSwitches[parentPort].remotePortId) {
-				psudoLldp.remotePortIdSubtype[subCount] = unmanagedSwitches[parentPort].remotePortIdSubtype[i];
-				psudoLldp.remotePortId[subCount] = unmanagedSwitches[parentPort].remotePortId[i];
-				psudoLldp.remoteSystemName[subCount] = unmanagedSwitches[parentPort].remoteSystemName[i];
-
+				psudoLldp.remotePortIdSubtype[subCount] = unmanagedSwitches[parentPort].remotePortIdSubtype;
+				psudoLldp.remotePortId[subCount]        = unmanagedSwitches[parentPort].remotePortId;
+				psudoLldp.remoteSystemName[subCount]    = unmanagedSwitches[parentPort].remoteSystemName;
 				subCount++;
 			}
 
@@ -636,12 +636,14 @@ class Topology extends Window {
 
 			subCount = 1;
 
-			this.Link(device, parentPort, unmanagedSwitch, 0);
+			if (!(parentPort in device.links)) {
+				this.Link(device, parentPort, unmanagedSwitch, 0);
+				//TODO: handle floating switches
+			}
 
 			for (const i in unmanagedSwitches[parentPort].remotePortId) {
 				const match = unmanagedSwitches[parentPort].matches[subCount];
 				if (!match) continue;
-				console.log(match);
 
 				if (match in this.devices) {
 
@@ -652,9 +654,7 @@ class Topology extends Window {
 
 				subCount++;
 			}
-
 		}
-
 	}
 
 	ComputeRemotePort(device, port, index, remoteDevice) {
@@ -691,8 +691,8 @@ class Topology extends Window {
 				? remoteLldp.localPortName[portId]
 				: portId;
 			return {
-				index: portId,
-				name: interfaceName
+				name: interfaceName,
+				index: portId
 			};
 		}
 
@@ -862,6 +862,16 @@ class Topology extends Window {
 	}
 
 	Link(deviceA, portIndexA, deviceB, portIndexB) {
+		if (portIndexA in deviceA.links) {
+			console.warn("port already in use: ", deviceA, portIndexA);
+			//return null;
+		}
+
+		if (portIndexB in deviceB.links) {
+			console.warn("port already in use: ", deviceB, portIndexB);
+			//return null;
+		}
+
 		const fileA = deviceA.initial.file;
 		const fileB = deviceB.initial.file;
 		const key = fileA > fileB
@@ -886,7 +896,6 @@ class Topology extends Window {
 			deviceA.links.push(key);
 		}
 		else {
-			if (portIndexA in deviceA.links) { console.warn("port already in use: ", deviceA, portIndexA); }
 			deviceA.links[portIndexA] = key;
 		}
 
@@ -894,7 +903,6 @@ class Topology extends Window {
 			deviceB.links.push(key);
 		}
 		else {
-			if (portIndexB in deviceB.links) { console.warn("port already in use: ", deviceB, portIndexB); }
 			deviceB.links[portIndexB] = key;
 		}
 
@@ -949,12 +957,10 @@ class Topology extends Window {
 		g.appendChild(rect);
 
 		const fill = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-		if (options.isRouter) {
-			fill.setAttribute("rx", 38);
-			fill.setAttribute("ry", 38);
-		}
 		fill.setAttribute("x", 10);
 		fill.setAttribute("y", 8);
+		fill.setAttribute("rx", options.isRouter ? 38 : 8);
+		fill.setAttribute("ry", options.isRouter ? 38 : 8);
 		fill.setAttribute("width", 76);
 		fill.setAttribute("height", 80);
 		fill.setAttribute("fill", "transparent");
@@ -1225,8 +1231,6 @@ class Topology extends Window {
 	SelectDevice(file) {
 		const device = this.devices[file];
 
-console.log(device);
-
 		this.infoBox.style.opacity = "0";
 		this.infoBox.style.visibility = "hidden";
 		this.infoBox.textContent = "";
@@ -1260,6 +1264,7 @@ console.log(device);
 		hostnameLabel.style.textOverflow = "ellipsis";
 		hostnameLabel.style.gridArea = "1 / 2";
 		hostnameLabel.style.fontWeight = "bold";
+		hostnameLabel.style.lineHeight = "18px";
 		hostnameLabel.textContent = device.isUnmanaged ? "unmanaged" : initial.hostname;
 		grid.appendChild(hostnameLabel);
 
@@ -1267,6 +1272,7 @@ console.log(device);
 		ipLabel.style.overflow = "hidden";
 		ipLabel.style.textOverflow = "ellipsis";
 		ipLabel.style.gridArea = "2 / 2";
+		ipLabel.style.lineHeight = "18px";
 		ipLabel.textContent = initial.ip;
 		grid.appendChild(ipLabel);
 
@@ -1274,6 +1280,7 @@ console.log(device);
 		locationLabel.style.overflow = "hidden";
 		locationLabel.style.textOverflow = "ellipsis";
 		locationLabel.style.gridArea = "3 / 2";
+		locationLabel.style.lineHeight = "18px";
 		locationLabel.textContent = initial.location;
 		grid.appendChild(locationLabel);
 
@@ -1281,6 +1288,7 @@ console.log(device);
 		chassisIdLabel.style.overflow = "hidden";
 		chassisIdLabel.style.textOverflow = "ellipsis";
 		chassisIdLabel.style.gridArea = "4 / 2";
+		chassisIdLabel.style.lineHeight = "18px";
 		chassisIdLabel.textContent = this.devices[file]?.lldp?.localChassisId ?? "";
 		grid.appendChild(chassisIdLabel);
 
@@ -1374,7 +1382,7 @@ console.log(device);
 			localPortName = index;
 			localBox.style.color = "#404040";
 		}
-		else if (portName === "-") {
+		else if (portName === "--") {
 			localPortName = "--";
 			localBox.style.color = "#404040";
 		}
@@ -1387,10 +1395,14 @@ console.log(device);
 			const remoteDeviceFile = device.initial.file === link.deviceA ? link.deviceB : link.deviceA;
 
 			if (remoteDeviceFile in this.devices) {
-				const remoteDevice   = this.devices[remoteDeviceFile];
-				const remotePortName = device.initial.file === link.deviceA ? link.portIndexB : link.portIndexA;
+				const remoteDevice = this.devices[remoteDeviceFile];
+				const remotePortIndex = device.initial.file === link.deviceA ? link.portIndexB : link.portIndexA;
 
-				remoteBox.textContent = remoteDevice.initial.hostname;
+				const remotePortName = remoteDevice.lldp && remoteDevice.lldp.localPortName
+					? remoteDevice.lldp.localPortName[remotePortIndex]
+					: remotePortIndex;
+
+				remoteBox.textContent = remoteDevice.isUnmanaged ? "unmanaged" : remoteDevice.initial.hostname;
 				remoteBox.style.width = "calc(50% - 12px)";
 				remoteBox.style.borderRadius = "4px 0 0 4px";
 				
@@ -1481,6 +1493,8 @@ console.log(device);
 			nameBox.style.backgroundColor = "var(--clr-accent)";
 			nameBox.style.borderRadius = "4px";
 			this.infoBox.appendChild(nameBox);
+
+console.log(device.lldp.remoteChassisIdSubtype[index]);
 
 			if (device.lldp.remoteChassisId[index]) {
 				for (let i=0; i<device.lldp.remoteChassisId[index].length; i++) {
