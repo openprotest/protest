@@ -62,7 +62,7 @@
 }
 
 .topology-error-message[undocumented]::before {
-	background-color: rgb(32,112,166);
+	background-color: rgb(240,128,24);
 }
 
 .topology-interface-list {
