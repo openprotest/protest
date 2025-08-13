@@ -829,7 +829,7 @@ class Topology extends Window {
 			y       : 600
 		});
 
-		element.fill.setAttribute("fill", "rgb(240,128,24)");
+		element.fill.setAttribute("fill", "rgb(232,118,0)");
 
 		const lldp = {
 			localChassisId       : null,
@@ -864,12 +864,12 @@ class Topology extends Window {
 	Link(deviceA, portIndexA, deviceB, portIndexB) {
 		if (portIndexA in deviceA.links) {
 			console.warn("port already in use: ", deviceA, portIndexA);
-			//return null;
+			return null;
 		}
 
 		if (portIndexB in deviceB.links) {
 			console.warn("port already in use: ", deviceB, portIndexB);
-			//return null;
+			return null;
 		}
 
 		const fileA = deviceA.initial.file;
@@ -914,8 +914,17 @@ class Topology extends Window {
 		const key = `${deviceFile}-${portIndex}-${endpoint}-e`;
 
 		const element = this.CreateEndPointElement(device, endpoint);
-		const offset = 72 * portIndex / device.lldp.localPortCount;
-		element.dot.setAttribute("cy", 12 + offset);
+		
+		if (device.isUnmanaged) {
+			const angle = (-device.lldp.localPortCount / 2 + portIndex / device.lldp.localPortCount) * Math.PI;
+			element.dot.setAttribute("cx", 24 + 25 * Math.cos(angle));
+			element.dot.setAttribute("cy", 24 + 25 * Math.sin(angle));
+		}
+		else {
+			const offset = 72 * portIndex / device.lldp.localPortCount;
+			element.dot.setAttribute("cx", 96);
+			element.dot.setAttribute("cy", 12 + offset);
+		}
 
 		const entry = {
 			key       : key,
@@ -1115,8 +1124,6 @@ class Topology extends Window {
 
 	CreateEndPointElement(parentDevice, file) {
 		const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-		dot.setAttribute("cx", 96);
-		//dot.setAttribute("cy", 12);
 		dot.setAttribute("r", 2);
 		dot.setAttribute("fill", "#c0c0c0");
 		parentDevice.element.root.appendChild(dot);
@@ -1493,8 +1500,6 @@ class Topology extends Window {
 			nameBox.style.backgroundColor = "var(--clr-accent)";
 			nameBox.style.borderRadius = "4px";
 			this.infoBox.appendChild(nameBox);
-
-console.log(device.lldp.remoteChassisIdSubtype[index]);
 
 			if (device.lldp.remoteChassisId[index]) {
 				for (let i=0; i<device.lldp.remoteChassisId[index].length; i++) {
