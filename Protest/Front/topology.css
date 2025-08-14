@@ -105,6 +105,8 @@
 
 .topology-interface-list > div > div:nth-child(2) {
 	width: calc(75% - 12px);
+	text-align: left;
+	padding-left: 8px;
 	margin-left: 4px;
 	margin-right: 2px;
 	border-radius: 4px;
@@ -145,7 +147,7 @@
 	padding: 4px;
 	background-color: color-mix(in srgb, var(--clr-pane) 80%, transparent);
 	backdrop-filter: blur(8px) brightness(80%);
-	border: var(--clr-accent) solid 2px;
+	border: var(--clr-select) solid 2px;
 	border-radius: 4px;
 	font-size: small;
 	color: #000;
@@ -163,7 +165,7 @@
 	content: "";
 	border-top: 10px solid transparent;
 	border-bottom: 10px solid transparent;
-	border-left: 11px solid var(--clr-accent);
+	border-left: 11px solid var(--clr-select);
 	right: -12px;
 	top: 4px;
 	transition: .2s;
@@ -177,7 +179,7 @@
 .topology-info-box-over-up::after {
 	border-top: 0 solid transparent;
 	border-bottom: 12px solid transparent;
-	border-left: 10px solid var(--clr-accent);
+	border-left: 10px solid var(--clr-select);
 }
 
 .topology-info-box-over-down::after {
@@ -185,7 +187,7 @@
 	bottom: 4px;
 	border-top: 12px solid transparent;
 	border-bottom: 0 solid transparent;
-	border-left: 10px solid var(--clr-accent);
+	border-left: 10px solid var(--clr-select);
 }
 
 @keyframes topology-spinner-animation {

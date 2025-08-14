@@ -545,8 +545,8 @@ class Topology extends Window {
 				if (match in this.devices) {
 					const remoteDevice = this.devices[match];
 
-					let remotePortName  = this.ComputeRemotePort(device, port, 0, remoteDevice);
-					let remotePortIndex = remotePortName?.index ?? -1;
+					let remotePort  = this.ComputeRemotePort(device, port, 0, remoteDevice);
+					let remotePortIndex = remotePort?.index ?? -1;
 
 					if (remoteDevice.isUndocumented) {
 						remotePortIndex = remoteDevice.links.length;
@@ -569,31 +569,28 @@ class Topology extends Window {
 				}
 			}
 			else { //multiple LLDP entries, treat as unmanaged switch
-
 				const matches = [];
 				for (let i=0; i<remotePortInfo.length; i++) {
 					const match = this.MatchDevice(device, port, i) ?? this.MatchDbEntry(device, port, i);
 					matches.push(match);
 				}
 
-				const isSingle = matches[0] !== null && matches.every(o=> o === matches[0]);
+				const nonNullMatches = matches.filter(o=> o !== null);
+				const isSingle = nonNullMatches.length > 1 && nonNullMatches.every(o=> o === matches[0]);
 				if (isSingle) {
 					//TODO: handle as single device
 				}
 				else {
-					
+					unmanagedSwitches[port] = {
+						length                : remotePortInfo.length,
+						matches               : matches,
+						remoteChassisIdSubtype: device.lldp.remoteChassisIdSubtype[port],
+						remoteChassisId       : device.lldp.remoteChassisId[port],
+						remotePortIdSubtype   : device.lldp.remotePortIdSubtype[port],
+						remotePortId          : device.lldp.remotePortId[port],
+						remoteSystemName      : device.lldp.remoteSystemName[port]
+					};
 				}
-
-				unmanagedSwitches[port] = {
-					length                : remotePortInfo.length,
-					matches               : matches,
-					remoteChassisIdSubtype: device.lldp.remoteChassisIdSubtype[port],
-					remoteChassisId       : device.lldp.remoteChassisId[port],
-					remotePortIdSubtype   : device.lldp.remotePortIdSubtype[port],
-					remotePortId          : device.lldp.remotePortId[port],
-					remoteSystemName      : device.lldp.remoteSystemName[port]
-				};
-				
 			}
 		}
 
@@ -610,50 +607,53 @@ class Topology extends Window {
 			const unmanagedSwitch = this.CreateUnmanagedSwitchEntry(device, parentPort, options);
 			const length = unmanagedSwitches[parentPort].length;
 
-			const psudoLldp = {
+			const pseudoLldp = {
 				file: unmanagedSwitch.initial.file,
-				localPortCount        : length,
-				localPortName         : new Array(length + 1).fill("--"),
-				localPortId           : new Array(length + 1).fill(""),
-				localPortIdSubtype    : new Array(length + 1).fill(0),
+				localPortCount        : length + 1,
+				localPortName         : Object.assign({}, new Array(length + 1).fill("--")),
+				localPortId           : Object.assign({}, new Array(length + 1).fill("")),
+				localPortIdSubtype    : Object.assign({}, new Array(length + 1).fill(0)),
 
-				remotePortIdSubtype:    {0:[device.lldp.localPortIdSubtype[parentPort]]},
-				remotePortId:           {0:[device.lldp.localPortId[parentPort]]},
-				remoteChassisIdSubtype: {0:[device.lldp.localChassisIdSubtype[parentPort]]},
-				remoteChassisId:        {0:[device.lldp.localChassisId[parentPort]]},
-				remoteSystemName:       {0:[device.lldp.localHostname[parentPort]]}
+				remoteChassisIdSubtype: {0:[device.lldp.localChassisIdSubtype]},
+				remoteChassisId       : {0:[device.lldp.localChassisId]},
+				remotePortIdSubtype   : {0:[device.lldp.localPortIdSubtype[parentPort]]},
+				remotePortId          : {0:[device.lldp.localPortId[parentPort]]},
+				remoteSystemName      : {0:[device.lldp.localHostname]}
 			};
 
-			let subCount = 1;
-			for (const i in unmanagedSwitches[parentPort].remotePortId) {
-				psudoLldp.remotePortIdSubtype[subCount] = unmanagedSwitches[parentPort].remotePortIdSubtype;
-				psudoLldp.remotePortId[subCount]        = unmanagedSwitches[parentPort].remotePortId;
-				psudoLldp.remoteSystemName[subCount]    = unmanagedSwitches[parentPort].remoteSystemName;
-				subCount++;
+			for (let i=0; i<unmanagedSwitches[parentPort].remotePortId.length; i++) {
+				pseudoLldp.remoteChassisIdSubtype[i+1] = [unmanagedSwitches[parentPort].remoteChassisIdSubtype[i]];
+				pseudoLldp.remoteChassisId[i+1]        = [unmanagedSwitches[parentPort].remoteChassisId[i]];
+				pseudoLldp.remotePortIdSubtype[i+1]    = [unmanagedSwitches[parentPort].remotePortIdSubtype[i]];
+				pseudoLldp.remotePortId[i+1]           = [unmanagedSwitches[parentPort].remotePortId[i]];
+				pseudoLldp.remoteSystemName[i+1]       = [unmanagedSwitches[parentPort].remoteSystemName[i]];
 			}
 
-			unmanagedSwitch.lldp = psudoLldp;
-
-			subCount = 1;
+			unmanagedSwitch.lldp = pseudoLldp;
 
 			if (!(parentPort in device.links)) {
-				this.Link(device, parentPort, unmanagedSwitch, 0);
 				//TODO: handle floating switches
+				this.Link(device, parentPort, unmanagedSwitch, 0);
 			}
 
-			for (const i in unmanagedSwitches[parentPort].remotePortId) {
-				const match = unmanagedSwitches[parentPort].matches[subCount];
+//console.log(device.initial.hostname, unmanagedSwitches[parentPort].matches);
+
+			for (let i=0; i<unmanagedSwitches[parentPort].matches.length; i++) {
+				const match = unmanagedSwitches[parentPort].matches[i];
+
+//console.log(i, device.initial.hostname, match);
+//console.log(unmanagedSwitches[parentPort]);
+
 				if (!match) continue;
 
 				if (match in this.devices) {
 
 				}
 				else {
-					this.LinkEndpoint(unmanagedSwitch, subCount, match);
+					this.LinkEndpoint(unmanagedSwitch, i + 1, match);
 				}
-
-				subCount++;
 			}
+
 		}
 	}
 
@@ -719,7 +719,7 @@ class Topology extends Window {
 		}
 
 		if (device.lldp.remotePortIdSubtype[port][index] === 5) { //remote port is interface
-			const entry = this.CreateUndocumentedSwitchEntry(device, port, index);
+			const entry = this.CreateUndocumentedEntry(device, port, index);
 			return entry.initial.file;
 		}
 
@@ -727,18 +727,17 @@ class Topology extends Window {
 	}
 
 	MatchDbEntry(device, port, index) {
-		const chassisId        = device.lldp.remoteChassisId[port][index];
+		const chassisId        = device.lldp.remoteChassisId[port][index].toLowerCase();
 		const chassisIdSubtype = device.lldp.remoteChassisIdSubtype[port][index];
-		const portId           = device.lldp.remotePortId[port][index];
+		const portId           = device.lldp.remotePortId[port][index].toLowerCase();
 		const portIdSubtype    = device.lldp.remotePortIdSubtype[port][index];
 
 		const match = (file, attribute, string) => {
-			const value = LOADER.devices.data[file][attribute]?.v;
+			const value = LOADER.devices.data[file][attribute]?.v.toLowerCase();
 			if (!value) return false;
 
 			const split = value.split(";").map(
 				o=>o.trim()
-				.toLowerCase()
 				.replaceAll(" ", "").replaceAll(":", "").replaceAll(".", "").replaceAll("-", "")
 			);
 
@@ -779,7 +778,7 @@ class Topology extends Window {
 			break;
 		}
 
-		const sysName = device.lldp.remoteSystemName[port][index];
+		const sysName = device.lldp.remoteSystemName[port][index].toLowerCase();
 		for (const file in LOADER.devices.data) {
 			if (match(file, "hostname", sysName)) return file;
 		}
@@ -803,18 +802,21 @@ class Topology extends Window {
 		return entry;
 	}
 
-	CreateUndocumentedSwitchEntry(device, port, index) {
+	CreateUndocumentedEntry(device, port, index) {
 		const dbFile = this.MatchDbEntry(device, port, index);
 
 		let deviceType     = null;
 		let deviceIp       = null;
+		let deviceMac      = null;
 		let deviceLocation = null;
 		if (dbFile) {
 			deviceType = LOADER.devices.data[dbFile]?.type.v.toLowerCase() ?? null;
 			deviceIp = LOADER.devices.data[dbFile]?.ip.v ?? null;
+			deviceMac = LOADER.devices.data[dbFile]["mac address"].v ?? null;
 			deviceLocation = LOADER.devices.data[dbFile]?.location.v.toLowerCase() ?? null;
 		}
 
+		deviceType ??= "switch";
 		const isRouter = deviceType === "router";
 
 		const file = dbFile ?? UI.GenerateUuid();
@@ -823,7 +825,7 @@ class Topology extends Window {
 		const element = this.CreateDeviceElement({
 			isRouter: isRouter,
 			file    : file,
-			type    : deviceType ?? "switch",
+			type    : deviceType,
 			name    : hostname,
 			x       : 100,
 			y       : 600
@@ -832,12 +834,12 @@ class Topology extends Window {
 		element.fill.setAttribute("fill", "rgb(232,118,0)");
 
 		const lldp = {
-			localChassisId       : null,
-			localChassisIdSubtype: null,
-			localHostname        : hostname,
 			localPortCount       : 0,
-			localPortId          : {},
+			localChassisIdSubtype: deviceMac ? 4 : null,
+			localChassisId       : deviceMac ? deviceMac : null,
 			localPortIdSubtype   : {},
+			localPortId          : {},
+			localHostname        : hostname,
 			localPortName        : {}
 		};
 
@@ -851,8 +853,8 @@ class Topology extends Window {
 				file: file,
 				hostname: hostname,
 				ip: deviceIp,
-				location: deviceLocation, 
-				type: "switch"
+				location: deviceLocation,
+				type: deviceType
 			},
 		};
 
@@ -1405,7 +1407,7 @@ class Topology extends Window {
 				const remoteDevice = this.devices[remoteDeviceFile];
 				const remotePortIndex = device.initial.file === link.deviceA ? link.portIndexB : link.portIndexA;
 
-				const remotePortName = remoteDevice.lldp && remoteDevice.lldp.localPortName
+				const remotePortName = remoteDevice.lldp && remoteDevice.lldp.localPortName && remoteDevice.lldp.localPortName[remotePortIndex].length > 0
 					? remoteDevice.lldp.localPortName[remotePortIndex]
 					: remotePortIndex;
 
