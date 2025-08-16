@@ -634,8 +634,37 @@ static OID_MAP_1_3_6_1_2_1 = [
 		element.appendChild(typeBox);
 
 		const valueBox = document.createElement("div");
-		valueBox.textContent = value;
 		element.appendChild(valueBox);
+
+		if (type === "octet-string") {
+			let isBinary = false;
+			for (let i=8; i<value.length; i+=2) {
+				const b = parseInt(value.substr(i, 2), 16);
+				if ((b<32 || b>126) && b!==10 && b!==13) {
+					isBinary = true;
+					break;
+				}
+			}
+
+			if (isBinary) {
+				valueBox.textContent = value;
+				valueBox.className = "snmp-hex";
+			}
+			else {
+				let newValue = "";
+				for (let i=6; i<value.length; i+=2) {
+					const b = parseInt(value.substr(i, 2), 16);
+					if (b > 126) continue;
+					newValue += String.fromCharCode(b);
+				}
+				valueBox.textContent = newValue;
+				valueBox.className = "snmp-str";
+			}
+			
+		}
+		else {
+			valueBox.textContent = value;
+		}
 
 		const hLine = document.createElement("div");
 		hLine.className = "snmp-tree-hline";

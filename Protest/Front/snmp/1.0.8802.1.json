@@ -193,7 +193,7 @@
 ".1.2.1.4.2.1":["lldpRemManAddrEntry"],
 ".1.2.1.4.2.1.1":["lldpRemManAddrSubtype"],
 ".1.2.1.4.2.1.2":["lldpRemManAddr"],
-".1.2.1.4.2.1.3":["lldpRemManAddrIfSubtype"],
+".1.2.1.4.2.1.3":["lldpRemManAddrIfSubtype", {"1":"Time mark","2":"Local port","3":"Index","4":"Address subtype","5":"Address"}],
 ".1.2.1.4.2.1.4":["lldpRemManAddrIfId"],
 ".1.2.1.4.2.1.5":["lldpRemManAddrOID"],
 ".1.2.1.4.3":["lldpRemUnknownTLVTable"],

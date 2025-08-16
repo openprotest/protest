@@ -344,29 +344,16 @@ internal static partial class Polling {
             }
             else if (result[i].Data.TypeCode == SnmpType.OctetString) {
                 string s = result[i].Data.ToString();
-                bool isBinary = false;
 
                 //int start = s.Length > 3 && s[0] == 0x04 ? 3 : 0;
 
-                for (int j = 0; j < s.Length; j++) {
-                    if ((s[j] < 32 || s[j] > 126) && s[j] != 10 && s[j] != 13) {
-                        isBinary = true;
-                        break;
-                    }
-                }
+                byte[] bytes = result[i].Data.ToBytes();
 
-                if (isBinary) {
-                    byte[] bytes = result[i].Data.ToBytes();
-
-                    builder.Append("\"0x");
-                    for (int j = 0; j < bytes.Length; j++) {
-                        builder.Append($"{bytes[j]:X2}");
-                    }
-                    builder.Append('\"');
+                builder.Append("\"0x");
+                for (int j = 0; j < bytes.Length; j++) {
+                    builder.Append($"{bytes[j]:X2}");
                 }
-                else {
-                    builder.Append($"\"{Data.EscapeJsonText(result[i].Data.ToString())}\"");
-                }
+                builder.Append('\"');
             }
             else {
                 builder.Append($"\"{Data.EscapeJsonText(result[i].Data.ToString())}\"");

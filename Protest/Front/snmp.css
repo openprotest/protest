@@ -80,6 +80,31 @@
 .snmp-list-item > div:nth-child(3) {
 	width: 50%;
 	max-width: 600px;
+	white-space: nowrap;
+}
+
+.snmp-list-item > div:nth-child(3)::before {
+	font-size: smaller;
+	text-align: center;
+	display: inline-block;
+	color: var(--clr-light);
+	background-color: rgb(72,72,72);
+	border-radius: 4px;
+	padding: 0px 2px;
+	margin-right: 4px;
+	min-width: 24px;
+	height: 20px;
+	line-height: 20px;
+}
+
+.snmp-list-item > div:nth-child(3).snmp-bin::before {
+	content: "BIN";
+}
+.snmp-list-item > div:nth-child(3).snmp-hex::before {
+	content: "HEX";
+}
+.snmp-list-item > div:nth-child(3).snmp-str::before {
+	content: "STR";
 }
 
 .snmp-list-item > div:nth-child(3) > div {
@@ -155,7 +180,7 @@
 .snmp-container-item > div:nth-child(2) {
 	max-width: calc(60% - 8px);
 	color: var(--clr-light);
-	background-color: var(--clr-dark);
+	background-color: rgb(72,72,72);
 	border-radius: 4px;
 	padding: 0 4px;
 	margin: 2px 0;
