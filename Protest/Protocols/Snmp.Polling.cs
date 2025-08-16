@@ -52,15 +52,15 @@ internal static partial class Polling {
         if (String.IsNullOrEmpty(communityString)) { communityString = "public"; }
         OctetString community = new OctetString(communityString);
 
-        if (!Int32.TryParse(timeoutString, out int timeout) || timeout == 0) {
-            timeout = 5000;
+        if (!Int32.TryParse(timeoutString, out int timeout) || timeout < 1) {
+            timeout = 10_000;
         }
 
         using StreamReader reader = new StreamReader(ctx.Request.InputStream, ctx.Request.ContentEncoding);
         string payload = reader.ReadToEnd().Trim();
 
         string[] oidArray = payload.Split(new char[] { ' ', ',', ';', '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
-        if (oidArray.Length == 0) { return Data.CODE_INVALID_ARGUMENT.Array; }
+        if (oidArray.Length == 0) return Data.CODE_INVALID_ARGUMENT.Array;
 
         try {
             if (version == VersionCode.V3) {
@@ -366,14 +366,14 @@ internal static partial class Polling {
                     else {
                         int lenBytesCount = lenByte & 0x7F;
                         size = 0;
-                        for (int j = 0; j < lenBytesCount; j++) {
-                            size = (size << 8) + bytes[2 + i];
+                        for (int j = 0; j < Math.Min(lenBytesCount, bytes.Length - 2); j++) {
+                            size = (size << 8) + bytes[2 + j];
                         }
                         startIndex = 2 + lenBytesCount;
                     }
 
                     builder.Append("\"");
-                    for (int j = startIndex; j < bytes.Length; j++) {
+                    for (int j = startIndex; j < Math.Min(startIndex + size, bytes.Length); j++) {
                         builder.Append($"{bytes[j]:X2}");
                     }
                     builder.Append('\"');
