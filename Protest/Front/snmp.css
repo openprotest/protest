@@ -75,6 +75,8 @@
 .snmp-list-item > div:nth-child(2) {
 	width: 15%;
 	max-width: 150px;
+	cursor: pointer;
+	user-select: none;
 }
 
 .snmp-list-item > div:nth-child(3) {

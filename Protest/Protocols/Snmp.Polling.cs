@@ -1,12 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Net;
-using System.Text;
-using Lextm.SharpSnmpLib;
+﻿using Lextm.SharpSnmpLib;
 using Lextm.SharpSnmpLib.Messaging;
 using Lextm.SharpSnmpLib.Security;
 using Protest.Tools;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Net;
+using System.Reflection;
+using System.Text;
 
 namespace Protest.Protocols.Snmp;
 
@@ -343,17 +344,40 @@ internal static partial class Polling {
                 builder.Append("\"--\"");
             }
             else if (result[i].Data.TypeCode == SnmpType.OctetString) {
-                string s = result[i].Data.ToString();
-
-                //int start = s.Length > 3 && s[0] == 0x04 ? 3 : 0;
-
                 byte[] bytes = result[i].Data.ToBytes();
 
-                builder.Append("\"");
-                for (int j = 0; j < bytes.Length; j++) {
-                    builder.Append($"{bytes[j]:X2}");
+                if (bytes.Length == 0) {
+                    builder.Append("\"\"");
                 }
-                builder.Append('\"');
+                else if (bytes.Length < 2) {
+                    builder.Append("\"");
+                    for (int j = 0; j < bytes.Length; j++) {
+                        builder.Append($"{bytes[j]:X2}");
+                    }
+                    builder.Append('\"');
+                }
+                else {
+                    byte lenByte = bytes[1];
+                    int size, startIndex;
+                    if (lenByte < 128) {
+                        size = lenByte;
+                        startIndex = 2;
+                    }
+                    else {
+                        int lenBytesCount = lenByte & 0x7F;
+                        size = 0;
+                        for (int j = 0; j < lenBytesCount; j++) {
+                            size = (size << 8) + bytes[2 + i];
+                        }
+                        startIndex = 2 + lenBytesCount;
+                    }
+
+                    builder.Append("\"");
+                    for (int j = startIndex; j < bytes.Length; j++) {
+                        builder.Append($"{bytes[j]:X2}");
+                    }
+                    builder.Append('\"');
+                }
             }
             else {
                 builder.Append($"\"{Data.EscapeJsonText(result[i].Data.ToString())}\"");
