@@ -708,7 +708,7 @@ const MENU = {
 						info.style.fontWeight = "400";
 						item.appendChild(info);
 
-						if (title === null || title.length === 0) { 
+						if (title === null || title.length === 0) {
 							info.style.paddingTop = "16px";
 						}
 					}
@@ -775,7 +775,7 @@ const MENU = {
 						info.style.fontWeight = "400";
 						item.appendChild(info);
 
-						if (title === null || title.length === 0) { 
+						if (title === null || title.length === 0) {
 							info.style.paddingTop = "16px";
 						}
 					}

@@ -534,14 +534,14 @@ class Topology extends Window {
 
 	ComputeLldpNeighbors(device) {
 		const unmanagedSwitches = {};
-		
+
 		for (const port in device.lldp.remotePortId) {
 			const remotePortInfo = device.lldp.remotePortId[port];
 			if (!remotePortInfo || remotePortInfo.length === 0) continue;
 
 			if (remotePortInfo.length === 1) {
 				const match = this.MatchDevice(device, port, 0) ?? this.MatchDbEntry(device, port, 0);
-				
+
 				if (match in this.devices) {
 					const remoteDevice = this.devices[match];
 
@@ -659,7 +659,7 @@ class Topology extends Window {
 
 	ComputeRemotePort(device, port, index, remoteDevice) {
 		const remoteLldp = remoteDevice.lldp || {};
-		
+
 		const findPortIndex = (name) => {
 			for (const i in remoteLldp.localPortName) {
 				if (remoteLldp.localPortName[i] === name) {
@@ -770,7 +770,7 @@ class Topology extends Window {
 				if (match(file, "mac address", portId)) return file;
 			}
 			break;
-		
+
 		case 4: //network address
 			for (const file in LOADER.devices.data) {
 				if (match(file, "ip", portId)) return file;
@@ -916,7 +916,7 @@ class Topology extends Window {
 		const key = `${deviceFile}-${portIndex}-${endpoint}-e`;
 
 		const element = this.CreateEndPointElement(device, endpoint);
-		
+
 		if (device.isUnmanaged) {
 			const angle = (-device.lldp.localPortCount / 2 + portIndex / device.lldp.localPortCount) * Math.PI;
 			element.dot.setAttribute("cx", 24 + 25 * Math.cos(angle));
@@ -1414,7 +1414,7 @@ class Topology extends Window {
 				remoteBox.textContent = remoteDevice.isUnmanaged ? "unmanaged" : remoteDevice.initial.hostname;
 				remoteBox.style.width = "calc(50% - 12px)";
 				remoteBox.style.borderRadius = "4px 0 0 4px";
-				
+
 				const remotePortBox = document.createElement("div");
 				remotePortBox.textContent = remotePortName;
 				interfaceBox.append(remotePortBox);
@@ -1433,10 +1433,10 @@ class Topology extends Window {
 				}
 			}
 			else {
-				
+
 			}
 		}
-			
+
 		interfaceBox.onmouseenter = ()=> {
 			if (!link) return;
 			const e = link.element;
@@ -1483,7 +1483,7 @@ class Topology extends Window {
 				this.infoBox.style.opacity = "0";
 				return;
 			}
-			
+
 			if (this.selectedInterface) {
 				this.selectedInterface.className = "";
 			}

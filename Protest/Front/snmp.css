@@ -83,7 +83,7 @@
 	white-space: nowrap;
 }
 
-.snmp-list-item > div:nth-child(3)::before {
+.snmp-list-item > div:nth-child(2)::before {
 	font-size: smaller;
 	text-align: center;
 	display: inline-block;
@@ -97,13 +97,13 @@
 	line-height: 20px;
 }
 
-.snmp-list-item > div:nth-child(3).snmp-bin::before {
+.snmp-list-item > div:nth-child(2).snmp-bin::before {
 	content: "BIN";
 }
-.snmp-list-item > div:nth-child(3).snmp-hex::before {
+.snmp-list-item > div:nth-child(2).snmp-hex::before {
 	content: "HEX";
 }
-.snmp-list-item > div:nth-child(3).snmp-str::before {
+.snmp-list-item > div:nth-child(2).snmp-str::before {
 	content: "STR";
 }
 

@@ -349,7 +349,7 @@ internal static partial class Polling {
 
                 byte[] bytes = result[i].Data.ToBytes();
 
-                builder.Append("\"0x");
+                builder.Append("\"");
                 for (int j = 0; j < bytes.Length; j++) {
                     builder.Append($"{bytes[j]:X2}");
                 }

@@ -631,6 +631,7 @@ static OID_MAP_1_3_6_1_2_1 = [
 
 		const typeBox = document.createElement("div");
 		typeBox.textContent = type;
+		typeBox.setAttribute("value", value);
 		element.appendChild(typeBox);
 
 		const valueBox = document.createElement("div");
@@ -638,8 +639,8 @@ static OID_MAP_1_3_6_1_2_1 = [
 
 		if (type === "octet-string") {
 			let isBinary = false;
-			for (let i=8; i<value.length; i+=2) {
-				const b = parseInt(value.substr(i, 2), 16);
+			for (let i=6; i<value.length; i+=2) {
+				const b = parseInt(value.substring(i, i+2), 16);
 				if ((b<32 || b>126) && b!==10 && b!==13) {
 					isBinary = true;
 					break;
@@ -647,20 +648,13 @@ static OID_MAP_1_3_6_1_2_1 = [
 			}
 
 			if (isBinary) {
-				valueBox.textContent = value;
-				valueBox.className = "snmp-hex";
+				typeBox.className = "snmp-hex";
+				valueBox.textContent = this.ValueToHex(value);
 			}
 			else {
-				let newValue = "";
-				for (let i=6; i<value.length; i+=2) {
-					const b = parseInt(value.substr(i, 2), 16);
-					if (b > 126) continue;
-					newValue += String.fromCharCode(b);
-				}
-				valueBox.textContent = newValue;
-				valueBox.className = "snmp-str";
+				typeBox.className = "snmp-str";
+				valueBox.textContent = this.ValueToString(value);
 			}
-			
 		}
 		else {
 			valueBox.textContent = value;
@@ -680,7 +674,108 @@ static OID_MAP_1_3_6_1_2_1 = [
 			valueBox.appendChild(stringValue);
 		}
 
+		typeBox.onclick = event=>{
+			const classes = ["snmp-hex", "snmp-bin", "snmp-str"];
+			const current = typeBox.className;
+			const nextClass = classes[(classes.indexOf(current) + 1) % classes.length];
+
+			if (event.shiftKey) {
+				const siblings = element.parentElement.childNodes;
+				for (let i=0; i<siblings.length; i++) {
+					siblings[i].childNodes[1].className = nextClass;
+					const v = siblings[i].childNodes[1].getAttribute("value");
+					siblings[i].childNodes[2].textContent = {
+						"snmp-hex": this.ValueToHex(v),
+						"snmp-bin": this.ValueToBinary(v),
+						"snmp-str": this.ValueToString(v)
+					}[nextClass];
+				}
+			}
+			else {
+				typeBox.className = nextClass;
+				valueBox.textContent = {
+					"snmp-hex": this.ValueToHex(value),
+					"snmp-bin": this.ValueToBinary(value),
+					"snmp-str": this.ValueToString(value)
+				}[nextClass];
+			}
+		};
+
 		return element;
+	}
+
+	ValueToHex(value) {
+		//const type = parseInt(value.substring(0, 2), 16);
+		let lenByte = parseInt(value.substring(2, 4), 16);
+
+		let size, index;
+		if (lenByte < 128) {
+			size = lenByte;
+			index = 4;
+		}
+		else {
+			const bytesCount = lenByte & 0x7F;
+			size = 0;
+			for (let i = 0; i < bytesCount; i++) {
+				size = (size << 8) + parseInt(value.substring(4 + i*2, 6 + i*2), 16);
+			}
+			index = 4 + bytesCount*2;
+		}
+
+		return "0x" + value.substring(index, index + size*2);
+	}
+
+	ValueToBinary(value) {
+		//const type = parseInt(value.substring(0, 2), 16);
+		let lenByte = parseInt(value.substring(2, 4), 16);
+
+		let size, index;
+		if (lenByte < 128) {
+			size = lenByte;
+			index = 4;
+		}
+		else {
+			const bytesCount = lenByte & 0x7F;
+			size = 0;
+			for (let i=0; i<bytesCount; i++) {
+				size = (size << 8) + parseInt(value.substring(4 + i*2, 6 + i*2), 16);
+			}
+			index = 4 + bytesCount*2;
+		}
+
+		let newValue = "0b ";
+		for (let i=index; i<index + size*2; i+=2) {
+			const b = parseInt(value.substring(i, i+2), 16);
+			newValue += b.toString(2).padStart(8, "0") + " ";
+		}
+		return newValue;
+	}
+
+	ValueToString(value) {
+		//const type = parseInt(value.substring(0, 2), 16);
+		let lenByte = parseInt(value.substring(2, 4), 16);
+
+		let size, index;
+		if (lenByte < 128) {
+			size = lenByte;
+			index = 4;
+		}
+		else {
+			const bytesCount = lenByte & 0x7F;
+			size = 0;
+			for (let i=0; i<bytesCount; i++) {
+				size = (size << 8) + parseInt(value.substring(4 + i*2, 6 + i*2), 16);
+			}
+			index = 4 + bytesCount*2;
+		}
+
+		let newValue = "";
+		for (let i=index; i<index + size*2; i+=2) {
+			const b = parseInt(value.substring(i, i+2), 16);
+			if (b > 126) continue;
+			newValue += String.fromCharCode(b);
+		}
+		return newValue;
 	}
 
 	CreateContainer(oid) {
