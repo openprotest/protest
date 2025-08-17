@@ -19,12 +19,10 @@ class Topology extends Window {
 		this.y0 = 0;
 		this.selected = null;
 		this.dragging = null;
-		this.shiftKey  = false;
-
+		this.shiftKey = false;
 		this.selectedInterface = null;
 
 		this.ws = null;
-
 		this.devices = {};
 		this.links = {};
 
@@ -550,14 +548,27 @@ class Topology extends Window {
 
 					if (remoteDevice.isUndocumented) {
 						remotePortIndex = remoteDevice.links.length;
-
-						remoteDevice.lldp.localPortCount        = remotePortIndex;
-						remoteDevice.lldp.localChassisId        = device.lldp.remoteChassisId[port][0];
-						remoteDevice.lldp.localChassisIdSubtype = device.lldp.remoteChassisIdSubtype[port][0];
-
+						remoteDevice.lldp.localPortCount                      = remotePortIndex;
 						remoteDevice.lldp.localPortName[remotePortIndex]      = device.lldp.remotePortId[port][0];
-						remoteDevice.lldp.localPortId[remotePortIndex]        = device.lldp.remoteChassisId[port][0];
+						remoteDevice.lldp.localChassisIdSubtype               = device.lldp.remoteChassisIdSubtype[port][0];
+						remoteDevice.lldp.localChassisId                      = device.lldp.remoteChassisId[port][0];
 						remoteDevice.lldp.localPortIdSubtype[remotePortIndex] = device.lldp.remoteChassisIdSubtype[port][0];
+						remoteDevice.lldp.localPortId[remotePortIndex]        = device.lldp.remoteChassisId[port][0];
+
+						if (!remoteDevice.lldp.remoteChassisIdSubtype) {
+							remoteDevice.lldp.remoteChassisIdSubtype = {};
+							remoteDevice.lldp.remoteChassisId        = {};
+							remoteDevice.lldp.remotePortIdSubtype    = {};
+							remoteDevice.lldp.remotePortId           = {};
+							remoteDevice.lldp.remoteSystemName       = {};
+						}
+
+						remoteDevice.lldp.remoteChassisIdSubtype[remotePortIndex] = [device.lldp.localChassisIdSubtype];
+						remoteDevice.lldp.remoteChassisId[remotePortIndex]        = [device.lldp.localChassisId];
+						remoteDevice.lldp.remotePortIdSubtype[remotePortIndex]    = [device.lldp.localPortIdSubtype[port]];
+						remoteDevice.lldp.remotePortId[remotePortIndex]           = [device.lldp.localPortId[port]];
+						remoteDevice.lldp.remoteSystemName[remotePortIndex]       = [device.lldp.localHostname];
+
 					}
 
 					if (remotePortIndex > -1) {
@@ -611,9 +622,8 @@ class Topology extends Window {
 				file: unmanagedSwitch.initial.file,
 				localPortCount        : length + 1,
 				localPortName         : Object.assign({}, new Array(length + 1).fill("--")),
-				localPortId           : Object.assign({}, new Array(length + 1).fill("")),
 				localPortIdSubtype    : Object.assign({}, new Array(length + 1).fill(0)),
-
+				localPortId           : Object.assign({}, new Array(length + 1).fill("")),
 				remoteChassisIdSubtype: {0:[device.lldp.localChassisIdSubtype]},
 				remoteChassisId       : {0:[device.lldp.localChassisId]},
 				remotePortIdSubtype   : {0:[device.lldp.localPortIdSubtype[parentPort]]},
@@ -1324,8 +1334,18 @@ class Topology extends Window {
 		interfacesList.onkeydown = event=> { this.InterfaceList_onkeydown(event, interfacesList); };
 
 		if (device.lldp) {
-			for (const index in device.lldp.localPortName) {
-				this.CreateInterfaceListItem(interfacesList, device, index, device.lldp.localPortName[index]);
+			if (device.isUndocumented) {
+				const entries = Object.entries(device.lldp.localPortName)
+					.sort(([, a], [, b]) => a.localeCompare(b));
+
+				for (const [index, name] of entries) {
+					this.CreateInterfaceListItem(interfacesList, device, index, name);
+				}
+			}
+			else {
+				for (const index in device.lldp.localPortName) {
+					this.CreateInterfaceListItem(interfacesList, device, index, device.lldp.localPortName[index]);
+				}
 			}
 		}
 	}

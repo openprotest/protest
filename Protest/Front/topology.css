@@ -142,7 +142,8 @@
 .topology-info-box {
 	position: absolute;
 	right: 374px;
-	width: 250px;
+	width: max-content;
+	min-width: 250px;
 	min-height: 100px;
 	padding: 4px;
 	background-color: color-mix(in srgb, var(--clr-pane) 80%, transparent);
