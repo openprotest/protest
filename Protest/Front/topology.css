@@ -112,21 +112,6 @@
 	border-radius: 4px;
 }
 
-.topology-interface-list > div > div:nth-child(2).snmp-ambiguous::after {
-	position: absolute;
-	content: "?";
-	text-align: center;
-	font-weight: bold;
-	color: var(--clr-light);
-	background-color: var(--clr-dark);
-	right: 2px;
-	width: 16px;
-	height: 16px;
-	line-height: 16px;
-	border-radius: 8px;
-	transform: translateY(2px);
-}
-
 .topology-interface-list > div > div:nth-child(3) {
 	width: calc(25% - 2px);
 	border-radius: 0 4px 4px 0;
@@ -146,6 +131,32 @@
 	border-bottom: 2px solid var(--clr-select);
 	height: 8px !important;
 	transform: translateY(6px) !important;
+}
+
+.snmp-ambiguous::after {
+	position: absolute;
+	content: "?";
+	text-align: center;
+	font-weight: bold;
+	color: var(--clr-light);
+	background-color: var(--clr-dark);
+	right: 2px;
+	width: 14px;
+	height: 14px;
+	line-height: 14px;
+	border-radius: 6px;
+	overflow: hidden;
+	transform: translateY(2px);
+}
+
+*:hover.snmp-ambiguous::after {
+	content: "ambiguous";
+	font-weight: normal;
+	width: 84px;
+	height: 16px;
+	line-height: 16px;
+	transform: translateY(1px);
+	transition: .2s;
 }
 
 .topology-selected {

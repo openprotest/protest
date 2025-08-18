@@ -580,20 +580,26 @@ class Topology extends Window {
 			}
 			else { //multiple LLDP entries, treat as unmanaged switch
 				const matches = [];
-				let networkDevicesCounter = 0;
+				const ambiguousIndexes = {};
+				let   nonAmbiguousCount = 0;
 
 				for (let i=0; i<remotePortInfo.length; i++) {
 					let match = this.MatchDevice(device, port, i);
 
-					if (match) networkDevicesCounter++;
+					if (match) {
+						nonAmbiguousCount++;
+					}
+					else {
+						ambiguousIndexes[i] = true;
+					}
 
 					match ??= this.MatchDbEntry(device, port, i);
 					matches.push(match);
 				}
 
-				if (networkDevicesCounter === 1) {
+				if (nonAmbiguousCount === 1) {
 					if (!device.lldp.ambiguous) device.lldp.ambiguous = {}
-					device.lldp.ambiguous[port] = true;
+					device.lldp.ambiguous[port] = ambiguousIndexes;
 					console.info("port skipped due to ambiguity", device, port);
 					continue;
 				}
@@ -670,7 +676,6 @@ class Topology extends Window {
 					this.LinkEndpoint(unmanagedSwitch, i + 1, match);
 				}
 			}
-
 		}
 	}
 
@@ -1578,6 +1583,10 @@ class Topology extends Window {
 					box.style.margin = "2px";
 					box.textContent = `${device.lldp.remoteChassisIdSubtype[index][i]}:${device.lldp.remoteChassisId[index][i]}|${device.lldp.remotePortIdSubtype[index][i]}:${device.lldp.remotePortId[index][i]}|${device.lldp.remoteSystemName[index][i]}`;
 					this.infoBox.appendChild(box);
+
+					if (device?.lldp?.ambiguous?.[index][i]) {
+						box.className = "snmp-ambiguous";
+					}
 				}
 			}
 
