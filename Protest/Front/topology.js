@@ -543,7 +543,7 @@ class Topology extends Window {
 				if (match in this.devices) {
 					const remoteDevice = this.devices[match];
 
-					let remotePort  = this.ComputeRemotePort(device, port, 0, remoteDevice);
+					let remotePort      = this.ComputeRemotePort(device, port, 0, remoteDevice);
 					let remotePortIndex = remotePort?.index ?? -1;
 
 					if (remoteDevice.isUndocumented) {
@@ -568,7 +568,6 @@ class Topology extends Window {
 						remoteDevice.lldp.remotePortIdSubtype[remotePortIndex]    = [device.lldp.localPortIdSubtype[port]];
 						remoteDevice.lldp.remotePortId[remotePortIndex]           = [device.lldp.localPortId[port]];
 						remoteDevice.lldp.remoteSystemName[remotePortIndex]       = [device.lldp.localHostname];
-
 					}
 
 					if (remotePortIndex > -1) {
@@ -581,15 +580,29 @@ class Topology extends Window {
 			}
 			else { //multiple LLDP entries, treat as unmanaged switch
 				const matches = [];
+				let networkDevicesCounter = 0;
+
 				for (let i=0; i<remotePortInfo.length; i++) {
-					const match = this.MatchDevice(device, port, i) ?? this.MatchDbEntry(device, port, i);
+					let match = this.MatchDevice(device, port, i);
+
+					if (match) networkDevicesCounter++;
+
+					match ??= this.MatchDbEntry(device, port, i);
 					matches.push(match);
+				}
+
+				if (networkDevicesCounter === 1) {
+					if (!device.lldp.ambiguous) device.lldp.ambiguous = {}
+					device.lldp.ambiguous[port] = true;
+					console.info("port skipped due to ambiguity", device, port);
+					continue;
 				}
 
 				const nonNullMatches = matches.filter(o=> o !== null);
 				const isSingle = nonNullMatches.length > 1 && nonNullMatches.every(o=> o === matches[0]);
+
 				if (isSingle) {
-					//TODO: handle as single device
+					
 				}
 				else {
 					unmanagedSwitches[port] = {
@@ -646,14 +659,8 @@ class Topology extends Window {
 				this.Link(device, parentPort, unmanagedSwitch, 0);
 			}
 
-//console.log(device.initial.hostname, unmanagedSwitches[parentPort].matches);
-
 			for (let i=0; i<unmanagedSwitches[parentPort].matches.length; i++) {
 				const match = unmanagedSwitches[parentPort].matches[i];
-
-//console.log(i, device.initial.hostname, match);
-//console.log(unmanagedSwitches[parentPort]);
-
 				if (!match) continue;
 
 				if (match in this.devices) {
@@ -670,11 +677,10 @@ class Topology extends Window {
 	ComputeRemotePort(device, port, index, remoteDevice) {
 		const remoteLldp = remoteDevice.lldp || {};
 
-		const findPortIndex = (name) => {
+		const findPortIndex = name=> {
 			for (const i in remoteLldp.localPortName) {
-				if (remoteLldp.localPortName[i] === name) {
-					return i;
-				}
+				if (remoteLldp.localPortId[i] === name) return i;
+				if (remoteLldp.localPortName[i] === name) return i;
 			}
 			return -1;
 		};
@@ -742,7 +748,7 @@ class Topology extends Window {
 		const portId           = device.lldp.remotePortId[port][index].toLowerCase();
 		const portIdSubtype    = device.lldp.remotePortIdSubtype[port][index];
 
-		const match = (file, attribute, string) => {
+		const match = (file, attribute, string)=> {
 			const value = LOADER.devices.data[file][attribute]?.v.toLowerCase();
 			if (!value) return false;
 
@@ -875,12 +881,12 @@ class Topology extends Window {
 
 	Link(deviceA, portIndexA, deviceB, portIndexB) {
 		if (portIndexA in deviceA.links) {
-			console.warn("port already in use: ", deviceA, portIndexA);
+			console.info("port already in use: ", deviceA, portIndexA);
 			return null;
 		}
 
 		if (portIndexB in deviceB.links) {
-			console.warn("port already in use: ", deviceB, portIndexB);
+			console.info("port already in use: ", deviceB, portIndexB);
 			return null;
 		}
 
@@ -921,6 +927,39 @@ class Topology extends Window {
 		return entry;
 	}
 
+	Unlink(deviceA, portIndexA, deviceB, portIndexB) {
+		const fileA = deviceA.initial.file;
+		const fileB = deviceB.initial.file;
+		const key = fileA > fileB
+			? `${fileA}-${portIndexA}-${fileB}-${portIndexB}`
+			: `${fileB}-${portIndexB}-${fileA}-${portIndexA}`;
+
+		const entry = this.links[key];
+		if (!entry) return;
+
+		this.linesLayer.removeChild(entry.element.line);
+		this.linesLayer.removeChild(entry.element.capA);
+		this.linesLayer.removeChild(entry.element.capB);
+
+		if (deviceA.isUnmanaged) {
+			const index = deviceA.links.indexOf(key);
+			if (index > -1) deviceA.links.splice(index, 1);
+		}
+		else {
+			delete deviceA.links[portIndexA];
+		}
+
+		if (deviceB.isUnmanaged) {
+			const index = deviceB.links.indexOf(key);
+			if (index > -1) deviceB.links.splice(index, 1);
+		}
+		else {
+			delete  deviceB.links[portIndexB];
+		}
+
+		delete this.links[key];
+	}
+
 	LinkEndpoint(device, portIndex, endpoint) {
 		const deviceFile = device.initial.file;
 		const key = `${deviceFile}-${portIndex}-${endpoint}-e`;
@@ -928,7 +967,8 @@ class Topology extends Window {
 		const element = this.CreateEndPointElement(device, endpoint);
 
 		if (device.isUnmanaged) {
-			const angle = (-device.lldp.localPortCount / 2 + portIndex / device.lldp.localPortCount) * Math.PI;
+			const angle = (portIndex - 1) / -Math.PI;
+
 			element.dot.setAttribute("cx", 24 + 25 * Math.cos(angle));
 			element.dot.setAttribute("cy", 24 + 25 * Math.sin(angle));
 		}
@@ -954,7 +994,9 @@ class Topology extends Window {
 			device.links.push(key);
 		}
 		else {
-			if (portIndex in device.links) { console.warn("port already in use"); }
+			if (portIndex in device.links) { 
+				console.info("port already in use");
+			}
 			device.links[portIndex] = key;
 		}
 
@@ -1419,6 +1461,10 @@ class Topology extends Window {
 		localBox.textContent = localPortName;
 
 		const link = this.links[device.links[index]];
+
+		if (device?.lldp?.ambiguous?.[index]) {
+			remoteBox.className = "snmp-ambiguous";
+		}
 
 		if (link) {
 			const remoteDeviceFile = device.initial.file === link.deviceA ? link.deviceB : link.deviceA;

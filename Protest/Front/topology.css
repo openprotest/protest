@@ -112,6 +112,21 @@
 	border-radius: 4px;
 }
 
+.topology-interface-list > div > div:nth-child(2).snmp-ambiguous::after {
+	position: absolute;
+	content: "?";
+	text-align: center;
+	font-weight: bold;
+	color: var(--clr-light);
+	background-color: var(--clr-dark);
+	right: 2px;
+	width: 16px;
+	height: 16px;
+	line-height: 16px;
+	border-radius: 8px;
+	transform: translateY(2px);
+}
+
 .topology-interface-list > div > div:nth-child(3) {
 	width: calc(25% - 2px);
 	border-radius: 0 4px 4px 0;
