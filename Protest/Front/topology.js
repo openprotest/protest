@@ -26,6 +26,9 @@ class Topology extends Window {
 		this.devices = {};
 		this.links = {};
 
+		this.documentedCount = 0;
+		this.undocumentedCount = 0;
+
 		this.InitializeComponents();
 		this.InitializeSvg();
 		this.StartDialog();
@@ -176,6 +179,9 @@ class Topology extends Window {
 		this.links = {};
 		this.workspace.textContent = "";
 		this.sideBar.textContent = "";
+
+		this.documentedCount = 0;
+		this.undocumentedCount = 0;
 
 		this.infoBox.style.opacity = "0";
 		this.infoBox.style.visibility = "hidden";
@@ -395,7 +401,8 @@ class Topology extends Window {
 			const json = JSON.parse(payload);
 
 			if (json.initial) {
-				let count = 0;
+				this.documentedCount = json.initial.length;
+
 				for (let i=0; i<json.initial.length; i++) {
 					if (["__proto__", "constructor", "prototype"].includes(json.initial[i].file)) continue;
 
@@ -403,8 +410,8 @@ class Topology extends Window {
 						file: json.initial[i].file,
 						type: json.initial[i].type,
 						name: json.initial[i].hostname,
-						x: 100 + (count % 8) * 150,
-						y: 150 + Math.floor(count / 8) * 250
+						x: 100 + (i % 8) * 150,
+						y: 150 + Math.floor(i / 8) * 250
 					});
 
 					this.devices[json.initial[i].file] = {
@@ -412,8 +419,6 @@ class Topology extends Window {
 						initial: json.initial[i],
 						links  : {},
 					};
-
-					count++;
 				}
 			}
 			else if (json.retrieve && !["__proto__", "constructor", "prototype"].includes(json.retrieve)) {
@@ -541,10 +546,9 @@ class Topology extends Window {
 				const match = this.MatchDevice(device, port, 0) ?? this.MatchDbEntry(device, port, 0);
 
 				if (match in this.devices) {
-					const remoteDevice = this.devices[match];
-
-					let remotePort      = this.ComputeRemotePort(device, port, 0, remoteDevice);
-					let remotePortIndex = remotePort?.index ?? -1;
+					const remoteDevice    = this.devices[match];
+					const remotePort      = this.ComputeRemotePort(device, port, 0, remoteDevice);
+					let   remotePortIndex = remotePort?.index ?? -1;
 
 					if (remoteDevice.isUndocumented) {
 						remotePortIndex = remoteDevice.links.length;
@@ -553,6 +557,9 @@ class Topology extends Window {
 
 					if (remotePortIndex > -1) {
 						this.Link(device, port, remoteDevice, remotePortIndex);
+					}
+					else {
+						//TODO:
 					}
 				}
 				else {
@@ -589,7 +596,7 @@ class Topology extends Window {
 				}
 
 				if (isSingle) {
-					const remoteDevice = this.devices[matches[0]];
+					const remoteDevice  = this.devices[matches[0]];
 					let remotePort      = this.ComputeRemotePort(device, port, 0, remoteDevice);
 					let remotePortIndex = remotePort?.index ?? -1;
 
@@ -861,13 +868,17 @@ class Topology extends Window {
 		const file = dbFile ?? UI.GenerateUuid();
 		const hostname = device.lldp.remoteSystemName[port][index];
 
+		const count = this.documentedCount + this.undocumentedCount;
+		const x = 100 + (count % 8) * 150;
+		const y = 150 + Math.floor(count / 8) * 250;
+
 		const element = this.CreateDeviceElement({
 			isRouter: isRouter,
 			file    : file,
 			type    : deviceType,
 			name    : hostname,
-			x       : 100,
-			y       : 600
+			x       : x,
+			y       : y
 		});
 
 		element.fill.setAttribute("fill", "rgb(232,118,0)");
@@ -894,11 +905,13 @@ class Topology extends Window {
 				ip: deviceIp,
 				location: deviceLocation,
 				type: deviceType
-			},
+			}
 		};
 
 		this.devices[file] = entry;
 
+		this.undocumentedCount++;
+		
 		return entry;
 	}
 

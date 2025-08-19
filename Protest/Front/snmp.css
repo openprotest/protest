@@ -50,8 +50,6 @@
 	position: relative;
 	height: 28px;
 	border-bottom: rgb(128,128,128) 1px solid;
-	-webkit-user-select: text;
-	user-select: text;
 }
 .snmp-list-item:hover {
 	background-color: var(--clr-highlight);
@@ -64,6 +62,8 @@
 	line-height: 28px;
 	overflow: hidden;
 	text-overflow: ellipsis;
+	-webkit-user-select: all;
+	user-select: all;
 }
 
 .snmp-list-item > div:nth-child(1) {

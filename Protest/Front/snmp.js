@@ -707,10 +707,13 @@ static OID_MAP_1_3_6_1_2_1 = [
 	}
 
 	ValueToHex(value) {
+		if (!value || value.length === 0) return "--";
 		return "0x" + value;
 	}
 
 	ValueToBinary(value) {
+		if (!value || value.length === 0) return "--";
+
 		let newValue = "0b ";
 		for (let i=0; i<value.length; i+=2) {
 			const b = parseInt(value.substring(i, i+2), 16);
@@ -720,6 +723,8 @@ static OID_MAP_1_3_6_1_2_1 = [
 	}
 
 	ValueToString(value) {
+		if (!value || value.length === 0) return "--";
+
 		let newValue = "";
 		for (let i=0; i<value.length; i+=2) {
 			const b = parseInt(value.substring(i, i+2), 16);
