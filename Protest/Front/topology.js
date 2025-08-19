@@ -1584,7 +1584,7 @@ class Topology extends Window {
 					box.textContent = `${device.lldp.remoteChassisIdSubtype[index][i]}:${device.lldp.remoteChassisId[index][i]}|${device.lldp.remotePortIdSubtype[index][i]}:${device.lldp.remotePortId[index][i]}|${device.lldp.remoteSystemName[index][i]}`;
 					this.infoBox.appendChild(box);
 
-					if (device?.lldp?.ambiguous?.[index][i]) {
+					if (device?.lldp?.ambiguous?.[index]?.[i]) {
 						box.className = "snmp-ambiguous";
 					}
 				}
