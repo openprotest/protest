@@ -53,16 +53,15 @@ class Topology extends Window {
 
 		this.workspace = document.createElement("div");
 		this.workspace.className = "topology-workspace";
-		this.content.appendChild(this.workspace);
 
 		this.sideBar = document.createElement("div");
 		this.sideBar.className = "topology-sidebar";
-		this.content.appendChild(this.sideBar);
 
 		this.infoBox = document.createElement("div");
 		this.infoBox.style.visibility = "hidden";
 		this.infoBox.className = "topology-info-box";
-		this.content.appendChild(this.infoBox);
+
+		this.content.append(this.workspace, this.sideBar, this.infoBox);
 
 		this.workspace.onmousedown = event=> this.Topology_onmousedown(event);
 		this.content.onmousemove = event=> this.Topology_onmousemove(event);
@@ -1416,13 +1415,13 @@ class Topology extends Window {
 				const entries = Object.entries(device.lldp.localPortName)
 					.sort(([, a], [, b]) => a.localeCompare(b));
 
-				for (const [index, name] of entries) {
-					this.CreateInterfaceListItem(interfacesList, device, index, name);
+				for (const [portIndex, name] of entries) {
+					this.CreateInterfaceListItem(interfacesList, device, portIndex, name);
 				}
 			}
 			else {
-				for (const index in device.lldp.localPortName) {
-					this.CreateInterfaceListItem(interfacesList, device, index, device.lldp.localPortName[index]);
+				for (const portIndex in device.lldp.localPortName) {
+					this.CreateInterfaceListItem(interfacesList, device, portIndex, device.lldp.localPortName[portIndex]);
 				}
 			}
 		}
@@ -1476,7 +1475,7 @@ class Topology extends Window {
 		this.selectedInterface.scrollIntoView({block:"nearest", inline:"nearest" });
 	}
 
-	CreateInterfaceListItem(listbox, device, index, portName) {
+	CreateInterfaceListItem(listbox, device, portIndex, portName) {
 		const interfaceBox = document.createElement("div");
 		const localBox = document.createElement("div");
 		const remoteBox = document.createElement("div");
@@ -1486,7 +1485,7 @@ class Topology extends Window {
 
 		let localPortName = portName;
 		if (!portName || portName.length === 0) {
-			localPortName = index;
+			localPortName = portIndex;
 			localBox.style.color = "#404040";
 		}
 		else if (portName === "--") {
@@ -1496,9 +1495,9 @@ class Topology extends Window {
 
 		localBox.textContent = localPortName;
 
-		const link = this.links[device.links[index]];
+		const link = this.links[device.links[portIndex]];
 
-		if (device?.lldp?.ambiguous?.[index]) {
+		if (device?.lldp?.ambiguous?.[portIndex]) {
 			remoteBox.className = "snmp-ambiguous";
 		}
 
@@ -1509,9 +1508,13 @@ class Topology extends Window {
 				const remoteDevice = this.devices[remoteDeviceFile];
 				const remotePortIndex = device.initial.file === link.deviceA ? link.portIndexB : link.portIndexA;
 
-				const remotePortName = remoteDevice.lldp && remoteDevice.lldp.localPortName && remoteDevice.lldp.localPortName[remotePortIndex].length > 0
-					? remoteDevice.lldp.localPortName[remotePortIndex]
-					: remotePortIndex;
+				let remotePortName;
+				if  (remoteDevice.lldp && remoteDevice.lldp.localPortName && remoteDevice.lldp.localPortName[remotePortIndex].length > 0) {
+					remotePortName = remoteDevice.lldp.localPortName[remotePortIndex];
+				}
+				else {
+					remotePortName = remotePortIndex;
+				}
 
 				remoteBox.textContent = remoteDevice.isUnmanaged ? "unmanaged" : remoteDevice.initial.hostname;
 				remoteBox.style.width = "calc(50% - 12px)";
@@ -1605,17 +1608,17 @@ class Topology extends Window {
 			nameBox.style.borderRadius = "4px";
 			this.infoBox.appendChild(nameBox);
 
-			if (device.lldp.remoteChassisId[index]) {
-				for (let i=0; i<device.lldp.remoteChassisId[index].length; i++) {
+			if (device.lldp.remoteChassisId[portIndex]) {
+				for (let i=0; i<device.lldp.remoteChassisId[portIndex].length; i++) {
 					const box = document.createElement("div");
 					box.style.border = "1px solid var(--clr-dark)";
 					box.style.borderRadius = "2px";
 					box.style.padding = "0 2px";
 					box.style.margin = "2px";
-					box.textContent = `${device.lldp.remoteChassisIdSubtype[index][i]}:${device.lldp.remoteChassisId[index][i]}|${device.lldp.remotePortIdSubtype[index][i]}:${device.lldp.remotePortId[index][i]}|${device.lldp.remoteSystemName[index][i]}`;
+					box.textContent = `${device.lldp.remoteChassisIdSubtype[portIndex][i]}:${device.lldp.remoteChassisId[portIndex][i]}|${device.lldp.remotePortIdSubtype[portIndex][i]}:${device.lldp.remotePortId[portIndex][i]}|${device.lldp.remoteSystemName[portIndex][i]}`;
 					this.infoBox.appendChild(box);
 
-					if (device?.lldp?.ambiguous?.[index]?.[i]) {
+					if (device?.lldp?.ambiguous?.[portIndex]?.[i]) {
 						box.className = "snmp-ambiguous";
 					}
 				}
