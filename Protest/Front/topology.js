@@ -1004,12 +1004,12 @@ class Topology extends Window {
 		if (device.isUnmanaged) {
 			const angle = (portIndex - 1) / -Math.PI;
 
-			element.dot.setAttribute("cx", 24 + 25 * Math.cos(angle));
-			element.dot.setAttribute("cy", 24 + 25 * Math.sin(angle));
+			element.dot.setAttribute("cx", 24 + 28 * Math.cos(angle));
+			element.dot.setAttribute("cy", 24 + 28 * Math.sin(angle));
 		}
 		else {
 			const offset = 72 * portIndex / device.lldp.localPortCount;
-			element.dot.setAttribute("cx", 96);
+			element.dot.setAttribute("cx", 100);
 			element.dot.setAttribute("cy", 12 + offset);
 		}
 
@@ -1213,8 +1213,9 @@ class Topology extends Window {
 
 	CreateEndPointElement(parentDevice, file) {
 		const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-		dot.setAttribute("r", 2);
-		dot.setAttribute("fill", "#c0c0c0");
+		dot.setAttribute("r", 4);
+		dot.setAttribute("fill", "var(--clr-accent)");
+		dot.style.display = "none";
 		parentDevice.element.root.appendChild(dot);
 
 		return {
@@ -1263,14 +1264,13 @@ class Topology extends Window {
 	DrawPath(a, b) {
 		const [p, s] = a.element.x < b.element.x ? [a, b] : [b, a];
 
-		const center = node => (
-			node.isUnmanaged
-				? {x: node.element.x + 24, y: node.element.y + 24}
-				: {x: node.element.x + 48, y: node.element.y + 48}
-		);
+		const pc = p.isUnmanaged
+			? {x: p.element.x + 24, y: p.element.y + 24}
+			: {x: p.element.x + 48, y: p.element.y + 48};
 
-		const pc = center(p);
-		const sc = center(s);
+		const sc = s.isUnmanaged
+			? {x: s.element.x + 24, y: s.element.y + 24}
+			: {x: s.element.x + 48, y: s.element.y + 48};
 
 		let px = pc.x, py = pc.y;
 		let sx = sc.x, sy = sc.y;
@@ -1282,11 +1282,11 @@ class Topology extends Window {
 		}
 		else if (p.isUnmanaged) {
 			const angle = Math.atan2(sc.y - pc.y, sc.x - pc.x);
-			px = pc.x + 24 * Math.cos(angle);
-			py = pc.y + 24 * Math.sin(angle);
+			px = pc.x + 28 * Math.cos(angle);
+			py = pc.y + 28 * Math.sin(angle);
 		}
 		else {
-			px += p.element.x > s.element.x ? -48 : 48;
+			px += p.element.x < s.element.x ? 50 : -50;
 		}
 
 		if (s.isRouter) {
@@ -1296,20 +1296,20 @@ class Topology extends Window {
 		}
 		else if (s.isUnmanaged) {
 			const angle = Math.atan2(pc.y - sc.y, pc.x - sc.x);
-			sx = sc.x + 24 * Math.cos(angle);
-			sy = sc.y + 24 * Math.sin(angle);
+			sx = sc.x + 28 * Math.cos(angle);
+			sy = sc.y + 28 * Math.sin(angle);
 		}
 		else {
-			sx += p.element.x > s.element.x ? 48 : -48;
+			sx += p.element.x > s.element.x ? 50 : -50;
 		}
 
 		if (Math.abs(pc.x - sc.x) < 88) {
 			if (!p.isUnmanaged && !p.isRouter) {
-				py = pc.y + (pc.y < sc.y ? 48 : -48);
+				py = pc.y + (pc.y < sc.y ? 50 : -50);
 				px = (pc.x + sc.x) / 2;
 			}
 			if (!s.isUnmanaged && !s.isRouter) {
-				sy = sc.y + (pc.y < sc.y ? -48 : 48);
+				sy = sc.y + (pc.y > sc.y ? 50 : -50);
 				sx = (pc.x + sc.x) / 2;
 			}
 		}
@@ -1547,16 +1547,15 @@ class Topology extends Window {
 			const e = link.element;
 
 			if (e.isEndpoint) {
-				e.dot.setAttribute("fill", "var(--clr-accent)");
-				e.dot.setAttribute("r", 5);
+				e.dot.style.display = "initial";
 				device.element.root.appendChild(e.dot);
 			}
 			else {
 				e.line.setAttribute("stroke", "var(--clr-accent)");
 				e.line.setAttribute("stroke-width", 5);
-				e.capA.setAttribute("r", 5);
+				e.capA.setAttribute("r", 4);
 				e.capA.setAttribute("fill", "var(--clr-accent)");
-				e.capB.setAttribute("r", 5);
+				e.capB.setAttribute("r", 4);
 				e.capB.setAttribute("fill", "var(--clr-accent)");
 				this.linesLayer.appendChild(e.line);
 				this.linesLayer.appendChild(e.capA);
@@ -1569,8 +1568,7 @@ class Topology extends Window {
 			const e = link.element;
 
 			if (e.isEndpoint) {
-				e.dot.setAttribute("fill", "#c0c0c0");
-				e.dot.setAttribute("r", 2);
+				e.dot.style.display = "none";
 			}
 			else {
 				e.line.setAttribute("stroke", "#c0c0c0");
