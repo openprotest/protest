@@ -449,15 +449,15 @@ internal static class LiveStats {
             return;
         }
 
-        Dictionary<int, string> typeDic     = new Dictionary<int, string>();
-        Dictionary<int, string> speedDic    = new Dictionary<int, string>();
-        Dictionary<int, string> untaggedDic = new Dictionary<int, string>();
-        Dictionary<int, string> taggedDic   = new Dictionary<int, string>();
-        Dictionary<int, string> statusDic   = new Dictionary<int, string>();
-        Dictionary<int, long> trafficInDic  = new Dictionary<int, long>();
-        Dictionary<int, long> trafficOutDic = new Dictionary<int, long>();
-        Dictionary<int, int> errorInDic     = new Dictionary<int, int>();
-        Dictionary<int, int> errorOutDic    = new Dictionary<int, int>();
+        Dictionary<int, string> typeDic       = new Dictionary<int, string>();
+        Dictionary<int, string> speedDic      = new Dictionary<int, string>();
+        Dictionary<int, string> untaggedDic   = new Dictionary<int, string>();
+        Dictionary<int, string> taggedDic     = new Dictionary<int, string>();
+        Dictionary<int, string> statusDic     = new Dictionary<int, string>();
+        Dictionary<int, long>   trafficInDic  = new Dictionary<int, long>();
+        Dictionary<int, long>   trafficOutDic = new Dictionary<int, long>();
+        Dictionary<int, int>    errorInDic    = new Dictionary<int, int>();
+        Dictionary<int, int>    errorOutDic   = new Dictionary<int, int>();
 
         Dictionary<short, List<int>> taggedMap = new Dictionary<short, List<int>>();
 
@@ -471,10 +471,10 @@ internal static class LiveStats {
 
             byte[] raw = result[i].Data.ToBytes();
 
-            int startIndex = GetPortBitmapStart(raw);
+            int startIndex = Topology.GetPortBitmapStart(raw);
             if (startIndex == -1) continue;
 
-            int maxIndex = Math.Min(raw.Length, startIndex + GetPortBitmapLength(raw, startIndex));
+            int maxIndex = Math.Min(raw.Length, startIndex + Topology.GetPortBitmapLength(raw, startIndex));
 
             for (int j = startIndex; j < maxIndex; j++) {
                 byte b = raw[j];

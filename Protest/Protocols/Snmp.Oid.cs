@@ -64,6 +64,12 @@ internal static class Oid {
         INTERFACE_ERROR_OUT,
     };
 
+    public static string[] TOPOLOGY_DOT1Q = new string[] {
+        INTERFACE_1Q_STATIC_NAME,
+        INTERFACE_1Q_VLAN_ENGRESS,
+        INTERFACE_1Q_VLAN_UNTAGGED
+    };
+
 
     public const string LLDP_LOCAL_SYS_DATA  = "1.0.8802.1.1.2.1.3";
     public const string LLDP_REMOTE_SYS_DATA = "1.0.8802.1.1.2.1.4";
@@ -90,7 +96,9 @@ internal static class Oid {
 
     public const string INTERFACE_1D_TP_FDB       = "1.3.6.1.2.1.17.4.3.1.2";
     public const string INTERFACE_1Q_VLAN_ENGRESS = "1.3.6.1.2.1.17.7.1.4.2.1.4";
-    public const string INTERFACE_Q_BRIDGE        = "1.3.6.1.2.1.17.7.1.4.3.1.2";
+    public const string INTERFACE_1Q_STATIC_NAME  = "1.3.6.1.2.1.17.7.1.4.3.1.1";
+    public const string INTERFACE_1Q_BRIDGE        = "1.3.6.1.2.1.17.7.1.4.3.1.2";
+    public const string INTERFACE_1Q_VLAN_UNTAGGED = "1.3.6.1.2.1.17.7.1.4.3.1.4";
     public const string INTERFACE_1Q_VLAN         = "1.3.6.1.2.1.17.7.1.4.5.1.1";
     public const string INTERFACE_ALIAS           = "1.3.6.1.2.1.31.1.1.1.18";
 

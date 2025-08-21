@@ -237,8 +237,8 @@ class Topology extends Window {
 		l2switchMask.setAttribute("mask-type", "alpha");
 		this.svg.appendChild(l2switchMask);
 		const l2switchImage = document.createElementNS("http://www.w3.org/2000/svg", "image");
-		l2switchImage.setAttribute("x", 2);
-		l2switchImage.setAttribute("y", 2);
+		l2switchImage.setAttribute("x", 0);
+		l2switchImage.setAttribute("y", 0);
 		l2switchImage.setAttribute("width", 44);
 		l2switchImage.setAttribute("height", 44);
 		l2switchImage.setAttribute("href", "mono/switch.svg?light");
@@ -450,6 +450,14 @@ class Topology extends Window {
 					if (this.selected && this.selected.initial.file === json.lldp.file) {
 						this.SelectDevice(json.lldp.file);
 					}
+				}
+			}
+			else if (json.dot1q && !["__proto__", "constructor", "prototype"].includes(json.dot1q.file)) {
+				const device = this.devices[json.dot1q.file];
+				device.dot1q = json.dot1q;
+
+				if (this.selected && this.selected.initial.file === json.dot1q.file) {
+					this.SelectDevice(json.dot1q.file);
 				}
 			}
 		};
@@ -1162,15 +1170,15 @@ class Topology extends Window {
 		this.svg.appendChild(g);
 
 		const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-		circle.setAttribute("cx", 24);
-		circle.setAttribute("cy", 24);
+		circle.setAttribute("cx", 22);
+		circle.setAttribute("cy", 22);
 		circle.setAttribute("r", 23);
 		circle.setAttribute("fill", "transparent");
 		g.appendChild(circle);
 
 		const icon = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-		icon.setAttribute("x", 4);
-		icon.setAttribute("y", 4);
+		icon.setAttribute("x", 2);
+		icon.setAttribute("y", 2);
 		icon.setAttribute("width", 40);
 		icon.setAttribute("height", 40);
 		icon.setAttribute("rx", 20);
@@ -1265,11 +1273,11 @@ class Topology extends Window {
 		const [p, s] = a.element.x < b.element.x ? [a, b] : [b, a];
 
 		const pc = p.isUnmanaged
-			? {x: p.element.x + 24, y: p.element.y + 24}
+			? {x: p.element.x + 22, y: p.element.y + 22}
 			: {x: p.element.x + 48, y: p.element.y + 48};
 
 		const sc = s.isUnmanaged
-			? {x: s.element.x + 24, y: s.element.y + 24}
+			? {x: s.element.x + 22, y: s.element.y + 22}
 			: {x: s.element.x + 48, y: s.element.y + 48};
 
 		let px = pc.x, py = pc.y;
@@ -1403,14 +1411,41 @@ class Topology extends Window {
 			this.sideBar.appendChild(undocumentedLabel);
 		}
 
-		const interfacesList = document.createElement("div");
-		interfacesList.className = "topology-interface-list";
-		interfacesList.tabIndex = 0;
-		this.sideBar.appendChild(interfacesList);
+		if (device.dot1q) {
+			const vlanList = document.createElement("details");
+			vlanList.className = "topology-vlan-list";
+			this.sideBar.appendChild(vlanList);
 
-		interfacesList.onkeydown = event=> { this.InterfaceList_onkeydown(event, interfacesList); };
+			if (this.vlanToggle) {
+				vlanList.setAttribute("open", true);
+			}
+
+			const vlanTitle = document.createElement("summary");
+			vlanTitle.textContent = "VLANs"
+			vlanList.appendChild(vlanTitle);
+
+			vlanList.ontoggle = ()=> {
+				this.vlanToggle = vlanList.open;
+			};
+
+			this.PopulateVlanStaticNames(vlanList, device.dot1q.names);
+		}
+
 
 		if (device.lldp) {
+			const interfacesList = document.createElement("details");
+			interfacesList.className = "topology-interface-list";
+			interfacesList.tabIndex = 0;
+			interfacesList.setAttribute("open", true);
+
+			this.sideBar.appendChild(interfacesList);
+
+			const interfacesTitle = document.createElement("summary");
+			interfacesTitle.textContent = "Interfaces"
+			interfacesList.appendChild(interfacesTitle);
+
+			interfacesList.onkeydown = event=> this.InterfaceList_onkeydown(event, interfacesList);
+
 			if (device.isUndocumented) {
 				const entries = Object.entries(device.lldp.localPortName)
 					.sort(([, a], [, b]) => a.localeCompare(b));
@@ -1473,6 +1508,45 @@ class Topology extends Window {
 
 		this.selectedInterface.click();
 		this.selectedInterface.scrollIntoView({block:"nearest", inline:"nearest" });
+	}
+
+	PopulateVlanStaticNames(vlanList, names) {
+		for (const vlan in names) {
+			const container = document.createElement("div");
+			vlanList.appendChild(container);
+			
+			const idBox = document.createElement("div");
+			idBox.textContent = vlan;
+
+			const valueBox = document.createElement("div");
+			
+			const color = document.createElement("div");
+			color.style.display = "inline-block";
+			color.style.width = "10px";
+			color.style.height = "10px";
+			color.style.marginRight = "4px";
+			color.style.border = "1px solid var(--clr-dark)";
+			color.style.borderRadius = "2px";
+			color.style.backgroundColor = this.GetVlanColor(vlan);
+			
+			const name = document.createElement("div");
+			name.style.display = "inline-block";
+			name.textContent = names[vlan];
+
+			valueBox.append(color, name);
+
+			container.append(idBox, valueBox);
+		}
+	}
+
+	GetVlanColor(vlan) {
+		if (!vlan || vlan == "") return null;
+		for (let i=0; i<KEEP.zones.length; i++) {
+			if (KEEP.zones[i].vlan == vlan) {
+				return KEEP.zones[i].color;
+			}
+		}
+		return null;
 	}
 
 	CreateInterfaceListItem(listbox, device, portIndex, portName) {
@@ -1600,9 +1674,9 @@ class Topology extends Window {
 			this.infoBox.style.opacity = "1";
 
 			const nameBox = document.createElement("div");
-			nameBox.textContent = localPortName;
+			nameBox.textContent ="LLDP";
 			nameBox.style.textAlign = "center";
-			nameBox.style.backgroundColor = "var(--clr-accent)";
+			nameBox.style.backgroundColor = "var(--clr-select)";
 			nameBox.style.borderRadius = "4px";
 			this.infoBox.appendChild(nameBox);
 

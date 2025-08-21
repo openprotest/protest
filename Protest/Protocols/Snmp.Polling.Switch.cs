@@ -67,20 +67,7 @@ internal static partial class Polling {
         }
     }
 
-    internal static int GetPortBitmapStart(byte[] raw) {
-        if (raw.Length > 4
-            && raw[0] == 0x04
-            && raw[2] == 0x02
-            && raw[3] == 0x02) {
-            return 4;
-        }
-        return raw.Length >= 3 ? 2 : 0;
-    }
 
-    internal static int GetPortBitmapLength(byte[] raw, int startIndex) {
-        if (raw.Length > 1 && raw[0] == 0x04) return raw[1];
-        return raw.Length - startIndex;
-    }
 
     private static PortDir[] ComputeInterface(IList<Variable> list, Dictionary<string, string> parsed) {
         PortDir descriptor = new PortDir();
@@ -101,10 +88,10 @@ internal static partial class Polling {
 
             byte[] raw = list[i].Data.ToBytes();
 
-            int startIndex = GetPortBitmapStart(raw);
+            int startIndex = Topology.GetPortBitmapStart(raw);
             if (startIndex == -1) continue;
 
-            int maxIndex = Math.Min(raw.Length, startIndex + GetPortBitmapLength(raw, startIndex));
+            int maxIndex = Math.Min(raw.Length, startIndex + Topology.GetPortBitmapLength(raw, startIndex));
 
             for (int j = startIndex; j < maxIndex; j++) {
                 byte b = raw[j];

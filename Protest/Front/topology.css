@@ -8,8 +8,8 @@
 .topology-workspace > svg {
 	background-size: 50px 50px;
 	background-image:
-	linear-gradient(to right, transparent 48px, rgba(96,96,96,.5) 49px, transparent 50px),
-	linear-gradient(to bottom, transparent 48px, rgba(96,96,96,.5) 49px, transparent 50px);
+	linear-gradient(to right, transparent 47px, rgba(96,96,96,.5) 48px, transparent 49px),
+	linear-gradient(to bottom, transparent 47px, rgba(96,96,96,.5) 48px, transparent 49px);
 }
 
 .topology-sidebar {
@@ -21,7 +21,7 @@
 	color: var(--clr-dark);
 	background-color: var(--clr-pane);
 	border-radius: 4px;
-	padding: 8px;
+	padding: 4px;
 	box-sizing: border-box;
 	overflow-y: auto;
 }
@@ -32,7 +32,7 @@
 	grid-template-columns: 88px auto;
 	grid-template-rows: 18px 18px 18px 18px;
 	margin-bottom: 16px;
-	padding: 8px 0;
+	padding: 4px 0;
 	border-radius: 4px;
 	-webkit-user-select: text; user-select: text;
 }
@@ -65,6 +65,91 @@
 	background-color: rgb(240,128,24);
 }
 
+.topology-vlan-list,
+.topology-interface-list {
+	outline: 0;
+	border: 2px solid var(--clr-control);
+	padding: 4px;
+	border-radius: 4px;
+}
+
+.topology-vlan-list > summary,
+.topology-interface-list > summary {
+	outline: 0;
+	font-weight: bold;
+}
+
+.topology-vlan-list > summary:focus-visible,
+.topology-interface-list > summary:focus-visible {
+	text-decoration: underline;
+	text-decoration-thickness: 2px;
+	text-decoration-color: var(--clr-select);
+}
+
+.topology-vlan-list[open] > summary,
+.topology-interface-list[open] > summary {
+	padding-bottom: 8px;
+}
+
+.topology-vlan-list > summary::marker,
+.topology-interface-list > summary::marker {
+	content: "";
+}
+.topology-vlan-list > summary::before,
+.topology-interface-list > summary::before {
+	content: "";
+	display: inline-block;
+	width: 14px;
+	height: 14px;
+	padding-left: 8px;
+	background-image: url("mono/guitarpick.svg");
+	background-size: 14px 14px;
+	background-position: center;
+	background-repeat: no-repeat;
+	transform: rotate(-90deg);
+	transition: .2s;
+}
+
+.topology-vlan-list[open] > summary::before,
+.topology-interface-list[open] > summary::before {
+	transform: rotate(0deg) !important;
+}
+
+.topology-vlan-list > div > div {
+	display: inline-block;
+	box-sizing: border-box;
+	min-height: 22px;
+	padding: 2px 0;
+	margin: 1px 0;
+	color: #000;
+	font-size: small;
+	background-color: var(--clr-control);
+	border-radius: 4px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	-webkit-user-select: all; user-select: all;
+}
+
+.topology-vlan-list > div > div:nth-child(1) {
+	width: 25%;
+	margin-left: 2px;
+	margin-right: 4px;
+	text-align: center;
+}
+
+.topology-vlan-list > div > div:nth-child(2) {
+	width: calc(75% - 12px);
+	text-align: left;
+	padding-left: 8px;
+	margin-left: 4px;
+	margin-right: 2px;
+}
+
+.topology-vlan-list > div:hover > div{
+	background-color: var(--clr-select);
+}
+
 .topology-interface-list {
 	margin-top: 16px;
 }
@@ -73,13 +158,12 @@
 	display: inline-block;
 	box-sizing: border-box;
 	background-color: var(--clr-control);
-	min-height: 24px;
+	min-height: 22px;
 	padding: 2px 0;
-	margin: 2px 0;
+	margin: 1px 0;
 	color: #000;
 	font-size: small;
 	text-align: center;
-	box-sizing: border-box;
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
@@ -88,6 +172,7 @@
 
 .topology-interface-list > div > div:nth-child(1) {
 	width: 25%;
+	margin-left: 2px;
 	margin-right: 4px;
 	border-radius: 4px;
 }
@@ -98,9 +183,9 @@
 	background-color: var(--clr-control);
 	width: 8px;
 	height: 4px;
-	left: calc(25% + 4px);
+	left: calc(25% + 7px);
 	box-sizing: border-box;
-	transform: translateY(8px);
+	transform: translateY(7px);
 }
 
 .topology-interface-list > div > div:nth-child(2) {
@@ -122,6 +207,10 @@
 	background-color: var(--clr-select);
 }
 
+.topology-interface-list-selected:hover > :nth-child(3) {
+	border-left: 2px solid var(--clr-dark);
+}
+
 .topology-interface-list-selected > div {
 	outline: 2px solid var(--clr-select);
 }
@@ -130,7 +219,7 @@
 	border-top: 2px solid var(--clr-select);
 	border-bottom: 2px solid var(--clr-select);
 	height: 8px !important;
-	transform: translateY(6px) !important;
+	transform: translateY(5px) !important;
 }
 
 .snmp-ambiguous::after {

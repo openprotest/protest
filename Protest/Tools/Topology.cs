@@ -1,13 +1,13 @@
-﻿using System.Collections.Generic;
+﻿using Lextm.SharpSnmpLib;
+using Protest.Http;
+using Protest.Protocols.Snmp;
+using System.Collections.Generic;
 using System.Net;
 using System.Net.WebSockets;
 using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using Protest.Http;
-using Protest.Protocols.Snmp;
-using Lextm.SharpSnmpLib;
 
 namespace Protest.Tools;
 
@@ -131,11 +131,19 @@ internal static class Topology {
 
                     if (rawLocal is null || rawLocal.Count == 0 || rawRemote is null || rawRemote.Count == 0) {
                         WsWriteText(ws, Encoding.UTF8.GetBytes($"{{\"nosnmp\":\"{candidate.filename}\"}}"), mutex);
+                        return;
                     }
                     else {
-                        byte[] response = ComputeSnmpResponse(candidate.filename, rawLocal, rawRemote);
+                        byte[] response = ComputeLldpResponse(candidate.filename, rawLocal, rawRemote);
                         WsWriteText(ws, response, mutex);
                     }
+
+                    IList<Variable> dot1q = Polling.SnmpQuery(ipAddress, snmpProfile, Oid.TOPOLOGY_DOT1Q, Polling.SnmpOperation.Walk);
+                    if (dot1q is not null && dot1q.Count > 0) {
+                        byte[] response = ComputeDotQ1Response(candidate.filename, dot1q);
+                        WsWriteText(ws, response, mutex);
+                    }
+
                 }
                 catch (Exception ex) {
                     Logger.Error(ex);
@@ -157,8 +165,7 @@ internal static class Topology {
         }
     }
 
-    private static byte[] ComputeSnmpResponse(string file, IList<Variable> rawLocal, IList<Variable> rawRemote) {
-
+    private static byte[] ComputeLldpResponse(string file, IList<Variable> rawLocal, IList<Variable> rawRemote) {
         Dictionary<string, Variable> local = new Dictionary<string, Variable>();
         for (int i = 0; i < rawLocal.Count; i++) {
             local.Add(rawLocal[i].Id.ToString(), rawLocal[i]);
@@ -261,6 +268,56 @@ internal static class Topology {
         return payload;
     }
 
+    private static byte[] ComputeDotQ1Response(string file, IList<Variable> dot1q) {
+        Dictionary<int, string>  names = new Dictionary<int, string>();
+        Dictionary<int, string>  egress = new Dictionary<int, string>();
+        Dictionary<int, string>  untagged = new Dictionary<int, string>();
+
+        Dictionary<string, Variable> vlans = new Dictionary<string, Variable>();
+        for (int i = 0; i < dot1q.Count; i++) {
+            string oid = dot1q[i].Id.ToString();
+            if (!int.TryParse(oid.Split('.')[^1], out int vlan)) continue;
+
+            if (oid.StartsWith(Protocols.Snmp.Oid.INTERFACE_1Q_STATIC_NAME)) {
+                names.Add(vlan, dot1q[i].Data.ToString());
+            }
+            else if (oid.StartsWith(Protocols.Snmp.Oid.INTERFACE_1Q_VLAN_ENGRESS) || oid.StartsWith(Protocols.Snmp.Oid.INTERFACE_1Q_VLAN_UNTAGGED)) {
+                byte[] raw = dot1q[i].Data.ToBytes();
+
+                int startIndex = GetPortBitmapStart(raw);
+                if (startIndex == -1) continue;
+                
+                int maxIndex = Math.Min(raw.Length, startIndex + Topology.GetPortBitmapLength(raw, startIndex));
+                
+                for (int j = maxIndex - 1; j >= 1; j--) {
+                    if (raw[j] != 0) break;
+                    maxIndex = j;
+                }
+
+                string hex = PortsToHex(raw, maxIndex);
+
+                if (oid.StartsWith(Protocols.Snmp.Oid.INTERFACE_1Q_VLAN_ENGRESS)) {
+                    egress.Add(vlan, hex);
+                }
+                else if (oid.StartsWith(Protocols.Snmp.Oid.INTERFACE_1Q_VLAN_UNTAGGED)) {
+                    untagged.Add(vlan, hex);
+                }
+
+            }
+        }
+
+        byte[] payload = JsonSerializer.SerializeToUtf8Bytes(new {
+            dot1q = new {
+                file     = file,
+                names    = names,
+                egress   = egress,
+                untagged = untagged,
+            }
+        });
+
+        return payload;
+    }
+
     private static string GetChassisId(string subtype, ISnmpData value) {
         byte[] bytes = value.ToBytes();
 
@@ -326,4 +383,30 @@ internal static class Topology {
         }
     }
 
+    internal static int GetPortBitmapStart(byte[] raw) {
+        if (raw.Length > 4
+            && raw[0] == 0x04
+            && raw[2] == 0x02
+            && raw[3] == 0x02) {
+            return 4;
+        }
+        return raw.Length >= 3 ? 2 : 0;
+    }
+
+    internal static int GetPortBitmapLength(byte[] raw, int startIndex) {
+        if (raw.Length > 1 && raw[0] == 0x04)
+            return raw[1];
+        return raw.Length - startIndex;
+    }
+
+    internal static string PortsToHex(byte[] raw, int maxIndex) {
+        Span<char> hex = stackalloc char[maxIndex * 2];
+        for (int j = 0; j < maxIndex; j++) {
+            string a = raw[j].ToString("x2");
+            hex[j * 2] = a.Length == 1 ? '0' : a[0];
+            hex[j * 2 + 1] = a.Length == 1 ? a[0] : a[1];
+        }
+
+        return hex.ToString();
+    }
 }
