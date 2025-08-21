@@ -1428,6 +1428,12 @@ class Topology extends Window {
 				this.vlanToggle = vlanList.open;
 			};
 
+			vlanList.onclick = ()=> {
+				this.infoBox.style.opacity = "0";
+				this.infoBox.style.visibility = "hidden";
+				this.infoBox.textContent = "";
+			};
+
 			this.PopulateVlanStaticNames(vlanList, device.dot1q.names);
 		}
 

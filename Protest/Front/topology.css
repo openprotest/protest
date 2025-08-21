@@ -77,6 +77,9 @@
 .topology-interface-list > summary {
 	outline: 0;
 	font-weight: bold;
+	background-color: var(--clr-control);
+	padding: 2px;
+	margin: -4px;
 }
 
 .topology-vlan-list > summary:focus-visible,
@@ -88,7 +91,7 @@
 
 .topology-vlan-list[open] > summary,
 .topology-interface-list[open] > summary {
-	padding-bottom: 8px;
+	margin-bottom: 8px;
 }
 
 .topology-vlan-list > summary::marker,

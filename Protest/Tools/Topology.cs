@@ -1,5 +1,4 @@
-﻿using Lextm.SharpSnmpLib;
-using Protest.Http;
+﻿using Protest.Http;
 using Protest.Protocols.Snmp;
 using System.Collections.Generic;
 using System.Net;
@@ -8,6 +7,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using Lextm.SharpSnmpLib;
 
 namespace Protest.Tools;
 
