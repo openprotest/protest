@@ -294,7 +294,7 @@ internal static class Topology {
                     maxIndex = j;
                 }
 
-                string hex = PortsToHex(raw, maxIndex);
+                string hex = PortsToHex(raw, startIndex, maxIndex);
 
                 if (oid.StartsWith(Protocols.Snmp.Oid.INTERFACE_1Q_VLAN_ENGRESS)) {
                     egress.Add(vlan, hex);
@@ -390,21 +390,23 @@ internal static class Topology {
             && raw[3] == 0x02) {
             return 4;
         }
+
         return raw.Length >= 3 ? 2 : 0;
     }
 
     internal static int GetPortBitmapLength(byte[] raw, int startIndex) {
-        if (raw.Length > 1 && raw[0] == 0x04)
-            return raw[1];
+        if (raw.Length > 1 && raw[0] == 0x04) return raw[1];
         return raw.Length - startIndex;
     }
 
-    internal static string PortsToHex(byte[] raw, int maxIndex) {
-        Span<char> hex = stackalloc char[maxIndex * 2];
-        for (int j = 0; j < maxIndex; j++) {
-            string a = raw[j].ToString("x2");
-            hex[j * 2] = a.Length == 1 ? '0' : a[0];
-            hex[j * 2 + 1] = a.Length == 1 ? a[0] : a[1];
+    internal static string PortsToHex(byte[] raw, int startIndex, int maxIndex) {
+        int size = maxIndex - startIndex;
+        Span<char> hex = stackalloc char[size * 2];
+
+        for (int i = 0; i < size; i++) {
+            string a = raw[startIndex + i].ToString("x2");
+            hex[i * 2] = a.Length == 1 ? '0' : a[0];
+            hex[i * 2 + 1] = a.Length == 1 ? a[0] : a[1];
         }
 
         return hex.ToString();

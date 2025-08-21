@@ -863,10 +863,10 @@ class Topology extends Window {
 		let deviceMac      = null;
 		let deviceLocation = null;
 		if (dbFile) {
-			deviceType = LOADER.devices.data[dbFile]?.type.v.toLowerCase() ?? null;
-			deviceIp = LOADER.devices.data[dbFile]?.ip.v ?? null;
-			deviceMac = LOADER.devices.data[dbFile]["mac address"].v ?? null;
-			deviceLocation = LOADER.devices.data[dbFile]?.location.v.toLowerCase() ?? null;
+			deviceType     = LOADER.devices.data[dbFile]?.type.v.toLowerCase() ?? null;
+			deviceIp       = LOADER.devices.data[dbFile]?.ip.v ?? null;
+			deviceMac      = LOADER.devices.data[dbFile]["mac address"]?.v ?? null;
+			deviceLocation = LOADER.devices.data[dbFile]?.location?.v.toLowerCase() ?? null;
 		}
 
 		deviceType ??= "switch";
