@@ -1465,6 +1465,14 @@ class Topology extends Window {
 					this.CreateInterfaceListItem(interfacesList, device, portIndex, device.lldp.localPortName[portIndex]);
 				}
 			}
+
+			interfacesList.ontoggle = ()=> {
+				if (!interfacesList.open) {
+					this.infoBox.textContent = "";
+					this.infoBox.style.visibility = "hidden";
+					this.infoBox.style.opacity = "0";
+				}
+			};
 		}
 	}
 
@@ -1479,9 +1487,9 @@ class Topology extends Window {
 
 		this.selectedInterface.className = "";
 
-		const children = interfacesList.childNodes;
+		const children = Array.from(interfacesList.childNodes).filter(o=> o.tagName === "DIV");
 		if (children.length === 0) return;
-		const lastIndex = [...children].findIndex(node => node === this.selectedInterface);
+		const lastIndex = children.indexOf(this.selectedInterface);
 		if (lastIndex === -1) return;
 
 		event.preventDefault();
@@ -1679,12 +1687,53 @@ class Topology extends Window {
 			this.infoBox.style.visibility = "visible";
 			this.infoBox.style.opacity = "1";
 
-			const nameBox = document.createElement("div");
-			nameBox.textContent ="LLDP";
-			nameBox.style.textAlign = "center";
-			nameBox.style.backgroundColor = "var(--clr-select)";
-			nameBox.style.borderRadius = "4px";
-			this.infoBox.appendChild(nameBox);
+			if (device.dot1q) {
+				const vlanTitle = document.createElement("div");
+				vlanTitle.textContent ="VLAN";
+				vlanTitle.style.textAlign = "center";
+				vlanTitle.style.backgroundColor = "var(--clr-select)";
+				vlanTitle.style.borderRadius = "4px";
+				this.infoBox.appendChild(vlanTitle);
+
+				let untaggedString = [];
+				for (const vlan in device.dot1q.untagged) {
+					const map  = device.dot1q.untagged[vlan];
+					if (!map) continue;
+					const byte = Number(`0x${map[Math.floor(portIndex / 4)]}`);
+					const mod  = (portIndex - 1) % 4;
+					const mask = 0b00001000 >> mod;
+					if ((byte & mask) !== 0) {
+						untaggedString.push(vlan);
+					}
+				}
+
+				let taggedString = [];
+				for (const vlan in device.dot1q.egress) {
+					const map  = device.dot1q.egress[vlan];
+					if (!map) continue;
+					const byte = Number(`0x${map[Math.floor(portIndex / 4)]}`);
+					const mod  = (portIndex - 1) % 4;
+					const mask = 0b00001000 >> mod;
+					if ((byte & mask) !== 0) {
+						taggedString.push(vlan);
+					}
+				}
+
+				const untaggedBox = document.createElement("div");
+				untaggedBox.textContent = `Untagged: ${untaggedString}`;
+				this.infoBox.appendChild(untaggedBox);
+
+				const taggedBox = document.createElement("div");
+				taggedBox.textContent = `Tagged: ${taggedString}`;
+				this.infoBox.appendChild(taggedBox);
+			}
+
+			const lldpTitle = document.createElement("div");
+			lldpTitle.textContent ="LLDP";
+			lldpTitle.style.textAlign = "center";
+			lldpTitle.style.backgroundColor = "var(--clr-select)";
+			lldpTitle.style.borderRadius = "4px";
+			this.infoBox.appendChild(lldpTitle);
 
 			if (device.lldp.remoteChassisId[portIndex]) {
 				for (let i=0; i<device.lldp.remoteChassisId[portIndex].length; i++) {
@@ -1718,11 +1767,11 @@ class Topology extends Window {
 		}
 		else if (y > this.sideBar.offsetHeight) {
 			this.infoBox.className = "topology-info-box topology-info-box-over-down";
-			this.infoBox.style.top = `${this.sideBar.offsetHeight - 100}px`;
+			this.infoBox.style.top = `${this.sideBar.offsetHeight - 150}px`;
 		}
-		else if (y > this.sideBar.offsetHeight - 100) {
+		else if (y > this.sideBar.offsetHeight - 150) {
 			this.infoBox.className = "topology-info-box topology-info-box-last";
-			this.infoBox.style.top = `${Math.min(this.sideBar.offsetHeight - 100, y - 80)}px`;
+			this.infoBox.style.top = `${Math.min(this.sideBar.offsetHeight - 150, y - 130)}px`;
 		}
 		else {
 			this.infoBox.className = "topology-info-box";

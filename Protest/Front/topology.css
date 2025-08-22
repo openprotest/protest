@@ -262,7 +262,7 @@
 	right: 374px;
 	width: max-content;
 	min-width: 250px;
-	min-height: 100px;
+	min-height: 150px;
 	padding: 4px;
 	background-color: color-mix(in srgb, var(--clr-pane) 80%, transparent);
 	backdrop-filter: blur(8px) brightness(80%);

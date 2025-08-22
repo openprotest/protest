@@ -226,6 +226,7 @@ internal static class Topology {
                     remoteChassisId.Push(index, pair.Value.Data.ToString());
                 }
             }
+
             if (pair.Key.StartsWith("1.0.8802.1.1.2.1.4.1.1.6")) {
                 remotePortIdSubtype.Push(index, int.TryParse(pair.Value.Data.ToString(), out int subtype) ? subtype : -1);
             }
@@ -302,7 +303,6 @@ internal static class Topology {
                 else if (oid.StartsWith(Protocols.Snmp.Oid.INTERFACE_1Q_VLAN_UNTAGGED)) {
                     untagged.Add(vlan, hex);
                 }
-
             }
         }
 

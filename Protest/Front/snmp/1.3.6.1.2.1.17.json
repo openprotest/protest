@@ -296,7 +296,7 @@
 ".7.1.4.5":["dot1qPortVlanTable"],
 ".7.1.4.5.1":["dot1qPortVlanEntry"],
 ".7.1.4.5.1.1":["dot1qPvid"],
-".7.1.4.5.1.2":["dot1qPortAcceptableFrameTypes"],
+".7.1.4.5.1.2":["dot1qPortAcceptableFrameTypes", {"1":"Admit all","2":"Admit only VLAN tagged"}],
 ".7.1.4.5.1.3":["dot1qPortIngressFiltering"],
 ".7.1.4.5.1.4":["dot1qPortGvrpStatus"],
 ".7.1.4.5.1.5":["dot1qPortGvrpFailedRegistrations"],
