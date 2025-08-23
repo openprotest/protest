@@ -918,7 +918,7 @@ class Topology extends Window {
 		this.devices[file] = entry;
 
 		this.undocumentedCount++;
-		
+
 		return entry;
 	}
 
@@ -1527,12 +1527,12 @@ class Topology extends Window {
 		for (const vlan in names) {
 			const container = document.createElement("div");
 			vlanList.appendChild(container);
-			
+
 			const idBox = document.createElement("div");
 			idBox.textContent = vlan;
 
 			const valueBox = document.createElement("div");
-			
+
 			const color = document.createElement("div");
 			color.style.display = "inline-block";
 			color.style.width = "10px";
@@ -1541,7 +1541,7 @@ class Topology extends Window {
 			color.style.border = "1px solid var(--clr-dark)";
 			color.style.borderRadius = "2px";
 			color.style.backgroundColor = this.GetVlanColor(vlan);
-			
+
 			const name = document.createElement("div");
 			name.style.display = "inline-block";
 			name.textContent = names[vlan];
@@ -1626,6 +1626,21 @@ class Topology extends Window {
 			}
 			else {
 
+			}
+		}
+		else if (device.lldp && device.lldp.remoteSystemName[portIndex]?.length === 1) {
+			remoteBox.className = "snmp-undocumented";
+			if (device.lldp.remoteSystemName[portIndex][0].length > 0) {
+				remoteBox.textContent = device.lldp.remoteSystemName[portIndex][0];
+			}
+			else if (device.lldp.​remoteChassisIdSubtype[portIndex][0] === 4
+				|| device.lldp.​remoteChassisIdSubtype[portIndex][0] === 5
+				|| device.lldp.​remoteChassisIdSubtype[portIndex][0] === 7) {
+				remoteBox.textContent = device.lldp.remoteChassisId[portIndex][0];
+			}
+			else if (device.lldp.remotePortIdSubtype​[portIndex][0] === 3
+				|| device.lldp.remotePortIdSubtype​[portIndex][0] === 4) {
+				remoteBox.textContent = device.lldp.remotePortId​[portIndex][0];
 			}
 		}
 
