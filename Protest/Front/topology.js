@@ -1694,14 +1694,14 @@ class Topology extends Window {
 				vlanTitle.style.borderRadius = "4px";
 				this.infoBox.appendChild(vlanTitle);
 
-				let untaggedString = [];
+				let untaggedString = "";
 				for (const vlan in device.dot1q.untagged) {
 					if (!(vlan in device.dot1q.untagged) || device.dot1q.untagged[vlan].length === 0) continue;
 					const hexMap = device.dot1q.untagged[vlan];
 					const binMap = parseInt(hexMap, 16).toString(2).padStart(hexMap.length * 4, "0");
 
 					if (binMap[parseInt(portIndex) - 1] == 1) {
-						untaggedString.push(vlan);
+						untaggedString = vlan;
 					}
 				}
 
