@@ -598,7 +598,7 @@ class Topology extends Window {
 				if (nonAmbiguousCount === 1 && !isSingle) {
 					if (!device.lldp.ambiguous) device.lldp.ambiguous = {}
 					device.lldp.ambiguous[port] = ambiguousIndexes;
-					console.info("port skipped due to ambiguity", device, port);
+					//console.info("port skipped due to ambiguity", device, port);
 					continue;
 				}
 
@@ -1038,7 +1038,7 @@ class Topology extends Window {
 		}
 		else {
 			if (portIndex in device.links) { 
-				console.info("port already in use");
+				console.info("port already in use", device, portIndex);
 			}
 			device.links[portIndex] = key;
 		}
@@ -1437,7 +1437,6 @@ class Topology extends Window {
 			this.PopulateVlanStaticNames(vlanList, device.dot1q.names);
 		}
 
-
 		if (device.lldp) {
 			const interfacesList = document.createElement("details");
 			interfacesList.className = "topology-interface-list";
@@ -1697,24 +1696,22 @@ class Topology extends Window {
 
 				let untaggedString = [];
 				for (const vlan in device.dot1q.untagged) {
-					const map  = device.dot1q.untagged[vlan];
-					if (!map) continue;
-					const byte = Number(`0x${map[Math.floor(portIndex / 4)]}`);
-					const mod  = (portIndex - 1) % 4;
-					const mask = 0b00001000 >> mod;
-					if ((byte & mask) !== 0) {
+					if (!(vlan in device.dot1q.untagged) || device.dot1q.untagged[vlan].length === 0) continue;
+					const hexMap = device.dot1q.untagged[vlan];
+					const binMap = parseInt(hexMap, 16).toString(2).padStart(hexMap.length * 4, "0");
+
+					if (binMap[parseInt(portIndex) - 1] == 1) {
 						untaggedString.push(vlan);
 					}
 				}
 
 				let taggedString = [];
 				for (const vlan in device.dot1q.egress) {
-					const map  = device.dot1q.egress[vlan];
-					if (!map) continue;
-					const byte = Number(`0x${map[Math.floor(portIndex / 4)]}`);
-					const mod  = (portIndex - 1) % 4;
-					const mask = 0b00001000 >> mod;
-					if ((byte & mask) !== 0) {
+					if (!(vlan in device.dot1q.egress) || device.dot1q.egress[vlan].length === 0) continue;
+					const hexMap = device.dot1q.egress[vlan];
+					const binMap = parseInt(hexMap, 16).toString(2).padStart(hexMap.length * 4, "0");
+
+					if (binMap[parseInt(portIndex) - 1] == 1) {
 						taggedString.push(vlan);
 					}
 				}
