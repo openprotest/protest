@@ -116,8 +116,8 @@ class Topology extends Window {
 		let x = this.offsetX - this.x0 + event.clientX;
 		let y = this.offsetY - this.y0 + event.clientY;
 		if (event.ctrlKey) {
-			x = Math.round(x / 50) * 50;
-			y = Math.round(y / 50) * 50;
+			x = Math.round(x / 25) * 25;
+			y = Math.round(y / 25) * 25;
 		}
 
 		this.dragging.element.x = x;
@@ -143,8 +143,8 @@ class Topology extends Window {
 				remoteDevice.element.y = remoteDevice.element.y0 + dy;
 
 				if (event.ctrlKey) {
-					remoteDevice.element.x = Math.round(remoteDevice.element.x / 50) * 50;
-					remoteDevice.element.y = Math.round(remoteDevice.element.y / 50) * 50;
+					remoteDevice.element.x = Math.round(remoteDevice.element.x / 25) * 25;
+					remoteDevice.element.y = Math.round(remoteDevice.element.y / 25) * 25;
 				}
 
 				remoteDevice.element.root.style.transform = `translate(${remoteDevice.element.x}px,${remoteDevice.element.y}px)`;

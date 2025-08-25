@@ -13,17 +13,17 @@ namespace Protest.Protocols.Snmp;
 
 internal static partial class Polling {
 
-    public enum SnmpOperation : byte {
+    internal enum SnmpOperation : byte {
         Get, Set, Walk
     }
 
-    public static byte[] GetHandler(HttpListenerContext ctx, Dictionary<string, string> parameters)
+    internal static byte[] GetHandler(HttpListenerContext ctx, Dictionary<string, string> parameters)
         => SnmpHandler(ctx, parameters, SnmpOperation.Get);
 
-    public static byte[] SetHandler(HttpListenerContext ctx, Dictionary<string, string> parameters)
+    internal static byte[] SetHandler(HttpListenerContext ctx, Dictionary<string, string> parameters)
         => SnmpHandler(ctx, parameters, SnmpOperation.Set);
 
-    public static byte[] WalkHandler(HttpListenerContext ctx, Dictionary<string, string> parameters)
+    internal static byte[] WalkHandler(HttpListenerContext ctx, Dictionary<string, string> parameters)
         => SnmpHandler(ctx, parameters, SnmpOperation.Walk);
 
     private static byte[] SnmpHandler(HttpListenerContext ctx, Dictionary<string, string> parameters, SnmpOperation operation) {
@@ -105,19 +105,19 @@ internal static partial class Polling {
         }
     }
 
-    public static IList<Variable> SnmpRequestV1V2(IPAddress ipAddress, VersionCode version, int timeout, string communityString, string[] oidArray, SnmpOperation operation, string dataString = null) {
+    internal static IList<Variable> SnmpRequestV1V2(IPAddress ipAddress, VersionCode version, int timeout, string communityString, string[] oidArray, SnmpOperation operation, string dataString = null) {
         IPEndPoint endpoint = new IPEndPoint(ipAddress, 161);
         OctetString community = new OctetString(communityString);
         OctetString data = dataString is null ? null : new OctetString(dataString);
         return SnmpRequestV1V2(endpoint, version, timeout, community, oidArray, operation, data);
     }
 
-    public static IList<Variable> SnmpRequestV1V2(IPAddress ipAddress, VersionCode version, int timeout, OctetString community, string[] oidArray, SnmpOperation operation, OctetString data = null) {
+    internal static IList<Variable> SnmpRequestV1V2(IPAddress ipAddress, VersionCode version, int timeout, OctetString community, string[] oidArray, SnmpOperation operation, OctetString data = null) {
         IPEndPoint endpoint = new IPEndPoint(ipAddress, 161);
         return SnmpRequestV1V2(endpoint, version, timeout, community, oidArray, operation, data);
     }
 
-    public static IList<Variable> SnmpRequestV1V2(IPEndPoint endpoint, VersionCode version, int timeout, OctetString community, string[] oidArray, SnmpOperation operation, OctetString data = null) {
+    internal static IList<Variable> SnmpRequestV1V2(IPEndPoint endpoint, VersionCode version, int timeout, OctetString community, string[] oidArray, SnmpOperation operation, OctetString data = null) {
         if (operation == SnmpOperation.Get) {
             IList<Variable> oidList = oidArray
                         .Select(o=> new Variable(new ObjectIdentifier(o.Trim())))
@@ -146,12 +146,12 @@ internal static partial class Polling {
         }
     }
 
-    public static IList<Variable> SnmpRequestV3(IPAddress ipAddress, int timeout, Tools.SnmpProfiles.Profile profile, string[] oidArray, SnmpOperation operation, OctetString data = null) {
+    internal static IList<Variable> SnmpRequestV3(IPAddress ipAddress, int timeout, Tools.SnmpProfiles.Profile profile, string[] oidArray, SnmpOperation operation, OctetString data = null) {
         IPEndPoint endpoint = new IPEndPoint(ipAddress, 161);
         return SnmpRequestV3(endpoint, timeout, profile, oidArray, operation, data);
     }
 
-    public static IList<Variable> SnmpRequestV3(IPEndPoint endpoint, int timeout, Tools.SnmpProfiles.Profile profile, string[] oidArray, SnmpOperation operation, OctetString data = null) {
+    internal static IList<Variable> SnmpRequestV3(IPEndPoint endpoint, int timeout, Tools.SnmpProfiles.Profile profile, string[] oidArray, SnmpOperation operation, OctetString data = null) {
         OctetString username            = new OctetString(profile.username);
         OctetString context             = new OctetString(profile.context);
         string authenticationPassphrase = profile.authPassword;
@@ -247,7 +247,7 @@ internal static partial class Polling {
         }
     }
 
-    public static Dictionary<string, string>ParseResponse(IList<Variable> result, bool preserveOctet = false) {
+    internal static Dictionary<string, string>ParseResponse(IList<Variable> result, bool preserveOctet = false) {
         if (result is null || result.Count == 0) {
             return null;
         }
@@ -263,7 +263,7 @@ internal static partial class Polling {
         return data;
     }
 
-    public static string ParseVariable(Variable variable, bool preserveOctet = false) {
+    internal static string ParseVariable(Variable variable, bool preserveOctet = false) {
         if (variable.Data.TypeCode == SnmpType.Null ||
             variable.Data.TypeCode == SnmpType.NoSuchObject ||
             variable.Data.TypeCode == SnmpType.NoSuchInstance) {
@@ -275,12 +275,7 @@ internal static partial class Polling {
             }
             else {
                 byte[] bytes = variable.Data.ToBytes();
-                for (int j = 0; j < bytes.Length; j++) {
-                    if (bytes[j] < 32) { bytes[j] = (byte)' '; }
-                    else if (bytes[j] > 126) { bytes[j] = (byte)' '; }
-                }
-
-                return Encoding.UTF8.GetString(bytes).Trim();
+                return ParseOctetString(bytes).Trim();
             }
         }
         else {
@@ -350,32 +345,15 @@ internal static partial class Polling {
                     builder.Append("\"\"");
                 }
                 else if (bytes.Length < 2) {
-                    builder.Append("\"");
+                    builder.Append('\"');
                     for (int j = 0; j < bytes.Length; j++) {
                         builder.Append($"{bytes[j]:X2}");
                     }
                     builder.Append('\"');
                 }
                 else {
-                    byte lenByte = bytes[1];
-                    int size, startIndex;
-                    if (lenByte < 128) {
-                        size = lenByte;
-                        startIndex = 2;
-                    }
-                    else {
-                        int lenBytesCount = lenByte & 0x7F;
-                        size = 0;
-                        for (int j = 0; j < Math.Min(lenBytesCount, bytes.Length - 2); j++) {
-                            size = (size << 8) + bytes[2 + j];
-                        }
-                        startIndex = 2 + lenBytesCount;
-                    }
-
-                    builder.Append("\"");
-                    for (int j = startIndex; j < Math.Min(startIndex + size, bytes.Length); j++) {
-                        builder.Append($"{bytes[j]:X2}");
-                    }
+                    builder.Append('\"');
+                    builder.Append(ParseOctetStringAsHex(bytes));
                     builder.Append('\"');
                 }
             }
@@ -387,10 +365,69 @@ internal static partial class Polling {
 
         builder.Append(']');
 
+        Console.WriteLine(builder.ToString());
+
         return Encoding.UTF8.GetBytes(builder.ToString());
     }
 
-    public static (IList<Variable>, SnmpProfiles.Profile) SnmpQueryTrialAndError(IPAddress target, SnmpProfiles.Profile[] snmpProfiles, string[] oids) {
+    internal static string ParseOctetString(byte[] bytes) {
+        if (bytes.Length < 2) return string.Empty;
+
+        byte lenByte = bytes[1];
+        int size, startIndex;
+        if (lenByte < 128) {
+            size = lenByte;
+            startIndex = 2;
+        }
+        else {
+            int lenBytesCount = lenByte & 0x7F;
+            size = 0;
+            for (int j = 0; j < Math.Min(lenBytesCount, bytes.Length - 2); j++) {
+                size = (size << 8) + bytes[2 + j];
+            }
+            startIndex = 2 + lenBytesCount;
+        }
+
+        int count = Math.Min(size, bytes.Length - startIndex);
+        if (count <= 0) return string.Empty;
+
+        return Encoding.UTF8.GetString(bytes, startIndex, count);
+    }
+
+    internal static string ParseOctetStringAsHex(byte[] bytes) {
+        if (bytes.Length < 2) return string.Empty;
+
+        byte lenByte = bytes[1];
+        int size, startIndex;
+        if (lenByte < 128) {
+            size = lenByte;
+            startIndex = 2;
+        }
+        else {
+            int lenBytesCount = lenByte & 0x7F;
+            size = 0;
+            for (int j = 0; j < Math.Min(lenBytesCount, bytes.Length - 2); j++) {
+                size = (size << 8) + bytes[2 + j];
+            }
+            startIndex = 2 + lenBytesCount;
+        }
+
+        int count = Math.Min(size, bytes.Length - startIndex);
+        if (count <= 0) return string.Empty;
+
+        Span<char> hex = stackalloc char[count * 2];
+        for (int i = 0; i < count; i++) {
+            byte b = bytes[startIndex + i];
+            hex[i * 2] = GetHexChar(b >> 4);
+            hex[i * 2 + 1] = GetHexChar(b & 0x0F);
+        }
+
+        return hex.ToString();
+
+        static char GetHexChar(int value) => (char)(value < 10 ? '0' + value : 'A' + (value - 10));
+    }
+
+    internal static (IList<Variable>, SnmpProfiles.Profile) SnmpQueryTrialAndError(IPAddress target, SnmpProfiles.Profile[] snmpProfiles, string[] oids) {
         for (int i = 0; i < snmpProfiles.Length; i++) {
             IList<Variable> result = SnmpQuery(target, snmpProfiles[i], oids, Polling.SnmpOperation.Get);
 
@@ -402,7 +439,7 @@ internal static partial class Polling {
         return (null, null);
     }
 
-    public static IList<Variable> SnmpQuery(IPAddress target, SnmpProfiles.Profile profile, string[] oids, SnmpOperation operation) {
+    internal static IList<Variable> SnmpQuery(IPAddress target, SnmpProfiles.Profile profile, string[] oids, SnmpOperation operation) {
         if (profile is null) return null;
 
         if (profile.version == 3) {
