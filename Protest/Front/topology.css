@@ -225,13 +225,12 @@
 	transform: translateY(5px) !important;
 }
 
-.snmp-ambiguous::after {
+.snmp-ambiguous::after,
+.snmp-undocumented::after {
 	position: absolute;
-	content: "?";
 	text-align: center;
 	font-weight: bold;
-	color: var(--clr-light);
-	background-color: var(--clr-dark);
+	color: var(--clr-dark);
 	right: 2px;
 	width: 14px;
 	height: 14px;
@@ -241,12 +240,44 @@
 	transform: translateY(2px);
 }
 
+.snmp-ambiguous::after {
+	content: "";
+	background-image: url(mono/question.svg);
+	background-size: 14px 14px;
+	background-position: center;
+	background-repeat: no-repeat;
+	background-color: var(--clr-warning);
+}
+
+.snmp-undocumented::after {
+	content: "";
+	background-image: url(mono/database.svg);
+	background-size: 10px 10px;
+	background-position: center;
+	background-repeat: no-repeat;
+	background-color: rgb(232,118,0);
+}
+
 *:hover.snmp-ambiguous::after {
+	background-image: none;
 	content: "ambiguous";
 	font-weight: normal;
-	width: 84px;
+	width: 82px;
 	height: 16px;
 	line-height: 16px;
+	box-shadow: var(--clr-dark) 0 0 0 1px;
+	transform: translateY(1px);
+	transition: .2s;
+}
+
+*:hover.snmp-undocumented::after {
+	background-image: none;
+	content: "undocumented";
+	font-weight: normal;
+	width: 100px;
+	height: 16px;
+	line-height: 16px;
+	box-shadow: var(--clr-dark) 0 0 0 1px;
 	transform: translateY(1px);
 	transition: .2s;
 }

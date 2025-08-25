@@ -417,6 +417,7 @@ class Topology extends Window {
 						element: element,
 						initial: json.initial[i],
 						links  : {},
+						dbMatch: {},
 					};
 				}
 			}
@@ -552,6 +553,8 @@ class Topology extends Window {
 			if (remotePortInfo.length === 1) {
 				const match = this.MatchDevice(device, port, 0) ?? this.MatchDbEntry(device, port, 0);
 
+				device.dbMatch[port] = match;
+
 				if (match in this.devices) {
 					const remoteDevice    = this.devices[match];
 					const remotePort      = this.ComputeRemotePort(device, port, 0, remoteDevice);
@@ -598,7 +601,7 @@ class Topology extends Window {
 				if (nonAmbiguousCount === 1 && !isSingle) {
 					if (!device.lldp.ambiguous) device.lldp.ambiguous = {}
 					device.lldp.ambiguous[port] = ambiguousIndexes;
-					console.info("port skipped due to ambiguity", device, port);
+					//console.info("port skipped due to ambiguity", device, port);
 					continue;
 				}
 
@@ -635,8 +638,13 @@ class Topology extends Window {
 			const options = {x:x, y:y};
 
 			const unmanagedSwitch = this.CreateUnmanagedSwitchEntry(device, parentPort, options);
-			const length = unmanagedSwitches[parentPort].length;
 
+			unmanagedSwitch.dbMatch.push(device.initial.file);
+			for (const i in unmanagedSwitches[parentPort].matches) {
+				unmanagedSwitch.dbMatch.push(unmanagedSwitches[parentPort].matches[i]);
+			}
+
+			const length = unmanagedSwitches[parentPort].length;
 			const pseudoLldp = {
 				file: unmanagedSwitch.initial.file,
 				localPortCount        : length + 1,
@@ -847,7 +855,8 @@ class Topology extends Window {
 			isUnmanaged: true,
 			element    : element,
 			initial    : {file: file, type: "switch"},
-			links      : []
+			links      : [],
+			dbMatch    : [],
 		};
 
 		this.devices[file] = entry;
@@ -906,6 +915,7 @@ class Topology extends Window {
 			element       : element,
 			lldp          : lldp,
 			links         : [],
+			dbMatch       : {},
 			initial: {
 				file: file,
 				hostname: hostname,
@@ -918,7 +928,7 @@ class Topology extends Window {
 		this.devices[file] = entry;
 
 		this.undocumentedCount++;
-		
+
 		return entry;
 	}
 
@@ -1038,7 +1048,7 @@ class Topology extends Window {
 		}
 		else {
 			if (portIndex in device.links) { 
-				console.info("port already in use");
+				console.info("port already in use", device, portIndex);
 			}
 			device.links[portIndex] = key;
 		}
@@ -1437,7 +1447,6 @@ class Topology extends Window {
 			this.PopulateVlanStaticNames(vlanList, device.dot1q.names);
 		}
 
-
 		if (device.lldp) {
 			const interfacesList = document.createElement("details");
 			interfacesList.className = "topology-interface-list";
@@ -1528,12 +1537,12 @@ class Topology extends Window {
 		for (const vlan in names) {
 			const container = document.createElement("div");
 			vlanList.appendChild(container);
-			
+
 			const idBox = document.createElement("div");
 			idBox.textContent = vlan;
 
 			const valueBox = document.createElement("div");
-			
+
 			const color = document.createElement("div");
 			color.style.display = "inline-block";
 			color.style.width = "10px";
@@ -1542,7 +1551,7 @@ class Topology extends Window {
 			color.style.border = "1px solid var(--clr-dark)";
 			color.style.borderRadius = "2px";
 			color.style.backgroundColor = this.GetVlanColor(vlan);
-			
+
 			const name = document.createElement("div");
 			name.style.display = "inline-block";
 			name.textContent = names[vlan];
@@ -1629,6 +1638,22 @@ class Topology extends Window {
 
 			}
 		}
+		else if (!device.dbMatch[portIndex] && device.lldp && device.lldp.remoteSystemName[portIndex]?.length > 0) {
+			remoteBox.className = "snmp-undocumented";
+
+			if (device.lldp.remoteSystemName[portIndex][0].length > 0) {
+				remoteBox.textContent = device.lldp.remoteSystemName[portIndex][0];
+			}
+			else if (device.lldp.remoteChassisIdSubtype[portIndex][0] === 4
+				|| device.lldp.remoteChassisIdSubtype[portIndex][0] === 5
+				|| device.lldp.remoteChassisIdSubtype[portIndex][0] === 7) {
+				remoteBox.textContent = device.lldp.remoteChassisId[portIndex][0];
+			}
+			else if (device.lldp.remotePortIdSubtype[portIndex][0] === 3
+				|| device.lldp.remotePortIdSubtype[portIndex][0] === 4) {
+				remoteBox.textContent = device.lldp.remotePortId[portIndex][0];
+			}
+		}
 
 		interfaceBox.onmouseenter = ()=> {
 			if (!link) return;
@@ -1695,26 +1720,24 @@ class Topology extends Window {
 				vlanTitle.style.borderRadius = "4px";
 				this.infoBox.appendChild(vlanTitle);
 
-				let untaggedString = [];
+				let untaggedString = "";
 				for (const vlan in device.dot1q.untagged) {
-					const map  = device.dot1q.untagged[vlan];
-					if (!map) continue;
-					const byte = Number(`0x${map[Math.floor(portIndex / 4)]}`);
-					const mod  = (portIndex - 1) % 4;
-					const mask = 0b00001000 >> mod;
-					if ((byte & mask) !== 0) {
-						untaggedString.push(vlan);
+					if (!(vlan in device.dot1q.untagged) || device.dot1q.untagged[vlan].length === 0) continue;
+					const hexMap = device.dot1q.untagged[vlan];
+					const binMap = parseInt(hexMap, 16).toString(2).padStart(hexMap.length * 4, "0");
+
+					if (binMap[parseInt(portIndex) - 1] == 1) {
+						untaggedString = vlan;
 					}
 				}
 
 				let taggedString = [];
 				for (const vlan in device.dot1q.egress) {
-					const map  = device.dot1q.egress[vlan];
-					if (!map) continue;
-					const byte = Number(`0x${map[Math.floor(portIndex / 4)]}`);
-					const mod  = (portIndex - 1) % 4;
-					const mask = 0b00001000 >> mod;
-					if ((byte & mask) !== 0) {
+					if (!(vlan in device.dot1q.egress) || device.dot1q.egress[vlan].length === 0) continue;
+					const hexMap = device.dot1q.egress[vlan];
+					const binMap = parseInt(hexMap, 16).toString(2).padStart(hexMap.length * 4, "0");
+
+					if (binMap[parseInt(portIndex) - 1] == 1) {
 						taggedString.push(vlan);
 					}
 				}
@@ -1747,6 +1770,9 @@ class Topology extends Window {
 
 					if (device?.lldp?.ambiguous?.[portIndex]?.[i]) {
 						box.className = "snmp-ambiguous";
+					}
+					else if (!device.dbMatch[portIndex] && device.lldp && device.lldp.remoteSystemName[portIndex]?.length > 0) {
+						box.className = "snmp-undocumented";
 					}
 				}
 			}

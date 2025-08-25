@@ -270,9 +270,9 @@ internal static class Topology {
     }
 
     private static byte[] ComputeDotQ1Response(string file, IList<Variable> dot1q) {
-        Dictionary<int, string>  names = new Dictionary<int, string>();
-        Dictionary<int, string>  egress = new Dictionary<int, string>();
-        Dictionary<int, string>  untagged = new Dictionary<int, string>();
+        Dictionary<int, string> names = new Dictionary<int, string>();
+        Dictionary<int, string> egress = new Dictionary<int, string>();
+        Dictionary<int, string> untagged = new Dictionary<int, string>();
 
         Dictionary<string, Variable> vlans = new Dictionary<string, Variable>();
         for (int i = 0; i < dot1q.Count; i++) {
