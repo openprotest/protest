@@ -417,6 +417,7 @@ button.view-live-button:active {
 	height: 40px;
 	border-radius: 4px;
 	transition: .2s;
+	overflow: hidden;
 }
 
 .view-interface-port:hover {

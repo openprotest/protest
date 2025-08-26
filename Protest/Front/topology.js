@@ -1471,7 +1471,7 @@ class Topology extends Window {
 			}
 			else {
 				for (const portIndex in device.lldp.localPortName) {
-					this.CreateInterfaceListItem(interfacesList, device, portIndex, device.lldp.localPortName[portIndex]);
+					this.CreateInterfaceListItem(interfacesList, device, portIndex, device.lldp.localPortId[portIndex]);
 				}
 			}
 
@@ -1712,14 +1712,14 @@ class Topology extends Window {
 			this.infoBox.style.visibility = "visible";
 			this.infoBox.style.opacity = "1";
 
-			if (device.dot1q) {
-				const vlanTitle = document.createElement("div");
-				vlanTitle.textContent ="VLAN";
-				vlanTitle.style.textAlign = "center";
-				vlanTitle.style.backgroundColor = "var(--clr-select)";
-				vlanTitle.style.borderRadius = "4px";
-				this.infoBox.appendChild(vlanTitle);
+			const titleBox = document.createElement("div");
+			titleBox.textContent = device.lldp ? device.lldp.localPortName[portIndex] || portName : portName;
+			titleBox.style.textAlign = "center";
+			titleBox.style.backgroundColor = "var(--clr-select)";
+			titleBox.style.borderRadius = "4px";
+			this.infoBox.appendChild(titleBox);
 
+			if (device.dot1q) {
 				let untaggedString = "";
 				for (const vlan in device.dot1q.untagged) {
 					if (!(vlan in device.dot1q.untagged) || device.dot1q.untagged[vlan].length === 0) continue;
@@ -1750,13 +1750,6 @@ class Topology extends Window {
 				taggedBox.textContent = `Tagged: ${taggedString}`;
 				this.infoBox.appendChild(taggedBox);
 			}
-
-			const lldpTitle = document.createElement("div");
-			lldpTitle.textContent ="LLDP";
-			lldpTitle.style.textAlign = "center";
-			lldpTitle.style.backgroundColor = "var(--clr-select)";
-			lldpTitle.style.borderRadius = "4px";
-			this.infoBox.appendChild(lldpTitle);
 
 			if (device.lldp.remoteChassisId[portIndex]) {
 				for (let i=0; i<device.lldp.remoteChassisId[portIndex].length; i++) {
