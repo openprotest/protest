@@ -789,10 +789,7 @@ class Topology extends Window {
 			if (!value) return false;
 
 			let split;
-			if (attribute === "ip") {
-				split = value.split(";").map(o=>o.trim());
-			}
-			else if (attribute === "mac address") {
+			if (attribute === "mac address") {
 					split = value.split(";").map(
 					o=>o.trim()
 					.replaceAll(" ", "").replaceAll(":", "").replaceAll("-", "").replaceAll(".", "")

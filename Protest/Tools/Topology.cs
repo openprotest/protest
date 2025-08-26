@@ -181,15 +181,17 @@ internal static class Topology {
         local.TryGetValue("1.0.8802.1.1.2.1.3.3.0", out Variable localHostname);
         //local.TryGetValue("1.0.8802.1.1.2.1.3.4.0", out Variable localDescription);
 
-        Dictionary<int, int>    localPortIdSubtype = new Dictionary<int, int>();
-        Dictionary<int, string> localPortId        = new Dictionary<int, string>();
-        Dictionary<int, string> localPortName      = new Dictionary<int, string>();
+        Dictionary<int, int>          localPortIdSubtype     = new Dictionary<int, int>();
+        Dictionary<int, string>       localPortId            = new Dictionary<int, string>();
+        Dictionary<int, string>       localPortName          = new Dictionary<int, string>();
 
         Dictionary<int, List<int>>    remoteChassisIdSubtype = new Dictionary<int, List<int>>();
         Dictionary<int, List<string>> remoteChassisId        = new Dictionary<int, List<string>>();
         Dictionary<int, List<int>>    remotePortIdSubtype    = new Dictionary<int, List<int>>();
         Dictionary<int, List<string>> remotePortId           = new Dictionary<int, List<string>>();
         Dictionary<int, List<string>> remoteSystemName       = new Dictionary<int, List<string>>();
+
+        Dictionary<int, List<string>> databaseEntry          = new Dictionary<int, List<string>>();
 
         foreach (KeyValuePair<string, Variable> pair in local) {
             if (!int.TryParse(pair.Key.Split('.')[^1], out int index)) continue;
@@ -226,8 +228,7 @@ internal static class Topology {
                     remoteChassisId.Push(index, pair.Value.Data.ToString());
                 }
             }
-
-            if (pair.Key.StartsWith("1.0.8802.1.1.2.1.4.1.1.6")) {
+            else if (pair.Key.StartsWith("1.0.8802.1.1.2.1.4.1.1.6")) {
                 remotePortIdSubtype.Push(index, int.TryParse(pair.Value.Data.ToString(), out int subtype) ? subtype : -1);
             }
             else if (pair.Key.StartsWith("1.0.8802.1.1.2.1.4.1.1.7")) {
@@ -244,19 +245,45 @@ internal static class Topology {
             }
         }
 
+        foreach (KeyValuePair<int, List<int>> pair in remoteChassisIdSubtype) {
+            int index = pair.Key;
+            if (!remoteChassisIdSubtype.TryGetValue(index, out List<int> chassisIdSubtype)) continue;
+            if (!remoteChassisId.TryGetValue(index, out List<string> chassisId)) continue;
+            if (!remotePortIdSubtype.TryGetValue(index, out List<int> portIdSubtype)) continue;
+            if (!remotePortId.TryGetValue(index, out List<string> portId)) continue;
+            if (!remoteSystemName.TryGetValue(index, out List<string> systemName)) continue;
+
+            for (int i = 0; i < chassisIdSubtype.Count; i++) {
+                if (chassisId.Count != chassisIdSubtype.Count) continue;
+                if (portIdSubtype.Count != chassisIdSubtype.Count) continue;
+                if (portId.Count != chassisIdSubtype.Count) continue;
+                if (systemName.Count != chassisIdSubtype.Count) continue;
+
+                string match = GetDatabaseEntry(
+                    chassisIdSubtype[i],
+                    chassisId[i].ToLower(),
+                    portIdSubtype[i],
+                    portId[i].ToLower(),
+                    systemName[i].ToLower()
+                );
+
+                databaseEntry.Push(index, match);
+            }
+        }
+
         byte[] payload = JsonSerializer.SerializeToUtf8Bytes(new {
             lldp = new {
                 file = file,
 
-                localChassisIdSubtype = int.TryParse(localChassisIdSubtype.Data.ToString(), out int localChassisIdSubtypeInt) ? localChassisIdSubtypeInt : -1,
-                localChassisId        = GetChassisId(localChassisIdSubtype.Data.ToString(), localChassisId.Data),
-                localHostname         = localHostname.Data.ToString(),
-                //localDescription      = localDescription.Data.ToString(),
+                localChassisIdSubtype   = int.TryParse(localChassisIdSubtype.Data.ToString(), out int localChassisIdSubtypeInt) ? localChassisIdSubtypeInt : -1,
+                localChassisId          = GetChassisId(localChassisIdSubtype.Data.ToString(), localChassisId.Data),
+                localHostname           = localHostname.Data.ToString(),
+                //localDescription        = localDescription.Data.ToString(),
 
-                localPortCount     = localPortIdSubtype.Count,
-                localPortIdSubtype = localPortIdSubtype,
-                localPortId        = localPortId,
-                localPortName      = localPortName,
+                localPortCount         = localPortIdSubtype.Count,
+                localPortIdSubtype     = localPortIdSubtype,
+                localPortId            = localPortId,
+                localPortName          = localPortName,
 
                 remoteChassisIdSubtype = remoteChassisIdSubtype,
                 remoteChassisId        = remoteChassisId,
@@ -383,6 +410,63 @@ internal static class Topology {
         }
     }
 
+    private static string GetDatabaseEntry(int chassisIdSubtype, string chassisId, int portIdSubtype, string portId, string systemName) {
+        switch (chassisIdSubtype) {
+        case 4: { //mac
+            foreach (KeyValuePair<string, Database.Entry> device in DatabaseInstances.devices.dictionary) {
+                if (MatchDatabaseAttribute(device.Value, "mac address", chassisId)) return device.Key;
+            }
+            break;
+        }
+        case 5: { //ip address
+            foreach (KeyValuePair<string, Database.Entry> device in DatabaseInstances.devices.dictionary) {
+                if (MatchDatabaseAttribute(device.Value, "ip", chassisId)) return device.Key;
+            }
+            break;
+        }
+        case 7: { //local
+            foreach (KeyValuePair<string, Database.Entry> device in DatabaseInstances.devices.dictionary) {
+                if (MatchDatabaseAttribute(device.Value, "hostname", chassisId)) return device.Key;
+            }
+            break;
+        }
+        }
+
+        switch (portIdSubtype) {
+        case 3: { //mac
+            foreach (KeyValuePair<string, Database.Entry> device in DatabaseInstances.devices.dictionary) {
+                if (MatchDatabaseAttribute(device.Value, "mac address", portId)) return device.Key;
+            }
+            break;
+        }
+        case 4: { //ip address
+            foreach (KeyValuePair<string, Database.Entry> device in DatabaseInstances.devices.dictionary) {
+                if (MatchDatabaseAttribute(device.Value, "ip", portId)) return device.Key;
+            }
+            break;
+        }
+        }
+
+        foreach (KeyValuePair<string, Database.Entry> device in DatabaseInstances.devices.dictionary) {
+            if (MatchDatabaseAttribute(device.Value, "hostname", systemName)) return device.Key;
+        }
+
+        return null;
+    }
+
+    private static bool MatchDatabaseAttribute(Database.Entry entry, string attributeName, string compare) {
+        if (!entry.attributes.TryGetValue(attributeName, out Database.Attribute attribute)) return false;
+        
+        string value = attribute.value.ToLower();
+        if (String.IsNullOrEmpty(value)) return false;
+
+        string[] split = attributeName == "mac address"
+            ? value.Split(';').Select(o => o.Trim().Replace(":", String.Empty).Replace("-", String.Empty).Replace(".", String.Empty)).ToArray()
+            : value.Split(';').Select(o => o.Trim()).ToArray();
+
+        return split.Contains(compare);
+    }
+
     internal static int GetPortBitmapStart(byte[] raw) {
         if (raw.Length > 4
             && raw[0] == 0x04
@@ -411,4 +495,6 @@ internal static class Topology {
 
         return hex.ToString();
     }
+
+    
 }
