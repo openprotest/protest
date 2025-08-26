@@ -53,7 +53,7 @@ internal static partial class Polling {
         OctetString community = new OctetString(communityString);
 
         if (!Int32.TryParse(timeoutString, out int timeout) || timeout < 1) {
-            timeout = 10_000;
+            timeout = 5_000;
         }
 
         using StreamReader reader = new StreamReader(ctx.Request.InputStream, ctx.Request.ContentEncoding);
@@ -364,8 +364,6 @@ internal static partial class Polling {
         }
 
         builder.Append(']');
-
-        Console.WriteLine(builder.ToString());
 
         return Encoding.UTF8.GetBytes(builder.ToString());
     }

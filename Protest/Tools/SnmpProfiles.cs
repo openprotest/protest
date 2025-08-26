@@ -209,34 +209,53 @@ internal sealed class SnmpProfilesJsonConverter : JsonConverter<SnmpProfiles.Pro
         }
 
         while (reader.Read()) {
-            if (reader.TokenType == JsonTokenType.EndArray) {
-                break;
-            }
+            if (reader.TokenType == JsonTokenType.EndArray) break;
+            
 
             if (reader.TokenType == JsonTokenType.StartObject) {
                 SnmpProfiles.Profile profile = new SnmpProfiles.Profile();
 
                 while (reader.Read()) {
-                    if (reader.TokenType == JsonTokenType.EndObject) {
-                        break;
-                    }
+                    if (reader.TokenType == JsonTokenType.EndObject) break;
+                    
 
                     if (reader.TokenType == JsonTokenType.PropertyName) {
                         string propertyName = reader.GetString();
                         reader.Read();
 
                         switch (propertyName) {
-                        case "name"            : profile.name = reader.GetString(); break;
-                        case "priority"        : profile.priority = reader.GetInt32(); break;
-                        case "version"         : profile.version = reader.GetInt32(); break;
-                        case "community"       : profile.community = reader.GetString(); break;
-                        case "context"         : profile.context = reader.GetString(); break;
-                        case "username"        : profile.username = reader.GetString(); break;
-                        case "authAlgorithm"   : profile.authAlgorithm = (SnmpProfiles.AuthenticationAlgorithm)reader.GetUInt16(); break;
-                        case "authPassword"    : profile.authPassword = hidePasswords ? String.Empty : reader.GetString(); break;
-                        case "privacyAlgorithm": profile.privacyAlgorithm = (SnmpProfiles.PrivacyAlgorithm)reader.GetUInt16(); break;
-                        case "privacyPassword" : profile.privacyPassword = hidePasswords ? String.Empty : reader.GetString(); break;
-                        case "guid"            : profile.guid = reader.GetGuid(); break;
+                        case "name"            : profile.name             = reader.GetString(); break;
+                        case "priority"        : profile.priority         = reader.GetInt32(); break;
+                        case "version"         : profile.version          = reader.GetInt32(); break;
+                        case "community"       : profile.community        = reader.GetString(); break;
+                        case "context"         : profile.context          = reader.GetString(); break;
+                        case "username"        : profile.username         = reader.GetString(); break;
+                        case "authPassword"    : profile.authPassword     = hidePasswords ? String.Empty : reader.GetString(); break;
+                        case "privacyPassword" : profile.privacyPassword  = hidePasswords ? String.Empty : reader.GetString(); break;
+                        case "guid"            : profile.guid             = reader.GetGuid(); break;
+
+                        case "authAlgorithm":
+                            if (reader.TokenType == JsonTokenType.Number && reader.TryGetInt32(out int authValue)
+                                && Enum.IsDefined(typeof(SnmpProfiles.AuthenticationAlgorithm), (byte)authValue)) {
+                                profile.authAlgorithm = (SnmpProfiles.AuthenticationAlgorithm)(byte)authValue;
+                            }
+                            else if (reader.TokenType == JsonTokenType.String
+                                && Enum.TryParse<SnmpProfiles.AuthenticationAlgorithm>(reader.GetString(), true, out SnmpProfiles.AuthenticationAlgorithm parsedAuth)) {
+                                profile.authAlgorithm = parsedAuth;
+                            }
+                            break;
+
+                        case "privacyAlgorithm":
+                            if (reader.TokenType == JsonTokenType.Number && reader.TryGetInt32(out int privValue)
+                                && Enum.IsDefined(typeof(SnmpProfiles.PrivacyAlgorithm), (byte)privValue)) {
+                                profile.privacyAlgorithm = (SnmpProfiles.PrivacyAlgorithm)(byte)privValue;
+                            }
+                            else if (reader.TokenType == JsonTokenType.String
+                                && Enum.TryParse<SnmpProfiles.PrivacyAlgorithm>(reader.GetString(), true, out SnmpProfiles.PrivacyAlgorithm parsedPriv)) {
+                                profile.privacyAlgorithm = parsedPriv;
+                            }
+                            break;
+
                         default: reader.Skip(); break;
                         }
                     }
@@ -250,17 +269,17 @@ internal sealed class SnmpProfilesJsonConverter : JsonConverter<SnmpProfiles.Pro
     }
 
     public override void Write(Utf8JsonWriter writer, SnmpProfiles.Profile[] value, JsonSerializerOptions options) {
-        ReadOnlySpan<byte> _name = "name"u8;
-        ReadOnlySpan<byte> _priority = "priority"u8;
-        ReadOnlySpan<byte> _version = "version"u8;
-        ReadOnlySpan<byte> _community = "community"u8;
-        ReadOnlySpan<byte> _context = "context"u8;
-        ReadOnlySpan<byte> _username = "username"u8;
-        ReadOnlySpan<byte> _authAlgorithm = "authAlgorithm"u8;
-        ReadOnlySpan<byte> _authPassword = "authPassword"u8;
+        ReadOnlySpan<byte> _name             = "name"u8;
+        ReadOnlySpan<byte> _priority         = "priority"u8;
+        ReadOnlySpan<byte> _version          = "version"u8;
+        ReadOnlySpan<byte> _community        = "community"u8;
+        ReadOnlySpan<byte> _context          = "context"u8;
+        ReadOnlySpan<byte> _username         = "username"u8;
+        ReadOnlySpan<byte> _authAlgorithm    = "authAlgorithm"u8;
+        ReadOnlySpan<byte> _authPassword     = "authPassword"u8;
         ReadOnlySpan<byte> _privacyAlgorithm = "privacyAlgorithm"u8;
-        ReadOnlySpan<byte> _privacyPassword = "privacyPassword"u8;
-        ReadOnlySpan<byte> _guid = "guid"u8;
+        ReadOnlySpan<byte> _privacyPassword  = "privacyPassword"u8;
+        ReadOnlySpan<byte> _guid             = "guid"u8;
 
         writer.WriteStartArray();
 
@@ -273,9 +292,9 @@ internal sealed class SnmpProfilesJsonConverter : JsonConverter<SnmpProfiles.Pro
             writer.WriteString(_context, value[i].context);
             writer.WriteString(_username, value[i].username);
             writer.WriteNumber(_authAlgorithm, (byte)value[i].authAlgorithm);
-            writer.WriteString(_authPassword, hidePasswords ? String.Empty : value[i].authPassword.ToString());
+            writer.WriteString(_authPassword, hidePasswords ? String.Empty : value[i].authPassword);
             writer.WriteNumber(_privacyAlgorithm, (byte)value[i].privacyAlgorithm);
-            writer.WriteString(_privacyPassword, hidePasswords ? String.Empty : value[i].privacyPassword.ToString());
+            writer.WriteString(_privacyPassword, hidePasswords ? String.Empty : value[i].privacyPassword);
             writer.WriteString(_guid, value[i].guid);
             writer.WriteEndObject();
         }

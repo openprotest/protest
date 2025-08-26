@@ -412,7 +412,7 @@ internal static class Fetch {
 
             if (!data.ContainsKey("type")) {
                 IList<Variable> dot1dBaseBridgeAddress = Protocols.Snmp.Polling.SnmpQuery(ipAddress, profile, ["1.3.6.1.2.1.17.1.1.0"], Polling.SnmpOperation.Get);
-                if (dot1dBaseBridgeAddress.Count > 0) {
+                if (dot1dBaseBridgeAddress?.Count > 0) {
                     data.TryAdd("type", new string[] { "Switch", "SNMP", string.Empty });
                 }
             }
