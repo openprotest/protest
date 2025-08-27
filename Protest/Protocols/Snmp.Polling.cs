@@ -215,28 +215,33 @@ internal static partial class Polling {
             List<Variable> result = new List<Variable>();
 
             foreach (string baseOid in oidArray) {
-                ObjectIdentifier rootOid = new ObjectIdentifier(baseOid.Trim());
+                ObjectIdentifier rootOid = new ObjectIdentifier(baseOid);
                 ObjectIdentifier currentOid = rootOid;
 
                 while (true) {
-                    GetNextRequestMessage request = new GetNextRequestMessage(
-                        VersionCode.V3,
-                        Messenger.NextMessageId,
-                        Messenger.NextRequestId,
-                        username,
-                        context,
-                        new List<Variable> { new Variable(currentOid) },
-                        privacyProvider,
-                        Messenger.MaxMessageSize,
-                        report);
+                    try {
+                        GetNextRequestMessage request = new GetNextRequestMessage(
+                            VersionCode.V3,
+                            Messenger.NextMessageId,
+                            Messenger.NextRequestId,
+                            username,
+                            context,
+                            new List<Variable> { new Variable(currentOid) },
+                            privacyProvider,
+                            Messenger.MaxMessageSize,
+                            report);
 
-                    ISnmpMessage response = request.GetResponse(timeout, endpoint);
-                    Variable nextVar = response.Variables().FirstOrDefault();
+                        ISnmpMessage response = request.GetResponse(timeout, endpoint);
+                        Variable nextVar = response.Variables().FirstOrDefault();
 
-                    if (nextVar == null || !nextVar.Id.ToString().StartsWith(rootOid.ToString())) break;
+                        if (nextVar == null || !nextVar.Id.ToString().StartsWith(baseOid)) break;
 
-                    result.Add(nextVar);
-                    currentOid = nextVar.Id;
+                        result.Add(nextVar);
+                        currentOid = nextVar.Id;
+                    }
+                    catch (SnmpException) {
+                        return result;
+                    }
                 }
             }
 

@@ -1,12 +1,12 @@
-﻿using Protest.Http;
-using Protest.Protocols.Snmp;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Net;
 using System.Net.WebSockets;
 using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using Protest.Http;
+using Protest.Protocols.Snmp;
 using Lextm.SharpSnmpLib;
 
 namespace Protest.Tools;
@@ -129,7 +129,7 @@ internal static class Topology {
                     IList<Variable> rawLocal = Polling.SnmpQuery(ipAddress, snmpProfile, [Oid.LLDP_LOCAL_SYS_DATA], Polling.SnmpOperation.Walk);
                     IList<Variable> rawRemote = Polling.SnmpQuery(ipAddress, snmpProfile, [Oid.LLDP_REMOTE_SYS_DATA], Polling.SnmpOperation.Walk);
 
-                    if (rawLocal is null || rawLocal.Count == 0 || rawRemote is null || rawRemote.Count == 0) {
+                    if (rawLocal is null || rawRemote is null) {
                         WsWriteText(ws, Encoding.UTF8.GetBytes($"{{\"nosnmp\":\"{candidate.filename}\"}}"), mutex);
                         return;
                     }
@@ -154,11 +154,8 @@ internal static class Topology {
 
             await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
         }
-        catch (WebSocketException ex) when (ex.WebSocketErrorCode == WebSocketError.ConnectionClosedPrematurely) {
+        catch (WebSocketException) {
             return;
-        }
-        catch (WebSocketException ex) when (ex.WebSocketErrorCode != WebSocketError.ConnectionClosedPrematurely) {
-            //do nothing
         }
         catch (Exception ex) {
             Logger.Error(ex);
@@ -290,6 +287,8 @@ internal static class Topology {
                 remotePortIdSubtype    = remotePortIdSubtype,
                 remotePortId           = remotePortId,
                 remoteSystemName       = remoteSystemName,
+
+                entry                  = databaseEntry,
             }
         });
 
