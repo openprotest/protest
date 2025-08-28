@@ -550,7 +550,7 @@ class Topology extends Window {
 			if (!remotePortInfo || remotePortInfo.length === 0) continue;
 
 			if (remotePortInfo.length === 1) {
-				const match = this.MatchDevice(device, port, 0) ?? this.MatchDbEntry(device, port, 0);
+				const match = this.MatchDevice(device, port, 0);
 
 				if (match in this.devices) {
 					const remoteDevice    = this.devices[match];
@@ -579,7 +579,8 @@ class Topology extends Window {
 				let   nonAmbiguousCount = 0;
 
 				for (let i=0; i<remotePortInfo.length; i++) {
-					let match = this.MatchDevice(device, port, i);
+					const match = this.MatchDevice(device, port, i);
+					matches.push(match);
 
 					if (match) {
 						nonAmbiguousCount++;
@@ -587,9 +588,6 @@ class Topology extends Window {
 					else {
 						ambiguousIndexes[i] = true;
 					}
-
-					match ??= this.MatchDbEntry(device, port, i);
-					matches.push(match);
 				}
 
 				const nonNullMatches = matches.filter(o=> o !== null);
@@ -763,79 +761,13 @@ class Topology extends Window {
 		if (targetName && targetName.length > 0) {
 			for (const file in this.devices) {
 				const candidate = this.devices[file];
-				if ((candidate.initial.hostname?.toUpperCase() ?? "") === targetName) return file;
+				if (targetName === (candidate.initial.hostname?.toUpperCase() ?? "")) return file;
 			}
 		}
 
 		if (device.lldp.remotePortIdSubtype[port][index] === 5) { //remote port is interface
 			const entry = this.CreateUndocumentedEntry(device, port, index);
 			return entry.initial.file;
-		}
-
-		return null;
-	}
-
-	MatchDbEntry(device, port, index) {
-		const chassisId        = device.lldp.remoteChassisId[port][index].toLowerCase();
-		const chassisIdSubtype = device.lldp.remoteChassisIdSubtype[port][index];
-		const portId           = device.lldp.remotePortId[port][index].toLowerCase();
-		const portIdSubtype    = device.lldp.remotePortIdSubtype[port][index];
-
-		const match = (file, attribute, string)=> {
-			const value = LOADER.devices.data[file][attribute]?.v.toLowerCase();
-			if (!value) return false;
-
-			let split;
-			if (attribute === "mac address") {
-					split = value.split(";").map(
-					o=>o.trim()
-					.replaceAll(" ", "").replaceAll(":", "").replaceAll("-", "").replaceAll(".", "")
-				);
-			}
-			else {
-				split = value.split(";").map(o=>o.trim());
-			}
-
-			return split.includes(string);
-		};
-
-		switch (chassisIdSubtype) {
-		case 4: //mac address
-			for (const file in LOADER.devices.data) {
-				if (match(file, "mac address", chassisId)) return file;
-			}
-			break;
-
-		case 5: //network address
-			for (const file in LOADER.devices.data) {
-				if (match(file, "ip", chassisId)) return file;
-			}
-			break;
-
-		case 7: //local
-			for (const file in LOADER.devices.data) {
-				if (match(file, "hostname", chassisId)) return file;
-			}
-			break;
-		}
-
-		switch (portIdSubtype) {
-		case 3: //mac address
-			for (const file in LOADER.devices.data) {
-				if (match(file, "mac address", portId)) return file;
-			}
-			break;
-
-		case 4: //network address
-			for (const file in LOADER.devices.data) {
-				if (match(file, "ip", portId)) return file;
-			}
-			break;
-		}
-
-		const sysName = device.lldp.remoteSystemName[port][index].toLowerCase();
-		for (const file in LOADER.devices.data) {
-			if (match(file, "hostname", sysName)) return file;
 		}
 
 		return null;
@@ -858,7 +790,7 @@ class Topology extends Window {
 	}
 
 	CreateUndocumentedEntry(device, port, index) {
-		const dbFile = this.MatchDbEntry(device, port, index);
+		const dbFile = device?.lldp?.entry[port][index] ?? null;
 
 		let deviceType     = null;
 		let deviceIp       = null;
@@ -1615,7 +1547,6 @@ class Topology extends Window {
 			}
 			else if (remoteDeviceFile in LOADER.devices.data) {
 				const dbEntry = LOADER.devices.data[remoteDeviceFile];
-
 				if ("hostname" in dbEntry && dbEntry.hostname.v.length > 0) {
 					remoteBox.textContent = dbEntry.hostname.v;
 				}
@@ -1626,8 +1557,21 @@ class Topology extends Window {
 					remoteBox.textContent = dbEntry.ip.ip;
 				}
 			}
-			else {
+			else if (portIndex in device?.lldp?.entry && device.lldp.entry[portIndex][0] === null) {
+				remoteBox.className = "snmp-undocumented";
 
+				if (device.lldp.remoteSystemName[portIndex][0].length > 0) {
+					remoteBox.textContent = device.lldp.remoteSystemName[portIndex][0];
+				}
+				else if (device.lldp.remoteChassisIdSubtype[portIndex][0] === 4
+					|| device.lldp.remoteChassisIdSubtype[portIndex][0] === 5
+					|| device.lldp.remoteChassisIdSubtype[portIndex][0] === 7) {
+					remoteBox.textContent = device.lldp.remoteChassisId[portIndex][0];
+				}
+				else if (device.lldp.remotePortIdSubtype[portIndex][0] === 3
+					|| device.lldp.remotePortIdSubtype[portIndex][0] === 4) {
+					remoteBox.textContent = device.lldp.remotePortId[portIndex][0];
+				}
 			}
 		}
 		else if (portIndex in device?.lldp?.entry && device.lldp.entry[portIndex][0] === null) {
