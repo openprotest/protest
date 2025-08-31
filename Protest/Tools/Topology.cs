@@ -272,9 +272,9 @@ internal static class Topology {
             lldp = new {
                 file = file,
 
-                localChassisIdSubtype   = int.TryParse(localChassisIdSubtype.Data.ToString(), out int localChassisIdSubtypeInt) ? localChassisIdSubtypeInt : -1,
-                localChassisId          = GetChassisId(localChassisIdSubtype.Data.ToString(), localChassisId.Data),
-                localHostname           = localHostname.Data.ToString(),
+                localChassisIdSubtype   = int.TryParse(localChassisIdSubtype.Data?.ToString(), out int localChassisIdSubtypeInt) ? localChassisIdSubtypeInt : -1,
+                localChassisId          = GetChassisId(localChassisIdSubtype.Data?.ToString(), localChassisId.Data),
+                localHostname           = localHostname?.Data.ToString(),
                 //localDescription        = localDescription.Data.ToString(),
 
                 localPortCount         = localPortIdSubtype.Count,

@@ -227,13 +227,17 @@
 
 .snmp-ambiguous::after,
 .snmp-undocumented::after {
+	content: "";
 	position: absolute;
 	text-align: center;
 	font-weight: bold;
-	color: var(--clr-dark);
 	right: 2px;
 	width: 14px;
 	height: 14px;
+	color: var(--clr-dark);
+	background-color: var(--clr-warning);
+	background-position: center;
+	background-repeat: no-repeat;
 	line-height: 14px;
 	border-radius: 6px;
 	overflow: hidden;
@@ -241,21 +245,13 @@
 }
 
 .snmp-ambiguous::after {
-	content: "";
 	background-image: url(mono/question.svg);
 	background-size: 14px 14px;
-	background-position: center;
-	background-repeat: no-repeat;
-	background-color: var(--clr-warning);
 }
 
 .snmp-undocumented::after {
-	content: "";
 	background-image: url(mono/database.svg);
 	background-size: 10px 10px;
-	background-position: center;
-	background-repeat: no-repeat;
-	background-color: rgb(232,118,0);
 }
 
 *:hover.snmp-ambiguous::after {

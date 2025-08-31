@@ -493,7 +493,6 @@ class Topology extends Window {
 		}
 
 		this.SortOffset();
-		//this.AdjustSvgSize();
 	}
 
 	SortOffset() {
@@ -550,88 +549,22 @@ class Topology extends Window {
 			if (!remotePortInfo || remotePortInfo.length === 0) continue;
 
 			if (remotePortInfo.length === 1) {
-				const match = this.MatchDevice(device, port, 0);
-
-				if (match in this.devices) {
-					const remoteDevice    = this.devices[match];
-					const remotePort      = this.ComputeRemotePort(device, port, 0, remoteDevice);
-					let   remotePortIndex = remotePort?.index ?? -1;
-
-					if (remoteDevice.isUndocumented) {
-						remotePortIndex = remoteDevice.links.length;
-						this.SynthesizePseudoLldp(device, port, 0, remoteDevice, remotePortIndex);
-					}
-
-					if (remotePortIndex > -1) {
-						this.Link(device, port, remoteDevice, remotePortIndex);
-					}
-					else {
-						//TODO:
-					}
-				}
-				else {
-					this.LinkEndpoint(device, port, match);
-				}
+				this.ComputeLldpSingleEntry(device, port, 0);
 			}
-			else { //multiple LLDP entries, treat as unmanaged switch
-				const matches = [];
-				const ambiguousIndexes = {};
-				let   nonAmbiguousCount = 0;
-
-				for (let i=0; i<remotePortInfo.length; i++) {
-					const match = this.MatchDevice(device, port, i);
-					matches.push(match);
-
-					if (match) {
-						nonAmbiguousCount++;
-					}
-					else {
-						ambiguousIndexes[i] = true;
-					}
-				}
-
-				const nonNullMatches = matches.filter(o=> o !== null);
-				const isSingle = nonNullMatches.length > 1 && nonNullMatches.every(o=> o === matches[0]);
-
-				if (nonAmbiguousCount === 1 && !isSingle) {
-					if (!device.lldp.ambiguous) device.lldp.ambiguous = {}
-					device.lldp.ambiguous[port] = ambiguousIndexes;
-					//console.info("port skipped due to ambiguity", device, port);
-					continue;
-				}
-
-				if (isSingle) {
-					const remoteDevice  = this.devices[matches[0]];
-					let remotePort      = this.ComputeRemotePort(device, port, 0, remoteDevice);
-					let remotePortIndex = remotePort?.index ?? -1;
-
-					this.SynthesizePseudoLldp(device, port, 0, remoteDevice, remotePortIndex);
-					this.Link(device, port, remoteDevice, remotePortIndex);
-				}
-				else {
-					unmanagedSwitches[port] = {
-						length                : remotePortInfo.length,
-						matches               : matches,
-						remoteChassisIdSubtype: device.lldp.remoteChassisIdSubtype[port],
-						remoteChassisId       : device.lldp.remoteChassisId[port],
-						remotePortIdSubtype   : device.lldp.remotePortIdSubtype[port],
-						remotePortId          : device.lldp.remotePortId[port],
-						remoteSystemName      : device.lldp.remoteSystemName[port],
-						entry                 : device.lldp.entry[port],
-					};
-				}
+			else {
+				this.ComputeLldpMultipleEntries(device, port, unmanagedSwitches);
 			}
 		}
 
+		//handle unmanaged switches:
 		let count = 0;
 		const total = Object.keys(unmanagedSwitches).length;
 		const totalWidth = total * 36;
 		for (const parentPort in unmanagedSwitches) {
 			const x = device.element.x - totalWidth / 2 + count * 36 + 42;
 			const y = device.element.y - 100 + (count % 2 === 0 ? 0 : 30);
-			count++;
-
 			const options = {x:x, y:y};
+			count++;
 
 			const unmanagedSwitch = this.CreateUnmanagedSwitchEntry(device, parentPort, options);
 
@@ -647,7 +580,7 @@ class Topology extends Window {
 				remotePortIdSubtype   : {0:[device.lldp.localPortIdSubtype[parentPort]]},
 				remotePortId          : {0:[device.lldp.localPortId[parentPort]]},
 				remoteSystemName      : {0:[device.lldp.localHostname]},
-				entry                 : {0:[unmanagedSwitch.initial.file]}
+				entry                 : {0:[device.initial.file]}
 			};
 
 			for (let i=0; i<unmanagedSwitches[parentPort].remotePortId.length; i++) {
@@ -668,7 +601,6 @@ class Topology extends Window {
 
 			for (let i=0; i<unmanagedSwitches[parentPort].matches.length; i++) {
 				const match = unmanagedSwitches[parentPort].matches[i];
-				if (!match) continue;
 
 				if (match in this.devices) {
 
@@ -677,6 +609,80 @@ class Topology extends Window {
 					this.LinkEndpoint(unmanagedSwitch, i + 1, match);
 				}
 			}
+		}
+	}
+
+	ComputeLldpSingleEntry(device, port, index) {
+		const match = this.MatchDevice(device, port, index);
+
+		if (match in this.devices) {
+			const remoteDevice    = this.devices[match];
+			const remotePort      = this.ComputeRemotePort(device, port, index, remoteDevice);
+			let   remotePortIndex = remotePort?.index ?? -1;
+
+			if (remoteDevice.isUndocumented) {
+				remotePortIndex = remoteDevice.links.length;
+				this.FabricatePseudoLldp(device, port, index, remoteDevice, remotePortIndex);
+			}
+
+			if (remotePortIndex > -1) {
+				this.Link(device, port, remoteDevice, remotePortIndex);
+			}
+			else {
+				//
+			}
+		}
+		else {
+			this.LinkEndpoint(device, port, match);
+		}
+	}
+
+	ComputeLldpMultipleEntries(device, port, unmanagedSwitches) {
+		const remotePortInfo   = device.lldp.remotePortId[port];
+		const matches          = [];
+		const ambiguousIndexes = {};
+		let nonAmbiguousCount  = 0;
+
+		for (let i=0; i<remotePortInfo.length; i++) {
+			const match = this.MatchDevice(device, port, i);
+			matches.push(match);
+
+			if (match) {
+				nonAmbiguousCount++;
+			}
+			else {
+				ambiguousIndexes[i] = true;
+			}
+		}
+
+		const nonNullMatches = matches.filter(o => o !== null);
+		const isSingle = nonNullMatches.length > 1 && nonNullMatches.every(o => o === matches[0]);
+
+		if (nonAmbiguousCount === 1) {
+			this.ComputeLldpSingleEntry(device, port, 0);
+		}
+
+		if (nonAmbiguousCount === 1 && !isSingle) {
+			if (!device.lldp.ambiguous) device.lldp.ambiguous = {}
+			device.lldp.ambiguous[port] = ambiguousIndexes;
+			//console.info("port skipped due to ambiguity", device, port);
+			return;
+		}
+
+		if (isSingle) {
+			this.ComputeLldpSingleEntry(device, port, 0);
+		}
+		else {
+			unmanagedSwitches[port] = {
+				length                : remotePortInfo.length,
+				remoteChassisIdSubtype: device.lldp.remoteChassisIdSubtype[port],
+				remoteChassisId       : device.lldp.remoteChassisId[port],
+				remotePortIdSubtype   : device.lldp.remotePortIdSubtype[port],
+				remotePortId          : device.lldp.remotePortId[port],
+				remoteSystemName      : device.lldp.remoteSystemName[port],
+				matches               : matches,
+				entry                 : device.lldp.entry[port],
+			};
 		}
 	}
 
@@ -721,7 +727,7 @@ class Topology extends Window {
 		return null;
 	}
 
-	SynthesizePseudoLldp(device, port, portIndex, remoteDevice, remotePortIndex) {
+	FabricatePseudoLldp(device, port, portIndex, remoteDevice, remotePortIndex) {
 		remoteDevice.lldp.localPortCount                      = remotePortIndex;
 		remoteDevice.lldp.localPortName[remotePortIndex]      = device.lldp.remotePortId[port][portIndex];
 		remoteDevice.lldp.localChassisIdSubtype               = device.lldp.remoteChassisIdSubtype[port][portIndex];
@@ -761,7 +767,9 @@ class Topology extends Window {
 		if (targetName && targetName.length > 0) {
 			for (const file in this.devices) {
 				const candidate = this.devices[file];
-				if (targetName === (candidate.initial.hostname?.toUpperCase() ?? "")) return file;
+				if (targetName === (candidate.initial.hostname?.toUpperCase() ?? "")) {
+					return file;
+				}
 			}
 		}
 
@@ -805,7 +813,6 @@ class Topology extends Window {
 
 		deviceType ??= "switch";
 		const isRouter = deviceType === "router";
-
 		const file = dbFile ?? UI.GenerateUuid();
 		const hostname = device.lldp.remoteSystemName[port][index];
 
@@ -850,7 +857,6 @@ class Topology extends Window {
 		};
 
 		this.devices[file] = entry;
-
 		this.undocumentedCount++;
 
 		return entry;
@@ -971,7 +977,7 @@ class Topology extends Window {
 			device.links.push(key);
 		}
 		else {
-			if (portIndex in device.links) { 
+			if (portIndex in device.links) {
 				console.info("port already in use", device, portIndex);
 			}
 			device.links[portIndex] = key;
@@ -1516,37 +1522,21 @@ class Topology extends Window {
 
 		localBox.textContent = localPortName;
 
-		const link = this.links[device.links[portIndex]];
-
 		if (device?.lldp?.ambiguous?.[portIndex]) {
 			remoteBox.className = "snmp-ambiguous";
 		}
 
-		if (link) {
-			const remoteDeviceFile = device.initial.file === link.deviceA ? link.deviceB : link.deviceA;
+		const entry = device.lldp.entry[portIndex];
 
-			if (remoteDeviceFile in this.devices) {
-				const remoteDevice = this.devices[remoteDeviceFile];
-				const remotePortIndex = device.initial.file === link.deviceA ? link.portIndexB : link.portIndexA;
+		if (entry && entry.length === 1) {
+			const file = entry[0];
 
-				let remotePortName;
-				if  (remoteDevice.lldp && remoteDevice.lldp.localPortName && remoteDevice.lldp.localPortName[remotePortIndex].length > 0) {
-					remotePortName = remoteDevice.lldp.localPortName[remotePortIndex];
-				}
-				else {
-					remotePortName = remotePortIndex;
-				}
-
-				remoteBox.textContent = remoteDevice.isUnmanaged ? "unmanaged" : remoteDevice.initial.hostname;
-				remoteBox.style.width = "calc(50% - 12px)";
-				remoteBox.style.borderRadius = "4px 0 0 4px";
-
-				const remotePortBox = document.createElement("div");
-				remotePortBox.textContent = remotePortName;
-				interfaceBox.append(remotePortBox);
+			if (file === null) {
+				remoteBox.className = "snmp-undocumented";
 			}
-			else if (remoteDeviceFile in LOADER.devices.data) {
-				const dbEntry = LOADER.devices.data[remoteDeviceFile];
+
+			const dbEntry = LOADER.devices.data[file];
+			if (dbEntry) {
 				if ("hostname" in dbEntry && dbEntry.hostname.v.length > 0) {
 					remoteBox.textContent = dbEntry.hostname.v;
 				}
@@ -1557,9 +1547,7 @@ class Topology extends Window {
 					remoteBox.textContent = dbEntry.ip.ip;
 				}
 			}
-			else if (portIndex in device?.lldp?.entry && device.lldp.entry[portIndex][0] === null) {
-				remoteBox.className = "snmp-undocumented";
-
+			else {
 				if (device.lldp.remoteSystemName[portIndex][0].length > 0) {
 					remoteBox.textContent = device.lldp.remoteSystemName[portIndex][0];
 				}
@@ -1574,20 +1562,30 @@ class Topology extends Window {
 				}
 			}
 		}
-		else if (portIndex in device?.lldp?.entry && device.lldp.entry[portIndex][0] === null) {
-			remoteBox.className = "snmp-undocumented";
 
-			if (device.lldp.remoteSystemName[portIndex][0].length > 0) {
-				remoteBox.textContent = device.lldp.remoteSystemName[portIndex][0];
-			}
-			else if (device.lldp.remoteChassisIdSubtype[portIndex][0] === 4
-				|| device.lldp.remoteChassisIdSubtype[portIndex][0] === 5
-				|| device.lldp.remoteChassisIdSubtype[portIndex][0] === 7) {
-				remoteBox.textContent = device.lldp.remoteChassisId[portIndex][0];
-			}
-			else if (device.lldp.remotePortIdSubtype[portIndex][0] === 3
-				|| device.lldp.remotePortIdSubtype[portIndex][0] === 4) {
-				remoteBox.textContent = device.lldp.remotePortId[portIndex][0];
+		const link = this.links[device.links[portIndex]];
+		if (link) {
+			const remoteDeviceFile = device.initial.file === link.deviceA ? link.deviceB : link.deviceA;
+
+			if (remoteDeviceFile in this.devices) {
+				const remoteDevice = this.devices[remoteDeviceFile];
+				const remotePortIndex = device.initial.file === link.deviceA ? link.portIndexB : link.portIndexA;
+
+				let remotePortName;
+				if (remoteDevice.lldp && remotePortIndex in remoteDevice.lldp.localPortName && remoteDevice.lldp.localPortName[remotePortIndex].length > 0) {
+					remotePortName = remoteDevice.lldp.localPortName[remotePortIndex];
+				}
+				else {
+					remotePortName = remotePortIndex;
+				}
+
+				remoteBox.textContent = remoteDevice.isUnmanaged ? "unmanaged" : remoteDevice.initial.hostname;
+				remoteBox.style.width = "calc(50% - 12px)";
+				remoteBox.style.borderRadius = "4px 0 0 4px";
+
+				const remotePortBox = document.createElement("div");
+				remotePortBox.textContent = remotePortName;
+				interfaceBox.append(remotePortBox);
 			}
 		}
 
