@@ -1,15 +1,35 @@
 .topology-workspace {
 	position: absolute;
-	width: calc(100% - 366px);
+	left : 8px;
+	right: 366px;
 	height: 100%;
 	overflow: auto;
+	transition: .2s;
 }
 
 .topology-workspace > svg {
 	background-size: 50px 50px;
 	background-image:
-	linear-gradient(to right, transparent 47px, rgba(96,96,96,.5) 48px, transparent 49px),
-	linear-gradient(to bottom, transparent 47px, rgba(96,96,96,.5) 48px, transparent 49px);
+		linear-gradient(to right, transparent 47px, rgba(96,96,96,.5) 48px, transparent 49px),
+		linear-gradient(to bottom, transparent 47px, rgba(96,96,96,.5) 48px, transparent 49px);
+}
+
+.topology-navbar {
+	position: absolute;
+	width: 300px;
+	top: 8px;
+	bottom: 8px;
+	color: var(--clr-dark);
+	background-color: var(--clr-pane);
+	border-radius: 4px;
+	padding: 4px;
+	box-sizing: border-box;
+	overflow-y: auto;
+
+	left: -100%;
+	visibility: hidden;
+	opacity: 0;
+	transition: .2s;
 }
 
 .topology-sidebar {
@@ -225,8 +245,8 @@
 	transform: translateY(5px) !important;
 }
 
-.snmp-ambiguous::after,
-.snmp-undocumented::after {
+.topology-ambiguous::after,
+.sntopologymp-undocumented::after {
 	content: "";
 	position: absolute;
 	text-align: center;
@@ -244,12 +264,12 @@
 	transform: translateY(2px);
 }
 
-.snmp-ambiguous::after {
+.topology-ambiguous::after {
 	background-image: url(mono/question.svg);
 	background-size: 14px 14px;
 }
 
-.snmp-undocumented::after {
+.topology-undocumented::after {
 	background-image: url(mono/database.svg);
 	background-size: 10px 10px;
 }

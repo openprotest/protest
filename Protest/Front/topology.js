@@ -35,6 +35,7 @@ class Topology extends Window {
 	}
 
 	InitializeComponents() {
+		this.content.style.overflow = "hidden";
 		this.SetupToolbar();
 
 		this.startButton = this.AddToolbarButton("Start discovery", "mono/play.svg?light");
@@ -54,6 +55,9 @@ class Topology extends Window {
 		this.workspace = document.createElement("div");
 		this.workspace.className = "topology-workspace";
 
+		this.navBar = document.createElement("div");
+		this.navBar.className = "topology-navbar";
+
 		this.sideBar = document.createElement("div");
 		this.sideBar.className = "topology-sidebar";
 
@@ -61,7 +65,7 @@ class Topology extends Window {
 		this.infoBox.style.visibility = "hidden";
 		this.infoBox.className = "topology-info-box";
 
-		this.content.append(this.workspace, this.sideBar, this.infoBox);
+		this.content.append(this.workspace, this.navBar, this.sideBar, this.infoBox);
 
 		this.workspace.onmousedown = event=> this.Topology_onmousedown(event);
 		this.content.onmousemove = event=> this.Topology_onmousemove(event);
@@ -69,6 +73,8 @@ class Topology extends Window {
 
 		this.startButton.onclick = ()=> this.StartDialog();
 		this.stopButton.onclick = ()=> this.Stop();
+		this.findButton.onclick = ()=> this.Find();
+
 		this.sideBar.onscroll = ()=> this.InfoBoxPosition();
 	}
 
@@ -471,6 +477,15 @@ class Topology extends Window {
 	Stop() {
 		this.startButton.disabled = false;
 		this.stopButton.disabled = true;
+	}
+
+	Find() {
+		this.navBar.style.visibility = "visible";
+		this.navBar.style.opacity = "1";
+		this.navBar.style.left = "8px";
+
+		this.workspace.style.left = "316px";
+		this.workspace.style.right = "366px";
 	}
 
 	SortBySnmp() {
@@ -1523,7 +1538,7 @@ class Topology extends Window {
 		localBox.textContent = localPortName;
 
 		if (device?.lldp?.ambiguous?.[portIndex]) {
-			remoteBox.className = "snmp-ambiguous";
+			remoteBox.className = "topology-ambiguous";
 		}
 
 		const entry = device.lldp.entry[portIndex];
@@ -1532,7 +1547,7 @@ class Topology extends Window {
 			const file = entry[0];
 
 			if (file === null) {
-				remoteBox.className = "snmp-undocumented";
+				remoteBox.className = "topology-undocumented";
 			}
 
 			const dbEntry = LOADER.devices.data[file];
@@ -1696,10 +1711,10 @@ class Topology extends Window {
 					this.infoBox.appendChild(box);
 
 					if (device?.lldp?.ambiguous?.[portIndex]?.[i]) {
-						box.className = "snmp-ambiguous";
+						box.className = "topology-ambiguous";
 					}
 					else if (device.lldp.entry[portIndex][i] === null) {
-						box.className = "snmp-undocumented";
+						box.className = "topology-undocumented";
 					}
 				}
 			}
