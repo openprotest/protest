@@ -398,7 +398,7 @@ class Topology extends Window {
 			this.startButton.disabled = false;
 			this.stopButton.disabled = true;
 
-			this.SortBySnmp();
+			this.SortByLocation();
 		};
 
 		this.ws.onmessage = event=> {
@@ -510,6 +510,21 @@ class Topology extends Window {
 		this.SortOffset();
 	}
 
+	SortByLocation() {
+		const groups = {};
+
+		for (const file in this.devices) {
+			const location = this.devices[file].initial.location?.toLowerCase().trim() ?? "unknown";
+			if (location in groups) {
+				groups[location].push(this.devices[file]);
+			}
+			else {
+				groups[location] = [];
+				groups[location].push(this.devices[file]);
+			}
+		}
+	}
+
 	SortOffset() {
 		let minX = this.workspace.offsetWidth;
 		for (const file in this.devices) {
@@ -571,60 +586,7 @@ class Topology extends Window {
 			}
 		}
 
-		//handle unmanaged switches:
-		let count = 0;
-		const total = Object.keys(unmanagedSwitches).length;
-		const totalWidth = total * 36;
-		for (const parentPort in unmanagedSwitches) {
-			const x = device.element.x - totalWidth / 2 + count * 36 + 42;
-			const y = device.element.y - 100 + (count % 2 === 0 ? 0 : 30);
-			const options = {x:x, y:y};
-			count++;
-
-			const unmanagedSwitch = this.CreateUnmanagedSwitchEntry(device, parentPort, options);
-
-			const length = unmanagedSwitches[parentPort].length;
-			const pseudoLldp = {
-				file: unmanagedSwitch.initial.file,
-				localPortCount        : length + 1,
-				localPortName         : Object.assign({}, new Array(length + 1).fill("--")),
-				localPortIdSubtype    : Object.assign({}, new Array(length + 1).fill(0)),
-				localPortId           : Object.assign({}, new Array(length + 1).fill("")),
-				remoteChassisIdSubtype: {0:[device.lldp.localChassisIdSubtype]},
-				remoteChassisId       : {0:[device.lldp.localChassisId]},
-				remotePortIdSubtype   : {0:[device.lldp.localPortIdSubtype[parentPort]]},
-				remotePortId          : {0:[device.lldp.localPortId[parentPort]]},
-				remoteSystemName      : {0:[device.lldp.localHostname]},
-				entry                 : {0:[device.initial.file]}
-			};
-
-			for (let i=0; i<unmanagedSwitches[parentPort].remotePortId.length; i++) {
-				pseudoLldp.remoteChassisIdSubtype[i+1] = [unmanagedSwitches[parentPort].remoteChassisIdSubtype[i]];
-				pseudoLldp.remoteChassisId[i+1]        = [unmanagedSwitches[parentPort].remoteChassisId[i]];
-				pseudoLldp.remotePortIdSubtype[i+1]    = [unmanagedSwitches[parentPort].remotePortIdSubtype[i]];
-				pseudoLldp.remotePortId[i+1]           = [unmanagedSwitches[parentPort].remotePortId[i]];
-				pseudoLldp.remoteSystemName[i+1]       = [unmanagedSwitches[parentPort].remoteSystemName[i]];
-				pseudoLldp.entry[i+1]                  = [unmanagedSwitches[parentPort].entry[i]];
-			}
-
-			unmanagedSwitch.lldp = pseudoLldp;
-
-			if (!(parentPort in device.links)) {
-				//TODO: handle floating switches
-				this.Link(device, parentPort, unmanagedSwitch, 0);
-			}
-
-			for (let i=0; i<unmanagedSwitches[parentPort].matches.length; i++) {
-				const match = unmanagedSwitches[parentPort].matches[i];
-
-				if (match in this.devices) {
-
-				}
-				else {
-					this.LinkEndpoint(unmanagedSwitch, i + 1, match);
-				}
-			}
-		}
+		this.ComputeUnmanagedSwitches(device, unmanagedSwitches);
 	}
 
 	ComputeLldpSingleEntry(device, port, index) {
@@ -701,6 +663,62 @@ class Topology extends Window {
 		}
 	}
 
+	ComputeUnmanagedSwitches(parentDevice, unmanagedSwitches) {
+		let count = 0;
+		const total = Object.keys(unmanagedSwitches).length;
+		const totalWidth = total * 36;
+		for (const parentPort in unmanagedSwitches) {
+			const x = parentDevice.element.x - totalWidth / 2 + count * 36 + 42;
+			const y = parentDevice.element.y - 100 + (count % 2 === 0 ? 0 : 30);
+			const options = {x:x, y:y};
+			count++;
+
+			const unmanagedSwitch = this.CreateUnmanagedSwitchEntry(parentDevice, parentPort, options);
+
+			const length = unmanagedSwitches[parentPort].length;
+			const pseudoLldp = {
+				file: unmanagedSwitch.initial.file,
+				localPortCount        : length + 1,
+				localPortName         : Object.assign({}, new Array(length + 1).fill("--")),
+				localPortIdSubtype    : Object.assign({}, new Array(length + 1).fill(0)),
+				localPortId           : Object.assign({}, new Array(length + 1).fill("")),
+				remoteChassisIdSubtype: {0:[parentDevice.lldp.localChassisIdSubtype]},
+				remoteChassisId       : {0:[parentDevice.lldp.localChassisId]},
+				remotePortIdSubtype   : {0:[parentDevice.lldp.localPortIdSubtype[parentPort]]},
+				remotePortId          : {0:[parentDevice.lldp.localPortId[parentPort]]},
+				remoteSystemName      : {0:[parentDevice.lldp.localHostname]},
+				entry                 : {0:[parentDevice.initial.file]}
+			};
+
+			for (let i=0; i<unmanagedSwitches[parentPort].remotePortId.length; i++) {
+				pseudoLldp.remoteChassisIdSubtype[i+1] = [unmanagedSwitches[parentPort].remoteChassisIdSubtype[i]];
+				pseudoLldp.remoteChassisId[i+1]        = [unmanagedSwitches[parentPort].remoteChassisId[i]];
+				pseudoLldp.remotePortIdSubtype[i+1]    = [unmanagedSwitches[parentPort].remotePortIdSubtype[i]];
+				pseudoLldp.remotePortId[i+1]           = [unmanagedSwitches[parentPort].remotePortId[i]];
+				pseudoLldp.remoteSystemName[i+1]       = [unmanagedSwitches[parentPort].remoteSystemName[i]];
+				pseudoLldp.entry[i+1]                  = [unmanagedSwitches[parentPort].entry[i]];
+			}
+
+			unmanagedSwitch.lldp = pseudoLldp;
+
+			if (!(parentPort in parentDevice.links)) {
+				//TODO: handle floating switches
+				this.Link(parentDevice, parentPort, unmanagedSwitch, 0);
+			}
+
+			for (let i=0; i<unmanagedSwitches[parentPort].matches.length; i++) {
+				const match = unmanagedSwitches[parentPort].matches[i];
+
+				if (match in this.devices) {
+
+				}
+				else {
+					this.LinkEndpoint(unmanagedSwitch, i + 1, match);
+				}
+			}
+		}
+	}
+
 	ComputeRemotePort(device, port, index, remoteDevice) {
 		const remoteLldp = remoteDevice.lldp || {};
 
@@ -730,9 +748,21 @@ class Topology extends Window {
 
 		if (device.lldp.remotePortIdSubtype[port][index] === 7) { //local name
 			const portId = device.lldp.remotePortId[port][index];
-			const interfaceName = !isNaN(portId) && remoteLldp.localPortName
+			
+			if (!remoteLldp.localPortName[portId]) {
+				for (const i in remoteLldp.localPortId) {
+					if (remoteLldp.localPortId[i] !== portId) continue;
+					return {
+						name: remoteLldp.localPortName[i],
+						index: i
+					};
+				}
+			}
+
+			const interfaceName = !isNaN(portId) && portId in remoteLldp.localPortName
 				? remoteLldp.localPortName[portId]
 				: portId;
+
 			return {
 				name: interfaceName,
 				index: portId

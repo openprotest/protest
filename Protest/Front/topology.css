@@ -246,7 +246,7 @@
 }
 
 .topology-ambiguous::after,
-.sntopologymp-undocumented::after {
+.topology-undocumented::after {
 	content: "";
 	position: absolute;
 	text-align: center;
