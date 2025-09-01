@@ -749,7 +749,7 @@ class Topology extends Window {
 		if (device.lldp.remotePortIdSubtype[port][index] === 7) { //local name
 			const portId = device.lldp.remotePortId[port][index];
 			
-			if (!remoteLldp.localPortName[portId]) {
+			if (remoteLldp.localPortName && !remoteLldp?.localPortName[portId]) {
 				for (const i in remoteLldp.localPortId) {
 					if (remoteLldp.localPortId[i] !== portId) continue;
 					return {
@@ -759,7 +759,7 @@ class Topology extends Window {
 				}
 			}
 
-			const interfaceName = !isNaN(portId) && portId in remoteLldp.localPortName
+			const interfaceName = !isNaN(portId) && remoteLldp.localPortName && remoteLldp.localPortName[portId]
 				? remoteLldp.localPortName[portId]
 				: portId;
 
