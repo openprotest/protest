@@ -81,7 +81,6 @@ static OID_MAP_1_3_6_1_2_1 = [
 		this.communityInput.style.gridArea = "2 / 2";
 		this.communityInput.style.marginRight = "0";
 		this.communityInput.style.minWidth = "50px";
-		this.communityInput.value = this.args.community;
 		snmpInput.appendChild(this.communityInput);
 
 		this.credentialsProfileInput = document.createElement("select");
@@ -89,6 +88,7 @@ static OID_MAP_1_3_6_1_2_1 = [
 		this.credentialsProfileInput.style.marginRight = "0";
 		this.credentialsProfileInput.style.minWidth = "50px";
 		this.credentialsProfileInput.style.display = "none";
+		this.credentialsProfileInput.value = this.args.credentials;
 		snmpInput.appendChild(this.credentialsProfileInput);
 
 		this.versionInput = document.createElement("select");
@@ -294,9 +294,9 @@ static OID_MAP_1_3_6_1_2_1 = [
 				this.credentialsProfileInput.appendChild(option);
 			}
 
-			if (this.args.profile) {
+			if (this.args.credentials) {
 				for (let i = 0; i < json.length; i++) {
-					if (json[i].guid != this.args.profile) continue;
+					if (json[i].guid != this.args.credentials) continue;
 
 					this.communityInput.value = json[i].community;
 					this.versionInput.value = json[i].version;
