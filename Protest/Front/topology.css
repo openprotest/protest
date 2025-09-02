@@ -31,6 +31,35 @@
 	transition: .2s;
 }
 
+.topology-find-listitem {
+	padding: 4px 2px;
+	border-bottom: 1px solid var(--clr-control);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.topology-find-listitem:hover {
+	background-color: var(--clr-highlight);
+}
+
+
+.topology-find-listitem[source]::before {
+	display: inline-block;
+	content: attr(source);
+	padding: 0 2px;
+	margin-right: 4px;
+	vertical-align: bottom;
+	border: 1px solid var(--clr-dark);
+	border-radius: 4px;
+	font-size: small;
+	text-align: center;
+	width: 36px;
+	max-width: 50px;
+	overflow: hidden;
+	white-space: nowrap;
+}
+
 .topology-sidebar {
 	position: absolute;
 	right: 8px;
@@ -325,7 +354,7 @@
 	background-size: 10px 10px;
 }
 
-*:hover.snmp-ambiguous::after {
+*:hover.topology-ambiguous::after {
 	background-image: none;
 	content: "ambiguous";
 	font-weight: normal;
@@ -337,7 +366,7 @@
 	transition: .2s;
 }
 
-*:hover.snmp-undocumented::after {
+*:hover.topology-undocumented::after {
 	background-image: none;
 	content: "undocumented";
 	font-weight: normal;

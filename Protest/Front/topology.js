@@ -553,6 +553,77 @@ class Topology extends Window {
 			.map(o => o.toLowerCase())
 			.map(o => this.IsMacAddress(o) ? o.replace(/[-:\s]/g, "") : o);
 
+		if (split.length === 0 || split.every(o=> o.length === 0)) return;
+
+		const includes = (str, arr) => {
+			if (!str) return false;
+			for (let i=0; i<arr.length; i++) {
+				if (str.includes(arr[i])) return true;
+			}
+			return false;
+		};
+
+		for (const file in this.devices) {
+			const device = this.devices[file];
+
+			if (includes(device.initial?.hostname?.toLowerCase(), split)) {
+				this.AddFindResult(listBox, device, null, "DB");
+				continue;
+			}
+
+			if (!device.lldp) continue;
+
+			if (includes(device.lldp?.localChassisId?.toLowerCase(), split)
+			|| includes(device.lldp?.localHostname?.toLowerCase(), split)) {
+				this.AddFindResult(listBox, device, null, "DB");
+				continue;
+			}
+
+			for (const port in device.lldp.remotePortId) {
+				for (let i=0; i<device.lldp.remotePortId[port].length; i++) {
+					if (includes(device.lldp.remoteSystemName[port][i]?.toLowerCase(), split)) {
+						this.AddFindResult(listBox, device, port, "LLDP");
+					}
+					else if (includes(device.lldp.remoteChassisId[port][i]?.toLowerCase(), split)) {
+						this.AddFindResult(listBox, device, port, "LLDP");
+					}
+					else if (includes(device.lldp.remotePortId[port][i]?.toLowerCase(), split)) {
+						this.AddFindResult(listBox, device, port, "LLDP");
+					}
+				}
+			}
+
+		}
+	}
+
+	AddFindResult(listBox, device, portIndex, source) {
+		const item = document.createElement("div");
+		item.className = "topology-find-listitem";
+		item.tabIndex = 0;
+		listBox.appendChild(item);
+		
+		if (source) {
+			item.setAttribute("source", source);
+		}
+
+		const name = device.isUnmanaged ? "unmanaged" : device.initial.hostname;
+
+		if (portIndex) {
+			const portName = device.isUnmanaged ? "--" : portIndex;
+			item.textContent += `${name} (${portName})`;
+		}
+		else {
+			item.textContent = name;
+		}
+
+		item.onclick = ()=> {
+			for (let i= 0; i<listBox.children.length; i++) {
+				listBox.children[i].style.backgroundColor = "";
+			}
+			item.style.backgroundColor = "var(--clr-select)";
+			
+			this.SelectDevice(device.initial.file, portIndex);
+		};
 	}
 
 	IsMacAddress(str) {
@@ -677,9 +748,6 @@ class Topology extends Window {
 			if (remotePortIndex > -1) {
 				this.Link(device, port, remoteDevice, remotePortIndex);
 			}
-			else {
-				//
-			}
 		}
 		else {
 			this.LinkEndpoint(device, port, match);
@@ -774,7 +842,6 @@ class Topology extends Window {
 			unmanagedSwitch.lldp = pseudoLldp;
 
 			if (!(parentPort in parentDevice.links)) {
-				//TODO: handle floating switches
 				this.Link(parentDevice, parentPort, unmanagedSwitch, 0);
 			}
 
@@ -910,7 +977,6 @@ class Topology extends Window {
 		};
 
 		this.devices[file] = entry;
-
 		return entry;
 	}
 
@@ -1180,7 +1246,7 @@ class Topology extends Window {
 
 		this.AdjustSvgSize();
 
-		g.addEventListener("mousedown", event=> {
+		g.onmousedown = event=> {
 			event.stopPropagation();
 			const element = this.devices[options.file].element;
 
@@ -1206,7 +1272,7 @@ class Topology extends Window {
 				remoteDevice.element.x0 = remoteDevice.element.x;
 				remoteDevice.element.y0 = remoteDevice.element.y;
 			}
-		});
+		};
 
 		return {
 			root     : g,
@@ -1389,7 +1455,7 @@ class Topology extends Window {
 		};
 	}
 
-	SelectDevice(file) {
+	SelectDevice(file, selectedPort=null) { 
 		const device = this.devices[file];
 
 		this.infoBox.style.opacity = "0";
@@ -1513,12 +1579,20 @@ class Topology extends Window {
 					.sort(([, a], [, b]) => a.localeCompare(b));
 
 				for (const [portIndex, name] of entries) {
-					this.CreateInterfaceListItem(interfacesList, device, portIndex, name);
+					const interfaceBox = this.CreateInterfaceListItem(interfacesList, device, portIndex, name);
+					if (selectedPort && selectedPort === portIndex) {
+						interfaceBox.click();
+						interfaceBox.scrollIntoView({block:"nearest", inline:"nearest" });
+					}
 				}
 			}
 			else {
 				for (const portIndex in device.lldp.localPortName) {
-					this.CreateInterfaceListItem(interfacesList, device, portIndex, device.lldp.localPortName[portIndex]);
+					const interfaceBox = this.CreateInterfaceListItem(interfacesList, device, portIndex, device.lldp.localPortName[portIndex]);
+					if (selectedPort && selectedPort === portIndex) {
+						interfaceBox.click();
+						interfaceBox.scrollIntoView({block:"nearest", inline:"nearest" });
+					}
 				}
 			}
 
@@ -1699,6 +1773,10 @@ class Topology extends Window {
 				remoteBox.textContent = remoteDevice.isUnmanaged ? "unmanaged" : remoteDevice.initial.hostname;
 				remoteBox.style.width = "calc(50% - 12px)";
 				remoteBox.style.borderRadius = "4px 0 0 4px";
+
+				if (remoteDevice.isUnmanaged) {
+					remoteBox.style.fontStyle = "italic";
+				}
 
 				const remotePortBox = document.createElement("div");
 				remotePortBox.textContent = remotePortName;
