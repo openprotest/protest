@@ -35,6 +35,7 @@ class Topology extends Window {
 	}
 
 	InitializeComponents() {
+		this.content.tabIndex = 0;
 		this.content.style.overflow = "hidden";
 		this.SetupToolbar();
 
@@ -49,8 +50,7 @@ class Topology extends Window {
 
 		this.trafficButton = this.AddToolbarButton("Visualize traffic", "mono/traffic.svg?light");
 		this.errorsButton = this.AddToolbarButton("Visualize errors", "mono/warning.svg?light");
-		this.loopDetection = this.AddToolbarButton("Close loop detection", "mono/infinite.svg?light");
-		this.AddToolbarSeparator();
+		//this.loopDetection = this.AddToolbarButton("Close loop detection", "mono/infinite.svg?light");
 
 		this.workspace = document.createElement("div");
 		this.workspace.className = "topology-workspace";
@@ -76,6 +76,14 @@ class Topology extends Window {
 		this.findButton.onclick = ()=> this.Find();
 
 		this.sideBar.onscroll = ()=> this.InfoBoxPosition();
+
+		this.content.onkeydown = event=> {
+			if (event.code === "KeyF" && event.ctrlKey) {
+				event.preventDefault();
+				this.Find();
+			}
+		}
+
 	}
 
 	AfterResize() { //override
@@ -479,13 +487,77 @@ class Topology extends Window {
 		this.stopButton.disabled = true;
 	}
 
-	Find() {
+	ShowNavBar() {
 		this.navBar.style.visibility = "visible";
-		this.navBar.style.opacity = "1";
 		this.navBar.style.left = "8px";
 
 		this.workspace.style.left = "316px";
-		this.workspace.style.right = "366px";
+
+		setTimeout(()=>this.AdjustSvgSize(), 200);
+	}
+
+	HideNavBar() {
+		this.navBar.style.visibility = "hidden";
+		this.navBar.style.left = "-100%";
+
+		this.workspace.style.left = "8px";
+
+		setTimeout(()=>this.AdjustSvgSize(), 200);
+		this.content.focus();
+	}
+
+	Find() {
+		this.navBar.textContent = "";
+
+		const titleBox = document.createElement("div");
+		titleBox.className = "topology-navbar-title";
+		titleBox.textContent = "Find device";
+
+		const closeButton = document.createElement("div");
+		closeButton.className = "topology-close-button";
+		closeButton.tabIndex = 0;
+
+		const findInput = document.createElement("input");
+		findInput.className = "topology-find-input";
+		findInput.type = "search";
+
+		const listBox = document.createElement("div");
+		listBox.className = "topology-find-listbox no-results";
+
+		this.navBar.append(titleBox, closeButton, findInput, listBox);
+
+		closeButton.onclick = ()=> this.HideNavBar();
+		
+		closeButton.onkeydown = event=> {
+			if (event.key === "Enter" || event.key === " ") this.HideNavBar();
+		};
+
+		findInput.onkeydown = event=> {
+			switch (event.key) {
+			case "Escape": this.HideNavBar(); break;
+			case "Enter": this.FindKeyword(findInput.value, listBox); break;
+			}
+		}
+
+		this.ShowNavBar();
+
+		setTimeout(()=> findInput.focus(), 200);
+	}
+
+	FindKeyword(keyword, listBox) {
+		listBox.textContent = "";
+
+		const split = keyword.split(" ")
+			.map(o => o.trim())
+			.filter(o => o.length > 0)
+			.map(o => o.toLowerCase())
+			.map(o => this.IsMacAddress(o) ? o.replace(/[-:\s]/g, "") : o);
+
+	}
+
+	IsMacAddress(str) {
+		const macRegex = /^(?:[0-9a-f]{12}|([0-9a-f]{2}([-:\s])){5}[0-9a-f]{2})$/;
+		return macRegex.test(str);
 	}
 
 	SortBySnmp() {

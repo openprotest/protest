@@ -28,7 +28,6 @@
 
 	left: -100%;
 	visibility: hidden;
-	opacity: 0;
 	transition: .2s;
 }
 
@@ -55,6 +54,58 @@
 	padding: 4px 0;
 	border-radius: 4px;
 	-webkit-user-select: text; user-select: text;
+}
+
+.topology-navbar-title {
+	position: absolute;
+	left: 24px;
+	right: 24px;
+	top: 4px;
+	color: var(--clr-dark);
+	font-weight: bold;
+	text-align: center;
+}
+
+.topology-close-button {
+	position: absolute;
+	top: 4px;
+	right: 4px;
+	width: 20px;
+	height: 20px;
+	border-radius: 50%;
+	background-color: var(--clr-dark);
+	mask: url(controls/close.svg), linear-gradient(var(--clr-dark) 0 0);
+	mask-size: 20px 20px;
+	mask-position: center;
+	mask-repeat: no-repeat;
+	mask-composite: exclude;
+	transition: .2s;
+}
+
+.topology-find-input {
+	position: absolute;
+	left: 4px;
+	top: 32px;
+	width: calc(100% - 16px);
+}
+
+.topology-find-listbox {
+	position: absolute;
+	left: 8px;
+	right: 8px;
+	top: 72px;
+	bottom: 8px;
+	overflow-y: auto;
+	border: 2px solid var(--clr-control);
+	border-radius: 4px;
+}
+
+.topology-close-button:focus {
+	background-color: var(--clr-select);
+}
+
+.topology-close-button:active {
+	filter: brightness(.8);
 }
 
 .topology-error-message {
