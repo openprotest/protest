@@ -32,7 +32,8 @@
 }
 
 .topology-find-listitem {
-	padding: 4px 2px;
+	position: relative;
+	height: 32px;
 	border-bottom: 1px solid var(--clr-control);
 }
 
@@ -40,38 +41,19 @@
 	background-color: var(--clr-highlight);
 }
 
-.topology-find-listitem[source]::before {
-	display: inline-block;
-	content: attr(source);
-	padding: 0 2px;
-	margin-right: 4px;
-	vertical-align: bottom;
-	border: 1px solid var(--clr-dark);
-	border-radius: 4px;
-	font-size: small;
-	text-align: center;
-	width: 36px;
-	max-width: 50px;
-	overflow: hidden;
-	white-space: nowrap;
-}
-
 .topology-find-listitem > div:nth-child(1) {
-	display: inline-block;
-	padding: 0 2px;
-	margin-right: 4px;
-	vertical-align: bottom;
+	position: absolute;
+	left: 2px;
+	top: 4px;
 	width: 24px;
 	height: 24px;
 	background-size: 24px 24px;
-	background-position: center;
-	background-repeat: no-repeat;
 }
 
 .topology-find-listitem > div:nth-child(2) {
-	display: inline-block;
-	padding: 0 2px;
-	vertical-align: bottom;
+	position: absolute;
+	left: 32px;
+	top: 4px;
 	width: calc(100% - 36px);
 	height: 24px;
 	line-height: 24px;
@@ -314,10 +296,14 @@
 .topology-interface-list > div > div:nth-child(2) {
 	width: calc(75% - 12px);
 	text-align: left;
-	padding-left: 8px;
+	padding-left: 24px;
 	margin-left: 4px;
 	margin-right: 2px;
 	border-radius: 4px;
+
+	background-size: 16px 16px, 18px 18px;
+	background-position: 4px center, 3px center;
+	background-repeat: no-repeat;
 }
 
 .topology-interface-list > div > div:nth-child(3) {
@@ -345,8 +331,7 @@
 	transform: translateY(5px) !important;
 }
 
-.topology-ambiguous::after,
-.topology-undocumented::after {
+.topology-ambiguous::after {
 	content: "";
 	position: absolute;
 	text-align: center;
@@ -369,28 +354,11 @@
 	background-size: 14px 14px;
 }
 
-.topology-undocumented::after {
-	background-image: url(mono/database.svg);
-	background-size: 10px 10px;
-}
-
 *:hover.topology-ambiguous::after {
 	background-image: none;
 	content: "ambiguous";
 	font-weight: normal;
 	width: 82px;
-	height: 16px;
-	line-height: 16px;
-	box-shadow: var(--clr-dark) 0 0 0 1px;
-	transform: translateY(1px);
-	transition: .2s;
-}
-
-*:hover.topology-undocumented::after {
-	background-image: none;
-	content: "undocumented";
-	font-weight: normal;
-	width: 100px;
 	height: 16px;
 	line-height: 16px;
 	box-shadow: var(--clr-dark) 0 0 0 1px;

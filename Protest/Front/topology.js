@@ -523,6 +523,7 @@ class Topology extends Window {
 
 		const listBox = document.createElement("div");
 		listBox.className = "topology-find-listbox no-results";
+		listBox.tabIndex = 0;
 
 		this.navBar.append(titleBox, closeButton, findInput, listBox);
 
@@ -532,10 +533,42 @@ class Topology extends Window {
 			if (event.key === "Enter" || event.key === " ") this.HideNavBar();
 		};
 
-		findInput.onkeydown = event=> {
+		listBox.onkeydown = findInput.onkeydown = event=> {
 			switch (event.key) {
 			case "Escape": this.HideNavBar(); break;
 			case "Enter": this.FindKeyword(findInput.value, listBox); break;
+
+			case "ArrowUp": {
+				if (listBox.children.length === 0) return;
+				event.preventDefault();
+
+				const children = Array.from(listBox.childNodes);
+				let selectedIndex = Array.from(children).findIndex(o=>o.style.backgroundColor !== "");
+
+				if (selectedIndex === -1) {
+					children[0].onclick();
+				}
+				else if (selectedIndex > 0) {
+					children[selectedIndex - 1].onclick();
+				}
+				break;
+			}
+
+			case "ArrowDown":{
+				if (listBox.children.length === 0) return;
+				event.preventDefault();
+
+				const children = Array.from(listBox.childNodes);
+				let selectedIndex = Array.from(children).findIndex(o=>o.style.backgroundColor !== "");
+
+				if (selectedIndex === -1) {
+					children[0].onclick();
+				}
+				else if (selectedIndex < children.length - 1) {
+					children[selectedIndex + 1].onclick();
+				}
+				break;
+			}
 			}
 		}
 
@@ -1734,7 +1767,8 @@ class Topology extends Window {
 			const file = entry[0];
 
 			if (file === null) {
-				remoteBox.className = "topology-undocumented";
+				remoteBox.classList.add("topology-undocumented");
+				remoteBox.style.backgroundImage = `url(mono/undocumented.svg), radial-gradient(circle,var(--clr-warning) 0%, var(--clr-warning) 80%, rgba(0, 0, 0, 0) 100%)`;
 			}
 
 			const dbEntry = LOADER.devices.data[file];
@@ -1747,6 +1781,11 @@ class Topology extends Window {
 				}
 				else if ("ip" in dbEntry && dbEntry.ip.v.length > 0) {
 					remoteBox.textContent = dbEntry.ip.ip;
+				}
+
+				if ("type" in dbEntry) {
+					const type = dbEntry.type.v.toLowerCase();
+					remoteBox.style.backgroundImage = `url(${type in LOADER.deviceIcons ? LOADER.deviceIcons[type] : "mono/gear.svg"})`;
 				}
 			}
 			else {
@@ -1904,8 +1943,9 @@ class Topology extends Window {
 					if (device?.lldp?.ambiguous?.[portIndex]?.[i]) {
 						box.className = "topology-ambiguous";
 					}
-					else if (device.lldp.entry[portIndex][i] === null) {
-						box.className = "topology-undocumented";
+					
+					if (device.lldp.entry[portIndex][i] === null) {
+						//undocumented
 					}
 				}
 			}
