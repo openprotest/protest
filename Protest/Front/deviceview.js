@@ -921,6 +921,7 @@ class DeviceView extends View {
 					linkIcon.style.backgroundRepeat = "no-repeat";
 					linkIcon.style.backgroundPosition = "0 center";
 					linkIcon.style.backgroundSize = "32px 32px";
+					linkIcon.style.fontSize = "small";
 					linkIcon.style.height = "40px";
 					linkIcon.style.lineHeight = "40px";
 					linkIcon.style.margin = "4px";

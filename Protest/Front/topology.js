@@ -592,28 +592,37 @@ class Topology extends Window {
 					}
 				}
 			}
-
 		}
 	}
 
 	AddFindResult(listBox, device, portIndex, source) {
 		const item = document.createElement("div");
 		item.className = "topology-find-listitem";
-		item.tabIndex = 0;
 		listBox.appendChild(item);
-		
-		if (source) {
-			item.setAttribute("source", source);
+
+		const iconBox = document.createElement("div");
+		const nameBox = document.createElement("div");
+		item.append(iconBox, nameBox);
+
+		if (portIndex) {
+			iconBox.style.backgroundImage = `url(mono/endpoint.svg)`;
+		}
+		else if (device.initial.file in LOADER.devices.data) {
+			const type = LOADER.devices.data[device.initial.file].type.v.toLowerCase();
+			iconBox.style.backgroundImage = `url(${type in LOADER.deviceIcons ? LOADER.deviceIcons[type] : "mono/gear.svg"})`;
+		}
+		else {
+			iconBox.style.backgroundImage = `url(mono/gear.svg)`;
 		}
 
 		const name = device.isUnmanaged ? "unmanaged" : device.initial.hostname;
 
 		if (portIndex) {
 			const portName = device.isUnmanaged ? "--" : portIndex;
-			item.textContent += `${name} (${portName})`;
+			nameBox.textContent = `${name} (${portName})`;
 		}
 		else {
-			item.textContent = name;
+			nameBox.textContent = name;
 		}
 
 		item.onclick = ()=> {
@@ -623,6 +632,8 @@ class Topology extends Window {
 			item.style.backgroundColor = "var(--clr-select)";
 			
 			this.SelectDevice(device.initial.file, portIndex);
+
+			device.element.root.scrollIntoView({behavior: "smooth", block: "center", inline: "center"});
 		};
 	}
 

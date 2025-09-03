@@ -34,15 +34,11 @@
 .topology-find-listitem {
 	padding: 4px 2px;
 	border-bottom: 1px solid var(--clr-control);
-	overflow: hidden;
-	text-overflow: ellipsis;
-	white-space: nowrap;
 }
 
 .topology-find-listitem:hover {
 	background-color: var(--clr-highlight);
 }
-
 
 .topology-find-listitem[source]::before {
 	display: inline-block;
@@ -57,6 +53,30 @@
 	width: 36px;
 	max-width: 50px;
 	overflow: hidden;
+	white-space: nowrap;
+}
+
+.topology-find-listitem > div:nth-child(1) {
+	display: inline-block;
+	padding: 0 2px;
+	margin-right: 4px;
+	vertical-align: bottom;
+	width: 24px;
+	height: 24px;
+	background-size: 24px 24px;
+	background-position: center;
+	background-repeat: no-repeat;
+}
+
+.topology-find-listitem > div:nth-child(2) {
+	display: inline-block;
+	padding: 0 2px;
+	vertical-align: bottom;
+	width: calc(100% - 36px);
+	height: 24px;
+	line-height: 24px;
+	overflow: hidden;
+	text-overflow: ellipsis;
 	white-space: nowrap;
 }
 
