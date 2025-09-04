@@ -844,72 +844,94 @@ class DeviceView extends View {
 			frontElement.onmouseenter = ()=> {
 				this.floating.textContent = "";
 
+				const speedBox = document.createElement("div");
+				speedBox.className = "view-interface-tooltip";
+				this.floating.appendChild(speedBox);
+
 				const speedColorBox = document.createElement("div");
-				speedColorBox.style.display = "inline-block";
-				speedColorBox.style.width = "8px";
-				speedColorBox.style.height = "8px";
-				speedColorBox.style.borderRadius = "2px";
-				speedColorBox.style.marginLeft = "4px";
-				speedColorBox.style.marginRight = "4px";
 				speedColorBox.style.backgroundColor = this.GetSpeedColor(speed);
-				this.floating.appendChild(speedColorBox);
+				speedBox.appendChild(speedColorBox);
 
 				if (speed !== "") {
 					const speedLabel = document.createElement("div");
 					speedLabel.style.display = "inline-block";
 					speedLabel.style.fontSize = "small";
 					speedLabel.textContent = `${speed} ${port}`;
-					this.floating.appendChild(speedLabel);
+					speedBox.appendChild(speedLabel);
 				}
 
-				this.floating.appendChild(document.createElement("br"));
-
 				if (untagged && untagged.toString().length) {
+					const vlanBox = document.createElement("div");
+					vlanBox.className = "view-interface-tooltip";
+					this.floating.appendChild(vlanBox);
+
 					const vlanColorBox = document.createElement("div");
-					vlanColorBox.style.display = "inline-block";
-					vlanColorBox.style.width = "8px";
-					vlanColorBox.style.height = "8px";
-					vlanColorBox.style.borderRadius = "2px";
-					vlanColorBox.style.marginLeft = "4px";
-					vlanColorBox.style.marginRight = "4px";
 					vlanColorBox.style.backgroundColor = this.GetVlanColor(untagged);
-					this.floating.appendChild(vlanColorBox);
+					vlanBox.appendChild(vlanColorBox);
 
 					const vlanLabel = document.createElement("div");
-					vlanLabel.style.display = "inline-block";
-					vlanLabel.style.fontSize = "small";
 					vlanLabel.textContent = `Untagged VLAN ${untagged}`;
-					this.floating.appendChild(vlanLabel);
+					vlanBox.appendChild(vlanLabel);
 				}
 
 				if (tagged && tagged.length) {
+					const vlanBox = document.createElement("div");
+					vlanBox.className = "view-interface-tooltip";
+					this.floating.appendChild(vlanBox);
+
+					const vlanColorBox = document.createElement("div");
+					vlanColorBox.style.backgroundColor = this.GetVlanColor(tagged);
+					vlanBox.appendChild(vlanColorBox);
+
+					const colors = tagged.split(",")
+						.map(o=>o.trim())
+						.map(o=>parseInt(o))
+						.map(o=>this.GetVlanColor(o))
+						.map(o=>o ? o : "var(--clr-dark)");
+
+					if (colors.length === 1) {
+						vlanColorBox.style.background = colors[0];
+					}
+					else {
+						let gradient = "linear-gradient(90deg,";
+						for (let i=0; i<colors.length; i++) {
+							if (i > 0) gradient += ", ";
+							gradient += `${colors[i]} ${Math.floor(i / colors.length * 100)}.1%, `;
+							gradient += `${colors[i]} ${Math.floor((i+1) / colors.length * 100)}%`;
+						}
+						gradient += ")";
+						vlanColorBox.style.background = gradient;
+					}
+
 					const vlanLabel = document.createElement("div");
-					vlanLabel.style.display = "inline-block";
-					vlanLabel.style.fontSize = "small";
-					vlanLabel.style.marginLeft = "18px";
-					vlanLabel.style.whiteSpace = "nowrap";
-					vlanLabel.style.overflow = "hidden";
-					vlanLabel.style.textOverflow = "ellipsis";
 					vlanLabel.textContent = `Tagged VLAN ${tagged}`;
-					this.floating.appendChild(vlanLabel);
+					vlanBox.appendChild(vlanLabel);
 				}
 
 				if (this.switchInfo.success && i < this.switchInfo.data.length) {
+					const trafficBox = document.createElement("div");
+					trafficBox.className = "view-interface-tooltip";
+					this.floating.appendChild(trafficBox);
+
+					const colorBox = document.createElement("div");
+					trafficBox.appendChild(colorBox);
+
 					const trafficLabel = document.createElement("div");
-					trafficLabel.style.display = "block";
-					trafficLabel.style.fontSize = "small";
-					trafficLabel.style.marginLeft = "18px";
 					trafficLabel.textContent = UI.SizeToString(this.switchInfo.data[i]);
-					this.floating.appendChild(trafficLabel);
+					trafficBox.appendChild(trafficLabel);
 				}
 
 				if (this.switchInfo.success && i < this.switchInfo.error.length) {
+					const trafficBox = document.createElement("div");
+					trafficBox.className = "view-interface-tooltip";
+					this.floating.appendChild(trafficBox);
+
+					const colorBox = document.createElement("div");
+					trafficBox.appendChild(colorBox);
+
 					const errorLabel = document.createElement("div");
-					errorLabel.style.display = "block";
-					errorLabel.style.fontSize = "small";
-					errorLabel.style.marginLeft = "18px";
 					errorLabel.textContent = this.switchInfo.error[i]==1 ? "1 error" : `${this.switchInfo.error[i]} errors`;
-					this.floating.appendChild(errorLabel);
+					trafficBox.appendChild(errorLabel);
 				}
 
 				if (link && link in LOADER.devices.data) {

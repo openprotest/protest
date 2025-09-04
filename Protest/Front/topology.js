@@ -15,6 +15,8 @@ class Topology extends Window {
 		this.SetTitle("Topology");
 		this.SetIcon("mono/topology.svg");
 
+		this.uiMode = null;
+
 		this.x0 = 0;
 		this.y0 = 0;
 		this.selected = null;
@@ -497,6 +499,8 @@ class Topology extends Window {
 	}
 
 	HideNavBar() {
+		this.uiMode = null;
+
 		this.navBar.style.visibility = "hidden";
 		this.navBar.style.left = "-100%";
 
@@ -507,6 +511,13 @@ class Topology extends Window {
 	}
 
 	Find() {
+		if (this.uiMode === "find") {
+			const input = this.navBar.querySelector(".topology-find-input");
+			if (input) input.focus();
+			return;
+		}
+
+		this.uiMode = "find"
 		this.navBar.textContent = "";
 
 		const titleBox = document.createElement("div");
@@ -549,6 +560,7 @@ class Topology extends Window {
 					children[0].onclick();
 				}
 				else if (selectedIndex > 0) {
+					children[selectedIndex - 1].scrollIntoView({block:"nearest", inline:"nearest"});
 					children[selectedIndex - 1].onclick();
 				}
 				break;
@@ -565,6 +577,7 @@ class Topology extends Window {
 					children[0].onclick();
 				}
 				else if (selectedIndex < children.length - 1) {
+					children[selectedIndex + 1].scrollIntoView({block:"nearest", inline:"nearest"});
 					children[selectedIndex + 1].onclick();
 				}
 				break;
@@ -1626,7 +1639,7 @@ class Topology extends Window {
 					const interfaceBox = this.CreateInterfaceListItem(interfacesList, device, portIndex, name);
 					if (selectedPort && selectedPort === portIndex) {
 						interfaceBox.click();
-						interfaceBox.scrollIntoView({block:"nearest", inline:"nearest" });
+						interfaceBox.scrollIntoView({block:"nearest", inline:"nearest"});
 					}
 				}
 			}
@@ -1635,7 +1648,7 @@ class Topology extends Window {
 					const interfaceBox = this.CreateInterfaceListItem(interfacesList, device, portIndex, device.lldp.localPortName[portIndex]);
 					if (selectedPort && selectedPort === portIndex) {
 						interfaceBox.click();
-						interfaceBox.scrollIntoView({block:"nearest", inline:"nearest" });
+						interfaceBox.scrollIntoView({block:"nearest", inline:"nearest"});
 					}
 				}
 			}
@@ -1695,7 +1708,7 @@ class Topology extends Window {
 		}
 
 		this.selectedInterface.click();
-		this.selectedInterface.scrollIntoView({block:"nearest", inline:"nearest" });
+		this.selectedInterface.scrollIntoView({block:"nearest", inline:"nearest"});
 	}
 
 	PopulateVlanStaticNames(vlanList, names) {

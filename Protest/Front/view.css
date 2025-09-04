@@ -634,6 +634,27 @@ button.view-live-button:active {
 	background-color: var(--clr-select);
 }
 
+.view-interface-tooltip {
+	height: 20px;
+}
+
+.view-interface-tooltip > div:nth-child(1) {
+	display: inline-block;
+	width: 10px;
+	height: 10px;
+	border-radius: 2px;
+	margin: 4px;
+}
+
+.view-interface-tooltip > div:nth-child(2) {
+	display: inline-block;
+	font-size: small;
+	width: calc(100% - 20px);
+	white-Space: nowrap;
+	overflow: hidden;
+	text-Overflow: ellipsis;
+}
+
 .view-lifeline-graph {
 	position: relative;
 	width: 100%;
