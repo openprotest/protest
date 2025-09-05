@@ -531,6 +531,7 @@ class Topology extends Window {
 		const findInput = document.createElement("input");
 		findInput.className = "topology-find-input";
 		findInput.type = "search";
+		findInput.value = this.args.find ?? "";
 
 		const listBox = document.createElement("div");
 		listBox.className = "topology-find-listbox no-results";
@@ -566,7 +567,7 @@ class Topology extends Window {
 				break;
 			}
 
-			case "ArrowDown":{
+			case "ArrowDown": {
 				if (listBox.children.length === 0) return;
 				event.preventDefault();
 
@@ -592,6 +593,8 @@ class Topology extends Window {
 
 	FindKeyword(keyword, listBox) {
 		listBox.textContent = "";
+
+		this.args.find = keyword;
 
 		const split = keyword.split(" ")
 			.map(o => o.trim())
