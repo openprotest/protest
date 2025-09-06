@@ -2,8 +2,8 @@ input[type="range"] {
 	appearance: none;
 	height: 10px;
 	border-radius: 4px;
-	background-color: var(--clr-control);
-	box-shadow: var(--clr-control) 0 0 0 1px;
+	background-color: rgb(96,96,96);
+	box-shadow: rgb(96,96,96) 0 0 0 1px;
 	outline: 0;
 }
 
