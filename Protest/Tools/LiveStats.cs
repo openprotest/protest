@@ -451,19 +451,61 @@ internal static class LiveStats {
 
         Dictionary<int, string> typeDic       = new Dictionary<int, string>();
         Dictionary<int, string> speedDic      = new Dictionary<int, string>();
-        Dictionary<int, string> untaggedDic   = new Dictionary<int, string>();
+        Dictionary<int, short > untaggedDic   = new Dictionary<int, short>();
         Dictionary<int, string> taggedDic     = new Dictionary<int, string>();
-        Dictionary<int, string> statusDic     = new Dictionary<int, string>();
+        Dictionary<int, byte>   statusDic     = new Dictionary<int, byte>();
         Dictionary<int, long>   trafficInDic  = new Dictionary<int, long>();
         Dictionary<int, long>   trafficOutDic = new Dictionary<int, long>();
         Dictionary<int, int>    errorInDic    = new Dictionary<int, int>();
         Dictionary<int, int>    errorOutDic   = new Dictionary<int, int>();
 
-        Dictionary<short, List<int>> taggedMap = new Dictionary<short, List<int>>();
+        Dictionary<int, string> macTable = new Dictionary<int, string>();
+        foreach (KeyValuePair<string, string> pair in parsedResult) {
+            if (!pair.Key.StartsWith(Oid.INT_1D_TP_FDB)) continue;
+            if (!int.TryParse(pair.Value, out int port)) continue;
+            string mac = String.Join(String.Empty, pair.Key.Split('.').TakeLast(6).Select(o=>int.Parse(o).ToString("x2")));
 
+            if (macTable.ContainsKey(port)) {
+                macTable[port] = null;
+            }
+            else {
+                macTable.Add(port,  mac);
+            }
+        }
+
+        foreach (KeyValuePair<string, string> pair in parsedResult) {
+            if (!int.TryParse(pair.Key.Split('.')[^1], out int index)) continue;
+
+            if (pair.Key.StartsWith(Protocols.Snmp.Oid.INT_TYPE)) {
+                typeDic.Add(index, pair.Value);
+            }
+            else if (pair.Key.StartsWith(Protocols.Snmp.Oid.INT_SPEED)) {
+                speedDic.Add(index, pair.Value);
+            }
+            else if (pair.Key.StartsWith(Protocols.Snmp.Oid.INT_1Q_VLAN)) {
+                untaggedDic.Add(index, short.TryParse(pair.Value, out short v) ? v : (short)0);
+            }
+            else if (pair.Key.StartsWith(Protocols.Snmp.Oid.INT_STATUS)) {
+                statusDic.Add(index, byte.TryParse(pair.Value, out byte v) ? v : (byte)0);
+            }
+            else if (pair.Key.StartsWith(Protocols.Snmp.Oid.INT_TRAFFIC_IN_64)) {
+                trafficInDic.Add(index, long.TryParse(pair.Value, out long v) ? v : 0);
+            }
+            else if (pair.Key.StartsWith(Protocols.Snmp.Oid.INT_TRAFFIC_OUT_64)) {
+                trafficOutDic.Add(index, long.TryParse(pair.Value, out long v) ? v : 0);
+            }
+            else if (pair.Key.StartsWith(Protocols.Snmp.Oid.INT_ERROR_IN)) {
+                errorInDic.Add(index, int.TryParse(pair.Value, out int v) ? v : 0);
+            }
+            else if (pair.Key.StartsWith(Protocols.Snmp.Oid.INT_ERROR_OUT)) {
+                errorOutDic.Add(index, int.TryParse(pair.Value, out int v) ? v : 0);
+            }
+        }
+
+        Dictionary<short, List<int>> taggedMap = new Dictionary<short, List<int>>();
         for (int i = 0; i < result.Count; i++) {
             string oid = result[i].Id.ToString();
-            if (!oid.StartsWith(Oid.INTERFACE_1Q_VLAN_ENGRESS)) continue;
+            if (!oid.StartsWith(Oid.INT_1Q_VLAN_ENGRESS)) continue;
 
             int dotIndex = oid.LastIndexOf('.');
             if (dotIndex == -1) continue;
@@ -496,57 +538,16 @@ internal static class LiveStats {
         foreach (KeyValuePair<short, List<int>> pair in taggedMap) {
             foreach (int port in pair.Value) {
                 taggedDic.TryGetValue(port, out string existing);
-                taggedDic[port] = string.IsNullOrEmpty(existing) ? pair.Key.ToString() : $"{existing},{pair.Key.ToString()}";
-            }
-        }
-
-        Dictionary<int, string> macTable = new Dictionary<int, string>();
-        foreach (KeyValuePair<string, string> pair in parsedResult) {
-            if (!pair.Key.StartsWith(Oid.INTERFACE_1D_TP_FDB)) continue;
-            if (!int.TryParse(pair.Value, out int port)) continue;
-            string mac = String.Join(String.Empty, pair.Key.Split('.').TakeLast(6).Select(o=>int.Parse(o).ToString("x2")));
-
-            if (macTable.ContainsKey(port)) {
-                macTable[port] = null;
-            }
-            else {
-                macTable.Add(port,  mac);
-            }
-        }
-
-        foreach (KeyValuePair<string, string> pair in parsedResult) {
-            if (!int.TryParse(pair.Key.Split('.')[^1], out int index)) continue;
-
-            if (pair.Key.StartsWith(Protocols.Snmp.Oid.INTERFACE_TYPE)) {
-                typeDic.Add(index, pair.Value);
-            }
-            else if (pair.Key.StartsWith(Protocols.Snmp.Oid.INTERFACE_SPEED)) {
-                speedDic.Add(index, pair.Value);
-            }
-            else if (pair.Key.StartsWith(Protocols.Snmp.Oid.INTERFACE_1Q_VLAN)) {
-                untaggedDic.Add(index, pair.Value);
-            }
-            else if (pair.Key.StartsWith(Protocols.Snmp.Oid.INTERFACE_STATUS)) {
-                statusDic.Add(index, pair.Value);
-            }
-            else if (pair.Key.StartsWith(Protocols.Snmp.Oid.INTERFACE_TRAFFIC_IN_64)) {
-                trafficInDic.Add(index, long.TryParse(pair.Value, out long v) ? v : 0);
-            }
-            else if (pair.Key.StartsWith(Protocols.Snmp.Oid.INTERFACE_TRAFFIC_OUT_64)) {
-                trafficOutDic.Add(index, long.TryParse(pair.Value, out long v) ? v : 0);
-            }
-            else if (pair.Key.StartsWith(Protocols.Snmp.Oid.INTERFACE_ERROR_IN)) {
-                errorInDic.Add(index, int.TryParse(pair.Value, out int v) ? v : 0);
-            }
-            else if (pair.Key.StartsWith(Protocols.Snmp.Oid.INTERFACE_ERROR_OUT)) {
-                errorOutDic.Add(index, int.TryParse(pair.Value, out int v) ? v : 0);
+                short.TryParse(pair.Key.ToString(), out short currentVlan);
+                if (untaggedDic.TryGetValue(port, out short untaggedVlanId) && untaggedVlanId == currentVlan) continue;
+                taggedDic[port] = string.IsNullOrEmpty(existing) ? currentVlan.ToString() : $"{existing},{currentVlan}";
             }
         }
 
         List<string> speedList    = new List<string>(typeDic.Count);
-        List<string> untaggedList = new List<string>(typeDic.Count);
+        List<short> untaggedList  = new List<short>(typeDic.Count);
         List<string> taggedList   = new List<string>(typeDic.Count);
-        List<string> statusList   = new List<string>(typeDic.Count);
+        List<short>  statusList   = new List<short>(typeDic.Count);
         List<long>   dataList     = new List<long>(typeDic.Count);
         List<int>    errorList    = new List<int>(typeDic.Count);
         List<string> linkList     = new List<string>(typeDic.Count);
@@ -557,9 +558,9 @@ internal static class LiveStats {
             string rawSpeed = speedDic.TryGetValue(pair.Key, out string s) ? s : "N/A";
             speedList.Add(PortSpeedToString(rawSpeed));
 
-            untaggedList.Add(untaggedDic.TryGetValue(pair.Key, out string untaggedVlan) ? untaggedVlan : "1");
-            taggedList.Add(taggedDic.TryGetValue(pair.Key, out string taggedVlan) ? taggedVlan : "1");
-            statusList.Add(statusDic.TryGetValue(pair.Key, out string status) ? status : "0");
+            untaggedList.Add(untaggedDic.TryGetValue(pair.Key, out short untaggedVlan) ? untaggedVlan : (short)1);
+            taggedList.Add(taggedDic.TryGetValue(pair.Key, out string taggedVlan) ? taggedVlan : String.Empty);
+            statusList.Add(statusDic.TryGetValue(pair.Key, out byte status) ? status : (short)0);
 
             long inTraffic = trafficInDic.TryGetValue(pair.Key, out long tin) ? tin : 0;
             long outTraffic = trafficOutDic.TryGetValue(pair.Key, out long tout) ? tout : 0;

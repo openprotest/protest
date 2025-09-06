@@ -77,10 +77,44 @@ internal static partial class Polling {
         PortDir untagged   = new PortDir();
         PortDir tagged     = new PortDir();
 
+        PortDir macTable = new PortDir();
+        foreach (KeyValuePair<string, string> pair in parsed) {
+            if (!pair.Key.StartsWith(Oid.INT_1D_TP_FDB)) continue;
+            if (!int.TryParse(pair.Value, out int port)) continue;
+            string mac = String.Join(String.Empty, pair.Key.Split('.').TakeLast(6).Select(o=>int.Parse(o).ToString("x2")));
+
+            if (macTable.ContainsKey(port)) {
+                macTable[port] = null;
+            }
+            else {
+                macTable.Add(port, mac);
+            }
+        }
+
+        foreach (KeyValuePair<string, string> pair in parsed) {
+            int index = int.Parse(pair.Key.Split('.')[^1]);
+
+            if (pair.Key.StartsWith(Oid.INT_DESCRIPTOR)) {
+                descriptor.Add(index, pair.Value);
+            }
+            else if (pair.Key.StartsWith(Oid.INT_ALIAS)) {
+                alias.Add(index, pair.Value);
+            }
+            else if (pair.Key.StartsWith(Oid.INT_TYPE)) {
+                type.Add(index, pair.Value);
+            }
+            else if (pair.Key.StartsWith(Oid.INT_SPEED)) {
+                speed.Add(index, pair.Value);
+            }
+            else if (pair.Key.StartsWith(Oid.INT_1Q_VLAN)) {
+                untagged.Add(index, pair.Value);
+            }
+        }
+
         Dictionary<short, List<int>> taggedMap = new Dictionary<short, List<int>>();
         for (int i = 0; i < list.Count; i++) {
             string oid = list[i].Id.ToString();
-            if (!oid.StartsWith(Oid.INTERFACE_1Q_VLAN_ENGRESS)) continue;
+            if (!oid.StartsWith(Oid.INT_1Q_VLAN_ENGRESS)) continue;
 
             int dotIndex = oid.LastIndexOf('.');
             if (dotIndex == -1) continue;
@@ -101,8 +135,8 @@ internal static partial class Polling {
                     int portIndex = 8 * (j - startIndex) + (k + 1);
                     if (!taggedMap.TryGetValue(vlanId, out List<int> ports)) {
                         ports = new List<int>();
-                    taggedMap[vlanId] = ports;
-                        }
+                        taggedMap[vlanId] = ports;
+                    }
                     if (!ports.Contains(portIndex)) {
                         ports.Add(portIndex);
                     }
@@ -113,41 +147,9 @@ internal static partial class Polling {
         foreach (KeyValuePair<short, List<int>> pair in taggedMap) {
             foreach (int port in pair.Value) {
                 tagged.TryGetValue(port, out string existing);
-                tagged[port] = string.IsNullOrEmpty(existing) ? pair.Key.ToString() : $"{existing},{pair.Key.ToString()}";
-            }
-        }
-
-        PortDir macTable = new PortDir();
-        foreach (KeyValuePair<string, string> pair in parsed) {
-            if (!pair.Key.StartsWith(Oid.INTERFACE_1D_TP_FDB)) continue;
-            if (!int.TryParse(pair.Value, out int port)) continue;
-            string mac = String.Join(String.Empty, pair.Key.Split('.').TakeLast(6).Select(o=>int.Parse(o).ToString("x2")));
-
-            if (macTable.ContainsKey(port)) {
-                macTable[port] = null;
-            }
-            else {
-                macTable.Add(port, mac);
-            }
-        }
-
-        foreach (KeyValuePair<string, string> pair in parsed) {
-            int index = int.Parse(pair.Key.Split('.')[^1]);
-
-            if (pair.Key.StartsWith(Oid.INTERFACE_DESCRIPTOR)) {
-                descriptor.Add(index, pair.Value);
-            }
-            else if (pair.Key.StartsWith(Oid.INTERFACE_ALIAS)) {
-                alias.Add(index, pair.Value);
-            }
-            else if (pair.Key.StartsWith(Oid.INTERFACE_TYPE)) {
-                type.Add(index, pair.Value);
-            }
-            else if (pair.Key.StartsWith(Oid.INTERFACE_SPEED)) {
-                speed.Add(index, pair.Value);
-            }
-            else if (pair.Key.StartsWith(Oid.INTERFACE_1Q_VLAN)) {
-                untagged.Add(index, pair.Value);
+                string currentVlan = pair.Key.ToString();
+                if (untagged.TryGetValue(port, out string untaggedVlanId) && untaggedVlanId == currentVlan) continue;
+                tagged[port] = string.IsNullOrEmpty(existing) ? currentVlan : $"{existing},{currentVlan}";
             }
         }
 

@@ -1919,20 +1919,26 @@ class Topology extends Window {
 				for (const vlan in device.dot1q.untagged) {
 					if (!(vlan in device.dot1q.untagged) || device.dot1q.untagged[vlan].length === 0) continue;
 					const hexMap = device.dot1q.untagged[vlan];
-					const binMap = parseInt(hexMap, 16).toString(2).padStart(hexMap.length * 4, "0");
+					const binMap = hexMap
+						.split("")
+						.map(h => parseInt(h, 16).toString(2).padStart(4, "0"))
+						.join("");
 
 					if (binMap[parseInt(portIndex) - 1] == 1) {
 						untaggedString = vlan;
 					}
 				}
 
-				let taggedString = [];
+				const taggedString = [];
 				for (const vlan in device.dot1q.egress) {
 					if (!(vlan in device.dot1q.egress) || device.dot1q.egress[vlan].length === 0) continue;
 					const hexMap = device.dot1q.egress[vlan];
-					const binMap = parseInt(hexMap, 16).toString(2).padStart(hexMap.length * 4, "0");
+					const binMap = hexMap
+						.split("")
+						.map(h => parseInt(h, 16).toString(2).padStart(4, "0"))
+						.join("");
 
-					if (binMap[parseInt(portIndex) - 1] == 1) {
+					if (binMap[parseInt(portIndex) - 1] == 1 && vlan !== untaggedString) {
 						taggedString.push(vlan);
 					}
 				}

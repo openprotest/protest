@@ -338,14 +338,6 @@ internal static class Fetch {
             }
         }
 
-        /*if (!hash.ContainsKey("type") && !gateways is not null) {
-            for (int i = 0; i < gateways.Length; i++)
-                if (gateways.Count(o => o.ToString() == ip) > 0) {
-                    hash.Add("type", new string[] { "Router", "IP", String.Empty });
-                    break;
-                }
-        }*/
-
         if (cancellationToken.IsCancellationRequested) {
             return null;
         }
@@ -363,7 +355,7 @@ internal static class Fetch {
             else if (ports.Contains(515) || ports.Contains(631) || ports.Contains(9100)) { //LPD, IPP, Print-server
                 data.TryAdd("type", new string[] { "Printer", "Port-scan", string.Empty });
             }
-            else if (ports.Contains(6789) || ports.Contains(10001)) { //ap
+            else if (ports.Contains(6789)) { //ap
                 data.TryAdd("type", new string[] { "Access point", "Port-scan", string.Empty });
             }
             else if (ports.Contains(7442) || ports.Contains(7550)) { //cam

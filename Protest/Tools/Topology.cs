@@ -305,10 +305,10 @@ internal static class Topology {
             string oid = dot1q[i].Id.ToString();
             if (!int.TryParse(oid.Split('.')[^1], out int vlan)) continue;
 
-            if (oid.StartsWith(Protocols.Snmp.Oid.INTERFACE_1Q_STATIC_NAME)) {
+            if (oid.StartsWith(Protocols.Snmp.Oid.INT_1Q_STATIC_NAME)) {
                 names.Add(vlan, dot1q[i].Data.ToString());
             }
-            else if (oid.StartsWith(Protocols.Snmp.Oid.INTERFACE_1Q_VLAN_ENGRESS) || oid.StartsWith(Protocols.Snmp.Oid.INTERFACE_1Q_VLAN_UNTAGGED)) {
+            else if (oid.StartsWith(Protocols.Snmp.Oid.INT_1Q_VLAN_ENGRESS) || oid.StartsWith(Protocols.Snmp.Oid.INT_1Q_VLAN_UNTAGGED)) {
                 byte[] raw = dot1q[i].Data.ToBytes();
 
                 int startIndex = GetPortBitmapStart(raw);
@@ -323,10 +323,10 @@ internal static class Topology {
 
                 string hex = PortsToHex(raw, startIndex, maxIndex);
 
-                if (oid.StartsWith(Protocols.Snmp.Oid.INTERFACE_1Q_VLAN_ENGRESS)) {
+                if (oid.StartsWith(Protocols.Snmp.Oid.INT_1Q_VLAN_ENGRESS)) {
                     egress.Add(vlan, hex);
                 }
-                else if (oid.StartsWith(Protocols.Snmp.Oid.INTERFACE_1Q_VLAN_UNTAGGED)) {
+                else if (oid.StartsWith(Protocols.Snmp.Oid.INT_1Q_VLAN_UNTAGGED)) {
                     untagged.Add(vlan, hex);
                 }
             }
@@ -495,5 +495,27 @@ internal static class Topology {
         return hex.ToString();
     }
 
-    
+    private static byte[] HexToBytes(string hex) {
+        if (string.IsNullOrEmpty(hex)) return Array.Empty<byte>();
+
+        int length = hex.Length / 2;
+        byte[] bytes = new byte[length];
+        ReadOnlySpan<char> span = hex.AsSpan();
+
+        for (int i = 0; i < length; i++) {
+            int hi = FromHexChar(span[i * 2]);
+            int lo = FromHexChar(span[i * 2 + 1]);
+            bytes[i] = (byte)((hi << 4) | lo);
+        }
+
+        return bytes;
+    }
+
+    private static int FromHexChar(char c) {
+        if (c >= '0' && c <= '9') return c - '0';
+        if (c >= 'a' && c <= 'f') return c - 'a' + 10;
+        if (c >= 'A' && c <= 'F') return c - 'A' + 10;
+        return '0';
+    }
+
 }

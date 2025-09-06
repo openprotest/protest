@@ -1334,18 +1334,13 @@ class DeviceView extends View {
 
 		let hashmap = {};
 		for (let i=0; i<list.length; i++) {
-			if (list[i] === "") continue;
-			const split = list[i].split(",").map(o=>o.trim()).map(o=>parseInt(o));
-
-			for (let j=0; j<split.length; j++) {
-				if (split[j] in hashmap) continue;
-				hashmap[split[j]] = true;
-			}
+			if (list[i] === 0) continue;
+			hashmap[list[i]] = true;
 		}
 
 		const values = Object.keys(hashmap).sort((a,b)=> a-b);
 		for (let i=0; i<values.length; i++) {
-			if (values[i] === "") continue;
+			if (values[i] === 0) continue;
 			if (values[i] in hashmap) {
 				const element = this.CreateLegendElement(this.GetVlanColor(values[i]), `VLAN ${values[i]}`);
 				element.className = "view-interface-legend-entry";
@@ -1353,7 +1348,7 @@ class DeviceView extends View {
 
 				element.onmouseenter = ()=> {
 					for (let j=0; j<frameList.length; j++) {
-						if (frameList[j].untagged === values[i]) {
+						if (frameList[j].untagged == values[i]) {
 							frameList[j].iconElement.parentElement.style.animation = "port-pop 1.5s ease-in-out infinite";
 						}
 					}
