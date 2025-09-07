@@ -407,9 +407,6 @@ internal static class Auth {
                 path.Add("/config/snmpprofiles/list");
                 path.Add("/config/snmpprofiles/save");
                 path.Add("/config/checkupdate");
-                path.Add("/config/upload/iplocation");
-                path.Add("/config/upload/proxy");
-                path.Add("/config/upload/tor");
                 break;
 
             case "log:write":

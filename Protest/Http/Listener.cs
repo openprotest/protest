@@ -110,7 +110,6 @@ internal sealed class Listener {
         ["/tools/dnslookup"] =         (ctx, parameters, username) => Protocols.Dns.Resolve(parameters),
         ["/tools/mdnslookup"] =        (ctx, parameters, username) => Protocols.Mdns.Resolve(parameters),
         ["/tools/ntp"] =               (ctx, parameters, username) => Protocols.Ntp.Request(parameters),
-        ["/tools/locateip"] =          (ctx, parameters, username) => Tools.LocateIp.Locate(ctx),
         ["/tools/maclookup"] =         (ctx, parameters, username) => Tools.MacLookup.Lookup(ctx),
         ["/tools/nics/list"] =         (ctx, parameters, username) => Tools.IpDiscovery.ListNics(),
 
@@ -164,10 +163,6 @@ internal sealed class Listener {
         ["/config/cert/create"] =       (ctx, parameters, username) => Tools.Cert.Create(ctx, username),
         ["/config/cert/delete"] =       (ctx, parameters, username) => Tools.Cert.Delete(parameters, username),
         ["/config/cert/download"] =     (ctx, parameters, username) => Tools.Cert.Download(ctx, parameters, username),
-
-        ["/config/upload/iplocation"] = (ctx, parameters, username) => Update.LocationFormDataHandler(ctx),
-        ["/config/upload/proxy"] =      (ctx, parameters, username) => Update.ProxyFormDataHandler(ctx),
-        ["/config/upload/tor"] =        (ctx, parameters, username) => Update.TorFormDataHandler(ctx),
 
         ["/api/list"] =                 (ctx, parameters, username) => Tools.Api.List(),
         ["/api/save"] =                 (ctx, parameters, username) => Tools.Api.Save(ctx, username),

@@ -13,12 +13,10 @@ class About extends Tabs {
 		this.aboutTab = this.AddTab("About", "mono/logo.svg");
 		this.legalTab = this.AddTab("Legal", "mono/law.svg");
 		this.updateTab = this.AddTab("Update", "mono/update.svg");
-		this.updateModTab = this.AddTab("Update modules", "mono/department.svg");
 
 		this.aboutTab.onclick = ()=> this.ShowAbout();
 		this.legalTab.onclick = ()=> this.ShowLegal();
 		this.updateTab.onclick = ()=> this.ShowUpdate();
-		this.updateModTab.onclick = ()=> this.ShowUpdateModules();
 
 		switch (this.args) {
 		case "legal":
@@ -29,11 +27,6 @@ class About extends Tabs {
 		case "update":
 			this.updateTab.className = "v-tab-selected";
 			this.ShowUpdate();
-			break;
-
-		case "updatemod":
-			this.updateModTab.className = "v-tab-selected";
-			this.ShowUpdateModules();
 			break;
 
 		default:
@@ -122,8 +115,6 @@ class About extends Tabs {
 		credits.innerHTML += "<b>-</b> Lextm.SharpSnmpLib         <a target='_blank' href='https://www.nuget.org/packages/Lextm.SharpSnmpLib'>by Lextm</a><br>";
 		credits.innerHTML += "<b>-</b> Open Sans typeface         <a>by Steve Matteson</a><br>";
 		credits.innerHTML += "<b>-</b> MAC addresses lookup table <a target='_blank' href='https://regauth.standards.ieee.org/standards-ra-web/pub/view.html'>by ieee</a><br>";
-		credits.innerHTML += "<b>-</b> IP2Location LITE           <a target='_blank' href='https://ip2location.com'>by ip2location.com</a><br>";
-		credits.innerHTML += "<b>-</b> IP2Proxy LITE              <a target='_blank' href='https://ip2location.com'>by ip2location.com</a><br>";
 		center.appendChild(credits);
 
 		center.appendChild(document.createElement("br"));
@@ -305,138 +296,5 @@ class About extends Tabs {
 			if (text.length === 0) return;
 			box.textContent = text;
 		});
-	}
-
-	async ShowUpdateModules() {
-		this.args = "updatemod";
-		this.tabsPanel.textContent = "";
-
-		const location = this.CreateDropArea("Drop a file here to update IP-location knowledge base", "/config/upload/iplocation", ["csv"]);
-		const proxy = this.CreateDropArea("Drop a file here to update proxy servers knowledge base", "/config/upload/proxy", ["csv"]);
-		const macTor = this.CreateDropArea("Drop a file here to update TOR servers knowledge base", "/config/upload/tor", ["txt"]);
-
-		this.tabsPanel.append(location, proxy, macTor);
-
-		const resources = document.createElement("div");
-		resources.style.paddingTop = "100px";
-		this.tabsPanel.appendChild(resources);
-
-		const resourcesText = document.createElement("div");
-		resourcesText.textContent = "Revised files for the knowledge base may be available on the following links:";
-
-		const link1 = document.createElement("a");
-		link1.style.display = "block";
-		link1.style.margin = "8px";
-		link1.target = "_blank";
-		link1.href = "https://lite.ip2location.com/database/db5-ip-country-region-city-latitude-longitude";
-		link1.textContent = "IP2Location - Location list";
-		resources.append(link1);
-
-		const link2 = document.createElement("a");
-		link2.style.display = "block";
-		link2.style.margin = "8px";
-		link2.target = "_blank";
-		link2.href = "https://lite.ip2location.com/database/px1-ip-country";
-		link2.textContent = "IP2Location - Proxy list";
-		resources.append(link2);
-
-		resources.append(resourcesText, link1, link2);
-	}
-
-	CreateDropArea(text, uploadUrl, filter) {
-		const dropArea = document.createElement("div");
-		dropArea.style.minHeight = "20px";
-		dropArea.style.margin = "16px";
-		dropArea.style.padding = "20px";
-		dropArea.style.border = "2px dashed var(--clr-dark)";
-		dropArea.style.borderRadius = "8px";
-		dropArea.style.transition = ".4s";
-
-		const message = document.createElement("div");
-		message.textContent = text;
-		message.style.color = "var(--clr-dark)";
-		message.style.fontWeight = "600";
-		message.style.textAlign = "center";
-		dropArea.append(message);
-
-		let isBusy = false;
-
-		dropArea.ondragover = ()=> {
-			if (isBusy) return;
-			dropArea.style.backgroundColor = "var(--clr-control)";
-			dropArea.style.border = "2px solid var(--clr-dark)";
-			return false;
-		};
-		dropArea.ondragleave = ()=> {
-			if (isBusy) return;
-			dropArea.style.backgroundColor = "";
-			dropArea.style.border = "2px dashed var(--clr-dark)";
-		};
-		dropArea.ondrop = async event=> {
-			event.preventDefault();
-
-			if (isBusy) return;
-
-			dropArea.style.backgroundColor = "";
-			dropArea.style.border = "2px dashed var(--clr-dark)";
-
-			if (event.dataTransfer.files.length !== 1) {
-				this.ConfirmBox("Please upload a single file.", true);
-				return;
-			}
-
-			let file = event.dataTransfer.files[0];
-			let extension = file.name.split(".");
-			extension = extension[extension.length-1].toLowerCase();
-
-			if (!filter.includes(extension)) {
-				this.ConfirmBox("Unsupported file", true);
-				return;
-			}
-
-			const formData = new FormData();
-			formData.append("file", file);
-
-			isBusy = true;
-			message.textContent = "Uploading file... This might take a minute.";
-			dropArea.style.border = "2px solid var(--clr-dark)";
-
-			const spinner = document.createElement("div");
-			spinner.className = "spinner";
-			spinner.style.textAlign = "left";
-			spinner.style.marginTop = "32px";
-			spinner.style.marginBottom = "16px";
-			spinner.appendChild(document.createElement("div"));
-			dropArea.appendChild(spinner);
-
-			try {
-				const response = await fetch(uploadUrl, {
-					method: "POST",
-					body: formData
-				});
-
-				if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
-
-				const json = await response.json();
-				if (json.error) throw (json.error);
-			}
-			catch (ex) {
-				this.ConfirmBox(ex, true, "mono/error.svg");
-			}
-			finally {
-				isBusy = false;
-				message.textContent = text;
-				dropArea.style.border = "2px dashed var(--clr-dark)";
-				dropArea.removeChild(spinner);
-			}
-
-			/*let fileReader = new FileReader();
-			fileReader.onload = ()=> {
-				let fileUrl = fileReader.result;
-			};
-			fileReader.readAsDataURL(file);*/
-		};
-
-		return dropArea;
 	}
 }

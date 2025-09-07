@@ -319,25 +319,6 @@ internal static class Fetch {
             }
         }
 
-        if (!data.ContainsKey("location")) {
-            for (int i = 0; i < ipList.Length; i++) {
-                byte[] bytes = ipList[i].GetAddressBytes();
-                if (bytes.Length != 4) continue;
-
-                ulong ipNumber = ((ulong)bytes[0] << 24) + ((ulong)bytes[1] << 16) + ((ulong)bytes[2] << 8) + bytes[3];
-                if (ipNumber >= 2130706432 && ipNumber <= 2147483647) continue; //127.0.0.0 <> 127.255.255.255
-                if (ipNumber >= 167772160 && ipNumber <= 184549375) continue; //10.0.0.0 <> 10.255.255.255
-                if (ipNumber >= 2886729728 && ipNumber <= 2887778303) continue; //172.16.0.0 <> 172.31.255.255
-                if (ipNumber >= 3232235520 && ipNumber <= 3232301055) continue; //192.168.0.0 <> 192.168.255.255
-                if (ipNumber >= 2851995648 && ipNumber <= 184549375) continue; //169.254.0.0 <> 169.254.255.255
-                if (ipNumber >= 3758096384) continue; // <= 224.0.0.0
-
-                string ipLocation = Encoding.UTF8.GetString(LocateIp.Locate(ipAddress?.ToString(), true));
-                if (ipLocation is null) continue;
-                data.TryAdd("location", new string[] { ipLocation, "Locate IP", string.Empty });
-            }
-        }
-
         if (cancellationToken.IsCancellationRequested) {
             return null;
         }
