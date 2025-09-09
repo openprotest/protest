@@ -368,7 +368,6 @@ const MENU = {
 		{ t:"mDNS discovery",     i:"mono/dns.svg?light",           g:"utilities", h:true,  f:args=> new Mdns(args),         k:"sd dns service multicast lookup resolve resolution" },
 		{ t:"Trace route",        i:"mono/traceroute.svg?light",    g:"utilities", h:false, f:args=> new TraceRoute(args),   k:"path" },
 		{ t:"TCP port scan",      i:"mono/portscan.svg?light",      g:"utilities", h:false, f:args=> new PortScan(args),     k:"portscan" },
-		{ t:"Locate IP",          i:"mono/locate.svg?light",        g:"utilities", h:true,  f:args=> new LocateIp(args),     k:"location" },
 		{ t:"MAC lookup",         i:"mono/maclookup.svg?light",     g:"utilities", h:false, f:args=> new MacLookup(args),    k:"physical address vendor resolver" },
 		{ t:"DHCP client",        i:"mono/dhcp.svg?light",          g:"utilities", h:false, f:args=> new DhcpDiscover(args), k:"discover" },
 		{ t:"NTP client",         i:"mono/clock.svg?light",         g:"utilities", h:false, f:args=> new NtpClient(args),    k:"network time" },

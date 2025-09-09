@@ -20,7 +20,7 @@
 .window>.title {
 	position: absolute;
 	cursor: default;
-	left: min(calc(26px + 5%), 112px);
+	left: 32px;
 	right: 112px;
 	top: 0;
 	height: 30px;
@@ -214,7 +214,6 @@
 	margin: 2px;
 	height: 28px;
 	line-height: 28px;
-	text-transform: capitalize;
 	padding-left: 28px;
 	background-size: 24px 24px;
 	background-position: 2px center;

@@ -106,7 +106,6 @@ const LOADER = {
 		"mdns.js",
 		"traceroute.js",
 		"portscan.js",
-		"locateip.js",
 		"maclookup.js",
 		"dhcpdiscover.js",
 		"ntpclient.js",
@@ -332,7 +331,6 @@ const LOADER = {
 		case "SpeedTest"    : return new SpeedTest(command.args);
 		case "PortScan"     : return new PortScan(command.args);
 		case "MacLookup"    : return new MacLookup(command.args);
-		case "LocateIp"     : return new LocateIp(command.args);
 		case "DhcpDiscover" : return new DhcpDiscover(command.args);
 		case "NtpClient"    : return new NtpClient(command.args);
 		case "SiteCheck"    : return new SiteCheck(command.args);

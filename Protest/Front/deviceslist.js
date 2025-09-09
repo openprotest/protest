@@ -27,7 +27,7 @@ class DevicesList extends List {
 		this.utilitiesDropDown = this.AddToolbarDropdown("mono/hammer.svg?light");
 		this.sentChatButton = this.AddSendToChatButton();
 
-		this.utilitiesDropDown.menu.style.height = "168px";
+		this.utilitiesDropDown.menu.style.height = "130px";
 
 		const optionPing = document.createElement("div");
 		optionPing.style.backgroundImage = "url(mono/ping.svg)";
@@ -36,22 +36,17 @@ class DevicesList extends List {
 
 		const optionDnsLookup = document.createElement("div");
 		optionDnsLookup.style.backgroundImage = "url(mono/dns.svg)";
-		optionDnsLookup.textContent = "DNS Lookup";
+		optionDnsLookup.textContent = "DNS lookup";
 		this.utilitiesDropDown.list.append(optionDnsLookup);
 
 		const optionTraceRoute = document.createElement("div");
 		optionTraceRoute.style.backgroundImage = "url(mono/traceroute.svg)";
-		optionTraceRoute.textContent = "Trace Router";
+		optionTraceRoute.textContent = "Trace router";
 		this.utilitiesDropDown.list.append(optionTraceRoute);
-
-		const optionLocateIp = document.createElement("div");
-		optionLocateIp.style.backgroundImage = "url(mono/locate.svg)";
-		optionLocateIp.textContent = "Locate IP";
-		this.utilitiesDropDown.list.append(optionLocateIp);
 
 		const optionMacLookup = document.createElement("div");
 		optionMacLookup.style.backgroundImage = "url(mono/maclookup.svg)";
-		optionMacLookup.textContent = "MAC Lookup";
+		optionMacLookup.textContent = "MAC lookup";
 		this.utilitiesDropDown.list.append(optionMacLookup);
 
 		if (this.args.find && this.args.find.length > 0) {
@@ -124,21 +119,6 @@ class DevicesList extends List {
 			}
 
 			new TraceRoute({entries: entries});
-		};
-
-		optionLocateIp.onclick=()=> {
-			let entries = [];
-			for (let i=0; i<this.list.childNodes.length; i++) {
-				const id = this.list.childNodes[i].getAttribute("id");
-				if ("ip" in LOADER.devices.data[id]) {
-					LOADER.devices.data[id]["ip"].v.split(";").map(o => o.trim()).forEach(o => entries.push(o));
-				}
-				else if ("hostname" in LOADER.devices.data[id]) {
-					LOADER.devices.data[id]["hostname"].v.split(";").map(o => o.trim()).forEach(o => entries.push(o));
-				}
-			}
-
-			new LocateIp({entries: entries});
 		};
 
 		optionMacLookup.onclick=()=> {

@@ -473,7 +473,7 @@ internal static partial class Lifeline {
             foreach (KeyValuePair<string, string> pair in switchCounters) {
                 if (!int.TryParse(pair.Key.Split('.')[^1], out int index)) continue;
 
-                if (pair.Key.StartsWith(Protocols.Snmp.Oid.INTERFACE_TYPE)) {
+                if (pair.Key.StartsWith(Protocols.Snmp.Oid.INT_TYPE)) {
                     int type = int.TryParse(pair.Value, out int v) ? v : -1;
                     typeMap.Add(index, type);
                 }
@@ -484,16 +484,16 @@ internal static partial class Lifeline {
                 if (!int.TryParse(pair.Key.Split('.')[^1], out int index)) continue;
                 if (!typeMap.ContainsKey(index) || typeMap[index] != 6) continue; //skip non-physical interfaces
 
-                if (pair.Key.StartsWith(Protocols.Snmp.Oid.INTERFACE_TRAFFIC_IN_64)) {
+                if (pair.Key.StartsWith(Protocols.Snmp.Oid.INT_TRAFFIC_IN_64)) {
                     traffic += long.TryParse(pair.Value, out long v) ? v : 0;
                 }
-                else if (pair.Key.StartsWith(Protocols.Snmp.Oid.INTERFACE_TRAFFIC_OUT_64)) {
+                else if (pair.Key.StartsWith(Protocols.Snmp.Oid.INT_TRAFFIC_OUT_64)) {
                     traffic += long.TryParse(pair.Value, out long v) ? v : 0;
                 }
-                else if (pair.Key.StartsWith(Protocols.Snmp.Oid.INTERFACE_ERROR_IN)) {
+                else if (pair.Key.StartsWith(Protocols.Snmp.Oid.INT_ERROR_IN)) {
                     errors += int.TryParse(pair.Value, out int v) ? v : 0;
                 }
-                else if (pair.Key.StartsWith(Protocols.Snmp.Oid.INTERFACE_ERROR_OUT)) {
+                else if (pair.Key.StartsWith(Protocols.Snmp.Oid.INT_ERROR_OUT)) {
                     errors += int.TryParse(pair.Value, out int v) ? v : 0;
                 }
             }

@@ -112,7 +112,7 @@ class DeviceView extends View {
 		this.utilitiesDropDown = this.AddToolbarDropdown("mono/hammer.svg?light");
 		this.bar.insertBefore(this.utilitiesDropDown.button, this.sendChatButton);
 
-		this.utilitiesDropDown.menu.style.height = "200px";
+		this.utilitiesDropDown.menu.style.height = "164px";
 
 		const optionPing = document.createElement("div");
 		optionPing.style.backgroundImage = "url(mono/ping.svg)";
@@ -121,12 +121,12 @@ class DeviceView extends View {
 
 		const optionDnsLookup = document.createElement("div");
 		optionDnsLookup.style.backgroundImage = "url(mono/dns.svg)";
-		optionDnsLookup.textContent = "DNS Lookup";
+		optionDnsLookup.textContent = "DNS lookup";
 		this.utilitiesDropDown.list.append(optionDnsLookup);
 
 		const optionTraceRoute = document.createElement("div");
 		optionTraceRoute.style.backgroundImage = "url(mono/traceroute.svg)";
-		optionTraceRoute.textContent = "Trace Router";
+		optionTraceRoute.textContent = "Trace router";
 		this.utilitiesDropDown.list.append(optionTraceRoute);
 
 		const optionPortScan = document.createElement("div");
@@ -134,14 +134,9 @@ class DeviceView extends View {
 		optionPortScan.textContent = "Port scan";
 		this.utilitiesDropDown.list.append(optionPortScan);
 
-		const optionLocateIp = document.createElement("div");
-		optionLocateIp.style.backgroundImage = "url(mono/locate.svg)";
-		optionLocateIp.textContent = "Locate IP";
-		this.utilitiesDropDown.list.append(optionLocateIp);
-
 		const optionMacLookup = document.createElement("div");
 		optionMacLookup.style.backgroundImage = "url(mono/maclookup.svg)";
-		optionMacLookup.textContent = "MAC Lookup";
+		optionMacLookup.textContent = "MAC lookup";
 		this.utilitiesDropDown.list.append(optionMacLookup);
 
 		this.refreshLiveStatsButton = this.AddToolbarButton("", "mono/restart.svg?light");
@@ -244,28 +239,6 @@ class DeviceView extends View {
 			}
 
 			new PortScan().Filter(target);
-		};
-
-		optionLocateIp.onclick=()=> {
-			let target;
-			if ("ip" in this.link) {
-				target = this.link.ip.v;
-			}
-			else if ("hostname" in this.link) {
-				target = this.link.hostname.v;
-			}
-			else {
-				this.ConfirmBox("No IP or Hostname", true);
-			}
-
-			for (let i=0; i<WIN.array.length; i++) {
-				if (!(WIN.array[i] instanceof LocateIp)) continue;
-				WIN.array[i].Filter(target);
-				WIN.array[i].BringToFront();
-				return;
-			}
-
-			new LocateIp().Filter(target);
 		};
 
 		optionMacLookup.onclick=()=> {
@@ -1334,18 +1307,13 @@ class DeviceView extends View {
 
 		let hashmap = {};
 		for (let i=0; i<list.length; i++) {
-			if (list[i] === "") continue;
-			const split = list[i].split(",").map(o=>o.trim()).map(o=>parseInt(o));
-
-			for (let j=0; j<split.length; j++) {
-				if (split[j] in hashmap) continue;
-				hashmap[split[j]] = true;
-			}
+			if (list[i] === 0) continue;
+			hashmap[list[i]] = true;
 		}
 
 		const values = Object.keys(hashmap).sort((a,b)=> a-b);
 		for (let i=0; i<values.length; i++) {
-			if (values[i] === "") continue;
+			if (values[i] === 0) continue;
 			if (values[i] in hashmap) {
 				const element = this.CreateLegendElement(this.GetVlanColor(values[i]), `VLAN ${values[i]}`);
 				element.className = "view-interface-legend-entry";
@@ -1353,7 +1321,7 @@ class DeviceView extends View {
 
 				element.onmouseenter = ()=> {
 					for (let j=0; j<frameList.length; j++) {
-						if (frameList[j].untagged === values[i]) {
+						if (frameList[j].untagged == values[i]) {
 							frameList[j].iconElement.parentElement.style.animation = "port-pop 1.5s ease-in-out infinite";
 						}
 					}
