@@ -335,7 +335,7 @@ class Chat extends Window {
 		this.AdjustUI();
 	}
 
-	async HandleMessage(message) {
+	async HandleMessage(message, ignoreDot=false) {
 		if (message.id in this.outdoing) {
 			this.outdoing[message.id].style.color = "var(--clr-dark)";
 			this.outdoing[message.id].style.backgroundColor = "var(--clr-pane)";
@@ -389,7 +389,7 @@ class Chat extends Window {
 			}
 		}
 
-		if (!(WIN.focused instanceof Chat)) {
+		if (!(WIN.focused instanceof Chat) && !ignoreDot) {
 			this.blinkingDot.style.backgroundColor = message.color;
 			this.blinkingDot.style.boxShadow = "black 0 0 1px inset";
 		}

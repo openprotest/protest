@@ -190,7 +190,7 @@ const KEEP = {
 					view.InitializePreview();
 				}
 
-				for (let i = 0; i < WIN.array.length; i++) { //each devices list
+				for (let i=0; i<WIN.array.length; i++) { //each devices list
 					if (!(WIN.array[i] instanceof DevicesList)) continue;
 					WIN.array[i].RefreshList();
 				}
@@ -208,7 +208,7 @@ const KEEP = {
 					view.InitializePreview();
 				}
 
-				for (let i = 0; i < WIN.array.length; i++) { //each users list
+				for (let i=0; i<WIN.array.length; i++) { //each users list
 					if (!(WIN.array[i] instanceof UsersList)) continue;
 					WIN.array[i].RefreshList();
 				}
@@ -227,7 +227,7 @@ const KEEP = {
 				delete LOADER.devices.data[message.target];
 				LOADER.devices.version = message.version;
 
-				for (let i = 0; i < WIN.array.length; i++) { //each devices list
+				for (let i=0; i<WIN.array.length; i++) { //each devices list
 					if (!(WIN.array[i] instanceof DevicesList)) continue;
 					WIN.array[i].RefreshList();
 				}
@@ -241,7 +241,7 @@ const KEEP = {
 				delete LOADER.users.data[message.target];
 				LOADER.users.version = message.version;
 
-				for (let i = 0; i < WIN.array.length; i++) { //each users list
+				for (let i=0; i<WIN.array.length; i++) { //each users list
 					if (!(WIN.array[i] instanceof UsersList)) continue;
 					WIN.array[i].RefreshList();
 				}
@@ -257,7 +257,7 @@ const KEEP = {
 			break;
 
 		case "cancel-fetch":
-			for (let i = 0; i < WIN.array.length; i++) {
+			for (let i=0; i<WIN.array.length; i++) {
 				if (!(WIN.array[i] instanceof Fetch)) continue;
 				WIN.array[i].statusValueLabel.textContent = "Canceling";
 			}
@@ -276,7 +276,7 @@ const KEEP = {
 			break;
 
 		case "finish-fetch":
-			for (let i = 0; i < WIN.array.length; i++) {
+			for (let i=0; i<WIN.array.length; i++) {
 				if (!(WIN.array[i] instanceof Fetch)) continue;
 				WIN.array[i].ShowPending(message.task);
 			}
@@ -285,7 +285,7 @@ const KEEP = {
 		case "abort-fetch":
 		case "discard-fetch":
 		case "approve-fetch":
-			for (let i = 0; i < WIN.array.length; i++) {
+			for (let i=0; i<WIN.array.length; i++) {
 				if (!(WIN.array[i] instanceof Fetch)) continue;
 				WIN.array[i].ShowDevices();
 				WIN.array[i].tabsList[0].className = "v-tab-selected";
@@ -294,7 +294,7 @@ const KEEP = {
 			break;
 
 		case "issues":
-			for (let i = 0; i < WIN.array.length; i++) {
+			for (let i=0; i<WIN.array.length; i++) {
 				if (!(WIN.array[i] instanceof Issues)) continue;
 				if (WIN.array[i].ws === null) {
 					WIN.array[i].Connect();
@@ -319,7 +319,7 @@ const KEEP = {
 			}
 
 			let chatCount = 0;
-			for (let i = 0; i < WIN.array.length; i++) {
+			for (let i=0; i<WIN.array.length; i++) {
 				if (!(WIN.array[i] instanceof Chat)) continue;
 
 				if (localStorage.getItem("focus_chat_window") === "true") {
@@ -362,9 +362,9 @@ const KEEP = {
 		case "chat-join":
 		case "chat-stream":
 		case "chat-ice":
-			for (let i = 0; i < WIN.array.length; i++) {
+			for (let i=0; i<WIN.array.length; i++) {
 				if (!(WIN.array[i] instanceof Chat)) continue;
-				WIN.array[i].HandleMessage(message);
+				WIN.array[i].HandleMessage(message, true);
 
 				/*if (WIN.focused !== WIN.array[i] && message.sender !== KEEP.username && localStorage.getItem("enable_notification_sound") !== "false") {
 					KEEP.chatNotificationSound.play();
