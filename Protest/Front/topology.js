@@ -51,7 +51,7 @@ class Topology extends Window {
 		this.AddToolbarSeparator();
 
 		this.trafficButton = this.AddToolbarButton("Visualize traffic", "mono/traffic.svg?light");
-		this.errorsButton = this.AddToolbarButton("Visualize errors", "mono/warning.svg?light");
+		this.errorsButton = this.AddToolbarButton("Visualize errors", "mono/error.svg?light");
 		//this.loopDetection = this.AddToolbarButton("Close loop detection", "mono/infinite.svg?light");
 
 		this.workspace = document.createElement("div");

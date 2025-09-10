@@ -2319,7 +2319,7 @@ class DeviceView extends View {
 			}
 
 			GenerateGraph(trafficData, "Traffic", "traffic", "mono/traffic.svg");
-			GenerateGraph(errorData, "Errors", "errors", "mono/warning.svg");
+			GenerateGraph(errorData, "Errors", "errors", "mono/error.svg");
 		}
 
 	}
