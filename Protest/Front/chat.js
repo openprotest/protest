@@ -614,7 +614,7 @@ class Chat extends Window {
 			KEEP.socket.send(JSON.stringify({
 				id: id,
 				type: "chat-text",
-				text: this.input.innerHTML
+				text: this.input.textContent
 			}));
 		}
 		catch (ex) {
