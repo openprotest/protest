@@ -343,7 +343,7 @@ class Chat extends Window {
 			delete this.outdoing[message.id];
 		}
 		else {
-			const time = new Date(UI.TicksToUnixDate(message.time));
+			const time = new Date(message.time);
 			const timeString = time.toLocaleTimeString(UI.regionalFormat, {});
 			const direction = message.sender === KEEP.username ? "out" : "in";
 
