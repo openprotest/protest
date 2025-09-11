@@ -89,7 +89,7 @@ const LOADER = {
 		"debitnotes.js",
 		"watchdog.js",
 		"personalize.js",
-		"settings.js",
+		"environment.js",
 		"rbac.js",
 		"deviceslist.js",
 		"userslist.js",
@@ -350,7 +350,7 @@ const LOADER = {
 		case "ScreenCapture"  : return new ScreenCapture(command.args);
 
 		case "About"        : return new About(command.args);
-		case "Settings"     : return new Settings(command.args);
+		case "Environment"  : return new Environment(command.args);
 		case "Personalize"  : return new Personalize(command.args);
 		case "AccessControl": return new AccessControl(command.args);
 		case "Automation"   : return new Automation(command.args);

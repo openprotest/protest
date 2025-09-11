@@ -388,11 +388,11 @@ const MENU = {
 		{ t:"Keyboard tester",    i:"mono/keyboard.svg?light",      g:"utilities", h:true,  f:args=> new KeyboardTester(), k:"keys" },
 		{ t:"Gamepad tester",     i:"mono/gamepad.svg?light",       g:"utilities", h:true,  f:args=> new KeyboardTester("gamepad"), k:"joystick" },
 
-		{ t:"Settings",      i:"mono/wrench.svg?light",      g:"manage", h:false, f:()=> new Settings(), },
-		{ t:"Zones",         i:"mono/router.svg?light",      g:"manage", h:true,  f:()=> new Settings("zones") },
-		{ t:"DHCP range",    i:"mono/dhcp.svg?light",        g:"manage", h:true,  f:()=> new Settings("dhcp"), k:"ip addresses"},
-		{ t:"SMTP settings", i:"mono/email.svg?light",       g:"manage", h:true,  f:()=> new Settings("smtp") },
-		{ t:"SNMP settings", i:"mono/snmp.svg?light",        g:"manage", h:true,  f:()=> new Settings("snmp") },
+		{ t:"Environment",   i:"mono/environment.svg?light",  g:"manage", h:false, f:()=> new Environment(), k:"settings" },
+		{ t:"Zones",         i:"mono/router.svg?light",      g:"manage", h:true,  f:()=> new Environment("zones") },
+		{ t:"DHCP range",    i:"mono/dhcp.svg?light",        g:"manage", h:true,  f:()=> new Environment("dhcp"), k:"ip addresses"},
+		{ t:"SMTP settings", i:"mono/email.svg?light",       g:"manage", h:true,  f:()=> new Environment("smtp") },
+		{ t:"SNMP settings", i:"mono/snmp.svg?light",        g:"manage", h:true,  f:()=> new Environment("snmp") },
 
 		{ t:"Personalize",    i:"mono/personalize.svg?light", g:"manage", h:false, f:()=> new Personalize() },
 		{ t:"Appearance",     i:"mono/tv.svg?light",          g:"manage", h:true,  f:()=> new Personalize("appearance") },
@@ -410,7 +410,6 @@ const MENU = {
 		{ t:"Log",            i:"mono/log.svg?light",         g:"manage", h:false, f:()=> new Log() },
 
 		{ t:"Update",         i:"mono/update.svg?light",      g:"manage", h:true,  f:()=> new About("update") },
-		{ t:"Update modules", i:"mono/department.svg?light",  g:"manage", h:true,  f:()=> new About("updatemod") },
 		{ t:"About",          i:"mono/logo.svg?light",        g:"manage", h:false, f:()=> new About("about") },
 		{ t:"Legal",          i:"mono/law.svg?light",         g:"manage", h:true,  f:()=> new About("legal") },
 

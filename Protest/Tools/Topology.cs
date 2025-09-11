@@ -81,12 +81,14 @@ internal static class Topology {
 
         List<Database.Entry> candidates = new List<Database.Entry>();
 
+        string[] types = ["firewall", "router", "switch"]; //"access point"
+
         foreach (KeyValuePair<string, Database.Entry> pair in DatabaseInstances.devices.dictionary) {
             Database.Entry device = pair.Value;
 
             if (!device.attributes.TryGetValue("type", out Database.Attribute typeAttr)) continue;
             string type = typeAttr.value.ToLower();
-            if (!options.Contains(type)) continue;
+            if (!types.Contains(type)) continue;
 
             if (!device.attributes.TryGetValue("ip", out Database.Attribute ipAttr)) continue;
             if (!device.attributes.TryGetValue("snmp profile", out Database.Attribute profileAttr)) continue;
@@ -126,22 +128,36 @@ internal static class Topology {
                 try {
                     WsWriteText(ws, Encoding.UTF8.GetBytes($"{{\"retrieve\":\"{candidate.filename}\"}}"), mutex);
 
-                    IList<Variable> rawLocal = Polling.SnmpQuery(ipAddress, snmpProfile, [Oid.LLDP_LOCAL_SYS_DATA], Polling.SnmpOperation.Walk);
-                    IList<Variable> rawRemote = Polling.SnmpQuery(ipAddress, snmpProfile, [Oid.LLDP_REMOTE_SYS_DATA], Polling.SnmpOperation.Walk);
+                    IList<Variable> lldpLocal = Polling.SnmpQuery(ipAddress, snmpProfile, [Oid.LLDP_LOCAL_SYS_DATA], Polling.SnmpOperation.Walk);
+                    IList<Variable> lldpRemote = Polling.SnmpQuery(ipAddress, snmpProfile, [Oid.LLDP_REMOTE_SYS_DATA], Polling.SnmpOperation.Walk);
 
-                    if (rawLocal is null || rawRemote is null) {
+                    if (lldpLocal is null || lldpRemote is null) {
                         WsWriteText(ws, Encoding.UTF8.GetBytes($"{{\"nosnmp\":\"{candidate.filename}\"}}"), mutex);
                         return;
                     }
                     else {
-                        byte[] response = ComputeLldpResponse(candidate.filename, rawLocal, rawRemote);
+                        byte[] response = ComputeLldpResponse(candidate.filename, lldpLocal, lldpRemote);
                         WsWriteText(ws, response, mutex);
                     }
 
-                    IList<Variable> dot1q = Polling.SnmpQuery(ipAddress, snmpProfile, Oid.TOPOLOGY_DOT1Q, Polling.SnmpOperation.Walk);
-                    if (dot1q is not null && dot1q.Count > 0) {
-                        byte[] response = ComputeDotQ1Response(candidate.filename, dot1q);
-                        WsWriteText(ws, response, mutex);
+                    if (options.Contains("mac")) {
+                        //TODO:
+                    }
+
+                    if (options.Contains("vlan")) {
+                        IList<Variable> dot1q = Polling.SnmpQuery(ipAddress, snmpProfile, Oid.TOPOLOGY_DOT1Q, Polling.SnmpOperation.Walk);
+                        if (dot1q is not null && dot1q.Count > 0) {
+                            byte[] response = ComputeDotQ1Response(candidate.filename, dot1q);
+                            WsWriteText(ws, response, mutex);
+                        }
+                    }
+
+                    if (options.Contains("traffic")) {
+                        //TODO:
+                    }
+
+                    if (options.Contains("error")) {
+                        //TODO:
                     }
 
                 }

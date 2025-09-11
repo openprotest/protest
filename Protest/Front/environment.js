@@ -1,4 +1,4 @@
-class Settings extends Tabs {
+class Environment extends Tabs {
 	constructor(args) {
 		super(null);
 
@@ -6,8 +6,8 @@ class Settings extends Tabs {
 
 		this.AddCssDependencies("list.css");
 
-		this.SetTitle("Settings");
-		this.SetIcon("mono/wrench.svg");
+		this.SetTitle("Environment");
+		this.SetIcon("mono/environment.svg");
 
 		this.zones = [];
 		this.dhcpRange = [];

@@ -97,22 +97,6 @@
 	text-align: center;
 }
 
-.topology-close-button {
-	position: absolute;
-	top: 4px;
-	right: 4px;
-	width: 20px;
-	height: 20px;
-	border-radius: 50%;
-	background-color: var(--clr-dark);
-	mask: url(controls/close.svg), linear-gradient(var(--clr-dark) 0 0);
-	mask-size: 20px 20px;
-	mask-position: center;
-	mask-repeat: no-repeat;
-	mask-composite: exclude;
-	transition: .2s;
-}
-
 .topology-find-input {
 	position: absolute;
 	left: 4px;
@@ -129,6 +113,22 @@
 	overflow-y: auto;
 	border: 2px solid var(--clr-control);
 	border-radius: 4px;
+}
+
+.topology-close-button {
+	position: absolute;
+	top: 4px;
+	right: 4px;
+	width: 20px;
+	height: 20px;
+	border-radius: 8px;
+	background-color: var(--clr-dark);
+	mask: url(controls/close.svg), linear-gradient(var(--clr-dark) 0 0);
+	mask-size: 20px 20px;
+	mask-position: center;
+	mask-repeat: no-repeat;
+	mask-composite: exclude;
+	transition: .2s;
 }
 
 .topology-close-button:focus {

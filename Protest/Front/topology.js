@@ -42,16 +42,18 @@ class Topology extends Window {
 		this.SetupToolbar();
 
 		this.startButton = this.AddToolbarButton("Start discovery", "mono/play.svg?light");
-		this.stopButton = this.AddToolbarButton("Stop", "mono/stop.svg?light");
-		this.stopButton.disabled = true;
 		this.AddToolbarSeparator();
 
 		this.sortButton = this.AddToolbarButton("Sort", "mono/sort.svg?light");
 		this.findButton = this.AddToolbarButton("Find", "mono/search.svg?light");
 		this.AddToolbarSeparator();
-
+		
 		this.trafficButton = this.AddToolbarButton("Visualize traffic", "mono/traffic.svg?light");
+		this.trafficButton.disabled = true;
+		
 		this.errorsButton = this.AddToolbarButton("Visualize errors", "mono/error.svg?light");
+		this.errorsButton.disabled = true;
+		
 		//this.loopDetection = this.AddToolbarButton("Close loop detection", "mono/infinite.svg?light");
 
 		this.workspace = document.createElement("div");
@@ -70,22 +72,22 @@ class Topology extends Window {
 		this.content.append(this.workspace, this.navBar, this.sideBar, this.infoBox);
 
 		this.workspace.onmousedown = event=> this.Topology_onmousedown(event);
-		this.content.onmousemove = event=> this.Topology_onmousemove(event);
-		this.content.onmouseup = event=> this.Topology_onmouseup(event);
+		this.content.onmousemove   = event=> this.Topology_onmousemove(event);
+		this.content.onmouseup     = event=> this.Topology_onmouseup(event);
 
-		this.startButton.onclick = ()=> this.StartDialog();
-		this.stopButton.onclick = ()=> this.Stop();
-		this.findButton.onclick = ()=> this.Find();
+		this.startButton.onclick   = ()=> this.StartDialog();
+		this.findButton.onclick    = ()=> this.FindMode();
+		this.trafficButton.onclick = ()=> this.TrafficMode();
+		this.errorsButton.onclick  = ()=> this.ErrorMode();
 
 		this.sideBar.onscroll = ()=> this.InfoBoxPosition();
 
 		this.content.onkeydown = event=> {
 			if (event.code === "KeyF" && event.ctrlKey) {
 				event.preventDefault();
-				this.Find();
+				this.FindMode();
 			}
-		}
-
+		};
 	}
 
 	AfterResize() { //override
@@ -268,7 +270,7 @@ class Topology extends Window {
 	}
 
 	StartDialog() {
-		const dialog = this.DialogBox("320px");
+		const dialog = this.DialogBox("260px");
 		if (dialog === null) return;
 
 		const {okButton, innerBox} = dialog;
@@ -280,7 +282,7 @@ class Topology extends Window {
 		innerBox.style.padding = "16px 32px";
 		innerBox.style.display = "grid";
 		innerBox.style.gridTemplateColumns = "auto 200px 50px auto auto";
-		innerBox.style.gridTemplateRows = "repeat(6, 34px)";
+		innerBox.style.gridTemplateRows = "repeat(5, 34px)";
 		innerBox.style.alignItems = "center";
 
 		let counter = 0;
@@ -300,14 +302,12 @@ class Topology extends Window {
 				toggle.label.style.minWidth = "0px";
 				toggle.label.style.color = "transparent";
 				input = toggle.checkbox;
-
 				innerBox.append(label, box);
 			}
 			else {
 				input = document.createElement(tag);
 				input.style.gridArea = `${counter} / 3`;
 				if (type) { input.type = type; }
-
 				innerBox.append(label, input);
 			}
 
@@ -318,54 +318,46 @@ class Topology extends Window {
 			return [label, input];
 		};
 
-		const labelInclude = document.createElement("div");
-		labelInclude.textContent = "Include:";
-		labelInclude.style.gridArea = `${++counter} / 2`;
-		innerBox.append(labelInclude);
+		const [lldpLabel, lldpInput] = AddParameter("LLDP", "input", "toggle");
+		lldpLabel.style.lineHeight = "24px";
+		lldpLabel.style.paddingLeft = "28px";
+		lldpLabel.style.backgroundImage = "url(mono/topology.svg)";
+		lldpLabel.style.backgroundSize = "24px";
+		lldpLabel.style.backgroundRepeat = "no-repeat";
+		lldpInput.checked = true;
+		lldpInput.disabled = true;
 
-		const [firewallLabel, firewallInput] = AddParameter("Firewalls", "input", "toggle");
-		firewallLabel.style.lineHeight = "24px";
-		firewallLabel.style.paddingLeft = "28px";
-		firewallLabel.style.backgroundImage = "url(mono/firewall.svg)";
-		firewallLabel.style.backgroundSize = "24px";
-		firewallLabel.style.backgroundRepeat = "no-repeat";
-		firewallInput.checked = true;
-		firewallInput.disabled = true;
+		const [macLabel, macInput] = AddParameter("MAC table", "input", "toggle");
+		macLabel.style.lineHeight = "24px";
+		macLabel.style.paddingLeft = "28px";
+		macLabel.style.backgroundImage = "url(mono/chip.svg)";
+		macLabel.style.backgroundSize = "24px";
+		macLabel.style.backgroundRepeat = "no-repeat";
+		macInput.checked = this.args.options ? this.args.options.mac : false;
 
-		const [routerLabel, routerInput] = AddParameter("Routers", "input", "toggle");
-		routerLabel.style.lineHeight = "24px";
-		routerLabel.style.paddingLeft = "28px";
-		routerLabel.style.backgroundImage = "url(mono/router.svg)";
-		routerLabel.style.backgroundSize = "24px";
-		routerLabel.style.backgroundRepeat = "no-repeat";
-		routerInput.checked = true;
-		routerInput.disabled = true;
+		const [dot1qLabel, dot1qInput] = AddParameter("VLAN (802.1Q)", "input", "toggle");
+		dot1qLabel.style.lineHeight = "24px";
+		dot1qLabel.style.paddingLeft = "28px";
+		dot1qLabel.style.backgroundImage = "url(mono/quota.svg)";
+		dot1qLabel.style.backgroundSize = "24px";
+		dot1qLabel.style.backgroundRepeat = "no-repeat";
+		dot1qInput.checked =  this.args.options ? this.args.options.dot1q : true;
 
-		const [switchLabel, switchInput] = AddParameter("Switches", "input", "toggle");
-		switchLabel.style.lineHeight = "24px";
-		switchLabel.style.paddingLeft = "28px";
-		switchLabel.style.backgroundImage = "url(mono/switch.svg)";
-		switchLabel.style.backgroundSize = "24px";
-		switchLabel.style.backgroundRepeat = "no-repeat";
-		switchInput.checked = true;
-		switchInput.disabled = true;
+		const [trafficLabel, trafficInput] = AddParameter("Traffic counters", "input", "toggle");
+		trafficLabel.style.lineHeight = "24px";
+		trafficLabel.style.paddingLeft = "28px";
+		trafficLabel.style.backgroundImage = "url(mono/traffic.svg)";
+		trafficLabel.style.backgroundSize = "24px";
+		trafficLabel.style.backgroundRepeat = "no-repeat";
+		trafficInput.checked =  this.args.options ? this.args.options.traffic : false;
 
-		const [apLabel, apInput] = AddParameter("Wireless access points", "input", "toggle");
-		apLabel.style.lineHeight = "24px";
-		apLabel.style.paddingLeft = "28px";
-		apLabel.style.backgroundImage = "url(mono/accesspoint.svg)";
-		apLabel.style.backgroundSize = "24px";
-		apLabel.style.backgroundRepeat = "no-repeat";
-		apInput.checked = true;
-		apInput.disabled = true;
-
-		const [endpointLabel, endpointInput] = AddParameter("End-point hosts", "input", "toggle");
-		endpointLabel.style.lineHeight = "24px";
-		endpointLabel.style.paddingLeft = "28px";
-		endpointLabel.style.backgroundImage = "url(mono/endpoint.svg)";
-		endpointLabel.style.backgroundSize = "24px";
-		endpointLabel.style.backgroundRepeat = "no-repeat";
-		endpointInput.checked = false;
+		const [errorLabel, errorInput] = AddParameter("Error counters", "input", "toggle");
+		errorLabel.style.lineHeight = "24px";
+		errorLabel.style.paddingLeft = "28px";
+		errorLabel.style.backgroundImage = "url(mono/error.svg)";
+		errorLabel.style.backgroundSize = "24px";
+		errorLabel.style.backgroundRepeat = "no-repeat";
+		errorInput.checked =  this.args.options ? this.args.options.error : false;
 
 		setTimeout(()=>okButton.focus(), 200);
 
@@ -376,16 +368,25 @@ class Topology extends Window {
 			dialog.Close();
 
 			const devices = [];
-			if (firewallInput.checked) devices.push("firewall");
-			if (routerInput.checked) devices.push("router");
-			if (switchInput.checked) devices.push("switch");
-			if (apInput.checked) devices.push("ap");
-			if (endpointInput.checked) devices.push("endpoint");
+			if (macInput.checked) devices.push("mac");
+			if (dot1qInput.checked) devices.push("vlan");
+			if (trafficInput.checked) devices.push("traffic");
+			if (errorInput.checked) devices.push("error");
 			this.Connect(devices);
+
+			this.trafficButton.disabled = !trafficInput.checked;
+			this.errorsButton.disabled = !errorInput.checked;
+
+			this.args.options = {
+				mac    : macInput.checked,
+				dot1q  : dot1qInput.checked,
+				traffic: trafficInput.checked,
+				error  : errorInput.checked,
+			};
 		};
 	}
 
-	Connect(devices) {
+	Connect(options) {
 		let server = window.location.href.replace("https://", "").replace("http://", "");
 		if (server.indexOf("/") > 0) server = server.substring(0, server.indexOf("/"));
 
@@ -400,13 +401,13 @@ class Topology extends Window {
 
 		this.ws.onopen = ()=> {
 			this.startButton.disabled = true;
-			this.stopButton.disabled = false;
-			this.ws.send(devices.join(";"));
+			this.ws.send(options.join(";"));
 		};
 
 		this.ws.onclose = ()=> {
 			this.startButton.disabled = false;
-			this.stopButton.disabled = true;
+			this.startButton.setAttribute("tip-below", "Re-discover");
+			this.startButton.style.backgroundImage = "url(mono/restart.svg?light)";
 
 			this.SortByLocation();
 		};
@@ -480,13 +481,7 @@ class Topology extends Window {
 
 		this.ws.onerror = ()=> {
 			this.startButton.disabled = false;
-			this.stopButton.disabled = true;
 		};
-	}
-
-	Stop() {
-		this.startButton.disabled = false;
-		this.stopButton.disabled = true;
 	}
 
 	ShowNavBar() {
@@ -510,7 +505,90 @@ class Topology extends Window {
 		this.content.focus();
 	}
 
-	Find() {
+	SortBySnmp() {
+		let count = 0;
+		for (const file in this.devices) {
+			if (this.devices[file].nosnmp) {
+				const element = this.devices[file].element;
+				element.root.style.transition = ".4s";
+				setTimeout(()=>{
+					element.root.style.transition = "none";
+				}, 400);
+
+				let x = 100 + 150 * 8 + (count % 2) * 150;
+				let y = 50 + Math.floor(count / 2) * 150;
+				element.x = x;
+				element.y = y;
+				element.root.style.transform = `translate(${x}px,${y}px)`;
+				count++;
+			}
+		}
+
+		this.SortOffset();
+	}
+
+	SortByLocation() {
+		const groups = {};
+
+		for (const file in this.devices) {
+			const location = this.devices[file].initial.location?.toLowerCase().trim() ?? "unknown";
+			if (location in groups) {
+				groups[location].push(this.devices[file]);
+			}
+			else {
+				groups[location] = [];
+				groups[location].push(this.devices[file]);
+			}
+		}
+	}
+
+	SortOffset() {
+		let minX = this.workspace.offsetWidth;
+		for (const file in this.devices) {
+			minX = Math.min(this.devices[file].element.x, minX);
+		}
+
+		for (const file in this.devices) {
+			const element = this.devices[file].element;
+			element.root.style.transition = ".4s";
+			setTimeout(()=>{
+				element.root.style.transition = "none";
+			}, 400);
+
+			let x = element.x - minX + 100;
+			let y = element.y;
+			element.x = x;
+			element.y = y;
+			element.root.style.transform = `translate(${x}px,${y}px)`;
+		}
+
+		for (const key in this.links) {
+			const link = this.links[key];
+			if (link.isEndpoint) continue;
+
+			const element = link.element;
+			element.line.style.transition = ".4s";
+			element.capA.style.transition = ".4s";
+			element.capB.style.transition = ".4s";
+
+			setTimeout(()=>{
+				element.line.style.transition = "none";
+				element.capA.style.transition = "none";
+				element.capB.style.transition = "none";
+			}, 400);
+
+			const linkPath = this.DrawPath(this.devices[link.deviceA], this.devices[link.deviceB]);
+			element.line.setAttribute("d", linkPath.path);
+			element.capA.setAttribute("cx", linkPath.primary.x);
+			element.capA.setAttribute("cy", linkPath.primary.y);
+			element.capB.setAttribute("cx", linkPath.secondary.x);
+			element.capB.setAttribute("cy", linkPath.secondary.y);
+		}
+
+		this.AdjustSvgSize();
+	}
+
+	FindMode() {
 		if (this.uiMode === "find") {
 			const input = this.navBar.querySelector(".topology-find-input");
 			if (input) input.focus();
@@ -531,7 +609,6 @@ class Topology extends Window {
 		const findInput = document.createElement("input");
 		findInput.className = "topology-find-input";
 		findInput.type = "search";
-		findInput.value = this.args.find ?? "";
 
 		const listBox = document.createElement("div");
 		listBox.className = "topology-find-listbox no-results";
@@ -540,7 +617,7 @@ class Topology extends Window {
 		this.navBar.append(titleBox, closeButton, findInput, listBox);
 
 		closeButton.onclick = ()=> this.HideNavBar();
-		
+
 		closeButton.onkeydown = event=> {
 			if (event.key === "Enter" || event.key === " ") this.HideNavBar();
 		};
@@ -593,8 +670,6 @@ class Topology extends Window {
 
 	FindKeyword(keyword, listBox) {
 		listBox.textContent = "";
-
-		this.args.find = keyword;
 
 		const split = keyword.split(" ")
 			.map(o => o.trim())
@@ -691,87 +766,47 @@ class Topology extends Window {
 		return macRegex.test(str);
 	}
 
-	SortBySnmp() {
-		let count = 0;
-		for (const file in this.devices) {
-			if (this.devices[file].nosnmp) {
-				const element = this.devices[file].element;
-				element.root.style.transition = ".4s";
-				setTimeout(()=>{
-					element.root.style.transition = "none";
-				}, 400);
+	TrafficMode() {
+		if (this.uiMode === "traffic") return;
+		
 
-				let x = 100 + 150 * 8 + (count % 2) * 150;
-				let y = 50 + Math.floor(count / 2) * 150;
-				element.x = x;
-				element.y = y;
-				element.root.style.transform = `translate(${x}px,${y}px)`;
-				count++;
-			}
-		}
+		this.uiMode = "traffic"
+		this.navBar.textContent = "";
 
-		this.SortOffset();
+		const titleBox = document.createElement("div");
+		titleBox.className = "topology-navbar-title";
+		titleBox.textContent = "Traffic counters";
+
+		const closeButton = document.createElement("div");
+		closeButton.className = "topology-close-button";
+		closeButton.tabIndex = 0;
+
+		this.navBar.append(titleBox, closeButton);
+
+		closeButton.onclick = ()=> this.HideNavBar();
+
+		this.ShowNavBar();
 	}
 
-	SortByLocation() {
-		const groups = {};
+	ErrorMode() {
+		if (this.uiMode === "error") return;
 
-		for (const file in this.devices) {
-			const location = this.devices[file].initial.location?.toLowerCase().trim() ?? "unknown";
-			if (location in groups) {
-				groups[location].push(this.devices[file]);
-			}
-			else {
-				groups[location] = [];
-				groups[location].push(this.devices[file]);
-			}
-		}
-	}
+		this.uiMode = "error"
+		this.navBar.textContent = "";
 
-	SortOffset() {
-		let minX = this.workspace.offsetWidth;
-		for (const file in this.devices) {
-			minX = Math.min(this.devices[file].element.x, minX);
-		}
+		const titleBox = document.createElement("div");
+		titleBox.className = "topology-navbar-title";
+		titleBox.textContent = "Error counters";
 
-		for (const file in this.devices) {
-			const element = this.devices[file].element;
-			element.root.style.transition = ".4s";
-			setTimeout(()=>{
-				element.root.style.transition = "none";
-			}, 400);
+		const closeButton = document.createElement("div");
+		closeButton.className = "topology-close-button";
+		closeButton.tabIndex = 0;
 
-			let x = element.x - minX + 100;
-			let y = element.y;
-			element.x = x;
-			element.y = y;
-			element.root.style.transform = `translate(${x}px,${y}px)`;
-		}
+		this.navBar.append(titleBox, closeButton);
 
-		for (const key in this.links) {
-			const link = this.links[key];
-			if (link.isEndpoint) continue;
+		closeButton.onclick = ()=> this.HideNavBar();
 
-			const element = link.element;
-			element.line.style.transition = ".4s";
-			element.capA.style.transition = ".4s";
-			element.capB.style.transition = ".4s";
-
-			setTimeout(()=>{
-				element.line.style.transition = "none";
-				element.capA.style.transition = "none";
-				element.capB.style.transition = "none";
-			}, 400);
-
-			const linkPath = this.DrawPath(this.devices[link.deviceA], this.devices[link.deviceB]);
-			element.line.setAttribute("d", linkPath.path);
-			element.capA.setAttribute("cx", linkPath.primary.x);
-			element.capA.setAttribute("cy", linkPath.primary.y);
-			element.capB.setAttribute("cx", linkPath.secondary.x);
-			element.capB.setAttribute("cy", linkPath.secondary.y);
-		}
-
-		this.AdjustSvgSize();
+		this.ShowNavBar();
 	}
 
 	ComputeLldpNeighbors(device) {

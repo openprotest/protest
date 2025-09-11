@@ -334,7 +334,7 @@ class AccessControl extends Tabs {
 		//this.permissionsList.push(this.AddPermissionObject("SNMP traps",        "url(mono/trap.svg)",         toolsGroup, false, true, false));
 
 		const manageGroup = this.AddPermissionGroup("Manage", "url(mono/logo.svg)");
-		this.permissionsList.push(this.AddPermissionObject("Settings",     "url(mono/wrench.svg)",      manageGroup, false, true, false));
+		this.permissionsList.push(this.AddPermissionObject("Environment",  "url(mono/environment.svg)",  manageGroup, false, true, false));
 		this.permissionsList.push(this.AddPermissionObject("RBAC",         "url(mono/rbac.svg)",        manageGroup, false, true, false));
 		this.permissionsList.push(this.AddPermissionObject("Automation",   "url(mono/automation.svg)",  manageGroup, false, true, false));
 		this.permissionsList.push(this.AddPermissionObject("API links",    "url(mono/carabiner.svg)",   manageGroup, false, true, false));
