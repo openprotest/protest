@@ -1,11 +1,8 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Text;
 using System.Text.Json;
 using System.Threading;
-using static Protest.Tools.Monitor;
 
 namespace Protest.Http;
 
@@ -19,6 +16,7 @@ internal static class Chat {
 
     private static readonly List<Message> history = new List<Message>(32);
     private static readonly Lock mutex = new Lock();
+    private const string defaultColor = "#A0A0A0";
 
     public static void TextHandler(ConcurrentDictionary<string, string> dictionary, string origin) {
         if (!Auth.rbac.TryGetValue(origin, out Auth.AccessControl rbac) && origin != "loopback") { return; }
@@ -28,23 +26,24 @@ internal static class Chat {
 
         string username = rbac?.username ?? "loopback";
         string alias = !String.IsNullOrEmpty(rbac?.alias) ? rbac.alias : username;
+        long now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
         byte[] json = JsonSerializer.SerializeToUtf8Bytes(new {
             action = "chat-text",
             id     = id,
-            time   = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+            time   = now,
             sender = username,
             alias  = alias,
-            color  = rbac?.color ?? "#A0A0A0",
+            color  = rbac?.color ?? defaultColor,
             text   = text
         });
 
         KeepAlive.Broadcast(json, "/chat/read");
 
         Message message = new Message {
-            sender = rbac?.username ?? "loopback",
-            timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
-            json = json
+            sender    = rbac?.username ?? "loopback",
+            timestamp = now,
+            json      = json
         };
 
         lock(mutex) {
@@ -60,23 +59,24 @@ internal static class Chat {
 
         string username = access?.username ?? "loopback";
         string alias = !String.IsNullOrEmpty(access?.alias) ? access.alias : username;
+        long now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
         byte[] json = JsonSerializer.SerializeToUtf8Bytes(new {
             action = "chat-emoji",
             id     = id,
-            time   = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+            time   = now,
             sender = username,
             alias  = alias,
-            color  = access?.color ?? "#A0A0A0",
+            color  = access?.color ?? defaultColor,
             url    = url
         });
 
         KeepAlive.Broadcast(json, "/chat/read");
 
         Message message = new Message {
-            sender = access?.username ?? "loopback",
-            timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
-            json = json
+            sender    = access?.username ?? "loopback",
+            timestamp = now,
+            json      = json
         };
 
         lock (mutex) {
@@ -95,14 +95,15 @@ internal static class Chat {
 
         string username = access?.username ?? "loopback";
         string alias = !String.IsNullOrEmpty(access?.alias) ? access.alias : username;
+        long now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
         byte[] json = JsonSerializer.SerializeToUtf8Bytes(new {
             action  = "chat-command",
             id      = id,
-            time    = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+            time    = now,
             sender  = username,
             alias   = alias,
-            color   = access?.color ?? "#A0A0A0",
+            color   = access?.color ?? defaultColor,
             command = command,
             args    = args,
             icon    = icon,
@@ -112,9 +113,9 @@ internal static class Chat {
         KeepAlive.Broadcast(json, "/chat/read");
 
         Message message = new Message {
-            sender = access?.username ?? "loopback",
-            timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
-            json = json
+            sender    = access?.username ?? "loopback",
+            timestamp = now,
+            json      = json
         };
 
         lock (mutex) {
@@ -147,7 +148,7 @@ internal static class Chat {
             time    = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
             sender  = username,
             alias   = alias,
-            color   = access?.color ?? "#A0A0A0",
+            color   = access?.color ?? defaultColor,
             sdp     = sdp
         });
 
@@ -168,7 +169,7 @@ internal static class Chat {
             time      = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
             sender    = username,
             alias     = alias,
-            color     = access?.color ?? "#A0A0A0",
+            color     = access?.color ?? defaultColor,
             candidate = candidate
         });
 
@@ -186,7 +187,7 @@ internal static class Chat {
             time   = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
             sender = username,
             alias  = alias,
-            color  = access?.color ?? "#A0A0A0",
+            color  = access?.color ?? defaultColor,
         });
 
         KeepAlive.Broadcast(json, "/chat/read");
@@ -198,22 +199,23 @@ internal static class Chat {
 
         string username = access?.username ?? "loopback";
         string alias = !String.IsNullOrEmpty(access?.alias) ? access.alias : username;
+        long now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
         byte[] json = JsonSerializer.SerializeToUtf8Bytes(new {
             action = "chat-stream",
             uuid   = uuid,
-            time   = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+            time   = now,
             sender = username,
             alias  = alias,
-            color  = access?.color ?? "#A0A0A0",
+            color  = access?.color ?? defaultColor,
         });
 
         KeepAlive.Broadcast(json, "/chat/read");
 
         Message message = new Message {
-            sender = access?.username ?? "loopback",
-            timestamp =DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
-            json = json
+            sender    = access?.username ?? "loopback",
+            timestamp = now,
+            json      = json
         };
 
         lock (mutex) {
@@ -233,7 +235,7 @@ internal static class Chat {
 
             int totalSize = 2; //[ and ]
             if (history.Count > 1) {
-                totalSize += history.Count - 1; // commas
+                totalSize += history.Count - 1; //commas
             }
 
             foreach (var msg in history) {
