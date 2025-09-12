@@ -253,9 +253,7 @@ internal static partial class Polling {
     }
 
     internal static Dictionary<string, string>ParseResponse(IList<Variable> result, bool preserveOctet = false) {
-        if (result is null || result.Count == 0) {
-            return null;
-        }
+        if (result is null || result.Count == 0) return null;
 
         Dictionary<string, string> data = new Dictionary<string, string>();
 
@@ -371,6 +369,35 @@ internal static partial class Polling {
         builder.Append(']');
 
         return Encoding.UTF8.GetBytes(builder.ToString());
+    }
+
+    internal static Dictionary<string, long> ParseLongResponse(IList<Variable> result) {
+        if (result is null || result.Count == 0) return null;
+        Dictionary<string, long> data = new Dictionary<string, long>(result.Count);
+
+        Span<byte> span = stackalloc byte[8];
+
+        for (int i = 0; i < result.Count; i++) {
+            if (result[i].Data is null) continue;
+            byte[] bytes = result[i].Data.ToBytes();
+
+            if (bytes.Length < 3) continue;
+            //byte type = bytes[0];
+            byte length = bytes[1];
+            
+            span.Clear();
+            for (int j = 0; j < length; j++) {
+                span[8 - length + j] = bytes[2 + j];
+            }
+
+            if (BitConverter.IsLittleEndian) {
+                span.Reverse();
+            }
+
+            data.Add(result[i].Id.ToString(), BitConverter.ToInt64(span));
+        }
+
+        return data;
     }
 
     internal static string ParseOctetString(byte[] bytes) {

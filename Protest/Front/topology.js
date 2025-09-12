@@ -1512,7 +1512,8 @@ class Topology extends Window {
 			py = pc.y + 28 * Math.sin(angle);
 		}
 		else {
-			px += p.element.x < s.element.x ? 50 : -50;
+			px += p.element.x < s.element.x ? 44 : -44;
+			py += p.element.y < s.element.y ? 44 : -44;
 		}
 
 		if (s.isRouter) {
@@ -1526,17 +1527,28 @@ class Topology extends Window {
 			sy = sc.y + 28 * Math.sin(angle);
 		}
 		else {
-			sx += p.element.x > s.element.x ? 50 : -50;
+			sx += p.element.x > s.element.x ? 44 : -44;
+			sy += p.element.y > s.element.y ? 44 : -44;
 		}
 
-		if (Math.abs(pc.x - sc.x) < 88) {
+		if (Math.abs(pc.x - sc.x) < 76) {
 			if (!p.isUnmanaged && !p.isRouter) {
-				py = pc.y + (pc.y < sc.y ? 50 : -50);
 				px = (pc.x + sc.x) / 2;
+				py = pc.y + (pc.y < sc.y ? 50 : -50);
 			}
 			if (!s.isUnmanaged && !s.isRouter) {
-				sy = sc.y + (pc.y > sc.y ? 50 : -50);
 				sx = (pc.x + sc.x) / 2;
+				sy = sc.y + (pc.y > sc.y ? 50 : -50);
+			}
+		}
+		else if (Math.abs(pc.y - sc.y) < 76) {
+			if (!p.isUnmanaged && !p.isRouter) {
+				px = pc.x + (pc.x < sc.x ? 50 : -50);
+				py = (pc.y + sc.y) / 2;
+			}
+			if (!s.isUnmanaged && !s.isRouter) {
+				sx = sc.x + (pc.x > sc.x ? 50 : -50);
+				sy = (pc.y + sc.y) / 2;
 			}
 		}
 
@@ -1819,7 +1831,7 @@ class Topology extends Window {
 
 			if (file === null) {
 				remoteBox.classList.add("topology-undocumented");
-				remoteBox.style.backgroundImage = `url(mono/undocumented.svg), radial-gradient(circle,var(--clr-warning) 0%, var(--clr-warning) 80%, rgba(0, 0, 0, 0) 100%)`;
+				remoteBox.style.backgroundImage = `url(mono/undocumented.svg), radial-gradient(circle,rgb(232,118,0) 0%, rgb(232,118,0) 80%, rgba(0, 0, 0, 0) 100%)`;
 			}
 
 			const dbEntry = LOADER.devices.data[file];

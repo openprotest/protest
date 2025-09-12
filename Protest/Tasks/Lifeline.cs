@@ -484,10 +484,10 @@ internal static partial class Lifeline {
                 if (!int.TryParse(pair.Key.Split('.')[^1], out int index)) continue;
                 if (!typeMap.ContainsKey(index) || typeMap[index] != 6) continue; //skip non-physical interfaces
 
-                if (pair.Key.StartsWith(Protocols.Snmp.Oid.INT_TRAFFIC_IN_64)) {
+                if (pair.Key.StartsWith(Protocols.Snmp.Oid.INT_TRAFFIC_BYTES_IN)) {
                     traffic += long.TryParse(pair.Value, out long v) ? v : 0;
                 }
-                else if (pair.Key.StartsWith(Protocols.Snmp.Oid.INT_TRAFFIC_OUT_64)) {
+                else if (pair.Key.StartsWith(Protocols.Snmp.Oid.INT_TRAFFIC_BYTES_OUT)) {
                     traffic += long.TryParse(pair.Value, out long v) ? v : 0;
                 }
                 else if (pair.Key.StartsWith(Protocols.Snmp.Oid.INT_ERROR_IN)) {

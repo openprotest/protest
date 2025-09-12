@@ -488,10 +488,10 @@ internal static class LiveStats {
             else if (pair.Key.StartsWith(Protocols.Snmp.Oid.INT_STATUS)) {
                 statusDic.Add(index, byte.TryParse(pair.Value, out byte v) ? v : (byte)0);
             }
-            else if (pair.Key.StartsWith(Protocols.Snmp.Oid.INT_TRAFFIC_IN_64)) {
+            else if (pair.Key.StartsWith(Protocols.Snmp.Oid.INT_TRAFFIC_BYTES_IN)) {
                 trafficInDic.Add(index, long.TryParse(pair.Value, out long v) ? v : 0);
             }
-            else if (pair.Key.StartsWith(Protocols.Snmp.Oid.INT_TRAFFIC_OUT_64)) {
+            else if (pair.Key.StartsWith(Protocols.Snmp.Oid.INT_TRAFFIC_BYTES_OUT)) {
                 trafficOutDic.Add(index, long.TryParse(pair.Value, out long v) ? v : 0);
             }
             else if (pair.Key.StartsWith(Protocols.Snmp.Oid.INT_ERROR_IN)) {

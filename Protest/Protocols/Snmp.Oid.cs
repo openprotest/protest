@@ -5,12 +5,12 @@ internal static class Oid {
     public static string[] GENERIC_OID = new string[] {
         SYSTEM_DESCRIPTOR,
         SYSTEM_NAME,
-        SYSTEM_LOCATION
+        SYSTEM_LOCATION,
     };
 
     public static string[] PRINTERS_OID = new string[] {
         PRINTER_MODEL,
-        PRINTER_SERIAL_NO
+        PRINTER_SERIAL_NO,
     };
 
     public static string[] SWITCH_OID = new string[] {
@@ -29,8 +29,8 @@ internal static class Oid {
         INT_1Q_VLAN,
         INT_1Q_VLAN_ENGRESS,
         INT_STATUS,
-        INT_TRAFFIC_IN_64,
-        INT_TRAFFIC_OUT_64,
+        INT_TRAFFIC_BYTES_IN,
+        INT_TRAFFIC_BYTES_OUT,
         INT_ERROR_IN,
         INT_ERROR_OUT,
         INT_1D_TP_FDB,
@@ -38,14 +38,14 @@ internal static class Oid {
 
     public static string[] LIVESTATS_OID = new string[] {
         SYSTEM_UPTIME,
-        SYSTEM_TEMPERATURE
+        SYSTEM_TEMPERATURE,
     };
 
     public static string[] LIVESTATS_PRINTER_OID = new string[] {
         PRINTER_STATUS,
         PRINTER_DISPLAY_MESSAGE,
         PRINTER_JOBS,
-        PRINTER_MARKER_COUNTER_LIFE
+        PRINTER_MARKER_COUNTER_LIFE,
     };
 
     public static string[] LIFELINE_PRINTER_OID = new string[] {
@@ -58,8 +58,8 @@ internal static class Oid {
 
     public static string[] LIFELINE_SWITCH_OID = new string[] {
         INT_TYPE,
-        INT_TRAFFIC_IN_64,
-        INT_TRAFFIC_OUT_64,
+        INT_TRAFFIC_BYTES_IN,
+        INT_TRAFFIC_BYTES_OUT,
         INT_ERROR_IN,
         INT_ERROR_OUT,
     };
@@ -67,7 +67,23 @@ internal static class Oid {
     public static string[] TOPOLOGY_DOT1Q = new string[] {
         INT_1Q_STATIC_NAME,
         INT_1Q_VLAN_ENGRESS,
-        INT_1Q_VLAN_UNTAGGED
+        INT_1Q_VLAN_UNTAGGED,
+    };
+
+    public static string[] TOPOLOGY_TRAFFIC = new string[] {
+        INT_TRAFFIC_BYTES_IN,
+        INT_TRAFFIC_PKTS_IN_UCAST,
+        INT_TRAFFIC_PKTS_IN_MCAST,
+        INT_TRAFFIC_PKTS_IN_BCAST,
+        INT_TRAFFIC_BYTES_OUT,
+        INT_TRAFFIC_PKTS_OUT_UCAST,
+        INT_TRAFFIC_PKTS_OUT_MCAST,
+        INT_TRAFFIC_PKTS_OUT_BCAST,
+    };
+
+    public static string[] TOPOLOGY_ERROR = new string[] {
+        INT_ERROR_IN,
+        INT_ERROR_OUT,
     };
 
 
@@ -89,7 +105,7 @@ internal static class Oid {
     public const string INT_SPEED       = "1.3.6.1.2.1.31.1.1.1.15";
     public const string INT_ENABLE      = "1.3.6.1.2.1.2.2.1.7";
     public const string INT_STATUS      = "1.3.6.1.2.1.2.2.1.8";
-    //public const string INTE_TRAFFIC_IN  = "1.3.6.1.2.1.2.2.1.10";
+    //public const string INT_TRAFFIC_IN  = "1.3.6.1.2.1.2.2.1.10";
     public const string INT_ERROR_IN    = "1.3.6.1.2.1.2.2.1.14";
     //public const string INT_TRAFFIC_OUT = "1.3.6.1.2.1.2.2.1.16";
     public const string INT_ERROR_OUT   = "1.3.6.1.2.1.2.2.1.20";
@@ -103,8 +119,15 @@ internal static class Oid {
     public const string INT_1Q_VLAN          = "1.3.6.1.2.1.17.7.1.4.5.1.1";
     public const string INT_ALIAS            = "1.3.6.1.2.1.31.1.1.1.18";
 
-    public const string INT_TRAFFIC_IN_64  = "1.3.6.1.2.1.31.1.1.1.6";
-    public const string INT_TRAFFIC_OUT_64 = "1.3.6.1.2.1.31.1.1.1.10";
+    public const string INT_TRAFFIC_BYTES_IN       = "1.3.6.1.2.1.31.1.1.1.6";
+    public const string INT_TRAFFIC_PKTS_IN_UCAST  = "1.3.6.1.2.1.31.1.1.1.7";
+    public const string INT_TRAFFIC_PKTS_IN_MCAST  = "1.3.6.1.2.1.31.1.1.1.8";
+    public const string INT_TRAFFIC_PKTS_IN_BCAST  = "1.3.6.1.2.1.31.1.1.1.9";
+    public const string INT_TRAFFIC_BYTES_OUT      = "1.3.6.1.2.1.31.1.1.1.10";
+    public const string INT_TRAFFIC_PKTS_OUT_UCAST = "1.3.6.1.2.1.31.1.1.1.11";
+    public const string INT_TRAFFIC_PKTS_OUT_MCAST = "1.3.6.1.2.1.31.1.1.1.12";
+    public const string INT_TRAFFIC_PKTS_OUT_BCAST = "1.3.6.1.2.1.31.1.1.1.13";
+
 
     public const string INT_MAC       = "1.3.6.1.2.1.2.2.1.6";
     public const string INTERFACE_IP  = "1.3.6.1.2.1.4.20.1.1";

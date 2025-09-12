@@ -157,11 +157,19 @@ internal static class Topology {
                     }
 
                     if (options.Contains("traffic")) {
-                        //TODO:
+                        IList<Variable> traffic = Polling.SnmpQuery(ipAddress, snmpProfile, Oid.TOPOLOGY_TRAFFIC, Polling.SnmpOperation.Walk);
+                        if (traffic is not null && traffic.Count > 0) {
+                            byte[] response = ComputeTrafficResponse(candidate.filename, traffic);
+                            WsWriteText(ws, response, mutex);
+                        }
                     }
 
                     if (options.Contains("error")) {
-                        //TODO:
+                        IList<Variable> error = Polling.SnmpQuery(ipAddress, snmpProfile, Oid.TOPOLOGY_ERROR, Polling.SnmpOperation.Walk);
+                        if (error is not null && error.Count > 0) {
+                            byte[] response = ComputeErrorResponse(candidate.filename, error);
+                            WsWriteText(ws, response, mutex);
+                        }
                     }
 
                 }
@@ -386,6 +394,92 @@ internal static class Topology {
                 names    = names,
                 egress   = egress,
                 untagged = untagged,
+            }
+        });
+
+        return payload;
+    }
+
+    private static byte[] ComputeTrafficResponse(string file, IList<Variable> traffic) {
+        Dictionary<string, long> parsedResult = Protocols.Snmp.Polling.ParseLongResponse(traffic);
+
+        Dictionary<int, long> bytesIn             = new Dictionary<int, long>();
+        Dictionary<int, long> packetsInUnicast    = new Dictionary<int, long>();
+        Dictionary<int, long> packetsInMulticast  = new Dictionary<int, long>();
+        Dictionary<int, long> packetsInBroadcast  = new Dictionary<int, long>();
+        Dictionary<int, long> bytesOut            = new Dictionary<int, long>();
+        Dictionary<int, long> packetsOutUnicast   = new Dictionary<int, long>();
+        Dictionary<int, long> packetsOutMulticast = new Dictionary<int, long>();
+        Dictionary<int, long> packetsOutBroadcast = new Dictionary<int, long>();
+
+        foreach (KeyValuePair<string, long> pair in parsedResult) {
+            if (!int.TryParse(pair.Key.Split('.')[^1], out int index)) continue;
+
+            if (pair.Key.StartsWith(Protocols.Snmp.Oid.INT_TRAFFIC_BYTES_IN)) {
+                bytesIn.Add(index, pair.Value);
+            }
+            else if (pair.Key.StartsWith(Protocols.Snmp.Oid.INT_TRAFFIC_PKTS_IN_UCAST)) {
+                packetsInUnicast.Add(index, pair.Value);
+            }
+            else if (pair.Key.StartsWith(Protocols.Snmp.Oid.INT_TRAFFIC_PKTS_IN_MCAST)) {
+                packetsInMulticast.Add(index, pair.Value);
+            }
+            else if (pair.Key.StartsWith(Protocols.Snmp.Oid.INT_TRAFFIC_PKTS_IN_BCAST)) {
+                packetsInBroadcast.Add(index, pair.Value);
+            }
+            else if (pair.Key.StartsWith(Protocols.Snmp.Oid.INT_TRAFFIC_BYTES_OUT)) {
+                bytesOut.Add(index, pair.Value);
+            }
+            else if (pair.Key.StartsWith(Protocols.Snmp.Oid.INT_TRAFFIC_PKTS_OUT_UCAST)) {
+                packetsOutUnicast.Add(index, pair.Value);
+            }
+            else if (pair.Key.StartsWith(Protocols.Snmp.Oid.INT_TRAFFIC_PKTS_OUT_MCAST)) {
+                packetsOutMulticast.Add(index, pair.Value);
+            }
+            else if (pair.Key.StartsWith(Protocols.Snmp.Oid.INT_TRAFFIC_PKTS_OUT_BCAST)) {
+                packetsOutBroadcast.Add(index, pair.Value);
+            }
+        }
+
+        byte[] payload = JsonSerializer.SerializeToUtf8Bytes(new {
+            traffic = new {
+                file     = file,
+                bytesin  = bytesIn,
+                pktsinu  = packetsInUnicast,
+                pktsinm  = packetsInMulticast,
+                pktsinb  = packetsInBroadcast,
+                bytesout = bytesIn,
+                pktsoutu = packetsOutUnicast,
+                pktsoutm = packetsOutMulticast,
+                pktsoutb = packetsOutBroadcast,
+            }
+        });
+
+        return payload;
+    }
+
+    private static byte[] ComputeErrorResponse(string file, IList<Variable> error) {
+        Dictionary<string, string> parsedResult = Protocols.Snmp.Polling.ParseResponse(error);
+
+        Dictionary<int, int> errIn = new Dictionary<int, int>();
+        Dictionary<int, int> errOut = new Dictionary<int, int>();
+
+        foreach (KeyValuePair<string, string> pair in parsedResult) {
+            if (!int.TryParse(pair.Key.Split('.')[^1], out int index)) continue;
+
+            if (pair.Key.StartsWith(Protocols.Snmp.Oid.INT_ERROR_IN)) {
+                errIn.Add(index, int.TryParse(pair.Value, out int bytes) ? bytes : 0);
+            }
+            else if (pair.Key.StartsWith(Protocols.Snmp.Oid.INT_ERROR_OUT)) {
+                errOut.Add(index, int.TryParse(pair.Value, out int pkts) ? pkts : 0);
+            }
+        }
+
+        byte[] payload = JsonSerializer.SerializeToUtf8Bytes(new {
+            error = new {
+                file = file,
+                @in  = errIn,
+                @out = errOut
             }
         });
 
