@@ -141,7 +141,11 @@ internal static class Topology {
                     }
 
                     if (options.Contains("mac")) {
-                        //TODO:
+                        IList<Variable> dot1TpFdb = Polling.SnmpQuery(ipAddress, snmpProfile, [Oid.INT_1D_TP_FDB], Polling.SnmpOperation.Walk);
+                        if (dot1TpFdb is not null && dot1TpFdb.Count > 0) {
+                            byte[] response = ComputeDot1TpFdpResponse(candidate.filename, dot1TpFdb);
+                            WsWriteText(ws, response, mutex);
+                        }
                     }
 
                     if (options.Contains("vlan")) {
@@ -305,6 +309,34 @@ internal static class Topology {
                 remoteSystemName       = remoteSystemName,
 
                 entry                  = databaseEntry,
+            }
+        });
+
+        return payload;
+    }
+
+    private static byte[] ComputeDot1TpFdpResponse(string file, IList<Variable> dot1TpFdb) {
+        Dictionary<string, string> parsedResult = Protocols.Snmp.Polling.ParseResponse(dot1TpFdb);
+
+        Dictionary<int, List<string>> macTable = new Dictionary<int, List<string>>();
+        foreach (KeyValuePair<string, string> pair in parsedResult) {
+            if (!pair.Key.StartsWith(Oid.INT_1D_TP_FDB)) continue;
+            if (!int.TryParse(pair.Value, out int port)) continue;
+
+            string mac = String.Join(String.Empty, pair.Key.Split('.').TakeLast(6).Select(o=>int.Parse(o).ToString("x2")));
+
+            if (macTable.ContainsKey(port)) {
+                macTable[port].Add(mac);
+            }
+            else {
+                macTable[port] = new List<string>() { mac };
+            }
+        }
+
+        byte[] payload = JsonSerializer.SerializeToUtf8Bytes(new {
+            dot1TpFdb = new {
+                file = file,
+                table = macTable
             }
         });
 
