@@ -101,13 +101,8 @@
 ".1.8.1.1.4":["sipCommonOtherStatsDisconTime"],
 ".1.9":["sipCommonNotifObjects"],
 ".1.9.1":["sipCommonStatusCodeNotifTo"],
-".1.9.1.0":["sipCommonStatusCodeNotifTo"],
 ".1.9.2":["sipCommonStatusCodeNotifFrom"],
-".1.9.2.0":["sipCommonStatusCodeNotifFrom"],
 ".1.9.3":["sipCommonStatusCodeNotifCallId"],
-".1.9.3.0":["sipCommonStatusCodeNotifCallId"],
 ".1.9.4":["sipCommonStatusCodeNotifCSeq"],
-".1.9.4.0":["sipCommonStatusCodeNotifCSeq"],
-".1.9.5":["sipCommonNotifApplIndex"],
-".1.9.5.0":["sipCommonNotifApplIndex"]
+".1.9.5":["sipCommonNotifApplIndex"]
 }

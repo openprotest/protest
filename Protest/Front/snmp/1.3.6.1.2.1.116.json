@@ -120,13 +120,8 @@
 ".2.2.7":["tripNotifObjectGroup"],
 ".3":["tripMIBNotifObjects"],
 ".3.1":["tripNotifApplIndex"],
-".3.1.0":["tripNotifApplIndex"],
 ".3.2":["tripNotifPeerAddrInetType"],
-".3.2.0":["tripNotifPeerAddrInetType"],
 ".3.3":["tripNotifPeerAddr"],
-".3.3.0":["tripNotifPeerAddr"],
 ".3.4":["tripNotifPeerErrCode"],
-".3.4.0":["tripNotifPeerErrCode"],
-".3.5":["tripNotifPeerErrSubcode"],
-".3.5.0":["tripNotifPeerErrSubcode"]
+".3.5":["tripNotifPeerErrSubcode"]
 }

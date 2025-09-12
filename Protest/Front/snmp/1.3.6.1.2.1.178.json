@@ -178,7 +178,6 @@
 ".1.4.1.1.3":["t11FcSpPoInRejects"],
 ".1.5":["t11FcSpPoControl"],
 ".1.5.1":["t11FcSpPoServerAddress"],
-".1.5.1.0":["t11FcSpPoServerAddress"],
 ".1.5.2":["t11FcSpPoControlTable"],
 ".1.5.2.1":["t11FcSpPoControlEntry"],
 ".1.5.2.1.1":["t11FcSpPoStorageType"],

@@ -7,7 +7,7 @@ static OID_MAP_1_0_8802 = [
 ];
 
 static OID_MAP_1_3_6_1_2_1 = [
-"1","2","3","4","6","9",
+"1","2","3","4","5","6","7","8","9",
 "10","11","12","13","14","15","16","17","18","19",
 "20","21","22","23","24","25","26","27","28","29",
 "30","31","32","33","34","35","36","37","38","39",
@@ -236,15 +236,13 @@ static OID_MAP_1_3_6_1_2_1 = [
 					if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
 
 					const json = await response.json();
-					if (json.error) throw(json.error);
+					if (json.error) return;
 
 					for (const key in json) {
 						Snmp.OID_CACHE[`${filename}${key}`] = json[key];
 					}
 				}
-				catch (ex) {
-					this.ConfirmBox(ex, true, "mono/error.svg");
-				}
+				catch {}
 			}
 
 		}
@@ -260,15 +258,13 @@ static OID_MAP_1_3_6_1_2_1 = [
 					if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
 
 					const json = await response.json();
-					if (json.error) throw(json.error);
+					if (json.error) return;
 
 					for (const key in json) {
 						Snmp.OID_CACHE[`${filename}${key}`] = json[key];
 					}
 				}
-				catch (ex) {
-					this.ConfirmBox(ex, true, "mono/error.svg");
-				}
+				catch {}
 			}
 		}
 
