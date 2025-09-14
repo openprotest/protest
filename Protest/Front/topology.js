@@ -47,13 +47,13 @@ class Topology extends Window {
 		this.sortButton = this.AddToolbarButton("Sort", "mono/sort.svg?light");
 		this.findButton = this.AddToolbarButton("Find", "mono/search.svg?light");
 		this.AddToolbarSeparator();
-		
+
 		this.trafficButton = this.AddToolbarButton("Visualize traffic", "mono/traffic.svg?light");
 		this.trafficButton.disabled = true;
-		
+
 		this.errorsButton = this.AddToolbarButton("Visualize errors", "mono/error.svg?light");
 		this.errorsButton.disabled = true;
-		
+
 		//this.loopDetection = this.AddToolbarButton("Close loop detection", "mono/infinite.svg?light");
 
 		this.workspace = document.createElement("div");
@@ -743,7 +743,7 @@ class Topology extends Window {
 
 		for (const file in this.devices) {
 			const device = this.devices[file];
-		
+
 			if (device.dot1tp) {
 				for (const port in device.dot1tp.table) {
 					for (let i=0; i<device.dot1tp.table[port].length; i++) {
@@ -796,7 +796,7 @@ class Topology extends Window {
 				listBox.children[i].style.backgroundColor = "";
 			}
 			item.style.backgroundColor = "var(--clr-select)";
-			
+
 			this.SelectDevice(device.initial.file, portIndex);
 
 			device.element.root.scrollIntoView({behavior: "smooth", block: "center", inline: "center"});
@@ -810,7 +810,6 @@ class Topology extends Window {
 
 	TrafficMode() {
 		if (this.uiMode === "traffic") return;
-		
 
 		this.uiMode = "traffic"
 		this.navBar.textContent = "";
@@ -1024,7 +1023,7 @@ class Topology extends Window {
 
 		if (device.lldp.remotePortIdSubtype[port][index] === 7) { //local name
 			const portId = device.lldp.remotePortId[port][index];
-			
+
 			if (remoteLldp.localPortName && !remoteLldp?.localPortName[portId]) {
 				for (const i in remoteLldp.localPortId) {
 					if (remoteLldp.localPortId[i] !== portId) continue;
@@ -1969,83 +1968,192 @@ class Topology extends Window {
 			titleBox.style.borderRadius = "4px";
 			this.infoBox.appendChild(titleBox);
 
-			if (device.dot1q) {
-				let untaggedString = "";
-				for (const vlan in device.dot1q.untagged) {
-					if (!(vlan in device.dot1q.untagged) || device.dot1q.untagged[vlan].length === 0) continue;
-					const hexMap = device.dot1q.untagged[vlan];
-					const binMap = hexMap
-						.split("")
-						.map(h => parseInt(h, 16).toString(2).padStart(4, "0"))
-						.join("");
+			this.PopulateInfoBox(this.infoBox, device, portIndex, remoteBox, link, dbFile, false);
 
-					if (binMap[parseInt(portIndex) - 1] == 1) {
-						untaggedString = vlan;
+			this.InfoBoxPosition();
+
+			this.infoBox.onclick = ()=> {
+				this.infoBox.style.opacity = "0";
+				this.infoBox.style.visibility = "hidden";
+				this.infoBox.textContent = "";
+
+				const dialog = this.PopupInfo();
+
+				const titleBox = document.createElement("div");
+				titleBox.textContent = localPortName;
+				titleBox.style.textAlign = "center";
+				titleBox.style.backgroundColor = "var(--clr-select)";
+				titleBox.style.borderRadius = "4px";
+				titleBox.style.marginBottom = "8px";
+				dialog.appendChild(titleBox);
+
+				this.PopulateInfoBox(dialog, device, portIndex, remoteBox, link, dbFile, true);
+			};
+		};
+
+		return interfaceBox;
+	}
+
+	PopulateInfoBox(container, device, portIndex, remoteBox, link, dbFile, expand) {
+		if (device.dot1q) {
+			let untaggedString = "";
+			for (const vlan in device.dot1q.untagged) {
+				if (!(vlan in device.dot1q.untagged) || device.dot1q.untagged[vlan].length === 0) continue;
+				const hexMap = device.dot1q.untagged[vlan];
+				const binMap = hexMap
+					.split("")
+					.map(h => parseInt(h, 16).toString(2).padStart(4, "0"))
+					.join("");
+
+				if (binMap[parseInt(portIndex) - 1] == 1) {
+					untaggedString = vlan;
+				}
+			}
+
+			const taggedString = [];
+			for (const vlan in device.dot1q.egress) {
+				if (!(vlan in device.dot1q.egress) || device.dot1q.egress[vlan].length === 0) continue;
+				const hexMap = device.dot1q.egress[vlan];
+				const binMap = hexMap
+					.split("")
+					.map(h => parseInt(h, 16).toString(2).padStart(4, "0"))
+					.join("");
+
+				if (binMap[parseInt(portIndex) - 1] == 1 && vlan !== untaggedString) {
+					taggedString.push(vlan);
+				}
+			}
+
+			const untaggedBox = document.createElement("div");
+			untaggedBox.style.backgroundImage = "url(mono/untagged.svg)";
+			untaggedBox.setAttribute("info-label", "Untagged:");
+			container.appendChild(untaggedBox);
+
+			const untaggedValue = document.createElement("div");
+			untaggedValue.textContent = untaggedString;
+			untaggedBox.appendChild(untaggedValue);
+
+			const taggedBox = document.createElement("div");
+			taggedBox.style.backgroundImage = "url(mono/trunk.svg)";
+			taggedBox.setAttribute("info-label", "Tagged:");
+			container.appendChild(taggedBox);
+
+			const taggedValue = document.createElement("div");
+			taggedValue.textContent = taggedString && taggedString.length > 0 ? taggedString : "--";
+			taggedBox.appendChild(taggedValue);
+		}
+
+		if (device.traffic) {
+			const trafficBox = document.createElement("div");
+			trafficBox.style.backgroundImage = "url(mono/traffic.svg)";
+			trafficBox.setAttribute("info-label", "Traffic:");
+			container.appendChild(trafficBox);
+
+			const trafficValue = document.createElement("div");
+			trafficValue.textContent = `${UI.SizeToString(device.traffic.bytesout[portIndex])} / ${UI.SizeToString(device.traffic.bytesin[portIndex])}`;
+			trafficBox.appendChild(trafficValue);
+		}
+
+		if (device.error) {
+			const errorBox = document.createElement("div");
+			errorBox.style.backgroundImage = "url(mono/error.svg)";
+			errorBox.setAttribute("info-label", "Error:");
+			container.appendChild(errorBox);
+
+			const errorValue = document.createElement("div");
+			errorValue.textContent = `${device.error.out[portIndex] + device.error.in[portIndex]}`;
+			errorBox.appendChild(errorValue);
+		}
+
+		if (link && dbFile) {
+			const linkBox = document.createElement("div");
+			linkBox.style.backgroundImage = "url(mono/endpoint.svg)";
+			linkBox.setAttribute("info-label", "Link:");
+			container.appendChild(linkBox);
+
+			const linkValue = document.createElement("div");
+			linkValue.textContent = remoteBox.textContent;
+			linkBox.appendChild(linkValue);
+
+			/*if (expand && dbFile in this.devices) {
+				linkBox.style.cursor = "pointer";
+
+				linkBox.onclick = event=> {
+					const element = this.devices[dbFile].element.root;
+					element.onmousedown(event);
+					element.scrollIntoView({behavior: "smooth", block: "center", inline: "center"});
+				};
+			}
+			else */if (expand && dbFile in LOADER.devices.data) {
+				linkBox.style.cursor = "pointer";
+				linkBox.onclick = ()=> LOADER.OpenDeviceByFile(dbFile);
+			}
+		}
+
+		if (expand) {
+			if (device.lldp && device.lldp.remoteChassisId[portIndex]) {
+				const lldpBox = document.createElement("div");
+				lldpBox.style.paddingTop = "8px";
+				lldpBox.setAttribute("info-label", "LLDP:");
+				container.appendChild(lldpBox);
+
+				const lldpValue = document.createElement("div");
+				lldpBox.appendChild(lldpValue);
+
+				const entries = device.lldp.remoteChassisId[portIndex];
+				if (entries.length === 0) {
+					lldpValue.textContent = "--";
+				}
+				else for (let i=0; i<entries.length; i++) {
+					const entry = document.createElement("div");
+					entry.style.backgroundImage = "url(mono/topology.svg)";
+					entry.style.fontSize = "small";
+					entry.textContent = `${entries[i]}|${device.lldp.remotePortId[portIndex][i]}|${device.lldp.remoteSystemName[portIndex][i]}`;
+					lldpValue.appendChild(entry);
+
+					if (entry.textContent.endsWith("|")) {
+						entry.textContent = entry.textContent.slice(0, -1);
+					}
+
+					if (device?.lldp?.ambiguous?.[portIndex]?.[i]) {
+						entry.className = "topology-ambiguous";
+					}
+
+					if (device.lldp.entry[portIndex][i] === null) {
+						//undocumented
 					}
 				}
+			}
 
-				const taggedString = [];
-				for (const vlan in device.dot1q.egress) {
-					if (!(vlan in device.dot1q.egress) || device.dot1q.egress[vlan].length === 0) continue;
-					const hexMap = device.dot1q.egress[vlan];
-					const binMap = hexMap
-						.split("")
-						.map(h => parseInt(h, 16).toString(2).padStart(4, "0"))
-						.join("");
+			if (device.dot1tp && device.dot1tp.table[portIndex]) {
+				const macBox = document.createElement("div");
+				macBox.style.paddingTop = "8px";
+				macBox.setAttribute("info-label", "MAC table:");
+				container.appendChild(macBox);
 
-					if (binMap[parseInt(portIndex) - 1] == 1 && vlan !== untaggedString) {
-						taggedString.push(vlan);
-					}
+				const macValue = document.createElement("div");
+				macBox.appendChild(macValue);
+
+				const table = device.dot1tp.table[portIndex];
+				if (table.length === 0) {
+					macValue.textContent = "--";
 				}
-
-				const untaggedBox = document.createElement("div");
-				untaggedBox.style.backgroundImage = "url(mono/untagged.svg)";
-				untaggedBox.setAttribute("info-label", "Untagged:");
-				this.infoBox.appendChild(untaggedBox);
-
-				const untaggedValue = document.createElement("div");
-				untaggedValue.textContent = untaggedString;
-				untaggedBox.appendChild(untaggedValue);
-
-				const taggedBox = document.createElement("div");
-				taggedBox.style.backgroundImage = "url(mono/trunk.svg)";
-				taggedBox.setAttribute("info-label", "Tagged:");
-				this.infoBox.appendChild(taggedBox);
-
-				const taggedValue = document.createElement("div");
-				taggedValue.textContent = taggedString && taggedString.length > 0 ? taggedString : "--";
-				taggedBox.appendChild(taggedValue);
+				else for (let i=0; i<table.length; i++) {
+					const entry = document.createElement("div");
+					entry.style.backgroundImage = "url(mono/chip.svg)";
+					entry.textContent = table[i];
+					macValue.appendChild(entry);
+				}
 			}
-
-			if (device.traffic) {
-				const trafficBox = document.createElement("div");
-				trafficBox.style.backgroundImage = "url(mono/traffic.svg)";
-				trafficBox.setAttribute("info-label", "Traffic:");
-				this.infoBox.appendChild(trafficBox);
-
-				const trafficValue = document.createElement("div");
-				trafficValue.textContent = `${UI.SizeToString(device.traffic.bytesout[portIndex])} / ${UI.SizeToString(device.traffic.bytesin[portIndex])}`;
-				trafficBox.appendChild(trafficValue);
-			}
-
-			if (device.error) {
-				const errorBox = document.createElement("div");
-				errorBox.style.backgroundImage = "url(mono/error.svg)";
-				errorBox.setAttribute("info-label", "Error:");
-				this.infoBox.appendChild(errorBox);
-
-				const errorValue = document.createElement("div");
-				errorValue.textContent = `${device.error.out[portIndex] + device.error.in[portIndex]}`;
-				errorBox.appendChild(errorValue);
-			}
-
+		}
+		else {
 			if (device.lldp && device.lldp.remoteChassisId[portIndex]) {
 				const entries = device.lldp.remoteChassisId[portIndex];
 
 				const lldpBox = document.createElement("div");
 				lldpBox.style.backgroundImage = "url(mono/topology.svg)";
 				lldpBox.setAttribute("info-label", "LLDP:");
-				this.infoBox.appendChild(lldpBox);
+				container.appendChild(lldpBox);
 
 				const lldpValue = document.createElement("div");
 				lldpBox.appendChild(lldpValue);
@@ -2077,11 +2185,10 @@ class Topology extends Window {
 				const macBox = document.createElement("div");
 				macBox.style.backgroundImage = "url(mono/chip.svg)";
 				macBox.setAttribute("info-label", "MAC table:");
-				this.infoBox.appendChild(macBox);
+				container.appendChild(macBox);
 
 				const macValue = document.createElement("div");
 				macBox.appendChild(macValue);
-				
 				if (table.length === 1) {
 					macValue.textContent = table[0];
 				}
@@ -2094,58 +2201,25 @@ class Topology extends Window {
 					macValue.style.borderRadius = "4px";
 				}
 			}
+		}
+	}
 
+	PopupInfo() {
+		const cover = document.createElement("div");
+		cover.style.position = "absolute";
+		cover.style.inset = "0";
+		this.content.appendChild(cover);
 
-			if (link && dbFile) {
-				const linkBox = document.createElement("div");
-				linkBox.style.backgroundImage = "url(mono/endpoint.svg)";
-				this.infoBox.appendChild(linkBox);
+		const dialog = document.createElement("div");
+		dialog.tabIndex = 0;
+		dialog.className = "topology-info-popup";
+		cover.appendChild(dialog);
 
-				const errorValue = document.createElement("div");
-				errorValue.style.width = "100%";
-				errorValue.textContent = remoteBox.textContent;
-				linkBox.appendChild(errorValue);
+		cover.onclick = ()=> this.content.removeChild(cover);
 
-				if (dbFile in this.devices) {
-					linkBox.style.cursor = "pointer";
+		dialog.onclick = event=> event.stopPropagation();
 
-					linkBox.onclick = event=> {
-						const element = this.devices[dbFile].element.root;
-						element.onmousedown(event);
-						element.scrollIntoView({behavior: "smooth", block: "center", inline: "center"});
-					};
-
-				}
-				else if (dbFile in LOADER.devices.data) {
-					linkBox.style.cursor = "pointer";
-					linkBox.onclick = ()=> LOADER.OpenDeviceByFile(dbFile);
-				}
-			}
-
-			/*if (device.lldp.remoteChassisId[portIndex]) {
-				for (let i=0; i<device.lldp.remoteChassisId[portIndex].length; i++) {
-					const box = document.createElement("div");
-					box.style.border = "1px solid var(--clr-dark)";
-					box.style.borderRadius = "2px";
-					box.style.padding = "0 2px";
-					box.style.margin = "2px";
-					box.textContent = `${device.lldp.remoteChassisIdSubtype[portIndex][i]}:${device.lldp.remoteChassisId[portIndex][i]}|${device.lldp.remotePortIdSubtype[portIndex][i]}:${device.lldp.remotePortId[portIndex][i]}|${device.lldp.remoteSystemName[portIndex][i]}`;
-					this.infoBox.appendChild(box);
-
-					if (device?.lldp?.ambiguous?.[portIndex]?.[i]) {
-						box.className = "topology-ambiguous";
-					}
-					
-					if (device.lldp.entry[portIndex][i] === null) {
-						//undocumented
-					}
-				}
-			}*/
-
-			this.InfoBoxPosition();
-		};
-
-		return interfaceBox;
+		return dialog;
 	}
 
 	InfoBoxPosition() {
@@ -2162,7 +2236,7 @@ class Topology extends Window {
 		}
 		else if (y > this.sideBar.offsetHeight - 180) {
 			this.infoBox.className = "topology-info-box topology-info-box-last";
-			this.infoBox.style.top = `${Math.min(this.sideBar.offsetHeight - 180, y - 160)}px`;
+			this.infoBox.style.top = `${Math.min(this.sideBar.offsetHeight - 180, y - 152)}px`;
 		}
 		else {
 			this.infoBox.className = "topology-info-box";
