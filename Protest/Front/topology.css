@@ -378,7 +378,8 @@
 	width: max-content;
 	min-width: 250px;
 	max-width: 400px;
-	min-height: 150px;
+	min-height: 180px;
+	max-height: 500px;
 	padding: 4px;
 	background-color: color-mix(in srgb, var(--clr-pane) 80%, transparent);
 	backdrop-filter: blur(8px) brightness(80%);
@@ -389,10 +390,32 @@
 	transition: .2s;
 }
 
-.topology-info-box > div {
+.topology-info-box div {
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
+}
+
+.topology-info-box > div {
+	padding: 1px 0 1px 20px;
+	background-size: 18px;
+	background-position: 0 center;
+	background-repeat: no-repeat;
+}
+
+.topology-info-box > div[info-label]::before {
+	display: inline-block;
+	vertical-align: middle;
+	content: attr(info-label);
+	width: 72px;
+}
+
+.topology-info-box > div > div {
+	display: inline-block;
+	vertical-align: middle;
+	width: calc(100% - 72px);
+	-webkit-user-select: text;
+	user-select: text;
 }
 
 .topology-info-box::after {

@@ -342,7 +342,7 @@ internal static class Topology {
         }
 
         byte[] payload = JsonSerializer.SerializeToUtf8Bytes(new {
-            dot1TpFdb = new {
+            dot1tp = new {
                 file = file,
                 table = macTable
             }
@@ -448,7 +448,7 @@ internal static class Topology {
                 pktsinu  = packetsInUnicast,
                 pktsinm  = packetsInMulticast,
                 pktsinb  = packetsInBroadcast,
-                bytesout = bytesIn,
+                bytesout = bytesOut,
                 pktsoutu = packetsOutUnicast,
                 pktsoutm = packetsOutMulticast,
                 pktsoutb = packetsOutBroadcast,
