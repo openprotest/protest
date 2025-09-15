@@ -6,6 +6,8 @@ class Topology extends Window {
 		"access point": "mono/accesspoint.svg",
 	};
 
+	static VENDOR_CACHE = {};
+
 	constructor(args) {
 		super();
 		this.args = args ?? {};
@@ -59,17 +61,17 @@ class Topology extends Window {
 		this.workspace = document.createElement("div");
 		this.workspace.className = "topology-workspace";
 
-		this.navBar = document.createElement("div");
-		this.navBar.className = "topology-navbar";
+		this.navPane = document.createElement("div");
+		this.navPane.className = "topology-navpane";
 
-		this.sideBar = document.createElement("div");
-		this.sideBar.className = "topology-sidebar";
+		this.sidePane = document.createElement("div");
+		this.sidePane.className = "topology-sidepane";
 
 		this.infoBox = document.createElement("div");
 		this.infoBox.style.visibility = "hidden";
 		this.infoBox.className = "topology-info-box";
 
-		this.content.append(this.workspace, this.navBar, this.sideBar, this.infoBox);
+		this.content.append(this.workspace, this.navPane, this.sidePane, this.infoBox);
 
 		this.workspace.onmousedown = event=> this.Topology_onmousedown(event);
 		this.content.onmousemove   = event=> this.Topology_onmousemove(event);
@@ -80,7 +82,7 @@ class Topology extends Window {
 		this.trafficButton.onclick = ()=> this.TrafficMode();
 		this.errorsButton.onclick  = ()=> this.ErrorMode();
 
-		this.sideBar.onscroll = ()=> this.InfoBoxPosition();
+		this.sidePane.onscroll = ()=> this.InfoBoxPosition();
 
 		this.content.onkeydown = event=> {
 			if (event.code === "KeyF" && event.ctrlKey) {
@@ -111,7 +113,7 @@ class Topology extends Window {
 		event.stopPropagation();
 		this.BringToFront();
 
-		this.sideBar.textContent = "";
+		this.sidePane.textContent = "";
 
 		this.infoBox.style.opacity = "0";
 		this.infoBox.style.visibility = "hidden";
@@ -195,7 +197,7 @@ class Topology extends Window {
 		this.devices = {};
 		this.links = {};
 		this.workspace.textContent = "";
-		this.sideBar.textContent = "";
+		this.sidePane.textContent = "";
 
 		this.documentedCount = 0;
 		this.undocumentedCount = 0;
@@ -498,20 +500,20 @@ class Topology extends Window {
 		};
 	}
 
-	ShowNavBar() {
-		this.navBar.style.visibility = "visible";
-		this.navBar.style.left = "8px";
+	ShowNavPane() {
+		this.navPane.style.visibility = "visible";
+		this.navPane.style.left = "8px";
 
 		this.workspace.style.left = "316px";
 
 		setTimeout(()=>this.AdjustSvgSize(), 200);
 	}
 
-	HideNavBar() {
+	HideNavPane() {
 		this.uiMode = null;
 
-		this.navBar.style.visibility = "hidden";
-		this.navBar.style.left = "-100%";
+		this.navPane.style.visibility = "hidden";
+		this.navPane.style.left = "-100%";
 
 		this.workspace.style.left = "8px";
 
@@ -604,16 +606,16 @@ class Topology extends Window {
 
 	FindMode() {
 		if (this.uiMode === "find") {
-			const input = this.navBar.querySelector(".topology-find-input");
+			const input = this.navPane.querySelector(".topology-find-input");
 			if (input) input.focus();
 			return;
 		}
 
-		this.uiMode = "find"
-		this.navBar.textContent = "";
+		this.uiMode = "find";
+		this.navPane.textContent = "";
 
 		const titleBox = document.createElement("div");
-		titleBox.className = "topology-navbar-title";
+		titleBox.className = "topology-navpane-title";
 		titleBox.textContent = "Find device";
 
 		const closeButton = document.createElement("div");
@@ -628,17 +630,17 @@ class Topology extends Window {
 		listBox.className = "topology-find-listbox no-results";
 		listBox.tabIndex = 0;
 
-		this.navBar.append(titleBox, closeButton, findInput, listBox);
+		this.navPane.append(titleBox, closeButton, findInput, listBox);
 
-		closeButton.onclick = ()=> this.HideNavBar();
+		closeButton.onclick = ()=> this.HideNavPane();
 
 		closeButton.onkeydown = event=> {
-			if (event.key === "Enter" || event.key === " ") this.HideNavBar();
+			if (event.key === "Enter" || event.key === " ") this.HideNavPane();
 		};
 
 		listBox.onkeydown = findInput.onkeydown = event=> {
 			switch (event.key) {
-			case "Escape": this.HideNavBar(); break;
+			case "Escape": this.HideNavPane(); break;
 			case "Enter": this.FindKeyword(findInput.value, listBox); break;
 
 			case "ArrowUp": {
@@ -675,9 +677,9 @@ class Topology extends Window {
 				break;
 			}
 			}
-		}
+		};
 
-		this.ShowNavBar();
+		this.ShowNavPane();
 
 		setTimeout(()=> findInput.focus(), 200);
 	}
@@ -811,43 +813,43 @@ class Topology extends Window {
 	TrafficMode() {
 		if (this.uiMode === "traffic") return;
 
-		this.uiMode = "traffic"
-		this.navBar.textContent = "";
+		this.uiMode = "traffic";
+		this.navPane.textContent = "";
 
 		const titleBox = document.createElement("div");
-		titleBox.className = "topology-navbar-title";
+		titleBox.className = "topology-navpane-title";
 		titleBox.textContent = "Traffic counters";
 
 		const closeButton = document.createElement("div");
 		closeButton.className = "topology-close-button";
 		closeButton.tabIndex = 0;
 
-		this.navBar.append(titleBox, closeButton);
+		this.navPane.append(titleBox, closeButton);
 
-		closeButton.onclick = ()=> this.HideNavBar();
+		closeButton.onclick = ()=> this.HideNavPane();
 
-		this.ShowNavBar();
+		this.ShowNavPane();
 	}
 
 	ErrorMode() {
 		if (this.uiMode === "error") return;
 
-		this.uiMode = "error"
-		this.navBar.textContent = "";
+		this.uiMode = "error";
+		this.navPane.textContent = "";
 
 		const titleBox = document.createElement("div");
-		titleBox.className = "topology-navbar-title";
+		titleBox.className = "topology-navpane-title";
 		titleBox.textContent = "Error counters";
 
 		const closeButton = document.createElement("div");
 		closeButton.className = "topology-close-button";
 		closeButton.tabIndex = 0;
 
-		this.navBar.append(titleBox, closeButton);
+		this.navPane.append(titleBox, closeButton);
 
-		closeButton.onclick = ()=> this.HideNavBar();
+		closeButton.onclick = ()=> this.HideNavPane();
 
-		this.ShowNavBar();
+		this.ShowNavPane();
 	}
 
 	ComputeLldpNeighbors(device) {
@@ -916,7 +918,7 @@ class Topology extends Window {
 		}
 
 		if (nonAmbiguousCount === 1 && !isSingle) {
-			if (!device.lldp.ambiguous) device.lldp.ambiguous = {}
+			if (!device.lldp.ambiguous) device.lldp.ambiguous = {};
 			device.lldp.ambiguous[port] = ambiguousIndexes;
 			//console.info("port skipped due to ambiguity", device, port);
 			return;
@@ -1589,13 +1591,13 @@ class Topology extends Window {
 
 		this.selected = device;
 
-		this.sideBar.textContent = "";
+		this.sidePane.textContent = "";
 
 		const initial = device.initial;
 
 		const grid = document.createElement("div");
-		grid.className = "topology-sidebar-grid";
-		this.sideBar.appendChild(grid);
+		grid.className = "topology-sidepane-grid";
+		this.sidePane.appendChild(grid);
 
 		const icon = document.createElement("div");
 		icon.style.gridArea = "1 / 1 / 5 / 1";
@@ -1643,27 +1645,27 @@ class Topology extends Window {
 			snmpLabel.className = "topology-error-message";
 			snmpLabel.textContent = "SNMP agent is unreachable";
 			snmpLabel.setAttribute("nosnmp", true);
-			this.sideBar.appendChild(snmpLabel);
+			this.sidePane.appendChild(snmpLabel);
 		}
 		else if (device.isUndocumented) {
 			const undocumentedLabel = document.createElement("div");
 			undocumentedLabel.className = "topology-error-message";
 			undocumentedLabel.textContent = "Undocumented";
 			undocumentedLabel.setAttribute("undocumented", true);
-			this.sideBar.appendChild(undocumentedLabel);
+			this.sidePane.appendChild(undocumentedLabel);
 		}
 
 		if (device.dot1q) {
 			const vlanList = document.createElement("details");
 			vlanList.className = "topology-vlan-list";
-			this.sideBar.appendChild(vlanList);
+			this.sidePane.appendChild(vlanList);
 
 			if (this.vlanToggle) {
 				vlanList.setAttribute("open", true);
 			}
 
 			const vlanTitle = document.createElement("summary");
-			vlanTitle.textContent = "VLANs"
+			vlanTitle.textContent = "VLANs";
 			vlanList.appendChild(vlanTitle);
 
 			vlanList.ontoggle = ()=> {
@@ -1685,10 +1687,10 @@ class Topology extends Window {
 			interfacesList.tabIndex = 0;
 			interfacesList.setAttribute("open", true);
 
-			this.sideBar.appendChild(interfacesList);
+			this.sidePane.appendChild(interfacesList);
 
 			const interfacesTitle = document.createElement("summary");
-			interfacesTitle.textContent = "Interfaces"
+			interfacesTitle.textContent = "Interfaces";
 			interfacesList.appendChild(interfacesTitle);
 
 			interfacesList.onkeydown = event=> this.InterfaceList_onkeydown(event, interfacesList);
@@ -1730,7 +1732,7 @@ class Topology extends Window {
 
 		if (event.key !== "ArrowUp" && event.key !== "ArrowDown" &&
 			event.key !== "PageUp" && event.key !== "PageDown" &&
-			event.key !== "Home" && event.key !== "End") {
+			event.key !== "Home" && event.key !== "End" && event.key !== "Enter") {
 			return;
 		}
 
@@ -1753,11 +1755,11 @@ class Topology extends Window {
 				break;
 
 			case "PageUp":
-				this.selectedInterface = children[Math.max(0, lastIndex - Math.floor(this.sideBar.offsetHeight / children[0].offsetHeight))];
+				this.selectedInterface = children[Math.max(0, lastIndex - Math.floor(this.sidePane.offsetHeight / children[0].offsetHeight))];
 				break;
 
 			case "PageDown":
-				this.selectedInterface = children[Math.min(children.length-1, lastIndex + Math.floor(this.sideBar.offsetHeight / children[0].offsetHeight))];
+				this.selectedInterface = children[Math.min(children.length-1, lastIndex + Math.floor(this.sidePane.offsetHeight / children[0].offsetHeight))];
 				break;
 
 			case "Home":
@@ -1767,6 +1769,13 @@ class Topology extends Window {
 			case "End":
 				this.selectedInterface = children[children.length-1];
 				break;
+
+			case "Enter":
+				if (this.infoBox.textContent !== "") {
+					this.infoBox.onclick();
+					this.selectedInterface.className = "topology-interface-list-selected";
+				}
+				return;
 		}
 
 		this.selectedInterface.click();
@@ -1975,7 +1984,6 @@ class Topology extends Window {
 			this.infoBox.onclick = ()=> {
 				this.infoBox.style.opacity = "0";
 				this.infoBox.style.visibility = "hidden";
-				this.infoBox.textContent = "";
 
 				const dialog = this.PopupInfo();
 
@@ -1988,6 +1996,43 @@ class Topology extends Window {
 				dialog.appendChild(titleBox);
 
 				this.PopulateInfoBox(dialog, device, portIndex, remoteBox, link, dbFile, true);
+
+				dialog.onkeydown = event=> {
+					if (event.key === "Escape") {
+						dialog.parentNode.onclick();
+					}
+					else if (event.key === "Enter"){
+						dialog.parentNode.onclick();
+
+						const list = this.sidePane.querySelector(".topology-interface-list");
+						list.onkeydown(event);
+
+						this.infoBox.style.opacity = "0";
+						this.infoBox.style.visibility = "hidden";
+					}
+					else if (event.key === "ArrowUp" || event.key === "ArrowDown"
+						|| event.key === "PageUp" || event.key === "PageDown"
+						|| event.key === "Home" || event.key === "End") {
+
+						const list = this.sidePane.querySelector(".topology-interface-list");
+						list.onkeydown(event);
+
+						this.infoBox.style.opacity = "0";
+						this.infoBox.style.visibility = "hidden";
+
+						dialog.textContent = "";
+
+						const titleBox = document.createElement("div");
+						titleBox.textContent = localPortName;
+						titleBox.style.textAlign = "center";
+						titleBox.style.backgroundColor = "var(--clr-select)";
+						titleBox.style.borderRadius = "4px";
+						titleBox.style.marginBottom = "8px";
+						dialog.appendChild(titleBox);
+
+						this.PopulateInfoBox(dialog, device, portIndex, remoteBox, link, dbFile, true);
+					}
+				};
 			};
 		};
 
@@ -2094,10 +2139,13 @@ class Topology extends Window {
 			if (device.lldp && device.lldp.remoteChassisId[portIndex]) {
 				const lldpBox = document.createElement("div");
 				lldpBox.style.paddingTop = "8px";
+				lldpBox.style.backgroundImage = "url(mono/topology.svg)";
+				lldpBox.style.backgroundPositionY = "6px";
 				lldpBox.setAttribute("info-label", "LLDP:");
 				container.appendChild(lldpBox);
 
 				const lldpValue = document.createElement("div");
+				lldpValue.style.fontFamily = "consolas";
 				lldpBox.appendChild(lldpValue);
 
 				const entries = device.lldp.remoteChassisId[portIndex];
@@ -2106,13 +2154,40 @@ class Topology extends Window {
 				}
 				else for (let i=0; i<entries.length; i++) {
 					const entry = document.createElement("div");
-					entry.style.backgroundImage = "url(mono/topology.svg)";
-					entry.style.fontSize = "small";
-					entry.textContent = `${entries[i]}|${device.lldp.remotePortId[portIndex][i]}|${device.lldp.remoteSystemName[portIndex][i]}`;
 					lldpValue.appendChild(entry);
+					
+					const chassisIdBox = document.createElement("div");
+					chassisIdBox.setAttribute("info-label", {
+						1:"Compon.",
+						2:"Alias",
+						3:"Port",
+						4:"MAC",
+						5:"IP",
+						6:"Interface",
+						7:"Local"
+					}[device.lldp.remoteChassisIdSubtype[portIndex][i]] ?? "--");
 
-					if (entry.textContent.endsWith("|")) {
-						entry.textContent = entry.textContent.slice(0, -1);
+					chassisIdBox.textContent = entries[i];
+
+					const portIdBox = document.createElement("div");
+					portIdBox.setAttribute("info-label", {
+						1:"Alias",
+						2:"Port",
+						3:"MAC",
+						4:"IP",
+						5:"Interface",
+						6:"Agent ID",
+						7:"Local"
+					}[device.lldp.remotePortIdSubtype[portIndex][i]] ?? "--");
+					portIdBox.textContent = device.lldp.remotePortId[portIndex][i];
+
+					entry.append(chassisIdBox, portIdBox);
+
+					if (device.lldp.remoteSystemName[portIndex][i].length > 0) {
+						const nameBox = document.createElement("div");
+						nameBox.setAttribute("info-label", "Hostname");
+						nameBox.textContent = device.lldp.remoteSystemName[portIndex][i];
+						entry.appendChild(nameBox);
 					}
 
 					if (device?.lldp?.ambiguous?.[portIndex]?.[i]) {
@@ -2128,10 +2203,13 @@ class Topology extends Window {
 			if (device.dot1tp && device.dot1tp.table[portIndex]) {
 				const macBox = document.createElement("div");
 				macBox.style.paddingTop = "8px";
+				macBox.style.backgroundImage = "url(mono/chip.svg)";
+				macBox.style.backgroundPositionY = "6px";
 				macBox.setAttribute("info-label", "MAC table:");
 				container.appendChild(macBox);
 
 				const macValue = document.createElement("div");
+				macValue.style.fontFamily = "consolas";
 				macBox.appendChild(macValue);
 
 				const table = device.dot1tp.table[portIndex];
@@ -2140,9 +2218,33 @@ class Topology extends Window {
 				}
 				else for (let i=0; i<table.length; i++) {
 					const entry = document.createElement("div");
-					entry.style.backgroundImage = "url(mono/chip.svg)";
 					entry.textContent = table[i];
 					macValue.appendChild(entry);
+
+					const macV = table[i].substring(0, 6);
+
+					setTimeout(async ()=>{
+						if (macV in Topology.VENDOR_CACHE) {
+							const vendor = Topology.VENDOR_CACHE[macV];
+							if (vendor !== "not found") {
+								entry.textContent = `${table[i]} - ${vendor}`;
+							}
+							return;
+						}
+
+						try {
+							const response = await fetch("tools/maclookup", { method:"POST", body:table[i] });
+
+							if (response.status === 200) {
+								const vendor = await response.text();
+								Topology.VENDOR_CACHE[macV] = vendor;
+								if (vendor !== "not found") {
+									entry.textContent = `${table[i]} - ${vendor}`;
+								}
+							}
+						}
+						catch {}
+					}, 1);
 				}
 			}
 		}
@@ -2206,6 +2308,7 @@ class Topology extends Window {
 
 	PopupInfo() {
 		const cover = document.createElement("div");
+		cover.style.tabIndex = 0;
 		cover.style.position = "absolute";
 		cover.style.inset = "0";
 		this.content.appendChild(cover);
@@ -2215,28 +2318,46 @@ class Topology extends Window {
 		dialog.className = "topology-info-popup";
 		cover.appendChild(dialog);
 
-		cover.onclick = ()=> this.content.removeChild(cover);
+		dialog.style.animation = "topology-info-popup .2s ease-in-out 1";
+
+		cover.onclick = ()=> {
+			if (this.infoBox.textContent !== "") {
+				this.infoBox.style.opacity = "1";
+				this.infoBox.style.visibility = "visible";
+			}
+
+			dialog.style.transition = ".2s";
+			dialog.style.opacity = "0";
+			dialog.style.transform = "translate(80px, 0px) scale(.8)";
+
+			setTimeout(()=>this.content.removeChild(cover), 200);
+
+			const list = this.sidePane.querySelector(".topology-interface-list");
+			list.focus();
+		};
 
 		dialog.onclick = event=> event.stopPropagation();
+
+		dialog.focus();
 
 		return dialog;
 	}
 
 	InfoBoxPosition() {
 		if (this.selectedInterface === null) return;
-		const y = this.selectedInterface.offsetTop + this.selectedInterface.offsetHeight - this.sideBar.scrollTop - 26;
+		const y = this.selectedInterface.offsetTop + this.selectedInterface.offsetHeight - this.sidePane.scrollTop - 26;
 
 		if (y < 0) {
 			this.infoBox.className = "topology-info-box topology-info-box-over-up";
 			this.infoBox.style.top = "8px";
 		}
-		else if (y > this.sideBar.offsetHeight) {
+		else if (y > this.sidePane.offsetHeight) {
 			this.infoBox.className = "topology-info-box topology-info-box-over-down";
-			this.infoBox.style.top = `${this.sideBar.offsetHeight - 180}px`;
+			this.infoBox.style.top = `${this.sidePane.offsetHeight - 180}px`;
 		}
-		else if (y > this.sideBar.offsetHeight - 180) {
+		else if (y > this.sidePane.offsetHeight - 180) {
 			this.infoBox.className = "topology-info-box topology-info-box-last";
-			this.infoBox.style.top = `${Math.min(this.sideBar.offsetHeight - 180, y - 152)}px`;
+			this.infoBox.style.top = `${Math.min(this.sidePane.offsetHeight - 180, y - 152)}px`;
 		}
 		else {
 			this.infoBox.className = "topology-info-box";
