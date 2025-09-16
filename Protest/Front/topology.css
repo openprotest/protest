@@ -311,20 +311,16 @@
 	border-radius: 0 4px 4px 0;
 }
 
-.topology-interface-list > div:hover > div,
-.topology-interface-list > div:hover > div:first-child::after {
-	background-color: var(--clr-select);
+.topology-interface-list-selected > div,
+.topology-interface-list-selected > div:first-child:after {
+	background-color: var(--clr-select) !important;
 }
 
-.topology-interface-list-selected:hover > :nth-child(3) {
-	border-left: 2px solid var(--clr-dark);
-}
-
-.topology-interface-list-selected > div {
+.topology-interface-list > div:hover > div {
 	outline: 2px solid var(--clr-select);
 }
 
-.topology-interface-list-selected > div:first-child::after {
+.topology-interface-list > div:hover > div:first-child::after {
 	border-top: 2px solid var(--clr-select);
 	border-bottom: 2px solid var(--clr-select);
 	height: 8px !important;
