@@ -69,9 +69,46 @@ class Topology extends Window {
 
 		this.infoBox = document.createElement("div");
 		this.infoBox.style.visibility = "hidden";
+		this.infoBox.style.opacity = "0";
 		this.infoBox.className = "topology-info-box";
 
 		this.content.append(this.workspace, this.navPane, this.sidePane, this.infoBox);
+
+		const cover = document.createElement("div");
+		cover.style.tabIndex = 0;
+		cover.style.position = "absolute";
+		cover.style.inset = "0";
+		cover.style.display = "none";
+		this.content.appendChild(cover);
+		
+		this.infoPopup = document.createElement("div");
+		this.infoPopup.tabIndex = 0;
+		this.infoPopup.style.visibility = "hidden";
+		this.infoPopup.style.opacity = "0";
+		this.infoPopup.className = "topology-info-popup";
+		cover.appendChild(this.infoPopup);
+		
+		this.infoPopup.onclick = event=> event.stopPropagation();
+
+		cover.onclick = ()=> {
+			if (this.infoBox.textContent !== "") {
+				this.infoBox.style.opacity = "1";
+				this.infoBox.style.visibility = "visible";
+			}
+
+			this.infoPopup.style.transition = ".2s";
+			this.infoPopup.style.opacity = "0";
+			this.infoPopup.style.transform = "translate(80px, 0px) scale(.8)";
+
+			cover.style.animation = "unset";
+			setTimeout(()=> {
+				cover.style.display = "none";
+				this.infoPopup.style.transform = "unset";
+			}, 200);
+
+			const list = this.sidePane.querySelector(".topology-interface-list");
+			list.focus();
+		};
 
 		this.workspace.onmousedown = event=> this.Topology_onmousedown(event);
 		this.content.onmousemove   = event=> this.Topology_onmousemove(event);
@@ -1967,17 +2004,16 @@ class Topology extends Window {
 			this.selectedInterface = interfaceBox;
 
 			this.infoBox.textContent = "";
-			this.infoBox.style.visibility = "visible";
-			this.infoBox.style.opacity = "1";
+			this.infoPopup.textContent = "";
 
-			const titleBox = document.createElement("div");
-			titleBox.textContent = localPortName;
-			titleBox.style.textAlign = "center";
-			titleBox.style.backgroundColor = "var(--clr-select)";
-			titleBox.style.borderRadius = "4px";
-			this.infoBox.appendChild(titleBox);
-
-			this.PopulateInfoBox(this.infoBox, device, portIndex, remoteBox, link, dbFile, false);
+			if (this.infoPopup.parentElement.style.display === "none") {
+				this.infoBox.style.visibility = "visible";
+				this.infoBox.style.opacity = "1";
+				this.PopulateInfoBox(this.infoBox, device, portIndex, localPortName, remoteBox, link, dbFile, false);
+			}
+			else {
+				this.PopulateInfoBox(this.infoPopup, device, portIndex, localPortName, remoteBox, link, dbFile, true);
+			}
 
 			this.InfoBoxPosition();
 
@@ -1985,30 +2021,19 @@ class Topology extends Window {
 				this.infoBox.style.opacity = "0";
 				this.infoBox.style.visibility = "hidden";
 
-				const dialog = this.PopupInfo();
+				this.infoPopup.parentElement.style.display = "initial";
 
-				const titleBox = document.createElement("div");
-				titleBox.textContent = localPortName;
-				titleBox.style.textAlign = "center";
-				titleBox.style.backgroundColor = "var(--clr-select)";
-				titleBox.style.borderRadius = "4px";
-				titleBox.style.marginBottom = "8px";
-				dialog.appendChild(titleBox);
+				this.infoPopup.textContent = "";
+				this.infoPopup.style.opacity = "1";
+				this.infoPopup.style.visibility = "visible";
+				this.infoPopup.style.animation = "topology-info-popup .2s ease-in-out 1";
+				this.infoPopup.focus();
 
-				this.PopulateInfoBox(dialog, device, portIndex, remoteBox, link, dbFile, true);
+				this.PopulateInfoBox(this.infoPopup, device, portIndex, localPortName, remoteBox, link, dbFile, true);
 
-				dialog.onkeydown = event=> {
-					if (event.key === "Escape") {
-						dialog.parentNode.onclick();
-					}
-					else if (event.key === "Enter"){
-						dialog.parentNode.onclick();
-
-						const list = this.sidePane.querySelector(".topology-interface-list");
-						list.onkeydown(event);
-
-						this.infoBox.style.opacity = "0";
-						this.infoBox.style.visibility = "hidden";
+				this.infoPopup.onkeydown = event=> {
+					if (event.key === "Escape" || event.key === "Enter") {
+						this.infoPopup.parentNode.onclick();
 					}
 					else if (event.key === "ArrowUp" || event.key === "ArrowDown"
 						|| event.key === "PageUp" || event.key === "PageDown"
@@ -2019,27 +2044,27 @@ class Topology extends Window {
 
 						this.infoBox.style.opacity = "0";
 						this.infoBox.style.visibility = "hidden";
-
-						dialog.textContent = "";
-
-						const titleBox = document.createElement("div");
-						titleBox.textContent = localPortName;
-						titleBox.style.textAlign = "center";
-						titleBox.style.backgroundColor = "var(--clr-select)";
-						titleBox.style.borderRadius = "4px";
-						titleBox.style.marginBottom = "8px";
-						dialog.appendChild(titleBox);
-
-						this.PopulateInfoBox(dialog, device, portIndex, remoteBox, link, dbFile, true);
 					}
 				};
+
 			};
 		};
 
 		return interfaceBox;
 	}
 
-	PopulateInfoBox(container, device, portIndex, remoteBox, link, dbFile, expand) {
+	PopulateInfoBox(container, device, portIndex, localPortName, remoteBox, link, dbFile, expand) {
+		const titleBox = document.createElement("div");
+		titleBox.textContent = localPortName;
+		titleBox.style.textAlign = "center";
+		titleBox.style.backgroundColor = "var(--clr-select)";
+		container.appendChild(titleBox);
+
+		if (expand) {
+			titleBox.style.borderRadius = "4px";
+			titleBox.style.marginBottom = "8px";
+		}
+
 		if (device.dot1q) {
 			let untaggedString = "";
 			for (const vlan in device.dot1q.untagged) {
@@ -2155,7 +2180,7 @@ class Topology extends Window {
 				else for (let i=0; i<entries.length; i++) {
 					const entry = document.createElement("div");
 					lldpValue.appendChild(entry);
-					
+
 					const chassisIdBox = document.createElement("div");
 					chassisIdBox.setAttribute("info-label", {
 						1:"Compon.",
@@ -2234,7 +2259,6 @@ class Topology extends Window {
 
 						try {
 							const response = await fetch("tools/maclookup", { method:"POST", body:table[i] });
-
 							if (response.status === 200) {
 								const vendor = await response.text();
 								Topology.VENDOR_CACHE[macV] = vendor;
@@ -2304,43 +2328,6 @@ class Topology extends Window {
 				}
 			}
 		}
-	}
-
-	PopupInfo() {
-		const cover = document.createElement("div");
-		cover.style.tabIndex = 0;
-		cover.style.position = "absolute";
-		cover.style.inset = "0";
-		this.content.appendChild(cover);
-
-		const dialog = document.createElement("div");
-		dialog.tabIndex = 0;
-		dialog.className = "topology-info-popup";
-		cover.appendChild(dialog);
-
-		dialog.style.animation = "topology-info-popup .2s ease-in-out 1";
-
-		cover.onclick = ()=> {
-			if (this.infoBox.textContent !== "") {
-				this.infoBox.style.opacity = "1";
-				this.infoBox.style.visibility = "visible";
-			}
-
-			dialog.style.transition = ".2s";
-			dialog.style.opacity = "0";
-			dialog.style.transform = "translate(80px, 0px) scale(.8)";
-
-			setTimeout(()=>this.content.removeChild(cover), 200);
-
-			const list = this.sidePane.querySelector(".topology-interface-list");
-			list.focus();
-		};
-
-		dialog.onclick = event=> event.stopPropagation();
-
-		dialog.focus();
-
-		return dialog;
 	}
 
 	InfoBoxPosition() {

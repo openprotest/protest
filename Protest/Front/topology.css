@@ -501,6 +501,10 @@
 	border-radius: 2px;
 }
 
+.topology-info-popup > div > div > div:hover {
+	background-color: var(--clr-select);
+}
+
 .topology-info-popup > div > div > div > div[info-label]::before {
 	display: inline-block;
 	content: attr(info-label);
