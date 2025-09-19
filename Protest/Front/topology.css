@@ -88,13 +88,10 @@
 }
 
 .topology-navpane-title {
-	position: absolute;
-	left: 24px;
-	right: 24px;
-	top: 4px;
 	color: var(--clr-dark);
 	font-weight: bold;
 	text-align: center;
+	margin-bottom: 20px;
 }
 
 .topology-find-input {
@@ -121,7 +118,7 @@
 	right: 4px;
 	width: 20px;
 	height: 20px;
-	border-radius: 8px;
+	border-radius: 50%;
 	background-color: var(--clr-dark);
 	mask: url(controls/close.svg), linear-gradient(var(--clr-dark) 0 0);
 	mask-size: 20px 20px;
@@ -441,8 +438,8 @@
 .topology-info-popup {
 	position: absolute;
 	right: 400px;
-	top: 20px;
-	bottom: 20px;
+	top: 40px;
+	bottom: 40px;
 	padding: 20px;
 	box-sizing: border-box;
 	width: min(480px, 50%);
@@ -455,7 +452,6 @@
 	backdrop-filter: blur(8px) brightness(80%);
 	box-shadow: rgba(0,0,0,.2) 0 12px 16px;
 	overflow-y: auto;
-
 }
 
 .topology-info-popup div {
@@ -506,7 +502,7 @@
 	content: attr(info-label);
 	vertical-align: middle;
 	text-align: center;
-	font-family: Segoe UI;
+	font-family: var(--global-font-family);
 	font-size: small;
 	line-height: 16px;
 	border: 1px solid var(--clr-dark);

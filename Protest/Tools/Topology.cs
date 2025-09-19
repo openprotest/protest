@@ -133,6 +133,7 @@ internal static class Topology {
 
                     if (lldpLocal is null || lldpRemote is null) {
                         WsWriteText(ws, Encoding.UTF8.GetBytes($"{{\"nosnmp\":\"{candidate.filename}\"}}"), mutex);
+                        WsWriteText(ws, Encoding.UTF8.GetBytes($"{{\"over\":\"{candidate.filename}\"}}"), mutex);
                         return;
                     }
                     else {
@@ -172,8 +173,11 @@ internal static class Topology {
                         }
                     }
 
+                    WsWriteText(ws, Encoding.UTF8.GetBytes($"{{\"over\":\"{candidate.filename}\"}}"), mutex);
+
                 }
                 catch (Exception ex) {
+                    WsWriteText(ws, Encoding.UTF8.GetBytes($"{{\"over\":\"{candidate.filename}\"}}"), mutex);
                     Logger.Error(ex);
                 }
             });
@@ -301,7 +305,7 @@ internal static class Topology {
                 file = file,
 
                 localChassisIdSubtype   = int.TryParse(localChassisIdSubtype?.Data?.ToString(), out int localChassisIdSubtypeInt) ? localChassisIdSubtypeInt : -1,
-                localChassisId          = GetChassisId(localChassisIdSubtype?.Data?.ToString(), localChassisId.Data),
+                localChassisId          = GetChassisId(localChassisIdSubtype?.Data?.ToString(), localChassisId?.Data),
                 localHostname           = localHostname?.Data.ToString(),
                 //localDescription        = localDescription.Data.ToString(),
 

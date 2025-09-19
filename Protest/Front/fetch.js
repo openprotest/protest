@@ -73,14 +73,16 @@ class Fetch extends Tabs {
 		this.progressBarInner.style.height = "100%";
 		this.progressBarInner.style.transition = ".4s";
 
+		const uniqueID = UI.GenerateUuid();
+		
 		this.updateRadio = document.createElement("input");
 		this.updateRadio.type = "radio";
-		this.updateRadio.name = "option";
+		this.updateRadio.name = uniqueID;
 		this.updateRadio.checked = false;
 
 		this.ipRadio = document.createElement("input");
 		this.ipRadio.type = "radio";
-		this.ipRadio.name = "option";
+		this.ipRadio.name = uniqueID;
 		this.ipRadio.checked = true;
 
 		this.ipFrom = new IpBox();
@@ -107,7 +109,7 @@ class Fetch extends Tabs {
 
 		this.domainRadio = document.createElement("input");
 		this.domainRadio.type = "radio";
-		this.domainRadio.name = "option";
+		this.domainRadio.name = uniqueID;
 		this.domainRadio.checked = false;
 
 		this.domainInput = document.createElement("input");

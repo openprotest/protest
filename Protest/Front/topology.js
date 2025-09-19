@@ -80,14 +80,14 @@ class Topology extends Window {
 		cover.style.inset = "0";
 		cover.style.display = "none";
 		this.content.appendChild(cover);
-		
+
 		this.infoPopup = document.createElement("div");
 		this.infoPopup.tabIndex = 0;
 		this.infoPopup.style.visibility = "hidden";
 		this.infoPopup.style.opacity = "0";
 		this.infoPopup.className = "topology-info-popup";
 		cover.appendChild(this.infoPopup);
-		
+
 		this.infoPopup.onclick = event=> event.stopPropagation();
 
 		cover.onclick = ()=> {
@@ -413,9 +413,6 @@ class Topology extends Window {
 			if (errorInput.checked) devices.push("error");
 			this.Connect(devices);
 
-			this.trafficButton.disabled = !trafficInput.checked;
-			this.errorsButton.disabled = !errorInput.checked;
-
 			this.args.options = {
 				mac    : macInput.checked,
 				dot1q  : dot1qInput.checked,
@@ -440,6 +437,8 @@ class Topology extends Window {
 
 		this.ws.onopen = ()=> {
 			this.startButton.disabled = true;
+			this.trafficButton.disabled = true;
+			this.errorsButton.disabled = true;
 			this.ws.send(options.join(";"));
 		};
 
@@ -448,7 +447,16 @@ class Topology extends Window {
 			this.startButton.setAttribute("tip-below", "Re-discover");
 			this.startButton.style.backgroundImage = "url(mono/restart.svg?light)";
 
+			this.trafficButton.disabled = !this.args.options.traffic;
+			this.errorsButton.disabled = !this.args.options.error;
+
 			this.SortByLocation();
+
+			if (this.args.options.traffic || this.args.options.error) {
+				for (const file in this.devices) {
+					this.PopulateEndpointDevices(this.devices[file]);
+				}
+			}
 		};
 
 		const forbiddenKeys = ["__proto__", "constructor", "prototype"];
@@ -489,8 +497,6 @@ class Topology extends Window {
 				const device = this.devices[json.nosnmp];
 				if (device) {
 					device.nosnmp = true;
-					device.element.spinner.style.visibility = "hidden";
-					device.element.spinner.style.opacity = "0";
 					device.element.fill.style.fill = "var(--clr-error)";
 				}
 			}
@@ -498,9 +504,6 @@ class Topology extends Window {
 				const device = this.devices[json.lldp.file];
 				if (device && typeof json.lldp === "object") {
 					device.lldp = json.lldp;
-
-					device.element.spinner.style.visibility = "hidden";
-					device.element.spinner.style.opacity = "0";
 					device.element.fill.style.fill = "rgb(88,166,32)";
 
 					this.ComputeLldpNeighbors(device);
@@ -530,6 +533,11 @@ class Topology extends Window {
 				const device = this.devices[json.error.file];
 				device.error = json.error;
 			}
+			else if (json.over && !forbiddenKeys.includes(json.over)) {
+				const device = this.devices[json.over];
+				device.element.spinner.style.visibility = "hidden";
+				device.element.spinner.style.opacity = "0";
+			}
 		};
 
 		this.ws.onerror = ()=> {
@@ -553,6 +561,23 @@ class Topology extends Window {
 		this.navPane.style.left = "-100%";
 
 		this.workspace.style.left = "8px";
+
+		for (const file in this.devices) {
+			const device = this.devices[file];
+
+			if (device.endpoint) {
+				device.endpoint.group.style.visibility = "hidden";
+				device.endpoint.group.style.opacity = "0";
+			}
+
+			for (const name in this.links) {
+				if (this.links[name].isEndpoint) continue;
+				const link = this.links[name];
+				link.element.capA.setAttribute("fill", "#c0c0c0");
+				link.element.capB.setAttribute("fill", "#c0c0c0");
+				link.element.line.setAttribute("stroke", "#c0c0c0");
+			}
+		}
 
 		setTimeout(()=>this.AdjustSvgSize(), 200);
 		this.content.focus();
@@ -863,8 +888,314 @@ class Topology extends Window {
 
 		this.navPane.append(titleBox, closeButton);
 
+		const trafficBox = document.createElement("div");
+		trafficBox.style.display = "grid";
+		trafficBox.style.gridTemplateColumns = "auto 72px 72px";
+		trafficBox.style.gridTemplateRows = "32px 48px repeat(3, 32px)";
+		trafficBox.style.textAlign = "center";
+		trafficBox.style.alignItems = "center";
+		trafficBox.style.marginBottom = "20px";
+		trafficBox.style.overflow = "hidden";
+		this.navPane.appendChild(trafficBox);
+
+		const inLabel = document.createElement("div");
+		inLabel.style.gridArea = "1 / 2";
+		inLabel.textContent = "Inbound";
+		trafficBox.appendChild(inLabel);
+
+		const outLabel = document.createElement("div");
+		outLabel.style.gridArea = "1 / 3";
+		outLabel.textContent = "Outbound";
+		trafficBox.appendChild(outLabel);
+
+
+		const bytesLabel = document.createElement("div");
+		bytesLabel.style.gridArea = "2 / 1";
+		bytesLabel.style.textAlign = "right";
+		bytesLabel.style.paddingRight = "4px";
+		bytesLabel.textContent = "Bytes:";
+
+		const bytesInBox = document.createElement("div");
+		bytesInBox.style.backgroundColor = "rgb(128,128,128)";
+		bytesInBox.style.gridArea = "2 / 2";
+		bytesInBox.style.marginRight = "1px";
+		bytesInBox.style.padding = "4px 24px 3px 24px";
+		bytesInBox.style.borderRadius = "8px 0 0 8px";
+
+		const bytesOutBox = document.createElement("div");
+		bytesOutBox.style.backgroundColor = "rgb(128,128,128)";
+		bytesOutBox.style.gridArea = "2 / 3";
+		bytesOutBox.style.marginLeft = "1px";
+		bytesOutBox.style.padding = "4px 24px 3px 24px";
+		bytesOutBox.style.borderRadius = "0 8px 8px 0";
+
+		trafficBox.append(bytesLabel, bytesInBox, bytesOutBox);
+
+		const bytesInCheckbox = document.createElement("input");
+		bytesInCheckbox.type = "checkbox";
+		bytesInCheckbox.checked = true;
+		bytesInBox.appendChild(bytesInCheckbox);
+		const bytesInToggle = this.AddCheckBoxLabel(bytesInBox, bytesInCheckbox, ".");
+		bytesInToggle.style.color = "rgb(128,128,128)";
+		bytesInToggle.style.transform = "scale(1.15)";
+
+		const bytesOutCheckbox = document.createElement("input");
+		bytesOutCheckbox.type = "checkbox";
+		bytesOutCheckbox.checked = true;
+		bytesOutBox.appendChild(bytesOutCheckbox);
+		const bytesOutToggle = this.AddCheckBoxLabel(bytesOutBox, bytesOutCheckbox, ".");
+		bytesOutToggle.style.color = "rgb(128,128,128)";
+		bytesOutToggle.style.transform = "scale(1.15)";
+
+
+		const unicastLabel = document.createElement("div");
+		unicastLabel.style.gridArea = "3 / 1";
+		unicastLabel.style.textAlign = "right";
+		unicastLabel.style.paddingRight = "4px";
+		unicastLabel.textContent = "Unicast packets:";
+
+		const unicastInBox = document.createElement("div");
+		unicastInBox.style.backgroundColor = "rgb(128,128,128)";
+		unicastInBox.style.gridArea = "3 / 2";
+		unicastInBox.style.marginRight = "1px";
+		unicastInBox.style.padding = "4px 24px 3px 24px";
+		unicastInBox.style.borderRadius = "8px 0 0 0";
+
+		const unicastOutBox = document.createElement("div");
+		unicastOutBox.style.backgroundColor = "rgb(128,128,128)";
+		unicastOutBox.style.gridArea = "3 / 3";
+		unicastOutBox.style.marginLeft = "1px";
+		unicastOutBox.style.padding = "4px 24px 3px 24px";
+		unicastOutBox.style.borderRadius = "0 8px 0 0";
+
+		trafficBox.append(unicastLabel, unicastInBox, unicastOutBox);
+
+		const unicastInCheckbox = document.createElement("input");
+		unicastInCheckbox.type = "checkbox";
+		unicastInBox.appendChild(unicastInCheckbox);
+		const unicastInToggle = this.AddCheckBoxLabel(unicastInBox, unicastInCheckbox, ".");
+		unicastInToggle.style.color = "rgb(128,128,128)";
+		unicastInToggle.style.transform = "scale(1.15)";
+
+		const unicastOutCheckbox = document.createElement("input");
+		unicastOutCheckbox.type = "checkbox";
+		unicastOutBox.appendChild(unicastOutCheckbox);
+		const unicastOutToggle = this.AddCheckBoxLabel(unicastOutBox, unicastOutCheckbox, ".");
+		unicastOutToggle.style.color = "rgb(128,128,128)";
+		unicastOutToggle.style.transform = "scale(1.15)";
+
+
+		const multicastLabel = document.createElement("div");
+		multicastLabel.style.gridArea = "4 / 1";
+		multicastLabel.style.textAlign = "right";
+		multicastLabel.style.paddingRight = "4px";
+		multicastLabel.textContent = "Multicast packets:";
+
+		const multicastInBox = document.createElement("div");
+		multicastInBox.style.backgroundColor = "rgb(128,128,128)";
+		multicastInBox.style.gridArea = "4 / 2";
+		multicastInBox.style.padding = "4px 24px 3px 24px";
+		multicastInBox.style.marginRight = "1px";
+
+		const multicastOutBox = document.createElement("div");
+		multicastOutBox.style.backgroundColor = "rgb(128,128,128)";
+		multicastOutBox.style.gridArea = "4 / 3";
+		multicastOutBox.style.padding = "4px 24px 3px 24px";
+		multicastOutBox.style.marginLeft = "1px";
+
+		trafficBox.append(multicastLabel, multicastInBox, multicastOutBox);
+
+		const multicastInCheckbox = document.createElement("input");
+		multicastInCheckbox.type = "checkbox";
+		multicastInBox.appendChild(multicastInCheckbox);
+		const multicastInToggle = this.AddCheckBoxLabel(multicastInBox, multicastInCheckbox, ".");
+		multicastInToggle.style.color = "rgb(128,128,128)";
+		multicastInToggle.style.transform = "scale(1.15)";
+
+		const multicastOutCheckbox = document.createElement("input");
+		multicastOutCheckbox.type = "checkbox";
+		multicastOutBox.appendChild(multicastOutCheckbox);
+		const multicastOutToggle = this.AddCheckBoxLabel(multicastOutBox, multicastOutCheckbox, ".");
+		multicastOutToggle.style.color = "rgb(128,128,128)";
+		multicastOutToggle.style.transform = "scale(1.15)";
+
+
+		const broadcastLabel = document.createElement("div");
+		broadcastLabel.style.gridArea = "5 / 1";
+		broadcastLabel.style.textAlign = "right";
+		broadcastLabel.style.paddingRight = "4px";
+		broadcastLabel.textContent = "Broadcast packets:";
+
+		const broadcastInBox = document.createElement("div");
+		broadcastInBox.style.backgroundColor = "rgb(128,128,128)";
+		broadcastInBox.style.gridArea = "5 / 2";
+		broadcastInBox.style.marginRight = "1px";
+		broadcastInBox.style.padding = "4px 24px 3px 24px";
+		broadcastInBox.style.borderRadius = "0 0 0 8px";
+
+		const broadcastOutBox = document.createElement("div");
+		broadcastOutBox.style.backgroundColor = "rgb(128,128,128)";
+		broadcastOutBox.style.gridArea = "5 / 3";
+		broadcastOutBox.style.marginLeft = "1px";
+		broadcastOutBox.style.padding = "4px 24px 3px 24px";
+		broadcastOutBox.style.borderRadius = "0 0 8px 0";
+
+		trafficBox.append(broadcastLabel, broadcastInBox, broadcastOutBox);
+
+		const broadcastInCheckbox = document.createElement("input");
+		broadcastInCheckbox.type = "checkbox";
+		broadcastInBox.appendChild(broadcastInCheckbox);
+		const broadcastInToggle = this.AddCheckBoxLabel(broadcastInBox, broadcastInCheckbox, ".");
+		broadcastInToggle.style.color = "rgb(128,128,128)";
+		broadcastInToggle.style.transform = "scale(1.15)";
+
+		const broadcastOutCheckbox = document.createElement("input");
+		broadcastOutCheckbox.type = "checkbox";
+		broadcastOutBox.appendChild(broadcastOutCheckbox);
+		const broadcastOutToggle = this.AddCheckBoxLabel(broadcastOutBox, broadcastOutCheckbox, ".");
+		broadcastOutToggle.style.color = "rgb(128,128,128)";
+		broadcastOutToggle.style.transform = "scale(1.15)";
+
+
+		const thresholdLabel = document.createElement("div");
+		thresholdLabel.textContent = "Threshold:";
+
+		const thresholdInput = document.createElement("input");
+		thresholdInput.type = "range";
+		thresholdInput.min = 0;
+		thresholdInput.max = 100;
+		thresholdInput.value = 0;
+		thresholdInput.style.width = "calc(100% - 4px)";
+		thresholdInput.style.marginTop = "8px";
+
+		const legend = document.createElement("div");
+		legend.style.height = "8px";
+		legend.style.border = "1px solid var(--clr-dark)";
+		legend.style.borderRadius = "2px";
+		legend.style.marginLeft = "11px";
+		legend.style.marginRight = "11px";
+		legend.style.marginTop = "4px";
+		legend.style.background = "linear-gradient(90deg,rgb(255,186,0) 0%, rgb(122,212,43) 100%)";
+		
+		this.navPane.append(thresholdLabel, thresholdInput, legend);
+
 		closeButton.onclick = ()=> this.HideNavPane();
 
+		const UpdateMap = (isBytes)=> {
+			let max = 100;
+
+			for (const file in this.devices) {
+				const device = this.devices[file];
+
+				if (!("traffic" in device)) continue;
+
+				device.traffic.sum = {};
+
+				if (isBytes) {
+					for (const port in device.traffic.bytesin) {
+						let sum = 0;
+						if (bytesInCheckbox.checked && device.traffic.bytesin[port])   sum += device.traffic.bytesin[port];
+						if (bytesOutCheckbox.checked && device.traffic.bytesout[port]) sum += device.traffic.bytesout[port];
+						device.traffic.sum[port] = sum;
+						max = Math.max(max, sum);
+					}
+				}
+				else {
+					for (const port in device.traffic.pktsinu) {
+						let sum = 0;
+
+						if (unicastInCheckbox.checked && device.traffic.pktsinu[port])     sum += device.traffic.pktsinu[port];
+						if (unicastOutCheckbox.checked && device.traffic.pktsoutu[port])   sum += device.traffic.pktsoutu[port];
+
+						if (multicastInCheckbox.checked && device.traffic.pktsinm[port])   sum += device.traffic.pktsinm[port];
+						if (multicastOutCheckbox.checked && device.traffic.pktsoutm[port]) sum += device.traffic.pktsoutm[port];
+
+						if (broadcastInCheckbox.checked && device.traffic.pktsinb[port])   sum += device.traffic.pktsinb[port];
+						if (broadcastOutCheckbox.checked && device.traffic.pktsoutb[port]) sum += device.traffic.pktsoutb[port];
+
+						device.traffic.sum[port] = sum;
+						max = Math.max(max, sum);
+					}
+				}
+			}
+
+			thresholdInput.max = max;
+
+			for (const file in this.devices) {
+				const device = this.devices[file];
+				if (!("traffic" in device)) continue;
+
+				if (device.endpoint) {
+					device.endpoint.group.style.visibility = "visible";
+					device.endpoint.group.style.opacity = "1";
+				}
+
+				for (const port in device.traffic.sum) {
+					let color;
+					if (device.traffic.sum[port] < thresholdInput.value) {
+						color = "transparent";
+					}
+					else if (device.traffic.sum[port] === 0) {
+						color = "#000";
+					}
+					else {
+						const p = device.traffic.sum[port] / max;
+						const c = 1 - p;
+						color = `rgb(${255*c + 112*p},${186*c + 212*p},${43*p})`; //rgb(255,186,0) <-> rgb(122,212,43)
+					}
+
+					if (port in device.endpoint.dot) {
+						device.endpoint.dot[port].setAttribute("fill", color);
+					}
+					else if (port in device.links && !this.links[device.links[port]].isEndpoint) {
+						const link = this.links[device.links[port]];
+						link.element.capA.setAttribute("fill", color);
+						link.element.capB.setAttribute("fill", color);
+						link.element.line.setAttribute("stroke", color);
+					}
+				}
+			}
+
+		};
+		
+		const UpdateTrack = (isBytes)=> {
+			if (isBytes) {
+				thresholdLabel.textContent = `Threshold: ${UI.SizeToString(thresholdInput.value)}`;
+			}
+			else {
+				thresholdLabel.textContent = `Threshold: ${thresholdInput.value}`;
+			}
+		};
+
+		const Toggle_onchange = (isBytes=false)=> {
+			if (isBytes) {
+				unicastInCheckbox.checked   = unicastOutCheckbox.checked   = false;
+				multicastInCheckbox.checked = multicastOutCheckbox.checked = false;
+				broadcastInCheckbox.checked = broadcastOutCheckbox.checked = false;
+			}
+			else {
+				bytesInCheckbox.checked = bytesOutCheckbox.checked = false;
+			}
+			UpdateMap(isBytes);
+		};
+
+		bytesInCheckbox.onchange      = ()=> Toggle_onchange(true);
+		bytesOutCheckbox.onchange     = ()=> Toggle_onchange(true);
+		unicastInCheckbox.onchange    = ()=> Toggle_onchange();
+		unicastOutCheckbox.onchange   = ()=> Toggle_onchange();
+		multicastInCheckbox.onchange  = ()=> Toggle_onchange();
+		multicastOutBox.onchange      = ()=> Toggle_onchange();
+		broadcastInCheckbox.onchange  = ()=> Toggle_onchange();
+		broadcastOutCheckbox.onchange = ()=> Toggle_onchange();
+
+		thresholdInput.oninput = thresholdInput.onchange = ()=> {
+			const isBytes = bytesInCheckbox.checked || bytesOutCheckbox.checked;
+			UpdateMap(isBytes);
+			UpdateTrack(isBytes);
+		};
+
+		thresholdInput.oninput();
+		Toggle_onchange(true);
 		this.ShowNavPane();
 	}
 
@@ -884,8 +1215,161 @@ class Topology extends Window {
 
 		this.navPane.append(titleBox, closeButton);
 
+
+		const errorBox = document.createElement("div");
+		errorBox.style.display = "grid";
+		errorBox.style.gridTemplateColumns = "100px 72px 72px";
+		errorBox.style.gridTemplateRows = "32px 48px";
+		errorBox.style.textAlign = "center";
+		errorBox.style.alignItems = "center";
+		errorBox.style.marginBottom = "20px";
+		errorBox.style.overflow = "hidden";
+		this.navPane.appendChild(errorBox);
+
+		const inLabel = document.createElement("div");
+		inLabel.style.gridArea = "1 / 2";
+		inLabel.textContent = "Inbound";
+		errorBox.appendChild(inLabel);
+
+		const outLabel = document.createElement("div");
+		outLabel.style.gridArea = "1 / 3";
+		outLabel.textContent = "Outbound";
+		errorBox.appendChild(outLabel);
+
+
+		const errorLabel = document.createElement("div");
+		errorLabel.style.gridArea = "2 / 1";
+		errorLabel.style.textAlign = "right";
+		errorLabel.style.paddingRight = "4px";
+		errorLabel.textContent = "Error:";
+
+		const errorInBox = document.createElement("div");
+		errorInBox.style.backgroundColor = "rgb(128,128,128)";
+		errorInBox.style.gridArea = "2 / 2";
+		errorInBox.style.marginRight = "1px";
+		errorInBox.style.padding = "4px 24px 3px 24px";
+		errorInBox.style.borderRadius = "8px 0 0 8px";
+
+		const errorOutBox = document.createElement("div");
+		errorOutBox.style.backgroundColor = "rgb(128,128,128)";
+		errorOutBox.style.gridArea = "2 / 3";
+		errorOutBox.style.marginLeft = "1px";
+		errorOutBox.style.padding = "4px 24px 3px 24px";
+		errorOutBox.style.borderRadius = "0 8px 8px 0";
+
+		errorBox.append(errorLabel, errorInBox, errorOutBox);
+		
+		const errorInCheckbox = document.createElement("input");
+		errorInCheckbox.type = "checkbox";
+		errorInCheckbox.checked = true;
+		errorInBox.appendChild(errorInCheckbox);
+		const errorInToggle = this.AddCheckBoxLabel(errorInBox, errorInCheckbox, ".");
+		errorInToggle.style.color = "rgb(128,128,128)";
+		errorInToggle.style.transform = "scale(1.15)";
+
+		const errorOutCheckbox = document.createElement("input");
+		errorOutCheckbox.type = "checkbox";
+		errorOutCheckbox.checked = true;
+		errorOutBox.appendChild(errorOutCheckbox);
+		const errorOutToggle = this.AddCheckBoxLabel(errorOutBox, errorOutCheckbox, ".");
+		errorOutToggle.style.color = "rgb(128,128,128)";
+		errorOutToggle.style.transform = "scale(1.15)";
+
+
+		const thresholdLabel = document.createElement("div");
+		thresholdLabel.textContent = "Threshold:";
+		thresholdLabel.style.marginTop = "20px";
+
+		const thresholdInput = document.createElement("input");
+		thresholdInput.type = "range";
+		thresholdInput.min = 0;
+		thresholdInput.max = 100;
+		thresholdInput.value = 0;
+		thresholdInput.style.width = "calc(100% - 4px)";
+		thresholdInput.style.marginTop = "8px";
+		
+		const legend = document.createElement("div");
+		legend.style.height = "8px";
+		legend.style.border = "1px solid var(--clr-dark)";
+		legend.style.borderRadius = "2px";
+		legend.style.margin = "4px 11px";
+		legend.style.marginBottom = "20px";
+		legend.style.background = "linear-gradient(90deg,rgb(255,186,0) 0%, rgb(255,64,32) 100%)";
+		
+		this.navPane.append(thresholdLabel, thresholdInput, legend);
+
 		closeButton.onclick = ()=> this.HideNavPane();
 
+		const UpdateMap = ()=> {
+			let max = 100;
+			for (const file in this.devices) {
+				const device = this.devices[file];
+				
+				if (!("error" in device)) continue;
+
+				device.error.sum = {};
+
+				for (const port in device.error.in) {
+					let sum = 0;
+					if (errorInCheckbox.checked && device.error.in[port]) sum += device.error.in[port];
+					if (errorOutCheckbox.checked && device.error.out[port]) sum += device.error.out[port];
+					device.error.sum[port] = sum;
+					max = Math.max(max, sum);
+				}
+			}
+
+			thresholdInput.max = max;
+
+			for (const file in this.devices) {
+				const device = this.devices[file];
+				if (!("error" in device)) continue;
+				
+				if (device.endpoint) {
+					device.endpoint.group.style.visibility = "visible";
+					device.endpoint.group.style.opacity = "1";
+				}
+
+				for (const port in device.error.sum) {
+					let color = "";
+					if (device.error.sum[port] < thresholdInput.value) {
+						color = "transparent";
+					}
+					else if (device.error.sum[port] === 0) {
+						color = "#000";
+					}
+					else {
+						const p = device.error.sum[port] / max;
+						const c = 1 - p;
+						color = `rgb(${255*c + 255*p},${186*c + 64*p},${32*p})`; //rgb(255,186,0) <-> rgb(255,64,32)
+					}
+
+					if (port in device.endpoint.dot) {
+						device.endpoint.dot[port].setAttribute("fill", color);
+					}
+					else if (port in device.links && !this.links[device.links[port]].isEndpoint) {
+						const link = this.links[device.links[port]];
+						link.element.capA.setAttribute("fill", color);
+						link.element.capB.setAttribute("fill", color);
+						link.element.line.setAttribute("stroke", color);
+					}
+				}
+			}
+		};
+
+		const UpdateTrack = ()=> {
+			thresholdLabel.textContent = `Threshold: ${thresholdInput.value}`;
+		};
+
+		errorInCheckbox.onchange  = ()=> UpdateMap();
+		errorOutCheckbox.onchange = ()=> UpdateMap();
+
+		thresholdInput.oninput = thresholdInput.onchange = ()=> {
+			UpdateMap();
+			UpdateTrack();
+		};
+
+		thresholdInput.oninput();
+		UpdateMap();
 		this.ShowNavPane();
 	}
 
@@ -1122,7 +1606,7 @@ class Topology extends Window {
 			}
 		}
 
-		const targetName = device.lldp.remoteSystemName[port][index]?.toUpperCase();
+		const targetName = device.lldp?.remoteSystemName[port][index]?.toUpperCase();
 		if (targetName && targetName.length > 0) {
 			for (const file in this.devices) {
 				const candidate = this.devices[file];
@@ -1295,7 +1779,7 @@ class Topology extends Window {
 			if (index > -1) deviceB.links.splice(index, 1);
 		}
 		else {
-			delete  deviceB.links[portIndexB];
+			delete deviceB.links[portIndexB];
 		}
 
 		delete this.links[key];
@@ -1611,6 +2095,57 @@ class Topology extends Window {
 			secondary: {x:sx, y:sy},
 			path     : `M ${px} ${py} C ${x1} ${py} ${x2} ${sy} ${sx} ${sy}`,
 		};
+	}
+
+	PopulateEndpointDevices(device) {
+		if (device.nosnmp) return;
+		if (!("lldp" in device)) return;
+		if (device.lldp.localPortCount < 1) return;
+
+		const portsGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
+		portsGroup.style.opacity = "0";
+		portsGroup.style.visibility = "hidden";
+		portsGroup.style.transition = ".2s";
+		device.element.root.appendChild(portsGroup);
+
+		const ports = device.lldp.localPortName;
+		const mod = Math.ceil(device.lldp.localPortCount / 24);
+
+		device.endpoint = {
+			group: portsGroup,
+			dot  : {}
+		};
+
+		for (const portIndex in ports) {
+			if (portIndex in device.links && !this.links[device.links[portIndex]].isEndpoint) {
+				continue;
+			}
+
+			let x = 0, y = 0;
+			if (device.isRouter) {
+				const angle = (portIndex - 1) / -Math.PI;
+				x = 48 + 48 * Math.cos(angle);
+				y = 48 + 48 * Math.sin(angle);
+			}
+			else if (device.isUnmanaged) {
+				const angle = (portIndex - 1) / -Math.PI;
+				x = 22 + 28 * Math.cos(angle);
+				y = 22 + 28 * Math.sin(angle);
+			}
+			else {
+				x = 104 + ((portIndex - 1) % mod) * 4;
+				y = 4 + 86 * portIndex / device.lldp.localPortCount;
+			}
+
+			const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+			dot.setAttribute("port", portIndex);
+			dot.setAttribute("cx", x);
+			dot.setAttribute("cy", y);
+			dot.setAttribute("r", 2);
+			portsGroup.appendChild(dot);
+		
+			device.endpoint.dot[portIndex] = dot;
+		}
 	}
 
 	SelectDevice(file, selectedPort=null) { 
@@ -1957,11 +2492,14 @@ class Topology extends Window {
 			}
 		}
 
+		let lastColor = null;
+
 		interfaceBox.onmouseenter = ()=> {
 			if (!link) return;
 			const e = link.element;
 
 			if (e && !e.isEndpoint) {
+				lastColor = e.line.getAttribute("stroke");
 				e.line.setAttribute("stroke", "var(--clr-accent)");
 				e.line.setAttribute("stroke-width", 5);
 				e.capA.setAttribute("r", 4);
@@ -1979,12 +2517,12 @@ class Topology extends Window {
 			const e = link.element;
 
 			if (e && !e.isEndpoint) {
-				e.line.setAttribute("stroke", "#c0c0c0");
+				e.line.setAttribute("stroke", lastColor ?? "#c0c0c0");
 				e.line.setAttribute("stroke-width", 3);
 				e.capA.setAttribute("r", 3);
-				e.capA.setAttribute("fill", "#c0c0c0");
+				e.capA.setAttribute("fill", lastColor ?? "#c0c0c0");
 				e.capB.setAttribute("r", 3);
-				e.capB.setAttribute("fill", "#c0c0c0");
+				e.capB.setAttribute("fill", lastColor ?? "#c0c0c0");
 			}
 		};
 
@@ -2061,8 +2599,12 @@ class Topology extends Window {
 		container.appendChild(titleBox);
 
 		if (expand) {
-			titleBox.style.borderRadius = "4px";
 			titleBox.style.marginBottom = "8px";
+			titleBox.style.borderRadius = "4px";
+		}
+		else {
+			titleBox.style.marginBottom = "2px";
+			titleBox.style.borderRadius = "2px";
 		}
 
 		if (device.dot1q) {
@@ -2145,16 +2687,7 @@ class Topology extends Window {
 			linkValue.textContent = remoteBox.textContent;
 			linkBox.appendChild(linkValue);
 
-			/*if (expand && dbFile in this.devices) {
-				linkBox.style.cursor = "pointer";
-
-				linkBox.onclick = event=> {
-					const element = this.devices[dbFile].element.root;
-					element.onmousedown(event);
-					element.scrollIntoView({behavior: "smooth", block: "center", inline: "center"});
-				};
-			}
-			else */if (expand && dbFile in LOADER.devices.data) {
+			if (expand && dbFile in LOADER.devices.data) {
 				linkBox.style.cursor = "pointer";
 				linkBox.onclick = ()=> LOADER.OpenDeviceByFile(dbFile);
 			}
