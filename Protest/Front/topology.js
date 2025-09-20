@@ -450,8 +450,6 @@ class Topology extends Window {
 			this.trafficButton.disabled = !this.args.options.traffic;
 			this.errorsButton.disabled = !this.args.options.error;
 
-			this.SortByLocation();
-
 			if (this.args.options.traffic || this.args.options.error) {
 				for (const file in this.devices) {
 					this.PopulateEndpointDevices(this.devices[file]);
@@ -485,6 +483,8 @@ class Topology extends Window {
 						links  : {},
 					};
 				}
+
+				this.SortByLocation();
 			}
 			else if (json.retrieve && !forbiddenKeys.includes(json.retrieve)) {
 				const device = this.devices[json.retrieve];
@@ -583,28 +583,6 @@ class Topology extends Window {
 		this.content.focus();
 	}
 
-	SortBySnmp() {
-		let count = 0;
-		for (const file in this.devices) {
-			if (this.devices[file].nosnmp) {
-				const element = this.devices[file].element;
-				element.root.style.transition = ".4s";
-				setTimeout(()=>{
-					element.root.style.transition = "none";
-				}, 400);
-
-				let x = 100 + 150 * 8 + (count % 2) * 150;
-				let y = 50 + Math.floor(count / 2) * 150;
-				element.x = x;
-				element.y = y;
-				element.root.style.transform = `translate(${x}px,${y}px)`;
-				count++;
-			}
-		}
-
-		this.SortOffset();
-	}
-
 	SortByLocation() {
 		const groups = {};
 
@@ -617,6 +595,35 @@ class Topology extends Window {
 				groups[location] = [];
 				groups[location].push(this.devices[file]);
 			}
+		}
+
+		let xOffset = 0, yOffset = 0;
+
+		for (const location in groups) {
+			const length = groups[location].length;
+			const width = length * 125;
+
+			if (xOffset + width > 1250) {
+				yOffset += 200;
+				xOffset = 0;
+			}
+
+			for (let i=0; i<groups[location].length; i++) {
+				const element = groups[location][i].element;
+				element.root.style.transition = ".4s";
+				setTimeout(()=>{
+					element.root.style.transition = "none";
+				}, 400);
+
+				let x = 100 + xOffset + i * 100;
+				let y = 50 + yOffset;
+
+				element.x = x;
+				element.y = y;
+				element.root.style.transform = `translate(${x}px,${y}px)`;
+			}
+
+			xOffset += length * 100 + 100;
 		}
 	}
 
