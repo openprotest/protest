@@ -8,6 +8,11 @@ class Topology extends Window {
 
 	static VENDOR_CACHE = {};
 
+	static VIEW_PADDING = 100;
+	static DEVICE_WIDTH = 100;
+	static ROW_HEIGHT   = 250;
+	static MAX_WIDTH    = 1250;
+	
 	constructor(args) {
 		super();
 		this.args = args ?? {};
@@ -30,8 +35,8 @@ class Topology extends Window {
 		this.devices = {};
 		this.links = {};
 
-		this.documentedCount = 0;
-		this.undocumentedCount = 0;
+		this.globalX = Topology.VIEW_PADDING;
+		this.globalY = Topology.VIEW_PADDING;
 
 		this.InitializeComponents();
 		this.InitializeSvg();
@@ -46,7 +51,6 @@ class Topology extends Window {
 		this.startButton = this.AddToolbarButton("Start discovery", "mono/play.svg?light");
 		this.AddToolbarSeparator();
 
-		this.sortButton = this.AddToolbarButton("Sort", "mono/sort.svg?light");
 		this.findButton = this.AddToolbarButton("Find", "mono/search.svg?light");
 		this.AddToolbarSeparator();
 
@@ -236,8 +240,8 @@ class Topology extends Window {
 		this.workspace.textContent = "";
 		this.sidePane.textContent = "";
 
-		this.documentedCount = 0;
-		this.undocumentedCount = 0;
+		this.globalX = Topology.VIEW_PADDING;
+		this.globalY = Topology.VIEW_PADDING;
 
 		this.infoBox.style.opacity = "0";
 		this.infoBox.style.visibility = "hidden";
@@ -455,6 +459,9 @@ class Topology extends Window {
 					this.PopulateEndpointDevices(this.devices[file]);
 				}
 			}
+
+			//this.SortUnreachable();
+			this.SortByLocation_Phase2();
 		};
 
 		const forbiddenKeys = ["__proto__", "constructor", "prototype"];
@@ -464,8 +471,6 @@ class Topology extends Window {
 			const json = JSON.parse(payload);
 
 			if (json.initial) {
-				this.documentedCount = json.initial.length;
-
 				for (let i=0; i<json.initial.length; i++) {
 					if (forbiddenKeys.includes(json.initial[i].file)) continue;
 
@@ -474,7 +479,7 @@ class Topology extends Window {
 						type: json.initial[i].type,
 						name: json.initial[i].hostname,
 						x: 100 + (i % 8) * 150,
-						y: 150 + Math.floor(i / 8) * 250
+						y: 150 + Math.floor(i / 8) * Topology.ROW_HEIGHT
 					});
 
 					this.devices[json.initial[i].file] = {
@@ -484,7 +489,7 @@ class Topology extends Window {
 					};
 				}
 
-				this.SortByLocation();
+				this.SortByLocation_Phase1();
 			}
 			else if (json.retrieve && !forbiddenKeys.includes(json.retrieve)) {
 				const device = this.devices[json.retrieve];
@@ -583,48 +588,110 @@ class Topology extends Window {
 		this.content.focus();
 	}
 
-	SortByLocation() {
+	SortByLocation_Phase1() {
 		const groups = {};
 
 		for (const file in this.devices) {
-			const location = this.devices[file].initial.location?.toLowerCase().trim() ?? "unknown";
-			if (location in groups) {
-				groups[location].push(this.devices[file]);
-			}
-			else {
-				groups[location] = [];
-				groups[location].push(this.devices[file]);
-			}
+			const location = this.devices[file].initial.location?.toLowerCase().trim() ?? UI.GenerateUuid();
+			(groups[location] ??= []).push(this.devices[file]);
 		}
 
-		let xOffset = 0, yOffset = 0;
+		this.globalX = Topology.VIEW_PADDING;
+		this.globalY = Topology.VIEW_PADDING;
 
 		for (const location in groups) {
 			const length = groups[location].length;
-			const width = length * 125;
+			const width = length * Topology.DEVICE_WIDTH;
 
-			if (xOffset + width > 1250) {
-				yOffset += 200;
-				xOffset = 0;
+			if (this.globalX + width > Topology.MAX_WIDTH) {
+				this.globalX = Topology.VIEW_PADDING;
+				this.globalY += Topology.ROW_HEIGHT;
 			}
 
 			for (let i=0; i<groups[location].length; i++) {
 				const element = groups[location][i].element;
-				element.root.style.transition = ".4s";
-				setTimeout(()=>{
-					element.root.style.transition = "none";
-				}, 400);
-
-				let x = 100 + xOffset + i * 100;
-				let y = 50 + yOffset;
-
-				element.x = x;
-				element.y = y;
-				element.root.style.transform = `translate(${x}px,${y}px)`;
+				let x = this.globalX + i * Topology.DEVICE_WIDTH;
+				let y = this.globalY;
+				this.MoveDeviceElement(element, x, y);
 			}
 
-			xOffset += length * 100 + 100;
+			this.globalX += width + 100;
 		}
+
+		this.globalX = Topology.VIEW_PADDING;
+		this.globalY += Topology.ROW_HEIGHT;
+	}
+
+	SortByLocation_Phase2() {
+		const groups = {};
+
+		for (const file in this.devices) {
+			const device = this.devices[file];
+			
+			if (device.isUnmanaged) continue;
+			
+			const location = device.initial.location?.toLowerCase().trim() ?? UI.GenerateUuid();
+
+			(groups[location] ??= { list: [], count: 0 }).list.push(device);
+		
+			let linksCount = 0;
+			for (const port in device.links) {
+				const link = this.links[device.links[port]];
+				if (link.isEndpoint) continue;
+				linksCount++;
+			}
+
+			groups[location].count += linksCount;
+		}
+
+		const sortedByLink = Object.keys(groups).sort((a, b)=> groups[b].count - groups[a].count);
+
+		this.globalX = Topology.VIEW_PADDING;
+		this.globalY = Topology.VIEW_PADDING;
+
+		for (let i=0; i<sortedByLink.length; i++) {
+			const location = sortedByLink[i];
+			const group = groups[location];
+			const width = group.list.length * Topology.DEVICE_WIDTH;
+
+			if (this.globalX !== Topology.VIEW_PADDING && this.globalX + width > Topology.MAX_WIDTH) {
+				this.globalX = Topology.VIEW_PADDING;
+				this.globalY += Topology.ROW_HEIGHT;
+			}
+			else if (i > 0) {
+				//TODO:
+			}
+
+			for (let j=0; j<group.list.length; j++) {
+				const device = group.list[j];
+				if (device.isUnmanaged) continue;
+				let x = this.globalX + j * Topology.DEVICE_WIDTH;
+				let y = this.globalY;
+				this.MoveDeviceElement(device.element, x, y);
+			}
+
+			this.globalX += width + 100;
+		}
+
+		this.PlaceUnmanagedElements();
+		this.AdjustLinkElement();
+		this.AdjustSvgSize();
+	}
+
+	SortUnreachable() {
+		let count = 0;
+
+		for (const file in this.devices) {
+			if (this.devices[file].nosnmp) {
+				const element = this.devices[file].element;
+				let x = Topology.MAX_WIDTH + (count % 2) * 150;
+				let y = 50 + Math.floor(count / 2) * 150;
+				this.MoveDeviceElement(element, x, y);
+				count++;
+			}
+		}
+
+		this.SortOffset();
 	}
 
 	SortOffset() {
@@ -635,18 +702,59 @@ class Topology extends Window {
 
 		for (const file in this.devices) {
 			const element = this.devices[file].element;
-			element.root.style.transition = ".4s";
-			setTimeout(()=>{
-				element.root.style.transition = "none";
-			}, 400);
-
 			let x = element.x - minX + 100;
 			let y = element.y;
-			element.x = x;
-			element.y = y;
-			element.root.style.transform = `translate(${x}px,${y}px)`;
+			this.MoveDeviceElement(element, x, y);
 		}
 
+		this.AdjustLinkElement();
+		this.AdjustSvgSize();
+	}
+
+	MoveDeviceElement(element, x, y) {
+		element.root.style.transition = ".4s";
+		setTimeout(() => {
+			element.root.style.transition = "none";
+		}, 400);
+
+		element.x = x;
+		element.y = y;
+
+		requestAnimationFrame(() => {
+			element.root.style.transform = `translate(${x}px, ${y}px)`;
+		});
+	}
+
+	PlaceUnmanagedElements() {
+		for (const file in this.devices) {
+			const device = this.devices[file];
+			if (device.isUnmanaged) continue;
+
+			const list = [];
+
+			for (const port in device.links) {
+				const link = this.links[device.links[port]];
+				
+				const a = this.devices[link.deviceA];
+				const b = this.devices[link.deviceB];
+				const unmanaged = a.isUnmanaged ? a : (b?.isUnmanaged ? b : null);
+
+				if (!unmanaged) continue;
+				
+				list.push(unmanaged);
+			}
+
+			for (let i=0; i<list.length; i++) {
+				const totalWidth = list.length * 36;
+				const x = device.element.x - totalWidth / 2 + i * 36 + 42;
+				const y = device.element.y - 100 + (i % 2 === 0 ? 0 : 30);
+				this.MoveDeviceElement(list[i].element, x, y);
+			}
+
+		}
+	}
+
+	AdjustLinkElement() {
 		for (const key in this.links) {
 			const link = this.links[key];
 			if (link.isEndpoint) continue;
@@ -669,8 +777,6 @@ class Topology extends Window {
 			element.capB.setAttribute("cx", linkPath.secondary.x);
 			element.capB.setAttribute("cy", linkPath.secondary.y);
 		}
-
-		this.AdjustSvgSize();
 	}
 
 	FindMode() {
@@ -1637,6 +1743,7 @@ class Topology extends Window {
 
 		const entry = {
 			isUnmanaged: true,
+			parent     : parentDevice.initial.file,
 			element    : element,
 			initial    : {file: file, type: "switch"},
 			links      : [],
@@ -1665,9 +1772,8 @@ class Topology extends Window {
 		const file = dbFile ?? UI.GenerateUuid();
 		const hostname = device.lldp.remoteSystemName[port][index];
 
-		const count = this.documentedCount + this.undocumentedCount;
-		const x = 100 + (count % 8) * 150;
-		const y = 150 + Math.floor(count / 8) * 250;
+		const x = this.globalX;
+		const y = this.globalY;
 
 		const element = this.CreateDeviceElement({
 			isRouter: isRouter,
@@ -1706,7 +1812,9 @@ class Topology extends Window {
 		};
 
 		this.devices[file] = entry;
-		this.undocumentedCount++;
+
+		this.globalX += 150;
+
 
 		return entry;
 	}
