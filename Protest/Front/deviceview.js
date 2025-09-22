@@ -3818,7 +3818,7 @@ class DeviceView extends View {
 		extendedOption.text = "Extended (1-8191)";
 		portScanInput.appendChild(extendedOption);
 
-		setTimeout(async ()=>{
+		(async ()=> {
 			const snmpProfiles = await this.GetSnmpProfiles();
 			if (snmpProfiles === null || snmpProfiles.length === 0) return;
 
@@ -3838,7 +3838,7 @@ class DeviceView extends View {
 				snmpInput.disabled = false;
 				snmpInput.value = this.link["snmp profile"].v;
 			}
-		}, 0);
+		})();
 
 		snmpToggle.checkbox.onchange = ()=> {
 			snmpInput.disabled = !snmpToggle.checkbox.checked;

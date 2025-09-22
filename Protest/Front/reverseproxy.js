@@ -647,7 +647,8 @@ class ReverseProxy extends List {
 		protocolInput.value = "TCP";
 
 		const certsInput = AddParameter("Certificate", "select", null);
-		setTimeout(async()=> {
+
+		(async ()=> {
 			const optionNone = document.createElement("option");
 			optionNone.value = null;
 			optionNone.text = "none";
@@ -664,7 +665,7 @@ class ReverseProxy extends List {
 			if (entry) {
 				certsInput.value = entry.certificate.v;
 			}
-		}, 0);
+		})();
 
 		const passwordInput = AddParameter("Password", "input", "password", {placeholder: entry ? "unchanged" : ""});
 

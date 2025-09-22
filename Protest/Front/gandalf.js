@@ -35,10 +35,10 @@ class Gandalf extends Window {
 
 		this.InitMenus();
 
-		setTimeout(async ()=>{
+		(async ()=> {
 			await this.GetEntropy();
 			this.GetSmtpProfiles();
-		},0);
+		})();
 	}
 
 	async GetEntropy(callback) {

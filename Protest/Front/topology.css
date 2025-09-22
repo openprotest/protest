@@ -452,6 +452,8 @@
 	backdrop-filter: blur(8px) brightness(80%);
 	box-shadow: rgba(0,0,0,.2) 0 12px 16px;
 	overflow-y: auto;
+
+	transition: .2s;
 }
 
 .topology-info-popup div {
@@ -489,7 +491,7 @@
 	background-position: 2px center;
 	background-repeat: no-repeat;
 	padding: 2px 4px;
-	margin: 4px 0;
+	margin-bottom: 4px;
 	border-radius: 2px;
 }
 
@@ -508,7 +510,7 @@
 	border: 1px solid var(--clr-dark);
 	border-radius: 4px;
 	margin-right: 4px;
-	width: 72px;
+	width: 48px;
 }
 
 .topology-info-popup div.topology-ambiguous::after {
@@ -517,6 +519,19 @@
 
 .topology-info-popup div:hover.topology-ambiguous::after {
 	transform: translateY(-18px);
+}
+
+@container (max-width: 900px) {
+	.topology-info-popup {
+		left: 0;
+		right: 366px;
+		top: 0;
+		bottom: 0;
+		border-radius: 0;
+		width: unset;
+		min-width: unset;
+		max-width: unset;
+	}
 }
 
 @keyframes topology-spinner-animation {

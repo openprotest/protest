@@ -8,10 +8,11 @@ class Topology extends Window {
 
 	static VENDOR_CACHE = {};
 
-	static VIEW_PADDING = 100;
-	static DEVICE_WIDTH = 100;
-	static ROW_HEIGHT   = 250;
-	static MAX_WIDTH    = 1250;
+	static VIEW_PADDING_X = 50;
+	static VIEW_PADDING_Y = 100;
+	static DEVICE_WIDTH   = 100;
+	static ROW_HEIGHT     = 250;
+	static MAX_WIDTH      = 1500;
 	
 	constructor(args) {
 		super();
@@ -35,8 +36,8 @@ class Topology extends Window {
 		this.devices = {};
 		this.links = {};
 
-		this.globalX = Topology.VIEW_PADDING;
-		this.globalY = Topology.VIEW_PADDING;
+		this.globalX = Topology.VIEW_PADDING_X;
+		this.globalY = Topology.VIEW_PADDING_Y;
 
 		this.InitializeComponents();
 		this.InitializeSvg();
@@ -79,10 +80,11 @@ class Topology extends Window {
 		this.content.append(this.workspace, this.navPane, this.sidePane, this.infoBox);
 
 		const cover = document.createElement("div");
-		cover.style.tabIndex = 0;
+		cover.style.containerType = "inline-size";
 		cover.style.position = "absolute";
 		cover.style.inset = "0";
 		cover.style.display = "none";
+		cover.style.tabIndex = 0;
 		this.content.appendChild(cover);
 
 		this.infoPopup = document.createElement("div");
@@ -240,12 +242,17 @@ class Topology extends Window {
 		this.workspace.textContent = "";
 		this.sidePane.textContent = "";
 
-		this.globalX = Topology.VIEW_PADDING;
-		this.globalY = Topology.VIEW_PADDING;
+		this.globalX = Topology.VIEW_PADDING_X;
+		this.globalY = Topology.VIEW_PADDING_Y;
 
 		this.infoBox.style.opacity = "0";
 		this.infoBox.style.visibility = "hidden";
 		this.infoBox.textContent = "";
+
+		this.infoPopup.style.opacity = "0";
+		this.infoPopup.style.visibility = "hidden";
+		this.infoPopup.textContent = "";
+
 	}
 
 	InitializeSvg() {
@@ -460,8 +467,8 @@ class Topology extends Window {
 				}
 			}
 
-			//this.SortUnreachable();
 			this.SortByLocation_Phase2();
+			this.SortUnreachable();
 		};
 
 		const forbiddenKeys = ["__proto__", "constructor", "prototype"];
@@ -596,15 +603,15 @@ class Topology extends Window {
 			(groups[location] ??= []).push(this.devices[file]);
 		}
 
-		this.globalX = Topology.VIEW_PADDING;
-		this.globalY = Topology.VIEW_PADDING;
+		this.globalX = Topology.VIEW_PADDING_X;
+		this.globalY = Topology.VIEW_PADDING_Y;
 
 		for (const location in groups) {
 			const length = groups[location].length;
 			const width = length * Topology.DEVICE_WIDTH;
 
 			if (this.globalX + width > Topology.MAX_WIDTH) {
-				this.globalX = Topology.VIEW_PADDING;
+				this.globalX = Topology.VIEW_PADDING_X;
 				this.globalY += Topology.ROW_HEIGHT;
 			}
 
@@ -618,7 +625,7 @@ class Topology extends Window {
 			this.globalX += width + 100;
 		}
 
-		this.globalX = Topology.VIEW_PADDING;
+		this.globalX = Topology.VIEW_PADDING_X;
 		this.globalY += Topology.ROW_HEIGHT;
 	}
 
@@ -646,16 +653,16 @@ class Topology extends Window {
 
 		const sortedByLink = Object.keys(groups).sort((a, b)=> groups[b].count - groups[a].count);
 
-		this.globalX = Topology.VIEW_PADDING;
-		this.globalY = Topology.VIEW_PADDING;
+		this.globalX = Topology.VIEW_PADDING_X;
+		this.globalY = Topology.VIEW_PADDING_Y;
 
 		for (let i=0; i<sortedByLink.length; i++) {
 			const location = sortedByLink[i];
 			const group = groups[location];
 			const width = group.list.length * Topology.DEVICE_WIDTH;
 
-			if (this.globalX !== Topology.VIEW_PADDING && this.globalX + width > Topology.MAX_WIDTH) {
-				this.globalX = Topology.VIEW_PADDING;
+			if (this.globalX !== Topology.VIEW_PADDING_X && this.globalX + width > Topology.MAX_WIDTH) {
+				this.globalX = Topology.VIEW_PADDING_X;
 				this.globalY += Topology.ROW_HEIGHT;
 			}
 			else if (i > 0) {
@@ -702,7 +709,7 @@ class Topology extends Window {
 
 		for (const file in this.devices) {
 			const element = this.devices[file].element;
-			let x = element.x - minX + 100;
+			let x = Topology.VIEW_PADDING_X + element.x - minX;
 			let y = element.y;
 			this.MoveDeviceElement(element, x, y);
 		}
@@ -1988,7 +1995,7 @@ class Topology extends Window {
 
 		const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
 		label.textContent = options.name;
-		label.setAttribute("y", 106);
+		label.setAttribute("y", 104);
 		label.setAttribute("x", 48);
 		label.setAttribute("font-size", "11");
 		label.setAttribute("fill", "#c0c0c0");
@@ -2836,10 +2843,9 @@ class Topology extends Window {
 						3:"Port",
 						4:"MAC",
 						5:"IP",
-						6:"Interface",
+						6:"Int.",
 						7:"Local"
 					}[device.lldp.remoteChassisIdSubtype[portIndex][i]] ?? "--");
-
 					chassisIdBox.textContent = entries[i];
 
 					const portIdBox = document.createElement("div");
@@ -2848,8 +2854,8 @@ class Topology extends Window {
 						2:"Port",
 						3:"MAC",
 						4:"IP",
-						5:"Interface",
-						6:"Agent ID",
+						5:"Int.",
+						6:"Agent",
 						7:"Local"
 					}[device.lldp.remotePortIdSubtype[portIndex][i]] ?? "--");
 					portIdBox.textContent = device.lldp.remotePortId[portIndex][i];
@@ -2858,7 +2864,7 @@ class Topology extends Window {
 
 					if (device.lldp.remoteSystemName[portIndex][i].length > 0) {
 						const nameBox = document.createElement("div");
-						nameBox.setAttribute("info-label", "Hostname");
+						nameBox.setAttribute("info-label", "Name");
 						nameBox.textContent = device.lldp.remoteSystemName[portIndex][i];
 						entry.appendChild(nameBox);
 					}
@@ -2869,6 +2875,24 @@ class Topology extends Window {
 
 					if (device.lldp.entry[portIndex][i] === null) {
 						//undocumented
+					}
+
+					if (device.lldp.remoteChassisIdSubtype[portIndex][i] === 4) {
+						(async () => {
+							const vendor = await this.MacLookup(entries[i]);
+							if (vendor && vendor !== "not found") {
+								chassisIdBox.textContent = `${entries[i]} - ${vendor}`;
+							}
+						})();
+					}
+
+					if (device.lldp.remotePortIdSubtype[portIndex][i] === 3) {
+						(async () => {
+							const vendor = await this.MacLookup(device.lldp.remotePortId[portIndex][i]);
+							if (vendor && vendor !== "not found") {
+								portIdBox.textContent = `${device.lldp.remotePortId[portIndex][i]} - ${vendor}`;
+							}
+						})();
 					}
 				}
 			}
@@ -2894,29 +2918,12 @@ class Topology extends Window {
 					entry.textContent = table[i];
 					macValue.appendChild(entry);
 
-					const macV = table[i].substring(0, 6);
-
-					setTimeout(async ()=>{
-						if (macV in Topology.VENDOR_CACHE) {
-							const vendor = Topology.VENDOR_CACHE[macV];
-							if (vendor !== "not found") {
-								entry.textContent = `${table[i]} - ${vendor}`;
-							}
-							return;
+					(async ()=> {
+						const vendor = await this.MacLookup(table[i]);
+						if (vendor && vendor !== "not found") {
+							entry.textContent = `${table[i]} - ${vendor}`;
 						}
-
-						try {
-							const response = await fetch("tools/maclookup", { method:"POST", body:table[i] });
-							if (response.status === 200) {
-								const vendor = await response.text();
-								Topology.VENDOR_CACHE[macV] = vendor;
-								if (vendor !== "not found") {
-									entry.textContent = `${table[i]} - ${vendor}`;
-								}
-							}
-						}
-						catch {}
-					}, 1);
+					})();
 				}
 			}
 		}
@@ -2997,6 +3004,30 @@ class Topology extends Window {
 		else {
 			this.infoBox.className = "topology-info-box";
 			this.infoBox.style.top = `${Math.max(8, y)}px`;
+		}
+	}
+
+	async MacLookup(mac) {
+		const mac6 = mac.substring(0, 6).toLowerCase();
+
+		if (mac6 in Topology.VENDOR_CACHE) {
+			const vendor = Topology.VENDOR_CACHE[mac6];
+			return vendor;
+		}
+
+		try {
+			const response = await fetch("tools/maclookup", { method: "POST", body: mac6 });
+			if (response.status === 200) {
+				const vendor = await response.text();
+				Topology.VENDOR_CACHE[mac6] = vendor;
+				return vendor;
+			}
+			else {
+				return null;
+			}
+		}
+		catch {
+			return null;
 		}
 	}
 }
