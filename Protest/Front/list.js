@@ -301,6 +301,8 @@ class List extends Window {
 
 		filterMenu.appendChild(filtersList);
 
+		let index = -1;
+
 		const ClearSelection = ()=> filtersList.childNodes.forEach(o=> o.style.backgroundColor = "");
 
 		const Refresh = ()=> {
@@ -319,7 +321,7 @@ class List extends Window {
 			filtersList.textContent = "";
 			filterMenu.style.height = `${32 + types.length * 33}px`;
 
-			for (let i = 0; i < types.length; i++) {
+			for (let i=0; i<types.length; i++) {
 				const newType = document.createElement("div");
 				newType.textContent = types[i];
 				filtersList.appendChild(newType);
@@ -366,6 +368,35 @@ class List extends Window {
 					filterInput.value = "";
 					filterInput.onchange();
 				}
+			}
+			else if (event.key === "Enter") {
+				const types = Array.from(filtersList.childNodes);
+				if (index > -1) {
+					types[index].onclick();
+				}
+			}
+			else if (event.key === "ArrowUp") {
+				const types = Array.from(filtersList.childNodes);
+				if (index > -1) {
+					types[index].style.backgroundColor = "";
+				}
+
+				index--;
+				index = Math.max(index, 0);
+				types[index].style.backgroundColor = "var(--clr-select)";
+				types[index].scrollIntoView({block:"nearest"});
+
+			}
+			else if (event.key === "ArrowDown") {
+				const types = Array.from(filtersList.childNodes);
+				if (index > -1) {
+					types[index].style.backgroundColor = "";
+				}
+
+				index++;
+				index = Math.min(index, types.length - 1);
+				types[index].style.backgroundColor = "var(--clr-select)";
+				types[index].scrollIntoView({block:"nearest"});
 			}
 		};
 
