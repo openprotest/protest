@@ -12,6 +12,8 @@
 	background-image:
 		linear-gradient(to right, transparent 47px, rgba(96,96,96,.5) 48px, transparent 49px),
 		linear-gradient(to bottom, transparent 47px, rgba(96,96,96,.5) 48px, transparent 49px);
+
+	transition: zoom .2s;
 }
 
 .topology-navpane {

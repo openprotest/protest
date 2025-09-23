@@ -31,6 +31,7 @@ class Topology extends Window {
 		this.dragging = null;
 		this.shiftKey = false;
 		this.selectedInterface = null;
+		this.zoom = 1;
 
 		this.ws = null;
 		this.devices = {};
@@ -53,13 +54,17 @@ class Topology extends Window {
 		this.AddToolbarSeparator();
 
 		this.findButton = this.AddToolbarButton("Find", "mono/search.svg?light");
-		this.AddToolbarSeparator();
 
 		this.trafficButton = this.AddToolbarButton("Visualize traffic", "mono/traffic.svg?light");
 		this.trafficButton.disabled = true;
 
 		this.errorsButton = this.AddToolbarButton("Visualize errors", "mono/error.svg?light");
 		this.errorsButton.disabled = true;
+
+		this.AddToolbarSeparator();
+
+		this.zoomOutButton = this.AddToolbarButton("Zoom out", "mono/zoomout.svg?light");
+		this.zoomInButton = this.AddToolbarButton("Zoom out", "mono/zoomin.svg?light");
 
 		//this.loopDetection = this.AddToolbarButton("Close loop detection", "mono/infinite.svg?light");
 
@@ -124,6 +129,8 @@ class Topology extends Window {
 		this.findButton.onclick    = ()=> this.FindMode();
 		this.trafficButton.onclick = ()=> this.TrafficMode();
 		this.errorsButton.onclick  = ()=> this.ErrorMode();
+		this.zoomOutButton.onclick = ()=> this.ZoomOut();
+		this.zoomInButton.onclick = ()=> this.ZoomIn();
 
 		this.sidePane.onscroll = ()=> this.InfoBoxPosition();
 
@@ -131,6 +138,31 @@ class Topology extends Window {
 			if (event.code === "KeyF" && event.ctrlKey) {
 				event.preventDefault();
 				this.FindMode();
+			}
+			else if (event.key === "+" && event.ctrlKey) {
+				event.preventDefault();
+				this.ZoomIn();
+			}
+			else if (event.key === "-" && event.ctrlKey) {
+				event.preventDefault();
+				this.ZoomOut();
+			}
+			else if (event.key === "0" && event.ctrlKey) {
+				event.preventDefault();
+				this.ZoomDefault();
+			}
+		};
+
+
+		this.content.onwheel = event=> {
+			if (event.ctrlKey) {
+				event.preventDefault();
+				if (event.deltaY < 0) {
+					this.ZoomIn();
+				}
+				else {
+					this.ZoomOut();
+				}
 			}
 		};
 	}
@@ -148,8 +180,11 @@ class Topology extends Window {
 			if (y > maxY) maxY = y;
 		}
 
-		this.svg.setAttribute("width", maxX === this.workspace.offsetWidth ? Math.max(maxX - 20, 1) - 20 : maxX - 20);
-		this.svg.setAttribute("height", maxY === this.workspace.offsetHeight ? Math.max(maxY - 20, 1) - 20 : maxY - 20);
+		const w = maxX === this.workspace.offsetWidth ? Math.max(maxX - 20, 1) : maxX;
+		const h = maxY === this.workspace.offsetHeight ? Math.max(maxY - 20, 1) : maxY;
+
+		this.svg.setAttribute("width", w - 20);
+		this.svg.setAttribute("height", h - 20);
 	}
 
 	Topology_onmousedown(event) {
@@ -176,8 +211,12 @@ class Topology extends Window {
 			return;
 		}
 
-		let x = this.offsetX - this.x0 + event.clientX;
-		let y = this.offsetY - this.y0 + event.clientY;
+		let dx = (event.clientX - this.x0) / this.zoom;
+		let dy = (event.clientY - this.y0) / this.zoom;
+
+		let x = this.offsetX + dx;
+		let y = this.offsetY + dy;
+
 		if (event.ctrlKey) {
 			x = Math.round(x / 25) * 25;
 			y = Math.round(y / 25) * 25;
@@ -1498,6 +1537,26 @@ class Topology extends Window {
 		thresholdInput.oninput();
 		UpdateMap();
 		this.ShowNavPane();
+	}
+
+	ZoomIn() {
+		this.zoom += .1;
+		this.zoom = Math.min(this.zoom, 2);
+		this.svg.style.zoom = `${100 * this.zoom}%`;
+		this.AdjustSvgSize();
+	}
+
+	ZoomOut() {
+		this.zoom -= .1;
+		this.zoom = Math.max(this.zoom, .2);
+		this.svg.style.zoom = `${100 * this.zoom}%`;
+		this.AdjustSvgSize();
+	}
+
+	ZoomDefault() {
+		this.zoom = 1;
+		this.svg.style.zoom = "100%";
+		this.AdjustSvgSize();
 	}
 
 	ComputeLldpNeighbors(device) {
