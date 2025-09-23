@@ -13,7 +13,7 @@ class Topology extends Window {
 	static DEVICE_WIDTH   = 100;
 	static ROW_HEIGHT     = 250;
 	static MAX_WIDTH      = 1500;
-	
+
 	constructor(args) {
 		super();
 		this.args = args ?? {};
@@ -54,6 +54,9 @@ class Topology extends Window {
 		this.AddToolbarSeparator();
 
 		this.findButton = this.AddToolbarButton("Find", "mono/search.svg?light");
+
+		this.vlanButton = this.AddToolbarButton("Visualize VLANs", "mono/quota.svg?light");
+		this.vlanButton.disabled = true;
 
 		this.trafficButton = this.AddToolbarButton("Visualize traffic", "mono/traffic.svg?light");
 		this.trafficButton.disabled = true;
@@ -127,10 +130,11 @@ class Topology extends Window {
 
 		this.startButton.onclick   = ()=> this.StartDialog();
 		this.findButton.onclick    = ()=> this.FindMode();
+		this.vlanButton.onclick    = ()=> this.VlanMode();
 		this.trafficButton.onclick = ()=> this.TrafficMode();
 		this.errorsButton.onclick  = ()=> this.ErrorMode();
 		this.zoomOutButton.onclick = ()=> this.ZoomOut();
-		this.zoomInButton.onclick = ()=> this.ZoomIn();
+		this.zoomInButton.onclick  = ()=> this.ZoomIn();
 
 		this.sidePane.onscroll = ()=> this.InfoBoxPosition();
 
@@ -488,6 +492,7 @@ class Topology extends Window {
 
 		this.ws.onopen = ()=> {
 			this.startButton.disabled = true;
+			this.vlanButton.disabled = true;
 			this.trafficButton.disabled = true;
 			this.errorsButton.disabled = true;
 			this.ws.send(options.join(";"));
@@ -498,10 +503,11 @@ class Topology extends Window {
 			this.startButton.setAttribute("tip-below", "Re-discover");
 			this.startButton.style.backgroundImage = "url(mono/restart.svg?light)";
 
+			this.vlanButton.disabled    = !this.args.options.dot1q;
 			this.trafficButton.disabled = !this.args.options.traffic;
-			this.errorsButton.disabled = !this.args.options.error;
+			this.errorsButton.disabled  = !this.args.options.error;
 
-			if (this.args.options.traffic || this.args.options.error) {
+			if (this.args.options.dot1q || this.args.options.traffic || this.args.options.error) {
 				for (const file in this.devices) {
 					this.PopulateEndpointDevices(this.devices[file]);
 				}
@@ -1030,6 +1036,123 @@ class Topology extends Window {
 	IsMacAddress(str) {
 		const macRegex = /^(?:[0-9a-f]{12}|([0-9a-f]{2}([-:\s])){5}[0-9a-f]{2})$/;
 		return macRegex.test(str);
+	}
+
+	VlanMode() {
+		if (this.uiMode === "vlan") return;
+
+		this.uiMode = "vlan";
+		this.navPane.textContent = "";
+
+		const titleBox = document.createElement("div");
+		titleBox.className = "topology-navpane-title";
+		titleBox.textContent = "VLAN viewer";
+
+		const closeButton = document.createElement("div");
+		closeButton.className = "topology-close-button";
+		closeButton.tabIndex = 0;
+
+		this.navPane.append(titleBox, closeButton);
+
+		const listBox = document.createElement("div");
+		listBox.className = "topology-find-listbox no-results";
+		listBox.tabIndex = 0;
+
+		this.navPane.appendChild(listBox);
+
+		let selected = null;
+
+		for (const file in this.devices) {
+			const device = this.devices[file];
+			if (!("dot1q" in device)) continue;
+			if (device.endpoint) {
+				device.endpoint.group.style.visibility = "visible";
+				device.endpoint.group.style.opacity = "1";
+			}
+
+			for (const port in device.endpoint.dot) {
+				device.endpoint.dot[port].setAttribute("fill", "#000");
+			}
+
+			for (const uuid in this.links) {
+				const link = this.links[uuid];
+				if (link.isEndpoint) continue;
+				link.element.line.setAttribute("stroke", "#000");
+				link.element.capA.setAttribute("fill", "#000");
+				link.element.capB.setAttribute("fill", "#000");
+			}
+		}
+
+		const ListVlans = ()=> {
+			listBox.textContent = "";
+
+			const vlanIds = {};
+
+			for (const file in this.devices) {
+				const device = this.devices[file];
+				if (!device.dot1q) continue;
+
+				for (const vlan in device.dot1q.untagged) {
+					if (vlan in vlanIds) continue;
+					vlanIds[vlan] = true;
+				}
+
+				for (const vlan in device.dot1q.egress) {
+					if (vlan in vlanIds) continue;
+					vlanIds[vlan] = true;
+				}
+			}
+
+			for (const vlan in vlanIds) {
+				const idBox = document.createElement("div");
+				idBox.style.backgroundColor = "var(--clr-control)";
+				idBox.style.margin = "4px";
+				idBox.style.padding = "2px 4px";
+				idBox.style.borderRadius = "4px";
+				idBox.style.transition = ".2s";
+
+				const color = document.createElement("div");
+				color.style.display = "inline-block";
+				color.style.width = "10px";
+				color.style.height = "10px";
+				color.style.marginRight = "4px";
+				color.style.border = "1px solid var(--clr-dark)";
+				color.style.borderRadius = "2px";
+				color.style.overflow = "hidden";
+				color.style.textOverflow = "ellipses";
+				color.style.whiteSpace = "nowrap";
+				color.style.backgroundColor = this.GetVlanColor(vlan);
+
+				const id = document.createElement("div");
+				id.style.display = "inline-block";
+				id.style.minWidth = "48px";
+				id.textContent = vlan;
+
+				const name = document.createElement("div");
+				name.style.display = "inline-block";
+				name.style.userSelect = "text";
+				name.textContent = this.GetVlanDescription(vlan);
+
+				idBox.append(color, id, name);
+
+				listBox.appendChild(idBox);
+
+				idBox.onclick = ()=> {
+					if (selected) {
+						selected.style.backgroundColor = "var(--clr-control)";
+					}
+
+					selected = idBox;
+					idBox.style.backgroundColor = "var(--clr-select)";
+				};
+			}
+
+		};
+
+		closeButton.onclick = ()=> this.HideNavPane();
+
+		ListVlans();
+		this.ShowNavPane();
 	}
 
 	TrafficMode() {
@@ -2576,6 +2699,16 @@ class Topology extends Window {
 		for (let i=0; i<KEEP.zones.length; i++) {
 			if (KEEP.zones[i].vlan == vlan) {
 				return KEEP.zones[i].color;
+			}
+		}
+		return null;
+	}
+
+	GetVlanDescription(vlan) {
+		if (!vlan || vlan == "") return null;
+		for (let i=0; i<KEEP.zones.length; i++) {
+			if (KEEP.zones[i].vlan == vlan) {
+				return KEEP.zones[i].name;
 			}
 		}
 		return null;
