@@ -253,6 +253,7 @@ class Topology extends Window {
 		this.infoPopup.style.visibility = "hidden";
 		this.infoPopup.textContent = "";
 
+		this.HideNavPane();
 	}
 
 	InitializeSvg() {
@@ -1202,7 +1203,7 @@ class Topology extends Window {
 		closeButton.onclick = ()=> this.HideNavPane();
 
 		const UpdateMap = (isBytes)=> {
-			let max = 100;
+			let max = 1;
 
 			for (const file in this.devices) {
 				const device = this.devices[file];
@@ -1213,6 +1214,8 @@ class Topology extends Window {
 
 				if (isBytes) {
 					for (const port in device.traffic.bytesin) {
+						if (!(port in device?.lldp.localPortId)) continue;
+
 						let sum = 0;
 						if (bytesInCheckbox.checked && device.traffic.bytesin[port])   sum += device.traffic.bytesin[port];
 						if (bytesOutCheckbox.checked && device.traffic.bytesout[port]) sum += device.traffic.bytesout[port];
@@ -1222,6 +1225,8 @@ class Topology extends Window {
 				}
 				else {
 					for (const port in device.traffic.pktsinu) {
+						if (!(port in device?.lldp.localPortId)) continue;
+
 						let sum = 0;
 
 						if (unicastInCheckbox.checked && device.traffic.pktsinu[port])     sum += device.traffic.pktsinu[port];
@@ -1421,7 +1426,7 @@ class Topology extends Window {
 		closeButton.onclick = ()=> this.HideNavPane();
 
 		const UpdateMap = ()=> {
-			let max = 100;
+			let max = 1;
 			for (const file in this.devices) {
 				const device = this.devices[file];
 				
@@ -1430,6 +1435,8 @@ class Topology extends Window {
 				device.error.sum = {};
 
 				for (const port in device.error.in) {
+					if (!(port in device?.lldp.localPortId)) continue;
+
 					let sum = 0;
 					if (errorInCheckbox.checked && device.error.in[port]) sum += device.error.in[port];
 					if (errorOutCheckbox.checked && device.error.out[port]) sum += device.error.out[port];
