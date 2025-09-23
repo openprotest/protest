@@ -1083,6 +1083,42 @@ class Topology extends Window {
 			}
 		}
 
+		const HighlightVlan = vlan=> {
+			for (const file in this.devices) {
+				const device = this.devices[file];
+				if (!device.dot1q) continue;
+
+				const untaggedMap = vlan in device.dot1q.untagged
+					?	device.dot1q.untagged[vlan]
+						.split("")
+						.map(h => parseInt(h, 16).toString(2).padStart(4, "0"))
+						.join("")
+					: "";
+
+				const egressMap = vlan in  device.dot1q.egress
+					?	device.dot1q.egress[vlan]
+						.split("")
+						.map(h => parseInt(h, 16).toString(2).padStart(4, "0"))
+						.join("")
+					: "";
+
+				for (const port in device.lldp.localPortIdSubtype) {
+					const includes = (untaggedMap[port - 1] == 1 || egressMap[port - 1] == 1);
+					const color = includes ? "var(--clr-accent)" : "#000";
+
+					if (port in device.endpoint.dot) {
+						device.endpoint.dot[port].setAttribute("fill", color);
+					}
+					else if (port in device.links && !this.links[device.links[port]].isEndpoint) {
+						const link = this.links[device.links[port]];
+						link.element.line.setAttribute("stroke", color);
+						link.element.capA.setAttribute("fill", color);
+						link.element.capB.setAttribute("fill", color);
+					}
+				}
+			}
+		};
+
 		const ListVlans = ()=> {
 			listBox.textContent = "";
 
@@ -1130,6 +1166,7 @@ class Topology extends Window {
 
 				const name = document.createElement("div");
 				name.style.display = "inline-block";
+				name.style.cursor = "default";
 				name.style.userSelect = "text";
 				name.textContent = this.GetVlanDescription(vlan);
 
@@ -1144,12 +1181,51 @@ class Topology extends Window {
 
 					selected = idBox;
 					idBox.style.backgroundColor = "var(--clr-select)";
+
+					HighlightVlan(vlan);
 				};
 			}
-
 		};
 
 		closeButton.onclick = ()=> this.HideNavPane();
+
+		listBox.onkeydown = event=> {
+			switch (event.key) {
+			case "ArrowUp": {
+				if (listBox.childNodes.length === 0) return;
+				event.preventDefault();
+
+				const children = Array.from(listBox.childNodes);
+				const selectedIndex = Array.from(children).findIndex(o=>o.style.backgroundColor !== "var(--clr-control)");
+
+				if (selectedIndex === -1) {
+					children[0].onclick();
+				}
+				else if (selectedIndex > 0) {
+					children[selectedIndex - 1].scrollIntoView({block:"nearest", inline:"nearest"});
+					children[selectedIndex - 1].onclick();
+				}
+				break;
+			}
+
+			case "ArrowDown": {
+				if (listBox.childNodes.length === 0) return;
+				event.preventDefault();
+
+				const children = Array.from(listBox.childNodes);
+				const selectedIndex = Array.from(children).findIndex(o=>o.style.backgroundColor !== "var(--clr-control)");
+
+				if (selectedIndex === -1) {
+					children[0].onclick();
+				}
+				else if (selectedIndex < children.length - 1) {
+					children[selectedIndex + 1].scrollIntoView({block:"nearest", inline:"nearest"});
+					children[selectedIndex + 1].onclick();
+				}
+				break;
+			}
+			}
+		};
 
 		ListVlans();
 		this.ShowNavPane();
@@ -2931,7 +3007,7 @@ class Topology extends Window {
 		if (device.dot1q) {
 			let untaggedString = "";
 			for (const vlan in device.dot1q.untagged) {
-				if (!(vlan in device.dot1q.untagged) || device.dot1q.untagged[vlan].length === 0) continue;
+				if (!(vlan in device.dot1q.untagged) || device.dot1q.untagged[vlan].length > vlan) continue;
 				const hexMap = device.dot1q.untagged[vlan];
 				const binMap = hexMap
 					.split("")
@@ -2945,7 +3021,7 @@ class Topology extends Window {
 
 			const taggedString = [];
 			for (const vlan in device.dot1q.egress) {
-				if (!(vlan in device.dot1q.egress) || device.dot1q.egress[vlan].length === 0) continue;
+				if (!(vlan in device.dot1q.egress) || device.dot1q.egress[vlan].length > vlan) continue;
 				const hexMap = device.dot1q.egress[vlan];
 				const binMap = hexMap
 					.split("")
