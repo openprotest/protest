@@ -616,6 +616,13 @@ class Topology extends Window {
 
 		this.workspace.style.left = "8px";
 
+		this.ResetLinkColor();
+
+		setTimeout(()=>this.AdjustSvgSize(), 200);
+		this.content.focus();
+	}
+
+	ResetLinkColor() {
 		for (const file in this.devices) {
 			const device = this.devices[file];
 
@@ -632,9 +639,6 @@ class Topology extends Window {
 				link.element.line.setAttribute("stroke", "#c0c0c0");
 			}
 		}
-
-		setTimeout(()=>this.AdjustSvgSize(), 200);
-		this.content.focus();
 	}
 
 	SortByLocation_Phase1() {
@@ -835,6 +839,8 @@ class Topology extends Window {
 			return;
 		}
 
+		this.ResetLinkColor();
+		
 		this.uiMode = "find";
 		this.navPane.textContent = "";
 
