@@ -424,7 +424,7 @@ class Topology extends Window {
 		const [macLabel, macInput] = AddParameter("MAC table", "input", "toggle");
 		macLabel.style.lineHeight = "24px";
 		macLabel.style.paddingLeft = "28px";
-		macLabel.style.backgroundImage = "url(mono/chip.svg)";
+		macLabel.style.backgroundImage = "url(mono/physicaladdress.svg)";
 		macLabel.style.backgroundSize = "24px";
 		macLabel.style.backgroundRepeat = "no-repeat";
 		macInput.checked = this.args.options ? this.args.options.mac : false;
@@ -998,7 +998,7 @@ class Topology extends Window {
 		item.append(iconBox, nameBox);
 
 		if (source === "MAC table") {
-			iconBox.style.backgroundImage = `url(mono/chip.svg)`;
+			iconBox.style.backgroundImage = `url(mono/physicaladdress.svg)`;
 		}
 		else if (portIndex) {
 			iconBox.style.backgroundImage = `url(mono/endpoint.svg)`;
@@ -3175,7 +3175,7 @@ class Topology extends Window {
 			if (device.dot1tp && device.dot1tp.table[portIndex]) {
 				const macBox = document.createElement("div");
 				macBox.style.paddingTop = "8px";
-				macBox.style.backgroundImage = "url(mono/chip.svg)";
+				macBox.style.backgroundImage = "url(mono/physicaladdress.svg)";
 				macBox.style.backgroundPositionY = "6px";
 				macBox.setAttribute("info-label", "MAC table:");
 				container.appendChild(macBox);
@@ -3239,7 +3239,7 @@ class Topology extends Window {
 				const table = device.dot1tp.table[portIndex];
 
 				const macBox = document.createElement("div");
-				macBox.style.backgroundImage = "url(mono/chip.svg)";
+				macBox.style.backgroundImage = "url(mono/physicaladdress.svg)";
 				macBox.setAttribute("info-label", "MAC table:");
 				container.appendChild(macBox);
 
