@@ -3007,28 +3007,33 @@ class Topology extends Window {
 		if (device.dot1q) {
 			let untaggedString = "";
 			for (const vlan in device.dot1q.untagged) {
-				if (!(vlan in device.dot1q.untagged) || device.dot1q.untagged[vlan].length > vlan) continue;
+				if (!(vlan in device.dot1q.untagged)) continue;
+				if (device.dot1q.untagged[vlan].length === 0) continue;
 				const hexMap = device.dot1q.untagged[vlan];
 				const binMap = hexMap
 					.split("")
 					.map(h => parseInt(h, 16).toString(2).padStart(4, "0"))
 					.join("");
 
-				if (binMap[parseInt(portIndex) - 1] == 1) {
+				const idx = parseInt(portIndex) - 1;
+				if (binMap.length > idx && binMap[idx] == 1) {
 					untaggedString = vlan;
 				}
 			}
 
 			const taggedString = [];
 			for (const vlan in device.dot1q.egress) {
-				if (!(vlan in device.dot1q.egress) || device.dot1q.egress[vlan].length > vlan) continue;
+				if (!(vlan in device.dot1q.egress)) continue;
+				if (device.dot1q.egress[vlan].length === 0) continue;
+
 				const hexMap = device.dot1q.egress[vlan];
 				const binMap = hexMap
 					.split("")
 					.map(h => parseInt(h, 16).toString(2).padStart(4, "0"))
 					.join("");
 
-				if (binMap[parseInt(portIndex) - 1] == 1 && vlan !== untaggedString) {
+				const idx = parseInt(portIndex) - 1;
+				if (binMap.length > idx && binMap[idx] == 1 && vlan !== untaggedString) {
 					taggedString.push(vlan);
 				}
 			}
