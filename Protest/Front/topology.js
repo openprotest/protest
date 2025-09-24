@@ -215,9 +215,8 @@ class Topology extends Window {
 			return;
 		}
 
-		let dx = (event.clientX - this.x0) / this.zoom;
-		let dy = (event.clientY - this.y0) / this.zoom;
-
+		const dx = (event.clientX - this.x0) / this.zoom;
+		const dy = (event.clientY - this.y0) / this.zoom;
 		let x = this.offsetX + dx;
 		let y = this.offsetY + dy;
 
@@ -231,9 +230,6 @@ class Topology extends Window {
 		this.dragging.element.root.style.transform = `translate(${x}px,${y}px)`;
 
 		if (this.shiftKey) {
-			const dx = event.clientX - this.x0;
-			const dy = event.clientY - this.y0;
-
 			for (const key in this.dragging.links) {
 				const file = this.dragging.links[key];
 				const link = this.links[file];
