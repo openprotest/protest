@@ -181,7 +181,7 @@ class NetCalc extends Window {
 
 			let v = 0;
 			for (let i=0; i<value; i++) {
-				v += Math.pow(2, 7 - i);
+				v += 2 ** (7-i);
 			}
 			this.ipMask.textBoxes[octet].value = v;
 
@@ -202,7 +202,7 @@ class NetCalc extends Window {
 
 			let v = 0;
 			for (let i = 0; i < value; i++)
-				v += Math.pow(2, 7 - i);
+				v += 2 ** (7-i);
 			this.ipMask.textBoxes[octet].value = v;
 
 			this.Calculate();
@@ -298,7 +298,7 @@ class NetCalc extends Window {
 		this.RangeLabel.textContent = `Host range:\n` + net[0] + "." + net[1] + "." + net[2] + "." + (net[3] + 1) + " - " +
 			broadcast[0] + "." + broadcast[1] + "." + broadcast[2] + "." + (broadcast[3] - 1);
 
-		this.totalLabel.textContent = `Hosts:\n${(Math.pow(2, 32 - this.cidrRange.value) - 2)}`;
+		this.totalLabel.textContent = `Hosts:\n${2 ** (32 - this.cidrRange.value) - 2}`;
 
 		this.wildcardBox.textContent = `${255 - mask[0]}.${255 - mask[1]}.${255 - mask[2]}.${255 - mask[3]}`;
 

@@ -119,8 +119,8 @@ class Certificates extends List {
 		const rsaKeyInput = AddParameter("RSA key size", "select", null);
 		for (let i=0; i<5; i++) {
 			const option = document.createElement("option");
-			option.value = 256 * Math.pow(2, i);
-			option.text = `${256 * Math.pow(2, i)} bits`;
+			option.value = 256 * 2 ** i;
+			option.text = `${value} bits`;
 			rsaKeyInput.appendChild(option);
 		}
 		rsaKeyInput.value = 2048;

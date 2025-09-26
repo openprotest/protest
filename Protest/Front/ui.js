@@ -243,53 +243,53 @@ const UI = {
 	SizeToString: size=> {
 		if (size < 8_192) return `${size} bytes`;
 		if (size < 8_192 * 1024) return `${(size / 1024).toFixed(2)} KB`;
-		if (size < 8_192 * Math.pow(1024,2)) return `${(size / Math.pow(1024,2)).toFixed(2)} MB`;
-		if (size < 8_192 * Math.pow(1024,3)) return `${(size / Math.pow(1024,3)).toFixed(2)} GB`;
-		if (size < 8_192 * Math.pow(1024,4)) return `${(size / Math.pow(1024,4)).toFixed(2)} TB`;
-		if (size < 8_192 * Math.pow(1024,5)) return `${(size / Math.pow(1024,5)).toFixed(2)} EB`;
-		if (size < 8_192 * Math.pow(1024,6)) return `${(size / Math.pow(1024,6)).toFixed(2)} ZB`;
-		if (size < 8_192 * Math.pow(1024,7)) return `${(size / Math.pow(1024,7)).toFixed(2)} YB`;
-		if (size < 8_192 * Math.pow(1024,8)) return `${(size / Math.pow(1024,8)).toFixed(2)} BB`;
+		if (size < 8_192 * 1024 ** 2) return `${(size / 1024 ** 2).toFixed(2)} MB`;
+		if (size < 8_192 * 1024 ** 3) return `${(size / 1024 ** 3).toFixed(2)} GB`;
+		if (size < 8_192 * 1024 ** 4) return `${(size / 1024 ** 4).toFixed(2)} TB`;
+		if (size < 8_192 * 1024 ** 5) return `${(size / 1024 ** 5).toFixed(2)} EB`;
+		if (size < 8_192 * 1024 ** 6) return `${(size / 1024 ** 6).toFixed(2)} ZB`;
+		if (size < 8_192 * 1024 ** 7) return `${(size / 1024 ** 7).toFixed(2)} YB`;
+		if (size < 8_192 * 1024 ** 8) return `${(size / 1024 ** 8).toFixed(2)} BB`;
 	},
 
 	SizeToGB: size=> {
-		return (size / Math.pow(1024,3)).toFixed(2);
+		return (size / 1024 ** 3).toFixed(2);
 	},
 
 	BytesPerSecToString: bps=> {
 		if (bps < 8_192) return `${bps} Bps`;
 		if (bps < 8_192 * 1024) return `${(bps / 1024).toFixed(2)} KBps`;
-		if (bps < 8_192 * Math.pow(1024,2)) return `${(bps / Math.pow(1024,2)).toFixed(2)} MBps`;
-		if (bps < 8_192 * Math.pow(1024,3)) return `${(bps / Math.pow(1024,3)).toFixed(2)} GBps`;
-		if (bps < 8_192 * Math.pow(1024,4)) return `${(bps / Math.pow(1024,4)).toFixed(2)} TBps`;
-		if (bps < 8_192 * Math.pow(1024,5)) return `${(bps / Math.pow(1024,5)).toFixed(2)} EBps`;
-		if (bps < 8_192 * Math.pow(1024,6)) return `${(bps / Math.pow(1024,6)).toFixed(2)} ZBps`;
-		if (bps < 8_192 * Math.pow(1024,7)) return `${(bps / Math.pow(1024,7)).toFixed(2)} YBps`;
-		if (bps < 8_192 * Math.pow(1024,8)) return `${(bps / Math.pow(1024,8)).toFixed(2)} BBps`;
+		if (bps < 8_192 * 1024 ** 2) return `${(bps / 1024 ** 2).toFixed(2)} MBps`;
+		if (bps < 8_192 * 1024 ** 3) return `${(bps / 1024 ** 3).toFixed(2)} GBps`;
+		if (bps < 8_192 * 1024 ** 4) return `${(bps / 1024 ** 4).toFixed(2)} TBps`;
+		if (bps < 8_192 * 1024 ** 5) return `${(bps / 1024 ** 5).toFixed(2)} EBps`;
+		if (bps < 8_192 * 1024 ** 6) return `${(bps / 1024 ** 6).toFixed(2)} ZBps`;
+		if (bps < 8_192 * 1024 ** 7) return `${(bps / 1024 ** 7).toFixed(2)} YBps`;
+		if (bps < 8_192 * 1024 ** 8) return `${(bps / 1024 ** 8).toFixed(2)} BBps`;
 	},
 
 	BytesPerSecToShortString: bps=> {
 		if (bps < 8_192) return `${Math.round(bps)} Bps`;
 		if (bps < 8_192 * 1024) return `${Math.round(bps / 1024)} KBps`;
-		if (bps < 8_192 * Math.pow(1024,2)) return `${Math.round(bps / Math.pow(1024,2))} MBps`;
-		if (bps < 8_192 * Math.pow(1024,3)) return `${Math.round(bps / Math.pow(1024,3))} GBps`;
-		if (bps < 8_192 * Math.pow(1024,4)) return `${Math.round(bps / Math.pow(1024,4))} TBps`;
-		if (bps < 8_192 * Math.pow(1024,5)) return `${Math.round(bps / Math.pow(1024,5))} EBps`;
-		if (bps < 8_192 * Math.pow(1024,6)) return `${Math.round(bps / Math.pow(1024,6))} ZBps`;
-		if (bps < 8_192 * Math.pow(1024,7)) return `${Math.round(bps / Math.pow(1024,7))} YBps`;
-		if (bps < 8_192 * Math.pow(1024,8)) return `${Math.round(bps / Math.pow(1024,8))} BBps`;
+		if (bps < 8_192 * 1024 ** 2) return `${Math.round(bps / 1024 ** 2)} MBps`;
+		if (bps < 8_192 * 1024 ** 3) return `${Math.round(bps / 1024 ** 3)} GBps`;
+		if (bps < 8_192 * 1024 ** 4) return `${Math.round(bps / 1024 ** 4)} TBps`;
+		if (bps < 8_192 * 1024 ** 5) return `${Math.round(bps / 1024 ** 5)} EBps`;
+		if (bps < 8_192 * 1024 ** 6) return `${Math.round(bps / 1024 ** 6)} ZBps`;
+		if (bps < 8_192 * 1024 ** 7) return `${Math.round(bps / 1024 ** 7)} YBps`;
+		if (bps < 8_192 * 1024 ** 8) return `${Math.round(bps / 1024 ** 8)} BBps`;
 	},
 
 	BitsPerSecToString: bps=> {
 		if (bps < 8_000) return `${bps} bps`;
 		if (bps < 8_000 * 1000) return `${Math.floor(bps / 1000)} Kbps`;
-		if (bps < 8_000 * Math.pow(1000,2)) return `${(bps / Math.pow(1000,2)).toFixed(2)} Mbps`;
-		if (bps < 8_000 * Math.pow(1000,3)) return `${(bps / Math.pow(1000,3)).toFixed(2)} Gbps`;
-		if (bps < 8_000 * Math.pow(1000,4)) return `${(bps / Math.pow(1000,4)).toFixed(2)} Tbps`;
-		if (bps < 8_000 * Math.pow(1000,5)) return `${(bps / Math.pow(1000,5)).toFixed(2)} Ebps`;
-		if (bps < 8_000 * Math.pow(1000,6)) return `${(bps / Math.pow(1000,6)).toFixed(2)} Zbps`;
-		if (bps < 8_000 * Math.pow(1000,7)) return `${(bps / Math.pow(1000,7)).toFixed(2)} Ybps`;
-		if (bps < 8_000 * Math.pow(1000,8)) return `${(bps / Math.pow(1000,8)).toFixed(2)} Bbps`;
+		if (bps < 8_000 * 1000 ** 2) return `${(bps / 1000 ** 2).toFixed(2)} Mbps`;
+		if (bps < 8_000 * 1000 ** 3) return `${(bps / 1000 ** 3).toFixed(2)} Gbps`;
+		if (bps < 8_000 * 1000 ** 4) return `${(bps / 1000 ** 4).toFixed(2)} Tbps`;
+		if (bps < 8_000 * 1000 ** 5) return `${(bps / 1000 ** 5).toFixed(2)} Ebps`;
+		if (bps < 8_000 * 1000 ** 6) return `${(bps / 1000 ** 6).toFixed(2)} Zbps`;
+		if (bps < 8_000 * 1000 ** 7) return `${(bps / 1000 ** 7).toFixed(2)} Ybps`;
+		if (bps < 8_000 * 1000 ** 8) return `${(bps / 1000 ** 8).toFixed(2)} Bbps`;
 	},
 
 	GenerateUuid: prefix=> {
@@ -352,11 +352,11 @@ const MENU = {
 		{ t:"Address book",  i:"mono/addressbook.svg?light",   g:"documentation", h:false, f:()=> new AddressBook(),   k:"phone email" },
 		{ t:"Team chat",     i:"mono/chat.svg?light",          g:"documentation", h:false, f:()=> new Chat(),          k:"messages" },
 
-		{ t:"IP discovery",    i:"mono/ipdiscovery.svg?light",  g:"tools", h:false, f:()=> new IpDiscovery() },
+		{ t:"Topology",        i:"mono/topology.svg?light",     g:"tools", h:false, f:()=> new Topology() },
 		{ t:"Watchdog",        i:"mono/watchdog.svg?light",     g:"tools", h:false, f:()=> new Watchdog() },
 		{ t:"Reverse proxy",   i:"mono/reverseproxy.svg?light", g:"tools", h:false, f:args=> new ReverseProxy(args), k:"man in the middle" },
 		{ t:"Issues",          i:"mono/issues.svg?light",       g:"tools", h:false, f:()=> new Issues() },
-		{ t:"Topology",        i:"mono/topology.svg?light",     g:"tools", h:true,  f:()=> new Topology() },
+		{ t:"IP discovery",    i:"mono/ipdiscovery.svg?light",  g:"tools", h:true,  f:()=> new IpDiscovery() },
 		{ t:"Gandalf",         i:"mono/gandalf.svg?light",      g:"tools", h:true,  f:()=> new Gandalf() },
 		//{ t:"Scripts",         i:"mono/scripts.svg?light",     g:"tools", h:false, f:args=> {} },
 		//{ t:"Script reports",  i:"mono/reportfile.svg?light",  g:"tools", h:true,  f:args=> {} },

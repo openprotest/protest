@@ -676,6 +676,39 @@ class Topology extends Window {
 	}
 
 	SortByLocation_Phase2() {
+		/*
+		const degrees = Object.values(this.devices)
+			.filter(d => !d.isUnmanaged)
+			.map(d => {
+				let linksCount = 0;
+
+				for (const port in d.links) {
+					const link = this.links[d.links[port]];
+					if (!link.isEndpoint) linksCount++;
+				}
+				return { device: d, degree: linksCount };
+			});
+
+		const mean = degrees.reduce((s, d)=>s+d.degree,0) / degrees.length;
+		const variance = degrees.reduce((s, d)=>s + (d.degree - mean) ** 2,0) / degrees.length;
+		const stdDev = Math.sqrt(variance);
+
+		const coreDevices = degrees.filter(d => d.degree >= mean + stdDev);
+		const edgeDevices = degrees.filter(d => d.degree < mean + stdDev);
+
+		this.globalX = Topology.VIEW_PADDING_X;
+		this.globalY = Topology.VIEW_PADDING_Y;
+
+
+		for (let i=0; i<coreDevices.length; i++) {
+
+		}
+
+		for (let i=0; i<edgeDevices.length; i++) {
+
+		}
+		*/
+
 		const groups = {};
 
 		for (const file in this.devices) {
@@ -685,7 +718,7 @@ class Topology extends Window {
 			
 			const location = device.initial.location?.toLowerCase().trim() ?? UI.GenerateUuid();
 
-			(groups[location] ??= { list: [], count: 0 }).list.push(device);
+			(groups[location] ??= { list:[], count:0 }).list.push(device);
 		
 			let linksCount = 0;
 			for (const port in device.links) {
@@ -698,6 +731,10 @@ class Topology extends Window {
 		}
 
 		const sortedByLink = Object.keys(groups).sort((a, b)=> groups[b].count - groups[a].count);
+
+		for (let i=0; i<sortedByLink.length; i++) {
+			console.log(sortedByLink[i], groups[sortedByLink[i]].count);
+		}
 
 		this.globalX = Topology.VIEW_PADDING_X;
 		this.globalY = Topology.VIEW_PADDING_Y;

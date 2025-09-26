@@ -463,7 +463,7 @@ class PassGen extends Window {
 		if (this.symbolsToggle.checkbox.checked) pool += 30;
 
 		let entropy = Math.log(pool, 2) * this.passwordInput.value.length;
-		//same as     Math.log(Math.pow(pool, this.passwordInput.value.length), 2));
+		//same as     Math.log(pool ** this.passwordInput.value.length, 2));
 
 		let strength = PassGen.StrengthBar(entropy);
 		let color = strength[0];
@@ -474,7 +474,7 @@ class PassGen extends Window {
 		this.commentLabel.textContent = comment;
 		this.entropyValueLabel.textContent = Math.round(entropy);
 
-		let combinations = Math.pow(pool, this.passwordInput.value.length);
+		let combinations = pool ** this.passwordInput.value.length;
 		let ttc = combinations / 350000000000; //time to crack in seconds
 
 		let eon = Math.floor(ttc / (1000000000 * 365 * 24 * 3600));

@@ -90,7 +90,7 @@ const KEEP = {
 			for (let i=0; i<octet; i++) { mask[i] = 255; }
 			for (let i=octet+1; i<4; i++) { mask[i] = 0; }
 			let v = 0;
-			for (let i=0; i<target; i++) { v += Math.pow(2, 7-i); }
+			for (let i=0; i<target; i++) { v += 2 ** (7-i); }
 			mask[octet] = v;
 
 			const first =
