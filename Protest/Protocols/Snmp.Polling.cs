@@ -120,16 +120,16 @@ internal static partial class Polling {
     internal static IList<Variable> SnmpRequestV1V2(IPEndPoint endpoint, VersionCode version, int timeout, OctetString community, string[] oidArray, SnmpOperation operation, OctetString data = null) {
         if (operation == SnmpOperation.Get) {
             IList<Variable> oidList = oidArray
-                        .Select(o=> new Variable(new ObjectIdentifier(o.Trim())))
-                        .ToList();
+                .Select(o=> new Variable(new ObjectIdentifier(o.Trim())))
+                .ToList();
 
             IList<Variable> result = Messenger.Get(version, endpoint, community, oidList, timeout);
             return result;
         }
         else if (operation == SnmpOperation.Set) {
             IList<Variable> oidList = oidArray
-                        .Select(o=> new Variable(new ObjectIdentifier(o.Trim()), data))
-                        .ToList();
+                .Select(o=> new Variable(new ObjectIdentifier(o.Trim()), data))
+                .ToList();
 
             IList<Variable> result = Messenger.Set(version, endpoint, community, oidList, timeout);
             return result;

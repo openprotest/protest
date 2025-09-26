@@ -120,7 +120,7 @@ internal static class Topology {
                 if (!candidate.attributes.TryGetValue("snmp profile", out Database.Attribute profileAttr)) return;
                 if (!SnmpProfiles.FromGuid(profileAttr.value, out SnmpProfiles.Profile snmpProfile) || snmpProfile is null) return;
 
-                string ipString = ipAttr.value.Split(";")[0].Trim();
+                string ipString = ipAttr.value.Split(';')[0].Trim();
                 if (!IPAddress.TryParse(ipString, out IPAddress ipAddress)) return;
 
                 await Task.Delay(1);
@@ -220,7 +220,7 @@ internal static class Topology {
         Dictionary<int, List<string>> remotePortId           = new Dictionary<int, List<string>>();
         Dictionary<int, List<string>> remoteSystemName       = new Dictionary<int, List<string>>();
 
-        Dictionary<int, List<string>> databaseEntry          = new Dictionary<int, List<string>>();
+        Dictionary<int, List<string>> dbEntry                = new Dictionary<int, List<string>>();
 
         foreach (KeyValuePair<string, Variable> pair in local) {
             if (!int.TryParse(pair.Key.Split('.')[^1], out int index)) continue;
@@ -288,7 +288,7 @@ internal static class Topology {
                 if (portId.Count != chassisIdSubtype.Count) continue;
                 if (systemName.Count != chassisIdSubtype.Count) continue;
 
-                string match = GetDatabaseEntry(
+                string match = GetDatabaseEntryByLldp(
                     chassisIdSubtype[i],
                     chassisId[i].ToLower(),
                     portIdSubtype[i],
@@ -296,7 +296,7 @@ internal static class Topology {
                     systemName[i].ToLower()
                 );
 
-                databaseEntry.Push(index, match);
+                dbEntry.Push(index, match);
             }
         }
 
@@ -320,7 +320,7 @@ internal static class Topology {
                 remotePortId           = remotePortId,
                 remoteSystemName       = remoteSystemName,
 
-                entry                  = databaseEntry,
+                entry                  = dbEntry,
             }
         });
 
@@ -344,11 +344,25 @@ internal static class Topology {
                 macTable[port] = new List<string>() { mac };
             }
         }
+        
+        Dictionary<int, string> dbEntry= new Dictionary<int, string>();
+        foreach (KeyValuePair<int, List<string>> pair in macTable) {
+            int port = pair.Key;
+            List<string> list = pair.Value;
+
+            if (list.Count != 1) continue;
+
+            string match = GetDatabaseEntryByMac(list[0]);
+            if (match is not null) {
+                dbEntry[port] = match;
+            }
+        }
 
         byte[] payload = JsonSerializer.SerializeToUtf8Bytes(new {
             dot1tp = new {
-                file = file,
-                table = macTable
+                file  = file,
+                table = macTable,
+                entry = dbEntry
             }
         });
 
@@ -555,7 +569,7 @@ internal static class Topology {
         }
     }
 
-    private static string GetDatabaseEntry(int chassisIdSubtype, string chassisId, int portIdSubtype, string portId, string systemName) {
+    private static string GetDatabaseEntryByLldp(int chassisIdSubtype, string chassisId, int portIdSubtype, string portId, string systemName) {
         switch (chassisIdSubtype) {
         case 4: { //mac
             foreach (KeyValuePair<string, Database.Entry> device in DatabaseInstances.devices.dictionary) {
@@ -594,6 +608,14 @@ internal static class Topology {
 
         foreach (KeyValuePair<string, Database.Entry> device in DatabaseInstances.devices.dictionary) {
             if (MatchDatabaseAttribute(device.Value, "hostname", systemName)) return device.Key;
+        }
+
+        return null;
+    }
+
+    private static string GetDatabaseEntryByMac(string mac) {
+        foreach (KeyValuePair<string, Database.Entry> device in DatabaseInstances.devices.dictionary) {
+            if (MatchDatabaseAttribute(device.Value, "mac address", mac)) return device.Key;
         }
 
         return null;

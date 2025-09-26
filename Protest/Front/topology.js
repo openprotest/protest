@@ -2816,10 +2816,10 @@ class Topology extends Window {
 			remoteBox.className = "topology-ambiguous";
 		}
 
-		const entry = device.lldp.entry[portIndex];
+		const entry = device.lldp.entry[portIndex] || [device?.dot1tp?.entry[portIndex]];
 		let dbFile = null;
-
-		if (entry && entry.length === 1) {
+		
+		if (entry && entry.length === 1 && entry[0]) {
 			const file = entry[0];
 
 			if (file === null) {
@@ -3081,10 +3081,10 @@ class Topology extends Window {
 			errorBox.appendChild(errorValue);
 		}
 
-		if (link && dbFile) {
+		if (dbFile) {
 			const linkBox = document.createElement("div");
-			linkBox.style.backgroundImage = "url(mono/endpoint.svg)";
-			linkBox.setAttribute("info-label", "Link:");
+			linkBox.style.backgroundImage = "url(mono/gear.svg)";
+			linkBox.setAttribute("info-label", "Device:");
 			container.appendChild(linkBox);
 
 			const linkValue = document.createElement("div");
