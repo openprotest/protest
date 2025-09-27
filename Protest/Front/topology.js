@@ -9,14 +9,14 @@ class Topology extends Window {
 	static VENDOR_CACHE = {};
 
 	static VIEW_PADDING_X = 50;
-	static VIEW_PADDING_Y = 100;
+	static VIEW_PADDING_Y = 50;
 	static DEVICE_WIDTH   = 100;
 	static ROW_HEIGHT     = 250;
 	static MAX_WIDTH      = 1500;
 
 	constructor(args) {
 		super();
-		this.args = args ?? {};
+		this.args = args ?? { zoom:1 };
 
 		this.AddCssDependencies("topology.css");
 
@@ -31,7 +31,6 @@ class Topology extends Window {
 		this.dragging = null;
 		this.shiftKey = false;
 		this.selectedInterface = null;
-		this.zoom = 1;
 
 		this.ws = null;
 		this.devices = {};
@@ -215,8 +214,8 @@ class Topology extends Window {
 			return;
 		}
 
-		const dx = (event.clientX - this.x0) / this.zoom;
-		const dy = (event.clientY - this.y0) / this.zoom;
+		const dx = (event.clientX - this.x0) / this.args.zoom;
+		const dy = (event.clientY - this.y0) / this.args.zoom;
 		let x = this.offsetX + dx;
 		let y = this.offsetY + dy;
 
@@ -299,6 +298,7 @@ class Topology extends Window {
 		this.svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
 		this.svg.setAttribute("width", 1);
 		this.svg.setAttribute("height", 1);
+		this.svg.style.zoom = `${100 * this.args.zoom}%`;
 		this.workspace.appendChild(this.svg);
 
 		const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
@@ -509,7 +509,7 @@ class Topology extends Window {
 				}
 			}
 
-			this.SortByLocation_Phase2();
+			this.SortByConnectivity();
 			this.SortUnreachable();
 		};
 
@@ -538,7 +538,7 @@ class Topology extends Window {
 					};
 				}
 
-				this.SortByLocation_Phase1();
+				this.SortByLocation();
 			}
 			else if (json.retrieve && !forbiddenKeys.includes(json.retrieve)) {
 				const device = this.devices[json.retrieve];
@@ -641,7 +641,7 @@ class Topology extends Window {
 		}
 	}
 
-	SortByLocation_Phase1() {
+	SortByLocation() {
 		const groups = {};
 
 		for (const file in this.devices) {
@@ -675,92 +675,114 @@ class Topology extends Window {
 		this.globalY += Topology.ROW_HEIGHT;
 	}
 
-	SortByLocation_Phase2() {
-		/*
+	SortByConnectivity() {
 		const degrees = Object.values(this.devices)
 			.filter(d => !d.isUnmanaged)
 			.map(d => {
 				let linksCount = 0;
-
 				for (const port in d.links) {
 					const link = this.links[d.links[port]];
 					if (!link.isEndpoint) linksCount++;
 				}
-				return { device: d, degree: linksCount };
+
+				return {
+					device: d,
+					degree: linksCount,
+				};
 			});
 
-		const mean = degrees.reduce((s, d)=>s+d.degree,0) / degrees.length;
-		const variance = degrees.reduce((s, d)=>s + (d.degree - mean) ** 2,0) / degrees.length;
-		const stdDev = Math.sqrt(variance);
+		const mean = degrees.reduce((s, d)=> s + d.degree, 0) / degrees.length;
+		const variance = degrees.reduce((s, d)=> s + (d.degree - mean) ** 2, 0) / degrees.length;
+		const threshold = mean + Math.sqrt(variance);
 
-		const coreDevices = degrees.filter(d => d.degree >= mean + stdDev);
-		const edgeDevices = degrees.filter(d => d.degree < mean + stdDev);
+		const coreDevices = degrees.filter(d=> d.degree > threshold);
+		//const edgeDevices = degrees.filter(d=> d.degree <= threshold);
 
-		this.globalX = Topology.VIEW_PADDING_X;
-		this.globalY = Topology.VIEW_PADDING_Y;
-
+		const groups = [];
+		const groupWidth = Topology.MAX_WIDTH / coreDevices.length;
 
 		for (let i=0; i<coreDevices.length; i++) {
+			groups.push({
+				x        : i * groupWidth,
+				y        : Topology.VIEW_PADDING_Y + Topology.ROW_HEIGHT,
+				levels   : [],
+			});
 
-		}
+			const device = coreDevices[i].device;
+			const x = groupWidth * i + (groupWidth - Topology.DEVICE_WIDTH) / 2;
 
-		for (let i=0; i<edgeDevices.length; i++) {
+			this.MoveDeviceElement(device.element, x, Topology.VIEW_PADDING_Y);
 
-		}
-		*/
-
-		const groups = {};
-
-		for (const file in this.devices) {
-			const device = this.devices[file];
-			
-			if (device.isUnmanaged) continue;
-			
-			const location = device.initial.location?.toLowerCase().trim() ?? UI.GenerateUuid();
-
-			(groups[location] ??= { list:[], count:0 }).list.push(device);
-		
-			let linksCount = 0;
+			const level = {};
 			for (const port in device.links) {
 				const link = this.links[device.links[port]];
 				if (link.isEndpoint) continue;
-				linksCount++;
+
+				const remoteDevice = device.initial.file === link.deviceA
+					? this.devices[link.deviceB]
+					: this.devices[link.deviceA];
+
+				if (remoteDevice.isUnmanaged) continue;
+
+				const file = remoteDevice.initial.file;
+				const isLinkedToCore  = coreDevices.find(d=> d.device === remoteDevice);
+				const isAlreadyAChild = file in level;
+
+				if (!isLinkedToCore && !isAlreadyAChild) {
+					level[file] = remoteDevice;
+				}
 			}
 
-			groups[location].count += linksCount;
+			groups[i].levels.push(level);
 		}
 
-		const sortedByLink = Object.keys(groups).sort((a, b)=> groups[b].count - groups[a].count);
+		for (let i = 0; i < groups.length; i++) {
+			let x = 0;
+			let y = groups[i].y;
 
-		for (let i=0; i<sortedByLink.length; i++) {
-			console.log(sortedByLink[i], groups[sortedByLink[i]].count);
-		}
+			const visited = new Set(Object.keys(groups[i].levels[0]));
+			visited.add(coreDevices[i].device.initial.file);
 
-		this.globalX = Topology.VIEW_PADDING_X;
-		this.globalY = Topology.VIEW_PADDING_Y;
+			for (let levelIndex = 0; levelIndex < groups[i].levels.length; levelIndex++) {
+				const level = groups[i].levels[levelIndex];
 
-		for (let i=0; i<sortedByLink.length; i++) {
-			const location = sortedByLink[i];
-			const group = groups[location];
-			const width = group.list.length * Topology.DEVICE_WIDTH;
+				for (const file in level) {
+					const device = level[file];
 
-			if (this.globalX !== Topology.VIEW_PADDING_X && this.globalX + width > Topology.MAX_WIDTH) {
-				this.globalX = Topology.VIEW_PADDING_X;
-				this.globalY += Topology.ROW_HEIGHT;
+					visited.add(device.initial.file);
+
+					if (x !== 0 && x + Topology.DEVICE_WIDTH > groupWidth) {
+						x = 0;
+						y += Topology.ROW_HEIGHT;
+						groups[i].y = y;
+					}
+
+					this.MoveDeviceElement(device.element, groups[i].x + x, y);
+					x += Topology.DEVICE_WIDTH;
+
+					const nextLevel = {};
+					for (const port in device.links) {
+						const link = this.links[device.links[port]];
+						if (link.isEndpoint) continue;
+
+						const remoteDevice = device.initial.file === link.deviceA
+							? this.devices[link.deviceB]
+							: this.devices[link.deviceA];
+
+						if (remoteDevice.isUnmanaged) continue;
+
+						const file = remoteDevice.initial.file;
+						if (!visited.has(file)) {
+							nextLevel[file] = remoteDevice;
+							visited.add(file);
+						}
+					}
+
+					if (Object.keys(nextLevel).length > 0) {
+						groups[i].levels.push(nextLevel);
+					}
+				}
 			}
-			else if (i > 0) {
-				//TODO:
-			}
-
-			for (let j=0; j<group.list.length; j++) {
-				const device = group.list[j];
-				if (device.isUnmanaged) continue;
-				let x = this.globalX + j * Topology.DEVICE_WIDTH;
-				let y = this.globalY;
-				this.MoveDeviceElement(device.element, x, y);
-			}
-
-			this.globalX += width + 100;
 		}
 
 		this.PlaceUnmanagedElements();
@@ -824,20 +846,20 @@ class Topology extends Window {
 
 			for (const port in device.links) {
 				const link = this.links[device.links[port]];
-				
+
 				const a = this.devices[link.deviceA];
 				const b = this.devices[link.deviceB];
 				const unmanaged = a.isUnmanaged ? a : (b?.isUnmanaged ? b : null);
 
 				if (!unmanaged) continue;
-				
+
 				list.push(unmanaged);
 			}
 
 			for (let i=0; i<list.length; i++) {
 				const totalWidth = list.length * 36;
-				const x = device.element.x - totalWidth / 2 + i * 36 + 42;
-				const y = device.element.y - 100 + (i % 2 === 0 ? 0 : 30);
+				const x = device.element.x - totalWidth / 2 + i * 36 + 93;
+				const y = device.element.y + 125 + (i % 2 === 0 ? 0 : 30);
 				this.MoveDeviceElement(list[i].element, x, y);
 			}
 
@@ -877,7 +899,7 @@ class Topology extends Window {
 		}
 
 		this.ResetLinkColor();
-		
+
 		this.uiMode = "find";
 		this.navPane.textContent = "";
 
@@ -1474,7 +1496,7 @@ class Topology extends Window {
 		legend.style.marginRight = "11px";
 		legend.style.marginTop = "4px";
 		legend.style.background = "linear-gradient(90deg,rgb(255,186,0) 0%, rgb(122,212,43) 100%)";
-		
+
 		this.navPane.append(thresholdLabel, thresholdInput, legend);
 
 		closeButton.onclick = ()=> this.HideNavPane();
@@ -1559,7 +1581,7 @@ class Topology extends Window {
 			}
 
 		};
-		
+
 		const UpdateTrack = (isBytes)=> {
 			if (isBytes) {
 				thresholdLabel.textContent = `Threshold: ${UI.SizeToString(thresholdInput.value)}`;
@@ -1660,7 +1682,7 @@ class Topology extends Window {
 		errorOutBox.style.borderRadius = "0 8px 8px 0";
 
 		errorBox.append(errorLabel, errorInBox, errorOutBox);
-		
+
 		const errorInCheckbox = document.createElement("input");
 		errorInCheckbox.type = "checkbox";
 		errorInCheckbox.checked = true;
@@ -1689,7 +1711,7 @@ class Topology extends Window {
 		thresholdInput.value = 0;
 		thresholdInput.style.width = "calc(100% - 4px)";
 		thresholdInput.style.marginTop = "8px";
-		
+
 		const legend = document.createElement("div");
 		legend.style.height = "8px";
 		legend.style.border = "1px solid var(--clr-dark)";
@@ -1697,7 +1719,7 @@ class Topology extends Window {
 		legend.style.margin = "4px 11px";
 		legend.style.marginBottom = "20px";
 		legend.style.background = "linear-gradient(90deg,rgb(255,186,0) 0%, rgb(255,64,32) 100%)";
-		
+
 		this.navPane.append(thresholdLabel, thresholdInput, legend);
 
 		closeButton.onclick = ()=> this.HideNavPane();
@@ -1706,7 +1728,7 @@ class Topology extends Window {
 			let max = 1;
 			for (const file in this.devices) {
 				const device = this.devices[file];
-				
+
 				if (!("error" in device)) continue;
 
 				device.error.sum = {};
@@ -1727,7 +1749,7 @@ class Topology extends Window {
 			for (const file in this.devices) {
 				const device = this.devices[file];
 				if (!("error" in device)) continue;
-				
+
 				if (device.endpoint) {
 					device.endpoint.group.style.visibility = "visible";
 					device.endpoint.group.style.opacity = "1";
@@ -1778,23 +1800,20 @@ class Topology extends Window {
 	}
 
 	ZoomIn() {
-		this.zoom += .1;
-		this.zoom = Math.min(this.zoom, 2);
-		this.svg.style.zoom = `${100 * this.zoom}%`;
-		this.AdjustSvgSize();
+		this.args.zoom += .1;
+		this.args.zoom = Math.min(this.args.zoom, 2);
+		this.svg.style.zoom = `${100 * this.args.zoom}%`;
 	}
 
 	ZoomOut() {
-		this.zoom -= .1;
-		this.zoom = Math.max(this.zoom, .2);
-		this.svg.style.zoom = `${100 * this.zoom}%`;
-		this.AdjustSvgSize();
+		this.args.zoom -= .1;
+		this.args.zoom = Math.max(this.args.zoom, .2);
+		this.svg.style.zoom = `${100 * this.args.zoom}%`;
 	}
 
 	ZoomDefault() {
-		this.zoom = 1;
+		this.args.zoom = 1;
 		this.svg.style.zoom = "100%";
-		this.AdjustSvgSize();
 	}
 
 	ComputeLldpNeighbors(device) {
@@ -1891,8 +1910,8 @@ class Topology extends Window {
 		const total = Object.keys(unmanagedSwitches).length;
 		const totalWidth = total * 36;
 		for (const parentPort in unmanagedSwitches) {
-			const x = parentDevice.element.x - totalWidth / 2 + count * 36 + 42;
-			const y = parentDevice.element.y - 100 + (count % 2 === 0 ? 0 : 30);
+			const x = parentDevice.element.x - totalWidth / 2 + count * 36 + 93;
+			const y = parentDevice.element.y + 125 + (count % 2 === 0 ? 0 : 30);
 			const options = {x:x, y:y};
 			count++;
 
@@ -1931,10 +1950,7 @@ class Topology extends Window {
 			for (let i=0; i<unmanagedSwitches[parentPort].matches.length; i++) {
 				const match = unmanagedSwitches[parentPort].matches[i];
 
-				if (match in this.devices) {
-
-				}
-				else {
+				if (!(match in this.devices)) {
 					this.LinkEndpoint(unmanagedSwitch, i + 1, match);
 				}
 			}
@@ -2569,7 +2585,7 @@ class Topology extends Window {
 			dot.setAttribute("cy", y);
 			dot.setAttribute("r", 2);
 			portsGroup.appendChild(dot);
-		
+
 			device.endpoint.dot[portIndex] = dot;
 		}
 	}
@@ -2855,7 +2871,7 @@ class Topology extends Window {
 
 		const entry = device.lldp.entry[portIndex] || [device?.dot1tp?.entry[portIndex]];
 		let dbFile = null;
-		
+
 		if (entry && entry.length === 1 && entry[0]) {
 			const file = entry[0];
 

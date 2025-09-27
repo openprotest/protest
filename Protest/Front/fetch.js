@@ -74,7 +74,7 @@ class Fetch extends Tabs {
 		this.progressBarInner.style.transition = ".4s";
 
 		const uniqueID = UI.GenerateUuid();
-		
+
 		this.updateRadio = document.createElement("input");
 		this.updateRadio.type = "radio";
 		this.updateRadio.name = uniqueID;
