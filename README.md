@@ -28,7 +28,6 @@ Pro-test includes a wide range of tools and utilities designed for system admini
 - mDNS discovery
 - Trace route
 - Port scan
-- IP locator
 - MAC address lookup
 - DHCP client
 - NTP client
@@ -37,6 +36,7 @@ Pro-test includes a wide range of tools and utilities designed for system admini
 - SSH and telnet client
 
 #### **Network monitoring**
+- Network topology
 - IP discovery tool
 - Network watchdog
 - Reverse proxy
