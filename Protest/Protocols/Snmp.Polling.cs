@@ -267,21 +267,19 @@ internal static partial class Polling {
     }
 
     internal static string ParseVariable(Variable variable, bool preserveOctet = false) {
-        if (variable.Data.TypeCode == SnmpType.Null ||
-            variable.Data.TypeCode == SnmpType.NoSuchObject ||
-            variable.Data.TypeCode == SnmpType.NoSuchInstance) {
+        switch (variable.Data.TypeCode) {
+        case SnmpType.Null:
+        case SnmpType.NoSuchObject:
+        case SnmpType.NoSuchInstance:
             return null;
-        }
-        else if (variable.Data.TypeCode == SnmpType.OctetString) {
-            if (preserveOctet) {
-                return variable.Data.ToString();
-            }
-            else {
-                byte[] bytes = variable.Data.ToBytes();
-                return ParseOctetString(bytes).Trim();
-            }
-        }
-        else {
+
+        case SnmpType.OctetString:
+            OctetString octet = (OctetString)variable.Data;
+            return preserveOctet
+                ? octet.ToString()
+                : Encoding.UTF8.GetString(octet.GetRaw()).Trim();
+
+        default:
             return variable.Data.ToString().Trim();
         }
     }
@@ -373,55 +371,42 @@ internal static partial class Polling {
 
     internal static Dictionary<string, long> ParseLongResponse(IList<Variable> result) {
         if (result is null || result.Count == 0) return null;
+
         Dictionary<string, long> data = new Dictionary<string, long>(result.Count);
 
-        Span<byte> span = stackalloc byte[8];
+        foreach (Variable variable in result) {
+            if (variable.Data == null) continue;
 
-        for (int i = 0; i < result.Count; i++) {
-            if (result[i].Data is null) continue;
-            byte[] bytes = result[i].Data.ToBytes();
+            switch (variable.Data) {
+            case Integer32 i32:
+                data[variable.Id.ToString()] = i32.ToInt32();
+                break;
 
-            if (bytes.Length < 3) continue;
-            //byte type = bytes[0];
-            byte length = bytes[1];
-            
-            span.Clear();
-            for (int j = 0; j < length; j++) {
-                span[8 - length + j] = bytes[2 + j];
+            case Counter32 c32:
+                data[variable.Id.ToString()] = c32.ToUInt32();
+                break;
+
+            case Gauge32 g32:
+                data[variable.Id.ToString()] = g32.ToUInt32();
+                break;
+
+            case TimeTicks ticks:
+                data[variable.Id.ToString()] = ticks.ToUInt32();
+                break;
+
+            case Counter64 c64:
+                data[variable.Id.ToString()] = (long)c64.ToUInt64();
+                break;
+
+            default:
+                if (long.TryParse(variable.Data.ToString(), out long parsed)) {
+                    data[variable.Id.ToString()] = parsed;
+                }
+                break;
             }
-
-            if (BitConverter.IsLittleEndian) {
-                span.Reverse();
-            }
-
-            data.Add(result[i].Id.ToString(), BitConverter.ToInt64(span));
         }
 
         return data;
-    }
-
-    internal static string ParseOctetString(byte[] bytes) {
-        if (bytes.Length < 2) return string.Empty;
-
-        byte lenByte = bytes[1];
-        int size, startIndex;
-        if (lenByte < 128) {
-            size = lenByte;
-            startIndex = 2;
-        }
-        else {
-            int lenBytesCount = lenByte & 0x7F;
-            size = 0;
-            for (int j = 0; j < Math.Min(lenBytesCount, bytes.Length - 2); j++) {
-                size = (size << 8) + bytes[2 + j];
-            }
-            startIndex = 2 + lenBytesCount;
-        }
-
-        int count = Math.Min(size, bytes.Length - startIndex);
-        if (count <= 0) return string.Empty;
-
-        return Encoding.UTF8.GetString(bytes, startIndex, count);
     }
 
     internal static string ParseOctetStringAsHex(byte[] bytes) {
