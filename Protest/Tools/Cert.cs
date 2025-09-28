@@ -13,11 +13,6 @@ namespace Protest.Tools;
 
 internal static class Cert {
     public static byte[] Create(HttpListenerContext ctx, string origin) {
-
-        if (!OperatingSystem.IsWindows()) {
-            return "{\"error\":\"not supported\"}"u8.ToArray();
-        }
-
         using StreamReader reader = new StreamReader(ctx.Request.InputStream, ctx.Request.ContentEncoding);
         string payload = reader.ReadToEnd();
 
@@ -257,7 +252,6 @@ internal static class Cert {
         }
     }
 
-    [SupportedOSPlatform("windows")]
     private static X509Certificate2 CreateSelfSignedCertificate(
         string domain,
         int rsaKeySize,
@@ -300,7 +294,10 @@ internal static class Cert {
         request.CertificateExtensions.Add(new X509SubjectKeyIdentifierExtension(request.PublicKey, false));
 
         X509Certificate2 certificate = request.CreateSelfSigned(notBefore, notAfter);
-        certificate.FriendlyName = friendlyName;
+
+        if (OperatingSystem.IsWindows()) {
+            certificate.FriendlyName = friendlyName;
+        }
 
         return certificate;
     }
