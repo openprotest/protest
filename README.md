@@ -1,6 +1,9 @@
 <p align="center"><img src="https://raw.githubusercontent.com/openprotest/protest/master/protest.png" /></p>
 <h1 align="center">Pro-test</h1>
 <h2 align="center">A management base for System Admins</h2>
+<br>
+
+[![Download](https://custom-icon-badges.demolab.com/badge/-Download-blue?style=for-the-badge&logo=download&logoColor=white "Download")](https://github.com/openprotest/protest/releases/latest)
 
 ### Overview:
 Pro-test is a robust solution for creating and managing an inventory database of your network environment.
@@ -9,7 +12,7 @@ The suite automatically populates the database by targeting the domain controlle
 
 **Pro-test provides complite data ownership, with all collected data remaining fully under your control.**
 
-<p align="center"><img src="https://raw.githubusercontent.com/openprotest/openprotest.github.io/refs/heads/main/screenshot.png" /></p>
+<p align="center"><img src="https://raw.githubusercontent.com/openprotest/openprotest.github.io/refs/heads/main/screenshot.png"/></p>
 
 ### How to use:
 Pro-test is portable and self-contained, with a web interface accessible via the loopback address.
