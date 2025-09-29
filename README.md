@@ -3,7 +3,7 @@
 <h2 align="center">A management base for System Admins</h2>
 <br>
 
-[![Download](https://custom-icon-badges.demolab.com/badge/-Download-blue?style=for-the-badge&logo=download&logoColor=white "Download")](https://github.com/openprotest/protest/releases/latest)
+[![Download](https://custom-icon-badges.demolab.com/badge/-Download-orange?style=for-the-badge&logo=download&logoColor=white "Download")](https://github.com/openprotest/protest/releases/latest)
 
 ### Overview:
 Pro-test is a robust solution for creating and managing an inventory database of your network environment.
