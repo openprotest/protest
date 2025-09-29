@@ -6,6 +6,7 @@ using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
 using Protest.Http;
+using System.Collections.Generic;
 
 namespace Protest.Protocols;
 
@@ -39,6 +40,7 @@ internal static class Dhcp {
         int timeout = 5000;
         string mac = String.Empty;
         string hostname = String.Empty;
+        byte[] options = null;
         bool accept = false;
 
         string[] attributes = Encoding.Default.GetString(buff, 0, receiveResult.Count).Trim().Split('&');
@@ -55,6 +57,12 @@ internal static class Dhcp {
             else if (attributes[i].StartsWith("accept=")) {
                 accept = Uri.UnescapeDataString(attributes[i][7..].ToString()) == "true";
             }
+            else if (attributes[i].StartsWith("options=")) {
+                options = attributes[i][8..]
+                    .Split(';')
+                    .Select(o => byte.TryParse(o, out byte v) ? v : (byte)0)
+                    .ToArray();
+            }
         }
 
         if (mac.Length == 0) {
@@ -65,7 +73,7 @@ internal static class Dhcp {
         }
 
         try {
-            Dhcp4wayHandshake(ws, mac, hostname, timeout, accept);
+            Dhcp4wayHandshake(ws, mac, hostname, options, timeout, accept);
         }
         catch (Exception ex) {
             string error = $"{{\"error\":\"{Data.EscapeJsonText(ex.Message)}\"}}";
@@ -77,7 +85,7 @@ internal static class Dhcp {
         await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, null, CancellationToken.None);
     }
 
-    public static void Dhcp4wayHandshake(WebSocket ws, string mac, string hostname, int timeout, bool accept = false) {
+    public static void Dhcp4wayHandshake(WebSocket ws, string mac, string hostname, byte[] options, int timeout, bool accept = false) {
         IPEndPoint remote = new IPEndPoint(IPAddress.Broadcast, 67);
         IPEndPoint local = new IPEndPoint(IPAddress.Any, 68);
 
@@ -100,7 +108,7 @@ internal static class Dhcp {
         }
 
         long timestamp = DateTime.Now.Ticks;
-        byte[] discover = Discover(timestamp, mac, hostname, transactionId, Array.Empty<byte>());
+        byte[] discover = Discover(timestamp, mac, hostname, transactionId, options);
 
         SendMessage(ws, discover, discover.Length, 1, id, id, mac, NULL_IP, NULL_IP);
 
@@ -124,7 +132,7 @@ internal static class Dhcp {
                 SendMessage(ws, reply, length, type, id, replyId, mac, server, ip);
 
                 if (type == 0x02 && accept) { //offer
-                    byte[] request = Request(timestamp, transactionId, mac, hostname, ip, server, Array.Empty<byte>());
+                    byte[] request = Request(timestamp, transactionId, mac, hostname, ip, server, options);
                     socket.SendTo(request, remote);
                     SendMessage(ws, request, request.Length, 3, id, id, mac, server, ip);
                 }
@@ -326,7 +334,7 @@ internal static class Dhcp {
 
         //index: 252
 
-        if (options.Length == 0) {
+        if (options is null) {
             buffer[index++] = 0x37; //opt: request list
             buffer[index++] = 0x0e; //length
             buffer[index++] = 0x01; //subnet mask
@@ -490,7 +498,7 @@ internal static class Dhcp {
 
         //index: 264
 
-        if (options.Length == 0) {
+        if (options is null) {
             buffer[index++] = 0x37; //opt: request list
             buffer[index++] = 0x0e; //length
             buffer[index++] = 0x01; //subnet mask
