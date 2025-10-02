@@ -212,14 +212,6 @@ internal static class Wmi {
                 ContentBuilderAddValue(moc, "Manufacturer", "manufacturer", data);
                 ContentBuilderAddValue(moc, "UserName", "owner", data);
                 ContentBuilderAddValue(moc, "Model", "model", data);
-
-                foreach (ManagementObject o in moc.Cast<ManagementObject>()) {
-                    bool isHypervisorPresent = (bool)o.GetPropertyValue("HypervisorPresent");
-                    if (isHypervisorPresent) {
-                        type = "Hypervisor";
-                        break;
-                    }
-                }
             }
             catch { }
 
