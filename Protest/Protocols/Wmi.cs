@@ -295,12 +295,11 @@ internal static class Wmi {
                 //ContentBuilderAddValue(moc, "MemoryType", "ram type", hash, new FormatMethodPtr(RamType));
                 ContentBuilderAddValue(moc, "FormFactor", "ram form factor", data, new FormatMethodPtr(RamFormFactor));
 
-                if (smbiosType == "20" || smbiosType == "21" || smbiosType == "22" || smbiosType == "23" || smbiosType == "24" || smbiosType == "25" || smbiosType == "26") {
-                    data.Add("ram type", SMBIOSMemoryType(smbiosType));
+                string memoryTypeString = SMBIOSMemoryType(smbiosType);
+                if (memoryTypeString == String.Empty || memoryTypeString == "Unknown") {
+                    memoryTypeString = RamType(memoryType);
                 }
-                else {
-                    data.Add("ram type", RamType(memoryType));
-                }
+                data.Add("ram type", memoryTypeString);
 
             }
             catch { }
@@ -722,6 +721,8 @@ internal static class Wmi {
             "24" => "DDR3",
             "25" => "FBD2",
             "26" => "DDR4",
+            "28" => "DDR5",
+            "34" => "DDR5",
             _ => String.Empty
         };
     }
