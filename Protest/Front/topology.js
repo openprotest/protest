@@ -1842,7 +1842,7 @@ class Topology extends Window {
 			const remotePort      = this.ComputeRemotePort(device, port, index, remoteDevice);
 			let   remotePortIndex = remotePort?.index ?? -1;
 
-			if (remoteDevice.isUndocumented) {
+			if (remoteDevice.isUntracked) {
 				remotePortIndex = remoteDevice.links.length;
 				this.FabricatePseudoLldp(device, port, index, remoteDevice, remotePortIndex);
 			}
@@ -2057,7 +2057,7 @@ class Topology extends Window {
 		}
 
 		if (device.lldp.remotePortIdSubtype[port][index] === 5) { //remote port is interface
-			const entry = this.CreateUndocumentedEntry(device, port, index);
+			const entry = this.CreateUntrackedEntry(device, port, index);
 			return entry.initial.file;
 		}
 
@@ -2080,7 +2080,7 @@ class Topology extends Window {
 		return entry;
 	}
 
-	CreateUndocumentedEntry(device, port, index) {
+	CreateUntrackedEntry(device, port, index) {
 		const dbFile = device?.lldp?.entry[port][index] ?? null;
 
 		let deviceType     = null;
@@ -2124,7 +2124,7 @@ class Topology extends Window {
 		};
 
 		const entry = {
-			isUndocumented: true,
+			isUntracked: true,
 			isRouter      : isRouter,
 			element       : element,
 			lldp          : lldp,
@@ -2654,6 +2654,118 @@ class Topology extends Window {
 		chassisIdLabel.textContent = this.devices[file]?.lldp?.localChassisId ?? "";
 		grid.appendChild(chassisIdLabel);
 
+		if (!device.isUnmanaged && initial.file in LOADER.devices.data) {
+			const optionsBox = document.createElement("div");
+			optionsBox.style.marginBottom = "12px";
+			this.sidePane.appendChild(optionsBox);
+
+			const databaseButton = document.createElement("button");
+			databaseButton.style.minWidth = "unset";
+			databaseButton.style.width = "36px";
+			databaseButton.style.height = "36px";
+			databaseButton.style.backgroundColor = "var(--clr-control)";
+			databaseButton.style.backgroundSize = "28px 28px";
+			databaseButton.style.backgroundPosition = "center";
+			databaseButton.style.backgroundRepeat = "no-repeat";
+			databaseButton.style.backgroundImage = "url(mono/database.svg)";
+
+			const httpButton = document.createElement("button");
+			httpButton.style.minWidth = "unset";
+			httpButton.style.width = "36px";
+			httpButton.style.height = "36px";
+			httpButton.style.backgroundColor = "var(--clr-control)";
+			httpButton.style.backgroundSize = "28px 28px";
+			httpButton.style.backgroundPosition = "center";
+			httpButton.style.backgroundRepeat = "no-repeat";
+			httpButton.style.backgroundImage = "url(mono/earth.svg)";
+
+			const sshButton = document.createElement("button");
+			sshButton.style.minWidth = "unset";
+			sshButton.style.width = "36px";
+			sshButton.style.height = "36px";
+			sshButton.style.backgroundColor = "var(--clr-control)";
+			sshButton.style.backgroundSize = "28px 28px";
+			sshButton.style.backgroundPosition = "center";
+			sshButton.style.backgroundRepeat = "no-repeat";
+			sshButton.style.backgroundImage = "url(mono/ssh.svg)";
+
+			optionsBox.append(databaseButton, httpButton, sshButton);
+
+			const overwriteProtocol = {};
+			const dbEntry = LOADER.devices.data[device.initial.file];
+			
+			let host = null;
+			if (device.initial.ip) {
+				host = device.initial.ip.split(";")[0].trim();
+			}
+
+			const ports = dbEntry?.ports.v.split(";").map(o=> parseInt(o.trim()));
+			if (dbEntry && ".overwriteprotocol" in dbEntry) {
+				dbEntry[".overwriteprotocol"].v.split(";").map(o=> o.trim()).forEach(o=> {
+					let split = o.split(":");
+					if (split.length === 2) overwriteProtocol[split[0]] = split[1];
+				});
+			}
+			if (dbEntry && "overwriteprotocol" in dbEntry) {
+				dbEntry["overwriteprotocol"].v.split(";").map(o=> o.trim()).forEach(o=> {
+					let split = o.split(":");
+					if (split.length === 2) overwriteProtocol[split[0]] = split[1];
+				});
+			}
+
+			databaseButton.onclick = ()=> LOADER.OpenDeviceByFile(initial.file);
+
+			httpButton.onclick = ()=> {
+				if (overwriteProtocol.https) { //https
+					const link = document.createElement("a");
+					link.href = "https://" + host + ":" + overwriteProtocol.https;
+					link.target = "_blank";
+					link.click();
+				}
+				else if (ports.includes(443)) { //https
+					const link = document.createElement("a");
+					link.href = "https://" + host;
+					link.target = "_blank";
+					link.click();
+				}
+				else if (overwriteProtocol.http) { //http
+					const link = document.createElement("a");
+					link.href = "http://" + host + ":" + overwriteProtocol.http;
+					link.target = "_blank";
+					link.click();
+
+				}
+				else if (ports.includes(80)) { //http
+					const link = document.createElement("a");
+					link.href = "http://" + host;
+					link.target = "_blank";
+					link.click();
+				}
+			};
+
+			sshButton.onclick = () => {
+				if (overwriteProtocol.ssh || ports.includes(22)) {
+					let sshHost = null;
+					if (overwriteProtocol.ssh) {
+						sshHost = `${host}:${overwriteProtocol.ssh}`;
+					}
+					else if (ports.includes(22)) {
+						sshHost = host;
+					}
+
+					let username = null;
+					if ("ssh username" in dbEntry) {
+						username = dbEntry["ssh username"].v;
+					}
+					else if ("username" in dbEntry) {
+						username = dbEntry.username.v;
+					}
+
+					new Ssh({ host: sshHost, username: username, file: device.initial.file });
+				}
+			};
+		}
+
 		if (device.nosnmp) {
 			const snmpLabel = document.createElement("div");
 			snmpLabel.className = "topology-error-message";
@@ -2661,12 +2773,12 @@ class Topology extends Window {
 			snmpLabel.setAttribute("nosnmp", true);
 			this.sidePane.appendChild(snmpLabel);
 		}
-		else if (device.isUndocumented) {
-			const undocumentedLabel = document.createElement("div");
-			undocumentedLabel.className = "topology-error-message";
-			undocumentedLabel.textContent = "Undocumented";
-			undocumentedLabel.setAttribute("undocumented", true);
-			this.sidePane.appendChild(undocumentedLabel);
+		else if (device.isUntracked) {
+			const untrackedLabel = document.createElement("div");
+			untrackedLabel.className = "topology-error-message";
+			untrackedLabel.textContent = "Untracked";
+			untrackedLabel.setAttribute("untracked", true);
+			this.sidePane.appendChild(untrackedLabel);
 		}
 
 		if (device.dot1q) {
@@ -2709,7 +2821,7 @@ class Topology extends Window {
 
 			interfacesList.onkeydown = event=> this.InterfaceList_onkeydown(event, interfacesList);
 
-			if (device.isUndocumented) {
+			if (device.isUntracked) {
 				const entries = Object.entries(device.lldp.localPortName)
 					.sort(([, a], [, b]) => a.localeCompare(b));
 
@@ -2876,8 +2988,8 @@ class Topology extends Window {
 			const file = entry[0];
 
 			if (file === null) {
-				remoteBox.classList.add("topology-undocumented");
-				remoteBox.style.backgroundImage = `url(mono/undocumented.svg), radial-gradient(circle,rgb(232,118,0) 0%, rgb(232,118,0) 80%, rgba(0, 0, 0, 0) 100%)`;
+				remoteBox.classList.add("topology-untracked");
+				remoteBox.style.backgroundImage = `url(mono/untracked.svg), radial-gradient(circle,rgb(232,118,0) 0%, rgb(232,118,0) 80%, rgba(0, 0, 0, 0) 100%)`;
 			}
 
 			dbFile = file;
@@ -3209,7 +3321,7 @@ class Topology extends Window {
 					}
 
 					if (device.lldp.entry[portIndex][i] === null) {
-						//undocumented
+						//untracked
 					}
 
 					if (device.lldp.remoteChassisIdSubtype[portIndex][i] === 4) {

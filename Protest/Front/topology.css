@@ -83,7 +83,7 @@
 	background-color: var(--clr-control);
 	grid-template-columns: 88px auto;
 	grid-template-rows: 18px 18px 18px 18px;
-	margin-bottom: 16px;
+	margin-bottom: 12px;
 	padding: 4px 0;
 	border-radius: 4px;
 	-webkit-user-select: text; user-select: text;
@@ -162,7 +162,7 @@
 	animation: blink 2s infinite;
 }
 
-.topology-error-message[undocumented]::before {
+.topology-error-message[untracked]::before {
 	background-color: rgb(240,128,24);
 }
 
