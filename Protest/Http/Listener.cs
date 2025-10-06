@@ -71,9 +71,9 @@ internal sealed class Listener {
         ["/manage/device/logoff"] =    (ctx, parameters, username) => OperatingSystem.IsWindows() ? Protocols.Wmi.Wmi_Win32PowerHandler(parameters, 4) : null,
         ["/manage/device/printtest"] = (ctx, parameters, username) => Proprietary.Printers.Generic.PrintTestPage(parameters),
 
-        ["/manage/user/unlock"] =      (ctx, parameters, username) => OperatingSystem.IsWindows() ? Protocols.Ldap.UnlockUser(parameters) : null,
-        ["/manage/user/enable"] =      (ctx, parameters, username) => OperatingSystem.IsWindows() ? Protocols.Ldap.EnableUser(parameters) : null,
-        ["/manage/user/disable"] =     (ctx, parameters, username) => OperatingSystem.IsWindows() ? Protocols.Ldap.DisableUser(parameters) : null,
+        ["/manage/user/unlock"] =      (ctx, parameters, username) => OperatingSystem.IsWindows() ? Protocols.Ldap.UnlockUser(parameters, username) : null,
+        ["/manage/user/enable"] =      (ctx, parameters, username) => OperatingSystem.IsWindows() ? Protocols.Ldap.EnableUser(parameters, username) : null,
+        ["/manage/user/disable"] =     (ctx, parameters, username) => OperatingSystem.IsWindows() ? Protocols.Ldap.DisableUser(parameters, username) : null,
 
         ["/docs/list"] =               (ctx, parameters, username) => Tools.Documentation.List(parameters),
         ["/docs/create"] =             (ctx, parameters, username) => Tools.Documentation.Create(ctx, username),
