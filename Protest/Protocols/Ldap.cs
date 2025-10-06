@@ -1,10 +1,11 @@
 ﻿using System.Collections.Generic;
 using System.DirectoryServices;
+using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
-using System.Net;
-using System.Text;
 using System.Runtime.Versioning;
+using System.Text;
+using System.Xml.Linq;
 
 namespace Protest.Protocols;
 
@@ -318,7 +319,7 @@ internal static class Ldap {
     }
 
     [SupportedOSPlatform("windows")]
-    public static byte[] UnlockUser(Dictionary<string, string> parameters) {
+    public static byte[] UnlockUser(Dictionary<string, string> parameters, string origin) {
         if (parameters is null) {
             return Data.CODE_INVALID_ARGUMENT.Array;
         }
@@ -346,11 +347,13 @@ internal static class Ldap {
         user.CommitChanges();
         user.Close();
 
+        Logger.Action(origin, $"Unlock domain user: {username}");
+
         return Data.CODE_OK.Array;
     }
 
     [SupportedOSPlatform("windows")]
-    public static byte[] EnableUser(Dictionary<string, string> parameters) {
+    public static byte[] EnableUser(Dictionary<string, string> parameters, string origin) {
         if (parameters is null) {
             return Data.CODE_INVALID_ARGUMENT.Array;
         }
@@ -381,11 +384,13 @@ internal static class Ldap {
         user.CommitChanges();
         user.Close();
 
+        Logger.Action(origin, $"Enable domain user: {username}");
+
         return Data.CODE_OK.Array;
     }
 
     [SupportedOSPlatform("windows")]
-    public static byte[] DisableUser(Dictionary<string, string> parameters) {
+    public static byte[] DisableUser(Dictionary<string, string> parameters, string origin) {
         if (parameters is null) {
             return Data.CODE_INVALID_ARGUMENT.Array;
         }
@@ -415,6 +420,8 @@ internal static class Ldap {
 
         user.CommitChanges();
         user.Close();
+
+        Logger.Action(origin, $"Disable domain user: {username}");
 
         return Data.CODE_OK.Array;
     }
