@@ -66,10 +66,9 @@
 
 .issues-toggle-button {
 	background-size: 22px 22px !important;
-	mask-image: url(mono/stop.svg) !important;
-	mask-size: 34px 34px !important;
-	mask-position: center !important;
-	mask-repeat: no-repeat !important;
+	width: 28px !important;
+	height: 28px !important;
+	margin: 6px !important;
 }
 
 .issues-status-label {
