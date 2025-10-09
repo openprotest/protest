@@ -29,7 +29,7 @@ class DeviceView extends View {
 		"operating system", "os architecture", "os version", "os build", "service pack", "os serial no", "os install date",
 
 		["mono/user.svg", "owner"],
-		"owner", "owner name", "location",
+		"owner", "owner name", "location", "contact",
 
 		["mono/directory.svg", "Domain information"],
 		"object guid", "distinguished name", "dns hostname", "created on dc", "fqdn",

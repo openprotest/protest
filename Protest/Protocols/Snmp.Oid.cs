@@ -6,6 +6,7 @@ internal static class Oid {
         SYSTEM_DESCRIPTOR,
         SYSTEM_NAME,
         SYSTEM_LOCATION,
+        SYSTEM_CONTACT,
     };
 
     public static string[] PRINTERS_OID = new string[] {

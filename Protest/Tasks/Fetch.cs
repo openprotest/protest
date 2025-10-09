@@ -13,8 +13,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using Protest.Http;
 using Protest.Tools;
-using Lextm.SharpSnmpLib;
 using Protest.Protocols.Snmp;
+using Lextm.SharpSnmpLib;
 
 namespace Protest.Tasks;
 
@@ -377,6 +377,9 @@ internal static class Fetch {
             }
             if (formatted is not null && formatted.TryGetValue(Protocols.Snmp.Oid.SYSTEM_LOCATION, out string snmpLocation)) {
                 data.TryAdd("location", new string[] { snmpLocation, "SNMP", string.Empty });
+            }
+            if (formatted is not null && formatted.TryGetValue(Protocols.Snmp.Oid.SYSTEM_CONTACT, out string snmpContact)) {
+                data.TryAdd("contact", new string[] { snmpContact, "SNMP", string.Empty });
             }
 
             if (result is not null) {
