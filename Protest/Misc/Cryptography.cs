@@ -21,16 +21,24 @@ internal static class Cryptography {
     public static byte[] HashStringToBytes(string key, byte length) {
         byte[] bytes = SHA512.HashData(Encoding.UTF8.GetBytes($"{SALT}{key}{PEPPER}{length}"));
         byte[] result = new byte[length];
-        for (byte i = 0; i < length; i++)
+        for (byte i = 0; i < length; i++) {
             result[i] = bytes[(bytes[i] + length) % bytes.Length];
+        }
 
         return result;
     }
 
     public static byte[] HashUsernameAndPassword(string username, string password) {
         int iterations = (username.Length + password.Length) * 63;
-        Rfc2898DeriveBytes pbkdf2 = new Rfc2898DeriveBytes(username + password, Encoding.UTF8.GetBytes(SALT), iterations, HashAlgorithmName.SHA512);
-        byte[] hash = pbkdf2.GetBytes(32);
+
+        byte[] hash = Rfc2898DeriveBytes.Pbkdf2(
+            username + password,
+            Encoding.UTF8.GetBytes(SALT),
+            iterations,
+            HashAlgorithmName.SHA512,
+            32
+        );
+
         return hash;
     }
 
@@ -76,5 +84,4 @@ internal static class Cryptography {
         if (plain is null || plain.Length == 0) return String.Empty;
         return Encoding.UTF8.GetString(plain);
     }
-
 }
