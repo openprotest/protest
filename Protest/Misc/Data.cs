@@ -67,12 +67,7 @@ internal static class Data {
     public static readonly string DIR_DEBIT_RETURNED = $"{DIR_DATA}{DELIMITER}debit{DELIMITER}returned";
     public static readonly string DIR_DEBIT_TEMPLATE = $"{DIR_DATA}{DELIMITER}debit{DELIMITER}templates";
 
-    public static readonly string DIR_IP_LOCATION    = $"{DIR_KNOWLADGE}{DELIMITER}ip";
-    public static readonly string DIR_PROXY          = $"{DIR_KNOWLADGE}{DELIMITER}proxy";
-    public static readonly string FILE_TOR           = $"{DIR_KNOWLADGE}{DELIMITER}tor.bin";
-    public static readonly string FILE_MAC           = $"{DIR_KNOWLADGE}{DELIMITER}mac.bin";
-
-    public static readonly string FILE_API_LINKS           = $"{DIR_DATA}{DELIMITER}api.json";
+    public static readonly string FILE_API_LINKS     = $"{DIR_DATA}{DELIMITER}api.json";
     public static readonly string FILE_ZONES         = $"{DIR_DATA}{DELIMITER}zones.json";
     public static readonly string FILE_DHCP_RANGE    = $"{DIR_DATA}{DELIMITER}dhcprange.json";
     public static readonly string FILE_SMTP_PROFILES = $"{DIR_DATA}{DELIMITER}smtpprofiles.json";
