@@ -16,8 +16,6 @@ internal static class Configuration {
     internal static string front_path = $"{Data.DIR_ROOT}{Data.DELIMITER}front";
     internal static string[] http_prefixes = new string[] { "http://127.0.0.1:8080/" };
 
-    internal static string IP2LOCATION_API_KEY = null;
-
     internal static bool Load() {
         if (!File.Exists(Data.FILE_CONFIG)) return false;
 
@@ -59,23 +57,12 @@ internal static class Configuration {
             case "backdoor":
                 backdoor = String.Equals(value.ToString(), "true", StringComparison.OrdinalIgnoreCase);
                 break;
-
-            case "ip2location_api_key":
-                IP2LOCATION_API_KEY = value.ToString();
-                break;
             }
         }
 
         fileReader.Close();
 
         if (httpPrefixes.Count > 0) http_prefixes = httpPrefixes.ToArray();
-
-        if (IP2LOCATION_API_KEY is null) {
-            try {
-                IP2LOCATION_API_KEY = File.ReadAllText($"{Data.DIR_KNOWLADGE}{Data.DELIMITER}ip2location-api-key.txt").Trim();
-            }
-            catch { }
-        }
 
         return true;
     }
@@ -132,9 +119,6 @@ internal static class Configuration {
 
         builder.AppendLine($"# When the backdoor flag set to true, requests originating from the loopback address bypass authentication");
         builder.AppendLine($"backdoor = {backdoor.ToString().ToLower()}");
-        builder.AppendLine();
-
-        builder.AppendLine("#ip2location_api_key = PASTE-API-KEY-HERE");
         builder.AppendLine();
 
         File.WriteAllText(Data.FILE_CONFIG, builder.ToString());
