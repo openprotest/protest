@@ -11,7 +11,7 @@ class Topology extends Window {
 	static VIEW_PADDING_X = 50;
 	static VIEW_PADDING_Y = 50;
 	static DEVICE_WIDTH   = 100;
-	static ROW_HEIGHT     = 250;
+	static ROW_HEIGHT     = 200;
 	static MAX_WIDTH      = 1500;
 
 	constructor(args) {
@@ -654,7 +654,7 @@ class Topology extends Window {
 
 		for (const location in groups) {
 			const length = groups[location].length;
-			const width = length * Topology.DEVICE_WIDTH;
+			const width = length * (Topology.DEVICE_WIDTH);
 
 			if (this.globalX + width > Topology.MAX_WIDTH) {
 				this.globalX = Topology.VIEW_PADDING_X;
@@ -663,7 +663,7 @@ class Topology extends Window {
 
 			for (let i=0; i<groups[location].length; i++) {
 				const element = groups[location][i].element;
-				let x = this.globalX + i * Topology.DEVICE_WIDTH;
+				let x = this.globalX + i * (Topology.DEVICE_WIDTH);
 				let y = this.globalY;
 				this.MoveDeviceElement(element, x, y);
 			}
@@ -758,7 +758,7 @@ class Topology extends Window {
 					}
 
 					this.MoveDeviceElement(device.element, groups[i].x + x, y);
-					x += Topology.DEVICE_WIDTH;
+					x += Topology.DEVICE_WIDTH + 50;
 
 					const nextLevel = {};
 					for (const port in device.links) {
@@ -1318,15 +1318,15 @@ class Topology extends Window {
 		trafficBox.style.overflow = "hidden";
 		this.navPane.appendChild(trafficBox);
 
-		const inLabel = document.createElement("div");
-		inLabel.style.gridArea = "1 / 2";
-		inLabel.textContent = "Inbound";
-		trafficBox.appendChild(inLabel);
+		const rxLabel = document.createElement("div");
+		rxLabel.style.gridArea = "1 / 2";
+		rxLabel.textContent = "RX";
+		trafficBox.appendChild(rxLabel);
 
-		const outLabel = document.createElement("div");
-		outLabel.style.gridArea = "1 / 3";
-		outLabel.textContent = "Outbound";
-		trafficBox.appendChild(outLabel);
+		const txLabel = document.createElement("div");
+		txLabel.style.gridArea = "1 / 3";
+		txLabel.textContent = "TX";
+		trafficBox.appendChild(txLabel);
 
 
 		const bytesLabel = document.createElement("div");
@@ -1650,15 +1650,15 @@ class Topology extends Window {
 		errorBox.style.overflow = "hidden";
 		this.navPane.appendChild(errorBox);
 
-		const inLabel = document.createElement("div");
-		inLabel.style.gridArea = "1 / 2";
-		inLabel.textContent = "Inbound";
-		errorBox.appendChild(inLabel);
+		const rxLabel = document.createElement("div");
+		rxLabel.style.gridArea = "1 / 2";
+		rxLabel.textContent = "RX";
+		errorBox.appendChild(rxLabel);
 
-		const outLabel = document.createElement("div");
-		outLabel.style.gridArea = "1 / 3";
-		outLabel.textContent = "Outbound";
-		errorBox.appendChild(outLabel);
+		const txLabel = document.createElement("div");
+		txLabel.style.gridArea = "1 / 3";
+		txLabel.textContent = "TX";
+		errorBox.appendChild(txLabel);
 
 
 		const errorLabel = document.createElement("div");
@@ -2599,6 +2599,12 @@ class Topology extends Window {
 
 		if (this.selected) {
 			this.selected.element.highlight.classList.remove("topology-selected");
+
+			if (this.selected.endpoint && this.selected.endpoint.dot) {
+				for (const p in this.selected.endpoint.dot) {
+					this.selected.endpoint.dot[p].setAttribute("stroke", "none");
+				}
+			}
 		}
 
 		device.element.highlight.classList.add("topology-selected");
@@ -2668,32 +2674,12 @@ class Topology extends Window {
 			databaseButton.style.backgroundPosition = "center";
 			databaseButton.style.backgroundRepeat = "no-repeat";
 			databaseButton.style.backgroundImage = "url(mono/database.svg)";
-
-			const httpButton = document.createElement("button");
-			httpButton.style.minWidth = "unset";
-			httpButton.style.width = "36px";
-			httpButton.style.height = "36px";
-			httpButton.style.backgroundColor = "var(--clr-control)";
-			httpButton.style.backgroundSize = "28px 28px";
-			httpButton.style.backgroundPosition = "center";
-			httpButton.style.backgroundRepeat = "no-repeat";
-			httpButton.style.backgroundImage = "url(mono/earth.svg)";
-
-			const sshButton = document.createElement("button");
-			sshButton.style.minWidth = "unset";
-			sshButton.style.width = "36px";
-			sshButton.style.height = "36px";
-			sshButton.style.backgroundColor = "var(--clr-control)";
-			sshButton.style.backgroundSize = "28px 28px";
-			sshButton.style.backgroundPosition = "center";
-			sshButton.style.backgroundRepeat = "no-repeat";
-			sshButton.style.backgroundImage = "url(mono/ssh.svg)";
-
-			optionsBox.append(databaseButton, httpButton, sshButton);
+			databaseButton.onclick = ()=> LOADER.OpenDeviceByFile(initial.file);
+			optionsBox.appendChild(databaseButton);
 
 			const overwriteProtocol = {};
 			const dbEntry = LOADER.devices.data[device.initial.file];
-			
+
 			let host = null;
 			if (device.initial.ip) {
 				host = device.initial.ip.split(";")[0].trim();
@@ -2713,38 +2699,75 @@ class Topology extends Window {
 				});
 			}
 
-			databaseButton.onclick = ()=> LOADER.OpenDeviceByFile(initial.file);
+			if (overwriteProtocol.http || ports.includes(80)) {
+				const httpButton = document.createElement("button");
+				httpButton.style.minWidth = "unset";
+				httpButton.style.width = "36px";
+				httpButton.style.height = "36px";
+				httpButton.style.backgroundColor = "var(--clr-control)";
+				httpButton.style.backgroundSize = "28px 28px";
+				httpButton.style.backgroundPosition = "center";
+				httpButton.style.backgroundRepeat = "no-repeat";
+				httpButton.style.backgroundImage = "url(mono/earth.svg)";
+				optionsBox.appendChild(httpButton);
 
-			httpButton.onclick = ()=> {
-				if (overwriteProtocol.https) { //https
-					const link = document.createElement("a");
-					link.href = "https://" + host + ":" + overwriteProtocol.https;
-					link.target = "_blank";
-					link.click();
-				}
-				else if (ports.includes(443)) { //https
-					const link = document.createElement("a");
-					link.href = "https://" + host;
-					link.target = "_blank";
-					link.click();
-				}
-				else if (overwriteProtocol.http) { //http
-					const link = document.createElement("a");
-					link.href = "http://" + host + ":" + overwriteProtocol.http;
-					link.target = "_blank";
-					link.click();
+				httpButton.onclick = () => {
+					if (overwriteProtocol.http) { //http
+						const link = document.createElement("a");
+						link.href = "http://" + host + ":" + overwriteProtocol.http;
+						link.target = "_blank";
+						link.click();
+					}
+					else if (ports.includes(80)) { //http
+						const link = document.createElement("a");
+						link.href = "http://" + host;
+						link.target = "_blank";
+						link.click();
+					}
+				};
+			}
 
-				}
-				else if (ports.includes(80)) { //http
-					const link = document.createElement("a");
-					link.href = "http://" + host;
-					link.target = "_blank";
-					link.click();
-				}
-			};
+			if (overwriteProtocol.https || ports.includes(443)) {
+				const httpButton = document.createElement("button");
+				httpButton.style.minWidth = "unset";
+				httpButton.style.width = "36px";
+				httpButton.style.height = "36px";
+				httpButton.style.backgroundColor = "var(--clr-control)";
+				httpButton.style.backgroundSize = "28px 28px";
+				httpButton.style.backgroundPosition = "center";
+				httpButton.style.backgroundRepeat = "no-repeat";
+				httpButton.style.backgroundImage = "url(mono/earth.svg)";
+				optionsBox.append(httpButton);
 
-			sshButton.onclick = () => {
-				if (overwriteProtocol.ssh || ports.includes(22)) {
+				httpButton.onclick = ()=> {
+					if (overwriteProtocol.https) { //https
+						const link = document.createElement("a");
+						link.href = "https://" + host + ":" + overwriteProtocol.https;
+						link.target = "_blank";
+						link.click();
+					}
+					else if (ports.includes(443)) { //https
+						const link = document.createElement("a");
+						link.href = "https://" + host;
+						link.target = "_blank";
+						link.click();
+					}
+				};
+			}
+
+			if (overwriteProtocol.ssh || ports.includes(22)) {
+				const sshButton = document.createElement("button");
+				sshButton.style.minWidth = "unset";
+				sshButton.style.width = "36px";
+				sshButton.style.height = "36px";
+				sshButton.style.backgroundColor = "var(--clr-control)";
+				sshButton.style.backgroundSize = "28px 28px";
+				sshButton.style.backgroundPosition = "center";
+				sshButton.style.backgroundRepeat = "no-repeat";
+				sshButton.style.backgroundImage = "url(mono/ssh.svg)";
+				optionsBox.appendChild(sshButton);
+
+				sshButton.onclick = () => {
 					let sshHost = null;
 					if (overwriteProtocol.ssh) {
 						sshHost = `${host}:${overwriteProtocol.ssh}`;
@@ -2762,8 +2785,8 @@ class Topology extends Window {
 					}
 
 					new Ssh({ host: sshHost, username: username, file: device.initial.file });
-				}
-			};
+				};
+			}
 		}
 
 		if (device.nosnmp) {
@@ -2989,7 +3012,7 @@ class Topology extends Window {
 
 			if (file === null) {
 				remoteBox.classList.add("topology-untracked");
-				remoteBox.style.backgroundImage = `url(mono/untracked.svg), radial-gradient(circle,rgb(232,118,0) 0%, rgb(232,118,0) 80%, rgba(0, 0, 0, 0) 100%)`;
+				remoteBox.style.backgroundImage = `url(mono/untracked.svg), radial-gradient(circle,rgb(232,118,0) 0%, rgb(232,118,0) 80%, #000 100%)`;
 			}
 
 			dbFile = file;
@@ -3107,6 +3130,17 @@ class Topology extends Window {
 
 			this.infoBox.textContent = "";
 			this.infoPopup.textContent = "";
+
+			if (device.endpoint) {
+				for (const p in device.endpoint.dot) {
+					device.endpoint.dot[p].setAttribute("stroke", "none");
+				}
+
+				if (portIndex in device.endpoint.dot) {
+					device.endpoint.dot[portIndex].setAttribute("stroke-width", "2");
+					device.endpoint.dot[portIndex].setAttribute("stroke", "var(--clr-accent)");
+				}
+			}
 
 			if (this.infoPopup.parentElement.style.display === "none") {
 				this.infoBox.style.visibility = "visible";

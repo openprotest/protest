@@ -201,7 +201,7 @@ class DhcpDiscover extends Window {
 		acceptLabel.style.textAlign = "right";
 		acceptLabel.style.gridRow = "4";
 		acceptLabel.style.gridColumn = "2";
-		
+
 		const acceptBox = document.createElement("div");
 		acceptBox.style.gridRow = "4";
 		acceptBox.style.gridColumn = "3";

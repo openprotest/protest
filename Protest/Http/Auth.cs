@@ -396,7 +396,7 @@ internal static class Auth {
                 path.Add("/issues/start");
                 break;
 
-            case "settings:write":
+            case "environment:write":
                 path.Add("/config/zones/list");
                 path.Add("/config/zones/save");
                 path.Add("/config/dhcprange/list");
