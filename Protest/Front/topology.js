@@ -202,6 +202,11 @@ class Topology extends Window {
 
 		if (this.selected) {
 			this.selected.element.highlight.classList.remove("topology-selected");
+
+			for (const p in this.selected?.endpoint?.dot) {
+				this.selected.endpoint.dot[p].setAttribute("stroke", "none");
+			}
+
 			this.selected = null;
 		}
 	}
@@ -2600,10 +2605,8 @@ class Topology extends Window {
 		if (this.selected) {
 			this.selected.element.highlight.classList.remove("topology-selected");
 
-			if (this.selected.endpoint && this.selected.endpoint.dot) {
-				for (const p in this.selected.endpoint.dot) {
-					this.selected.endpoint.dot[p].setAttribute("stroke", "none");
-				}
+			for (const p in this.selected?.endpoint?.dot) {
+				this.selected.endpoint.dot[p].setAttribute("stroke", "none");
 			}
 		}
 
