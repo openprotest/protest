@@ -53,10 +53,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.DirectoryServices" Version="9.0.9" />
-    <PackageReference Include="System.Management" Version="9.0.9" />
+    <PackageReference Include="System.DirectoryServices" Version="9.0.10" />
+    <PackageReference Include="System.Management" Version="9.0.10" />
     <PackageReference Include="Yarp.ReverseProxy" Version="2.3.0" />
-    <PackageReference Include="SSH.NET" Version="2025.0.0" />
+    <PackageReference Include="SSH.NET" Version="2025.1.0" />
     <PackageReference Include="Lextm.SharpSnmpLib" Version="12.5.6" />
   </ItemGroup>
 
