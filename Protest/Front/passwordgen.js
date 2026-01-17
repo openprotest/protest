@@ -231,7 +231,7 @@ class PassGen extends Window {
 				this.lengthRange.min = 6;
 				this.lengthRange.max = 64;
 				this.lowercaseToggle.checkbox.checked = true;
-				this.uppercaseToggle.checkbox.checked = false;
+				this.uppercaseToggle.checkbox.checked = true;
 				this.numbersToggle.checkbox.checked = true;
 				this.symbolsToggle.checkbox.checked = false;
 				this.similarToggle.checkbox.checked = false;

@@ -285,9 +285,9 @@ class Grid extends Window {
 
 		dialog.cancelButton.disabled = true;
 
+		const url = (this instanceof DevicesGrid) ? "db/device/grid" : "db/user/grid";
+		
 		try {
-			let url = (this instanceof DevicesGrid) ? `db/device/grid` : `db/user/grid`;
-
 			const response = await fetch(url, {
 				method: "POST",
 				body : JSON.stringify(this.mods)
@@ -300,7 +300,7 @@ class Grid extends Window {
 				throw new Error(json.error);
 			}
 
-			dialog.cancelButton.onclick();
+			dialog.Close();
 		}
 		catch (ex) {
 			dialog.innerBox.parentElement.style.transition = ".4s";

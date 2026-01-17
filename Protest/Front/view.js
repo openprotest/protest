@@ -311,6 +311,55 @@ class View extends Window {
 				}
 			};
 		}
+		else if (name.toLowerCase() === "uplink" && !editMode) {
+			try {
+				const json = JSON.parse(value);
+
+				const device = LOADER.devices.data[json.device];
+				const port = json.port;
+
+				if (!json.device || json.device.length === 0 || !device) {
+					throw "device not found";
+				}
+
+				valueBox.style.display = "none";
+
+				const deviceButton = document.createElement("input");
+				deviceButton.type = "button";
+				deviceButton.className = "with-icon";
+				deviceButton.style.backgroundImage = "url(mono/switch.svg?light)";
+				valueContainer.appendChild(deviceButton);
+
+				if (device.name && device.name.v.length > 0) {
+					deviceButton.value = device.name.v;
+				}
+				else if (device.hostname && device.hostname.v.length > 0) {
+					deviceButton.value = device.hostname.v;
+				}
+				else if (device.ip && device.ip.v.length > 0) {
+					deviceButton.value = device.ip.v;
+				}
+				else {
+					deviceButton.value = "Device";
+				}
+
+				const portButton = document.createElement("input");
+				portButton.type = "button";
+				portButton.className = "with-icon";
+				portButton.style.backgroundImage = "url(mono/ethernetport.svg?light)";
+				valueContainer.appendChild(portButton);
+				
+				portButton.value = port;
+
+				deviceButton.onclick = portButton.onclick = ()=> {
+					const win = LOADER.OpenDeviceByFile(json.device);
+					
+				};
+			}
+			catch (ex) {
+				console.error(`uplink parse error: ${ex}`);
+			}
+		}
 		else if (value?.includes(";") && !editMode) {
 			valueBox.style.display = "none";
 

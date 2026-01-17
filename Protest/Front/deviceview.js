@@ -5,7 +5,7 @@ class DeviceView extends View {
 		"type", "name",
 
 		["mono/portscan.svg", "network"],
-		"ip", "ipv6", "mask", "hostname", "mac address", "dhcp enabled", "ports", "network adapter speed", "overwriteprotocol",
+		"ip", "ipv6", "mask", "hostname", "mac address", "dhcp enabled", "ports", "network adapter speed", "uplink", "overwriteprotocol",
 
 		[".", "device"],
 		"manufacturer", "model", "serial number", "chasse type", "description",

@@ -2680,6 +2680,21 @@ class Topology extends Window {
 			databaseButton.onclick = ()=> LOADER.OpenDeviceByFile(initial.file);
 			optionsBox.appendChild(databaseButton);
 
+			if (device.lldp && device.lldp.localPortCount > 0) {
+				const updateDbButton = document.createElement("button");
+				updateDbButton.style.minWidth = "unset";
+				updateDbButton.style.width = "36px";
+				updateDbButton.style.height = "36px";
+				updateDbButton.style.backgroundColor = "var(--clr-control)";
+				updateDbButton.style.backgroundSize = "28px 28px";
+				updateDbButton.style.backgroundPosition = "center";
+				updateDbButton.style.backgroundRepeat = "no-repeat";
+				updateDbButton.style.backgroundImage = "url(mono/upload.svg)";
+				optionsBox.appendChild(updateDbButton);
+				
+				updateDbButton.onclick = ()=> this.UpdateDatabaseDialog(file);
+			}
+
 			const overwriteProtocol = {};
 			const dbEntry = LOADER.devices.data[device.initial.file];
 
@@ -2879,6 +2894,139 @@ class Topology extends Window {
 		}
 	}
 
+	UpdateDatabaseDialog(file) {
+		const dialog = this.DialogBox("640px");
+		if (dialog === null) return;
+
+		const {okButton, innerBox} = dialog;
+		okButton.value = "Sync database uplinks";
+
+		innerBox.parentElement.style.maxWidth = "640px";
+
+		innerBox.style.padding = "16px 32px";
+
+		const device = this.devices[file];
+
+		const list = [];
+
+		for (const portIndex in device.lldp.localPortName) {
+			const portName = device.lldp.localPortName[portIndex] || portIndex;
+
+			const entry = device.lldp.entry[portIndex] || [device?.dot1tp?.entry[portIndex]];
+			if (!entry || entry.length === 0) continue;
+			
+			for (let i=0; i<entry.length; i++) {
+				if (!entry[i]) continue;
+
+				const dbEntry = LOADER.devices.data[entry[i]];
+
+				let checked = true;
+				if ("type" in dbEntry && dbEntry.type.v.toLowerCase() === "switch") {
+					checked = false;
+				}
+
+				const newItem = document.createElement("div");
+				newItem.className = "topology-find-listitem";
+				newItem.style.paddingLeft = "4px";
+				newItem.style.overflow = "hidden";
+				innerBox.appendChild(newItem);
+
+				const toggle = this.CreateToggle(portName, checked, newItem);
+				toggle.label.style.marginRight = "12px";
+				toggle.label.style.marginTop = "4px";
+				toggle.label.style.width = "128px";
+
+				const deviceLabel = document.createElement("div");
+				deviceLabel.style.display = "inline-block";
+				deviceLabel.style.transform = "translateY(4px)";
+				deviceLabel.style.width = "calc(100% - 225px)";
+				deviceLabel.style.backgroundImage = "url(mono/gear.svg)";
+				deviceLabel.style.backgroundSize = "20px 20px";
+				deviceLabel.style.backgroundPosition = "2px 50%";
+				deviceLabel.style.backgroundRepeat = "no-repeat";
+				deviceLabel.style.paddingLeft = "28px";
+				deviceLabel.style.overflow = "hidden";
+				deviceLabel.style.textOverflow = "ellipsis";
+				deviceLabel.style.whiteSpace = "nowrap";
+				newItem.appendChild(deviceLabel);
+
+				if ("hostname" in dbEntry && dbEntry.hostname.v.length > 0) {
+					deviceLabel.textContent = dbEntry.hostname.v;
+				}
+				else if ("name" in dbEntry && dbEntry.name.v.length > 0) {
+					deviceLabel.textContent = dbEntry.name.v;
+				}
+				else if ("mac address" in dbEntry && dbEntry["mac address"].v.length > 0) {
+					deviceLabel.textContent = dbEntry["mac address"].v;
+				}
+				else if ("ip" in dbEntry && dbEntry.ip.v.length > 0) {
+					deviceLabel.textContent = dbEntry.ip.v;
+				}
+
+				if ("type" in dbEntry) {
+					const type = dbEntry.type.v.toLowerCase();
+					deviceLabel.style.backgroundImage = `url(${type in LOADER.deviceIcons ? LOADER.deviceIcons[type] : "mono/gear.svg"})`;
+				}
+
+				list.push({
+					toggle: toggle,
+					file  : entry[i],
+					port  : portName
+				});
+
+				newItem.onclick = ()=> {
+					toggle.checkbox.checked = !toggle.checkbox.checked;
+				};
+			}
+		}
+
+		okButton.onclick = async ()=> {
+			const mods = {};
+			for (let i=0; i<list.length; i++) {
+				if (!list[i].toggle.checkbox.checked) continue;
+				
+				mods[list[i].file] = {
+					uplink: JSON.stringify({
+						device: file,
+						port: list[i].port
+					})
+				};
+			}
+
+			try {
+				const response = await fetch("db/device/grid", {
+					method: "POST",
+					body : JSON.stringify(mods)
+				});
+
+				if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
+
+				const json = await response.json();
+				if (json.error) {
+					throw new Error(json.error);
+				}
+
+				dialog.Close();
+			}
+			catch (ex) {
+				dialog.innerBox.parentElement.style.transition = ".4s";
+				dialog.innerBox.parentElement.style.height = "150px";
+				dialog.innerBox.textContent = "";
+				okButton.style.display = "none";
+				dialog.cancelButton.value = "Close";
+
+				const errorBox = document.createElement("div");
+				errorBox.textContent = ex;
+				errorBox.style.textAlign = "center";
+				errorBox.style.fontWeight = "600";
+				errorBox.style.padding = "20px";
+				dialog.innerBox.appendChild(errorBox);
+			}
+		};
+
+		setTimeout(()=>okButton.focus(), 200);
+	}
+
 	InterfaceList_onkeydown(event, interfacesList) {
 		if (this.selectedInterface === null) return;
 
@@ -3027,8 +3175,11 @@ class Topology extends Window {
 				else if ("name" in dbEntry && dbEntry.name.v.length > 0) {
 					remoteBox.textContent = dbEntry.name.v;
 				}
+				else if ("mac address" in dbEntry && dbEntry["mac address"].v.length > 0) {
+					remoteBox.textContent = dbEntry["mac address"].v;
+				}
 				else if ("ip" in dbEntry && dbEntry.ip.v.length > 0) {
-					remoteBox.textContent = dbEntry.ip.ip;
+					remoteBox.textContent = dbEntry.ip.v;
 				}
 
 				if ("type" in dbEntry) {
