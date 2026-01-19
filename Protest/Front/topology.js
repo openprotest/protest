@@ -50,6 +50,8 @@ class Topology extends Window {
 		this.SetupToolbar();
 
 		this.startButton = this.AddToolbarButton("Start discovery", "mono/play.svg?light");
+		this.syncButton = this.AddToolbarButton("Save uplinks to Devices", "mono/upload.svg?light");
+		this.syncButton.disabled = true;
 		this.AddToolbarSeparator();
 
 		this.findButton = this.AddToolbarButton("Find", "mono/search.svg?light");
@@ -128,6 +130,7 @@ class Topology extends Window {
 		this.content.onmouseup     = event=> this.Topology_onmouseup(event);
 
 		this.startButton.onclick   = ()=> this.StartDialog();
+		this.syncButton.onclick    = ()=> this.UpdateDeviceUplink();
 		this.findButton.onclick    = ()=> this.FindMode();
 		this.vlanButton.onclick    = ()=> this.VlanMode();
 		this.trafficButton.onclick = ()=> this.TrafficMode();
@@ -492,6 +495,7 @@ class Topology extends Window {
 		this.ws = new WebSocket(`${KEEP.isSecure ? "wss://" : "ws://"}${server}/ws/topology`);
 
 		this.ws.onopen = ()=> {
+			this.syncButton.disabled = true;
 			this.startButton.disabled = true;
 			this.vlanButton.disabled = true;
 			this.trafficButton.disabled = true;
@@ -500,6 +504,7 @@ class Topology extends Window {
 		};
 
 		this.ws.onclose = ()=> {
+			this.syncButton.disabled = false;
 			this.startButton.disabled = false;
 			this.startButton.setAttribute("tip-below", "Re-discover");
 			this.startButton.style.backgroundImage = "url(mono/restart.svg?light)";
@@ -601,6 +606,7 @@ class Topology extends Window {
 
 		this.ws.onerror = ()=> {
 			this.startButton.disabled = false;
+			this.syncButton.disabled = false;
 		};
 	}
 
@@ -2691,8 +2697,8 @@ class Topology extends Window {
 				updateDbButton.style.backgroundRepeat = "no-repeat";
 				updateDbButton.style.backgroundImage = "url(mono/upload.svg)";
 				optionsBox.appendChild(updateDbButton);
-				
-				updateDbButton.onclick = ()=> this.UpdateDatabaseDialog(file);
+
+				updateDbButton.onclick = ()=> this.UpdateDeviceUplink(file);
 			}
 
 			const overwriteProtocol = {};
@@ -2894,89 +2900,118 @@ class Topology extends Window {
 		}
 	}
 
-	UpdateDatabaseDialog(file) {
-		const dialog = this.DialogBox("640px");
+	UpdateDeviceUplink(target="*") {
+		const dialog = this.DialogBox("calc(100% - 40px)");
 		if (dialog === null) return;
 
 		const {okButton, innerBox} = dialog;
 		okButton.value = "Sync database uplinks";
 
-		innerBox.parentElement.style.maxWidth = "640px";
+		innerBox.parentElement.style.maxWidth = "720px";
 
-		innerBox.style.padding = "16px 32px";
-
-		const device = this.devices[file];
+		innerBox.style.border = "2px solid var(--clr-control)";
+		innerBox.style.borderRadius = "4px";
+		innerBox.style.margin = "20px 20px 8px 20px";
 
 		const list = [];
+		
+		for (const file in this.devices) {
+			if (target !== "*" && file !== target) continue;
 
-		for (const portIndex in device.lldp.localPortName) {
-			const portName = device.lldp.localPortName[portIndex] || portIndex;
+			const device = this.devices[file];
 
-			const entry = device.lldp.entry[portIndex] || [device?.dot1tp?.entry[portIndex]];
-			if (!entry || entry.length === 0) continue;
-			
-			for (let i=0; i<entry.length; i++) {
-				if (!entry[i]) continue;
+			if (device.isUnmanaged) continue;
+			if (!device.lldp || device.lldp.localPortName === 0) continue;
 
-				const dbEntry = LOADER.devices.data[entry[i]];
+			const switchBox = document.createElement("div");
+			switchBox.style.border = "2px solid var(--clr-control)";
+			switchBox.style.borderRadius = "4px";
+			switchBox.style.margin = "20px";
 
-				let checked = true;
-				if ("type" in dbEntry && dbEntry.type.v.toLowerCase() === "switch") {
-					checked = false;
+			const titleBox = document.createElement("div");
+			titleBox.textContent = device.initial.hostname;
+			titleBox.style.fontWeight = "bold";
+			titleBox.style.backgroundColor = "var(--clr-control)";
+			titleBox.style.padding = "4px";
+
+			const contentBox = document.createElement("div");
+
+			switchBox.append(titleBox, contentBox);
+
+			for (const portIndex in device.lldp.localPortName) {
+				const portName = device.lldp.localPortName[portIndex] || portIndex;
+
+				const entry = device.lldp.entry[portIndex] || [device?.dot1tp?.entry[portIndex]];
+				if (!entry || entry.length === 0) continue;
+
+				for (let i=0; i<entry.length; i++) {
+					if (!entry[i]) continue;
+
+					const dbEntry = LOADER.devices.data[entry[i]];
+					if (!dbEntry) continue;
+
+					let checked = true;
+					if ("type" in dbEntry && dbEntry.type.v.toLowerCase() === "switch") {
+						checked = false;
+					}
+
+					const newItem = document.createElement("div");
+					newItem.className = "topology-find-listitem";
+					newItem.style.paddingLeft = "4px";
+					newItem.style.overflow = "hidden";
+					contentBox.appendChild(newItem);
+
+					const toggle = this.CreateToggle(portName, checked, newItem);
+					toggle.label.style.marginRight = "12px";
+					toggle.label.style.marginTop = "4px";
+					toggle.label.style.width = "128px";
+
+					const deviceLabel = document.createElement("div");
+					deviceLabel.style.display = "inline-block";
+					deviceLabel.style.transform = "translateY(4px)";
+					deviceLabel.style.width = "calc(100% - 225px)";
+					deviceLabel.style.backgroundImage = "url(mono/gear.svg)";
+					deviceLabel.style.backgroundSize = "20px 20px";
+					deviceLabel.style.backgroundPosition = "2px 50%";
+					deviceLabel.style.backgroundRepeat = "no-repeat";
+					deviceLabel.style.paddingLeft = "28px";
+					deviceLabel.style.overflow = "hidden";
+					deviceLabel.style.textOverflow = "ellipsis";
+					deviceLabel.style.whiteSpace = "nowrap";
+					newItem.appendChild(deviceLabel);
+
+					if ("hostname" in dbEntry && dbEntry.hostname.v.length > 0) {
+						deviceLabel.textContent = dbEntry.hostname.v;
+					}
+					else if ("name" in dbEntry && dbEntry.name.v.length > 0) {
+						deviceLabel.textContent = dbEntry.name.v;
+					}
+					else if ("mac address" in dbEntry && dbEntry["mac address"].v.length > 0) {
+						deviceLabel.textContent = dbEntry["mac address"].v;
+					}
+					else if ("ip" in dbEntry && dbEntry.ip.v.length > 0) {
+						deviceLabel.textContent = dbEntry.ip.v;
+					}
+
+					if ("type" in dbEntry) {
+						const type = dbEntry.type.v.toLowerCase();
+						deviceLabel.style.backgroundImage = `url(${type in LOADER.deviceIcons ? LOADER.deviceIcons[type] : "mono/gear.svg"})`;
+					}
+
+					list.push({
+						toggle: toggle,
+						file  : entry[i],
+						port  : portName
+					});
+
+					newItem.onclick = ()=> {
+						toggle.checkbox.checked = !toggle.checkbox.checked;
+					};
 				}
+			}
 
-				const newItem = document.createElement("div");
-				newItem.className = "topology-find-listitem";
-				newItem.style.paddingLeft = "4px";
-				newItem.style.overflow = "hidden";
-				innerBox.appendChild(newItem);
-
-				const toggle = this.CreateToggle(portName, checked, newItem);
-				toggle.label.style.marginRight = "12px";
-				toggle.label.style.marginTop = "4px";
-				toggle.label.style.width = "128px";
-
-				const deviceLabel = document.createElement("div");
-				deviceLabel.style.display = "inline-block";
-				deviceLabel.style.transform = "translateY(4px)";
-				deviceLabel.style.width = "calc(100% - 225px)";
-				deviceLabel.style.backgroundImage = "url(mono/gear.svg)";
-				deviceLabel.style.backgroundSize = "20px 20px";
-				deviceLabel.style.backgroundPosition = "2px 50%";
-				deviceLabel.style.backgroundRepeat = "no-repeat";
-				deviceLabel.style.paddingLeft = "28px";
-				deviceLabel.style.overflow = "hidden";
-				deviceLabel.style.textOverflow = "ellipsis";
-				deviceLabel.style.whiteSpace = "nowrap";
-				newItem.appendChild(deviceLabel);
-
-				if ("hostname" in dbEntry && dbEntry.hostname.v.length > 0) {
-					deviceLabel.textContent = dbEntry.hostname.v;
-				}
-				else if ("name" in dbEntry && dbEntry.name.v.length > 0) {
-					deviceLabel.textContent = dbEntry.name.v;
-				}
-				else if ("mac address" in dbEntry && dbEntry["mac address"].v.length > 0) {
-					deviceLabel.textContent = dbEntry["mac address"].v;
-				}
-				else if ("ip" in dbEntry && dbEntry.ip.v.length > 0) {
-					deviceLabel.textContent = dbEntry.ip.v;
-				}
-
-				if ("type" in dbEntry) {
-					const type = dbEntry.type.v.toLowerCase();
-					deviceLabel.style.backgroundImage = `url(${type in LOADER.deviceIcons ? LOADER.deviceIcons[type] : "mono/gear.svg"})`;
-				}
-
-				list.push({
-					toggle: toggle,
-					file  : entry[i],
-					port  : portName
-				});
-
-				newItem.onclick = ()=> {
-					toggle.checkbox.checked = !toggle.checkbox.checked;
-				};
+			if (contentBox.childNodes.length > 0) {
+				innerBox.appendChild(switchBox);
 			}
 		}
 
@@ -2984,7 +3019,7 @@ class Topology extends Window {
 			const mods = {};
 			for (let i=0; i<list.length; i++) {
 				if (!list[i].toggle.checkbox.checked) continue;
-				
+
 				mods[list[i].file] = {
 					uplink: JSON.stringify({
 						device: file,

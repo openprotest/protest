@@ -286,7 +286,7 @@ class Grid extends Window {
 		dialog.cancelButton.disabled = true;
 
 		const url = (this instanceof DevicesGrid) ? "db/device/grid" : "db/user/grid";
-		
+
 		try {
 			const response = await fetch(url, {
 				method: "POST",

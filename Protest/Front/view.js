@@ -324,37 +324,48 @@ class View extends Window {
 
 				valueBox.style.display = "none";
 
-				const deviceButton = document.createElement("input");
-				deviceButton.type = "button";
-				deviceButton.className = "with-icon";
-				deviceButton.style.backgroundImage = "url(mono/switch.svg?light)";
+				const deviceButton = document.createElement("button");
+				deviceButton.style.height = "40px";
+				deviceButton.style.paddingLeft = "4px";
+				deviceButton.style.paddingRight = "4px";
+				deviceButton.style.color = "var(--clr-dark)";
+				deviceButton.style.backgroundColor = "transparent";
+				deviceButton.style.whiteSpace = "nowrap";
 				valueContainer.appendChild(deviceButton);
 
+				deviceButton.onclick = ()=> LOADER.OpenDeviceByFile(json.device);
+
+				const deviceBox = document.createElement("div");
+				const portBox = document.createElement("div");
+				deviceBox.style.marginRight        = "4px";
+				deviceBox.style.padding            = portBox.style.padding            = "6px 4px 6px 32px";
+				deviceBox.style.display            = portBox.style.display            = "inline-block";
+				deviceBox.style.backgroundSize     = portBox.style.backgroundSize     = "24px 24px";
+				deviceBox.style.backgroundPosition = portBox.style.backgroundPosition = "4px 50%";
+				deviceBox.style.backgroundRepeat   = portBox.style.backgroundRepeat   = "no-repeat";
+				deviceBox.style.border             = portBox.style.border             = "1px solid var(--clr-dark)";
+				deviceBox.style.borderRadius       = portBox.style.borderRadius       = "4px";
+
+				deviceButton.append(deviceBox, portBox);
+
+				deviceBox.style.backgroundImage = "url(mono/switch.svg)";
+
 				if (device.name && device.name.v.length > 0) {
-					deviceButton.value = device.name.v;
+					deviceBox.textContent = device.name.v;
 				}
 				else if (device.hostname && device.hostname.v.length > 0) {
-					deviceButton.value = device.hostname.v;
+					deviceBox.textContent = device.hostname.v;
 				}
 				else if (device.ip && device.ip.v.length > 0) {
-					deviceButton.value = device.ip.v;
+					deviceBox.textContent = device.ip.v;
 				}
 				else {
-					deviceButton.value = "Device";
+					deviceBox.textContent = "Device";
 				}
 
-				const portButton = document.createElement("input");
-				portButton.type = "button";
-				portButton.className = "with-icon";
-				portButton.style.backgroundImage = "url(mono/ethernetport.svg?light)";
-				valueContainer.appendChild(portButton);
-				
-				portButton.value = port;
+				portBox.textContent = port;
+				portBox.style.backgroundImage = "url(mono/ethernetport.svg)";
 
-				deviceButton.onclick = portButton.onclick = ()=> {
-					const win = LOADER.OpenDeviceByFile(json.device);
-					
-				};
 			}
 			catch (ex) {
 				console.error(`uplink parse error: ${ex}`);
