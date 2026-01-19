@@ -12,8 +12,8 @@
     <ProjectGuid>{72F5BCA3-7752-45E8-8027-2060EBBDA456}</ProjectGuid>
 
     <OutputType>Exe</OutputType>
-    <LangVersion>13</LangVersion>
-    <TargetFrameworks>net9.0</TargetFrameworks>
+    <LangVersion>14</LangVersion>
+    <TargetFrameworks>net10.0</TargetFrameworks>
     <Platforms>x64</Platforms>
 
     <ServerGarbageCollection>true</ServerGarbageCollection>
