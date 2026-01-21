@@ -130,7 +130,7 @@ class Topology extends Window {
 		this.content.onmouseup     = event=> this.Topology_onmouseup(event);
 
 		this.startButton.onclick   = ()=> this.StartDialog();
-		this.syncButton.onclick    = ()=> this.UpdateDeviceUplink();
+		this.syncButton.onclick    = ()=> this.UpdateDeviceUplinkDialog();
 		this.findButton.onclick    = ()=> this.FindMode();
 		this.vlanButton.onclick    = ()=> this.VlanMode();
 		this.trafficButton.onclick = ()=> this.TrafficMode();
@@ -2698,7 +2698,7 @@ class Topology extends Window {
 				updateDbButton.style.backgroundImage = "url(mono/upload.svg)";
 				optionsBox.appendChild(updateDbButton);
 
-				updateDbButton.onclick = ()=> this.UpdateDeviceUplink(file);
+				updateDbButton.onclick = ()=> this.UpdateDeviceUplinkDialog(file);
 			}
 
 			const overwriteProtocol = {};
@@ -2900,12 +2900,12 @@ class Topology extends Window {
 		}
 	}
 
-	UpdateDeviceUplink(target="*") {
+	UpdateDeviceUplinkDialog(target="*") {
 		const dialog = this.DialogBox("calc(100% - 40px)");
 		if (dialog === null) return;
 
 		const {okButton, innerBox} = dialog;
-		okButton.value = "Sync database uplinks";
+		okButton.value = "Save uplinks to Devices";
 
 		innerBox.parentElement.style.maxWidth = "720px";
 
@@ -2914,7 +2914,7 @@ class Topology extends Window {
 		innerBox.style.margin = "20px 20px 8px 20px";
 
 		const list = [];
-		
+
 		for (const file in this.devices) {
 			if (target !== "*" && file !== target) continue;
 
@@ -2922,6 +2922,8 @@ class Topology extends Window {
 
 			if (device.isUnmanaged) continue;
 			if (!device.lldp || device.lldp.localPortName === 0) continue;
+
+			const type = device.initial.type.toLowerCase();
 
 			const switchBox = document.createElement("div");
 			switchBox.style.border = "2px solid var(--clr-control)";
@@ -2932,7 +2934,11 @@ class Topology extends Window {
 			titleBox.textContent = device.initial.hostname;
 			titleBox.style.fontWeight = "bold";
 			titleBox.style.backgroundColor = "var(--clr-control)";
-			titleBox.style.padding = "4px";
+			titleBox.style.padding = "4px 4px 4px 32px";
+			titleBox.style.backgroundImage = `url(${type in LOADER.deviceIcons ? LOADER.deviceIcons[type] : "mono/gear.svg"})`;
+			titleBox.style.backgroundSize = "24px 24px";
+			titleBox.style.backgroundPosition = "2px 50%";
+			titleBox.style.backgroundRepeat = "no-repeat";
 
 			const contentBox = document.createElement("div");
 
@@ -2978,6 +2984,7 @@ class Topology extends Window {
 					deviceLabel.style.overflow = "hidden";
 					deviceLabel.style.textOverflow = "ellipsis";
 					deviceLabel.style.whiteSpace = "nowrap";
+					deviceLabel.style.userSelect = "text";
 					newItem.appendChild(deviceLabel);
 
 					if ("hostname" in dbEntry && dbEntry.hostname.v.length > 0) {
@@ -2999,10 +3006,13 @@ class Topology extends Window {
 					}
 
 					list.push({
+						uplink: file,
 						toggle: toggle,
 						file  : entry[i],
 						port  : portName
 					});
+
+					deviceLabel.onclick = event=> event.stopPropagation();
 
 					newItem.onclick = ()=> {
 						toggle.checkbox.checked = !toggle.checkbox.checked;
@@ -3020,18 +3030,24 @@ class Topology extends Window {
 			for (let i=0; i<list.length; i++) {
 				if (!list[i].toggle.checkbox.checked) continue;
 
-				mods[list[i].file] = {
-					uplink: JSON.stringify({
-						device: file,
-						port: list[i].port
-					})
-				};
+				if (!mods[list[i].file]) {
+					mods[list[i].file] = [];
+				}
+
+				mods[list[i].file].push({
+					device: list[i].uplink,
+					port: list[i].port
+				});
+			}
+
+			for (const file in mods) {
+				mods[file] = { "uplink": JSON.stringify(mods[file]) };
 			}
 
 			try {
 				const response = await fetch("db/device/grid", {
 					method: "POST",
-					body : JSON.stringify(mods)
+					body: JSON.stringify(mods)
 				});
 
 				if (response.status !== 200) LOADER.HttpErrorHandler(response.status);

@@ -38,6 +38,9 @@
 	height: 32px;
 	border-bottom: 1px solid var(--clr-control);
 }
+.topology-find-listitem:last-child {
+	border-bottom: 1px solid transparent;
+}
 
 .topology-find-listitem:hover {
 	background-color: var(--clr-highlight);

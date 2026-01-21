@@ -315,56 +315,60 @@ class View extends Window {
 			try {
 				const json = JSON.parse(value);
 
-				const device = LOADER.devices.data[json.device];
-				const port = json.port;
+				for (let i=0; i<json.length; i++) {
+					const device = LOADER.devices.data[json[i].device];
+					const port = json[i].port;
 
-				if (!json.device || json.device.length === 0 || !device) {
-					throw "device not found";
+					valueBox.style.display = "none";
+
+					const deviceButton = document.createElement("button");
+					deviceButton.style.height = "32px";
+					deviceButton.style.paddingLeft = "1px";
+					deviceButton.style.paddingRight = "1px";
+					deviceButton.style.margin = "2px";
+					deviceButton.style.color = "var(--clr-dark)";
+					deviceButton.style.backgroundColor = "transparent";
+					deviceButton.style.whiteSpace = "nowrap";
+					valueContainer.appendChild(deviceButton);
+
+					deviceButton.onclick = ()=> LOADER.OpenDeviceByFile(json[i].device);
+
+					const deviceBox = document.createElement("div");
+					deviceBox.style.backgroundSize     = "24px 24px";
+					deviceBox.style.borderRadius       = "4px 0 0 4px";
+					deviceBox.style.marginRight        = "1px";
+
+					const portBox = document.createElement("div");
+					portBox.style.backgroundSize       = "28px 28px";
+					portBox.style.borderRadius         = "0 4px 4px 0";
+
+					deviceBox.style.padding            = portBox.style.padding            = "4px 8px 4px 32px";
+					deviceBox.style.display            = portBox.style.display            = "inline-block";
+					deviceBox.style.backgroundPosition = portBox.style.backgroundPosition = "2px 50%";
+					deviceBox.style.backgroundRepeat   = portBox.style.backgroundRepeat   = "no-repeat";
+					deviceBox.style.border             = portBox.style.border             = "1px solid var(--clr-dark)";
+
+					deviceButton.append(deviceBox, portBox);
+
+					deviceBox.style.backgroundImage = "url(mono/switch.svg)";
+
+					if (device.name && device.name.v.length > 0) {
+						deviceBox.textContent = device.name.v;
+					}
+					else if (device.hostname && device.hostname.v.length > 0) {
+						deviceBox.textContent = device.hostname.v;
+					}
+					else if (device.ip && device.ip.v.length > 0) {
+						deviceBox.textContent = device.ip.v;
+					}
+					else {
+						deviceBox.textContent = "Device";
+					}
+
+					portBox.textContent = port;
+					portBox.style.backgroundImage = "url(mono/ethernetport.svg)";
+
 				}
-
-				valueBox.style.display = "none";
-
-				const deviceButton = document.createElement("button");
-				deviceButton.style.height = "40px";
-				deviceButton.style.paddingLeft = "4px";
-				deviceButton.style.paddingRight = "4px";
-				deviceButton.style.color = "var(--clr-dark)";
-				deviceButton.style.backgroundColor = "transparent";
-				deviceButton.style.whiteSpace = "nowrap";
-				valueContainer.appendChild(deviceButton);
-
-				deviceButton.onclick = ()=> LOADER.OpenDeviceByFile(json.device);
-
-				const deviceBox = document.createElement("div");
-				const portBox = document.createElement("div");
-				deviceBox.style.marginRight        = "4px";
-				deviceBox.style.padding            = portBox.style.padding            = "6px 4px 6px 32px";
-				deviceBox.style.display            = portBox.style.display            = "inline-block";
-				deviceBox.style.backgroundSize     = portBox.style.backgroundSize     = "24px 24px";
-				deviceBox.style.backgroundPosition = portBox.style.backgroundPosition = "4px 50%";
-				deviceBox.style.backgroundRepeat   = portBox.style.backgroundRepeat   = "no-repeat";
-				deviceBox.style.border             = portBox.style.border             = "1px solid var(--clr-dark)";
-				deviceBox.style.borderRadius       = portBox.style.borderRadius       = "4px";
-
-				deviceButton.append(deviceBox, portBox);
-
-				deviceBox.style.backgroundImage = "url(mono/switch.svg)";
-
-				if (device.name && device.name.v.length > 0) {
-					deviceBox.textContent = device.name.v;
-				}
-				else if (device.hostname && device.hostname.v.length > 0) {
-					deviceBox.textContent = device.hostname.v;
-				}
-				else if (device.ip && device.ip.v.length > 0) {
-					deviceBox.textContent = device.ip.v;
-				}
-				else {
-					deviceBox.textContent = "Device";
-				}
-
-				portBox.textContent = port;
-				portBox.style.backgroundImage = "url(mono/ethernetport.svg)";
 
 			}
 			catch (ex) {
