@@ -173,6 +173,14 @@ internal static class Topology {
                         }
                     }
 
+                    if (options.Contains("speed")) {
+                        IList<Variable> speed = Polling.SnmpQuery(ipAddress, snmpProfile, [Oid.INT_SPEED], Polling.SnmpOperation.Walk);
+                        if (speed is not null && speed.Count > 0) {
+                            byte[] response = ComputeSpeedResponse(candidate.filename, speed);
+                            WsWriteText(ws, response, mutex);
+                        }
+                    }
+
                     WsWriteText(ws, Encoding.UTF8.GetBytes($"{{\"over\":\"{candidate.filename}\"}}"), mutex);
 
                 }
@@ -498,6 +506,25 @@ internal static class Topology {
                 file = file,
                 @in  = errIn,
                 @out = errOut
+            }
+        });
+
+        return payload;
+    }
+
+    private static byte[] ComputeSpeedResponse(string file, IList<Variable> speed) {
+        Dictionary<string, long> parsedResult = Protocols.Snmp.Polling.ParseLongResponse(speed);
+        Dictionary<int, long> speeds = new Dictionary<int, long>();
+
+        foreach (KeyValuePair<string, long> pair in parsedResult) {
+            if (!int.TryParse(pair.Key.Split('.')[^1], out int index)) continue;
+            speeds.Add(index, pair.Value);
+        }
+
+        byte[] payload = JsonSerializer.SerializeToUtf8Bytes(new {
+            speed = new {
+                file  = file,
+                value = speeds
             }
         });
 

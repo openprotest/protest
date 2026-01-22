@@ -292,6 +292,16 @@ const UI = {
 		if (bps < 8_000 * 1000 ** 8) return `${(bps / 1000 ** 8).toFixed(2)} Bbps`;
 	},
 
+	MBitsPerSecToString: bps=> {
+		if (bps < 1000) return `${bps} Mbps`;
+		if (bps < 1000 ** 2) return `${bps / 1000} Gbps`;
+		if (bps < 1000 ** 3) return `${bps / 1000 ** 2} Tbps`;
+		if (bps < 1000 ** 4) return `${bps / 1000 ** 3} Ebps`;
+		if (bps < 1000 ** 5) return `${bps / 1000 ** 4} Zbps`;
+		if (bps < 1000 ** 6) return `${bps / 1000 ** 5} Ybps`;
+		if (bps < 1000 ** 7) return `${bps / 1000 ** 6} Bbps`;
+	},
+
 	GenerateUuid: prefix=> {
 		if (prefix) {
 			return `${prefix}-${"xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx".replace(/[x]/g, ()=>(window.crypto.getRandomValues(new Uint8Array(1))[0] & 0b00001111).toString(16))}`;

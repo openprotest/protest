@@ -65,6 +65,9 @@ class Topology extends Window {
 		this.errorsButton = this.AddToolbarButton("Visualize errors", "mono/error.svg?light");
 		this.errorsButton.disabled = true;
 
+		this.speedButton = this.AddToolbarButton("Connection speed", "mono/speedtest.svg?light");
+		this.speedButton.disabled = true;
+
 		this.AddToolbarSeparator();
 
 		this.zoomOutButton = this.AddToolbarButton("Zoom out", "mono/zoomout.svg?light");
@@ -135,6 +138,7 @@ class Topology extends Window {
 		this.vlanButton.onclick    = ()=> this.VlanMode();
 		this.trafficButton.onclick = ()=> this.TrafficMode();
 		this.errorsButton.onclick  = ()=> this.ErrorMode();
+		this.speedButton.onclick   = ()=> this.SpeedMode();
 		this.zoomOutButton.onclick = ()=> this.ZoomOut();
 		this.zoomInButton.onclick  = ()=> this.ZoomIn();
 
@@ -368,7 +372,7 @@ class Topology extends Window {
 	}
 
 	StartDialog() {
-		const dialog = this.DialogBox("260px");
+		const dialog = this.DialogBox("280px");
 		if (dialog === null) return;
 
 		const {okButton, innerBox} = dialog;
@@ -457,6 +461,14 @@ class Topology extends Window {
 		errorLabel.style.backgroundRepeat = "no-repeat";
 		errorInput.checked =  this.args.options ? this.args.options.error : false;
 
+		const [speedLabel, speedInput] = AddParameter("Connection speed", "input", "toggle");
+		speedLabel.style.lineHeight = "24px";
+		speedLabel.style.paddingLeft = "28px";
+		speedLabel.style.backgroundImage = "url(mono/speedtest.svg)";
+		speedLabel.style.backgroundSize = "24px";
+		speedLabel.style.backgroundRepeat = "no-repeat";
+		speedInput.checked =  this.args.options ? this.args.options.speed : false;
+
 		setTimeout(()=>okButton.focus(), 200);
 
 		okButton.onclick = async ()=> {
@@ -470,6 +482,7 @@ class Topology extends Window {
 			if (dot1qInput.checked) devices.push("vlan");
 			if (trafficInput.checked) devices.push("traffic");
 			if (errorInput.checked) devices.push("error");
+			if (speedInput.checked) devices.push("speed");
 			this.Connect(devices);
 
 			this.args.options = {
@@ -477,6 +490,7 @@ class Topology extends Window {
 				dot1q  : dot1qInput.checked,
 				traffic: trafficInput.checked,
 				error  : errorInput.checked,
+				speed  : speedInput.checked
 			};
 		};
 	}
@@ -500,6 +514,7 @@ class Topology extends Window {
 			this.vlanButton.disabled = true;
 			this.trafficButton.disabled = true;
 			this.errorsButton.disabled = true;
+			this.speedButton.disabled = true;
 			this.ws.send(options.join(";"));
 		};
 
@@ -512,6 +527,7 @@ class Topology extends Window {
 			this.vlanButton.disabled    = !this.args.options.dot1q;
 			this.trafficButton.disabled = !this.args.options.traffic;
 			this.errorsButton.disabled  = !this.args.options.error;
+			this.speedButton.disabled   = !this.args.options.speed;
 
 			if (this.args.options.dot1q || this.args.options.traffic || this.args.options.error) {
 				for (const file in this.devices) {
@@ -596,6 +612,10 @@ class Topology extends Window {
 			else if (json.error && !forbiddenKeys.includes(json.error.file)) {
 				const device = this.devices[json.error.file];
 				device.error = json.error;
+			}
+			else if (json.speed && !forbiddenKeys.includes(json.speed.file)) {
+				const device = this.devices[json.speed.file];
+				device.speed = json.speed;
 			}
 			else if (json.over && !forbiddenKeys.includes(json.over)) {
 				const device = this.devices[json.over];
@@ -1129,7 +1149,7 @@ class Topology extends Window {
 		const listBox = document.createElement("div");
 		listBox.className = "topology-find-listbox no-results";
 		listBox.tabIndex = 0;
-
+		listBox.style.top = "40px";
 		this.navPane.appendChild(listBox);
 
 		let selected = null;
@@ -1806,6 +1826,207 @@ class Topology extends Window {
 		};
 
 		thresholdInput.oninput();
+		UpdateMap();
+		this.ShowNavPane();
+	}
+
+	SpeedMode() {
+		if (this.uiMode === "speed") return;
+
+		this.uiMode = "speed";
+		this.navPane.textContent = "";
+
+		const titleBox = document.createElement("div");
+		titleBox.className = "topology-navpane-title";
+		titleBox.textContent = "Connection speed";
+
+		const closeButton = document.createElement("div");
+		closeButton.className = "topology-close-button";
+		closeButton.tabIndex = 0;
+
+		this.navPane.append(titleBox, closeButton);
+
+
+		const listBox = document.createElement("div");
+		listBox.className = "topology-find-listbox no-results";
+		listBox.tabIndex = 0;
+		listBox.style.top = "40px";
+		this.navPane.appendChild(listBox);
+
+		closeButton.onclick = ()=> this.HideNavPane();
+
+		const list = [
+			{ text: "10 Mbps",  value: 10,     color: "hsl(15,100%,50%)" },
+			{ text: "100 Mbps", value: 100,    color: "hsl(30,100%,50%)" },
+			{ text: "1 Gbps",   value: 1000,   color: "hsl(50,100%,50%)" },
+			{ text: "2.5 Gbps", value: 2500,   color: "hsl(65,100%,50%)" },
+			{ text: "5 Gbps",   value: 5000,   color: "hsl(80,100%,50%)" },
+			{ text: "10 Gbps",  value: 10000,  color: "hsl(130,100%,50%)" },
+			{ text: "25 Gbps",  value: 25000,  color: "hsl(180,100%,50%)" },
+			{ text: "40 Gbps",  value: 40000,  color: "hsl(200,100%,53%)" },
+			{ text: "100 Gbps", value: 100000, color: "hsl(230,100%,59%)" },
+			{ text: "200 Gbps", value: 200000, color: "hsl(255,100%,59%)" },
+			{ text: "400 Gbps", value: 400000, color: "hsl(275,100%,56%)" },
+			{ text: "800 Gbps", value: 800000, color: "hsl(300,100%,56%)" },
+		];
+
+		const colorMapping = {
+			10: "hsl(15,100%,50%)",
+			100: "hsl(30,100%,50%)",
+			1000: "hsl(50,100%,50%)",
+			2500: "hsl(65,100%,50%)",
+			5000: "hsl(80,100%,50%)",
+			10000: "hsl(130,100%,50%)",
+			25000: "hsl(180,100%,50%)",
+			40000: "hsl(200,100%,53%)",
+			100000: "hsl(230,100%,59%)",
+			200000: "hsl(255,100%,59%)",
+			400000: "hsl(275,100%,56%)",
+			800000: "hsl(300,100%,56%)",
+		};
+
+		const HighlightSpeed = speed=> {
+			for (const file in this.devices) {
+				const device = this.devices[file];
+				if (!device.speed || !device.speed.value) continue;
+
+				for (const port in device.speed.value) {
+					const speedColor = colorMapping[device.speed.value[port]] || "#000";
+					const color = !speed || device.speed.value[port] === speed ? speedColor : `color-mix(in srgb, ${speedColor} 33%, transparent)`;
+
+					if (port in device.endpoint.dot) {
+						device.endpoint.dot[port].setAttribute("fill", color);
+					}
+					else if (port in device.links && !this.links[device.links[port]].isEndpoint) {
+						const link = this.links[device.links[port]];
+						link.element.line.setAttribute("stroke", color);
+						link.element.capA.setAttribute("fill", color);
+						link.element.capB.setAttribute("fill", color);
+					}
+				}
+			}
+		};
+
+		let selected = null;
+
+		for (const i in list) {
+			const speedBox = document.createElement("div");
+			speedBox.style.backgroundColor = "var(--clr-control)";
+			speedBox.style.margin = "4px";
+			speedBox.style.padding = "2px 4px";
+			speedBox.style.borderRadius = "4px";
+			speedBox.style.transition = ".2s";
+
+			const color = document.createElement("div");
+			color.style.display = "inline-block";
+			color.style.width = "10px";
+			color.style.height = "10px";
+			color.style.marginRight = "4px";
+			color.style.border = "1px solid var(--clr-dark)";
+			color.style.borderRadius = "2px";
+			color.style.overflow = "hidden";
+			color.style.textOverflow = "ellipses";
+			color.style.whiteSpace = "nowrap";
+			color.style.backgroundColor = list[i].color;
+
+			const name = document.createElement("div");
+			name.style.display = "inline-block";
+			name.style.cursor = "default";
+			name.textContent = list[i].text;
+
+			speedBox.append(color, name);
+			listBox.appendChild(speedBox);
+
+			speedBox.onclick = ()=> {
+
+				if (selected === speedBox) {
+					selected.style.backgroundColor = "var(--clr-control)";
+					selected = null;
+					HighlightSpeed(null);
+					return;
+				}
+
+				if (selected) {
+					selected.style.backgroundColor = "var(--clr-control)";
+				}
+
+				selected = speedBox;
+				speedBox.style.backgroundColor = "var(--clr-select)";
+
+				HighlightSpeed(list[i].value);
+			};
+		}
+
+		const UpdateMap = ()=> {
+			for (const file in this.devices) {
+				const device = this.devices[file];
+				if (!("speed" in device)) continue;
+
+				if (device.endpoint) {
+					device.endpoint.group.style.visibility = "visible";
+					device.endpoint.group.style.opacity = "1";
+				}
+
+				for (const port in device.speed.value) {
+					let color;
+					if (!device.speed.value[port] || device.speed.value[port] === 0) {
+						color = "#000";
+					}
+					else {
+						color = colorMapping[device.speed.value[port]] || "#000";
+					}
+
+					if (port in device.endpoint.dot) {
+						device.endpoint.dot[port].setAttribute("fill", color);
+					}
+					else if (port in device.links && !this.links[device.links[port]].isEndpoint) {
+						const link = this.links[device.links[port]];
+						link.element.capA.setAttribute("fill", color);
+						link.element.capB.setAttribute("fill", color);
+						link.element.line.setAttribute("stroke", color);
+					}
+				}
+			}
+		};
+
+		listBox.onkeydown = event=> {
+			switch (event.key) {
+			case "ArrowUp": {
+				if (listBox.childNodes.length === 0) return;
+				event.preventDefault();
+
+				const children = Array.from(listBox.childNodes);
+				const selectedIndex = Array.from(children).findIndex(o=>o.style.backgroundColor !== "var(--clr-control)");
+
+				if (selectedIndex === -1) {
+					children[0].onclick();
+				}
+				else if (selectedIndex > 0) {
+					children[selectedIndex - 1].scrollIntoView({block:"nearest", inline:"nearest"});
+					children[selectedIndex - 1].onclick();
+				}
+				break;
+			}
+
+			case "ArrowDown": {
+				if (listBox.childNodes.length === 0) return;
+				event.preventDefault();
+
+				const children = Array.from(listBox.childNodes);
+				const selectedIndex = Array.from(children).findIndex(o=>o.style.backgroundColor !== "var(--clr-control)");
+
+				if (selectedIndex === -1) {
+					children[0].onclick();
+				}
+				else if (selectedIndex < children.length - 1) {
+					children[selectedIndex + 1].scrollIntoView({block:"nearest", inline:"nearest"});
+					children[selectedIndex + 1].onclick();
+				}
+				break;
+			}
+			}
+		};
+
 		UpdateMap();
 		this.ShowNavPane();
 	}
@@ -3444,6 +3665,20 @@ class Topology extends Window {
 				}
 			}
 
+			if (dbFile && expand && dbFile in LOADER.devices.data) {
+				const linkBox = document.createElement("div");
+				linkBox.style.backgroundImage = "url(mono/gear.svg)";
+				linkBox.setAttribute("info-label", "Device:");
+				container.appendChild(linkBox);
+
+				const linkValue = document.createElement("div");
+				linkValue.textContent = remoteBox.textContent;
+				linkBox.appendChild(linkValue);
+
+				linkBox.style.cursor = "pointer";
+				linkBox.onclick = ()=> LOADER.OpenDeviceByFile(dbFile);
+			}
+
 			const untaggedBox = document.createElement("div");
 			untaggedBox.style.backgroundImage = "url(mono/untagged.svg)";
 			untaggedBox.setAttribute("info-label", "Untagged:");
@@ -3485,20 +3720,15 @@ class Topology extends Window {
 			errorBox.appendChild(errorValue);
 		}
 
-		if (dbFile) {
-			const linkBox = document.createElement("div");
-			linkBox.style.backgroundImage = "url(mono/gear.svg)";
-			linkBox.setAttribute("info-label", "Device:");
-			container.appendChild(linkBox);
+		if (device.speed && device.speed.value && device.speed.value[portIndex] > 0) {
+			const speedBox = document.createElement("div");
+			speedBox.style.backgroundImage = "url(mono/speedtest.svg)";
+			speedBox.setAttribute("info-label", "Speed:");
+			container.appendChild(speedBox);
 
-			const linkValue = document.createElement("div");
-			linkValue.textContent = remoteBox.textContent;
-			linkBox.appendChild(linkValue);
-
-			if (expand && dbFile in LOADER.devices.data) {
-				linkBox.style.cursor = "pointer";
-				linkBox.onclick = ()=> LOADER.OpenDeviceByFile(dbFile);
-			}
+			const speedValue = document.createElement("div");
+			speedValue.textContent = UI.MBitsPerSecToString(device.speed.value[portIndex]);
+			speedBox.appendChild(speedValue);
 		}
 
 		if (expand) {
