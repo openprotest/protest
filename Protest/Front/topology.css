@@ -165,7 +165,7 @@
 	animation: blink 2s infinite;
 }
 
-.topology-error-message[untracked]::before {
+.topology-error-message[inferred]::before {
 	background-color: rgb(240,128,24);
 }
 
@@ -282,6 +282,9 @@
 	margin-left: 2px;
 	margin-right: 4px;
 	border-radius: 4px;
+	background-size: 5px 5px, 7px 7px;
+	background-position: 3px 50%, 2px 50%;
+	background-repeat: no-repeat, no-repeat;
 }
 
 .topology-interface-list > div > div:nth-child(1)::after {
@@ -407,7 +410,11 @@
 .topology-info-box > div > div {
 	display: inline-block;
 	vertical-align: middle;
-	width: calc(100% - 72px);
+	width: calc(100% - 84px);
+	padding-left: 12px;
+	background-size: 6px 6px, 8px 8px;
+	background-position: 1px 50%, 0 50%;
+	background-repeat: no-repeat, no-repeat;
 }
 
 .topology-info-box::after {
@@ -484,9 +491,12 @@
 .topology-info-popup > div > div {
 	display: inline-block;
 	vertical-align: middle;
-	width: calc(100% - 88px);
-	-webkit-user-select: text;
-	user-select: text;
+	width: calc(100% - 104px);
+	padding-left: 16px;
+	background-size: 8px 8px, 10px 10px;
+	background-position: 2px 50%, 1px 50%;
+	background-repeat: no-repeat, no-repeat;
+	-webkit-user-select: text; user-select: text;
 }
 
 .topology-info-popup > div > div > div {
