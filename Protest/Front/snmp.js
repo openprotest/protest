@@ -282,7 +282,7 @@ static OID_MAP_1_3_6_1_2_1 = [
 
 			this.snmpProfiles = json;
 
-			for (let i = 0; i < json.length; i++) {
+			for (let i=0; i<json.length; i++) {
 				if (json[i].version !== 3) continue;
 				const option = document.createElement("option");
 				option.value = json[i].guid;
@@ -291,7 +291,7 @@ static OID_MAP_1_3_6_1_2_1 = [
 			}
 
 			if (this.args.credentials) {
-				for (let i = 0; i < json.length; i++) {
+				for (let i=0; i<json.length; i++) {
 					if (json[i].guid != this.args.credentials) continue;
 
 					this.communityInput.value = json[i].community;

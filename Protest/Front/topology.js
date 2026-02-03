@@ -3807,7 +3807,7 @@ class Topology extends Window {
 			const taggedValue = document.createElement("div");
 			taggedValue.textContent = taggedArray && taggedArray.length > 0 ? taggedArray : "--";
 			taggedBox.appendChild(taggedValue);
-			
+
 			if (taggedArray.length === 1) {
 				taggedValue.style.backgroundImage = `radial-gradient(circle, ${this.GetVlanColor(taggedArray[0]) || "trasparent"} 75%, #0000 75%), radial-gradient(circle,var(--clr-dark) 75%, transparent 75%)`;
 			}

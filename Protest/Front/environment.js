@@ -795,7 +795,7 @@ class Environment extends Tabs {
 
 	async GetSnmpProfiles() {
 		try {
-			const response = await fetch("config/snmpprofiles/list");
+			const response = await fetch("config/snmpprofiles/list?password=true");
 
 			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
 
@@ -1264,6 +1264,8 @@ class Environment extends Tabs {
 
 		const {okButton, innerBox} = dialog;
 
+		let isNew = object === null;
+
 		okButton.value = "Save";
 
 		innerBox.style.padding = "16px 32px";
@@ -1350,8 +1352,35 @@ class Environment extends Tabs {
 		const authPasswordInput = document.createElement("input");
 		authPasswordInput.style.gridArea = "8 / 3";
 		authPasswordInput.type = "password";
-		authPasswordInput.placeholder = object ? "unchanged" : "";
+		//authPasswordInput.placeholder = object ? "unchanged" : "";
 		innerBox.append(authPasswordLabel, authPasswordInput);
+
+
+		const authPasswordOptionsBox = document.createElement("div");
+		authPasswordOptionsBox.style.gridArea = "8 / 4";
+		innerBox.append(authPasswordOptionsBox);
+
+		const authPasswordShowButton = document.createElement("input");
+		authPasswordShowButton.type = "button";
+		authPasswordShowButton.style.minWidth = "32px";
+		authPasswordShowButton.style.backgroundImage = "url(mono/showpassword.svg?light)";
+		authPasswordShowButton.style.backgroundSize = "24px 24px";
+		authPasswordShowButton.style.backgroundPosition = "center";
+		authPasswordShowButton.style.backgroundRepeat = "no-repeat";
+
+		const authPasswordStampButton = document.createElement("input");
+		authPasswordStampButton.type = "button";
+		authPasswordStampButton.style.minWidth = "32px";
+		authPasswordStampButton.style.backgroundImage = "url(mono/stamp.svg?light)";
+		authPasswordStampButton.style.backgroundSize = "24px 24px";
+		authPasswordStampButton.style.backgroundPosition = "center";
+		authPasswordStampButton.style.backgroundRepeat = "no-repeat";
+
+		authPasswordOptionsBox.appendChild(authPasswordShowButton);
+		if (!isNew) {
+			authPasswordOptionsBox.appendChild(authPasswordStampButton);
+		}
+
 
 		const privacyAlgorithmLabel = document.createElement("div");
 		privacyAlgorithmLabel.style.gridArea = "10 / 2";
@@ -1374,8 +1403,35 @@ class Environment extends Tabs {
 		const privacyPasswordInput = document.createElement("input");
 		privacyPasswordInput.style.gridArea = "11 / 3";
 		privacyPasswordInput.type = "password";
-		privacyPasswordInput.placeholder = object ? "unchanged" : "";
+		//privacyPasswordInput.placeholder = object ? "unchanged" : "";
 		innerBox.append(privacyPasswordLabel, privacyPasswordInput);
+
+
+		const privacyPasswordOptionsBox = document.createElement("div");
+		privacyPasswordOptionsBox.style.gridArea = "11 / 4";
+		innerBox.append(privacyPasswordOptionsBox);
+
+		const privacyPasswordShowButton = document.createElement("input");
+		privacyPasswordShowButton.type = "button";
+		privacyPasswordShowButton.style.minWidth = "32px";
+		privacyPasswordShowButton.style.backgroundImage = "url(mono/showpassword.svg?light)";
+		privacyPasswordShowButton.style.backgroundSize = "24px 24px";
+		privacyPasswordShowButton.style.backgroundPosition = "center";
+		privacyPasswordShowButton.style.backgroundRepeat = "no-repeat";
+		
+		const privacyPasswordStampButton = document.createElement("input");
+		privacyPasswordStampButton.type = "button";
+		privacyPasswordStampButton.style.minWidth = "32px";
+		privacyPasswordStampButton.style.backgroundImage = "url(mono/stamp.svg?light)";
+		privacyPasswordStampButton.style.backgroundSize = "24px 24px";
+		privacyPasswordStampButton.style.backgroundPosition = "center";
+		privacyPasswordStampButton.style.backgroundRepeat = "no-repeat";
+
+		privacyPasswordOptionsBox.appendChild(privacyPasswordShowButton);
+
+		if (!isNew) {
+			privacyPasswordOptionsBox.appendChild(privacyPasswordStampButton);
+		}
 
 		const authObsoleteBox = document.createElement("div");
 		authObsoleteBox.textContent = "Obsolete";
@@ -1423,17 +1479,17 @@ class Environment extends Tabs {
 			innerBox.append(guidLabel, guidValue);
 		}
 
-		if (object) {
-			nameInput.value = object.name;
-			priorityInput.value = object.priority;
-			versionInput.value = object.version;
-			communityInput.value = object.community;
-			contextInput.value = object.context;
-			usernameInput.value = object.username;
-			authAlgorithmInput.value = object.authAlgorithm;
-			authPasswordInput.value = "";
+		if (!isNew) {
+			nameInput.value             = object.name;
+			priorityInput.value         = object.priority;
+			versionInput.value          = object.version;
+			communityInput.value        = object.community;
+			contextInput.value          = object.context;
+			usernameInput.value         = object.username;
+			authAlgorithmInput.value    = object.authAlgorithm;
+			authPasswordInput.value     = object.authPassword;
 			privacyAlgorithmInput.value = object.privacyAlgorithm;
-			privacyPasswordInput.value = "";
+			privacyPasswordInput.value  = object.privacyPassword;
 		}
 		else {
 			priorityInput.value = 1;
@@ -1450,8 +1506,6 @@ class Environment extends Tabs {
 			privacyObsoleteBox.style.opacity = (privacyAlgorithmInput.value == 0) ? "1" : "0";
 			privacyObsoleteBox.style.transform = (privacyAlgorithmInput.value == 0) ? "none" : "translateX(-8px)";
 		};
-
-		let isNew = object === null;
 
 		if (!isNew) {
 			versionInput.disabled = true;
@@ -1470,6 +1524,39 @@ class Environment extends Tabs {
 			authPasswordInput.disabled = !isV3;
 			privacyAlgorithmInput.disabled = !isV3;
 			privacyPasswordInput.disabled = !isV3;
+
+			authPasswordOptionsBox.style.visibility = isV3 ? "visible" : "hidden";
+			privacyPasswordOptionsBox.style.visibility = isV3 ? "visible" : "hidden";
+		};
+
+		authPasswordShowButton.onclick = ()=> {
+			authPasswordShowButton.disabled = true;
+			authPasswordInput.type = "text";
+		};
+
+		authPasswordStampButton.onclick = ()=> {
+			if (authPasswordInput.value.length < 1) return;
+			UI.PromptAgent(this, "stamp", authPasswordInput.value);
+
+			if (authPasswordStampButton.style.animation === "") {
+				authPasswordStampButton.style.animation = "bg-stamp .6s linear";
+				setTimeout(()=>authPasswordStampButton.style.animation = "", 600);
+			}
+		};
+
+		privacyPasswordShowButton.onclick = ()=> {
+			privacyPasswordShowButton.disabled = true;
+			privacyPasswordInput.type = "text";
+		};
+
+		privacyPasswordStampButton.onclick = ()=> {
+			if (privacyPasswordInput.value.length < 1) return;
+			UI.PromptAgent(this, "stamp", privacyPasswordInput.value);
+
+			if (privacyPasswordStampButton.style.animation === "") {
+				privacyPasswordStampButton.style.animation = "bg-stamp .6s linear";
+				setTimeout(()=>privacyPasswordStampButton.style.animation = "", 600);
+			}
 		};
 
 		okButton.onclick = async ()=>{

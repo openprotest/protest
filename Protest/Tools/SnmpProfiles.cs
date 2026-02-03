@@ -88,10 +88,12 @@ internal static class SnmpProfiles {
         }
     }
 
-    public static byte[] List() {
+    public static byte[] List(Dictionary<string, string> parameters) {
+        bool withPassword = (parameters?.TryGetValue("password", out string flag) ?? false) && flag == "true";
+
         try {
             Profile[] profiles = Load();
-            byte[] json = JsonSerializer.SerializeToUtf8Bytes(profiles, snmpProfilesSerializerOptions);
+            byte[] json = JsonSerializer.SerializeToUtf8Bytes(profiles, withPassword ? snmpProfilesSerializerOptionsWithPasswords : snmpProfilesSerializerOptions);
             return json;
         }
         catch {

@@ -155,7 +155,8 @@ internal sealed class Listener {
         ["/config/smtpprofiles/list"] = (ctx, parameters, username) => Tools.SmtpProfiles.List(),
         ["/config/smtpprofiles/save"] = (ctx, parameters, username) => Tools.SmtpProfiles.Save(ctx, username),
         ["/config/smtpprofiles/test"] = (ctx, parameters, username) => Tools.SmtpProfiles.SendTest(parameters),
-        ["/config/snmpprofiles/list"] = (ctx, parameters, username) => Tools.SnmpProfiles.List(),
+
+        ["/config/snmpprofiles/list"] = (ctx, parameters, username) => Tools.SnmpProfiles.List(parameters),
         ["/config/snmpprofiles/save"] = (ctx, parameters, username) => Tools.SnmpProfiles.Save(ctx, username),
 
         ["/config/cert/list"] =         (ctx, parameters, username) => Tools.Cert.List(),
