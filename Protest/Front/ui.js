@@ -491,7 +491,6 @@ const MENU = {
 		menubutton.style.visibility = "hidden";
 
 		attachedmenubutton.style.transform = "none";
-		attachedmenubutton.style.boxShadow = "#202020 0 0 0 3px inset";
 
 		switch (UI.taskbarPosition) {
 		case "top":
@@ -540,8 +539,6 @@ const MENU = {
 		case "right": attachedmenubutton.style.transform = "scaleX(0)"; break;
 		default: attachedmenubutton.style.transform = "scaleY(0)"; break;
 		}
-
-		attachedmenubutton.style.boxShadow = "none";
 
 		if (MENU.isAttached) {
 			MENU.isAttached = false;
@@ -858,7 +855,6 @@ const MENU = {
 			menufilterdot.style.left = `${menufilter.offsetLeft + Math.max(index, 0)  * 40 + 1}px`;
 			MENU.filterIndex = index;
 		}
-
 		MENU.Update(searchinput.value);
 	},
 

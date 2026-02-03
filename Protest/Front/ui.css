@@ -57,23 +57,25 @@
 
 #attachedmenubutton {
 	position: absolute;
-	left: 4px;
-	top: 4px;
-	width: 48px;
-	height: 48px;
-	background-image: url(mono/logo.svg);
-	background-size: 55% 55%;
-	background-position: center;
-	background-repeat: no-repeat;
-	border-radius: 48%;
+	left: 0;
+	top: 0;
+	width: 56px;
+	height: 56px;
 
-	transform: scaleY(0%);
+	background:
+		url(mono/logo.svg),
+		radial-gradient(circle, transparent 52%, var(--clr-dark) 56%, var(--clr-dark) 60%, transparent 64%);
+
+	background-size: 46% 46%, 100% 100%;
+	background-position: center, center;
+	background-repeat: no-repeat, no-repeat;
+	border-radius: 50%;
+
 	transform-origin: 50% 50%;
 	transition: .2s;
 }
 
 #attachedmenubutton:active {
-	filter: brightness(0%);
 	background-color: rgba(32,32,32,.1);
 }
 

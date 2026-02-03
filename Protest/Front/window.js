@@ -50,8 +50,8 @@ const WIN = {
 		}
 
 		if (MENU.isAttached) {
-			attachedmenubutton.style.width = `${WIN.iconSize - 8}px`;
-			attachedmenubutton.style.height = `${WIN.iconSize - 8}px`;
+			attachedmenubutton.style.width = `${WIN.iconSize}px`;
+			attachedmenubutton.style.height = `${WIN.iconSize}px`;
 		}
 
 		for (let i = 0; i < WIN.array.length; i++) {
@@ -1047,11 +1047,11 @@ class Window {
 		okButton.onclick = event=> cancelButton.onclick(event);
 
 		return {
-			okButton: okButton,
+			okButton    : okButton,
 			cancelButton: cancelButton,
-			innerBox: innerBox,
-			buttonBox: buttonBox,
-			Close: Close
+			innerBox    : innerBox,
+			buttonBox   : buttonBox,
+			Close       : Close
 		};
 	}
 
