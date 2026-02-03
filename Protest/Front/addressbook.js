@@ -120,7 +120,7 @@ class AddressBook extends Window {
 	Contact_onclick(element, index) {
 		const dim = document.createElement("div");
 		dim.className = "win-dim";
-		dim.style.backgroundColor = "rgba(32,32,32,.25)";
+		dim.style.backgroundColor = "rgba(32,32,32,.4)";
 		dim.style.animation = "fade-in .2s 1";
 		dim.style.zIndex = "2";
 
@@ -140,6 +140,8 @@ class AddressBook extends Window {
 			element.style.opacity = "0";
 
 		const preview = document.createElement("div");
+		const backDiv = document.createElement("div");
+
 		preview.className = "address-book-preview";
 		if (this.args.view === "card") {
 			preview.style.width = `${element.clientWidth*2}px`;
@@ -158,9 +160,19 @@ class AddressBook extends Window {
 
 		dim.appendChild(preview);
 
+		const closeButton = document.createElement("div");
+		closeButton.className = "address-book-close-button";
+		dim.appendChild(closeButton);
+
 		const title = document.createElement("div");
-		title.textContent = this.contacts[index].title ?? "--";
 		title.className = "title";
+		title.textContent = this.contacts[index].title ?? "--";
+		title.style.fontWeight = "600";
+		title.style.textAlign = "center";
+		title.style.textTransform = "uppercase";
+		title.style.borderBottomColor = "var(--clr-accent)";
+		title.style.borderBottomWidth = "2px";
+		title.style.borderBottomStyle = "solid";
 		preview.appendChild(title);
 
 		if (this.contacts[index].name) {
@@ -228,15 +240,13 @@ class AddressBook extends Window {
 			qrButton.className = "qr-icon";
 			preview.appendChild(qrButton);
 
-			preview.style.scrollSnapType = "y mandatory";
-			preview.style.scrollSnapAlign = "bottom";
-
 			const BuildQrCode = (value, label, type, size=150)=> {
 				const qrContainer = document.createElement("div");
 				qrContainer.className = "address-book-qrcode";
-				preview.appendChild(qrContainer);
+				backDiv.appendChild(qrContainer);
 
 				const qrBox = document.createElement("div");
+				qrBox.style.marginTop = "24px";
 				qrContainer.appendChild(qrBox);
 
 				new QRCode(qrBox, {
@@ -255,11 +265,29 @@ class AddressBook extends Window {
 				return qrContainer;
 			};
 
-			qrButton.onclick = ()=>{
-				qrButton.style.display = "none";
+			qrButton.onclick = ()=> {
 				for (let i=qrList.length-1; i>=0; i--) {
 					BuildQrCode(qrList[i], qrList[i], qrList[i].includes("@") ? "mailto" : "tel");
 				}
+
+				backDiv.className = "address-book-preview";
+				backDiv.style.width           = preview.style.width;
+				backDiv.style.height          = preview.style.height;
+				backDiv.style.left            = preview.style.left;
+				backDiv.style.top             = preview.style.top;
+				backDiv.style.transform       = "perspective(1000px) rotateY(180deg)";
+				backDiv.style.scrollSnapType  = "y mandatory";
+				backDiv.style.scrollSnapAlign = "bottom";
+				dim.appendChild(backDiv);
+
+				dim.appendChild(closeButton);
+
+				setTimeout(()=> {
+					preview.style.transform = "perspective(1000px) rotateY(-180deg)";
+					preview.style.transition = ".4s";
+					backDiv.style.transform = "perspective(1000px) rotateY(0)";
+					backDiv.style.transition = ".4s";
+				}, 1);
 
 				const NL = String.fromCharCode(13) + String.fromCharCode(10);
 				let vCard = "";
@@ -305,10 +333,6 @@ class AddressBook extends Window {
 			};
 		}
 
-		const closeButton = document.createElement("div");
-		closeButton.className = "address-book-close-button";
-		dim.appendChild(closeButton);
-
 		setTimeout(()=>{
 			preview.style.transition = ".25s";
 			preview.style.width = "500px";
@@ -324,7 +348,7 @@ class AddressBook extends Window {
 			dim.style.background = "rgba(0,0,0,0)";
 			dim.style.transition = ".2s";
 
-			preview.style.transition = ".2s";
+			preview.style.transition = backDiv.style.transition = ".2s";
 			closeButton.style.opacity = "0";
 
 			const qrButton = preview.querySelector(".qr-icon");
@@ -334,21 +358,23 @@ class AddressBook extends Window {
 			}
 
 			if (this.args.view === "card") {
-				preview.style.width = `${element.clientWidth*2}px`;
-				preview.style.height = `${element.clientHeight*2}px`;
-				preview.style.left = `${element.offsetLeft - element.clientWidth/2}px`;
-				preview.style.top = `${element.offsetTop - this.content.scrollTop - element.clientHeight/2}px`;
+				preview.style.width     = backDiv.style.width     = `${element.clientWidth*2}px`;
+				preview.style.height    = backDiv.style.height    = `${element.clientHeight*2}px`;
+				preview.style.left      = backDiv.style.left      = `${element.offsetLeft - element.clientWidth/2}px`;
+				preview.style.top       = backDiv.style.top       = `${element.offsetTop - this.content.scrollTop - element.clientHeight/2}px`;
 				preview.style.transform = "scale(50%)";
+				backDiv.style.transform = "scale(50%) rotateY(180deg)";
 			}
 			else {
 				preview.style.transform = "scaleY(5%)";
-				preview.style.opacity = ".2";
+				backDiv.style.transform = "scaleY(5%)  rotateY(180deg)";
+				preview.style.opacity   = backDiv.style.opacity   = ".2";
 			}
 
 			setTimeout(()=>{
 				preview.style.opacity = "0";
+				backDiv.style.opacity = "0";
 				element.style.opacity = "1";
-
 			}, 100);
 
 			setTimeout(()=>{
@@ -362,6 +388,7 @@ class AddressBook extends Window {
 		};
 
 		preview.onclick = event=> event.stopPropagation();
+		backDiv.onclick = event=> event.stopPropagation();
 	}
 
 	RefreshList() {
