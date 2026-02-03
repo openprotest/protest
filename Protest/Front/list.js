@@ -56,6 +56,7 @@ class List extends Window {
 		else if (event.code === "ArrowUp" && this.selected) {
 			const previousElement = this.selected.previousElementSibling;
 			if (previousElement) {
+				event.preventDefault();
 				const selectedIcon = this.selected.querySelector(".list-element-icon");
 				if (selectedIcon) {
 					selectedIcon.style.backgroundColor = "";
@@ -76,6 +77,7 @@ class List extends Window {
 				: this.list.firstChild;
 
 			if (nextElement) {
+				event.preventDefault();
 				if (this.selected) {
 					const selectedIcon = this.selected.querySelector(".list-element-icon");
 					if (selectedIcon) {
@@ -94,10 +96,13 @@ class List extends Window {
 		}
 		else if (event.code === "PageUp" && this.selected) {
 			const elements = Array.from(this.list.childNodes);
+			if (elements.length === 0) return;
+
 			const index    = elements.indexOf(this.selected);
 			const jump     = Math.floor(this.list.clientHeight / this.selected.clientHeight);
-			const previous = Math.max(index - jump, 0);
+			const previous = Math.max(index - jump + 1, 0);
 
+			event.preventDefault();
 			this.selected.style.backgroundColor = "";
 			this.selected = elements[previous];
 			this.selected.style.backgroundColor = "var(--clr-select)";
@@ -105,10 +110,13 @@ class List extends Window {
 		}
 		else if (event.code === "PageDown" && this.selected) {
 			const elements = Array.from(this.list.childNodes);
+			if (elements.length === 0) return;
+
 			const index    = elements.indexOf(this.selected);
 			const jump     = Math.floor(this.list.clientHeight / this.selected.clientHeight);
-			const next     = Math.min(index + jump, elements.length - 1);
+			const next     = Math.min(index + jump - 1, elements.length - 1);
 
+			event.preventDefault();
 			this.selected.style.backgroundColor = "";
 			this.selected = elements[next];
 			this.selected.style.backgroundColor = "var(--clr-select)";
@@ -116,6 +124,7 @@ class List extends Window {
 		}
 
 		else if (event.code === "Home" && this.selected) {
+			event.preventDefault();
 			const element = Array.from(this.list.childNodes)[0];
 
 			this.selected.style.backgroundColor = "";
@@ -124,6 +133,7 @@ class List extends Window {
 			this.selected.scrollIntoView({block:"nearest"});
 		}
 		else if (event.code === "End" && this.selected) {
+			event.preventDefault();
 			const elements = Array.from(this.list.childNodes);
 
 			this.selected.style.backgroundColor = "";
@@ -131,7 +141,6 @@ class List extends Window {
 			this.selected.style.backgroundColor = "var(--clr-select)";
 			this.selected.scrollIntoView({block:"nearest"});
 		}
-
 		else if (event.code === "Enter" || event.code === "NumpadEnter" && this.selected) {
 			this.selected?.ondblclick(event);
 		}
@@ -638,7 +647,8 @@ class List extends Window {
 
 		if (this.selected) {
 			this.selected.style.backgroundColor = "var(--clr-select)";
-			setTimeout(()=> this.selected.scrollIntoView({behavior:"smooth", block:"center"}), 100);
+			const selected = this.selected;
+			requestAnimationFrame(() => selected.scrollIntoView({behavior:"smooth", block:"center"}));
 		}
 
 		this.OnUiReady();

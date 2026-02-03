@@ -1815,7 +1815,6 @@ class DeviceView extends View {
 			this.liveD.appendChild(graphBox);
 
 			const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-			svg.style.transition = ".2s";
 			svg.setAttribute("width", GRAPH_WIDTH + DAY_WIDTH);
 			svg.setAttribute("height", `${28}px`);
 			graphBox.appendChild(svg);
@@ -1872,7 +1871,6 @@ class DeviceView extends View {
 			graphBox.appendChild(iconBox);
 
 			const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-			svg.style.transition = ".2s";
 			svg.setAttribute("width", GRAPH_WIDTH + DAY_WIDTH);
 			svg.setAttribute("height", `${height + 28}px`);
 			graphBox.appendChild(svg);
@@ -2177,17 +2175,23 @@ class DeviceView extends View {
 			return svg;
 		};
 
-		this.liveD.onwheel = event=>{
-			xOffset += event.deltaY > 0 ? DAY_WIDTH : -DAY_WIDTH;
+		let x0 = 0;
+		this.liveD.onmousedown = event=>{
+			x0 = event.clientX;
+		};
+
+		this.liveD.onmousemove = event=>{
+			if (event.buttons !== 1) return;
+
+			let dx = event.clientX - x0;
+			x0 = event.clientX;
+			xOffset += dx;
 
 			if (xOffset < 0) {
 				xOffset = 0;
 			}
 			else if (xOffset > GRAPH_WIDTH - 800) {
 				xOffset = GRAPH_WIDTH - 800;
-			}
-			else {
-				event.preventDefault();
 			}
 
 			for (let i=0; i<graphSvgs.length; i++) {

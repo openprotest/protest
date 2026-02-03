@@ -113,7 +113,7 @@ internal static class Configuration {
 #endif
 
         builder.AppendLine("http_prefix = http://127.0.0.1:8080/");
-        builder.AppendLine("http_prefix = http://[::1]:8080/");
+        builder.AppendLine("#http_prefix = http://[::1]:8080/");
         builder.AppendLine("#http_prefix = https://+:443/");
         builder.AppendLine();
 
