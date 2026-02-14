@@ -484,6 +484,51 @@ class List extends Window {
 		return findInput;
 	}
 
+	SetupPrint() {
+		if (!this.toolbar) return null;
+
+		const printButton = this.AddToolbarButton("Print", "mono/printer.svg?light");
+
+		printButton.onclick = ()=> {
+			const newPrint = window.open();
+			newPrint.document.title = this.header.textContent;
+			newPrint.document.write("<html><body></body></html>");
+
+			const table = document.createElement("table");
+			table.style.borderCollapse = "collapse";
+			newPrint.document.body.appendChild(table);
+
+			for (let i=0; i<this.columnsElements.length; i++) {
+				const th = document.createElement("th");
+				th.style.textTransform = "uppercase";
+				th.textContent = this.columnsElements[i].textContent;
+				table.appendChild(th);
+			}
+
+			for (let i=0; i<this.list.childNodes.length; i++) {
+				const entry = this.link.data[this.list.childNodes[i].getAttribute("id")];
+
+				const tr = document.createElement("tr");
+
+				for (let j=0; j<this.columnsElements.length; j++) {
+					const td = document.createElement("td");
+					td.style.padding = "1px 2px";
+					td.style.border = "1px solid #c0c0c0";
+					const key = this.columnsElements[j].textContent;
+					if (key in entry) {
+						td.textContent = entry[key].v;
+					}
+					tr.appendChild(td);
+				}
+				table.appendChild(tr);
+			}
+
+			newPrint.onload = ()=> newPrint.print();
+			newPrint.document.close();
+			setTimeout(()=> newPrint.close(), 99);
+		};
+	}
+
 	PopOut() { //overrides
 		super.PopOut();
 		this.UpdateViewport(true);

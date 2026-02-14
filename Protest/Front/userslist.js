@@ -24,6 +24,7 @@ class UsersList extends List {
 		const filterButton = this.SetupFilter();
 		this.SetupFind();
 		this.toolbar.appendChild(this.AddToolbarSeparator());
+		this.SetupPrint();
 		this.sentChatButton = this.AddSendToChatButton();
 
 		if (this.args.find && this.args.find.length > 0) {

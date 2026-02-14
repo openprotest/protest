@@ -25,6 +25,7 @@ class DevicesList extends List {
 		this.SetupFind();
 		this.toolbar.appendChild(this.AddToolbarSeparator());
 		this.utilitiesDropDown = this.AddToolbarDropdown("mono/hammer.svg?light");
+		this.SetupPrint();
 		this.sentChatButton = this.AddSendToChatButton();
 
 		this.utilitiesDropDown.menu.style.height = "130px";
