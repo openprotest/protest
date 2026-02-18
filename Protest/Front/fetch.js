@@ -590,7 +590,7 @@ class Fetch extends Tabs {
 		this.tabsPanel.style.gridTemplateRows = "repeat(3, 40px) repeat(12, 36px)";
 
 		this.tabsPanel.appendChild(this.updateRadio);
-		const updateOption = this.AddRadioLabel(this.tabsPanel, this.updateRadio, "Update, only existing records");
+		const updateOption = this.AddRadioLabel(this.tabsPanel, this.updateRadio, "Update existing records");
 		updateOption.style.gridArea = "1 / 2 / 1 / 6";
 
 		this.ipRadio.disabled = false;
@@ -669,7 +669,7 @@ class Fetch extends Tabs {
 		}
 
 		this.tabsPanel.appendChild(this.updateRadio);
-		const updateOption = this.AddRadioLabel(this.tabsPanel, this.updateRadio, "Update, only existing records");
+		const updateOption = this.AddRadioLabel(this.tabsPanel, this.updateRadio, "Update existing records");
 		updateOption.style.gridArea = "1 / 2 / 1 / 6";
 
 		this.tabsPanel.appendChild(this.ipRadio);

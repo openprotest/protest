@@ -909,7 +909,7 @@ internal static class Fetch {
             return Data.CODE_INVALID_ARGUMENT.Array;
         }
 
-        Dictionary<string, string> values = new Dictionary<string, string>();
+        Dictionary<string, string> conflicted = new Dictionary<string, string>();
 
         foreach (KeyValuePair<string, Database.Entry> entry in database.dictionary) {
             if (!entry.Value.attributes.TryGetValue(targetAttribute, out Database.Attribute attribute)) continue;
@@ -918,8 +918,8 @@ internal static class Fetch {
 
             for (int i = 0; i < key.Length; i++) {
                 if (key[i].Length == 0) continue;
-                if (values.ContainsKey(key[i])) continue;
-                values.Add(key[i], entry.Value.filename);
+                if (conflicted.ContainsKey(key[i])) continue;
+                conflicted.Add(key[i], entry.Value.filename);
             }
         }
 
@@ -929,38 +929,34 @@ internal static class Fetch {
             ConcurrentDictionary<string, Database.Attribute> attributes = new ConcurrentDictionary<string, Database.Attribute>();
             foreach (KeyValuePair<string, string[]> attr in pair.Value) {
                 attributes.TryAdd(attr.Key, new Database.Attribute() {
-                    value = attr.Value[0],
-                    date = date,
+                    value  = attr.Value[0],
+                    date   = date,
                     origin = origin
                 });
             }
 
-            if (pair.Value.TryGetValue(targetAttribute, out string[] targetValue)) { //existing
-                if (values.TryGetValue(targetValue[0], out string file)) {
+            if (pair.Value.TryGetValue(targetAttribute, out string[] targetValue)
+                && conflicted.TryGetValue(targetValue[0], out string file)
+                && database.dictionary.TryGetValue(file, out Database.Entry oldEntry)) { //conflict triggered
 
-                    if (database.dictionary.TryGetValue(file, out Database.Entry oldEntry)) {
-                        //keep old name if it exists
-                        if (oldEntry.attributes.TryGetValue("name", out Database.Attribute oldName)
-                            && String.IsNullOrEmpty(oldName.value)) {
-                            attributes.AddOrUpdate("name", oldName, (_, _) => oldName);
-                        }
-
-                        //keep old type if it exists
-                        if (oldEntry.attributes.TryGetValue("type", out Database.Attribute oldType)
-                            && String.IsNullOrEmpty(oldType.value)) {
-                            attributes.AddOrUpdate("type", oldType, (_, _) => oldType);
-                        }
-                    }
-
-                    database.Save(file, attributes, saveMethod, origin);
+                //keep old name if exists
+                if (oldEntry.attributes.TryGetValue("name", out Database.Attribute oldName) && String.IsNullOrEmpty(oldName.value)) {
+                    attributes.AddOrUpdate("name", oldName, (_, _) => oldName);
                 }
+
+                //keep old type if exists
+                if (oldEntry.attributes.TryGetValue("type", out Database.Attribute oldType) && String.IsNullOrEmpty(oldType.value)) {
+                    attributes.AddOrUpdate("type", oldType, (_, _) => oldType);
+                }
+
+                database.Save(file, attributes, saveMethod, origin);
             }
-            else { //new
+            else {
                 database.Save(null, attributes, saveMethod, origin);
             }
         }
 
-        values.Clear();
+        conflicted.Clear();
 
         if (result?.type == Type.devices) {
             KeepAlive.Broadcast("{\"action\":\"approve-fetch\",\"type\":\"devices\"}"u8.ToArray(), "/fetch/status");

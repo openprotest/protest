@@ -194,7 +194,7 @@ internal static class Wmi {
                 //ContentBuilderAddArray(moc, "IPAddress", "ipv6", hash, new FormatMethodPtr(IPv6Filter));
                 ContentBuilderAddArray(moc, "IPAddress", "ip", data, new FormatMethodPtr(IPv4Filter));
                 ContentBuilderAddArray(moc, "MACAddress", "mac address", data);
-                ContentBuilderAddArray(moc, "IPSubnet", "mask", data, new FormatMethodPtr(IPv4MaskFilter));
+                //ContentBuilderAddArray(moc, "IPSubnet", "mask", data, new FormatMethodPtr(IPv4MaskFilter));
                 ContentBuilderAddArray(moc, "DHCPEnabled", "dhcp enabled", data);
             }
             catch { }
