@@ -7,14 +7,14 @@ using System.Windows.Forms;
 namespace ProtestAgent {
     public partial class Checkbox : UserControl {
         private static readonly Pen selectPen = new Pen(Color.FromArgb(255, 102, 0), 6);
-        private static readonly SolidBrush backgroundBrush = new SolidBrush(Color.FromArgb(128, 128, 128));
+        private static readonly SolidBrush backgroundBrush = new SolidBrush(Color.FromArgb(96, 96, 96));
         private static readonly SolidBrush foregroundBrush = new SolidBrush(Color.FromArgb(32, 32, 32));
         private static readonly SolidBrush onBrush = new SolidBrush(Color.FromArgb(255, 102, 0));
-        private static readonly SolidBrush offBrush = new SolidBrush(Color.FromArgb(88, 88, 88));
+        private static readonly SolidBrush offBrush = new SolidBrush(Color.FromArgb(144, 144, 144));
 
-        private GraphicsPath path;
-        private GraphicsPath pathOn;
-        private GraphicsPath pathOff;
+        private readonly GraphicsPath path;
+        private readonly GraphicsPath pathOn;
+        private readonly GraphicsPath pathOff;
 
         public event EventHandler OnChange;
 
