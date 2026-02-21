@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Runtime.Versioning;
 using System.Text;
-using System.Net;
 
 namespace Protest;
 internal static class Configuration {
@@ -13,7 +12,7 @@ internal static class Configuration {
 
     internal static bool backdoor = true;
 
-    internal static string front_path = $"{Data.DIR_ROOT}{Data.DELIMITER}front";
+    internal static string front_path = $"{Data.DIR_BASE}{Data.DELIMITER}front";
     internal static string[] http_prefixes = new string[] { "http://127.0.0.1:8080/" };
 
     internal static bool Load() {

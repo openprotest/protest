@@ -1,8 +1,5 @@
-using Lextm.SharpSnmpLib;
-using Microsoft.Extensions.Hosting;
 using System.IO;
 using System.Reflection;
-using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -43,14 +40,14 @@ internal static class Data {
     public static readonly ArraySegment<byte> CODE_OTHER_TASK_IN_PROGRESS = new ArraySegment<byte>("{\"error\":\"another task is already in progress\"}"u8.ToArray());
     public static readonly ArraySegment<byte> CODE_TASK_DONT_EXITSTS      = new ArraySegment<byte>("{\"error\":\"this task no longer exists\"}"u8.ToArray());
 
-    public static readonly string DIR_ROOT           = $"{Directory.GetCurrentDirectory()}{DELIMITER}protest_";
-    public static readonly string DIR_KNOWLADGE      = $"{DIR_ROOT}{DELIMITER}knowledge";
-    public static readonly string DIR_RBAC           = $"{DIR_ROOT}{DELIMITER}rbac";
-    public static readonly string DIR_LOG            = $"{DIR_ROOT}{DELIMITER}log";
-    public static readonly string DIR_BACKUP         = $"{DIR_ROOT}{DELIMITER}backup";
-    public static readonly string DIR_CERTIFICATES   = $"{DIR_ROOT}{DELIMITER}certificates";
+    public static readonly string DIR_BASE           = $"{AppContext.BaseDirectory}{DELIMITER}protest_";
+    public static readonly string DIR_KNOWLADGE      = $"{DIR_BASE}{DELIMITER}knowledge";
+    public static readonly string DIR_RBAC           = $"{DIR_BASE}{DELIMITER}rbac";
+    public static readonly string DIR_LOG            = $"{DIR_BASE}{DELIMITER}log";
+    public static readonly string DIR_BACKUP         = $"{DIR_BASE}{DELIMITER}backup";
+    public static readonly string DIR_CERTIFICATES   = $"{DIR_BASE}{DELIMITER}certificates";
 
-    public static readonly string DIR_DATA           = $"{DIR_ROOT}{DELIMITER}data";
+    public static readonly string DIR_DATA           = $"{DIR_BASE}{DELIMITER}data";
     public static readonly string DIR_DEVICES        = $"{DIR_DATA}{DELIMITER}devices";
     public static readonly string DIR_USERS          = $"{DIR_DATA}{DELIMITER}users";
 
@@ -74,7 +71,7 @@ internal static class Data {
     public static readonly string FILE_SNMP_PROFILES = $"{DIR_DATA}{DELIMITER}snmpprofiles.json";
     public static readonly string FILE_NOTIFICATIONS = $"{DIR_DATA}{DELIMITER}notifications.json";
 
-    public static readonly string FILE_CONFIG        = $"{DIR_ROOT}{DELIMITER}protest.cfg";
+    public static readonly string FILE_CONFIG        = $"{DIR_BASE}{DELIMITER}protest.cfg";
 
     private static readonly byte[] DEBIT_TEMPLATE = "The aforementioned items are company property and must be returned in pristine condition at the conclusion of the contract. Any loss, damage, or failure to return these items will result in their value being deducted from the employee's salary."u8.ToArray();
 
