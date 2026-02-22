@@ -27,7 +27,7 @@ namespace ProtestAgent {
                 Alignment = StringAlignment.Near,
                 LineAlignment = StringAlignment.Center
         };
-        
+
         private static Font font;
         private GraphicsPath path;
 

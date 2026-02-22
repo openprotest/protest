@@ -107,7 +107,7 @@ internal sealed class HttpReverseProxy : ReverseProxyAbstract {
 
     private void ConfigureLogging(ILoggingBuilder logger) {
         logger.ClearProviders();
-        
+
         //logger.AddConsole();
         //logger.SetMinimumLevel(LogLevel.Warning);
         //logger.AddFilter("Microsoft", LogLevel.Warning);

@@ -62,7 +62,7 @@ internal static class LiveStats {
             if (Issues.CheckPasswordStrength(entry, true, out Issues.Issue? weakPsIssue)) {
                 WsWriteText(ws, weakPsIssue?.ToLiveStatsJsonBytes(), mutex);
             }
-            
+
             try {
                 if (OperatingSystem.IsWindows()
                     && entry.attributes.TryGetValue("type", out Database.Attribute typeAttribute)

@@ -158,7 +158,7 @@ internal static class SmtpProfiles {
 
             <tr><td>&nbsp;</td></tr>
             <tr><td align="center">
-            
+
             <table width="640" bgcolor="#e0e0e0">
             <tr><td style="padding:10px"></td></tr>
 

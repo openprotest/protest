@@ -106,7 +106,7 @@ internal static class Backup {
 
     internal static byte[] Download(HttpListenerContext ctx, Dictionary<string, string> parameters, string origin) {
         if (parameters is null) { return Data.CODE_FAILED.Array; }
-        
+
         parameters.TryGetValue("name", out string name);
         if (String.IsNullOrEmpty(name)) { return Data.CODE_INVALID_ARGUMENT.Array; }
 

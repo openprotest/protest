@@ -314,9 +314,9 @@ internal static class Issues {
                 string[] macs = ipAttribute.value.Split(',').Select(o=>o.Trim()).ToArray();
                 for (int i = 0; i < macs.Length; i++) {
                     if (string.IsNullOrEmpty(macs[i])) { continue; }
-                    
+
                     macs[i] = macs[i].Replace(":", "").Replace("-", "").ToUpper();
-                    
+
                     if (string.IsNullOrEmpty(macs[i])) { continue; }
 
                     if (macAddresses.ContainsKey(macs[i])) {
@@ -471,7 +471,7 @@ internal static class Issues {
         issue = null;
         return false;
     }
-    
+
     public static bool CheckMemory(Database.Entry device, string host, out Issue? issue) {
         byte[] lifeline = Lifeline.LoadFile(device.filename, 3, "memory");
 
@@ -533,7 +533,7 @@ internal static class Issues {
             };
             return true;
         }
-        
+
         issue = null;
         return false;
     }
@@ -933,7 +933,7 @@ internal static class Issues {
 
                 double entropyRounded = Math.Round(entropy, 2);
                 entry.attributes.TryGetValue("name", out Database.Attribute nameAttribute);
-                
+
                 if (nameAttribute is null) {
                     entry.attributes.TryGetValue("title", out nameAttribute);
                 }

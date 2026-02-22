@@ -88,7 +88,7 @@ internal static class Telnet {
                     telnet.Close();
                     return;
                 }
-                
+
                 stream.Write(buff, 0, receiveResult.Count);
             }
         }

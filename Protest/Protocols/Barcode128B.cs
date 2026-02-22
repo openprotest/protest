@@ -93,7 +93,7 @@ internal static class Barcode128B {
         0b_11110111010, //77: m
         0b_11000010100, //78: n
         0b_10001111010, //79: o
-        
+
         0b_10100111100, //80: p
         0b_10010111100, //81: q
         0b_10010011110, //82: r
@@ -168,7 +168,7 @@ internal static class Barcode128B {
             checksum += (input[i] - 32) * (i + 1);
         }
         encode.Append(Convert.ToString(code128B[checksum % 103], 2)); //checksumm
-        
+
         encode.Append(Convert.ToString(code128B[106], 2)); //stop code
 
         string encoded = encode.ToString();

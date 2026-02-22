@@ -295,7 +295,7 @@ internal static class Ldap {
         if (telephoneBuilder.Length > 0) {
             data.Add("telephone number", telephoneBuilder.ToString());
         }
-    
+
         if (mobileBuilder.Length > 0) {
             data.Add("mobile number", mobileBuilder.ToString());
         }

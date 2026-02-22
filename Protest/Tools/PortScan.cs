@@ -334,7 +334,7 @@ internal static class PortScan {
 
     [SupportedOSPlatform("windows")]
     public static int[] RemoteNetstat(string host) {
-       
+
         try {
             ProcessStartInfo info = new ProcessStartInfo {
                 FileName = "psexec",

@@ -87,7 +87,7 @@ internal static class Monitor {
             await ws.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, null, CancellationToken.None);
             return;
         }
-        
+
         snmpProfiles = SnmpProfiles.Load();
 
         string target = null!;
@@ -265,7 +265,7 @@ internal static class Monitor {
                     _ = int.TryParse(query.value, out newInterval);
                     interval = Math.Max(newInterval, 100);
                     break;
-                
+
                 case Action.addwmi:
                     queries.TryAdd(query.index, query);
                     if (wmiThread is null) {
@@ -357,7 +357,7 @@ internal static class Monitor {
             foreach (PropertyData p in o.Properties) {
                 string name = p.Name.ToString();
                 string value;
-                
+
                 try {
                     value = Protocols.Wmi.FormatProperty(p);
                 }

@@ -489,7 +489,7 @@ internal static class Fetch {
 
         string snmp2 = null;
         string[] snmp2Profiles = null;
-        
+
         string snmp3 = null;
         string[] snmp3Profiles = null;
 

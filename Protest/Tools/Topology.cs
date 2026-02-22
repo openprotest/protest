@@ -352,7 +352,7 @@ internal static class Topology {
                 macTable[port] = new List<string>() { mac };
             }
         }
-        
+
         Dictionary<int, string> dbEntry= new Dictionary<int, string>();
         foreach (KeyValuePair<int, List<string>> pair in macTable) {
             int port = pair.Key;
@@ -395,9 +395,9 @@ internal static class Topology {
 
                 int startIndex = GetPortBitmapStart(raw);
                 if (startIndex == -1) continue;
-                
+
                 int maxIndex = Math.Min(raw.Length, startIndex + Topology.GetPortBitmapLength(raw, startIndex));
-                
+
                 for (int j = maxIndex - 1; j >= 1; j--) {
                     if (raw[j] != 0) break;
                     maxIndex = j;
@@ -650,7 +650,7 @@ internal static class Topology {
 
     private static bool MatchDatabaseAttribute(Database.Entry entry, string attributeName, string compare) {
         if (!entry.attributes.TryGetValue(attributeName, out Database.Attribute attribute)) return false;
-        
+
         string value = attribute.value.ToLower();
         if (String.IsNullOrEmpty(value)) return false;
 

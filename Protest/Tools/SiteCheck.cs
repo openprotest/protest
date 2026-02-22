@@ -110,7 +110,7 @@ internal static class SiteCheck {
             await TlsCheck(ws, uri, protocol, mutex);
 
             List<Task> tasks = new List<Task>();
-            
+
             if (req.v1) {
                 tasks.Add(CheckHttp(ws, uri, HttpVersion.Version11, mutex));
             }

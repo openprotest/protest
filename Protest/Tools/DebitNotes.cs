@@ -45,7 +45,7 @@ internal static class DebitNotes {
         string strShortTerm = String.Empty;
         string strLongTerm = String.Empty;
         string strReturned = String.Empty;
-        
+
         if (parameters is not null) {
             parameters.TryGetValue("keywords", out keywords);
             parameters.TryGetValue("upto", out strUpTo);
@@ -347,7 +347,7 @@ internal static class DebitNotes {
             }
             catch { }
         }
-        
+
         builder.Append(']');
 
         return Encoding.UTF8.GetBytes(builder.ToString());

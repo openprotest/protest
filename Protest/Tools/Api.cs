@@ -282,7 +282,7 @@ file sealed class ApiJsonConverter : JsonConverter<Api.Link[]> {
         ReadOnlySpan<byte> _name        = "name"u8;
         ReadOnlySpan<byte> _readonly    = "readonly"u8;
         ReadOnlySpan<byte> _permissions = "permissions"u8;
-        
+
         writer.WriteStartArray();
 
         for (int i = 0; i < value.Length; i++) {

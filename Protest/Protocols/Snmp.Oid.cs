@@ -172,7 +172,7 @@ internal static class Oid {
     public const string PRINTER_TRAYS_LEVEL  = "1.3.6.1.2.1.43.8.2.1.10";
     public const string PRINTER_TRAYS_STATUS = "1.3.6.1.2.1.43.8.2.1.11";
     public const string PRINTER_TRAYS        = "1.3.6.1.2.1.43.8.2.1.18";
-    
+
     public const string PRINTER_JOBS = "1.3.6.1.4.1.11.2.3.9.4.2.1.1.6.5.1";
 
 }

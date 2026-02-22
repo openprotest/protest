@@ -38,7 +38,7 @@ internal class JsonConvertersTests {
     public void AttributesJsonConverter_SerializeDeserialize_StringsAreEqual() {
         JsonSerializerOptions options = new JsonSerializerOptions();
         options.Converters.Add(new AttributesJsonConverter(true));
-        
+
         byte[] first = JsonSerializer.SerializeToUtf8Bytes(database.dictionary, options);
 
         ConcurrentDictionary<string, Database.Attribute>? reverse = JsonSerializer.Deserialize<ConcurrentDictionary<string, Database.Attribute>>(first, options);

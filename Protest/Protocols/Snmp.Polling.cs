@@ -329,10 +329,10 @@ internal static partial class Polling {
 
             //oid
             builder.Append($"\"{Data.EscapeJsonText(result[i].Id.ToString())}\",");
-            
+
             //type
             builder.Append($"\"{type}\",");
-            
+
             //value
             if (result[i].Data.TypeCode == SnmpType.Null ||
                 result[i].Data.TypeCode == SnmpType.NoSuchObject ||

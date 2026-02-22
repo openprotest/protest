@@ -34,7 +34,7 @@ internal abstract class ReverseProxyAbstract {
         isRunning = true;
         return true;
     }
-    
+
     public virtual bool Stop(string origin) {
         isRunning = false;
         return true;

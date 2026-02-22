@@ -93,7 +93,7 @@ internal sealed class Cache {
         if (_deflate > 0) { Console.WriteLine($"  Deflate : {100 * _deflate / (_raw + 1),5}% {_raw,10} -> {_deflate,8}"); }
         if (_brotli > 0)  { Console.WriteLine($"  Brotli  : {100 * _brotli / (_raw + 1),5}% {_raw,10} -> {_brotli,8}"); }
         Console.WriteLine();
-        
+
         if (Directory.Exists(path)) {
             FileSystemWatcher watcher = new FileSystemWatcher(path);
             watcher.EnableRaisingEvents = true;

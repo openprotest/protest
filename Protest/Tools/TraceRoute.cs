@@ -110,7 +110,7 @@ internal static class TraceRoute {
 
                         string over = $"over{((char)127)}{hostname}";
                         ws.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(over), 0, over.Length), WebSocketMessageType.Text, true, CancellationToken.None);
-                        
+
                         //ws.CloseAsync(WebSocketCloseStatus.NormalClosure, null, CancellationToken.None);
                     }
 

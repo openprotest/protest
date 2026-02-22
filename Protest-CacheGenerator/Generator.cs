@@ -41,7 +41,7 @@ public class Generator : IIncrementalGenerator {
         builder.AppendLine("internal static class StaticCacheSerialization {");
 
         builder.AppendLine("    public static readonly Dictionary<string, byte[]> cache = new Dictionary<string, byte[]>() {");
-        
+
         LoadDirectory(frontPath, frontPath, builder);
 
         builder.AppendLine("    };");
@@ -93,7 +93,7 @@ public class Generator : IIncrementalGenerator {
              filePath.EndsWith(".svg") ||
              filePath.EndsWith(".css") ||
              filePath.EndsWith(".js")) {
-            
+
             bytes = Minify(bytes, false);
         }
 

@@ -54,7 +54,7 @@ internal static class PasswordStrength {
     };
 
     static private readonly JsonSerializerOptions emailProfilesSerializerOptions;
-    
+
     static PasswordStrength() {
         emailProfilesSerializerOptions = new JsonSerializerOptions();
         emailProfilesSerializerOptions.Converters.Add(new SmtpProfilesJsonConverter(false));

@@ -15,7 +15,7 @@ internal static class Auth {
 
     private static readonly JsonSerializerOptions serializerOptions;
     private static Random rng = new Random();
-    
+
     internal static readonly ConcurrentDictionary<string, AccessControl> rbac = new();
     internal static readonly ConcurrentDictionary<string, Session> sessions = new();
 
@@ -478,7 +478,7 @@ internal static class Auth {
             builder.Append($"\"alias\":\"{Data.EscapeJsonText(access.Value.alias)}\",");
             builder.Append($"\"color\":\"{Data.EscapeJsonText(access.Value.color)}\",");
             builder.Append($"\"isDomain\":{(access.Value.isDomainUser ? "true" : "false")},");
-            
+
             builder.Append($"\"authorization\":[");
             bool firstAuth = true;
             for (int i=0; i<access.Value.authorization.Length; i++) {
@@ -487,7 +487,7 @@ internal static class Auth {
                 firstAuth = false;
             }
             builder.Append(']');
-            
+
             builder.Append('}');
 
             first = false;

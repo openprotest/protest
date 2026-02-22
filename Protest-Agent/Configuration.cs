@@ -87,7 +87,7 @@ namespace ProtestAgent {
                 stamp.enabled    = true;
                 smb.enabled      = true;
                 compmgmt.enabled = true;
-                
+
                 rdp.enabled   = true;
                 rdp.path      = "mstsc.exe";
                 rdp.arguments = "-f";

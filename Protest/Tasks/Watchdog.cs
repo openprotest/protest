@@ -75,7 +75,7 @@ internal static class Watchdog {
 
     private static readonly JsonSerializerOptions watcherSerializerOptions = new();
     private static readonly JsonSerializerOptions notificationSerializerOptions = new();
-        
+
     public static void Initialize() {
         watcherSerializerOptions.Converters.Add(new WatcherJsonConverter());
         notificationSerializerOptions.Converters.Add(new NotificationJsonConverter());

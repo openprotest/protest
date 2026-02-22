@@ -1418,7 +1418,7 @@ class Environment extends Tabs {
 		privacyPasswordShowButton.style.backgroundSize = "24px 24px";
 		privacyPasswordShowButton.style.backgroundPosition = "center";
 		privacyPasswordShowButton.style.backgroundRepeat = "no-repeat";
-		
+
 		const privacyPasswordStampButton = document.createElement("input");
 		privacyPasswordStampButton.type = "button";
 		privacyPasswordStampButton.style.minWidth = "32px";

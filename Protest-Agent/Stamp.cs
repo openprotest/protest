@@ -72,7 +72,7 @@ public partial class Stamp : Form {
             this.Close();
         }
     }
-    
+
     private void Stamp_Paint(object sender, PaintEventArgs e) {
         if (progress == 0) {
             e.Graphics.DrawRectangle(outline, 4, 6, 184, 28);

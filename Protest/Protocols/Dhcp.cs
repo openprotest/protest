@@ -290,7 +290,7 @@ internal static class Dhcp {
         for (int i = 0; i < 64; i++) { //server host name
             buffer[index++] = 0x00;
         }
-        
+
         for (int i = 0; i < 128; i++) { //boot file name
             buffer[index++] = 0x00;
         }

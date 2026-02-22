@@ -13,19 +13,19 @@ internal static class Documentation {
         string keywords = null;
         parameters?.TryGetValue("keywords", out keywords);
         keywords ??= String.Empty;
-        
+
         string[] keywordsArray = keywords.Split(' ').Where(o=>o.Length > 0).ToArray();
 
         DirectoryInfo dir = new DirectoryInfo(Data.DIR_DOCUMENTATION);
         if (!dir.Exists) {
             return "[]"u8.ToArray();
         }
-        
+
         List<FileInfo> files = dir.GetFiles().ToList();
         files.Sort((a, b) => String.Compare(a.Name, b.Name));
 
         StringBuilder builder = new StringBuilder();
-        
+
         builder.Append('[');
         lock (mutex) {
             bool first = true;
@@ -55,7 +55,7 @@ internal static class Documentation {
             }
         }
         builder.Append(']');
-        
+
         return Encoding.UTF8.GetBytes(builder.ToString());
     }
 
