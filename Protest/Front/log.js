@@ -21,7 +21,7 @@ class Log extends Window {
 		this.listTitle.className = "list-title";
 		this.listTitle.textContent = `${"Date".padEnd(23)} ${"Origin".padEnd(31)} ${"Action"}`;
 		this.listTitle.style.fontFamily = "monospace";
-		this.listTitle.style.lineHeight = "25px";
+		this.listTitle.style.lineHeight = "32px";
 		this.listTitle.style.paddingLeft = "28px";
 		this.listTitle.style.whiteSpace = "pre-wrap";
 		this.listTitle.style.overflow = "hidden";
@@ -33,7 +33,7 @@ class Log extends Window {
 		this.list.style.position = "absolute";
 		this.list.style.left = "0px";
 		this.list.style.right = "0px";
-		this.list.style.top = "26px";
+		this.list.style.top = "30px";
 		this.list.style.bottom = "28px";
 		this.list.style.color = "var(--clr-dark)";
 		this.list.style.backgroundColor = "var(--clr-pane)";

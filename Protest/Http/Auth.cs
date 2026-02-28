@@ -2,10 +2,12 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
+using OtpNet;
 
 namespace Protest.Http;
 
@@ -13,17 +15,31 @@ internal static class Auth {
     private const long HOUR = 36_000_000_000L;
     private const long SESSION_TIMEOUT = 120L * HOUR; //5 days
 
+    private const long RATE_LIMIT_TIME_WINDOW = 6_000_000_000; //10 minutes
+    private const int MAX_REQUESTS_PER_WIN_PERIOD = 8;
+    private static readonly ConcurrentDictionary<IPAddress, List<long>> rateLimLog = new ConcurrentDictionary<IPAddress, List<long>>();
+
     private static readonly JsonSerializerOptions serializerOptions;
     private static Random rng = new Random();
+
+    private static readonly ConcurrentDictionary<string, OtpToken> otpTokens = new();
 
     internal static readonly ConcurrentDictionary<string, AccessControl> rbac = new();
     internal static readonly ConcurrentDictionary<string, Session> sessions = new();
 
-
-    public record AccessControl {
+    private record OtpToken {
+        public string tokenId;
         public string username;
+        public bool   enrolled;
+        public byte[] secret;
+    }
+
+    internal record AccessControl {
+        public string username;
+        public string email;
         public string domain;
-        public byte[] hash;
+        public byte[] passwordHash;
+        public byte[] totpSecret;
         public string alias;
         public string color;
         public bool isDomainUser;
@@ -31,7 +47,7 @@ internal static class Auth {
         public HashSet<string> accessPath;
     }
 
-    public record Session {
+    internal record Session {
         public AccessControl access;
         public IPAddress ip;
         public string sessionId;
@@ -44,7 +60,7 @@ internal static class Auth {
         serializerOptions.Converters.Add(new AccessControlJsonConverter());
     }
 
-    public static bool IsAuthenticated(HttpListenerContext ctx) {
+    internal static bool IsAuthenticated(HttpListenerContext ctx) {
         IPAddress remoteIp = ctx.Request.RemoteEndPoint.Address;
         if (IPAddress.IsLoopback(remoteIp) && Configuration.backdoor) return true;
 
@@ -63,7 +79,7 @@ internal static class Auth {
         return true;
     }
 
-    public static bool IsAuthorized(HttpListenerContext ctx, string path) {
+    internal static bool IsAuthorized(HttpListenerContext ctx, string path) {
         IPAddress remoteIp = ctx.Request.RemoteEndPoint.Address;
         if (IPAddress.IsLoopback(remoteIp) && Configuration.backdoor) return true;
 
@@ -79,7 +95,7 @@ internal static class Auth {
         return session.access.accessPath.Contains(path);
     }
 
-    public static bool IsAuthenticatedAndAuthorized(HttpListenerContext ctx, string path) {
+    internal static bool IsAuthenticatedAndAuthorized(HttpListenerContext ctx, string path) {
         IPAddress remoteIp = ctx.Request.RemoteEndPoint.Address;
         if (IPAddress.IsLoopback(remoteIp) && Configuration.backdoor) return true;
 
@@ -100,21 +116,72 @@ internal static class Auth {
         return session.access.accessPath.Contains(path);
     }
 
-    public static bool AttemptAuthentication(HttpListenerContext ctx, out string sessionId) {
-        using StreamReader streamReader = new StreamReader(ctx.Request.InputStream);
-        ReadOnlySpan<char> payload = streamReader.ReadToEnd().AsSpan();
+    private static bool IsRateLimited(IPAddress clientIP) {
+        List<long> timestamps = rateLimLog.GetOrAdd(clientIP, _ => new List<long>(5));
 
-        int index = payload.IndexOf((char)127);
-        if (index == -1) {
-            sessionId = null;
+        long currentTime = DateTime.UtcNow.Ticks;
+        for (int i = timestamps.Count - 1; i >= 0; i--) {
+            if (currentTime - timestamps[i] > RATE_LIMIT_TIME_WINDOW) {
+                timestamps.RemoveAt(i);
+            }
+        }
+
+        if (rateLimLog[clientIP].Count >= MAX_REQUESTS_PER_WIN_PERIOD) {
+            return true;
+        }
+
+        timestamps.Add(currentTime);
+        return false;
+    }
+
+    internal static bool AuthHandler(HttpListenerContext ctx) {
+        if (!String.Equals(ctx.Request.HttpMethod, "POST", StringComparison.Ordinal)) {
+            ctx.Response.StatusCode = (int)HttpStatusCode.BadRequest;
             return false;
         }
 
-        string username = payload[..index].ToString().ToLower();
-        string password = payload[(index+1)..].ToString();
+        IPAddress clientIP = ctx.Request.RemoteEndPoint?.Address;
+        if (clientIP is null) {
+            ctx.Response.StatusCode = (int)HttpStatusCode.BadRequest;
+            return false;
+        }
+
+        if (IsRateLimited(clientIP)) {
+            ctx.Response.StatusCode = (int)HttpStatusCode.TooManyRequests;
+            return false;
+        }
+
+        using StreamReader streamReader = new StreamReader(ctx.Request.InputStream);
+        string payload = streamReader.ReadToEnd();
+        string[] array = payload.Split((char)127);
+
+        if (array.Length == 0) {
+            ctx.Response.StatusCode = (int)HttpStatusCode.BadRequest;
+            return false;
+        }
+
+        int.TryParse(array[0], out int status);
+
+        switch (status) {
+        case -1: return TotpEnrollment(ctx, array);
+        case  1: return PrimaryFactorAuthentication(ctx, array);
+        case  2: return TotpAuthentication(ctx, array);
+        }
+
+        return false;
+    }
+ 
+    internal static bool PrimaryFactorAuthentication(HttpListenerContext ctx, string[] array) {
+        if (array.Length < 3) {
+            ctx.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
+            return false;
+        }
+
+        string username = array[1].ToLower();
+        string password = array[2];
 
         if (!rbac.TryGetValue(username, out AccessControl access)) {
-            sessionId = null;
+            ctx.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
             return false;
         }
 
@@ -122,23 +189,122 @@ internal static class Auth {
         Thread.Sleep(rng.Next(250));
 #endif
 
-        bool successful = access.isDomainUser && OperatingSystem.IsWindows()
+        bool isSuccessful = access.isDomainUser && OperatingSystem.IsWindows()
             ? Protocols.Ldap.TryDirectoryAuthentication(username, password)
-            : Cryptography.HashUsernameAndPassword(username, password).SequenceEqual(access.hash);
+            : Cryptography.HashUsernameAndPassword(username, password).SequenceEqual(access.passwordHash);
 
-        if (successful) {
-            Logger.Action(username, $"Successfully logged in from {ctx.Request.RemoteEndPoint.Address}");
-            sessionId = GrandAccess(ctx, username);
+        if (isSuccessful) {
+            Logger.Action(username, $"Primary factor authentication succeeded from {ctx.Request.RemoteEndPoint.Address}");
+            ctx.Response.StatusCode = (int)HttpStatusCode.Accepted;
+
+            string tokenId      = Cryptography.RandomStringGenerator(32);
+            bool isEnrolled     = access.totpSecret is not null;
+            byte[] secret       = isEnrolled ? access.totpSecret : GenerateTotpSecret(40);
+            string secretString = OtpNet.Base32Encoding.ToString(secret);
+
+            otpTokens[tokenId] = new OtpToken() {
+                tokenId  = tokenId,
+                username = username,
+                enrolled = isEnrolled,
+                secret   = secret
+            };
+
+            if (isEnrolled) {
+                byte[] buffer = System.Text.Encoding.UTF8.GetBytes($"{{\"status\":2,\"token\":\"{tokenId}\"}}");
+                ctx.Response.OutputStream.Write(buffer, 0, buffer.Length);
+            }
+            else {
+                byte[] buffer = System.Text.Encoding.UTF8.GetBytes($"{{\"status\":-1,\"secret\":\"{secretString}\",\"token\":\"{tokenId}\"}}");
+                ctx.Response.OutputStream.Write(buffer, 0, buffer.Length);
+            }
+
             return true;
         }
 
-        Logger.Action(username, $"Unsuccessful login attempt from {ctx.Request.RemoteEndPoint.Address}");
-        sessionId = null;
+        Logger.Action(username, $"Primary factor authentication failed from {ctx.Request.RemoteEndPoint.Address}");
+        ctx.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
         return false;
     }
 
-    public static string GrandAccess(HttpListenerContext ctx, string username) {
-        string sessionId = Cryptography.RandomStringGenerator(64);
+    private static bool TotpAuthentication(HttpListenerContext ctx, string[] array) {
+        if (array.Length < 4) {
+            ctx.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
+            return false;
+        }
+
+        string username = array[1].ToLower();
+        string tokenId  = array[2];
+        string totp     = array[3];
+
+        if (!otpTokens.TryGetValue(tokenId, out OtpToken token)) return false;
+
+        if (!token.enrolled) return false;
+
+        bool isSuccessful = ValidateTotp(token.secret, totp);
+
+        if (isSuccessful) {
+            GrandAccess(ctx, token.username);
+
+            Logger.Action(token.username, $"Secondary factor authentication succeeded from {ctx.Request.RemoteEndPoint.Address}");
+            ctx.Response.StatusCode = (int)HttpStatusCode.Accepted;
+            byte[] buffer = System.Text.Encoding.UTF8.GetBytes("{\"status\":0}");
+            ctx.Response.OutputStream.Write(buffer, 0, buffer.Length);
+        }
+        else {
+            Logger.Action(token.username, $"Secondary factor authentication failed from {ctx.Request.RemoteEndPoint.Address}");
+            ctx.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
+        }
+
+        return isSuccessful;
+    }
+
+    private static bool TotpEnrollment(HttpListenerContext ctx, string[] array) {
+        if (array.Length < 4) {
+            ctx.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
+            return false;
+        }
+
+        string username = array[1].ToLower();
+        string tokenId  = array[2];
+        string totp     = array[3];
+
+        if (!otpTokens.TryGetValue(tokenId, out OtpToken token)) return false;
+        if (token.enrolled) return false;
+        if (token.username != username) return false;
+
+        bool isSuccessful = ValidateTotp(token.secret, totp);
+
+        if (isSuccessful) {
+            GrandAccess(ctx, token.username);
+            SetUserTotpSecret(token.username, token.secret);
+
+            Logger.Action(token.username, $"TOTP enrollment succeeded from {ctx.Request.RemoteEndPoint.Address}");
+            ctx.Response.StatusCode = (int)HttpStatusCode.Accepted;
+            byte[] buffer = System.Text.Encoding.UTF8.GetBytes("{\"status\":0}");
+            ctx.Response.OutputStream.Write(buffer, 0, buffer.Length);
+        }
+        else {
+            Logger.Action(token.username, $"TOTP enrollment failed from {ctx.Request.RemoteEndPoint.Address}");
+            ctx.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
+        }
+
+        return isSuccessful;
+    }
+
+    private static bool ValidateTotp(byte[] secret, string userTotp) {
+        if (secret is null || secret.Length == 0) return false;
+        Totp totp = new Totp(secret);
+        return totp.VerifyTotp(userTotp, out _, new VerificationWindow(previous: 1, future: 1));
+    }
+
+    private static byte[] GenerateTotpSecret(int sizeBytes=40) {
+        byte[] secret = new byte[sizeBytes];
+        RandomNumberGenerator.Fill(secret);
+        return secret;
+    }
+
+    internal static string GrandAccess(HttpListenerContext ctx, string username) {
+        string sessionId = Cryptography.RandomStringGenerator(72);
         string userHostName = ctx.Request.UserHostName.Split(':')[0];
 
         //RFC6265: no port in the "Domain" attribute
@@ -163,12 +329,12 @@ internal static class Auth {
         return null;
     }
 
-    public static bool RevokeAccess(HttpListenerContext ctx, string origin) {
+    internal static bool RevokeAccess(HttpListenerContext ctx, string origin) {
         string sessionId = ctx.Request.Cookies["sessionid"]?.Value ?? null;
         if (sessionId is null) return false;
         return RevokeAccess(sessionId, origin);
     }
-    public static bool RevokeAccess(string sessionId, string origin = null) {
+    internal static bool RevokeAccess(string sessionId, string origin = null) {
         if (sessionId is null) return false;
         if (!sessions.ContainsKey(sessionId)) return false;
 
@@ -181,7 +347,7 @@ internal static class Auth {
         return false;
     }
 
-    public static string GetUsername(string sessionId) {
+    internal static string GetUsername(string sessionId) {
         if (sessionId is null) return null;
 
         if (sessions.TryGetValue(sessionId, out Session session)) {
@@ -189,6 +355,27 @@ internal static class Auth {
         }
 
         return null;
+    }
+
+    private static bool SetUserTotpSecret(string username, byte[] secret) {
+        if (username is null) return false;
+
+        if (!rbac.TryRemove(username, out AccessControl access)) return false;
+
+        access.totpSecret = secret;
+
+        byte[] plain = JsonSerializer.SerializeToUtf8Bytes(access, serializerOptions);
+        byte[] cipher = Cryptography.Encrypt(plain, Configuration.DB_KEY, Configuration.DB_KEY_IV);
+
+        try {
+            File.WriteAllBytes($"{Data.DIR_RBAC}{Data.DELIMITER}{access.username}", cipher);
+        }
+        catch (Exception ex) {
+            Logger.Error(ex);
+            return false;
+        }
+
+        return true;
     }
 
     private static HashSet<string> PopulateAccessPath(string[] accessList) {
@@ -438,7 +625,7 @@ internal static class Auth {
         return path;
     }
 
-    public static bool LoadRbac() {
+    internal static bool LoadRbac() {
         DirectoryInfo dirRbac = new DirectoryInfo(Data.DIR_RBAC);
         if (!dirRbac.Exists) return false;
 
@@ -463,7 +650,7 @@ internal static class Auth {
         return true;
     }
 
-    public static byte[] ListUsers() {
+    internal static byte[] ListUsers() {
         StringBuilder builder = new StringBuilder();
         builder.Append('[');
 
@@ -473,6 +660,7 @@ internal static class Auth {
 
             builder.Append('{');
             builder.Append($"\"username\":\"{Data.EscapeJsonText(access.Value.username)}\",");
+            builder.Append($"\"email\":\"{Data.EscapeJsonText(access.Value.email)}\",");
             builder.Append($"\"domain\":\"{Data.EscapeJsonText(access.Value.domain)}\",");
             //builder.Append($"\"password\":\"{access.Value.hash}\",");
             builder.Append($"\"alias\":\"{Data.EscapeJsonText(access.Value.alias)}\",");
@@ -498,7 +686,7 @@ internal static class Auth {
         return Encoding.UTF8.GetBytes(builder.ToString());
     }
 
-    public static byte[] CreateUser(HttpListenerContext ctx, Dictionary<string, string> parameters, string origin) {
+    internal static byte[] CreateUser(HttpListenerContext ctx, Dictionary<string, string> parameters, string origin) {
         if (parameters is null) {
             return Data.CODE_INVALID_ARGUMENT.Array;
         }
@@ -511,15 +699,18 @@ internal static class Auth {
         string permissionsString = reader.ReadToEnd();
 
         parameters.TryGetValue("domain", out string domain);
+        parameters.TryGetValue("email", out string email);
         parameters.TryGetValue("password", out string password);
+
         parameters.TryGetValue("alias", out string alias);
         parameters.TryGetValue("color", out string color);
         parameters.TryGetValue("isdomain", out string isDomainString);
 
-        username = Uri.UnescapeDataString(username);
+        username = Uri.UnescapeDataString(username).ToLower();
+        email    = Uri.UnescapeDataString(email);
         password = Uri.UnescapeDataString(password);
-        alias = Uri.UnescapeDataString(alias);
-        color = Uri.UnescapeDataString(color);
+        alias    = Uri.UnescapeDataString(alias);
+        color    = Uri.UnescapeDataString(color);
         bool isDomainUser = Uri.UnescapeDataString(isDomainString) == "true";
 
         if (username is null) return Data.CODE_INVALID_ARGUMENT.Array;
@@ -527,23 +718,27 @@ internal static class Auth {
         AccessControl access;
         if (rbac.TryRemove(username, out AccessControl exists)) {
             access = exists;
-            access.username = username;
-            access.domain = domain;
-            access.hash = String.IsNullOrEmpty(password) ? access.hash : Cryptography.HashUsernameAndPassword(username, password);
-            access.alias = alias;
-            access.color = color;
+            access.username     = username;
+            access.email        = email;
+            access.domain       = domain;
+            access.passwordHash = String.IsNullOrEmpty(password) ? access.passwordHash : Cryptography.HashUsernameAndPassword(username, password);
+            access.totpSecret   = null;
+            access.alias        = alias;
+            access.color        = color;
             access.isDomainUser = isDomainUser;
         }
         else {
             if (String.IsNullOrEmpty(password) && !isDomainUser) {
                 return "{\"error\":\"please enter password\"}"u8.ToArray();
             }
+
             access = new AccessControl {
-                username = username,
-                domain = domain,
-                hash = Cryptography.HashUsernameAndPassword(username, password),
-                alias = alias,
-                color = color,
+                username     = username,
+                domain       = domain,
+                passwordHash = Cryptography.HashUsernameAndPassword(username, password),
+                totpSecret   = null,
+                alias        = alias,
+                color        = color,
                 isDomainUser = isDomainUser
             };
         }
@@ -580,7 +775,7 @@ internal static class Auth {
         return plain;
     }
 
-    public static byte[] DeleteUser(Dictionary<string, string> parameters, string origin) {
+    internal static byte[] DeleteUser(Dictionary<string, string> parameters, string origin) {
         if (parameters is null) {
             return Data.CODE_INVALID_ARGUMENT.Array;
         }
@@ -614,7 +809,7 @@ internal static class Auth {
         return "{\"status\":\"ok\"}"u8.ToArray();
     }
 
-    public static byte[] ListSessions() {
+    internal static byte[] ListSessions() {
         StringBuilder builder = new StringBuilder();
         bool first = true;
 
@@ -639,7 +834,7 @@ internal static class Auth {
         return Encoding.UTF8.GetBytes(builder.ToString());
     }
 
-    public static byte[] KickUser(Dictionary<string, string> parameters, string origin) {
+    internal static byte[] KickUser(Dictionary<string, string> parameters, string origin) {
         if (parameters is null) {
             return Data.CODE_INVALID_ARGUMENT.Array;
         }
@@ -664,7 +859,7 @@ internal static class Auth {
         return Data.CODE_FAILED.ToArray();
     }
 
-    public static void UpdateSessionTtl(string sessionId, long ttl) {
+    internal static void UpdateSessionTtl(string sessionId, long ttl) {
         if (!sessions.TryGetValue(sessionId, out Session session)) return;
         session.ttl = ttl * 24 * HOUR; //in ticks
         sessions[sessionId] = session;
@@ -683,7 +878,10 @@ file sealed class AccessControlJsonConverter : JsonConverter<Auth.AccessControl>
                 reader.Read();
 
                 if (propertyName == "username") {
-                    access.username = reader.GetString();
+                    access.username = reader.GetString().ToLower();
+                }
+                else if (propertyName == "email") {
+                    access.email = reader.GetString();
                 }
                 else if (propertyName == "domain") {
                     access.domain = reader.GetString();
@@ -692,7 +890,11 @@ file sealed class AccessControlJsonConverter : JsonConverter<Auth.AccessControl>
                     access.alias = reader.GetString();
                 }
                 else if (propertyName == "hash") {
-                    access.hash = Convert.FromHexString(reader.GetString());
+                    access.passwordHash = Convert.FromHexString(reader.GetString());
+                }
+                else if (propertyName == "totp") {
+                    string totp = reader.GetString();
+                    access.totpSecret = totp is null ? null : Convert.FromHexString(totp);
                 }
                 else if (propertyName == "color") {
                     access.color = reader.GetString();
@@ -717,21 +919,25 @@ file sealed class AccessControlJsonConverter : JsonConverter<Auth.AccessControl>
     }
 
     public override void Write(Utf8JsonWriter writer, Auth.AccessControl value, JsonSerializerOptions options) {
-        ReadOnlySpan<byte> _username = "username"u8;
-        ReadOnlySpan<byte> _domain = "domain"u8;
-        ReadOnlySpan<byte> _alias = "alias"u8;
-        ReadOnlySpan<byte> _color = "color"u8;
-        ReadOnlySpan<byte> _hash = "hash"u8;
-        ReadOnlySpan<byte> _isDomainUser = "isDomainUser"u8;
+        ReadOnlySpan<byte> _username      = "username"u8;
+        ReadOnlySpan<byte> _email         = "email"u8;
+        ReadOnlySpan<byte> _domain        = "domain"u8;
+        ReadOnlySpan<byte> _alias         = "alias"u8;
+        ReadOnlySpan<byte> _color         = "color"u8;
+        ReadOnlySpan<byte> _hash          = "hash"u8;
+        ReadOnlySpan<byte> _totp          = "totp"u8;
+        ReadOnlySpan<byte> _isDomainUser  = "isDomainUser"u8;
         ReadOnlySpan<byte> _authorization = "authorization"u8;
 
         writer.WriteStartObject();
 
-        writer.WriteString(_username, value.username);
+        writer.WriteString(_username, value.username.ToLower());
+        writer.WriteString(_email, value.email);
         writer.WriteString(_domain, value.domain);
         writer.WriteString(_alias, value.alias);
         writer.WriteString(_color, value.color);
-        writer.WriteString(_hash, Convert.ToHexString(value.hash));
+        writer.WriteString(_hash, Convert.ToHexString(value.passwordHash));
+        writer.WriteString(_totp, value.totpSecret is null ? null: Convert.ToHexString(value.totpSecret));
         writer.WriteBoolean(_isDomainUser, value.isDomainUser);
 
         writer.WritePropertyName(_authorization);

@@ -65,7 +65,7 @@
 		}
 
 		input[type="button"] {
-			border-radius: 12px;
+			border-radius: 8px;
 			margin-top: 12px;
 			width: 100px;
 			height: 36px;
@@ -74,16 +74,37 @@
 			font-weight: bold;
 			transition: .4s;
 		}
-
+		input[type="button"]:disabled {
+			color: rgb(176,176,176);
+			background-color: rgb(96,96,96) !important;
+			filter: contrast(60%) brightness(80%) !important;
+		}
 		input[type="button"]:hover{
 			filter: brightness(110%);
 		}
-		.auth-glow > *,
+		
+		.glow > * {
+			transition: .4s;
+		}
+
+		.glow:focus-within > img,
+		.glow:focus-within > input,
 		input[type="button"]:focus {
-			filter: brightness(125%) drop-shadow(0 0 2px rgba(255,255,255,.8));
+			filter: brightness(130%) drop-shadow(0 0 2px rgba(255,255,255,.8));
 		}
 		input[type="button"]:active {
-			filter: brightness(150%) drop-shadow(0 0 4px rgba(255,255,255,.8));
+			filter: brightness(150%) drop-shadow(0 0 8px rgba(255,255,255,.8));
+		}
+
+		@keyframes otp-in {
+			0%   { opacity:0; height:0; }
+			40%  { opacity:0; height:40px; }
+			100% { opacity:1; height:40px; }
+		}
+
+		@keyframes enroll-in {
+			0%   { opacity:0; transform: translateY(-20px); }
+			100% { opacity:1; transform: translateY(0px); }
 		}
 
 		@keyframes lock {
@@ -117,14 +138,19 @@
 	<br>
 	<div id="messageLabel">Sorry, I don't like this password.</div>
 	<br>
-	<div>
-		<img src="mono/user.svg?light" title="username" width="28" height="28">
+	<div class="glow">
+		<img src="mono/user.svg?light" title="Username" width="28" height="28">
 		<input type="text" id="usernameInput" aria-label="Username" autocomplete="off" autofocus>
 	</div>
-	<div>
-		<img src="mono/lock.svg?light" title="password" width="28" height="28">
+	<div class="glow">
+		<img src="mono/credential.svg?light" title="Password" width="28" height="28">
 		<input type="password" id="passwordInput" aria-label="Password" autocomplete="off">
 	</div>
+	<div class="glow" id="otpBox" style="display:none; animation:otp-in .8s 1 forwards;">
+		<img src="mono/mfa.svg?light" title="OTP" width="28" height="28">
+		<input type="text" id="otpInput" aria-label="One time password" autocomplete="off" maxlength="6" style="font-size:16px; font-weight:bold; font-family:monospace; text-align:center; letter-spacing:12px;">
+	</div>
+
 	<input id="loginButton" type="button" value="Login"/>
 
 	<noscript>
@@ -132,27 +158,19 @@
 	</noscript>
 
 	<script>
+		let status = 1;
+		let token = null;
 		usernameInput.value = localStorage.getItem("last_username");
 		usernameInput.onkeyup = event=> {
 			if (event.key==="Enter") passwordInput.focus();
 		};
 
-		passwordInput.onkeyup = event=> {
-			if (event.key==="Enter") loginButton.onclick(event);
+		passwordInput.onkeyup = otpInput.onkeyup = event=> {
+			if (event.key==="Enter") Login();
 		};
 
 		usernameInput.oninput = usernameInput.onchange = passwordInput.oninput = passwordInput.onchange = event=> {
 			loginButton.style.opacity = usernameInput.value === "" || passwordInput.value === "" ? "0" : "1";
-		};
-
-		usernameInput.onblur = passwordInput.onblur = event=> {
-			usernameInput.parentElement.classList.remove("auth-glow");
-			passwordInput.parentElement.classList.remove("auth-glow");
-		};
-
-		usernameInput.onfocus = passwordInput.onfocus = event=> {
-			passwordInput.onblur();
-			event.target.parentElement.classList.add("auth-glow");
 		};
 
 		if (usernameInput.value.length === 0) {
@@ -162,23 +180,132 @@
 			passwordInput.focus();
 		}
 
+		loginButton.onclick = ()=>Login();
+		
 		let busy = false;
-		loginButton.onclick = async event=> {
+		const Login = async ()=> {
 			if (busy) return;
 
+			switch (status) {
+			//case -1: await TotpEnrollment(); break;
+			case 1: await PrimaryLogin(); break;
+			case 2: await SecondaryLogin(); break;
+			}
+		};
+
+		const HandleResponse = json => {
+			if (json.status === -1) { //enrollment required
+				usernameInput.style.display = "none";
+				passwordInput.style.display = "none";
+				loginButton.style.display = "none";
+
+				const enrollmentBox = document.createElement("div");
+				enrollmentBox.style.backgroundColor = "rgb(224,224,224)";
+				enrollmentBox.style.position = "absolute";
+				enrollmentBox.style.width = "500px";
+				enrollmentBox.style.height = "500px";
+				enrollmentBox.style.left = "calc(50% - 250px)";
+				enrollmentBox.style.top = "20px";
+				enrollmentBox.style.border = "1px solid rgb(224,224,224)";
+				enrollmentBox.style.borderRadius = "8px";
+				enrollmentBox.style.animation = "enroll-in .8s 1 forwards";
+				document.body.appendChild(enrollmentBox);
+
+				const enrollTitle = document.createElement("div");
+				enrollTitle.textContent = "Scan this QR code with your OTP app to enroll.";
+				enrollTitle.style.color = "#202020";
+				enrollTitle.style.fontWeight = "bold";
+				enrollTitle.style.margin = "20px";
+				enrollmentBox.appendChild(enrollTitle);
+
+				const qrBox = document.createElement("div");
+				qrBox.style.marginTop = "24px";
+				enrollmentBox.appendChild(qrBox);
+
+				const inputBox = document.createElement("div");
+				inputBox.style.marginTop = "20px";
+				enrollmentBox.appendChild(inputBox);
+
+				const optImage = document.createElement("img");
+				optImage.src = "mono/mfa.svg";
+				optImage.title = "OTP";
+				optImage.width = 28;
+				optImage.height = 28;
+				inputBox.appendChild(optImage);
+
+				const otpInput = document.createElement("input");
+				otpInput.type = "text";
+				otpInput.maxLength = 6;
+				otpInput.style.fontSize = "16px";
+				otpInput.style.fontWeight = "bold";
+				otpInput.style.fontFamily = "monospace";
+				otpInput.style.textAlign = "center";
+				otpInput.style.letterSpacing = "12px";
+				otpInput.style.color = "#202020";
+				otpInput.style.backgroundColor = "rgb(224,224,224)";
+				otpInput.style.boxShadow = "#202020 0 0 0 2px";
+				inputBox.appendChild(otpInput);
+
+				const qrLib = document.createElement("script");
+				qrLib.src = "qrcode.js";
+				document.body.appendChild(qrLib);
+
+				qrLib.onload = ()=> {
+					const label = `Pro-test:${usernameInput.value}`;
+					new QRCode(qrBox, {
+						text: `otpauth://totp/${label}?secret=${json.secret}&issuer=Pro-test`,
+						width: 250,
+						height: 250,
+						colorDark: "#202020",
+						colorLight: "transparent",
+						correctLevel: QRCode.CorrectLevel.L
+					});
+
+					qrBox.childNodes[0].style.padding = "8px";
+					qrBox.childNodes[0].style.border = "4px solid #202020";
+					qrBox.childNodes[0].style.borderRadius = "8px";
+				};
+
+				otpInput.onkeyup = event=> {
+					if (event.key==="Enter") {
+						TotpEnrollment(usernameInput.value, json.token, otpInput.value);
+					}
+				};
+				
+				otpInput.focus();
+			}
+			else if (json.status === 2) { //otp required
+				usernameInput.setAttribute("readonly", true);
+				passwordInput.setAttribute("readonly", true);
+				otpBox.style.display = "block";
+				otpInput.focus();
+			}
+			else {
+				location.reload();
+			}
+
+			status = json.status;
+		};
+
+		const PrimaryLogin = async ()=> {
 			if (usernameInput.value === "" || passwordInput.value === "") return;
+
+			loginButton.setAttribute("disabled", true);
 			busy = true;
 
 			try {
 				const response = await fetch("auth", {
 					method: "POST",
 					credentials: "same-origin",
-					body: `${usernameInput.value}${String.fromCharCode(127)}${passwordInput.value}`
+					body: `${status}${String.fromCharCode(127)}${usernameInput.value}${String.fromCharCode(127)}${passwordInput.value}`
 				});
 
 				if (response.status === 202) {
 					localStorage.setItem("last_username", usernameInput.value);
-					location.reload();
+
+					const json = await response.json();
+					token = json.token;
+					HandleResponse(json);
 				}
 				else {
 					passwordInput.value="";
@@ -190,6 +317,47 @@
 						locklatch.style.animation="none";
 					}, 1000);
 				}
+				loginButton.removeAttribute("disabled");
+				busy = false;
+			}
+			catch (ex) {
+				messageLabel.style.visibility="visible";
+				messageLabel.style.color="red";
+				messageLabel.textContent="Server is unreachable.";
+				console.error(ex);
+				loginButton.removeAttribute("disabled");
+				busy = false;
+			}
+		};
+
+		const SecondaryLogin = async ()=> {
+			if (otpInput.value.length != 6) return;
+
+			busy = true;
+
+			try {
+				const response = await fetch("auth", {
+					method: "POST",
+					credentials: "same-origin",
+					body: `2${String.fromCharCode(127)}${usernameInput.value}${String.fromCharCode(127)}${token}${String.fromCharCode(127)}${otpInput.value}`
+				});
+
+				if (response.status === 202) {
+					const json = await response.json();
+					HandleResponse(json);
+				}
+				else {
+					messageLabel.textContent = "OTP challenge failed.";
+					messageLabel.style.visibility="visible";
+					messageLabel.style.animation="shake 1s 1";
+					locklatch.style.animation="fail .4s 1";
+					setTimeout(()=> {
+						messageLabel.style.animation="none";
+						locklatch.style.animation="none";
+					}, 1000);
+				}
+
+				loginButton.removeAttribute("disabled");
 				busy = false;
 			}
 			catch (ex) {
@@ -197,8 +365,40 @@
 				messageLabel.style.color = "red";
 				messageLabel.textContent = "Server is unreachable.";
 				console.error(ex);
+				loginButton.removeAttribute("disabled");
 				busy = false;
 			}
 		};
+
+		const TotpEnrollment = async (username, token, otp)=> {
+			if (otp.length != 6) return;
+
+			busy = true;
+
+			try {
+				const response = await fetch("auth", {
+					method: "POST",
+					credentials: "same-origin",
+					body: `-1${String.fromCharCode(127)}${username}${String.fromCharCode(127)}${token}${String.fromCharCode(127)}${otp}`
+				});
+
+				if (response.status === 202) {
+					const json = await response.json();
+					HandleResponse(json);
+				}
+
+				loginButton.removeAttribute("disabled");
+				busy = false;
+			}
+			catch (ex) {
+				messageLabel.style.visibility = "visible";
+				messageLabel.style.color = "red";
+				messageLabel.textContent = "Server is unreachable.";
+				console.error(ex);
+				loginButton.removeAttribute("disabled");
+				busy = false;
+			}
+		};
+
 	</script>
 </body></html>

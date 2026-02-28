@@ -19,10 +19,6 @@ internal sealed class Listener {
     private readonly HttpListener listener;
     private readonly Cache cache;
 
-    private const long RATE_LIMIT_TIME_WINDOW = 6_000_000_000; //10 minutes
-    private const int MAX_REQUESTS_PER_WIN_PERIOD = 5;
-    private static readonly ConcurrentDictionary<IPAddress, List<long>> rateLimLog = new ConcurrentDictionary<IPAddress, List<long>>();
-
     private static readonly Dictionary<string, Func<HttpListenerContext, Dictionary<string, string>, string, byte[]>> routing
     = new Dictionary<string, Func<HttpListenerContext, Dictionary<string, string>, string, byte[]>> {
 
@@ -266,7 +262,7 @@ internal sealed class Listener {
         string path = ctx.Request.Url.PathAndQuery;
 
         if (String.Equals(path, "/auth", StringComparison.Ordinal)) {
-            AuthHandler(ctx);
+            Auth.AuthHandler(ctx);
             ctx.Response.Close();
             return;
         }
@@ -418,49 +414,6 @@ internal sealed class Listener {
 
         ctx.Response.Close();
         return true;
-    }
-
-    private static bool AuthHandler(HttpListenerContext ctx) {
-        if (!String.Equals(ctx.Request.HttpMethod, "POST", StringComparison.Ordinal)) {
-            ctx.Response.StatusCode = (int)HttpStatusCode.BadRequest;
-            return false;
-        }
-
-        IPAddress clientIP = ctx.Request.RemoteEndPoint?.Address;
-        if (clientIP is null) {
-            ctx.Response.StatusCode = (int)HttpStatusCode.BadRequest;
-            return false;
-        }
-
-        if (IsRateLimited(clientIP)) {
-            ctx.Response.StatusCode = (int)HttpStatusCode.TooManyRequests;
-            return false;
-        }
-
-        bool isSuccessful = Auth.AttemptAuthentication(ctx, out _);
-        ctx.Response.StatusCode = isSuccessful
-            ? (int)HttpStatusCode.Accepted
-            : (int)HttpStatusCode.Unauthorized;
-
-        return true;
-    }
-
-    private static bool IsRateLimited(IPAddress clientIP) {
-        List<long> timestamps = rateLimLog.GetOrAdd(clientIP, _ => new List<long>(5));
-
-        long currentTime = DateTime.UtcNow.Ticks;
-        for (int i = timestamps.Count - 1; i >= 0; i--) {
-            if (currentTime - timestamps[i] > RATE_LIMIT_TIME_WINDOW) {
-                timestamps.RemoveAt(i);
-            }
-        }
-
-        if (rateLimLog[clientIP].Count >= MAX_REQUESTS_PER_WIN_PERIOD) {
-            return true;
-        }
-
-        timestamps.Add(currentTime);
-        return false;
     }
 
     private static bool DynamicHandler(HttpListenerContext ctx, Dictionary<string, string> parameters) {

@@ -12,12 +12,19 @@ class AccessControl extends Tabs {
 		this.tabsPanel.style.padding = "20px";
 
 		this.rbacTab = this.AddTab("RBAC", "mono/rbac.svg");
+		this.totpTab = this.AddTab("MFA", "mono/mfa.svg");
 		this.sessionsTab = this.AddTab("Open sessions", "mono/hourglass.svg");
 
 		this.rbacTab.onclick = ()=> this.ShowRbac();
+		this.totpTab.onclick = ()=> this.ShowTotp();
 		this.sessionsTab.onclick = ()=> this.ShowSessions();
 
 		switch (this.args) {
+		case "totp":
+			this.totpTab.className = "v-tab-selected";
+			this.ShowTotp();
+			break;
+
 		case "sessions":
 			this.sessionsTab.className = "v-tab-selected";
 			this.ShowSessions();
@@ -103,14 +110,13 @@ class AccessControl extends Tabs {
 		userDetails.style.position = "absolute";
 		userDetails.style.display = "grid";
 		userDetails.style.gridTemplateColumns = "minmax(80px, 120px) minmax(60px, 250px) minmax(60px, 160px)";
-		userDetails.style.gridTemplateRows = "repeat(5, 36px)";
+		userDetails.style.gridTemplateRows = "repeat(6, 36px) 64px";
 		userDetails.style.alignItems = "center";
 		userDetails.style.left = "266px";
 		userDetails.style.right = "8px";
 		userDetails.style.top = "48px";
 		userDetails.style.minWidth = "200px";
 		userDetails.style.maxWidth = "600px";
-		userDetails.style.height = "142px";
 		userDetails.style.margin = "4px 8px";
 
 		const usernameLabel = document.createElement("div");
@@ -123,6 +129,16 @@ class AccessControl extends Tabs {
 		this.username.style.gridColumn = "2";
 		userDetails.append(usernameLabel, this.username);
 
+		const emailLabel = document.createElement("div");
+		emailLabel.textContent = "E-mail:";
+		emailLabel.style.gridRow = "2";
+		emailLabel.style.gridColumn = "1";
+		this.email = document.createElement("input");
+		this.email.type = "text";
+		this.email.style.gridRow = "2";
+		this.email.style.gridColumn = "2";
+		userDetails.append(emailLabel, this.email);
+
 		this.domainUserToggle = this.CreateToggle("Domain user", false, userDetails);
 		this.domainUserToggle.label.style.marginLeft = "8px";
 		this.domainUserToggle.label.style.whiteSpace = "nowrap";
@@ -131,56 +147,72 @@ class AccessControl extends Tabs {
 
 		const domainLabel = document.createElement("div");
 		domainLabel.textContent = "Domain:";
-		domainLabel.style.gridRow = "2";
+		domainLabel.style.gridRow = "3";
 		domainLabel.style.gridColumn = "1";
 		this.domain = document.createElement("input");
 		this.domain.type = "text";
 		this.domain.disabled = true;
-		this.domain.style.gridRow = "2";
+		this.domain.style.gridRow = "3";
 		this.domain.style.gridColumn = "2";
 		userDetails.append(domainLabel, this.domain);
 
 		const passwordLabel = document.createElement("div");
 		passwordLabel.textContent = "Password:";
-		passwordLabel.style.gridRow = "3";
+		passwordLabel.style.gridRow = "4";
 		passwordLabel.style.gridColumn = "1";
 		this.password = document.createElement("input");
 		this.password.type = "password";
-		this.password.style.gridRow = "3";
+		this.password.style.gridRow = "4";
 		this.password.style.gridColumn = "2";
 		userDetails.append(passwordLabel, this.password);
 
 		const aliasLabel = document.createElement("div");
 		aliasLabel.textContent = "Alias:";
-		aliasLabel.style.gridRow = "4";
+		aliasLabel.style.gridRow = "5";
 		aliasLabel.style.gridColumn = "1";
 		this.alias = document.createElement("input");
 		this.alias.type = "text";
-		this.alias.style.gridRow = "4";
+		this.alias.style.gridRow = "5";
 		this.alias.style.gridColumn = "2";
 		userDetails.append(aliasLabel, this.alias);
 
 		const colorLabel = document.createElement("div");
 		colorLabel.textContent = "Color:";
-		colorLabel.style.gridRow = "5";
+		colorLabel.style.gridRow = "6";
 		colorLabel.style.gridColumn = "1";
 		this.color = document.createElement("input");
 		this.color.type = "color";
-		this.color.style.gridRow = "5";
+		this.color.style.gridRow = "6";
 		this.color.style.gridColumn = "2";
 		userDetails.append(colorLabel, this.color);
 
-		this.accessList = document.createElement("div");
-		this.accessList.style.position = "absolute";
-		this.accessList.style.left = "266px";
-		this.accessList.style.right = "8px";
-		this.accessList.style.top = "240px";
-		this.accessList.style.bottom = "8px";
-		this.accessList.style.paddingLeft = "8px";
-		this.accessList.style.paddingTop = "20px";
-		this.accessList.style.overflowY = "scroll";
+		const buttonsBox = document.createElement("div");
+		buttonsBox.style.gridRow = "7";
+		buttonsBox.style.gridColumn = "1 / span 3";
+		buttonsBox.style.marginTop = "20px";
+		userDetails.appendChild(buttonsBox);
 
-		this.tabsPanel.append(this.usersList, userDetails, this.accessList);
+		this.permissions = document.createElement("input");
+		this.permissions.type = "button";
+		this.permissions.value = "Permissions";
+		this.permissions.className = "with-icon";
+		this.permissions.style.width = "135px";
+		this.permissions.style.height = "36px";
+		this.permissions.style.backgroundImage = "url(mono/lock.svg?light)";
+		this.permissions.setAttribute("disabled", true);
+		buttonsBox.appendChild(this.permissions);
+
+		this.mfa = document.createElement("input");
+		this.mfa.type = "button";
+		this.mfa.value = "MFA";
+		this.mfa.className = "with-icon";
+		this.mfa.style.width = "80px";
+		this.mfa.style.height = "36px";
+		this.mfa.style.backgroundImage = "url(mono/mfa.svg?light)";
+		this.mfa.setAttribute("disabled", true);
+		buttonsBox.appendChild(this.mfa);
+
+		this.tabsPanel.append(this.usersList, userDetails);
 
 		this.InitializePermissionList();
 
@@ -205,6 +237,7 @@ class AccessControl extends Tabs {
 			}
 
 			this.username.value = "";
+			this.email.value = "";
 			this.domain.value = "";
 			this.password.value = "";
 			this.alias.value = "";
@@ -220,26 +253,28 @@ class AccessControl extends Tabs {
 
 		this.saveButton.onclick = async ()=> {
 			this.username.value = this.username.value.trim();
+			this.email.value = this.email.value.trim();
 			this.domain.value = this.domain.value.trim();
 			this.password.value = this.password.value.trim();
 			this.alias.value = this.alias.value.trim();
 
 			if (this.username.value.length === 0) {
-				this.ConfirmBox("Please enter username.", true).addEventListener("click", ()=>setTimeout(this.username.focus(), 150));
+				this.username.setAttribute("required", true);
 				return;
 			}
 
-			if (this.domainUserToggle.checkbox.checked) {
-				if (this.domain.value.length === 0) {
-					this.ConfirmBox("Please enter domain.", true).addEventListener("click", ()=>setTimeout(this.domain.focus(), 150));
-					return;
-				}
+			if (this.domainUserToggle.checkbox.checked && this.domain.value.length === 0) {
+				this.domain.setAttribute("required", true);
+				return;
 			}
 
 			this.username.setAttribute("readonly", true);
 
+			this.domain.removeAttribute("required");
+			this.username.removeAttribute("required");
+
 			try {
-				let url = `rbac/create?username=${encodeURIComponent(this.username.value)}&domain=${encodeURIComponent(this.domain.value)}&password=${encodeURIComponent(this.password.value)}&alias=${encodeURIComponent(this.alias.value)}&color=${encodeURIComponent(this.color.value)}&isdomain=${this.domainUserToggle.checkbox.checked}`;
+				let url = `rbac/create?username=${encodeURIComponent(this.username.value)}&email=${encodeURIComponent(this.email.value)}&domain=${encodeURIComponent(this.domain.value)}&password=${encodeURIComponent(this.password.value)}&alias=${encodeURIComponent(this.alias.value)}&color=${encodeURIComponent(this.color.value)}&isdomain=${this.domainUserToggle.checkbox.checked}`;
 				let authorization = [];
 
 				for (let i=0; i<this.permissionsList.length; i++) {
@@ -268,7 +303,7 @@ class AccessControl extends Tabs {
 					}
 				}
 
-				let newUser = this.AddUser(this.username.value, this.domain.value, this.password.value, this.alias.value, this.color.value, this.domainUserToggle.checkbox.checked, authorization);
+				let newUser = this.AddUser(this.username.value, this.email.value, this.domain.value, this.password.value, this.alias.value, this.color.value, this.domainUserToggle.checkbox.checked, authorization);
 				newUser.onclick();
 			}
 			catch (ex) {
@@ -302,48 +337,124 @@ class AccessControl extends Tabs {
 			});
 		};
 
+		this.permissions.onclick = ()=> {
+			const dialog = this.DialogBox("calc(100% - 40px)");
+			if (dialog === null) return;
+
+			const {okButton, innerBox} = dialog;
+
+			innerBox.parentElement.style.maxWidth = "680px";
+
+			innerBox.style.padding = "16px 32px";
+
+			innerBox.append(this.inventoryGroup, this.documentationGroup, this.toolsGroup, this.manageGroup);
+
+			for (let i=0; i<this.permissionsList.length; i++) {
+				this.permissionsList[i].read.checked = false;
+				this.permissionsList[i].write.checked = false;
+			}
+
+			for (let i=0; i<this.authorization.length; i++) {
+				let split = this.authorization[i].split(":");
+				let permission = this.permissionsList.find(o=>o.name.toLowerCase() === split[0]);
+				if (!permission) continue;
+
+				if (split[1] === "read") {
+					permission.read.checked = true;
+				}
+				else if (split[1] === "write") {
+					permission.write.checked = true;
+				}
+			}
+
+			okButton.onclick = ()=> {
+				this.saveButton.onclick();
+				dialog.Close();
+			};
+		};
+
 		this.GetUsers();
+	}
+
+	ShowTotp() {
+		this.args = "totp";
+		this.tabsPanel.textContent = "";
+
+		this.totpToggle = this.CreateToggle("Enable TOTP (Time-based One-Time Password)", true, this.tabsPanel);
+
+		this.tabsPanel.appendChild(document.createElement("br"));
+		this.tabsPanel.appendChild(document.createElement("br"));
+		this.tabsPanel.appendChild(document.createElement("hr"));
+		this.tabsPanel.appendChild(document.createElement("br"));
+
+		this.alternativeToggle = this.CreateToggle("Enable alternative OTP method", false, this.tabsPanel);
+
+		this.tabsPanel.appendChild(document.createElement("br"));
+		this.tabsPanel.appendChild(document.createElement("br"));
+
+		const smtpLabel = document.createElement("div");
+		smtpLabel.textContent = "SMTP profile:";
+		smtpLabel.style.display = "inline-block";
+		smtpLabel.style.minWidth = "100px";
+		this.tabsPanel.appendChild(smtpLabel);
+
+		this.smtp = document.createElement("select");
+		this.smtp.style.width = "220px";
+		this.tabsPanel.appendChild(this.smtp);
+
+		this.totpToggle.checkbox.onchange = ()=> {};
+
+		this.alternativeToggle.checkbox.onchange = ()=> {
+			if (this.alternativeToggle.checkbox.checked) {
+				this.smtp.removeAttribute("disabled");
+			}
+			else {
+				this.smtp.setAttribute("disabled", true);
+			}
+		};
+
+		this.totpToggle.checkbox.setAttribute("disabled", true);
+		this.alternativeToggle.checkbox.setAttribute("disabled", true);
+		this.smtp.setAttribute("disabled", true);
 	}
 
 	InitializePermissionList() {
 		this.permissionsList = [];
 
-		const inventoryGroup = this.AddPermissionGroup("Inventory", "url(mono/database.svg)");
-		this.permissionsList.push(this.AddPermissionObject("Devices",      "url(mono/devices.svg)",     inventoryGroup, true, true, true));
-		this.permissionsList.push(this.AddPermissionObject("Users",        "url(mono/users.svg)",       inventoryGroup, true, true, true));
-		this.permissionsList.push(this.AddPermissionObject("Passwords",    "url(mono/credential.svg)",  inventoryGroup, true, false, false));
-		this.permissionsList.push(this.AddPermissionObject("Manage hosts", "url(mono/workstation.svg)", inventoryGroup, false, true, false));
-		this.permissionsList.push(this.AddPermissionObject("Manage users", "url(mono/user.svg)",        inventoryGroup, false, true, false));
-		this.permissionsList.push(this.AddPermissionObject("Fetch",        "url(mono/fetch.svg)",       inventoryGroup, false, true, false));
+		this.inventoryGroup = this.AddPermissionGroup("Inventory", "url(mono/database.svg)");
+		this.permissionsList.push(this.AddPermissionObject("Devices",      "url(mono/devices.svg)",     this.inventoryGroup, true, true, true));
+		this.permissionsList.push(this.AddPermissionObject("Users",        "url(mono/users.svg)",       this.inventoryGroup, true, true, true));
+		this.permissionsList.push(this.AddPermissionObject("Passwords",    "url(mono/credential.svg)",  this.inventoryGroup, true, false, false));
+		this.permissionsList.push(this.AddPermissionObject("Manage hosts", "url(mono/workstation.svg)", this.inventoryGroup, false, true, false));
+		this.permissionsList.push(this.AddPermissionObject("Manage users", "url(mono/user.svg)",        this.inventoryGroup, false, true, false));
+		this.permissionsList.push(this.AddPermissionObject("Fetch",        "url(mono/fetch.svg)",       this.inventoryGroup, false, true, false));
 
-		const documentationGroup = this.AddPermissionGroup("Documentation", "url(mono/documentation.svg)");
-		this.permissionsList.push(this.AddPermissionObject("Documentation", "url(mono/documentation.svg)", documentationGroup, true, true, true));
-		this.permissionsList.push(this.AddPermissionObject("Debit notes",   "url(mono/notes.svg)",        documentationGroup, true, true, true));
-		this.permissionsList.push(this.AddPermissionObject("Chat",          "url(mono/chat.svg)",         documentationGroup, true, true, true));
+		this.documentationGroup = this.AddPermissionGroup("Documentation", "url(mono/documentation.svg)");
+		this.permissionsList.push(this.AddPermissionObject("Documentation", "url(mono/documentation.svg)", this.documentationGroup, true, true, true));
+		this.permissionsList.push(this.AddPermissionObject("Debit notes",   "url(mono/notes.svg)",         this.documentationGroup, true, true, true));
+		this.permissionsList.push(this.AddPermissionObject("Chat",          "url(mono/chat.svg)",          this.documentationGroup, true, true, true));
 
-		const toolsGroup = this.AddPermissionGroup("Tools and utilities",       "url(mono/hammer.svg)");
-		this.permissionsList.push(this.AddPermissionObject("Watchdog",          "url(mono/watchdog.svg)",     toolsGroup, false, true, false));
-		this.permissionsList.push(this.AddPermissionObject("Reverse proxy",     "url(mono/reverseproxy.svg)", toolsGroup, false, true, false));
-		this.permissionsList.push(this.AddPermissionObject("Issues",            "url(mono/issues.svg)",       toolsGroup, false, true, false));
-		//this.permissionsList.push(this.AddPermissionObject("Scripts",           "url(mono/scripts.svg)",      toolsGroup, false, true, false));
-		this.permissionsList.push(this.AddPermissionObject("Network utilities", "url(mono/portscan.svg)",     toolsGroup, false, true, false));
-		this.permissionsList.push(this.AddPermissionObject("Telnet",            "url(mono/telnet.svg)",       toolsGroup, false, true, false));
-		this.permissionsList.push(this.AddPermissionObject("Secure shell",      "url(mono/ssh.svg)",          toolsGroup, false, true, false));
-		this.permissionsList.push(this.AddPermissionObject("WMI",               "url(mono/wmi.svg)",          toolsGroup, false, true, false));
-		this.permissionsList.push(this.AddPermissionObject("SNMP pooling",      "url(mono/snmp.svg)",         toolsGroup, false, true, false));
-		//this.permissionsList.push(this.AddPermissionObject("SNMP traps",        "url(mono/trap.svg)",         toolsGroup, false, true, false));
+		this.toolsGroup = this.AddPermissionGroup("Tools and utilities",       "url(mono/hammer.svg)");
+		this.permissionsList.push(this.AddPermissionObject("Watchdog",          "url(mono/watchdog.svg)",     this.toolsGroup, false, true, false));
+		this.permissionsList.push(this.AddPermissionObject("Reverse proxy",     "url(mono/reverseproxy.svg)", this.toolsGroup, false, true, false));
+		this.permissionsList.push(this.AddPermissionObject("Issues",            "url(mono/issues.svg)",       this.toolsGroup, false, true, false));
+		//this.permissionsList.push(this.AddPermissionObject("Scripts",           "url(mono/scripts.svg)",      this.toolsGroup, false, true, false));
+		this.permissionsList.push(this.AddPermissionObject("Network utilities", "url(mono/portscan.svg)",     this.toolsGroup, false, true, false));
+		this.permissionsList.push(this.AddPermissionObject("Telnet",            "url(mono/telnet.svg)",       this.toolsGroup, false, true, false));
+		this.permissionsList.push(this.AddPermissionObject("Secure shell",      "url(mono/ssh.svg)",          this.toolsGroup, false, true, false));
+		this.permissionsList.push(this.AddPermissionObject("WMI",               "url(mono/wmi.svg)",          this.toolsGroup, false, true, false));
+		this.permissionsList.push(this.AddPermissionObject("SNMP pooling",      "url(mono/snmp.svg)",         this.toolsGroup, false, true, false));
+		//this.permissionsList.push(this.AddPermissionObject("SNMP traps",        "url(mono/trap.svg)",         this.toolsGroup, false, true, false));
 
-		const manageGroup = this.AddPermissionGroup("Manage", "url(mono/logo.svg)");
-		this.permissionsList.push(this.AddPermissionObject("Environment",  "url(mono/environment.svg)",  manageGroup, false, true, false));
-		this.permissionsList.push(this.AddPermissionObject("RBAC",         "url(mono/rbac.svg)",        manageGroup, false, true, false));
-		this.permissionsList.push(this.AddPermissionObject("Automation",   "url(mono/automation.svg)",  manageGroup, false, true, false));
-		this.permissionsList.push(this.AddPermissionObject("API links",    "url(mono/carabiner.svg)",   manageGroup, false, true, false));
-		this.permissionsList.push(this.AddPermissionObject("Log",          "url(mono/log.svg)",         manageGroup, false, true, false));
-		this.permissionsList.push(this.AddPermissionObject("Certificates", "url(mono/certificate.svg)", manageGroup, false, true, false));
-		this.permissionsList.push(this.AddPermissionObject("Backup",       "url(mono/backup.svg)",      manageGroup, false, true, false));
-		this.permissionsList.push(this.AddPermissionObject("Update",       "url(mono/update.svg)",      manageGroup, false, true, false));
-
-		this.accessList.append(inventoryGroup, documentationGroup, toolsGroup, manageGroup);
+		this.manageGroup = this.AddPermissionGroup("Manage", "url(mono/logo.svg)");
+		this.permissionsList.push(this.AddPermissionObject("Environment",  "url(mono/environment.svg)", this.manageGroup, false, true, false));
+		this.permissionsList.push(this.AddPermissionObject("RBAC",         "url(mono/rbac.svg)",        this.manageGroup, false, true, false));
+		this.permissionsList.push(this.AddPermissionObject("Automation",   "url(mono/automation.svg)",  this.manageGroup, false, true, false));
+		this.permissionsList.push(this.AddPermissionObject("API links",    "url(mono/carabiner.svg)",   this.manageGroup, false, true, false));
+		this.permissionsList.push(this.AddPermissionObject("Log",          "url(mono/log.svg)",         this.manageGroup, false, true, false));
+		this.permissionsList.push(this.AddPermissionObject("Certificates", "url(mono/certificate.svg)", this.manageGroup, false, true, false));
+		this.permissionsList.push(this.AddPermissionObject("Backup",       "url(mono/backup.svg)",      this.manageGroup, false, true, false));
+		this.permissionsList.push(this.AddPermissionObject("Update",       "url(mono/update.svg)",      this.manageGroup, false, true, false));
 	}
 
 	AddPermissionGroup(name, icon) {
@@ -446,7 +557,7 @@ class AccessControl extends Tabs {
 			if (json.error) throw(json.error);
 
 			for (let i=0; i<json.length; i++) {
-				this.AddUser(json[i].username, json[i].domain, "", json[i].alias, json[i].color, json[i].isDomain, json[i].authorization);
+				this.AddUser(json[i].username, json[i].email, json[i].domain, "", json[i].alias, json[i].color, json[i].isDomain, json[i].authorization);
 			}
 		}
 		catch (ex) {
@@ -454,7 +565,7 @@ class AccessControl extends Tabs {
 		}
 	}
 
-	AddUser(username, domain, password, alias, color, isDomain, authorization) {
+	AddUser(username, email, domain, password, alias, color, isDomain, authorization) {
 		const usernameLabel = document.createElement("div");
 		usernameLabel.textContent = username;
 		usernameLabel.style.fontWeight = "600";
@@ -477,7 +588,10 @@ class AccessControl extends Tabs {
 			this.removeButton.disabled = false;
 			this.username.setAttribute("readonly", true);
 
-			for (let i = 0; i < this.usersList.childNodes.length; i++) {
+			this.domain.removeAttribute("required");
+			this.username.removeAttribute("required");
+
+			for (let i=0; i<this.usersList.childNodes.length; i++) {
 				this.usersList.childNodes[i].style.backgroundColor = "transparent";
 			}
 			usernameLabel.style.backgroundColor = "var(--clr-select)";
@@ -486,31 +600,18 @@ class AccessControl extends Tabs {
 			this.alias.placeholder = username;
 
 			this.username.value = username;
-			this.domain.value = domain;
+			this.email.value    = email;
+			this.domain.value   = domain;
 			this.password.value = "";
-			this.alias.value = alias;
-			this.color.value = color;
+			this.alias.value    = alias;
+			this.color.value    = color;
 			this.domainUserToggle.checkbox.checked = isDomain;
+			this.authorization  = authorization;
+
+			this.permissions.removeAttribute("disabled");
+			this.mfa.removeAttribute("disabled");
 
 			this.domainUserToggle.checkbox.onchange();
-
-			for (let i=0; i<this.permissionsList.length; i++) {
-				this.permissionsList[i].read.checked = false;
-				this.permissionsList[i].write.checked = false;
-			}
-
-			for (let i=0; i<authorization.length; i++) {
-				let split = authorization[i].split(":");
-				let permission = this.permissionsList.find(o=>o.name.toLowerCase() === split[0]);
-				if (!permission) continue;
-
-				if (split[1] === "read") {
-					permission.read.checked = true;
-				}
-				else if (split[1] === "write") {
-					permission.write.checked = true;
-				}
-			}
 		};
 
 		return usernameLabel;

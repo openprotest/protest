@@ -9,16 +9,16 @@ internal static class Cryptography {
     private const string SALT   = "3pVDs55EbUDHL48qMm4oY13uUw69RQoH";
     private const string PEPPER = "sEhH5EG2sw958Q98";
 
-    public static byte[] RandomByteGenerator(int length) {
+    internal static byte[] RandomByteGenerator(int length) {
         return RandomNumberGenerator.GetBytes(length);
     }
 
-    public static string RandomStringGenerator(int length) {
+    internal static string RandomStringGenerator(int length) {
         byte[] bytes = RandomNumberGenerator.GetBytes(length);
         return BitConverter.ToString(bytes).Replace("-", String.Empty);
     }
 
-    public static byte[] HashStringToBytes(string key, byte length) {
+    internal static byte[] HashStringToBytes(string key, byte length) {
         byte[] bytes = SHA512.HashData(Encoding.UTF8.GetBytes($"{SALT}{key}{PEPPER}{length}"));
         byte[] result = new byte[length];
         for (byte i = 0; i < length; i++) {
@@ -28,7 +28,7 @@ internal static class Cryptography {
         return result;
     }
 
-    public static byte[] HashUsernameAndPassword(string username, string password) {
+    internal static byte[] HashUsernameAndPassword(string username, string password) {
         int iterations = (username.Length + password.Length) * 63;
 
         byte[] hash = Rfc2898DeriveBytes.Pbkdf2(
@@ -42,7 +42,7 @@ internal static class Cryptography {
         return hash;
     }
 
-    public static byte[] Encrypt(byte[] plain, byte[] key, byte[] iv) {
+    internal static byte[] Encrypt(byte[] plain, byte[] key, byte[] iv) {
         if (plain is null || plain.Length == 0) return Array.Empty<byte>();
         if (key is null || key.Length == 0) return plain; //in case of a null key, don't encrypt
 
@@ -55,7 +55,7 @@ internal static class Cryptography {
         return memoryStream.ToArray();
     }
 
-    public static byte[] Decrypt(byte[] cipher, byte[] key, byte[] iv) {
+    internal static byte[] Decrypt(byte[] cipher, byte[] key, byte[] iv) {
         if (cipher is null || cipher.Length == 0) return Array.Empty<byte>();
         if (key is null || key.Length == 0) return cipher; //in case of a null key, don't decrypt
 
@@ -68,7 +68,7 @@ internal static class Cryptography {
         return memoryStream.ToArray();
     }
 
-    public static string EncryptB64(string text, byte[] key, byte[] iv) {
+    internal static string EncryptB64(string text, byte[] key, byte[] iv) {
         if (String.IsNullOrEmpty(text)) return String.Empty;
 
         byte[] bytes = Encoding.UTF8.GetBytes(text);
@@ -76,7 +76,7 @@ internal static class Cryptography {
         return Convert.ToBase64String(cipher);
     }
 
-    public static string DecryptB64(string encodedText, byte[] key, byte[] iv) {
+    internal static string DecryptB64(string encodedText, byte[] key, byte[] iv) {
         if (String.IsNullOrEmpty(encodedText)) return String.Empty;
 
         byte[] bytes = Convert.FromBase64String(encodedText);
