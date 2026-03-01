@@ -196,7 +196,6 @@ class AccessControl extends Tabs {
 		this.permissions.type = "button";
 		this.permissions.value = "Permissions";
 		this.permissions.className = "with-icon";
-		this.permissions.style.width = "135px";
 		this.permissions.style.height = "36px";
 		this.permissions.style.backgroundImage = "url(mono/lock.svg?light)";
 		this.permissions.setAttribute("disabled", true);
@@ -204,9 +203,8 @@ class AccessControl extends Tabs {
 
 		this.mfa = document.createElement("input");
 		this.mfa.type = "button";
-		this.mfa.value = "MFA";
+		this.mfa.value = "Re-register MFA";
 		this.mfa.className = "with-icon";
-		this.mfa.style.width = "80px";
 		this.mfa.style.height = "36px";
 		this.mfa.style.backgroundImage = "url(mono/mfa.svg?light)";
 		this.mfa.setAttribute("disabled", true);
@@ -371,6 +369,20 @@ class AccessControl extends Tabs {
 				this.saveButton.onclick();
 				dialog.Close();
 			};
+		};
+
+		this.mfa.onclick = ()=> {
+			this.ConfirmBox("Are you sure? This will void the previous registration and re-register the OTP app.", false, "mono/mfa.svg").addEventListener("click", async ()=>{
+				try {
+					const response = await fetch(`rbac/reregistermfa?username=${this.username.value}`);
+					if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
+					const json = await response.json();
+					if (json.status !== "ok") throw ("Failded to reset MFA registration.");
+				}
+				catch (ex) {
+					this.ConfirmBox(ex, true, "mono/error.svg");
+				}
+			});
 		};
 
 		this.GetUsers();

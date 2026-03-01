@@ -6,7 +6,6 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using System.Threading;
 using OtpNet;
 
 namespace Protest.Http;
@@ -20,7 +19,6 @@ internal static class Auth {
     private static readonly ConcurrentDictionary<IPAddress, List<long>> rateLimLog = new ConcurrentDictionary<IPAddress, List<long>>();
 
     private static readonly JsonSerializerOptions serializerOptions;
-    private static Random rng = new Random();
 
     private static readonly ConcurrentDictionary<string, OtpToken> otpTokens = new();
 
@@ -567,6 +565,7 @@ internal static class Auth {
                 path.Add("/rbac/delete");
                 path.Add("/rbac/sessions");
                 path.Add("/rbac/kickuser");
+                path.Add("/rbac/reregistermfa");
                 break;
 
             case "reverse proxy:write":
@@ -666,6 +665,8 @@ internal static class Auth {
             builder.Append($"\"alias\":\"{Data.EscapeJsonText(access.Value.alias)}\",");
             builder.Append($"\"color\":\"{Data.EscapeJsonText(access.Value.color)}\",");
             builder.Append($"\"isDomain\":{(access.Value.isDomainUser ? "true" : "false")},");
+
+            builder.Append($"\"isRegistered\":{(access.Value.totpSecret is not null ? "true" : "false")},");
 
             builder.Append($"\"authorization\":[");
             bool firstAuth = true;
@@ -807,6 +808,28 @@ internal static class Auth {
         Logger.Action(origin, $"Delete RBAC for {username}");
 
         return "{\"status\":\"ok\"}"u8.ToArray();
+    }
+
+    internal static byte[] ResetMfaSecret(Dictionary<string, string> parameters, string origin) {
+        if (parameters is null) {
+            return Data.CODE_INVALID_ARGUMENT.Array;
+        }
+
+        if (!parameters.TryGetValue("username", out string username)) {
+            return Data.CODE_INVALID_ARGUMENT.Array;
+        }
+
+        if (username is null) {
+            return Data.CODE_INVALID_ARGUMENT.Array;
+        }
+
+        if (SetUserTotpSecret(username, null)) {
+            Logger.Action(origin, $"Re-register MFA for {username}");
+            return "{\"status\":\"ok\"}"u8.ToArray();
+        }
+        else {
+            return "{\"status\":\"failed\"}"u8.ToArray();
+        }
     }
 
     internal static byte[] ListSessions() {

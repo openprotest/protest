@@ -133,6 +133,7 @@ internal sealed class Listener {
         ["/rbac/delete"] =              (ctx, parameters, username) => Auth.DeleteUser(parameters, username),
         ["/rbac/sessions"] =            (ctx, parameters, username) => Auth.ListSessions(),
         ["/rbac/kickuser"] =            (ctx, parameters, username) => Auth.KickUser(parameters, username),
+        ["/rbac/reregistermfa"] =       (ctx, parameters, username) => Auth.ResetMfaSecret(parameters, username),
 
         ["/tasks/list"] =               (ctx, parameters, username) => Tasks.Tasks.ListTasks(),
 
