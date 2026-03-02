@@ -795,14 +795,14 @@ class Personalize extends Tabs {
 		this.preferRdpFileCheckbox = document.createElement("input");
 		this.preferRdpFileCheckbox.type = "checkbox";
 		this.tabsPanel.appendChild(this.preferRdpFileCheckbox);
-		this.AddCheckBoxLabel(this.tabsPanel, this.preferRdpFileCheckbox, "Prefer to download RDP file");
+		this.AddCheckBoxLabel(this.tabsPanel, this.preferRdpFileCheckbox, "Prefer downloading RDP file");
 		this.tabsPanel.appendChild(document.createElement("br"));
 		this.tabsPanel.appendChild(document.createElement("br"));
 
 		this.preferVncFileCheckbox = document.createElement("input");
 		this.preferVncFileCheckbox.type = "checkbox";
 		this.tabsPanel.appendChild(this.preferVncFileCheckbox);
-		this.AddCheckBoxLabel(this.tabsPanel, this.preferVncFileCheckbox, "Prefer to download VNC file");
+		this.AddCheckBoxLabel(this.tabsPanel, this.preferVncFileCheckbox, "Prefer downloading VNC file");
 		this.tabsPanel.appendChild(document.createElement("br"));
 		this.tabsPanel.appendChild(document.createElement("br"));
 

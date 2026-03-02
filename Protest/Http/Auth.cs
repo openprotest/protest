@@ -6,6 +6,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Threading;
 using OtpNet;
 
 namespace Protest.Http;
@@ -18,8 +19,8 @@ internal static class Auth {
     private const int MAX_REQUESTS_PER_WIN_PERIOD = 8;
     private static readonly ConcurrentDictionary<IPAddress, List<long>> rateLimLog = new ConcurrentDictionary<IPAddress, List<long>>();
 
+    private static Random rng = new Random();
     private static readonly JsonSerializerOptions serializerOptions;
-
     private static readonly ConcurrentDictionary<string, OtpToken> otpTokens = new();
 
     internal static readonly ConcurrentDictionary<string, AccessControl> rbac = new();
@@ -125,6 +126,7 @@ internal static class Auth {
         }
 
         if (rateLimLog[clientIP].Count >= MAX_REQUESTS_PER_WIN_PERIOD) {
+            Logger.Action("System", $"Rate limit triggered for host {clientIP}");
             return true;
         }
 
@@ -169,7 +171,7 @@ internal static class Auth {
         return false;
     }
  
-    internal static bool PrimaryFactorAuthentication(HttpListenerContext ctx, string[] array) {
+    private static bool PrimaryFactorAuthentication(HttpListenerContext ctx, string[] array) {
         if (array.Length < 3) {
             ctx.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
             return false;
@@ -192,7 +194,7 @@ internal static class Auth {
             : Cryptography.HashUsernameAndPassword(username, password).SequenceEqual(access.passwordHash);
 
         if (isSuccessful) {
-            Logger.Action(username, $"Primary factor authentication succeeded from {ctx.Request.RemoteEndPoint.Address}");
+            Logger.Action(username, $"Primary factor authentication succeeded from {ctx.Request.RemoteEndPoint?.Address}");
             ctx.Response.StatusCode = (int)HttpStatusCode.Accepted;
 
             string tokenId      = Cryptography.RandomStringGenerator(32);
@@ -219,7 +221,7 @@ internal static class Auth {
             return true;
         }
 
-        Logger.Action(username, $"Primary factor authentication failed from {ctx.Request.RemoteEndPoint.Address}");
+        Logger.Action(username, $"Primary factor authentication failed from {ctx.Request.RemoteEndPoint?.Address}");
         ctx.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
         return false;
     }
@@ -243,13 +245,13 @@ internal static class Auth {
         if (isSuccessful) {
             GrandAccess(ctx, token.username);
 
-            Logger.Action(token.username, $"Secondary factor authentication succeeded from {ctx.Request.RemoteEndPoint.Address}");
+            Logger.Action(token.username, $"Secondary factor authentication succeeded from {ctx.Request.RemoteEndPoint?.Address}");
             ctx.Response.StatusCode = (int)HttpStatusCode.Accepted;
             byte[] buffer = System.Text.Encoding.UTF8.GetBytes("{\"status\":0}");
             ctx.Response.OutputStream.Write(buffer, 0, buffer.Length);
         }
         else {
-            Logger.Action(token.username, $"Secondary factor authentication failed from {ctx.Request.RemoteEndPoint.Address}");
+            Logger.Action(token.username, $"Secondary factor authentication failed from {ctx.Request.RemoteEndPoint?.Address}");
             ctx.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
         }
 
@@ -276,13 +278,13 @@ internal static class Auth {
             GrandAccess(ctx, token.username);
             SetUserTotpSecret(token.username, token.secret);
 
-            Logger.Action(token.username, $"TOTP enrollment succeeded from {ctx.Request.RemoteEndPoint.Address}");
+            Logger.Action(token.username, $"TOTP enrollment succeeded from {ctx.Request.RemoteEndPoint?.Address}");
             ctx.Response.StatusCode = (int)HttpStatusCode.Accepted;
             byte[] buffer = System.Text.Encoding.UTF8.GetBytes("{\"status\":0}");
             ctx.Response.OutputStream.Write(buffer, 0, buffer.Length);
         }
         else {
-            Logger.Action(token.username, $"TOTP enrollment failed from {ctx.Request.RemoteEndPoint.Address}");
+            Logger.Action(token.username, $"TOTP enrollment failed from {ctx.Request.RemoteEndPoint?.Address}");
             ctx.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
         }
 
@@ -301,7 +303,7 @@ internal static class Auth {
         return secret;
     }
 
-    internal static string GrandAccess(HttpListenerContext ctx, string username) {
+    private static string GrandAccess(HttpListenerContext ctx, string username) {
         string sessionId = Cryptography.RandomStringGenerator(72);
         string userHostName = ctx.Request.UserHostName.Split(':')[0];
 
@@ -358,7 +360,7 @@ internal static class Auth {
     private static bool SetUserTotpSecret(string username, byte[] secret) {
         if (username is null) return false;
 
-        if (!rbac.TryRemove(username, out AccessControl access)) return false;
+        if (!rbac.TryGetValue(username, out AccessControl access)) return false;
 
         access.totpSecret = secret;
 
