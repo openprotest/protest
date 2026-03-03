@@ -223,7 +223,8 @@
 				enrollmentBox.appendChild(qrBox);
 
 				const inputBox = document.createElement("div");
-				inputBox.style.marginTop = "20px";
+				inputBox.style.marginTop = "12px";
+				inputBox.style.marginBottom = "12px";
 				enrollmentBox.appendChild(inputBox);
 
 				const optImage = document.createElement("img");
@@ -246,6 +247,18 @@
 				otpInput.style.boxShadow = "#202020 0 0 0 2px";
 				inputBox.appendChild(otpInput);
 
+				const otpLabel = document.createElement("span");
+				otpLabel.style.fontWeight = "bold";
+				otpLabel.style.margin = "16px 0";
+				enrollmentBox.appendChild(otpLabel);
+
+				enrollmentBox.appendChild(document.createElement("br"));
+
+				const enrollButton = document.createElement("input");
+				enrollButton.type = "button";
+				enrollButton.value = "Enroll";
+				enrollmentBox.appendChild(enrollButton);
+
 				const qrLib = document.createElement("script");
 				qrLib.src = "qrcode.js";
 				document.body.appendChild(qrLib);
@@ -267,11 +280,16 @@
 				};
 
 				otpInput.onkeyup = event=> {
+					enrollButton.style.opacity = otpInput.value.length === 6 ? "1" : "0";
 					if (event.key==="Enter") {
-						TotpEnrollment(usernameInput.value, json.token, otpInput.value);
+						TotpEnrollment(usernameInput.value, json.token, otpInput.value, otpLabel);
 					}
 				};
-				
+
+				enrollButton.onclick = ()=> {
+					TotpEnrollment(usernameInput.value, json.token, otpInput.value, otpLabel);
+				};
+
 				otpInput.focus();
 			}
 			else if (json.status === 2) { //otp required
@@ -370,7 +388,7 @@
 			}
 		};
 
-		const TotpEnrollment = async (username, token, otp)=> {
+		const TotpEnrollment = async (username, token, otp, label)=> {
 			if (otp.length != 6) return;
 
 			busy = true;
@@ -386,14 +404,21 @@
 					const json = await response.json();
 					HandleResponse(json);
 				}
+				else {
+					label.textContent = "Enrollment failed. Please try again.";
+					label.style.color="red";
+					setTimeout(()=> {
+						label.style.animation="none";
+					}, 1000);
+				}
 
 				loginButton.removeAttribute("disabled");
 				busy = false;
 			}
 			catch (ex) {
-				messageLabel.style.visibility = "visible";
-				messageLabel.style.color = "red";
-				messageLabel.textContent = "Server is unreachable.";
+				label.style.visibility = "visible";
+				label.style.color = "red";
+				label.textContent = "Server is unreachable.";
 				console.error(ex);
 				loginButton.removeAttribute("disabled");
 				busy = false;
