@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using System.Net.Http;
@@ -15,7 +14,7 @@ using Protest.Http;
 
 namespace Protest.Tools;
 
-internal static class SiteCheck {
+internal static class WebsiteCheck {
 
     private class RequestData {
         public bool v1 { get; set; }
@@ -151,14 +150,21 @@ internal static class SiteCheck {
             result.Append("{\"title\":\"DNS\",");
 
             result.Append($"\"result\":[");
+            
+            long starttime = DateTime.UtcNow.Ticks;
             IPAddress[] ips = System.Net.Dns.GetHostAddresses(domain);
+            long endtime = DateTime.UtcNow.Ticks;
+
             for (int i = 0; i < ips.Length; i++) {
                 if (i > 0) result.Append(',');
                 result.Append($"\"{ips[i].ToString()}\"");
             }
             result.Append("],");
 
-            result.Append($"\"status\":\"pass\"");
+            result.Append($"\"status\":\"pass\",");
+
+            result.Append($"\"time\":\"{(endtime - starttime) / 10_000}\"");
+
             result.Append('}');
 
             WsWriteText(ws, result.ToString(), mutex);
@@ -176,10 +182,14 @@ internal static class SiteCheck {
             result.Append("{\"title\":\"TCP\",");
 
             using TcpClient client = new TcpClient();
+
+            long starttime = DateTime.UtcNow.Ticks;
             await client.ConnectAsync(domain, port);
+            long endtime = DateTime.UtcNow.Ticks;
 
             result.Append($"\"result\":[\"{(client.Connected ? "Established" : "Failed")}\"],");
-            result.Append($"\"status\":\"{(client.Connected ? "pass" : "failed")}\"");
+            result.Append($"\"status\":\"{(client.Connected ? "pass" : "failed")}\",");
+            result.Append($"\"time\":\"{(endtime - starttime) / 10_000}\"");
             result.Append('}');
 
             client.Close();
@@ -201,9 +211,11 @@ internal static class SiteCheck {
         try {
             if (protocol == "https") {
                 StringBuilder result = new StringBuilder();
-
+                long starttime = DateTime.UtcNow.Ticks;
                 using HttpClientHandler handler = new HttpClientHandler();
                 handler.ServerCertificateCustomValidationCallback = (HttpRequestMessage request, X509Certificate2 cert, X509Chain chain, SslPolicyErrors errors) => {
+                    long endtime = DateTime.UtcNow.Ticks;
+
                     if (result.Length > 0) return errors == SslPolicyErrors.None;
 
                     result.Append("{\"title\":\"TLS\",");
@@ -220,7 +232,9 @@ internal static class SiteCheck {
 
                     result.Append($"],");
 
-                    result.Append($"\"status\":\"{(errors == SslPolicyErrors.None ? "pass" : "failed")}\"");
+                    result.Append($"\"status\":\"{(errors == SslPolicyErrors.None ? "pass" : "failed")}\",");
+                    result.Append($"\"time\":\"{(endtime - starttime) / 10_000}\"");
+
                     result.Append('}');
 
                     return errors == SslPolicyErrors.None;
@@ -262,7 +276,11 @@ internal static class SiteCheck {
                 VersionPolicy = HttpVersionPolicy.RequestVersionExact
             };
 
+            long starttime = DateTime.UtcNow.Ticks;
+
             using HttpResponseMessage response = await client.SendAsync(request);
+
+            long endtime = DateTime.UtcNow.Ticks;
 
             List<string> resultList = new List<string> {
                 $"HTTP/{response.Version} {(int)response.StatusCode} {response.StatusCode}"
@@ -283,7 +301,10 @@ internal static class SiteCheck {
             }
             result.Append("],");
 
-            result.Append($"\"status\":\"pass\"");
+            result.Append($"\"status\":\"pass\",");
+            
+            result.Append($"\"time\":\"{(endtime - starttime) / 10_000}\"");
+
             result.Append('}');
 
             WsWriteText(ws, result.ToString(), mutex);

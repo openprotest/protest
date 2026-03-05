@@ -1,10 +1,10 @@
-class SiteCheck extends Window {
+class WebsiteCheck extends Window {
 	constructor(args) {
 		super();
 
 		this.args = args ? args : { value: "", v1:true, v2:false, v3:false };
 
-		this.SetTitle("Site check");
+		this.SetTitle("Website check");
 		this.SetIcon("mono/websitecheck.svg");
 
 		this.content.style.padding = "32px 32px 0 32px";
@@ -125,7 +125,7 @@ class SiteCheck extends Window {
 		let server = window.location.href.replace("https://", "").replace("http://", "");
 		if (server.indexOf("/") > 0) server = server.substring(0, server.indexOf("/"));
 
-		this.ws = new WebSocket((KEEP.isSecure ? "wss://" : "ws://") + server + "/ws/sitecheck");
+		this.ws = new WebSocket((KEEP.isSecure ? "wss://" : "ws://") + server + "/ws/websitecheck");
 
 		this.ws.onopen = ()=> {
 			this.result.textContent = "";
@@ -193,6 +193,15 @@ class SiteCheck extends Window {
 		title.style.paddingLeft = "4px";
 		title.textContent = json.title;
 		container.appendChild(title);
+
+		if (json.time) {
+			const timestamp = document.createElement("div");
+			timestamp.textContent = `${json.time}ms`;
+			timestamp.style.position = "absolute";
+			timestamp.style.top = "4px";
+			timestamp.style.right = "32px";
+			container.appendChild(timestamp);
+		}
 
 		const toggleButton = document.createElement("div");
 		toggleButton.style.position = "absolute";

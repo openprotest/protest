@@ -509,7 +509,7 @@ internal static class Auth {
                 path.Add("/ws/dhcp");
                 path.Add("/ws/portscan");
                 path.Add("/ws/traceroute");
-                path.Add("/ws/sitecheck");
+                path.Add("/ws/websitecheck");
                 path.Add("/ws/ipdiscovery");
                 path.Add("/tools/nics/list");
                 path.Add("/tools/bulkping");

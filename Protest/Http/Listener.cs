@@ -456,7 +456,7 @@ internal sealed class Listener {
         case "/ws/ipdiscovery":      Tools.IpDiscovery.WebSocketHandler(ctx);  return true;
         case "/ws/portscan":         Tools.PortScan.WebSocketHandler(ctx);     return true;
         case "/ws/traceroute":       Tools.TraceRoute.WebSocketHandler(ctx);   return true;
-        case "/ws/sitecheck":        Tools.SiteCheck.WebSocketHandler(ctx);    return true;
+        case "/ws/websitecheck":     Tools.WebsiteCheck.WebSocketHandler(ctx);    return true;
         case "/ws/monitor":          Tools.Monitor.WebSocketHandler(ctx);      return true;
         case "/ws/topology":         Tools.Topology.WebSocketHandler(ctx);     return true;
         case "/ws/livestats/device": Tools.LiveStats.DeviceStats(ctx);         return true;
