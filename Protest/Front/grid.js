@@ -722,6 +722,7 @@ class Grid extends Window {
 			const input = document.createElement("input");
 			input.type = "text";
 			input.onchange = event=> this.Cell_onchange(event);
+			input.onkeydown = event=> this.Cell_onkeydown(event);
 
 			if (file in this.mods && columns[i] in this.mods[file]) {
  				input.value = this.mods[file][columns[i]];
@@ -766,6 +767,28 @@ class Grid extends Window {
 		}
 
 		this.UpdateCellIcon(event.target, file, attribute);
+	}
+
+	Cell_onkeydown(event) {
+		let nextElement = null;
+		const parentElement = event.target.parentElement;
+		if (event.key === "ArrowUp") {
+			nextElement = parentElement.previousSibling;
+		}
+		else if (event.key === "ArrowDown") {
+			nextElement = parentElement.nextSibling;
+		}
+		else {
+			return;
+		}
+
+		event.preventDefault();
+		if (nextElement === null) return;
+
+		const cellIndex = Array.from(parentElement.childNodes).findIndex(o=>o === event.target);
+
+
+		nextElement.childNodes[cellIndex].focus();
 	}
 
 	UpdateCellIcon(input, file, attribute) {

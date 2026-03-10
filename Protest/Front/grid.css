@@ -163,14 +163,23 @@
 .grid-entry {
 	width: fit-content;
 	min-width: 300px;
-	height: 32px;
+	height: 34px;
 	margin-left: 50px;
+	border-radius: 2px;
 
 	white-space: nowrap;
 	overflow: hidden;
 
 	content-visibility: auto;
 	contain-intrinsic-size: 33px;
+}
+
+.grid-entry:focus-within {
+	background-color: var(--clr-accent);
+}
+
+.grid-entry > input:focus {
+	box-shadow: var(--clr-dark) 0px 0px 0px 2px inset !important;
 }
 
 .grid-entry > input {

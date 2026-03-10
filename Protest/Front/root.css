@@ -78,8 +78,7 @@ a {
 }
 
 a:focus {
-	animation: focus-outline .3s ease-in;
-	box-shadow: var(--clr-accent) 0 0 0 2px;
+	animation: focus-outline .3s ease-in forwards;
 }
 
 hr {
