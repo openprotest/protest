@@ -38,10 +38,9 @@ internal static class Data {
     public static readonly ArraySegment<byte> CODE_HOST_UNREACHABLE       = new ArraySegment<byte>("{\"error\":\"host is unreachable\"}"u8.ToArray());
     public static readonly ArraySegment<byte> CODE_TCP_CONN_FAILURE       = new ArraySegment<byte>("{\"error\":\"tcp connection failure\"}"u8.ToArray());
     public static readonly ArraySegment<byte> CODE_OTHER_TASK_IN_PROGRESS = new ArraySegment<byte>("{\"error\":\"another task is already in progress\"}"u8.ToArray());
-    public static readonly ArraySegment<byte> CODE_TASK_DONT_EXITSTS      = new ArraySegment<byte>("{\"error\":\"this task no longer exists\"}"u8.ToArray());
+    public static readonly ArraySegment<byte> CODE_TASK_DONT_EXIST        = new ArraySegment<byte>("{\"error\":\"this task no longer exists\"}"u8.ToArray());
 
     public static readonly string DIR_BASE           = $"{AppContext.BaseDirectory}{DELIMITER}protest_";
-    public static readonly string DIR_KNOWLADGE      = $"{DIR_BASE}{DELIMITER}knowledge";
     public static readonly string DIR_RBAC           = $"{DIR_BASE}{DELIMITER}rbac";
     public static readonly string DIR_LOG            = $"{DIR_BASE}{DELIMITER}log";
     public static readonly string DIR_BACKUP         = $"{DIR_BASE}{DELIMITER}backup";

@@ -4,7 +4,6 @@ using System.IO;
 using System.Data;
 using System.DirectoryServices;
 using System.Net;
-using System.Net.Http;
 using System.Net.NetworkInformation;
 using System.Text;
 using System.Text.Json;
@@ -372,13 +371,13 @@ internal static class Fetch {
             if (formatted is not null && formatted.TryGetValue(Protocols.Snmp.Oid.SYSTEM_DESCRIPTOR, out string snmpDescription)) {
                 data.TryAdd("descriptor", new string[] { snmpDescription, "SNMP", string.Empty });
             }
-            if (formatted is not null && formatted.TryGetValue(Protocols.Snmp.Oid.SYSTEM_NAME, out string snmpHostname)) {
+            if (formatted is not null && formatted.TryGetValue(Protocols.Snmp.Oid.SYSTEM_NAME, out string snmpHostname) && !String.IsNullOrEmpty(snmpHostname)) {
                 data.TryAdd("hostname", new string[] { snmpHostname, "SNMP", string.Empty });
             }
-            if (formatted is not null && formatted.TryGetValue(Protocols.Snmp.Oid.SYSTEM_LOCATION, out string snmpLocation)) {
+            if (formatted is not null && formatted.TryGetValue(Protocols.Snmp.Oid.SYSTEM_LOCATION, out string snmpLocation) && !String.IsNullOrEmpty(snmpLocation)) {
                 data.TryAdd("location", new string[] { snmpLocation, "SNMP", string.Empty });
             }
-            if (formatted is not null && formatted.TryGetValue(Protocols.Snmp.Oid.SYSTEM_CONTACT, out string snmpContact)) {
+            if (formatted is not null && formatted.TryGetValue(Protocols.Snmp.Oid.SYSTEM_CONTACT, out string snmpContact) && !String.IsNullOrEmpty(snmpContact)) {
                 data.TryAdd("contact", new string[] { snmpContact, "SNMP", string.Empty });
             }
 
@@ -864,7 +863,7 @@ internal static class Fetch {
     }
 
     public static byte[] CancelTask(string origin) {
-        if (task is null) return Data.CODE_TASK_DONT_EXITSTS.Array;
+        if (task is null) return Data.CODE_TASK_DONT_EXIST.Array;
 
         KeepAlive.Broadcast("{\"action\":\"cancel-fetch\",\"type\":\"devices\"}"u8.ToArray(), "/fetch/status");
         task.RequestCancel(origin);
@@ -874,7 +873,7 @@ internal static class Fetch {
     }
 
     public static byte[] ApproveLastTask(Dictionary<string, string> parameters, string origin) {
-        if (result is null) return Data.CODE_TASK_DONT_EXITSTS.Array;
+        if (result is null) return Data.CODE_TASK_DONT_EXIST.Array;
 
         if (parameters is null) {
             return Data.CODE_INVALID_ARGUMENT.Array;
