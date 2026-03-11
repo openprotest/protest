@@ -107,6 +107,7 @@ internal static class Ldap {
             if (split.Length == 2) {
                 username = split[0].Trim();
                 domain = split[1].Trim();
+                if (String.IsNullOrEmpty(domain)) return false;
             }
             else {
                 return false;
@@ -122,10 +123,11 @@ internal static class Ldap {
             }
         }
 
-        if (domain is null) return false;
-
         try {
-            DirectoryEntry entry = new DirectoryEntry($"LDAP://{NormalizeDomain(domain)}", username, password);
+            string normalizedDomain = NormalizeDomain(domain);
+            if (String.IsNullOrEmpty(normalizedDomain)) return false;
+
+            DirectoryEntry entry = new DirectoryEntry($"LDAP://{normalizedDomain}", username, password);
             object o = entry.NativeObject;
 
             string escapedUsername = EscapeLdapValue(username);
