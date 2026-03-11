@@ -611,6 +611,7 @@ class Grid extends Window {
 			if (!this.attributeElements[i].checkbox.checked) continue;
 			const columnHeading = document.createElement("div");
 			columnHeading.textContent = this.attributeElements[i].name;
+			columnHeading.style.textTransform = LOADER.alwaysUppercase.includes(this.attributeElements[i].name) ? "uppercase" : "capitalize";
 			this.heading.appendChild(columnHeading);
 
 			const columnOptions = document.createElement("div");
@@ -775,8 +776,12 @@ class Grid extends Window {
 		if (event.key === "ArrowUp") {
 			nextElement = parentElement.previousSibling;
 		}
-		else if (event.key === "ArrowDown") {
+		else if (event.key === "ArrowDown" || event.key === "Enter") {
 			nextElement = parentElement.nextSibling;
+		}
+		else if (event.key === "PageUp" || event.key === "PageDown") {
+			event.preventDefault();
+			return;
 		}
 		else {
 			return;
@@ -786,9 +791,18 @@ class Grid extends Window {
 		if (nextElement === null) return;
 
 		const cellIndex = Array.from(parentElement.childNodes).findIndex(o=>o === event.target);
+		const cell = nextElement.childNodes[cellIndex];
 
+		if (cell) {
+			if (nextElement.offsetTop <= this.table.scrollTop + 52) {
+				this.table.scrollTop = this.table.scrollTop - 34;
+			}
+			else if (nextElement.offsetTop > this.table.scrollTop + this.table.clientHeight - cell.clientHeight - 34) {
+				this.table.scrollTop = Math.min(nextElement.offsetTop - this.table.clientHeight + cell.clientHeight + 34, this.table.scrollHeight);
+			}
 
-		nextElement.childNodes[cellIndex].focus();
+			cell.focus();
+		}
 	}
 
 	UpdateCellIcon(input, file, attribute) {

@@ -186,6 +186,7 @@
 	display: inline-block;
 	box-sizing: content-box;
 	width: 230px;
+	height: 22px;
 	margin: 2px !important;
 	transition: 0s;
 
