@@ -10,6 +10,38 @@ using System.Xml.Linq;
 namespace Protest.Protocols;
 
 internal static class Ldap {
+    private static string NormalizeDomain(string domain) {
+        if (String.IsNullOrWhiteSpace(domain)) return null;
+
+        domain = domain.Trim();
+        foreach (char c in domain) {
+            if (!((c >= 'a' && c <= 'z') ||
+                  (c >= 'A' && c <= 'Z') ||
+                  (c >= '0' && c <= '9') ||
+                  c == '-' || c == '.')) {
+                return null;
+            }
+        }
+        return domain;
+    }
+
+    private static string EscapeLdapValue(string value) {
+        if (string.IsNullOrEmpty(value)) return string.Empty;
+
+        StringBuilder escaped = new StringBuilder(value.Length);
+        foreach (char c in value) {
+            switch (c) {
+            case '\\': escaped.Append("\\5c"); break;
+            case '*' : escaped.Append("\\2a"); break;
+            case '(':  escaped.Append("\\28"); break;
+            case ')':  escaped.Append("\\29"); break;
+            case '\0': escaped.Append("\\00"); break;
+            default:   escaped.Append(c);      break;
+            }
+        }
+
+        return escaped.ToString();
+    }
 
     [SupportedOSPlatform("windows")]
     public static string[] GetAllWorkstations(string domain) {
@@ -71,12 +103,15 @@ internal static class Ldap {
         string domain = null;
 
         if (username.Contains('@')) {
-            domain = username.Split('@')[1].Trim();
-            username = username.Split('@')[0].Trim();
+            string[] split = username.Split('@');
+            if (split.Length == 2) {
+                username = split[0].Trim();
+                domain = NormalizeDomain(split[1].Trim());
+            }
         }
         else {
             try {
-                domain = IPGlobalProperties.GetIPGlobalProperties()?.DomainName ?? null;
+                domain = NormalizeDomain(IPGlobalProperties.GetIPGlobalProperties()?.DomainName ?? null);
             }
             catch { }
         }
@@ -86,14 +121,15 @@ internal static class Ldap {
         try {
             DirectoryEntry entry = new DirectoryEntry($"LDAP://{domain}", username, password);
             object o = entry.NativeObject;
+            
+            string escapedUsername = EscapeLdapValue(username);
 
             using DirectorySearcher searcher = new DirectorySearcher(entry);
-            searcher.Filter = $"(SAMAccountName={username})";
+            searcher.Filter = $"(SAMAccountName={escapedUsername})";
             searcher.PropertiesToLoad.Add("cn");
 
             SearchResult result = searcher.FindOne();
             if (result is null) return false;
-
         }
         catch {
             return false;
