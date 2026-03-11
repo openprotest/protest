@@ -100,7 +100,7 @@ internal static class Ldap {
 
     [SupportedOSPlatform("windows")]
     public static bool TryDirectoryAuthentication(string username, string password) {
-        string domain = null;
+        string domain;
 
         if (username.Contains('@')) {
             string[] split = username.Split('@');
@@ -108,12 +108,18 @@ internal static class Ldap {
                 username = split[0].Trim();
                 domain = NormalizeDomain(split[1].Trim());
             }
+            else {
+                return false;
+            }
         }
         else {
             try {
                 domain = NormalizeDomain(IPGlobalProperties.GetIPGlobalProperties()?.DomainName ?? null);
+                if (String.IsNullOrEmpty(domain)) return false;
             }
-            catch { }
+            catch {
+                return false;
+            }
         }
 
         if (domain is null) return false;
@@ -121,7 +127,7 @@ internal static class Ldap {
         try {
             DirectoryEntry entry = new DirectoryEntry($"LDAP://{domain}", username, password);
             object o = entry.NativeObject;
-            
+
             string escapedUsername = EscapeLdapValue(username);
 
             using DirectorySearcher searcher = new DirectorySearcher(entry);
@@ -130,12 +136,12 @@ internal static class Ldap {
 
             SearchResult result = searcher.FindOne();
             if (result is null) return false;
+
+            return true;
         }
         catch {
             return false;
         }
-
-        return true;
     }
 
     public static byte[] NetworkInfo() {
