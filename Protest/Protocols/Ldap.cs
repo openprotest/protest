@@ -100,33 +100,25 @@ internal static class Ldap {
 
     [SupportedOSPlatform("windows")]
     public static bool TryDirectoryAuthentication(string username, string password) {
-        string domain;
+        string normalizedDomain;
+
+        try {
+            string domain = IPGlobalProperties.GetIPGlobalProperties()?.DomainName ?? null;
+            if (String.IsNullOrEmpty(domain)) return false;
+   
+            normalizedDomain = NormalizeDomain(domain);
+            if (String.IsNullOrEmpty(normalizedDomain)) return false;
+        }
+        catch {
+            return false;
+        }
 
         if (username.Contains('@')) {
             string[] split = username.Split('@');
-            if (split.Length == 2) {
-                username = split[0].Trim();
-                domain = split[1].Trim();
-                if (String.IsNullOrEmpty(domain)) return false;
-            }
-            else {
-                return false;
-            }
-        }
-        else {
-            try {
-                domain = IPGlobalProperties.GetIPGlobalProperties()?.DomainName ?? null;
-                if (String.IsNullOrEmpty(domain)) return false;
-            }
-            catch {
-                return false;
-            }
+            username = split[0].Trim();
         }
 
         try {
-            string normalizedDomain = NormalizeDomain(domain);
-            if (String.IsNullOrEmpty(normalizedDomain)) return false;
-
             DirectoryEntry entry = new DirectoryEntry($"LDAP://{normalizedDomain}", username, password);
             object o = entry.NativeObject;
 
