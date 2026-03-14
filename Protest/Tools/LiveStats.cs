@@ -144,7 +144,9 @@ internal static class LiveStats {
                         try {
                             using System.Net.NetworkInformation.Ping p = new System.Net.NetworkInformation.Ping();
                             PingReply reply = await p.SendPingAsync(pingArray[index], 200);
-                            if (reply.Status == IPStatus.Success) {
+
+                            switch ((int)reply.Status) {
+                            case (int)IPStatus.Success:
                                 if (firstAlive is null) {
                                     firstAlive = pingArray[index];
                                     firstReply = reply;
@@ -152,13 +154,21 @@ internal static class LiveStats {
                                 WsWriteText(ws, $"{{\"echoReply\":\"{reply.RoundtripTime}\",\"for\":\"{pingArray[index]}\",\"source\":\"ICMP\"}}", mutex);
                                 WsWriteText(ws, $"{{\"info\":\"Last seen {pingArray[index]}: Just now\",\"source\":\"ICMP\"}}", mutex);
                                 LastSeen.Seen(pingArray[index]);
-                            }
-                            else if (reply.Status == IPStatus.TimedOut) {
+                                break;
+
+                            case (int)IPStatus.TimedOut:
                                 WsWriteText(ws, $"{{\"echoReply\":\"Timed out\",\"for\":\"{pingArray[index]}\",\"source\":\"ICMP\"}}", mutex);
-                            }
-                            else {
+                                break;
+
+                            case 11050:
+                                WsWriteText(ws, $"{{\"echoReply\":\"General failure\",\"for\":\"{pingArray[index]}\",\"source\":\"ICMP\"}}", mutex);
+                                break;
+
+                            default:
                                 WsWriteText(ws, $"{{\"echoReply\":\"{Data.EscapeJsonText(reply.Status.ToString())}\",\"for\":\"{pingArray[index]}\",\"source\":\"ICMP\"}}", mutex);
+                                break;
                             }
+
                         }
                         catch {
                             WsWriteText(ws, $"{{\"echoReply\":\"Error\",\"for\":\"{Data.EscapeJsonText(pingArray[index])}\",\"source\":\"ICMP\"}}", mutex);
