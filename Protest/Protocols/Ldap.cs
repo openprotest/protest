@@ -50,7 +50,10 @@ internal static class Ldap {
         SearchResultCollection result = null;
 
         try {
-            DirectoryEntry directoryEntry = new DirectoryEntry($"LDAP://{domain}");
+            string normalizeDomain = NormalizeDomain(domain);
+            if (String.IsNullOrWhiteSpace(normalizeDomain)) return null;
+
+            DirectoryEntry directoryEntry = new DirectoryEntry($"LDAP://{normalizeDomain}");
             using DirectorySearcher searcher = new DirectorySearcher(directoryEntry);
             searcher.Filter = "(objectClass=computer)";
             //result = searcher.FindAll().Cast<SearchResult>().ToArray();
@@ -69,6 +72,8 @@ internal static class Ldap {
             array[i] = result[i].Properties.Contains("name") ? result[i].Properties["name"][0].ToString() : String.Empty;
         }
 
+        result?.Dispose();
+
         return array;
     }
 
@@ -76,7 +81,10 @@ internal static class Ldap {
     public static string[] GetAllUsers(string domain) {
         SearchResultCollection result = null;
         try {
-            DirectoryEntry dir = new DirectoryEntry($"LDAP://{domain}");
+            string normalizeDomain = NormalizeDomain(domain);
+            if (String.IsNullOrWhiteSpace(normalizeDomain)) return null;
+
+            DirectoryEntry dir = new DirectoryEntry($"LDAP://{normalizeDomain}");
             using DirectorySearcher searcher = new DirectorySearcher(dir);
             searcher.Filter = "(&(objectClass=user)(objectCategory=person))";
             result = searcher.FindAll();
@@ -94,6 +102,8 @@ internal static class Ldap {
                 list.Add(o.Properties["userPrincipalName"][0].ToString());
             }
         }
+
+        result?.Dispose();
 
         return list.ToArray();
     }
@@ -122,10 +132,8 @@ internal static class Ldap {
             DirectoryEntry entry = new DirectoryEntry($"LDAP://{normalizedDomain}", username, password);
             object o = entry.NativeObject;
 
-            string escapedUsername = EscapeLdapValue(username);
-
             using DirectorySearcher searcher = new DirectorySearcher(entry);
-            searcher.Filter = $"(SAMAccountName={escapedUsername})";
+            searcher.Filter = $"(SAMAccountName={EscapeLdapValue(username)})";
             searcher.PropertiesToLoad.Add("cn");
 
             SearchResult result = searcher.FindOne();
@@ -165,9 +173,9 @@ internal static class Ldap {
                     string domain = IPGlobalProperties.GetIPGlobalProperties().DomainName;
 
                     string result = "{";
-                    result += $"\"firstIp\":\"{firstAddress}\",";
-                    result += $"\"lastIp\":\"{lastAddress}\",";
-                    result += $"\"domain\":\"{domain}\"";
+                    result += $"\"firstIp\":\"{Data.EscapeJsonText(firstAddress)}\",";
+                    result += $"\"lastIp\":\"{Data.EscapeJsonText(lastAddress)}\",";
+                    result += $"\"domain\":\"{Data.EscapeJsonText(domain)}\"";
                     result += "}";
 
                     return Encoding.UTF8.GetBytes(result);
@@ -182,17 +190,21 @@ internal static class Ldap {
     public static SearchResult GetWorkstation(string name) {
         if (String.IsNullOrEmpty(name)) return null;
 
-        string domain = null;
+        string normalizedDomain = null;
         try {
-            domain = IPGlobalProperties.GetIPGlobalProperties()?.DomainName ?? null;
+            string domain = IPGlobalProperties.GetIPGlobalProperties()?.DomainName ?? null;
+            if (String.IsNullOrEmpty(domain)) return null;
+
+            normalizedDomain = NormalizeDomain(domain);
+            if (String.IsNullOrEmpty(normalizedDomain)) return null;
         }
         catch { }
 
         if (name.Contains('.')) name = name.Split('.')[0];
 
-        DirectoryEntry directoryEntry = new DirectoryEntry($"LDAP://{domain}");
+        DirectoryEntry directoryEntry = new DirectoryEntry($"LDAP://{normalizedDomain}");
         using DirectorySearcher searcher = new DirectorySearcher(directoryEntry);
-        searcher.Filter = $"(&(objectClass=computer)(cn={name}))";
+        searcher.Filter = $"(&(objectClass=computer)(cn={EscapeLdapValue(name)}))";
 
         SearchResult result = null;
         try {
@@ -210,18 +222,22 @@ internal static class Ldap {
     public static SearchResult GetUser(string username) {
         if (String.IsNullOrEmpty(username)) return null;
 
-        string domain = null;
+        string normalizedDomain = null;
         try {
-            domain = IPGlobalProperties.GetIPGlobalProperties()?.DomainName ?? null;
+            string domain = IPGlobalProperties.GetIPGlobalProperties()?.DomainName ?? null;
+            if (String.IsNullOrEmpty(domain)) return null;
+
+            normalizedDomain = NormalizeDomain(domain);
+            if (String.IsNullOrEmpty(normalizedDomain)) return null;
         }
         catch { }
 
-        using DirectoryEntry directoryEntry = new DirectoryEntry($"LDAP://{domain}");
+        using DirectoryEntry directoryEntry = new DirectoryEntry($"LDAP://{normalizedDomain}");
         SearchResult result = null;
 
         try {
             using DirectorySearcher searcher = new DirectorySearcher(directoryEntry);
-            searcher.Filter = $"(&(objectClass=user)(objectCategory=person)(userPrincipalName={username}))";
+            searcher.Filter = $"(&(objectClass=user)(objectCategory=person)(userPrincipalName={EscapeLdapValue(username)}))";
             result = searcher.FindOne();
         }
         catch { }
@@ -231,7 +247,7 @@ internal static class Ldap {
                 if (username.IndexOf("@") > -1) username = username.Split('@')[0];
                 using DirectorySearcher searcher = new DirectorySearcher(directoryEntry);
                 //searcher.Filter = "(&(objectClass=user)(objectCategory=person))";
-                searcher.Filter = $"(&(objectClass=user)(objectCategory=person)(cn={username}))";
+                searcher.Filter = $"(&(objectClass=user)(objectCategory=person)(cn={EscapeLdapValue(username)}))";
                 result = searcher.FindOne();
             }
             catch { }
