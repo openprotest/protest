@@ -132,7 +132,7 @@ internal static class Topology {
                     IList<Variable> lldpRemote = Polling.SnmpQuery(ipAddress, snmpProfile, [Oid.LLDP_REMOTE_SYS_DATA], Polling.SnmpOperation.Walk);
 
                     if (lldpLocal is null || lldpRemote is null) {
-                        WsWriteText(ws, Encoding.UTF8.GetBytes($"{{\"nosnmp\":\"{candidate.filename}\"}}"), mutex);
+                        WsWriteText(ws, Encoding.UTF8.GetBytes($"{{\"nolldp\":\"{candidate.filename}\"}}"), mutex);
                         WsWriteText(ws, Encoding.UTF8.GetBytes($"{{\"over\":\"{candidate.filename}\"}}"), mutex);
                         return;
                     }
@@ -185,6 +185,7 @@ internal static class Topology {
 
                 }
                 catch (Exception ex) {
+                    WsWriteText(ws, Encoding.UTF8.GetBytes($"{{\"nosnmp\":\"{candidate.filename}\"}}"), mutex);
                     WsWriteText(ws, Encoding.UTF8.GetBytes($"{{\"over\":\"{candidate.filename}\"}}"), mutex);
                     Logger.Error(ex);
                 }

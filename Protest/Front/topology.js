@@ -614,6 +614,13 @@ class Topology extends Window {
 					device.element.fill.style.fill = "var(--clr-error)";
 				}
 			}
+			else if (json.nolldp && !forbiddenKeys.includes(json.nolldp)) {
+				const device = this.devices[json.nolldp];
+				if (device) {
+					device.nolldp = true;
+					device.element.fill.style.fill = "var(--clr-orange)";
+				}
+			}
 			else if (json.lldp && !forbiddenKeys.includes(json.lldp.file)) {
 				const device = this.devices[json.lldp.file];
 				if (device && typeof json.lldp === "object") {
@@ -859,7 +866,7 @@ class Topology extends Window {
 		let count = 0;
 
 		for (const file in this.devices) {
-			if (this.devices[file].nosnmp) {
+			if (this.devices[file].nosnmp || this.devices[file].nolldp) {
 				const element = this.devices[file].element;
 				let x = Topology.MAX_WIDTH + (count % 2) * 150;
 				let y = 50 + Math.floor(count / 2) * 150;
@@ -1163,7 +1170,7 @@ class Topology extends Window {
 			}
 			item.style.backgroundColor = "var(--clr-select)";
 
-			this.SelectDevice(device.initial.file, portIndex);
+			this.SelectDevice(device.initial.file, portIndex.toString());
 
 			device.element.root.scrollIntoView({behavior: "smooth", block: "center", inline: "center"});
 		};
@@ -2403,7 +2410,7 @@ class Topology extends Window {
 			y       : y
 		});
 
-		element.fill.setAttribute("fill", "rgb(232,118,0)");
+		element.fill.setAttribute("fill", "rgb(52,169,228)");
 
 		const lldp = {
 			localPortCount       : 0,
@@ -2482,6 +2489,41 @@ class Topology extends Window {
 		else {
 			deviceB.links[portIndexB] = key;
 		}
+
+		let lastColor = null;
+
+		element.line.onmouseenter = e=> {
+			lastColor = element.line.getAttribute("stroke");
+			element.line.setAttribute("stroke", "var(--clr-accent)");
+			element.line.setAttribute("stroke-width", 5);
+			element.capA.setAttribute("r", 4);
+			element.capA.setAttribute("fill", "var(--clr-accent)");
+			element.capB.setAttribute("r", 4);
+			element.capB.setAttribute("fill", "var(--clr-accent)");
+			this.linesLayer.appendChild(element.line);
+			this.linesLayer.appendChild(element.capA);
+			this.linesLayer.appendChild(element.capB);
+		};
+
+		element.line.onmouseleave = e=> {
+			element.line.setAttribute("stroke", lastColor ?? "#c0c0c0");
+			element.line.setAttribute("stroke-width", 3);
+			element.capA.setAttribute("r", 3);
+			element.capA.setAttribute("fill", lastColor ?? "#c0c0c0");
+			element.capB.setAttribute("r", 3);
+			element.capB.setAttribute("fill", lastColor ?? "#c0c0c0");
+		};
+
+		element.line.onmousedown = e=> e.stopPropagation();
+
+		element.line.onclick = e=> {
+			if (deviceA.initial.file === this.selected?.initial.file) {
+				this.SelectDevice(deviceB.initial.file, portIndexB.toString());
+			}
+			else {
+				this.SelectDevice(deviceA.initial.file, portIndexA.toString());
+			}
+		};
 
 		return entry;
 	}
@@ -2832,7 +2874,7 @@ class Topology extends Window {
 	}
 
 	PopulateEndpointDevices(device) {
-		if (device.nosnmp) return;
+		if (device.nosnmp || device.nolldp) return;
 		if (!("lldp" in device)) return;
 		if (device.lldp.localPortCount < 1) return;
 
@@ -3098,7 +3140,14 @@ class Topology extends Window {
 			const snmpLabel = document.createElement("div");
 			snmpLabel.className = "topology-error-message";
 			snmpLabel.textContent = "SNMP agent is unreachable";
-			snmpLabel.setAttribute("nosnmp", true);
+			snmpLabel.setAttribute("nonsmp", true);
+			this.sidePane.appendChild(snmpLabel);
+		}
+		if (device.nolldp) {
+			const snmpLabel = document.createElement("div");
+			snmpLabel.className = "topology-error-message";
+			snmpLabel.textContent = "LLDP unavailable";
+			snmpLabel.setAttribute("nolldp", true);
 			this.sidePane.appendChild(snmpLabel);
 		}
 		else if (device.isInferred) {
@@ -3545,7 +3594,7 @@ class Topology extends Window {
 
 			if (file === null) {
 				remoteBox.classList.add("topology-inferred");
-				remoteBox.style.backgroundImage = "url(mono/inferred.svg), radial-gradient(circle,rgb(232,118,0) 0%, rgb(232,118,0) 80%, #000 100%)";
+				remoteBox.style.backgroundImage = "url(mono/inferred.svg), radial-gradient(circle,rgb(52,169,228) 0%, rgb(52,169,228) 80%, #000 100%)";
 			}
 
 			dbFile = file;

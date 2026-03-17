@@ -160,13 +160,18 @@
 	border-radius: 6px;
 }
 
-.topology-error-message[nosnmp]::before {
+.topology-error-message[nonsmp]::before {
 	background-color: var(--clr-error);
 	animation: blink 2s infinite;
 }
 
+.topology-error-message[nolldp]::before {
+	background-color: var(--clr-orange);
+	animation: blink 2s infinite;
+}
+
 .topology-error-message[inferred]::before {
-	background-color: rgb(240,128,24);
+	background-color: rgb(52,169,228);
 }
 
 .topology-vlan-list,
