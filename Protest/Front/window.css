@@ -32,6 +32,8 @@
 	font-size: 16px;
 	font-weight: 600;
 	line-height: 28px;
+
+	transition: opacity .1s;
 }
 
 .window>.control {
@@ -94,6 +96,8 @@
 	background-repeat: no-repeat;
 	background-size: cover;
 	filter: invert(1);
+
+	transition: opacity .1s;
 }
 
 .win-toolbar {

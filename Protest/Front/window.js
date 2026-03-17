@@ -817,11 +817,24 @@ class Window {
 			document.getSelection().removeAllRanges();
 
 		for (let i = 0; i < WIN.array.length; i++) {
+			WIN.array[i].header.style.opacity = ".5";
+			WIN.array[i].titleIcon.style.opacity = ".5";
+			WIN.array[i].closeButton.style.opacity = ".5";
+			WIN.array[i].maximizeButton.style.opacity = ".5";
+			WIN.array[i].minimizeButton.style.opacity = ".5";
+			WIN.array[i].popOutButton.style.opacity = ".5";
 			WIN.array[i].task.className = "bar-icon";
 			WIN.array[i].task.style.backgroundColor = "rgba(0,0,0,0)";
 			WIN.array[i].icon.style.filter = "none";
 		}
 
+		this.header.style.opacity = "1";
+		this.titleIcon.style.opacity = "1";
+		this.closeButton.style.opacity = "1";
+
+		this.maximizeButton.style.opacity = "1";
+		this.minimizeButton.style.opacity = "1";
+		this.popOutButton.style.opacity = "1";
 		this.task.className = "bar-icon bar-icon-focused";
 		this.task.style.backgroundColor = "rgb(64,64,64)";
 		this.icon.style.filter = "brightness(6)";
