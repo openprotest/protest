@@ -3,7 +3,7 @@ class UserView extends View {
 		"type", "title", "department", "division", "company",
 
 		["mono/user.svg", "general"],
-		"first name", "middle name", "last name", "display name", "employee id",
+		"first name", "middle name", "last name", "display name", "employee id", "site",
 
 		["mono/credential.svg", "authentication"],
 		"domain", "username", "password",
