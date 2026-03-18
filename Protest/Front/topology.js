@@ -2490,28 +2490,16 @@ class Topology extends Window {
 			deviceB.links[portIndexB] = key;
 		}
 
-		let lastColor = null;
-
-		element.line.onmouseenter = e=> {
-			lastColor = element.line.getAttribute("stroke");
-			element.line.setAttribute("stroke", "var(--clr-accent)");
+		element.line.onmouseenter = ()=> {
 			element.line.setAttribute("stroke-width", 5);
 			element.capA.setAttribute("r", 4);
-			element.capA.setAttribute("fill", "var(--clr-accent)");
 			element.capB.setAttribute("r", 4);
-			element.capB.setAttribute("fill", "var(--clr-accent)");
-			this.linesLayer.appendChild(element.line);
-			this.linesLayer.appendChild(element.capA);
-			this.linesLayer.appendChild(element.capB);
 		};
 
-		element.line.onmouseleave = e=> {
-			element.line.setAttribute("stroke", lastColor ?? "#c0c0c0");
+		element.line.onmouseleave = ()=> {
 			element.line.setAttribute("stroke-width", 3);
 			element.capA.setAttribute("r", 3);
-			element.capA.setAttribute("fill", lastColor ?? "#c0c0c0");
 			element.capB.setAttribute("r", 3);
-			element.capB.setAttribute("fill", lastColor ?? "#c0c0c0");
 		};
 
 		element.line.onmousedown = e=> e.stopPropagation();
