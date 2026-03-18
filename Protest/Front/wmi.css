@@ -6,8 +6,8 @@
 	top: 8px;
 	height: 122px;
 	display: grid;
-	grid-template-columns: 72px auto 80px;
-	grid-template-rows: 32px 32px 56px auto;
+	grid-template-columns: 88px auto 80px;
+	grid-template-rows: 32px 32px 32px 56px auto;
 	transition: .2s;
 }
 
@@ -15,7 +15,7 @@
 	all: unset;
 	position: absolute;
 	right: 8px;
-	top: 96px;
+	top: 128px;
 	width: 28px !important;
 	min-width: 28px !important;
 	height: 28px!important;
@@ -40,7 +40,7 @@
 	position: absolute;
 	left: 4px;
 	right: 4px;
-	top: 136px;
+	top: 168px;
 	bottom: 4px;
 	transition: .4s;
 }

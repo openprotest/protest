@@ -30,10 +30,10 @@ internal static class Wmi {
         };
         return Scope(host, impersonationLevel, username, password);
     }*/
-    public static ManagementScope Scope(string host, int timeout = 0) {
-        return Scope(host, ImpersonationLevel.Impersonate, String.Empty, String.Empty, timeout);
+    public static ManagementScope Scope(string host, string @namespace = "cimv2", int timeout = 0) {
+        return Scope(host, @namespace, ImpersonationLevel.Impersonate, String.Empty, String.Empty, timeout);
     }
-    public static ManagementScope Scope(string host, ImpersonationLevel impersonation, string username, string password, int timeout = 0) {
+    public static ManagementScope Scope(string host, string @namespace, ImpersonationLevel impersonation, string username, string password, int timeout = 0) {
         ConnectionOptions options = new ConnectionOptions();
         if (username?.Length > 0) options.Username = username;
         if (password?.Length > 0) options.Password = password;
@@ -43,7 +43,7 @@ internal static class Wmi {
 
         ManagementScope scope;
         try {
-            scope = new ManagementScope($"\\\\{host}\\root\\cimv2", options);
+            scope = new ManagementScope($"\\\\{host}\\root\\{@namespace}", options);
 
             if (timeout > 0) {
                 using CancellationTokenSource tokenSource = new CancellationTokenSource();
@@ -109,8 +109,8 @@ internal static class Wmi {
         }
     }
 
-    public static string WmiGet(string host, string className, string property, bool isArray, FormatMethodPtr format = null) {
-        ManagementScope scope = Scope(host);
+    public static string WmiGet(string host, string @namespace, string className, string property, bool isArray, FormatMethodPtr format = null) {
+        ManagementScope scope = Scope(host, @namespace);
         if (scope is null) return String.Empty;
         WmiGet(scope, className, property, isArray, format);
         return String.Empty;
@@ -166,12 +166,12 @@ internal static class Wmi {
         if (value != null && value.Length > 0) data.Add(label, value);
     }
 
-    public static Dictionary<string, string> WmiFetch(string host) {
+    public static Dictionary<string, string> WmiFetch(string host, string @namespace = "cimv2") {
         Dictionary<string, string> data = new Dictionary<string, string>();
 
         string type = String.Empty;
 
-        ManagementScope scope = Scope(host);
+        ManagementScope scope = Scope(host, @namespace);
         if (scope is not null) {
             try {
                 using ManagementObjectCollection moc = new ManagementObjectSearcher(scope, new SelectQuery("Win32_SystemEnclosure")).Get();
@@ -364,14 +364,18 @@ internal static class Wmi {
             return null;
         }
 
+        if (!parameters.TryGetValue("namespace", out string @namespace)) {
+            @namespace = "cimv2";
+        }
+
         using StreamReader reader = new StreamReader(ctx.Request.InputStream, ctx.Request.ContentEncoding);
         string query = reader.ReadToEnd().Trim();
 
-        return Query(host, query);
+        return Query(host, @namespace, query);
     }
 
-    public static byte[] Query(string host, string query) {
-        ManagementScope scope = Scope(host);
+    public static byte[] Query(string host, string @namespace, string query) {
+        ManagementScope scope = Scope(host, @namespace);
         if (scope is null) return null;
 
         ManagementObjectCollection moc;

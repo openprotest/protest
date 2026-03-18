@@ -31,14 +31,63 @@ class Wmi extends Window {
 		if (this.args.target != null) this.targetInput.value = this.args.target;
 		wmiInput.appendChild(this.targetInput);
 
+		const namespaceLabel = document.createElement("div");
+		namespaceLabel.style.lineHeight = "28px";
+		namespaceLabel.style.gridArea = "2 / 1";
+		namespaceLabel.textContent = "Namespace:";
+		wmiInput.appendChild(namespaceLabel);
+
+		this.namespaceInput = document.createElement("select");
+		this.namespaceInput.style.gridArea = "2 / 2";
+		if (this.args.namespace != null) this.namespaceInput.value = this.args.namespace;
+		wmiInput.appendChild(this.namespaceInput);
+
+		const namespaces = [
+			"subscription",
+			"DEFAULT",
+			"CIMV2",
+			"msdtc",
+			"Cli",
+			"SECURITY",
+			"HyperVCluster",
+			"SecurityCenter2",
+			"RSOP",
+			"PEH",
+			"StandardCimv2",
+			"WMI",
+			"directory",
+			"Policy",
+			"virtualization",
+			"Interop",
+			"Hardware",
+			"ServiceModel",
+			"SecurityCenter",
+			"Microsoft",
+			"Appv"
+		];
+
+		for (let i=0; i<namespaces.length; i++) {
+			const option = document.createElement("option");
+			option.value = namespaces[i];
+			option.textContent = namespaces[i];
+			this.namespaceInput.appendChild(option);
+		}
+
+		if (this.args.namespace != null) {
+			this.namespaceInput.value = this.args.namespace;
+		}
+		else {
+			this.namespaceInput.value = "CIMV2";
+		}
+
 		const queryLabel = document.createElement("div");
 		queryLabel.textContent = "Query:";
-		queryLabel.style.gridArea = "2 / 1";
+		queryLabel.style.gridArea = "3 / 1";
 		wmiInput.appendChild(queryLabel);
 
 		this.queryInput = document.createElement("textarea");
 		this.queryInput.placeholder = "SELECT * FROM Win32_BIOS WHERE Status = \"OK\"";
-		this.queryInput.style.gridArea = "2 / 2 / 2 span / auto";
+		this.queryInput.style.gridArea = "3 / 2 / 2 span / auto";
 		//this.queryInput.style.fontFamily = "monospace";
 		this.queryInput.style.resize = "none";
 		if (this.args.query != null) this.queryInput.value = this.args.query;
@@ -47,14 +96,14 @@ class Wmi extends Window {
 		const helperButton = document.createElement("input");
 		helperButton.type = "button";
 		helperButton.value = "...";
-		helperButton.style.gridArea = "2 / 3";
+		helperButton.style.gridArea = "3 / 3";
 		wmiInput.appendChild(helperButton);
 
 		this.executeButton = document.createElement("input");
 		this.executeButton.type = "button";
 		this.executeButton.value = "Execute";
 		this.executeButton.style.height = "auto";
-		this.executeButton.style.gridArea = "3 / 3";
+		this.executeButton.style.gridArea = "4 / 3";
 		wmiInput.appendChild(this.executeButton);
 
 		const toggleButton = document.createElement("input");
@@ -66,8 +115,9 @@ class Wmi extends Window {
 		this.plotBox.className = "wmi-plot no-results";
 		this.content.appendChild(this.plotBox);
 
-		this.targetInput.oninput = ()=> { this.args.target = this.targetInput.value };
-		this.queryInput.oninput = ()=> { this.args.query = this.queryInput.value };
+		this.targetInput.oninput    = ()=> { this.args.target = this.targetInput.value };
+		this.namespaceInput.onchange = ()=> { this.args.namespace = this.namespaceInput.value };
+		this.queryInput.oninput     = ()=> { this.args.query = this.queryInput.value };
 
 		helperButton.onclick = ()=> this.SequelAssistant();
 
@@ -75,12 +125,12 @@ class Wmi extends Window {
 
 		toggleButton.onclick = ()=> {
 			if (wmiInput.style.visibility === "hidden") {
-				toggleButton.style.top = "96px";
+				toggleButton.style.top = "128px";
 				toggleButton.style.transform = "rotate(-180deg)";
 				wmiInput.style.visibility = "visible";
 				wmiInput.style.opacity = "1";
 				wmiInput.style.transform = "none";
-				this.plotBox.style.top = "136px";
+				this.plotBox.style.top = "168px";
 				this.args.hideInput = false;
 			}
 			else {
@@ -377,7 +427,7 @@ class Wmi extends Window {
 		const spinner = document.createElement("div");
 		spinner.className = "spinner";
 		spinner.style.textAlign = "left";
-		spinner.style.marginTop = "160px";
+		spinner.style.marginTop = "192px";
 		spinner.style.marginBottom = "32px";
 		spinner.appendChild(document.createElement("div"));
 		this.content.appendChild(spinner);
@@ -388,7 +438,7 @@ class Wmi extends Window {
 		this.plotBox.textContent = "";
 
 		try {
-			const response = await fetch(`wmi/query?target=${encodeURIComponent(this.targetInput.value)}`, {
+			const response = await fetch(`wmi/query?target=${encodeURIComponent(this.targetInput.value)}&namespace=${this.namespaceInput.value}`, {
 				method: "POST",
 				body: query
 			});
