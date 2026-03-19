@@ -16,7 +16,7 @@ internal static class Chat {
 
     private static readonly List<Message> history = new List<Message>(32);
     private static readonly Lock mutex = new Lock();
-    private const string defaultColor = "#A0A0A0";
+    private const string defaultColor = "#606060";
 
     public static void TextHandler(ConcurrentDictionary<string, string> dictionary, string origin) {
         if (!Auth.rbac.TryGetValue(origin, out Auth.AccessControl rbac) && origin != "loopback") { return; }

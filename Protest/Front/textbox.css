@@ -11,6 +11,7 @@ select {
 	outline: 0;
 	border: none;
 	border-radius: 4px;
+	color: var(--clr-dark);
 	background-color: var(--clr-control);
 	background-position: calc(100%);
 	padding: 4px 8px;

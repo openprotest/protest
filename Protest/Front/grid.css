@@ -14,7 +14,6 @@
 	min-width: 28px !important;
 	height: 28px !important;
 	min-height: 28px !important;
-	background-color: transparent !important;
 	background-size: 24px 24px;
 	background-position: center;
 	background-repeat: no-repeat;
@@ -38,7 +37,7 @@
 	top: 72px;
 	bottom: 0px;
 	width: 250px;
-
+	color: var(--clr-contrast);
 	overflow-x: hidden;
 	overflow-y: scroll;
 	transition: opacity .2s;
@@ -65,7 +64,6 @@
 	min-height: 28px !important;
 	padding-left: 0 !important;
 	padding-right: 0 !important;
-	background-color: transparent !important;
 	background-image: url(/mono/guitarpick.svg?light);
 	background-size: 20px 20px;
 	background-position: center;

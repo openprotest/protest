@@ -56,7 +56,7 @@
 	bottom: 14px;
 	padding: 0 8px;
 	font-size: small;
-	color: var(--clr-pane);
+	color: var(--clr-contrast);
 
 	transition: .2s;
 	opacity: 0;

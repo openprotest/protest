@@ -421,7 +421,7 @@ class HexViewer extends Window {
 			dot.style.width = "6px";
 			dot.style.height = "6px";
 			dot.style.borderRadius = "3px";
-			dot.style.backgroundColor = "var(--clr-light)";
+			dot.style.backgroundColor = "var(--clr-contrast)";
 			element.appendChild(dot);
 		}
 
@@ -432,7 +432,7 @@ class HexViewer extends Window {
 			connect.style.bottom = "100%";
 			connect.style.width = "2px";
 			connect.style.height = "50px";
-			connect.style.backgroundColor = "var(--clr-light)";
+			connect.style.backgroundColor = "var(--clr-contrast)";
 			element.appendChild(connect);
 
 			const index = this.listCount;

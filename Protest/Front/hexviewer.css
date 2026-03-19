@@ -89,7 +89,7 @@
 	content: "";
 	position: absolute;
 	left: var(--indentation);
-	background-color: var(--clr-light);
+	background-color: var(--clr-contrast);
 }
 
 .hexviewer-label-T::before,

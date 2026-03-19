@@ -1,10 +1,10 @@
 .window {
 	position: absolute;
-	background-color: rgb(64, 64, 64);
+	background-color: light-dark(rgb(168,168,168), rgb(64,64,64));
 	border-radius: 8px 8px 0 0;
-	border-top: 1px solid rgb(84, 84, 84);
+	border-top: 1px solid rgb(84,84,84);
 	outline: 0;
-	box-shadow: rgba(0, 0, 0, .85) 0 0 8px;
+	box-shadow: rgba(0,0,0,.85) 0 0 8px;
 
 	transition-timing-function: cubic-bezier(.2, .6, .36, 1);
 	min-width: 240px;
@@ -24,15 +24,13 @@
 	right: 112px;
 	top: 0;
 	height: 30px;
-
-	color: whitesmoke;
+	color: var(--clr-contrast);
 	text-align: center;
 	overflow: hidden;
 	text-overflow: ellipsis;
 	font-size: 16px;
 	font-weight: 600;
 	line-height: 28px;
-
 	transition: opacity .1s;
 }
 
@@ -93,16 +91,15 @@
 	width: 22px;
 	height: 22px;
 
-	background-repeat: no-repeat;
-	background-size: cover;
-	filter: invert(1);
+	background-color: light-dark(#202020, #c0c0c0);
+	mask-repeat: no-repeat;
+	mask-size: cover;
 
 	transition: opacity .1s;
 }
 
 .win-toolbar {
-	/*background: var(--grd-toolbar);*/
-	background-color: #505050;
+	background-color: light-dark(#808080, #505050);
 	border-radius: 4px;
 	position: absolute;
 	left: 4px;
@@ -135,19 +132,24 @@
 	filter: drop-shadow(rgba(32, 32, 32, .5) 1px 1px 1px);
 }
 
-.win-toolbar>.win-toolbar-button:is(:hover, :focus, :focus-within) {
+.win-toolbar>.win-toolbar-button:is(:hover, :focus-visible) {
 	transition: .2s;
-	background-color: rgb(72, 72, 72);
+	background-color: var(--clr-select);
+}
+
+.win-toolbar>.win-toolbar-button:focus-visible {
+	
 }
 
 .win-toolbar>.win-toolbar-button:active {
 	transition: .2s;
-	background-color: rgb(64, 64, 64);
+	background-color: color-mix(in hsl shorter hue, var(--clr-accent) 85%, #000);
 }
 
 .win-toolbar>.win-toolbar-button:disabled {
-	opacity: .5;
+	opacity: .66;
 	background-color: transparent !important;
+	filter: brightness(80%) !important;
 }
 
 .win-toolbar>.win-toolbar-button>.win-toolbar-submenu {
@@ -233,7 +235,7 @@
 	background-color: var(--clr-select);
 }
 .win-toolbar>.win-toolbar-button>.win-toolbar-submenu>div>div:active {
-	background-color: var(--clr-accent);
+	background-color: color-mix(in hsl shorter hue, var(--clr-accent) 85%, #000);
 }
 
 .win-toolbar>.win-toolbar-button>input[type="text"] {
@@ -269,7 +271,7 @@
 
 .win-content {
 	position: absolute;
-	color: var(--clr-light);
+	color: var(--clr-contrast);
 	left: 4px;
 	right: 4px;
 	top: 32px;
@@ -285,7 +287,7 @@
 	bottom: 0;
 	overflow: hidden;
 
-	background-color: rgba(64, 64, 64, .8);
+	background-color: light-dark(rgba(160,160,160,.8), rgba(64,64,64,.8));
 	/*backdrop-filter: blur(4px*);*/
 
 	animation: fade-in .2s;

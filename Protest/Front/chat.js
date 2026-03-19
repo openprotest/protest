@@ -532,7 +532,7 @@ class Chat extends Window {
 			const placeholder = document.createElement("div");
 			placeholder.style.padding = "40px 8px";
 			placeholder.style.textAlign = "center";
-			placeholder.style.color = "var(--clr-pane)";
+			placeholder.style.color = "var(--clr-contrast)";
 			placeholder.textContent = "Messages are self-destruct after 24 hours.";
 			this.chatBox.append(placeholder);
 

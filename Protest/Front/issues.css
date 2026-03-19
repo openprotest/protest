@@ -75,6 +75,6 @@
 	position: absolute;
 	right: 8px;
 	bottom: 4px;
-	color: var(--clr-pane);
+	color: var(--clr-contrast);
 	font-weight: 600;
 }

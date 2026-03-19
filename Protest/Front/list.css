@@ -18,6 +18,7 @@
 	right: 0;
 	top: 0;
 	height: 30px;
+	color: var(--clr-light);
 
 	border-radius: 4px 4px 0 0;
 	background: var(--grd-toolbar);
@@ -168,10 +169,10 @@
 	position: absolute;
 	left: 2px;
 	bottom: 3px;
-	color: var(--clr-pane);
+	color: var(--clr-contrast);
 	font-weight: 600;
 	padding: 0 8px;
-	border: 1px solid var(--clr-pane);
+	border: 1px solid var(--clr-contrast);
 	border-radius: 2px;
 }
 
@@ -184,9 +185,8 @@
 	height: 18px;
 	border-radius: 50%;
 	border-style: solid;
-	border-color: var(--clr-pane) var(--clr-pane) transparent transparent;
+	border-color: var(--clr-contrast) var(--clr-contrast) transparent transparent;
 	border-width: 2px 3px 3px 0;
 	box-sizing: border-box;
-
 	animation: spin 1s linear infinite;
 }

@@ -1,3 +1,13 @@
+:root {
+	--download-icon: url("/mono/download.svg");
+}
+
+@media (prefers-color-scheme: dark) {
+	:root {
+		--download-icon: url("/mono/download.svg?light");
+	}
+}
+
 .address-book-search-bar {
 	position: sticky;
 	left: 0;
@@ -9,7 +19,12 @@
 	border-radius: 0 0 12px 12px;
 	text-align: center;
 
-	background: linear-gradient(0deg, rgba(64,64,64,.66) 0%, rgba(64,64,64,1) 100%);
+	background: linear-gradient(
+		0deg,
+		light-dark(rgba(168,168,168,.66), rgba(64,64,64,.66)) 0%,
+		light-dark(rgba(168,168,168,1), rgba(64,64,64,1)) 100%
+	);
+
 	backdrop-filter: blur(8px) brightness(80%);
 	box-shadow: rgba(0,0,0,.8) 0 1px 8px;
 
@@ -87,18 +102,18 @@
 }
 
 .address-book-button:hover {
-	background-color: rgb(72,72,72);
+	background-color: var(--clr-select);
 }
 
 .address-book-button:active {
-	background-color: rgb(64,64,64);
+	background-color: color-mix(in hsl shorter hue, var(--clr-accent) 85%, #000);
 }
 
 .address-book-button > div {
 	position: absolute;
-	background-color: #c0c0c0;
+	background-color: light-dark(#202020, #c0c0c0);
 	border-radius: 1px;
-	transition: .4s;
+	transition: .4s, background-color 0s;
 }
 
 .address-book-list {
@@ -114,17 +129,6 @@
 	background-color: rgba(255,255,255,.5);
 
 	transition: opacity .15s;
-}
-
-@media (prefers-color-scheme: light) {
-	.address-book-list > div:hover {
-		background-color: color-mix(in srgb, var(--clr-select) 85%, var(--clr-light) 15%);
-	}
-}
-@media (prefers-color-scheme: dark) {
-	.address-book-list > div:hover {
-		background-color: color-mix(in srgb, var(--clr-select) 80%, var(--clr-dark) 20%);
-	}
 }
 
 .address-book-list.card > div {
@@ -351,6 +355,10 @@
 }
 
 @media (prefers-color-scheme: light) {
+	.address-book-list > div:hover {
+		background-color: color-mix(in srgb, var(--clr-select) 85%, var(--clr-light) 15%);
+	}
+
 	.address-book-list > div,
 	.address-book-preview {
 		background-color: rgba(224,232,234,.96);
@@ -361,6 +369,10 @@
 }
 
 @media (prefers-color-scheme: dark) {
+	.address-book-list > div:hover {
+		background-color: color-mix(in srgb, var(--clr-select) 80%, var(--clr-dark) 20%);
+	}
+
 	.address-book-list > div,
 	.address-book-preview {
 		background-color: color-mix(in hsl, var(--clr-pane) 96%, transparent 4%);

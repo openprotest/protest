@@ -176,6 +176,7 @@ class Grid extends Window {
 			if (this.table.style.left === "0px") {
 				toggleButton.style.left = "216px";
 				toggleButton.style.top = "32px";
+				toggleButton.style.backgroundColor = "";
 				toggleButton.style.backgroundImage = "url(/mono/guitarpick.svg?light)";
 				toggleButton.style.transform = "rotate(90deg)";
 				this.table.style.left = "258px";
@@ -191,6 +192,7 @@ class Grid extends Window {
 			else {
 				toggleButton.style.left = "2px";
 				toggleButton.style.top = "2px";
+				toggleButton.style.backgroundColor = "transparent";
 				toggleButton.style.backgroundImage = "url(/mono/guitarpick.svg)";
 				toggleButton.style.transform = "rotate(-90deg)";
 				this.table.style.left = "0px";

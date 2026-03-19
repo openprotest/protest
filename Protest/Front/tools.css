@@ -4,7 +4,7 @@
 	border-bottom: 1px solid rgb(96,96,96);
 }
 .tool-element:hover {
-	background-color: rgb(96,96,96) !important;
+	background-color: light-dark(rgb(224,224,224,.8), rgba(96,96,96,.8)) !important;
 }
 
 .tool-element > .tool-icon {
@@ -84,7 +84,7 @@
 	position: absolute;
 	content: "";
 	border: solid;
-	border-color: rgb(192,192,192) transparent;
+	border-color: var(--clr-contrast) transparent;
 	border-width: 12px 8px 0 8px;
 	top: 2px;
 	left: 2px;

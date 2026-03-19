@@ -106,7 +106,7 @@ class DeviceView extends View {
 		setTimeout(()=>this.AfterResize(), WIN.ANIME_DURATION);
 	}
 
-	InitializeComponents() {
+	InitializeComponents() { //overridable
 		super.InitializeComponents();
 
 		this.utilitiesDropDown = this.AddToolbarDropdown("mono/hammer.svg?light");

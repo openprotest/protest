@@ -70,11 +70,13 @@ class UserView extends View {
 			this.attributes.appendChild(this.CreateAttribute("mobile number", "", origin, date, true));
 		}
 
-		this.refreshLiveStatsButton = this.AddToolbarButton("", "mono/restart.svg?light");
-		this.refreshLiveStatsButton.style.float = "right";
-		this.refreshLiveStatsButton.style.marginRight = "7px";
-		this.refreshLiveStatsButton.onclick = ()=> this.InitializeLiveStats();
-		this.bar.appendChild(this.refreshLiveStatsButton);
+		if (args.file) {
+			this.refreshLiveStatsButton = this.AddToolbarButton("", "mono/restart.svg?light");
+			this.refreshLiveStatsButton.style.float = "right";
+			this.refreshLiveStatsButton.style.marginRight = "7px";
+			this.refreshLiveStatsButton.onclick = ()=> this.InitializeLiveStats();
+			this.bar.appendChild(this.refreshLiveStatsButton);
+		}
 	}
 
 	InitializePreview() { //overrides

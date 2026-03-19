@@ -1171,7 +1171,7 @@ class Window {
 
 	SetIcon(iconPath) {
 		this.icon.style.backgroundImage = `url(${iconPath})`;
-		this.titleIcon.style.backgroundImage = `url(${iconPath})`;
+		this.titleIcon.style.maskImage = `url(${iconPath})`;
 		this.iconPath = iconPath;
 	}
 

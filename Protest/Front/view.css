@@ -733,9 +733,9 @@ button.view-live-button:active {
 }
 
 .view-info-box {
-	color: var(--clr-light);
-	background-color: transparent;
-	background-image: url(mono/info.svg?light);
+	color: var(--clr-dark);
+	background-color: var(--clr-pane);
+	background-image: url(mono/info.svg);
 }
 
 .view-warning-box {
@@ -769,13 +769,14 @@ button.view-live-button:active {
 	margin: 0 8px 0 0;
 	border-radius: 4px;
 	text-align: center;
+	color: var(--clr-contrast);
 	overflow: hidden;
 	white-space: nowrap;
 }
 
 .view-info-box[source]::before {
-	color: #404040;
-	background-color: #c0c0c0;
+	color: var(--clr-pane);
+	background-color: #202020;
 }
 .view-warning-box[source]::before {
 	color: var(--clr-warning);

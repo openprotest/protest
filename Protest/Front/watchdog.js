@@ -917,7 +917,7 @@ class Watchdog extends Window {
 		element.className = "list-element";
 
 		const nameLabel = document.createElement("div");
-		nameLabel.style.color = watcher.enable ? "var(--clr-light)" : "color-mix(in hsl, var(--clr-light), transparent)";
+		nameLabel.style.color = watcher.enable ? "var(--clr-contrast)" : "color-mix(in hsl, var(--clr-light), transparent)";
 		nameLabel.textContent = watcher.name;
 
 		const protocol = document.createElement("div");

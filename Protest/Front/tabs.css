@@ -27,7 +27,7 @@
 	padding: 4px;
 	color: var(--clr-dark);
 	background: linear-gradient(90deg, rgba(16,16,16,.15) 90%, rgba(16,16,16,.25) 100%);
-	background-color: rgb(160,160,160);
+	background-color: light-dark(rgb(216,216,216), rgb(160,160,160));
 	border-radius: 8px 0 0 8px;
 	transform-origin: 100%;
 	transform: scaleX(.98);
@@ -41,7 +41,7 @@
 }
 
 .tabs-box > button:not(:disabled):hover {
-	background-color: rgb(172,172,172) !important;
+	background-color: light-dark(rgb(208,208,208), rgb(172,172,172)) !important;
 }
 
 .tabs-box > button:not(:disabled):active {

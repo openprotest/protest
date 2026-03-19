@@ -42,7 +42,6 @@ class Window {
 		this.content.style.top = "0";
 		this.content.style.bottom = "0";
 		this.win.appendChild(this.content);
-
 	}
 
 	ConfirmBox(message, okOnly=false, icon=null) {
@@ -263,12 +262,12 @@ class Window {
 		const favicon_light = document.createElement("link");
 		favicon_light.rel = "icon";
 		favicon_light.href = iconPath;
-		favicon_light.media = "(prefers-color-scheme: light";
+		favicon_light.media = "(prefers-color-scheme:light";
 
 		const favicon_dark = document.createElement("link");
 		favicon_dark.rel = "icon";
 		favicon_dark.href = `${iconPath}?light`;
-		favicon_dark.media = "(prefers-color-scheme: dark)";
+		favicon_dark.media = "(prefers-color-scheme:dark)";
 
 		document.head.appendChild(favicon_light);
 		document.head.appendChild(favicon_dark);

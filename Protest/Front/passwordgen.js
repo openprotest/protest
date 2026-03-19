@@ -203,7 +203,7 @@ class PassGen extends Window {
 		stampButton.style.borderRadius = "0 4px 4px 0";
 
 		this.ttcLabel = document.createElement("div");
-		this.ttcLabel.style.color = "var(--clr-light)";
+		this.ttcLabel.style.color = "var(--clr-contrast)";
 		this.ttcLabel.style.whiteSpace = "nowrap";
 		this.content.appendChild(this.ttcLabel);
 
