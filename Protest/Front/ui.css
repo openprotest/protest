@@ -435,8 +435,8 @@
 }
 
 .glass > .window {
-	background-color: light-dark(rgba(192,192,192,.6), rgba(64,64,64,.5)) !important;;
-	backdrop-filter: blur(12px) brightness(.8);
+	background-color: light-dark(rgba(184,184,184,.6), rgba(64,64,64,.5)) !important;
+	backdrop-filter: blur(12px) brightness(.85);
 }
 
 .glass > .window .win-dim {

@@ -10,7 +10,7 @@
 	top: 8px;
 	bottom: 64px;
 	color: var(--clr-light);
-	border: 2px solid var(--clr-pane);
+	border: 2px solid color-mix(in srgb, var(--clr-contrast) 80%, transparent);
 	padding: 4px;
 	margin: 8px;
 	border-radius: 4px;
@@ -220,7 +220,7 @@
 
 	color: var(--clr-dark);
 	background-color: var(--clr-pane);
-	filter: drop-shadow(rgba(32, 32, 32, .5) 1px 1px 1px);
+	filter: drop-shadow(rgba(32,32,32,.5) -1px 1px 1px);
 	overflow-y: auto;
 	transition: .2s;
 }
@@ -242,7 +242,7 @@
 	background-position: center;
 	background-size: 32px 32px;
 	background-repeat: no-repeat;
-	filter: drop-shadow(rgba(32, 32, 32, .5) 1px 1px 1px);
+	filter: drop-shadow(rgba(32,32,32,.5) -1px 1px 1px);
 }
 .chat-button:active {
 	background-color: rgb(52,52,52) !important;

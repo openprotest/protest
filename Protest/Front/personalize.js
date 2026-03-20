@@ -123,8 +123,26 @@ class Personalize extends Tabs {
 			this.taskbarPositionInput.appendChild(option);
 		}
 
-		this.tabsPanel.appendChild(document.createElement("hr"));
+		const modeLabel = document.createElement("div");
+		modeLabel.textContent = "Color mode:";
+		modeLabel.style.display = "inline-block";
+		modeLabel.style.minWidth = "150px";
+		modeLabel.style.fontWeight = "600";
+		this.tabsPanel.appendChild(modeLabel);
+
+		this.modeInput = document.createElement("select");
+		this.modeInput.style.width = "200px";
+		this.tabsPanel.appendChild(this.modeInput);
 		this.tabsPanel.appendChild(document.createElement("br"));
+		this.tabsPanel.appendChild(document.createElement("br"));
+
+		const modeOptions = ["System", "Light", "Dark"];
+		for (let i=0; i<modeOptions.length; i++) {
+			const option = document.createElement("option");
+			option.value = (modeOptions[i] === "System") ? "light dark" : modeOptions[i].toLowerCase();
+			option.textContent = modeOptions[i];
+			this.modeInput.appendChild(option);
+		}
 
 		const accentColorLabel = document.createElement("div");
 		accentColorLabel.textContent = "Accent color:";
@@ -166,6 +184,7 @@ class Personalize extends Tabs {
 		this.glassCheckbox.checked = localStorage.getItem("glass") === "true";
 		this.scrollBarInput.value = localStorage.getItem("scrollbar_style") ? localStorage.getItem("scrollbar_style") : "thin";
 		this.taskbarPositionInput.value = localStorage.getItem("taskbar_position") ? localStorage.getItem("taskbar_position") : "bottom";
+		this.modeInput.value = localStorage.getItem("color_mode") ? localStorage.getItem("color_mode") : "light dark";
 
 		this.saturation.value = localStorage.getItem("accent_saturation") ? localStorage.getItem("accent_saturation") : 100;
 
@@ -302,6 +321,8 @@ class Personalize extends Tabs {
 
 			UI.SetTaskbarPosition(this.taskbarPositionInput.value);
 
+			document.documentElement.style.colorScheme = [this.modeInput.value];
+
 			document.body.className = this.animationsCheckbox.checked ? "" : "disable-animations";
 
 			localStorage.setItem("w_always_maxed", this.winMaxedCheckbox.checked);
@@ -313,6 +334,7 @@ class Personalize extends Tabs {
 			localStorage.setItem("glass", this.glassCheckbox.checked);
 			localStorage.setItem("scrollbar_style", this.scrollBarInput.value);
 			localStorage.setItem("taskbar_position", this.taskbarPositionInput.value);
+			localStorage.setItem("color_mode", this.modeInput.value);
 
 			localStorage.setItem("accent_saturation", this.saturation.value);
 
@@ -371,9 +393,10 @@ class Personalize extends Tabs {
 		this.dateTimeCheckbox.onchange = Apply;
 		this.animationsCheckbox.onchange = Apply;
 		this.glassCheckbox.onchange = Apply;
-		this.saturation.oninput = Apply;
 		this.scrollBarInput.onchange = Apply;
 		this.taskbarPositionInput.onchange = Apply;
+		this.modeInput.onchange = Apply;
+		this.saturation.oninput = Apply;
 
 		Apply();
 	}

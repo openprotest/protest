@@ -62,7 +62,7 @@ internal static class KeepAlive {
 
         try {
             //init
-            ArraySegment<byte> initSegment = new(Encoding.UTF8.GetBytes($"{{\"action\":\"init\",\"version\":\"{Data.VersionToString()}\",\"username\":\"{username}\",\"color\":\"{accessControl?.color ?? "#A0A0A0"}\",\"authorization\":[\"{string.Join("\",\"", accessArray)}\"]}}"));
+            ArraySegment<byte> initSegment = new(Encoding.UTF8.GetBytes($"{{\"action\":\"init\",\"version\":\"{Data.VersionToString()}\",\"username\":\"{username}\",\"color\":\"{accessControl?.color ?? "#606060"}\",\"authorization\":[\"{string.Join("\",\"", accessArray)}\"]}}"));
             await ws.SendAsync(initSegment, WebSocketMessageType.Text, true, CancellationToken.None);
 
             ArraySegment<byte> zonesSegment = new(Encoding.UTF8.GetBytes($"{{\"action\":\"zones\",\"list\":{Zones.ListZonesString()}}}"));

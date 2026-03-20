@@ -148,7 +148,7 @@
 	</div>
 	<div class="glow" id="otpBox" style="display:none; animation:otp-in .8s 1 forwards;">
 		<img src="mono/mfa.svg?light" title="OTP" width="28" height="28">
-		<input type="text" id="otpInput" aria-label="One time password" autocomplete="off" maxlength="6" style="font-size:16px; font-weight:bold; font-family:monospace; text-align:center; letter-spacing:12px;">
+		<input type="text" id="otpInput" aria-label="One time password" autocomplete="off" maxlength="6" inputmode="numeric" pattern="[0-9]+" style="font-size:16px; font-weight:bold; font-family:monospace; text-align:center; letter-spacing:12px;">
 	</div>
 
 	<input id="loginButton" type="button" value="Login"/>
