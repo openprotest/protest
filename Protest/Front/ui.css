@@ -419,7 +419,7 @@
 #analog_clock_h,
 #analog_clock_m {
 	transform-origin: 50% 50%;
-	transition: transform .8s;
+	transition: transform 2s;
 }
 
 .glass > #menubox {
