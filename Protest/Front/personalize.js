@@ -375,6 +375,8 @@ class Personalize extends Tabs {
 					let hsl = UI.RgbToHsl(accent);
 					WIN.array[i].popOutWindow.document.querySelector(":root").style.setProperty("--clr-select", `hsl(${hsl[0]+7},${hsl[1]*this.saturation.value/100}%,${hsl[2]*.9}%)`);
 					WIN.array[i].popOutWindow.document.querySelector(":root").style.setProperty("--clr-accent", `hsl(${hsl[0]},${hsl[1]*this.saturation.value/100}%,${hsl[2]}%)`);
+					WIN.array[i].popOutWindow.document.body.style.colorScheme = localStorage.getItem("color_mode") ?? "light dark";
+				
 				}
 			}
 

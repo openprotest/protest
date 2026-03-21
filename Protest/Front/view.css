@@ -334,8 +334,8 @@ button.view-live-button {
 
 	padding: 4px 8px 4px 40px;
 	color: var(--clr-dark);
-	border-left: 1px solid #888;
-	border-bottom: 1px solid #888;
+	border-left: 1px solid #777;
+	border-bottom: 1px solid #777;
 	background-color: var(--clr-pane);
 	background-size: 32px 32px;
 	background-position: 4px center;
@@ -817,8 +817,8 @@ button.view-live-button:active {
 	text-align: left;
 	padding-left: 40px;
 	color: var(--clr-dark);
-	border-left: 1px solid #888;
-	border-bottom: 1px solid #888;
+	border-left: 1px solid #777;
+	border-bottom: 1px solid #777;
 	background-color: var(--clr-pane);
 	background-size: 26px 26px;
 	background-position: 7px center;

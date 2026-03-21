@@ -25,8 +25,8 @@ class Documentation extends Window {
 		this.searchInput.style.gridArea = "1 / 2";
 		this.searchInput.type = "search";
 		this.searchInput.value = this.args.keywords;
-		this.searchInput.style.borderLeft = "1px solid #888";
-		this.searchInput.style.borderBottom = "1px solid #888";
+		this.searchInput.style.borderLeft = "1px solid #777";
+		this.searchInput.style.borderBottom = "1px solid #777";
 		this.sidebar.appendChild(this.searchInput);
 
 		this.list = document.createElement("div");
@@ -118,7 +118,7 @@ class Documentation extends Window {
 		this.addRelatedButton.style.backgroundRepeat = "no-repeat";
 		this.addRelatedButton.style.backgroundSize = "24px 24px";
 		this.addRelatedButton.style.backgroundPosition = "center center";
-		this.addRelatedButton.style.borderBottom = "1px solid #888";
+		this.addRelatedButton.style.borderBottom = "1px solid #777";
 
 		this.body.appendChild(this.addRelatedButton);
 

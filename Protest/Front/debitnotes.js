@@ -38,8 +38,8 @@ class DebitNotes extends Window {
 
 		this.searchInput = document.createElement("input");
 		this.searchInput.style.gridArea = "1 / 2";
-		this.searchInput.style.borderLeft = "1px solid #888";
-		this.searchInput.style.borderBottom = "1px solid #888";
+		this.searchInput.style.borderLeft = "1px solid #777";
+		this.searchInput.style.borderBottom = "1px solid #777";
 
 		this.searchInput.type = "search";
 		this.searchInput.value = this.args.keywords;
@@ -53,8 +53,8 @@ class DebitNotes extends Window {
 		this.upToInput = document.createElement("select");
 		this.upToInput.value = this.args.upto;
 		this.upToInput.style.gridArea = "2 / 2";
-		this.upToInput.style.borderLeft = "1px solid #888";
-		this.upToInput.style.borderBottom = "1px solid #888";
+		this.upToInput.style.borderLeft = "1px solid #777";
+		this.upToInput.style.borderBottom = "1px solid #777";
 		listBox.appendChild(this.upToInput);
 
 		for (let i = 2; i < 11; i += 2) {

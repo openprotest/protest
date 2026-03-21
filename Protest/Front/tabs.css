@@ -28,8 +28,8 @@
 	color: var(--clr-dark);
 	background: linear-gradient(90deg, rgba(16,16,16,.15) 90%, rgba(16,16,16,.25) 100%);
 	background-color: light-dark(rgb(216,216,216), rgb(160,160,160));
-	border-left: 1px solid #888;
-	border-bottom: 1px solid #888;
+	border-left: 1px solid #777;
+	border-bottom: 1px solid #777;
 	border-radius: 8px 0 0 8px;
 	transform-origin: 100%;
 	transform: scaleX(.98);

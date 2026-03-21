@@ -731,8 +731,9 @@ class Window {
 
 		newWin.document.close();
 
+		newWin.document.body.style.colorScheme = localStorage.getItem("color_mode") ?? "light dark";
 		newWin.document.body.style.background = "none";
-		newWin.document.body.style.backgroundColor = "rgb(64,64,64)";
+		newWin.document.body.style.backgroundColor = "light-dark(rgb(168,168,168) ,rgb(64,64,64))";
 		newWin.document.body.style.padding = "0";
 		newWin.document.body.style.margin = "0";
 

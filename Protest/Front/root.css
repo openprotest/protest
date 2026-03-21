@@ -41,7 +41,7 @@
 	--clr-dark       : rgb(32,32,32);
 	--clr-contrast   : light-dark(rgb(32,32,32),rgb(192,192,192));
 
-	--clr-control: light-dark(rgb(160,160,160), rgb(144,144,144));
+	--clr-control: light-dark(rgb(152,152,152), rgb(144,144,144));
 	--clr-highlight: light-dark(rgb(204,204,204), rgb(184,184,184));
 	--clr-pane: light-dark(rgb(192,192,192), rgb(168,168,168));
 
