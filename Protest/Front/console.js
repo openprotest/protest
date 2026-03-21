@@ -24,6 +24,8 @@ class Console extends Window {
 		this.inputBox.style.margin = "0";
 		this.inputBox.style.border = "0";
 		this.inputBox.style.boxSizing = "border-box";
+		this.inputBox.style.borderLeft = "1px solid #888";
+		this.inputBox.style.borderBottom = "1px solid #888";
 		this.content.appendChild(this.inputBox);
 
 		let historyIndex = -1;

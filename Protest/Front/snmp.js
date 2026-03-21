@@ -51,15 +51,15 @@ static OID_MAP_1_3_6_1_2_1 = [
 
 		this.content.style.overflow = "hidden";
 
-		const snmpInput = document.createElement("div");
-		snmpInput.className = "snmp-input";
-		this.content.appendChild(snmpInput);
+		const inputBox = document.createElement("div");
+		inputBox.className = "snmp-input";
+		this.content.appendChild(inputBox);
 
 		const targetLabel = document.createElement("div");
 		targetLabel.style.lineHeight = "28px";
 		targetLabel.style.gridArea = "1 / 1";
 		targetLabel.textContent = "Target:";
-		snmpInput.appendChild(targetLabel);
+		inputBox.appendChild(targetLabel);
 
 		this.targetInput = document.createElement("input");
 		this.targetInput.type = "text";
@@ -67,13 +67,15 @@ static OID_MAP_1_3_6_1_2_1 = [
 		this.targetInput.style.gridArea = "1 / 2 / 1 / 4";
 		this.targetInput.style.minWidth = "50px";
 		this.targetInput.value = this.args.target ?? "";
-		snmpInput.appendChild(this.targetInput);
+		this.targetInput.style.borderLeft = "1px solid #888";
+		this.targetInput.style.borderBottom = "1px solid #888";
+		inputBox.appendChild(this.targetInput);
 
 		const authLabel = document.createElement("div");
 		authLabel.style.lineHeight = "28px";
 		authLabel.style.gridArea = "2 / 1";
 		authLabel.textContent = "Community:";
-		snmpInput.appendChild(authLabel);
+		inputBox.appendChild(authLabel);
 
 		this.communityInput = document.createElement("input");
 		this.communityInput.type = "text";
@@ -81,7 +83,9 @@ static OID_MAP_1_3_6_1_2_1 = [
 		this.communityInput.style.gridArea = "2 / 2";
 		this.communityInput.style.marginRight = "0";
 		this.communityInput.style.minWidth = "50px";
-		snmpInput.appendChild(this.communityInput);
+		this.communityInput.style.borderLeft = "1px solid #888";
+		this.communityInput.style.borderBottom = "1px solid #888";
+		inputBox.appendChild(this.communityInput);
 
 		this.credentialsProfileInput = document.createElement("select");
 		this.credentialsProfileInput.style.gridArea = "2 / 2";
@@ -89,12 +93,14 @@ static OID_MAP_1_3_6_1_2_1 = [
 		this.credentialsProfileInput.style.minWidth = "50px";
 		this.credentialsProfileInput.style.display = "none";
 		this.credentialsProfileInput.value = this.args.credentials;
-		snmpInput.appendChild(this.credentialsProfileInput);
+		inputBox.appendChild(this.credentialsProfileInput);
 
 		this.versionInput = document.createElement("select");
 		this.versionInput.style.gridArea = "2 / 3";
+		this.versionInput.style.borderLeft = "1px solid #888";
+		this.versionInput.style.borderBottom = "1px solid #888";
 		if (this.args.version) this.versionInput.value = this.args.version;
-		snmpInput.appendChild(this.versionInput);
+		inputBox.appendChild(this.versionInput);
 
 		const versionOptions = [1,2,3];
 		for (let i=0; i<versionOptions.length; i++) {
@@ -110,7 +116,7 @@ static OID_MAP_1_3_6_1_2_1 = [
 		oidLabel.style.lineHeight = "28px";
 		oidLabel.style.gridArea = "3 / 1";
 		oidLabel.textContent = "OID:";
-		snmpInput.appendChild(oidLabel);
+		inputBox.appendChild(oidLabel);
 
 		this.oidInput = document.createElement("textarea");
 		this.oidInput.placeholder = "1.3.6.1.2.1.1.1.0";
@@ -118,7 +124,9 @@ static OID_MAP_1_3_6_1_2_1 = [
 		this.oidInput.style.resize = "none";
 		this.oidInput.style.minWidth = "50px";
 		this.oidInput.value = this.args.oid ?? "";
-		snmpInput.appendChild(this.oidInput);
+		this.oidInput.style.borderLeft = "1px solid #888";
+		this.oidInput.style.borderBottom = "1px solid #888";
+		inputBox.appendChild(this.oidInput);
 
 		this.explorerButton = document.createElement("input");
 		this.explorerButton.type = "button";
@@ -127,7 +135,7 @@ static OID_MAP_1_3_6_1_2_1 = [
 		this.explorerButton.style.height = "auto";
 		this.explorerButton.style.gridArea = "2 / 4";
 		this.explorerButton.style.padding = "0";
-		//snmpInput.appendChild(this.explorerButton);
+		//inputBox.appendChild(this.explorerButton);
 
 		this.getButton = document.createElement("input");
 		this.getButton.type = "button";
@@ -136,7 +144,7 @@ static OID_MAP_1_3_6_1_2_1 = [
 		this.getButton.style.height = "auto";
 		this.getButton.style.gridArea = "3 / 4 / 5 / 4";
 		this.getButton.style.padding = "0";
-		snmpInput.appendChild(this.getButton);
+		inputBox.appendChild(this.getButton);
 
 		this.setButton = document.createElement("input");
 		this.setButton.type = "button";
@@ -145,7 +153,7 @@ static OID_MAP_1_3_6_1_2_1 = [
 		this.setButton.style.height = "auto";
 		this.setButton.style.gridArea = "3 / 5 / 5 / 5";
 		this.setButton.style.padding = "0";
-		snmpInput.appendChild(this.setButton);
+		inputBox.appendChild(this.setButton);
 
 		this.walkButton = document.createElement("input");
 		this.walkButton.type = "button";
@@ -154,7 +162,7 @@ static OID_MAP_1_3_6_1_2_1 = [
 		this.walkButton.style.height = "auto";
 		this.walkButton.style.gridArea = "3 / 6 / 5 / 6";
 		this.walkButton.style.padding = "0";
-		snmpInput.appendChild(this.walkButton);
+		inputBox.appendChild(this.walkButton);
 
 		const toggleButton = document.createElement("input");
 		toggleButton.type = "button";
@@ -190,21 +198,21 @@ static OID_MAP_1_3_6_1_2_1 = [
 		this.walkButton.onclick = ()=> this.WalkQuery();
 
 		toggleButton.onclick = ()=> {
-			if (snmpInput.style.visibility === "hidden") {
+			if (inputBox.style.visibility === "hidden") {
 				toggleButton.style.top = "96px";
 				toggleButton.style.transform = "rotate(-180deg)";
-				snmpInput.style.visibility = "visible";
-				snmpInput.style.opacity = "1";
-				snmpInput.style.transform = "none";
+				inputBox.style.visibility = "visible";
+				inputBox.style.opacity = "1";
+				inputBox.style.transform = "none";
 				this.plotBox.style.top = "136px";
 				this.args.hideInput = false;
 			}
 			else {
 				toggleButton.style.top = "0px";
 				toggleButton.style.transform = "rotate(0deg)";
-				snmpInput.style.visibility = "hidden";
-				snmpInput.style.opacity = "0";
-				snmpInput.style.transform = "translateY(-64px)";
+				inputBox.style.visibility = "hidden";
+				inputBox.style.opacity = "0";
+				inputBox.style.transform = "translateY(-64px)";
 				this.plotBox.style.top = "36px";
 				this.args.hideInput = true;
 			}

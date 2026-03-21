@@ -150,7 +150,6 @@ class DhcpDiscover extends Window {
 		grid.style.gridTemplateColumns = "auto 200px 200px 150px auto";
 		grid.style.gridTemplateRows = "repeat(4, 36px)";
 		grid.style.alignItems = "center";
-		grid.style.color = "var(--clr-control)";
 		this.content.appendChild(grid);
 
 		const timeoutLabel = document.createElement("div");
@@ -166,6 +165,8 @@ class DhcpDiscover extends Window {
 		this.timeoutInput.value = this.args.timeout;
 		this.timeoutInput.style.gridRow = "1";
 		this.timeoutInput.style.gridColumn = "3";
+		this.timeoutInput.style.borderLeft = "1px solid #888";
+		this.timeoutInput.style.borderBottom = "1px solid #888";
 		grid.append(timeoutLabel, this.timeoutInput);
 
 		const hostLabel = document.createElement("div");
@@ -180,6 +181,8 @@ class DhcpDiscover extends Window {
 		this.hostnameInput.value = this.args.hostname;
 		this.hostnameInput.style.gridRow = "2";
 		this.hostnameInput.style.gridColumn = "3";
+		this.hostnameInput.style.borderLeft = "1px solid #888";
+		this.hostnameInput.style.borderBottom = "1px solid #888";
 		grid.append(hostLabel, this.hostnameInput);
 
 		const spoofMacLabel = document.createElement("div");
@@ -194,6 +197,8 @@ class DhcpDiscover extends Window {
 		this.macInput.value = this.args.mac;
 		this.macInput.style.gridRow = "3";
 		this.macInput.style.gridColumn = "3";
+		this.macInput.style.borderLeft = "1px solid #888";
+		this.macInput.style.borderBottom = "1px solid #888";
 		grid.append(spoofMacLabel, this.macInput);
 
 		const acceptLabel = document.createElement("div");
@@ -205,6 +210,8 @@ class DhcpDiscover extends Window {
 		const acceptBox = document.createElement("div");
 		acceptBox.style.gridRow = "4";
 		acceptBox.style.gridColumn = "3";
+		acceptBox.style.paddingLeft = "4px";
+		acceptBox.style.textAlign = "left";
 		grid.append(acceptLabel, acceptBox);
 
 		this.acceptToggle = this.CreateToggle(".", this.args.accept, acceptBox);

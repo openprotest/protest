@@ -25,6 +25,8 @@ class MicTester extends Window {
 		this.AddToolbarSeparator();
 		this.settingsButton = this.AddToolbarButton("Settings", "mono/wrench.svg?light");
 
+		this.content.style.backgroundColor = "light-dark(#20202050, transparent)";
+
 		this.canvas = document.createElement("canvas");
 		this.canvas.style.width = "100%";
 		this.canvas.style.height = "100%";
@@ -35,7 +37,7 @@ class MicTester extends Window {
 		this.infoBox.style.right = "8px";
 		this.infoBox.style.bottom = "8px";
 		this.infoBox.style.zIndex = "1";
-		this.infoBox.style.color = "var(--clr-light)";
+		this.infoBox.style.color = "var(--clr-contrast)";
 		this.infoBox.style.textShadow = "black 0 0 2px";
 		this.content.appendChild(this.infoBox);
 

@@ -14,33 +14,37 @@ class Wmi extends Window {
 
 		this.content.style.overflow = "hidden";
 
-		const wmiInput = document.createElement("div");
-		wmiInput.className = "wmi-input";
-		this.content.appendChild(wmiInput);
+		const inputBox = document.createElement("div");
+		inputBox.className = "wmi-input";
+		this.content.appendChild(inputBox);
 
 		const targetLabel = document.createElement("div");
 		targetLabel.style.lineHeight = "28px";
 		targetLabel.style.gridArea = "1 / 1";
 		targetLabel.textContent = "Target:";
-		wmiInput.appendChild(targetLabel);
+		inputBox.appendChild(targetLabel);
 
 		this.targetInput = document.createElement("input");
 		this.targetInput.type = "text";
 		this.targetInput.placeholder = "hostname or ip";
 		this.targetInput.style.gridArea = "1 / 2";
+		this.targetInput.style.borderLeft = "1px solid #888";
+		this.targetInput.style.borderBottom = "1px solid #888";
 		if (this.args.target != null) this.targetInput.value = this.args.target;
-		wmiInput.appendChild(this.targetInput);
+		inputBox.appendChild(this.targetInput);
 
 		const namespaceLabel = document.createElement("div");
 		namespaceLabel.style.lineHeight = "28px";
 		namespaceLabel.style.gridArea = "2 / 1";
 		namespaceLabel.textContent = "Namespace:";
-		wmiInput.appendChild(namespaceLabel);
+		inputBox.appendChild(namespaceLabel);
 
 		this.namespaceInput = document.createElement("select");
 		this.namespaceInput.style.gridArea = "2 / 2";
+		this.namespaceInput.style.borderLeft = "1px solid #888";
+		this.namespaceInput.style.borderBottom = "1px solid #888";
 		if (this.args.namespace != null) this.namespaceInput.value = this.args.namespace;
-		wmiInput.appendChild(this.namespaceInput);
+		inputBox.appendChild(this.namespaceInput);
 
 		const namespaces = [
 			"subscription",
@@ -83,28 +87,30 @@ class Wmi extends Window {
 		const queryLabel = document.createElement("div");
 		queryLabel.textContent = "Query:";
 		queryLabel.style.gridArea = "3 / 1";
-		wmiInput.appendChild(queryLabel);
+		inputBox.appendChild(queryLabel);
 
 		this.queryInput = document.createElement("textarea");
 		this.queryInput.placeholder = "SELECT * FROM Win32_BIOS WHERE Status = \"OK\"";
 		this.queryInput.style.gridArea = "3 / 2 / 2 span / auto";
+		this.queryInput.style.borderLeft = "1px solid #888";
+		this.queryInput.style.borderBottom = "1px solid #888";
 		//this.queryInput.style.fontFamily = "monospace";
 		this.queryInput.style.resize = "none";
 		if (this.args.query != null) this.queryInput.value = this.args.query;
-		wmiInput.appendChild(this.queryInput);
+		inputBox.appendChild(this.queryInput);
 
 		const helperButton = document.createElement("input");
 		helperButton.type = "button";
 		helperButton.value = "...";
 		helperButton.style.gridArea = "3 / 3";
-		wmiInput.appendChild(helperButton);
+		inputBox.appendChild(helperButton);
 
 		this.executeButton = document.createElement("input");
 		this.executeButton.type = "button";
 		this.executeButton.value = "Execute";
 		this.executeButton.style.height = "auto";
 		this.executeButton.style.gridArea = "4 / 3";
-		wmiInput.appendChild(this.executeButton);
+		inputBox.appendChild(this.executeButton);
 
 		const toggleButton = document.createElement("input");
 		toggleButton.type = "button";
@@ -124,21 +130,21 @@ class Wmi extends Window {
 		this.executeButton.onclick = ()=> this.Query();
 
 		toggleButton.onclick = ()=> {
-			if (wmiInput.style.visibility === "hidden") {
+			if (inputBox.style.visibility === "hidden") {
 				toggleButton.style.top = "128px";
 				toggleButton.style.transform = "rotate(-180deg)";
-				wmiInput.style.visibility = "visible";
-				wmiInput.style.opacity = "1";
-				wmiInput.style.transform = "none";
+				inputBox.style.visibility = "visible";
+				inputBox.style.opacity = "1";
+				inputBox.style.transform = "none";
 				this.plotBox.style.top = "168px";
 				this.args.hideInput = false;
 			}
 			else {
 				toggleButton.style.top = "0px";
 				toggleButton.style.transform = "rotate(0deg)";
-				wmiInput.style.visibility = "hidden";
-				wmiInput.style.opacity = "0";
-				wmiInput.style.transform = "translateY(-64px)";
+				inputBox.style.visibility = "hidden";
+				inputBox.style.opacity = "0";
+				inputBox.style.transform = "translateY(-64px)";
 				this.plotBox.style.top = "36px";
 				this.args.hideInput = true;
 			}

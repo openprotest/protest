@@ -452,7 +452,7 @@
 }
 
 .glass > .window .win-toolbar {
-	background-color: light-dark(#20202050, transparent) !important;
+	background-color: light-dark(#20202050, #20202040) !important;
 }
 
 .glass > .window > .win-content > .list-listbox {

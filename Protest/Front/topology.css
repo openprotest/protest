@@ -3,7 +3,8 @@
 	background-color: rgba(64,64,64,.4);
 	left : 8px;
 	right: 366px;
-	height: 100%;
+	top: 8px;
+	bottom: 8px;
 	overflow: auto;
 	transition: .2s;
 }
