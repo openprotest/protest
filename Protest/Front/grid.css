@@ -3,6 +3,8 @@
 	left: 2px;
 	top: 2px;
 	width: 228px;
+	border-left: 1px solid #888 !important;
+	border-bottom: 1px solid #888 !important;
 
 	transition: opacity .2s;
 }

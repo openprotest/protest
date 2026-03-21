@@ -141,10 +141,6 @@
 	background-color: var(--clr-select);
 }
 
-.win-toolbar>.win-toolbar-button:focus-visible {
-	
-}
-
 .win-toolbar>.win-toolbar-button:active {
 	transition: .2s;
 	background-color: color-mix(in hsl shorter hue, var(--clr-accent) 85%, #000);

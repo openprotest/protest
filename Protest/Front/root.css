@@ -29,7 +29,7 @@
 	--global-font-size: 15px;
 	--global-font-family: "Open Sans";
 	--sidemenu-width: 480px;
-	
+
 	--clr-accent     : rgb(255,102,0);
 	--clr-select     : rgb(232,118,0);
 	--clr-transparent: rgba(255,102,0,.6);
@@ -40,14 +40,14 @@
 	--clr-light      : rgb(224,224,224);
 	--clr-dark       : rgb(32,32,32);
 	--clr-contrast   : light-dark(rgb(32,32,32),rgb(192,192,192));
-	
+
 	--clr-control: light-dark(rgb(160,160,160), rgb(144,144,144));
 	--clr-highlight: light-dark(rgb(204,204,204), rgb(184,184,184));
 	--clr-pane: light-dark(rgb(192,192,192), rgb(168,168,168));
-	
+
 	--grd-taskbar: linear-gradient(to bottom, rgb(199,64,0)0%, rgb(232,118,0)92%, rgb(199,64,0)100%);
 	--grd-taskbar-rev: linear-gradient(to bottom, rgb(199,64,0)0%, rgb(232,118,0)2%, rgb(199,64,0)100%);
-	
+
 	--grd-toolbar: linear-gradient(
 		light-dark(rgb(128,128,128), rgb(96,96,96)),
 		light-dark(rgb(112,112,112), rgb(80,80,80))

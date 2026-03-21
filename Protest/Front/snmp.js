@@ -99,6 +99,8 @@ static OID_MAP_1_3_6_1_2_1 = [
 		this.versionInput.style.gridArea = "2 / 3";
 		this.versionInput.style.borderLeft = "1px solid #888";
 		this.versionInput.style.borderBottom = "1px solid #888";
+		this.versionInput.style.borderLeft = "1px solid #888";
+		this.versionInput.style.borderBottom = "1px solid #888";
 		if (this.args.version) this.versionInput.value = this.args.version;
 		inputBox.appendChild(this.versionInput);
 
