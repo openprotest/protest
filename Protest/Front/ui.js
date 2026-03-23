@@ -57,7 +57,7 @@ const UI = {
 
 		UI.SetTaskbarPosition(localStorage.getItem("taskbar_position") ?? "bottom");
 
-		document.documentElement.style.colorScheme = localStorage.getItem("color_mode") ?? "system";
+		document.documentElement.style.colorScheme = localStorage.getItem("color_mode") ?? "light dark";
 
 		UI.regionalFormat = localStorage.getItem("regional_format") ?
 			localStorage.getItem("regional_format") : "sys";

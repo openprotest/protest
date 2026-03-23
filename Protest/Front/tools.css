@@ -132,7 +132,7 @@
 	position: sticky;
 	left: 180px;
 	content: attr(after-label);
-	color: #c0c0c0;
+	color: var(--clr-contrast);
 	overflow: hidden;
 	text-overflow: ellipsis;
 }

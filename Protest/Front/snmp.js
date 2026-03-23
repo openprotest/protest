@@ -89,6 +89,8 @@ static OID_MAP_1_3_6_1_2_1 = [
 
 		this.credentialsProfileInput = document.createElement("select");
 		this.credentialsProfileInput.style.gridArea = "2 / 2";
+		this.credentialsProfileInput.style.borderLeft = "1px solid #777";
+		this.credentialsProfileInput.style.borderBottom = "1px solid #777";
 		this.credentialsProfileInput.style.marginRight = "0";
 		this.credentialsProfileInput.style.minWidth = "50px";
 		this.credentialsProfileInput.style.display = "none";
@@ -97,8 +99,6 @@ static OID_MAP_1_3_6_1_2_1 = [
 
 		this.versionInput = document.createElement("select");
 		this.versionInput.style.gridArea = "2 / 3";
-		this.versionInput.style.borderLeft = "1px solid #777";
-		this.versionInput.style.borderBottom = "1px solid #777";
 		this.versionInput.style.borderLeft = "1px solid #777";
 		this.versionInput.style.borderBottom = "1px solid #777";
 		if (this.args.version) this.versionInput.value = this.args.version;

@@ -287,7 +287,7 @@
 	bottom: 0;
 	overflow: hidden;
 
-	background-color: light-dark(rgba(160,160,160,.8), rgba(64,64,64,.8));
+	background-color: light-dark(rgba(168,168,168,.8), rgba(64,64,64,.8));
 	/*backdrop-filter: blur(4px*);*/
 
 	animation: fade-in .2s;
@@ -463,8 +463,8 @@
 	border-radius: 4px;
 	box-shadow: var(--clr-dark) 0 0 4px;
 
-	transition: .2s;
-	transition-delay: .25s;
+	transition: .15s;
+	transition-delay: .1s;
 }
 
 #container.no-popout>.window>.popout-box {
