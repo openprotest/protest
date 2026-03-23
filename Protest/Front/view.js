@@ -105,6 +105,11 @@ class View extends Window {
 
 		this.SetupFloatingMenu();
 		this.floating.style.zIndex = "2";
+
+		this.sideFloat = document.createElement("div");
+		this.sideFloat.className = "side-tools-floating";
+		this.sideFloat.onmousedown = event=> event.stopPropagation();
+		this.content.appendChild(this.sideFloat);
 	}
 
 	CreateAttribute(name, value, origin, date, editMode=false) {
@@ -563,6 +568,20 @@ class View extends Window {
 		button.style.backgroundImage = "url(" + icon + ")";
 		button.textContent = label;
 		this.sideTools.appendChild(button);
+
+		button.onmouseenter = button.onfocus = ()=> {
+			if (button.clientWidth > 48) return;
+
+			this.sideFloat.textContent = label;
+			this.sideFloat.style.display = "block";
+			this.sideFloat.textContent = label;
+			this.sideFloat.style.top = `${button.offsetTop - this.sideTools.scrollTop + 44}px`;
+		};
+
+		button.onmouseleave = button.onblur = ()=>{
+			this.sideFloat.style.display = "none";
+		};
+
 		return button;
 	}
 

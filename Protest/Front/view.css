@@ -795,12 +795,26 @@ button.view-live-button:active {
 
 .view-side-tools {
 	position: absolute;
-	left: 4px;
-	top: 48px;
-	width: 40px;
-	z-index: 2;
+	left: 0px;
+	top: 44px;
+	bottom: 8px;
+	width: 41px;
+	padding: 4px;
 	min-height: 40px;
+	z-index: 2;
+	overflow-x: visible;
+	overflow-y: scroll;
 	transition: .2s;
+}
+
+.view-side-tools::-webkit-scrollbar {
+	display: none !important;
+}
+
+@-moz-document url-prefix() {
+	.view-side-tools {
+		scrollbar-width: none !important;
+	}
 }
 
 .view-side-tools > button {
@@ -827,7 +841,7 @@ button.view-live-button:active {
 
 .view-side-tools > button:hover,
 .view-side-tools > button:focus-visible {
-	width: 192px !important;
+	/*width: 192px !important;*/
 	filter: brightness(1.2);
 }
 
@@ -851,6 +865,27 @@ button.view-live-button:active {
 
 	animation: spin 2s linear infinite;
 	transition: .2s;
+}
+
+.side-tools-floating {
+	display: none;
+	position: absolute;
+	z-index: 2;
+	left: 40px;
+	width: 150px;
+	padding: 5px 4px 6px 4px;
+	overflow: hidden;
+	color: var(--clr-dark);
+	background-color: var(--clr-pane);
+	font-weight: 600;
+	border-bottom: 1px solid #777;
+	border-radius: 0 4px 4px 0;
+	filter: brightness(1.2);
+	transform-origin: 0 50%;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	animation: side-tools-floating-slide-in .2s forwards;
 }
 
 .view-fetch-floating-button {
@@ -944,12 +979,16 @@ button.view-live-button:active {
 }
 
 @keyframes slide-right {
-	0%  { opacity:0; transform:translateX(-150px); }
-	100%{ opacity:1; transform: none; }
+	0%  {opacity:0; transform:translateX(-150px);}
+	100%{opacity:1; transform: none;}
+}
+
+@keyframes side-tools-floating-slide-in {
+	0%  {opacity: 0; transform: scaleX(.5);}
+	100%{opacity: 1; transform: scaleX(1);}
 }
 
 @keyframes led-blink {
-	0%   {background-color: #408020;}
 	25%  {background-color: #408020;}
 	50%  {background-color: #70f040;}
 	75%  {background-color: #70f040;}
