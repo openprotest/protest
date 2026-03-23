@@ -1,13 +1,3 @@
-:root {
-	--download-icon: url("/mono/download.svg");
-}
-
-@media (prefers-color-scheme: dark) {
-	:root {
-		--download-icon: url("/mono/download.svg?light");
-	}
-}
-
 .address-book-search-bar {
 	position: sticky;
 	left: 0;
@@ -21,7 +11,7 @@
 
 	background: linear-gradient(
 		0deg,
-		light-dark(rgba(168,168,168,.66), rgba(64,64,64,.66)) 0%,
+		light-dark(rgba(168,168,168,.5), rgba(64,64,64,.5)) 0%,
 		light-dark(rgba(168,168,168,1), rgba(64,64,64,1)) 100%
 	);
 
@@ -68,6 +58,8 @@
 
 .address-book-frequent > div {
 	display: inline-block;
+	border-left: 1px solid #777;
+	border-bottom: 1px solid #777;
 	border-radius: 4px;
 	padding: 4px 8px;
 	margin: 0 4px;
@@ -94,24 +86,26 @@
 	width: 48px;
 	height: 48px;
 	border-radius: 4px;
+	background-color: light-dark(transparent, #C0C0C0);
 	background-size: 40px 40px;
 	background-position: center;
 	background-repeat: no-repeat;
 	filter: drop-shadow(rgba(32,32,32,.5)1px 1px 1px);
+	transform: scale(.9);
 	transition: .2s;
 }
 
 .address-book-button:hover {
-	background-color: var(--clr-select);
+	background-color: var(--clr-select) !important;
 }
 
 .address-book-button:active {
-	background-color: color-mix(in hsl shorter hue, var(--clr-accent) 85%, #000);
+	background-color: color-mix(in hsl shorter hue, var(--clr-accent) 85%, #000) !important;
 }
 
 .address-book-button > div {
 	position: absolute;
-	background-color: light-dark(#202020, #c0c0c0);
+	background-color: #202020;
 	border-radius: 1px;
 	transition: .4s, background-color 0s;
 }
@@ -129,6 +123,15 @@
 	background-color: rgba(255,255,255,.5);
 
 	transition: opacity .15s;
+}
+
+.address-book-list > div:hover {
+	background-color: color-mix(in hsl shorter hue, var(--clr-select) 80%, transparent);
+}
+
+.address-book-list > div,
+.address-book-preview {
+	background-color: light-dark(rgba(224,232,234,.96), rgba(168,168,168,.96));
 }
 
 .address-book-list.card > div {
@@ -264,7 +267,7 @@
 }
 .address-book-preview > a:nth-child(n+2):is(:hover, :focus),
 .address-book-preview > div:nth-child(n+2):is(:hover, :focus) {
-	background-color: var(--clr-highlight);
+	background-color: light-dark(#fff, rgb(184,184,184));
 }
 
 .address-book-preview > div.name {
@@ -312,6 +315,7 @@
 	border-radius: 8px;
 	width: 150px;
 	margin-top: 40px;
+	background-color: light-dark(white, #c0c0c0);
 	box-shadow: rgba(0,0,0,.5) 0 1px 4px;
 }
 
@@ -351,33 +355,5 @@
 	.address-book-button {
 		visibility: hidden;
 		opacity: 0;
-	}
-}
-
-@media (prefers-color-scheme: light) {
-	.address-book-list > div:hover {
-		background-color: color-mix(in srgb, var(--clr-select) 85%, var(--clr-light) 15%);
-	}
-
-	.address-book-list > div,
-	.address-book-preview {
-		background-color: rgba(224,232,234,.96);
-	}
-	.address-book-qrcode > div {
-		background-color: white;
-	}
-}
-
-@media (prefers-color-scheme: dark) {
-	.address-book-list > div:hover {
-		background-color: color-mix(in srgb, var(--clr-select) 80%, var(--clr-dark) 20%);
-	}
-
-	.address-book-list > div,
-	.address-book-preview {
-		background-color: color-mix(in hsl, var(--clr-pane) 96%, transparent 4%);
-	}
-	.address-book-qrcode > div {
-		background-color: #C0C0C0;
 	}
 }

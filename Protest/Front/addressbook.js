@@ -37,7 +37,7 @@ class AddressBook extends Window {
 		this.downloadButton = document.createElement("div");
 		this.downloadButton.classList = "address-book-button";
 		this.downloadButton.style.right = "64px";
-		this.downloadButton.style.backgroundImage = "var(--download-icon)";
+		this.downloadButton.style.backgroundImage = "url('/mono/download.svg')";
 		this.downloadButton.tabIndex = "0";
 		this.downloadButton.onclick = ()=> this.DownloadContacts();
 
