@@ -3,6 +3,7 @@ using System.Net;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using System.Text.RegularExpressions;
+using System.Diagnostics;
 
 namespace Protest.Protocols;
 
@@ -15,7 +16,10 @@ internal static partial class Arp {
 #pragma warning restore SYSLIB1092
 
     [GeneratedRegex("^((?:[0-9]{1,3}\\.){3}[0-9]{1,3})(?:\\s+\\w+){2}\\s+((?:[0-9A-Fa-f]{2}[:-]){5}(?:[0-9A-Fa-f]{2}))")]
-    private static partial Regex LinuxMacAddressRegex();
+    private static partial Regex LinuxAddressRegex();
+
+    [GeneratedRegex(@"\bat\s+(([0-9A-F]{1,2}[:-]){5}[0-9A-F]{1,2})\b", RegexOptions.IgnoreCase, "en-GB")]
+    private static partial Regex MacAddressRegex();
 
     public static string ArpRequest(string ip) {
         string[] split = ip.Split('.');
@@ -32,8 +36,11 @@ internal static partial class Arp {
             if (OperatingSystem.IsWindows()) {
                 return ArpRequest_Windows(ipAddress);
             }
-            else if (OperatingSystem.IsLinux() || OperatingSystem.IsMacOS()) {
+            else if (OperatingSystem.IsLinux()) {
                 return ArpRequest_Linux(ipAddress);
+            }
+            else if (OperatingSystem.IsMacOS()) {
+                return ArpRequest_Mac(ipAddress);
             }
             else {
                 return String.Empty;
@@ -63,7 +70,6 @@ internal static partial class Arp {
     }
 
     [SupportedOSPlatform("linux")]
-    [SupportedOSPlatform("osx")]
     private static string ArpRequest_Linux(IPAddress ip) {
         if (!ip.OnSameBroadcastDomain()) return String.Empty;
 
@@ -71,7 +77,7 @@ internal static partial class Arp {
             using FileStream arpFile = new FileStream("/proc/net/arp", FileMode.Open, FileAccess.Read);
             using StreamReader reader = new StreamReader(arpFile);
 
-            Regex regex = LinuxMacAddressRegex();
+            Regex regex = LinuxAddressRegex();
 
             reader.ReadLine(); //skip header
 
@@ -97,27 +103,53 @@ internal static partial class Arp {
         }
     }
 
-    [SupportedOSPlatform("windows")]
-    public static bool ArpPing(string host) {
-        try {
-            IPAddress[] ips = System.Net.Dns.GetHostAddresses(host);
-            if (ips.Length == 0) { return false; }
 
-            IPAddress ip = ips.First(o => o.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork);
-            if (!ips[0].OnSameBroadcastDomain()) {
-                return false;
+    [SupportedOSPlatform("macos")]
+    private static string ArpRequest_Mac(IPAddress ip) {
+        if (!ip.OnSameBroadcastDomain()) return string.Empty;
+
+        try {
+            using Process process = new Process();
+            process.StartInfo = new ProcessStartInfo {
+                FileName = "/usr/sbin/arp",
+                Arguments = $"-n {ip}",
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
+
+            process.Start();
+
+            string output = process.StandardOutput.ReadToEnd();
+            string error = process.StandardError.ReadToEnd();
+
+            process.WaitForExit();
+
+            if (process.ExitCode != 0 || string.IsNullOrWhiteSpace(output)) {
+                return string.Empty;
             }
 
-            int len = 6;
-            byte[] mac = new byte[len];
-            uint long_ip = BitConverter.ToUInt32(ip.GetAddressBytes());
+            Match match = MacAddressRegex().Match(output);
+            if (!match.Success) {
+                return string.Empty;
+            }
 
-            _ = SendARP(long_ip, 0, mac, ref len);
+            string mac = match.Groups[1].Value.Replace("-", ":");
 
-            return true;
+            string[] parts = mac.Split(':');
+            if (parts.Length != 6)
+            return string.Empty;
+
+            for (int i = 0; i < parts.Length; i++) {
+                parts[i] = parts[i].PadLeft(2, '0');
+            }
+
+            return string.Join(":", parts).ToLowerInvariant();;
         }
-        catch {
-            return false;
+        catch (Exception ex) {
+            Logger.Error(ex);
+            return string.Empty;
         }
     }
 }
