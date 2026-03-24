@@ -113,6 +113,16 @@ div, svg {
 	background: var(--clr-dark);
 }
 
+.focusable-element {
+	border-radius: 4px;
+	padding: 4px;
+	width: fit-content;
+}
+
+.focusable-element:focus-visible {
+	animation: focus-outline .3s ease-in forwards;
+}
+
 .scrollbar-thick *::-webkit-scrollbar {
 	width: 11px;
 	height: 11px;

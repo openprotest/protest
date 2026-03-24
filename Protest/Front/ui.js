@@ -36,8 +36,7 @@ const UI = {
 
 		let accentColor;
 		try {
-			accentColor = localStorage.getItem("accent_color") ?
-				JSON.parse(localStorage.getItem("accent_color")) : [255, 102, 0];
+			accentColor = localStorage.getItem("accent_color") ? JSON.parse(localStorage.getItem("accent_color")) : [255, 102, 0];
 		}
 		catch {
 			localStorage.removeItem("accent_color");
@@ -230,6 +229,10 @@ const UI = {
 			: 66;
 
 		return `hsl(${Math.round(92 + pingResult / 2.2)},${calculatedSaturation}%,${calculatedLightness}%)`;
+	},
+
+	PingColor_LightDark(pingResult) {
+		return `light-dark(${UI.PingColor(pingResult, 35)}, ${UI.PingColor(pingResult)})`;
 	},
 
 	TicksToUnixDate: ticks=> {

@@ -342,14 +342,16 @@ class Mdns extends Console {
 			if (json.req && json.res) {
 				const hexBox = document.createElement("div");
 				hexBox.style.position = "absolute";
-				hexBox.style.width = "24px";
-				hexBox.style.height = "24px";
+				hexBox.style.width = "28px";
+				hexBox.style.height = "28px";
 				hexBox.style.right = "32px";
-				hexBox.style.top = "4px";
-				hexBox.style.backgroundSize = "contain";
-				hexBox.style.backgroundImage = "url(mono/hexviewer.svg?light)";
+				hexBox.style.top = "2px";
+				hexBox.style.borderRadius = "2px";
+				hexBox.style.backgroundColor = "light-dark(#20202080, transparent)";
+				hexBox.style.backgroundSize = "24px 24px";
+				hexBox.style.backgroundPosition = "center";
 				hexBox.style.backgroundRepeat = "no-repeat";
-				hexBox.style.cursor = "pointer";
+				hexBox.style.backgroundImage = "url(mono/hexviewer.svg?light)";
 				element.appendChild(hexBox);
 
 				hexBox.onclick = ()=>{

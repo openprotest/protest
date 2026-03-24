@@ -444,7 +444,7 @@
 }
 
 .glass > .window header.title {
-	text-shadow: light-dark(#000 0 0 4px, #fff 0 0 4px);
+	text-shadow: light-dark(#C0C0C080, #202020C0) 0 0 4px;
 	background: radial-gradient(circle, rgb(96,96,96) 0%, rgba(96,96,96,0) 100%);
 	background-position: 50% 100%;
 	background-repeat: no-repeat;

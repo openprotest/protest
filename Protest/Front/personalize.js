@@ -151,6 +151,8 @@ class Personalize extends Tabs {
 		this.tabsPanel.appendChild(accentColorLabel);
 
 		this.accentBoxes = document.createElement("div");
+		this.accentBoxes.tabIndex = "0";
+		this.accentBoxes.className = "focusable-element";
 		this.tabsPanel.appendChild(this.accentBoxes);
 
 		this.tabsPanel.appendChild(document.createElement("br"));
@@ -196,8 +198,8 @@ class Personalize extends Tabs {
 			selected_accent = JSON.parse(localStorage.getItem("accent_color"));
 
 		const accentColors = [[224,72,64], [255,102,0], [255,186,0], [96,192,32], [36,176,244]];
-
-		for (let i = 0; i < accentColors.length; i++) {
+		
+		for (let i=0; i<accentColors.length; i++) {
 			let hsl = UI.RgbToHsl(accentColors[i]); //--clr-accent
 			let step1 = `hsl(${hsl[0]-4},${hsl[1]*this.saturation.value/100}%,${hsl[2]*.78}%)`;
 			let step2 = `hsl(${hsl[0]+7},${hsl[1]*this.saturation.value/100}%,${hsl[2]*.9}%)`; //--clr-select
@@ -376,7 +378,6 @@ class Personalize extends Tabs {
 					WIN.array[i].popOutWindow.document.querySelector(":root").style.setProperty("--clr-select", `hsl(${hsl[0]+7},${hsl[1]*this.saturation.value/100}%,${hsl[2]*.9}%)`);
 					WIN.array[i].popOutWindow.document.querySelector(":root").style.setProperty("--clr-accent", `hsl(${hsl[0]},${hsl[1]*this.saturation.value/100}%,${hsl[2]}%)`);
 					WIN.array[i].popOutWindow.document.body.style.colorScheme = localStorage.getItem("color_mode") ?? "light dark";
-				
 				}
 			}
 
@@ -386,6 +387,41 @@ class Personalize extends Tabs {
 
 			localStorage.setItem("accent_saturation", this.saturation.value);
 			UI.SetAccentColor(accentColor, this.saturation.value / 100);
+		};
+
+		this.accentBoxes.onkeydown = event=> {
+			if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+
+			const selectedColor = JSON.parse(localStorage.getItem("accent_color")) ?? [0,0,0];
+
+			const selectedIndex = accentColors.findIndex(
+			color =>
+				color[0] === selectedColor[0] &&
+				color[1] === selectedColor[1] &&
+				color[2] === selectedColor[2]
+			);
+			
+			let nextIndex;
+			if (event.key === "ArrowLeft") {
+				nextIndex = selectedIndex - 1;
+				if (nextIndex < 0) nextIndex = accentColors.length - 1;
+				localStorage.setItem("accent_color", JSON.stringify(accentColors[nextIndex]));
+			}
+			else if (event.key === "ArrowRight") {
+				nextIndex = (selectedIndex + 1) % accentColors.length;
+				localStorage.setItem("accent_color", JSON.stringify(accentColors[nextIndex]));
+			}
+
+			Apply();
+
+			for (let i = 0; i < WIN.array.length; i++) { //update all windows indicators
+				for (let j=0; j<this.accentIndicators.length; j++) {
+					if (WIN.array[i] instanceof Personalize && WIN.array[i].args !== "appearance") continue;
+					const isSelected = nextIndex === j;
+					WIN.array[i].accentIndicators[j].style.width = isSelected ? "48px" : "8px";
+					WIN.array[i].accentIndicators[j].style.marginLeft = isSelected ? "0px" : "20px";
+				}
+			}
 		};
 
 		this.winMaxedCheckbox.onchange = Apply;

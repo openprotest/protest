@@ -40,8 +40,7 @@
 	width: 22px;
 	height: 22px;
 	background-color: rgb(192, 192, 192);
-	border-left: 1px solid #777;
-	border-bottom: 1px solid #777;
+	box-shadow: light-dark(#777, #333) -1px 1px 0;
 	border-radius: 50%;
 	transition: .2s;
 }
@@ -101,7 +100,7 @@
 }
 
 .win-toolbar {
-	background-color: light-dark(#808080, #505050);
+	background-color: light-dark(#777, #505050);
 	border-left: 1px solid light-dark(#666, #333);
 	border-bottom: 1px solid light-dark(#666, #333);
 	border-radius: 4px;

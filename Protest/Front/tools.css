@@ -4,7 +4,7 @@
 	border-bottom: 1px solid rgb(96,96,96);
 }
 .tool-element:hover {
-	background-color: light-dark(rgb(224,224,224,.8), rgba(96,96,96,.8)) !important;
+	background-color: light-dark(rgb(144,144,144,.8), rgba(96,96,96,.8)) !important;
 }
 
 .tool-element > .tool-icon {
@@ -14,9 +14,14 @@
 	width: 24px;
 	height: 24px;
 	cursor: pointer;
+}
 
-	background-repeat: no-repeat;
-	background-size: 24px 24px;
+.tool-element > .tool-icon > div {
+	width: 24px;
+	height: 24px;
+	background-color: var(--clr-contrast);
+	mask-repeat: no-repeat;
+	mask-size: 24px 24px;
 }
 
 .tool-element > .tool-icon[tip]::before {

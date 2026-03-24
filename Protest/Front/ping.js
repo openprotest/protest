@@ -436,7 +436,7 @@ class Ping extends Console {
 			td1a.style.borderRadius = "8px 8px 0 0";
 			td1a.style.width = "24px";
 			td1a.style.height = "24px";
-			td1a.style.background = `linear-gradient(to bottom, ${UI.PingColor(0)}0%, ${UI.PingColor(125)}50%, ${UI.PingColor(250)}100%)`;
+			td1a.style.background = `linear-gradient(to bottom, ${UI.PingColor_LightDark(0)}0%, ${UI.PingColor_LightDark(125)}50%, ${UI.PingColor_LightDark(250)}100%)`;
 			tr1.appendChild(td1a);
 			const td1b = document.createElement("td");
 			td1b.style.minWidth = "96px";
@@ -447,7 +447,7 @@ class Ping extends Console {
 			const td2a = document.createElement("td");
 			td2a.style.width = "24px";
 			td2a.style.height = "24px";
-			td2a.style.background = `linear-gradient(to bottom, ${UI.PingColor(250)}0%, ${UI.PingColor(375)}50%, ${UI.PingColor(500)}100%)`;
+			td2a.style.background = `linear-gradient(to bottom, ${UI.PingColor_LightDark(250)}0%, ${UI.PingColor_LightDark(375)}50%, ${UI.PingColor_LightDark(500)}100%)`;
 			tr2.appendChild(td2a);
 			const td2b = document.createElement("td");
 			td2b.style.paddingLeft = "8px";
@@ -458,7 +458,7 @@ class Ping extends Console {
 			td3a.style.borderRadius = "0 0 8px 8px";
 			td3a.style.width = "24px";
 			td3a.style.height = "24px";
-			td3a.style.background = `linear-gradient(to bottom, ${UI.PingColor(500)}0%, ${UI.PingColor(675)}50%, ${UI.PingColor(750)}100%)`;
+			td3a.style.background = `linear-gradient(to bottom, ${UI.PingColor_LightDark(500)}0%, ${UI.PingColor_LightDark(675)}50%, ${UI.PingColor_LightDark(750)}100%)`;
 			tr3.appendChild(td3a);
 			const td3b = document.createElement("td");
 			td3b.style.paddingLeft = "8px";
@@ -469,7 +469,7 @@ class Ping extends Console {
 			td4a.style.borderRadius = "0 0 8px 8px";
 			td4a.style.width = "24px";
 			td4a.style.height = "24px";
-			td4a.style.background = `linear-gradient(to bottom, ${UI.PingColor(750)}0%, ${UI.PingColor(1000)}100%)`;
+			td4a.style.background = `linear-gradient(to bottom, ${UI.PingColor_LightDark(750)}0%, ${UI.PingColor_LightDark(1000)}100%)`;
 			tr4.appendChild(td4a);
 			const td4b = document.createElement("td");
 			td4b.style.paddingLeft = "8px";
@@ -715,17 +715,20 @@ class Ping extends Console {
 			}
 
 			if (type) {
+				const iconBox = document.createElement("div");
+				iconBox.className = "tool-icon";
+				div.appendChild(iconBox);
+				
 				const icon = document.createElement("div");
-				icon.className = "tool-icon";
-				icon.style.backgroundImage = `url(${type in LOADER.deviceIcons ? LOADER.deviceIcons[type] : "mono/gear.svg"}?light)`;
-				div.appendChild(icon);
+				icon.style.maskImage = `url(${type in LOADER.deviceIcons ? LOADER.deviceIcons[type] : "mono/gear.svg"}?light)`;
+				iconBox.appendChild(icon);
 
 				let label = LOADER.devices.data[key].name?.v ?? LOADER.devices.data[key].ip?.v;
 				if (label) {
-					icon.setAttribute("tip", label);
+					iconBox.setAttribute("tip", label);
 				}
 
-				icon.ondblclick = ()=> LOADER.OpenDeviceByFile(key);
+				iconBox.ondblclick = ()=> LOADER.OpenDeviceByFile(key);
 
 				break;
 			}
@@ -934,7 +937,7 @@ class Ping extends Console {
 				}
 
 				for (let j = 0; j < Ping.HISTORY_LIMIT; j++) {
-					let color = UI.PingColor(this.hashtable[index].ping[j]);
+					let color = UI.PingColor_LightDark(this.hashtable[index].ping[j]);
 					if (isNaN(this.hashtable[index].ping[j])) {
 						this.hashtable[index].ping_e[j].style.backgroundColor = "transparent";
 						this.hashtable[index].ping_e[j].style.boxShadow = `${color} 0 0 0 2px inset`;

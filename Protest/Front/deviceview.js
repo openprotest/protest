@@ -2832,6 +2832,7 @@ class DeviceView extends View {
 		const bulkBox = document.createElement("div");
 		bulkBox.style.marginTop = "8px";
 		bulkBox.style.whiteSpace = "nowrap";
+		bulkBox.style.color = "var(--clr-dark)";
 		innerBox.appendChild(bulkBox);
 
 		const portInput = document.createElement("select");
@@ -2911,8 +2912,9 @@ class DeviceView extends View {
 		extractBox.style.maxWidth = "400px";
 		extractBox.style.minWidth = "220px";
 		extractBox.style.borderRadius = "8px";
-		extractBox.style.boxShadow = "rgba(0,0,0,.4) 0 0 8px";
+		extractBox.style.color = "var(--clr-dark)";
 		extractBox.style.backgroundColor = "var(--clr-pane)";
+		extractBox.style.boxShadow = "rgba(0,0,0,.4) 0 0 8px";
 		extractBox.style.padding = "16px 8px";
 		extractBox.style.overflow = "hidden";
 		extractBox.style.textAlign = "center";
@@ -2946,8 +2948,9 @@ class DeviceView extends View {
 		snmpBox.style.maxWidth = "400px";
 		snmpBox.style.minWidth = "220px";
 		snmpBox.style.borderRadius = "8px";
-		snmpBox.style.boxShadow = "rgba(0,0,0,.4) 0 0 8px";
+		snmpBox.style.color = "var(--clr-dark)";
 		snmpBox.style.backgroundColor = "var(--clr-pane)";
+		snmpBox.style.boxShadow = "rgba(0,0,0,.4) 0 0 8px";
 		snmpBox.style.padding = "16px 8px";
 		snmpBox.style.overflow = "hidden";
 		snmpBox.style.textAlign = "center";
