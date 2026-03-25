@@ -10,7 +10,6 @@ using System.Text;
 using System.Text.Json;
 using System.Net;
 using Protest.Http;
-using Microsoft.Extensions.Options;
 using System.Threading;
 
 namespace Protest;

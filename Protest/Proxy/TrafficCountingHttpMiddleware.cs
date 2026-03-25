@@ -1,8 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using System.IO;
 using System.Threading.Tasks;
-using System.Threading;
-using System.Net;
 using Microsoft.AspNetCore.Http;
 
 namespace Protest.Proxy;

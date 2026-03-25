@@ -1,7 +1,6 @@
 ﻿using Protest.Http;
 using System.IO;
 using System.Net;
-using System.Text;
 using System.Threading;
 
 namespace Protest.Tools;

@@ -1,8 +1,6 @@
-﻿using Microsoft.Extensions.Hosting;
-using Protest.Http;
+﻿using Protest.Http;
 using Protest.Protocols;
 using Protest.Tools;
-using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.DirectoryServices;

@@ -1,7 +1,4 @@
-﻿using System.IO;
-using System.Data;
-using System.Net.NetworkInformation;
-using System.Data.SqlClient;
+﻿using System.Net.NetworkInformation;
 //using System.Management.Automation;
 
 namespace Protest.Tools;

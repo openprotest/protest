@@ -1,9 +1,4 @@
-﻿using Microsoft.VisualBasic.FileIO;
-using System.Collections.Generic;
-using System.Globalization;
-using System.IO;
-using System.Net;
-using System.Net.Http;
+﻿using System.Net.Http;
 using System.Text;
 
 namespace Protest;

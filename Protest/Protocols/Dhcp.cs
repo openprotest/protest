@@ -4,9 +4,7 @@ using System.Net;
 using System.Text;
 using System.Net.WebSockets;
 using System.Threading;
-using System.Threading.Tasks;
 using Protest.Http;
-using System.Collections.Generic;
 
 namespace Protest.Protocols;
 
