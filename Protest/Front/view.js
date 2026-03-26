@@ -401,8 +401,13 @@ class View extends Window {
 		const newGroup = document.createElement("div");
 		newGroup.className = "view-attributes-group";
 
-		newGroup.style.backgroundImage = icon === "." ? this.icon.style.backgroundImage : `url(${icon})`;
-		newGroup.textContent = title;
+		const iconBox = document.createElement("div");
+		iconBox.style.maskImage = icon === "." ? this.icon.style.backgroundImage : `url(${icon})`;
+		newGroup.appendChild(iconBox);
+
+		const labelBox = document.createElement("div");
+		labelBox.textContent = title;
+		newGroup.appendChild(labelBox);
 
 		return newGroup;
 	}
@@ -805,7 +810,7 @@ class View extends Window {
 
 				if (i === sorted.length - 1) {
 					for (let j=0; j<this.attributes.childNodes.length; j++) {
-						if (this.attributes.childNodes[j].childNodes.length < 2) continue;
+						if (this.attributes.childNodes[j].childNodes.length < 3) continue;
 						if (this.attributes.childNodes[j].childNodes[0].value.includes("password")) {
 							this.attributes.childNodes[j].style.backgroundImage = "url(mono/lock.svg)";
 						}
@@ -816,7 +821,7 @@ class View extends Window {
 				}
 				else {
 					for (let j=0; j<this.attributes.childNodes.length; j++) {
-						if (this.attributes.childNodes[j].childNodes.length < 2) continue;
+						if (this.attributes.childNodes[j].childNodes.length < 3) continue;
 
 						if (this.attributes.childNodes[j].childNodes[0].value.includes("password")) {
 							this.attributes.childNodes[j].style.backgroundImage = "url(mono/lock.svg)";
@@ -894,7 +899,7 @@ class View extends Window {
 			const attribute = this.attributes.childNodes[i];
 			attribute.style.display = "inherit";
 
-			if (attribute.childNodes.length < 2) {
+			if (attribute.childNodes.length < 3) {
 				attribute.textContent = "";
 				attribute.style.height = "0px";
 				attribute.style.marginTop = "0px";

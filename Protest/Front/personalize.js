@@ -198,7 +198,7 @@ class Personalize extends Tabs {
 			selected_accent = JSON.parse(localStorage.getItem("accent_color"));
 
 		const accentColors = [[224,72,64], [255,102,0], [255,186,0], [96,192,32], [36,176,244]];
-		
+
 		for (let i=0; i<accentColors.length; i++) {
 			let hsl = UI.RgbToHsl(accentColors[i]); //--clr-accent
 			let step1 = `hsl(${hsl[0]-4},${hsl[1]*this.saturation.value/100}%,${hsl[2]*.78}%)`;
@@ -400,7 +400,7 @@ class Personalize extends Tabs {
 				color[1] === selectedColor[1] &&
 				color[2] === selectedColor[2]
 			);
-			
+
 			let nextIndex;
 			if (event.key === "ArrowLeft") {
 				nextIndex = selectedIndex - 1;

@@ -718,7 +718,7 @@ class Ping extends Console {
 				const iconBox = document.createElement("div");
 				iconBox.className = "tool-icon";
 				div.appendChild(iconBox);
-				
+
 				const icon = document.createElement("div");
 				icon.style.maskImage = `url(${type in LOADER.deviceIcons ? LOADER.deviceIcons[type] : "mono/gear.svg"}?light)`;
 				iconBox.appendChild(icon);

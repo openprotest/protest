@@ -8,7 +8,7 @@ class DeviceView extends View {
 		"ip", "ipv6", "mask", "hostname", "mac address", "dhcp enabled", "ports", "network adapter speed", "uplink", "overwriteprotocol",
 
 		[".", "device"],
-		"manufacturer", "model", "serial number", "chasse type", "description",
+		"manufacturer", "model", "serial number", "chasse type", "description", "descriptor",
 
 		["mono/motherboard.svg", "motherboard"],
 		"motherboard", "motherboard manufacturer", "motherboard serial number", "bios",
@@ -2397,7 +2397,7 @@ class DeviceView extends View {
 		saveButton.addEventListener("click", async ()=> {
 			let obj = {};
 			for (let i=0; i<this.attributes.childNodes.length; i++) {
-				if (this.attributes.childNodes[i].childNodes.length < 2) continue;
+				if (this.attributes.childNodes[i].childNodes.length < 3) continue;
 				let name = this.attributes.childNodes[i].childNodes[0].value.toLowerCase();
 				let value = this.attributes.childNodes[i].childNodes[1].firstChild.value;
 				obj[name] = {v:value};
@@ -3629,7 +3629,7 @@ class DeviceView extends View {
 
 			let obj = {};
 			for (let i=0; i<this.attributes.childNodes.length; i++) {
-				if (this.attributes.childNodes[i].childNodes.length < 2) continue;
+				if (this.attributes.childNodes[i].childNodes.length < 3) continue;
 				let name = this.attributes.childNodes[i].childNodes[0].value;
 				let value = this.attributes.childNodes[i].childNodes[1].firstChild.value;
 				obj[name] = {v:value};
