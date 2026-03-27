@@ -400,7 +400,7 @@ class Topology extends Window {
 
 		this.linesLayer = document.createElementNS("http://www.w3.org/2000/svg", "g");
 		this.linesLayer.setAttribute("fill", "none");
-		this.linesLayer.setAttribute("stroke", "#c0c0c0");
+		this.linesLayer.setAttribute("stroke", "light-dark(#202020, #c0c0c0)");
 		this.linesLayer.setAttribute("stroke-width", 3);
 		this.svg.appendChild(this.linesLayer);
 	}
@@ -706,9 +706,9 @@ class Topology extends Window {
 			for (const name in this.links) {
 				if (this.links[name].isEndpoint) continue;
 				const link = this.links[name];
-				link.element.capA.setAttribute("fill", "#c0c0c0");
-				link.element.capB.setAttribute("fill", "#c0c0c0");
-				link.element.line.setAttribute("stroke", "#c0c0c0");
+				link.element.capA.setAttribute("fill", "light-dark(#202020, #c0c0c0)");
+				link.element.capB.setAttribute("fill", "light-dark(#202020, #c0c0c0)");
+				link.element.line.setAttribute("stroke", "light-dark(#202020, #c0c0c0)");
 			}
 		}
 	}
@@ -2441,7 +2441,6 @@ class Topology extends Window {
 
 		this.globalX += 150;
 
-
 		return entry;
 	}
 
@@ -2609,7 +2608,7 @@ class Topology extends Window {
 		icon.setAttribute("y", 4);
 		icon.setAttribute("width", 88);
 		icon.setAttribute("height", 88);
-		icon.setAttribute("fill", "#c0c0c0");
+		icon.setAttribute("fill", "light-dark(#202020, #c0c0c0)");
 		icon.style.transition = "fill .8s";
 		g.appendChild(icon);
 
@@ -2640,7 +2639,7 @@ class Topology extends Window {
 		label.setAttribute("y", 104);
 		label.setAttribute("x", 48);
 		label.setAttribute("font-size", "11");
-		label.setAttribute("fill", "#c0c0c0");
+		label.setAttribute("fill", "light-dark(#202020, #c0c0c0)");
 		label.setAttribute("font-weight", "800");
 		label.setAttribute("dominant-baseline", "middle");
 		label.setAttribute("text-anchor", "middle");
@@ -2707,6 +2706,13 @@ class Topology extends Window {
 		circle.setAttribute("fill", "transparent");
 		g.appendChild(circle);
 
+		const fill = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+		fill.setAttribute("cx", 22);
+		fill.setAttribute("cy", 22);
+		fill.setAttribute("r", 18);
+		fill.setAttribute("fill", "rgb(52,169,228)");
+		g.appendChild(fill);
+
 		const icon = document.createElementNS("http://www.w3.org/2000/svg", "rect");
 		icon.setAttribute("x", 2);
 		icon.setAttribute("y", 2);
@@ -2714,7 +2720,7 @@ class Topology extends Window {
 		icon.setAttribute("height", 40);
 		icon.setAttribute("rx", 20);
 		icon.setAttribute("ry", 20);
-		icon.setAttribute("fill", "#c0c0c0");
+		icon.setAttribute("fill", "light-dark(#202020, #c0c0c0)");
 		icon.setAttribute("mask", "url(#l2switchMask)");
 		icon.style.transition = "fill .8s";
 		g.appendChild(icon);
@@ -2762,7 +2768,7 @@ class Topology extends Window {
 		this.linesLayer.appendChild(line);
 
 		const capElementA = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-		capElementA.setAttribute("fill", "#c0c0c0");
+		capElementA.setAttribute("fill", "light-dark(#202020, #c0c0c0)");
 		capElementA.setAttribute("r", 3);
 		capElementA.setAttribute("cx", linkPath.primary.x);
 		capElementA.setAttribute("cy", linkPath.primary.y);
@@ -2770,7 +2776,7 @@ class Topology extends Window {
 		this.linesLayer.appendChild(capElementA);
 
 		const capElementB = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-		capElementB.setAttribute("fill", "#c0c0c0");
+		capElementB.setAttribute("fill", "light-dark(#202020, #c0c0c0)");
 		capElementB.setAttribute("r", 3);
 		capElementB.setAttribute("cx", linkPath.secondary.x);
 		capElementB.setAttribute("cy", linkPath.secondary.y);
@@ -3138,7 +3144,7 @@ class Topology extends Window {
 			snmpLabel.setAttribute("nolldp", true);
 			this.sidePane.appendChild(snmpLabel);
 		}
-		else if (device.isInferred) {
+		else if (device.isInferred || device.isUnmanaged) {
 			const inferredLabel = document.createElement("div");
 			inferredLabel.className = "topology-error-message";
 			inferredLabel.textContent = "Inferred";
@@ -3677,12 +3683,12 @@ class Topology extends Window {
 			const e = link.element;
 
 			if (e && !e.isEndpoint) {
-				e.line.setAttribute("stroke", lastColor ?? "#c0c0c0");
+				e.line.setAttribute("stroke", lastColor ?? "light-dark(#202020, #c0c0c0)");
 				e.line.setAttribute("stroke-width", 3);
 				e.capA.setAttribute("r", 3);
-				e.capA.setAttribute("fill", lastColor ?? "#c0c0c0");
+				e.capA.setAttribute("fill", lastColor ?? "light-dark(#202020, #c0c0c0)");
 				e.capB.setAttribute("r", 3);
-				e.capB.setAttribute("fill", lastColor ?? "#c0c0c0");
+				e.capB.setAttribute("fill", lastColor ?? "light-dark(#202020, #c0c0c0)");
 			}
 		};
 

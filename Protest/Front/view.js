@@ -505,53 +505,29 @@ class View extends Window {
 		};
 	}
 
-	CreateInfo(text, source) {
-		const info = document.createElement("div");
-		info.setAttribute("priority", "40");
-		info.className = "view-info-box";
-		info.textContent = text;
-		info.setAttribute("source", source);
-		this.liveB.appendChild(info);
+	CreateWarningBox(text, source, severity) {
+		const box = document.createElement("div");
+		box.setAttribute("severity", severity);
+		box.className = {
+			10: "view-info-box",
+			20: "view-warning-box",
+			30: "view-error-box",
+			40: "view-critical-box",
+		}[severity];
+
+		box.textContent = text;
+		box.setAttribute("source", source);
+		this.liveB.appendChild(box);
 		this.SortWarningBoxes();
-		return info;
-	}
-	CreateWarning(text, source) {
-		const warning = document.createElement("div");
-		warning.setAttribute("priority", "30");
-		warning.className = "view-warning-box";
-		warning.textContent = text;
-		warning.setAttribute("source", source);
-		this.liveB.appendChild(warning);
-		this.SortWarningBoxes();
-		return warning;
-	}
-	CreateError(text, source) {
-		const error = document.createElement("div");
-		error.setAttribute("priority", "20");
-		error.className = "view-error-box";
-		error.textContent = text;
-		error.setAttribute("source", source);
-		this.liveB.appendChild(error);
-		this.SortWarningBoxes();
-		return error;
-	}
-	CreateCritical(text, source) {
-		const critical = document.createElement("div");
-		critical.setAttribute("priority", "10");
-		critical.className = "view-critical-box";
-		critical.textContent = text;
-		critical.setAttribute("source", source);
-		this.liveB.appendChild(critical);
-		this.SortWarningBoxes();
-		return critical;
+		return box;
 	}
 
 	SortWarningBoxes() {
 		let boxes = [];
 
 		for (let i=0; i<this.liveB.children.length; i++) {
-			const priority = this.liveB.children[i].getAttribute("priority");
-			if (!priority) continue;
+			const severity = this.liveB.children[i].getAttribute("severity");
+			if (!severity) continue;
 			boxes.push(this.liveB.children[i]);
 		}
 
@@ -560,7 +536,7 @@ class View extends Window {
 		}
 
 		boxes.sort((a, b)=> {
-			return parseInt(a.getAttribute("priority")) - parseInt(b.getAttribute("priority"));
+			return parseInt(b.getAttribute("severity")) - parseInt(a.getAttribute("severity"));
 		});
 
 		for (let i=0; i<boxes.length; i++) {
