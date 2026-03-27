@@ -25,7 +25,7 @@ internal static class Issues {
     private const int DISK_SPACE_THRESHOLD      = 85;
     private const int DISK_IO_THRESHOLD         = 75;
 
-    public enum SeverityLevel {
+    public enum SeverityLevel : byte {
         info     = 1,
         warning  = 2,
         error    = 3,
@@ -228,6 +228,10 @@ internal static class Issues {
             issues.Add(issue.Value);
         }
 
+        if (CheckWindowsLifecycle(device, out Issue? lifecycleIssue) && lifecycleIssue.HasValue) {
+            issues.Add(lifecycleIssue.Value);
+        }
+
         if (osAttribute?.value.Contains("windows", StringComparison.OrdinalIgnoreCase) == true) {
             string ipString = null;
             if (device.attributes.TryGetValue("ip", out Database.Attribute ip) && !String.IsNullOrEmpty(ip?.value)) {
@@ -288,7 +292,7 @@ internal static class Issues {
                             name       = nameAttribute?.value ?? String.Empty,
                             identifier = ips[i],
                             category   = "Database",
-                            source     = "Internal check",
+                            source     = "Internal",
                             file       = device.Value.filename,
                             isUser     = false,
                         });
@@ -324,7 +328,7 @@ internal static class Issues {
                             name       = nameAttribute?.value ?? String.Empty,
                             identifier = macs[i].Length == 12 ? Regex.Replace(macs[i], @"(\w{2})(?=\w)", "$1:") : macs[i],
                             category   = "Database",
-                            source     = "Internal check",
+                            source     = "Internal",
                             file       = device.Value.filename,
                             isUser     = false,
                         });
@@ -942,7 +946,7 @@ internal static class Issues {
                     name       = nameAttribute?.value ?? String.Empty,
                     identifier = target,
                     category   = "Password",
-                    source     = "Internal check",
+                    source     = "Internal",
                     file       = entry.filename,
                     isUser     = isUser,
                 };
@@ -952,6 +956,62 @@ internal static class Issues {
 
         issue = null;
         return false;
+    }
+
+    public static bool CheckWindowsLifecycle(Database.Entry device, out Issue? issue) {
+        issue = null;
+
+        if (device is null) {
+            return false;
+        }
+
+        device.attributes.TryGetValue("operating system", out Database.Attribute osAttribute);
+        device.attributes.TryGetValue("os version", out Database.Attribute osVersionAttribute);
+
+        if (!WindowsLifecycle.TryAssess(osAttribute?.value, osVersionAttribute?.value, out WindowsLifecycle.Assessment assessment)) {
+            return false;
+        }
+
+        if (assessment.state != WindowsLifecycle.SupportState.expiringSoon
+            && assessment.state != WindowsLifecycle.SupportState.outOfSupport) {
+            return false;
+        }
+
+        device.attributes.TryGetValue("name", out Database.Attribute nameAttribute);
+
+        string osName = assessment.productName.Contains(assessment.release, StringComparison.OrdinalIgnoreCase)
+            ? assessment.productName
+            : $"{assessment.productName} {assessment.release}";
+
+        string message = assessment.state == WindowsLifecycle.SupportState.outOfSupport
+            ? $"{osName} ({assessment.version}) has reached EOS"
+            : $"{osName} ({assessment.version}) reaches EOS on {assessment.endOfSupport:yyyy-MM-dd} ({assessment.daysLeft} days left)";
+
+        string ipString = string.Empty;
+        if (device.attributes.TryGetValue("ip", out Database.Attribute ip) && !String.IsNullOrEmpty(ip?.value)) {
+            ipString = ip.value.Split(';').Select(o => o.Trim()).ToArray()[0];
+        }
+
+        Issues.SeverityLevel severity;
+        if (assessment.state == WindowsLifecycle.SupportState.outOfSupport) {
+            severity = SeverityLevel.critical;
+        }
+        else {
+            severity = assessment.daysLeft < 90 ? SeverityLevel.error : SeverityLevel.warning;
+        }
+
+        issue = new Issue {
+            severity   = severity,
+            message    = message,
+            name       = nameAttribute?.value ?? String.Empty,
+            identifier = ipString,
+            category   = "Operating system",
+            source     = "Internal",
+            file       = device.filename,
+            isUser     = false
+        };
+
+        return true;
     }
 
     public static bool CheckDiskSpace(string file, string target, double percent, string diskCaption, out Issue? issue) {

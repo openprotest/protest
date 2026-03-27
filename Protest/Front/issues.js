@@ -16,6 +16,7 @@ class Issues extends List {
 		"Memory usage"      : "url(mono/ram.svg)",
 		"Disk space"        : "url(mono/hdd.svg)",
 		"Disk I/O"          : "url(mono/ssd.svg)",
+		"Operating system"  : "url(mono/os.svg)",
 		"Printer component" : "url(mono/printer.svg)",
 	};
 
