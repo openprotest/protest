@@ -43,8 +43,8 @@ internal static class Monitor {
 
     private static readonly Lock mutex;
 
-    private static JsonSerializerOptions actionSerializerOptions;
-    private static JsonSerializerOptions answerSerializerOptions;
+    private static readonly JsonSerializerOptions actionSerializerOptions;
+    private static readonly JsonSerializerOptions answerSerializerOptions;
 
     private static SnmpProfiles.Profile[] snmpProfiles;
 

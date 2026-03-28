@@ -1645,13 +1645,13 @@ class DeviceView extends View {
 				const split = this.link["network adapter speed"].v.split(";").map(o=> o.trim());
 				for (let i=0; i<split.length; i++) {
 					if (split[i] === "10 Mbps" || split[i] === "100 Mbps") {
-						this.CreateWarning(`Poor ethernet link speed: ${split[i]}`, "WMI");
+						this.CreateWarningBox(`Poor ethernet link speed: ${split[i]}`, "WMI", 20);
 					}
 				}
 			}
 
 			if (".interfaces" in this.link && "snmp profile" in this.link && !this.switchInfo.success) {
-				this.CreateWarning("SNMP fetch failed. Currently displaying local data", "SNMP");
+				this.CreateWarningBox("SNMP polling failed. Currently displaying local data", "SNMP", 20);
 			}
 
 			this.liveStatsWebSockets = null;
