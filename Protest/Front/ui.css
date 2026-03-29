@@ -177,6 +177,7 @@
 
 #menufilterdot {
 	position: absolute;
+	z-index: -1;
 	left: 156px;
 	top: 112px;
 	background-color: var(--clr-accent);
@@ -187,6 +188,16 @@
 	transform: scale(0);
 	transition: transform .4s, left .6s, width .8s;
 	transition-timing-function:  cubic-bezier(.2,.8,.3,1.2);
+}
+
+#menufilterdot.focused::before {
+	content: "";
+	position: absolute;
+	width: 100%;
+	height: 32px;
+	border-radius: 4px;
+	background-color: var(--clr-transparent);
+	transform: translateY(-35px);
 }
 
 #menulist {
