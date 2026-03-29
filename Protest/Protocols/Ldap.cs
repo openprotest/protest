@@ -114,7 +114,7 @@ internal static class Ldap {
         try {
             string domain = IPGlobalProperties.GetIPGlobalProperties()?.DomainName ?? null;
             if (String.IsNullOrEmpty(domain)) return false;
-   
+
             normalizedDomain = NormalizeDomain(domain);
             if (String.IsNullOrEmpty(normalizedDomain)) return false;
         }

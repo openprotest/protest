@@ -66,8 +66,6 @@ internal static partial class Polling {
         }
     }
 
-
-
     private static PortDir[] ComputeInterface(IList<Variable> list, Dictionary<string, string> parsed) {
         PortDir descriptor = new PortDir();
         PortDir alias      = new PortDir();

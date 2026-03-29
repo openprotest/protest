@@ -150,7 +150,7 @@ internal static class WebsiteCheck {
             result.Append("{\"title\":\"DNS\",");
 
             result.Append($"\"result\":[");
-            
+
             long starttime = DateTime.UtcNow.Ticks;
             IPAddress[] ips = System.Net.Dns.GetHostAddresses(domain);
             long endtime = DateTime.UtcNow.Ticks;
@@ -302,7 +302,7 @@ internal static class WebsiteCheck {
             result.Append("],");
 
             result.Append($"\"status\":\"pass\",");
-            
+
             result.Append($"\"time\":\"{(endtime - starttime) / 10_000}\"");
 
             result.Append('}');

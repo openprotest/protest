@@ -170,7 +170,7 @@ internal static class Auth {
 
         return false;
     }
- 
+
     private static bool PrimaryFactorAuthentication(HttpListenerContext ctx, string[] array) {
         if (array.Length < 3) {
             ctx.Response.StatusCode = (int)HttpStatusCode.Unauthorized;

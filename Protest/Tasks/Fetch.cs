@@ -458,7 +458,7 @@ internal static class Fetch {
 
         if (data is null || data.IsEmpty) {
             return "{\"error\":\"Failed to fetch data.\"}"u8.ToArray();
-        } 
+        }
 
         return JsonSerializer.SerializeToUtf8Bytes(data, fetchSerializerOptions);
     }
