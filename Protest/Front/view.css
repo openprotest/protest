@@ -447,6 +447,8 @@ button.view-live-button:active {
 	padding: 8px;
 	min-width: 228px;
 	min-height: 40px;
+	border-left: 1px solid #777;
+	border-bottom: 1px solid #777;
 	border-radius: 4px;
 	box-sizing: border-box;
 	overflow-y: hidden;

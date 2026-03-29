@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-
 namespace Protest.Tools;
 
 internal static class WindowsLifecycle {
