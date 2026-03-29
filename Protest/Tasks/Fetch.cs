@@ -385,6 +385,19 @@ internal static class Fetch {
                 data.TryAdd("snmp profile", new string[] { profile.guid.ToString(), "SNMP", string.Empty });
             }
 
+            IList<Variable> macAddressResult = Protocols.Snmp.Polling.SnmpQuery(ipAddress, profile, [Protocols.Snmp.Oid.INT_MAC], Polling.SnmpOperation.Walk);
+            List<string> macAddresses = macAddressResult
+                .Select(o => o.Data.ToBytes())
+                .Where(o => o.Length == 8)
+                .Where(o => o[2]>0 && o[3]>0 && o[4]>0 && o[4]>0 && o[6]>0 && o[7]>0)
+                .Select(o => BitConverter.ToString(o, 2).Replace('-', ':'))
+                .Distinct()
+                .ToList();
+
+            if (macAddresses.Count > 0) {
+                data.TryAdd("mac address", new string[] { String.Join("; ", macAddresses), "SNMP", string.Empty });
+            }
+
             if (!data.ContainsKey("type")) {
                 IList<Variable> dot1dBaseBridgeAddress = Protocols.Snmp.Polling.SnmpQuery(ipAddress, profile, ["1.3.6.1.2.1.17.1.1.0"], Polling.SnmpOperation.Get);
                 if (dot1dBaseBridgeAddress?.Count > 0) {
