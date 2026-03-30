@@ -479,7 +479,7 @@ internal static class Dhcp {
         buffer[index++] = requestedIp[2];
         buffer[index++] = requestedIp[3];
 
-        buffer[index++] = 0x36; //opt: dhcp 
+        buffer[index++] = 0x36; //opt: dhcp
         buffer[index++] = 0x04; //length
         buffer[index++] = dhcpServerIp[0]; //ip address
         buffer[index++] = dhcpServerIp[1];

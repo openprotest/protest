@@ -304,7 +304,7 @@ internal static class IpDiscovery {
             WsWriteText(ws, JsonSerializer.SerializeToUtf8Bytes<HostEntry>(gwHost, hostSerializerOptions), mutex);
         }
     }
-   
+
     private static void DiscoverMdns(ConcurrentDictionary<string, HostEntry> dic, NetworkInterface nic, WebSocket ws, Lock mutex, CancellationToken token) {
         const int timeout = 1000;
         const Protocols.Dns.RecordType type = Protocols.Dns.RecordType.ANY;

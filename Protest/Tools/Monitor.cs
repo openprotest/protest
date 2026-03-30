@@ -535,7 +535,7 @@ file sealed class ActionJsonConverter : JsonConverter<Monitor.Query> {
                 case "index" : action.index  = reader.GetInt32(); break;
 
                 case "action":
-                    //action.action = Enum.Parse<Monitor.Action>(reader.GetString()); 
+                    //action.action = Enum.Parse<Monitor.Action>(reader.GetString());
                     Enum.TryParse<Monitor.Action>(reader.GetString(), true, out Monitor.Action act);
                     action.action = act;
                     break;

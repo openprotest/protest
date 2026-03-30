@@ -368,7 +368,7 @@ internal static class Issues {
 
             bool isMinorVariation = i > 0 && Math.Abs(lastRtt - rtt) < 2 && timestamp - lastTimestamp < 600_000;
             if (isMinorVariation) { continue; }
- 
+
             lastTimestamp = timestamp;
             lastRtt = rtt;
 

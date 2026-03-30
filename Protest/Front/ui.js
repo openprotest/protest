@@ -1239,6 +1239,8 @@ keyMux:
 		break;
 	}
 
+	menufilterdot.className = MENU.index === -1 ? "focused" : "";
+
 	if (MENU.list.length > 0
 		&& MENU.index > -1
 		&& (event.key==="ArrowUp" || event.key==="ArrowDown" || event.key==="ArrowLeft" || event.key==="ArrowRight")) { //scroll into view
