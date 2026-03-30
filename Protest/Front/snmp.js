@@ -137,7 +137,7 @@ static OID_MAP_1_3_6_1_2_1 = [
 		this.explorerButton.style.height = "auto";
 		this.explorerButton.style.gridArea = "2 / 4";
 		this.explorerButton.style.padding = "0";
-		//inputBox.appendChild(this.explorerButton);
+		inputBox.appendChild(this.explorerButton);
 
 		this.getButton = document.createElement("input");
 		this.getButton.type = "button";
@@ -175,6 +175,29 @@ static OID_MAP_1_3_6_1_2_1 = [
 		this.plotBox.tabIndex = 0;
 		this.plotBox.className = "snmp-plot no-results";
 		this.content.appendChild(this.plotBox);
+
+
+		if (this.args.profile) {
+			(async () => {
+				const response = await fetch("config/snmpprofiles/list")
+
+				if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
+
+				const json = await response.json();
+				if (json.error) throw(json.error);
+
+				for (const profile of json) {
+					if (profile.guid !== this.args.profile) continue;
+					this.communityInput.value = profile.community;
+					this.versionInput.value = profile.version;
+					this.versionInput.onchange();
+					if (profile.version === 3) {
+						this.credentialsProfileInput.value = profile.guid;
+					}
+					break;
+				}
+			})();
+		}
 
 		this.targetInput.oninput = ()=> { this.args.target = this.targetInput.value };
 		this.communityInput.oninput = ()=> { this.args.community = this.communityInput.value };
@@ -327,9 +350,116 @@ static OID_MAP_1_3_6_1_2_1 = [
 
 		const {okButton, innerBox} = dialog;
 
+		const tasks = [];
+		let taskCount = 0;
+
+		const spinner = document.createElement("div");
+		spinner.className = "spinner";
+		spinner.style.textAlign = "left";
+		spinner.style.marginTop = "32px";
+		spinner.style.marginBottom = "16px";
+		spinner.appendChild(document.createElement("div"));
+		dialog.innerBox.appendChild(spinner);
+
+		const getOidTask = async oid=> {
+			await this.GetOid(oid);
+			taskCount++;
+			//innerBox.textContent = `Loading OID database... (${tasks.length} / ${taskCount})`;
+		};
+
+		for (let i=0; i<Snmp.OID_MAP_1_0_8802.length; i++) {
+			const oid = `1.0.8802.${Snmp.OID_MAP_1_0_8802[i]}`;
+			tasks.push(getOidTask(oid));
+		}
+		for (let i=0; i<Snmp.OID_MAP_1_3_6_1_2_1.length; i++) {
+			const oid = `1.3.6.1.2.1.${Snmp.OID_MAP_1_3_6_1_2_1[i]}`;
+			tasks.push(getOidTask(oid));
+		}
+
+		await Promise.all(tasks);
+
+		innerBox.textContent = "";
+
+		innerBox.style.margin = "16px";
+		innerBox.style.display = "grid";
+		innerBox.style.gridTemplateColumns = "auto";
+		innerBox.style.gridTemplateRows = "32px 8px auto";
+
+		const findInput = document.createElement("input");
+		findInput.type = "text";
+		findInput.placeholder = "Find..";
+		findInput.style.gridArea = "1 / 1";
+
+		const oidList = document.createElement("div");
+		oidList.className = "wmi-classes-list no-results";
+		oidList.style.border = "var(--clr-control) solid 1.5px";
+		oidList.style.gridArea = "3 / 1";
+		oidList.style.overflowY = "scroll";
+
+		innerBox.append(findInput, oidList);
+
+		findInput.focus();
+
+		let selectedElement = null;
+		let selectedOid = null;
+
+		const FindOid = (container, keywords)=> {
+			for (const key in Snmp.OID_CACHE) {
+				const info = Snmp.OID_CACHE[key][0];
+				
+				if (!isNaN(info)) continue;
+
+				let mismatch = false;
+				for (const keyword of keywords) {
+					if (!info.toLowerCase().includes(keyword) && !key.includes(keyword)) {
+						mismatch = true;
+						break;
+					}
+				}
+
+				if (mismatch) continue;
+
+				const item = document.createElement("div");
+				item.className = "snmp-container-item";
+				container.appendChild(item);
+
+				const oidBox = document.createElement("div");
+				oidBox.textContent = key;
+				oidBox.style.userSelect = "text";
+
+				const infoBox = document.createElement("div");
+				infoBox.textContent = info;
+
+				item.append(oidBox, infoBox);
+
+				item.onclick = ()=> {
+					if (selectedElement) {
+						selectedElement.style.backgroundColor = "";
+					}
+					item.style.backgroundColor = "var(--clr-select)";
+					selectedElement = item;
+					selectedOid = key;
+				};
+			}
+		};
+
+		findInput.onchange = ()=> {
+			oidList.textContent = "";
+			const keywords = new Set(findInput.value.trim().toLowerCase().split(" "));
+			FindOid(oidList, keywords);
+		};
+
+		if (this.oidInput.value.length > 0) {
+			const keyword = this.oidInput.value.split(",")[0].trim();
+			findInput.value = keyword;
+			FindOid(oidList, keyword);
+		}
+
 		okButton.addEventListener("click", ()=> {
-			this.oidInput.value = "";
-			this.args.oid = "";
+			if (selectedOid) {
+				this.oidInput.value = selectedOid;
+				this.args.oid = selectedOid;
+			}
 		});
 	}
 
@@ -1017,5 +1147,4 @@ static OID_MAP_1_3_6_1_2_1 = [
 		}
 		return this.selected;
 	}
-
 }

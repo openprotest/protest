@@ -515,8 +515,16 @@ class View extends Window {
 			40: "view-critical-box",
 		}[severity];
 
-		box.textContent = text;
+		const iconBox = document.createElement("div");
+
+		const sourceBox = document.createElement("div");
+		sourceBox.textContent = source;
+
+		const textBox = document.createElement("div");
+		textBox.textContent = text;
+
 		box.setAttribute("source", source);
+		box.append(iconBox, sourceBox, textBox);
 		this.liveB.appendChild(box);
 		this.SortWarningBoxes();
 		return box;

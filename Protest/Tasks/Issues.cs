@@ -292,7 +292,7 @@ internal static class Issues {
                             name       = nameAttribute?.value ?? String.Empty,
                             identifier = ips[i],
                             category   = "Database",
-                            source     = "Internal",
+                            source     = "Record",
                             file       = device.Value.filename,
                             isUser     = false,
                         });
@@ -328,7 +328,7 @@ internal static class Issues {
                             name       = nameAttribute?.value ?? String.Empty,
                             identifier = macs[i].Length == 12 ? Regex.Replace(macs[i], @"(\w{2})(?=\w)", "$1:") : macs[i],
                             category   = "Database",
-                            source     = "Internal",
+                            source     = "Record",
                             file       = device.Value.filename,
                             isUser     = false,
                         });
@@ -732,7 +732,7 @@ internal static class Issues {
                     name       = nameAttribute?.value ?? String.Empty,
                     identifier = host,
                     category   = "Network",
-                    source     = "WMI",
+                    source     = "Record",
                     file       = device.filename,
                     isUser     = false,
                 };
@@ -946,7 +946,7 @@ internal static class Issues {
                     name       = nameAttribute?.value ?? String.Empty,
                     identifier = target,
                     category   = "Password",
-                    source     = "Internal",
+                    source     = "Record",
                     file       = entry.filename,
                     isUser     = isUser,
                 };
@@ -997,7 +997,7 @@ internal static class Issues {
             severity = SeverityLevel.critical;
         }
         else {
-            severity = assessment.daysLeft < 90 ? SeverityLevel.error : SeverityLevel.warning;
+            severity = assessment.daysLeft < 30 ? SeverityLevel.error : SeverityLevel.warning;
         }
 
         issue = new Issue {
@@ -1006,7 +1006,7 @@ internal static class Issues {
             name       = nameAttribute?.value ?? String.Empty,
             identifier = ipString,
             category   = "Operating system",
-            source     = "Internal",
+            source     = "Record",
             file       = device.filename,
             isUser     = false
         };

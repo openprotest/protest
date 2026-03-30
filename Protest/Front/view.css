@@ -392,10 +392,7 @@ button.view-live-button:active {
 }
 
 .view-info-pane > div {
-	background-color: light-dark(#20202050, #20202040);
 	margin: 0 8px 16px 8px;
-	padding: 8px;
-	border: light-dark(transparent, rgb(168,168,168)) solid 2px;
 	border-radius: 4px;
 }
 
@@ -765,77 +762,83 @@ button.view-live-button:active {
 .view-warning-box,
 .view-error-box,
 .view-critical-box {
-	font-weight: 600;
-	margin: 0 0 4px 0;
-	padding: 6px 0 6px 36px;
+	display: block;
+	white-space: nowrap;
+	overflow: hidden;
+	padding: 6px 4px;
+	border-left: 1px solid transparent;
+	border-bottom: 1px solid transparent;
 	border-radius: 4px;
-	background-position: 4px center;
-	background-size: 24px 24px;
-	background-repeat: no-repeat;
-	border-left: 1px solid #777;
-	border-bottom: 1px solid #777;
+}
+
+.view-info-box > div,
+.view-warning-box > div,
+.view-error-box > div,
+.view-critical-box > div {
+	display: inline-block;
+}
+
+.view-info-box > div:nth-child(1),
+.view-warning-box > div:nth-child(1),
+.view-error-box > div:nth-child(1),
+.view-critical-box > div:nth-child(1) {
+	filter: drop-shadow(#444 -1px 1px 0);
+	width: 24px;
+	height: 24px;
+	vertical-align: center;
+}
+
+.view-info-box > div:nth-child(1)::after,
+.view-warning-box > div:nth-child(1)::after,
+.view-error-box > div:nth-child(1)::after,
+.view-critical-box > div:nth-child(1)::after {
+	content: "";
+	position: absolute;
+	width: 24px;
+	height: 24px;
+	mask-size: cover;
+}
+
+.view-info-box > div:nth-child(1)::after {
+	mask-image: url(mono/info.svg);
+	background-color: rgb(32,148,240);
+}
+.view-warning-box > div:nth-child(1)::after {
+	mask-image: url(mono/warning.svg);
+	background-color: var(--clr-warning);
+}
+.view-error-box > div:nth-child(1)::after {
+	mask-image: url(mono/error.svg);
+	background-color: var(--clr-error);
+}
+.view-critical-box > div:nth-child(1)::after {
+	mask-image: url(mono/critical.svg);
+	background-color: var(--clr-critical);
+}
+
+.view-info-box > div:nth-child(2),
+.view-warning-box > div:nth-child(2),
+.view-error-box > div:nth-child(2),
+.view-critical-box > div:nth-child(2) {
+	border: 2px solid var(--clr-contrast);
+	border-radius: 4px;
+	padding: 0px 4px;
+	margin: 0px 8px;
+	min-width: 56px;
+	text-align: center;
+	font-weight: 600;
+}
+
+.view-info-box > div:nth-child(3),
+.view-warning-box > div:nth-child(3),
+.view-error-box > div:nth-child(3),
+.view-critical-box > div:nth-child(3) {
 	-webkit-user-select: text;
 	user-select: text;
+	font-weight: 600;
 }
 
-.view-info-box {
-	color: var(--clr-dark);
-	background-color: var(--clr-pane);
-	background-image: url(mono/info.svg);
-}
 
-.view-warning-box {
-	color: var(--clr-dark);
-	background-color: var(--clr-warning);
-	background-image: url(mono/warning.svg);
-}
-
-.view-error-box {
-	color: var(--clr-dark);
-	background-color: var(--clr-error);
-	background-image: url(mono/error.svg);
-}
-
-.view-critical-box {
-	color: var(--clr-dark);
-	background-color: var(--clr-critical);
-	background-image: url(mono/critical.svg);
-}
-
-.view-info-box[source]::before,
-.view-warning-box[source]::before,
-.view-error-box[source]::before,
-.view-critical-box[source]::before { /*source*/
-	display: inline-block;
-	content: attr(source);
-	font-weight: bold;
-	vertical-align: bottom;
-	min-width: 50px;
-	padding: 0 4px;
-	margin: 0 8px 0 0;
-	border-radius: 4px;
-	text-align: center;
-	color: var(--clr-contrast);
-	overflow: hidden;
-	white-space: nowrap;
-}
-
-.view-info-box[source]::before {
-	color: var(--clr-pane);
-	background-color: #202020;
-}
-.view-warning-box[source]::before {
-	color: var(--clr-warning);
-	background-color: #202020;
-}
-.view-error-box[source]::before {
-	color: var(--clr-error);
-	background-color: #202020;
-}
-.view-critical-box[source]::before {
-	color: var(--clr-critical);
-	background-color: #202020;
-}
 
 .view-side-tools {
 	position: absolute;
