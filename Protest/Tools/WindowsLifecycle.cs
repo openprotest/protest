@@ -1,3 +1,5 @@
+using Protest.Tasks;
+
 namespace Protest.Tools;
 
 internal static class WindowsLifecycle {
@@ -75,7 +77,63 @@ internal static class WindowsLifecycle {
         ("Windows Server 2025",    26100, new DateOnly(2034, 11, 14)),
     };
 
-    public static bool TryAssess(string osName, string osVersion, out Assessment assessment) {
+    internal static bool CheckEntry(Database.Entry device, out Issues.Issue? issue) {
+        issue = null;
+
+        if (device is null) {
+            return false;
+        }
+
+        device.attributes.TryGetValue("operating system", out Database.Attribute osAttribute);
+        device.attributes.TryGetValue("os version", out Database.Attribute osVersionAttribute);
+
+        if (!WindowsLifecycle.TryAssess(osAttribute?.value, osVersionAttribute?.value, out WindowsLifecycle.Assessment assessment)) {
+            return false;
+        }
+
+        if (assessment.state != WindowsLifecycle.SupportState.expiringSoon
+            && assessment.state != WindowsLifecycle.SupportState.outOfSupport) {
+            return false;
+        }
+
+        device.attributes.TryGetValue("name", out Database.Attribute nameAttribute);
+
+        string osName = assessment.productName.Contains(assessment.release, StringComparison.OrdinalIgnoreCase)
+            ? assessment.productName
+            : $"{assessment.productName} {assessment.release}";
+
+        string message = assessment.state == WindowsLifecycle.SupportState.outOfSupport
+            ? $"{osName} ({assessment.version}) has reached EOS"
+            : $"{osName} ({assessment.version}) reaches EOS on {assessment.endOfSupport:yyyy-MM-dd} ({assessment.daysLeft} days left)";
+
+        string ipString = string.Empty;
+        if (device.attributes.TryGetValue("ip", out Database.Attribute ip) && !String.IsNullOrEmpty(ip?.value)) {
+            ipString = ip.value.Split(';').Select(o => o.Trim()).ToArray()[0];
+        }
+
+        Issues.SeverityLevel severity;
+        if (assessment.state == WindowsLifecycle.SupportState.outOfSupport) {
+            severity = Issues.SeverityLevel.critical;
+        }
+        else {
+            severity = assessment.daysLeft < 30 ? Issues.SeverityLevel.error : Issues.SeverityLevel.warning;
+        }
+
+        issue = new Issues.Issue {
+            severity = severity,
+            message = message,
+            name = nameAttribute?.value ?? String.Empty,
+            identifier = ipString,
+            category = "Operating system",
+            source = "Record",
+            file = device.filename,
+            isUser = false
+        };
+
+        return true;
+    }
+
+    private static bool TryAssess(string osName, string osVersion, out Assessment assessment) {
         assessment = default;
 
         if (String.IsNullOrWhiteSpace(osName) || !osName.Contains("windows", StringComparison.OrdinalIgnoreCase)) {

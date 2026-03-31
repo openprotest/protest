@@ -1,17 +1,18 @@
-﻿using Protest.Http;
-using Protest.Protocols;
-using Protest.Tools;
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.DirectoryServices;
 using System.Net;
 using System.Net.WebSockets;
+using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using Protest.Http;
+using Protest.Protocols;
+using Protest.Tools;
 
 namespace Protest.Tasks;
 
@@ -228,31 +229,27 @@ internal static class Issues {
             issues.Add(issue.Value);
         }
 
-        if (CheckWindowsLifecycle(device, out Issue? lifecycleIssue) && lifecycleIssue.HasValue) {
-            issues.Add(lifecycleIssue.Value);
-        }
-
         if (osAttribute?.value.Contains("windows", StringComparison.OrdinalIgnoreCase) == true) {
             string ipString = null;
             if (device.attributes.TryGetValue("ip", out Database.Attribute ip) && !String.IsNullOrEmpty(ip?.value)) {
                 ipString = ip.value.Split(';').Select(o => o.Trim()).ToArray()[0];
             }
 
-            if (CheckCpu(device, ipString, out Issue ? cpuIssue)) {
+            if (CheckCpuLifeline(device, ipString, out Issue ? cpuIssue)) {
                 issues.Add(cpuIssue.Value);
             }
 
-            if (CheckMemory(device, ipString, out Issue? memoryIssue)) {
+            if (CheckMemoryLifeline(device, ipString, out Issue? memoryIssue)) {
                 issues.Add(memoryIssue.Value);
             }
 
-            if (CheckDiskSpace(device, ipString, out Issue[] diskIssues) && diskIssues is not null) {
+            if (CheckDiskSpaceLifeline(device, ipString, out Issue[] diskIssues) && diskIssues is not null) {
                 for (int i = 0; i < diskIssues.Length; i++) {
                     issues.Add(diskIssues[i]);
                 }
             }
 
-            if (CheckDiskIO(device, ipString, out Issue? diskIoIssue)) {
+            if (CheckDiskIOLifeline(device, ipString, out Issue? diskIoIssue)) {
                 issues.Add(diskIoIssue.Value);
             }
 
@@ -260,6 +257,17 @@ internal static class Issues {
                 issues.Add(nicSpeedIssue.Value);
             }
 
+            if (OperatingSystem.IsWindows()) {
+                if (WindowsLifecycle.CheckEntry(device, out Issue? lifecycleIssue) && lifecycleIssue.HasValue) {
+                    issues.Add(lifecycleIssue.Value);
+                }
+
+                if (WindowsUpdate.CheckEntry(device, out List<Issue?> osUpdateIssues)) {
+                    for (int i = 0; i < osUpdateIssues.Count; i++) {
+                        issues.Add(osUpdateIssues[i].Value);
+                    }
+                }
+            }
 
         }
         else if (Data.PRINTER_TYPES.Contains(typeAttribute?.value, StringComparer.OrdinalIgnoreCase)) {
@@ -415,7 +423,7 @@ internal static class Issues {
         return false;
     }
 
-    public static bool CheckCpu(Database.Entry device, string host, out Issue? issue) {
+    public static bool CheckCpuLifeline(Database.Entry device, string host, out Issue? issue) {
         byte[] lifeline = Lifeline.LoadFile(device.filename, 3, "cpu");
 
         if (lifeline is null || lifeline.Length < 9 * MIN_LIFELINE_ENTRIES) {
@@ -463,7 +471,7 @@ internal static class Issues {
                 name       = nameAttribute?.value ?? String.Empty,
                 identifier = host,
                 category   = "CPU utilization",
-                source     = "WMI",
+                source     = "Lifeline",
                 file       = device.filename,
                 isUser     = false,
             };
@@ -474,7 +482,7 @@ internal static class Issues {
         return false;
     }
 
-    public static bool CheckMemory(Database.Entry device, string host, out Issue? issue) {
+    public static bool CheckMemoryLifeline(Database.Entry device, string host, out Issue? issue) {
         byte[] lifeline = Lifeline.LoadFile(device.filename, 3, "memory");
 
         if (lifeline is null || lifeline.Length < 24 * MIN_LIFELINE_ENTRIES) {
@@ -529,7 +537,7 @@ internal static class Issues {
                 name       = nameAttribute?.value ?? String.Empty,
                 identifier = host,
                 category   = "Memory usage",
-                source     = "WMI",
+                source     = "Lifeline",
                 file       = device.filename,
                 isUser     = false,
             };
@@ -540,7 +548,7 @@ internal static class Issues {
         return false;
     }
 
-    public static bool CheckDiskSpace(Database.Entry device, string host, out Issue[] issues) {
+    public static bool CheckDiskSpaceLifeline(Database.Entry device, string host, out Issue[] issues) {
         byte[] lifeline = Lifeline.ViewFile(device.filename, DateTime.Now.ToString("yyyyMM"), "disk");
 
         if (lifeline is null || lifeline.Length <= 12 + 17 * MIN_LIFELINE_ENTRIES) {
@@ -637,7 +645,7 @@ internal static class Issues {
                     name       = nameAttribute?.value ?? String.Empty,
                     identifier = host,
                     category   = "Disk space",
-                    source     = "WMI",
+                    source     = "Lifeline",
                     file       = device.filename,
                     isUser     = false,
                 });
@@ -653,7 +661,7 @@ internal static class Issues {
         return false;
     }
 
-    public static bool CheckDiskIO(Database.Entry device, string host, out Issue? issue) {
+    public static bool CheckDiskIOLifeline(Database.Entry device, string host, out Issue? issue) {
         byte[] lifeline = Lifeline.LoadFile(device.filename, 3, "diskio");
 
         if (lifeline is null || lifeline.Length < 9 * MIN_LIFELINE_ENTRIES) {
@@ -701,7 +709,7 @@ internal static class Issues {
                 name       = nameAttribute?.value ?? String.Empty,
                 identifier = host,
                 category   = "Disk I/O",
-                source     = "WMI",
+                source     = "Lifeline",
                 file       = device.filename,
                 isUser     = false,
             };
@@ -956,62 +964,6 @@ internal static class Issues {
 
         issue = null;
         return false;
-    }
-
-    public static bool CheckWindowsLifecycle(Database.Entry device, out Issue? issue) {
-        issue = null;
-
-        if (device is null) {
-            return false;
-        }
-
-        device.attributes.TryGetValue("operating system", out Database.Attribute osAttribute);
-        device.attributes.TryGetValue("os version", out Database.Attribute osVersionAttribute);
-
-        if (!WindowsLifecycle.TryAssess(osAttribute?.value, osVersionAttribute?.value, out WindowsLifecycle.Assessment assessment)) {
-            return false;
-        }
-
-        if (assessment.state != WindowsLifecycle.SupportState.expiringSoon
-            && assessment.state != WindowsLifecycle.SupportState.outOfSupport) {
-            return false;
-        }
-
-        device.attributes.TryGetValue("name", out Database.Attribute nameAttribute);
-
-        string osName = assessment.productName.Contains(assessment.release, StringComparison.OrdinalIgnoreCase)
-            ? assessment.productName
-            : $"{assessment.productName} {assessment.release}";
-
-        string message = assessment.state == WindowsLifecycle.SupportState.outOfSupport
-            ? $"{osName} ({assessment.version}) has reached EOS"
-            : $"{osName} ({assessment.version}) reaches EOS on {assessment.endOfSupport:yyyy-MM-dd} ({assessment.daysLeft} days left)";
-
-        string ipString = string.Empty;
-        if (device.attributes.TryGetValue("ip", out Database.Attribute ip) && !String.IsNullOrEmpty(ip?.value)) {
-            ipString = ip.value.Split(';').Select(o => o.Trim()).ToArray()[0];
-        }
-
-        Issues.SeverityLevel severity;
-        if (assessment.state == WindowsLifecycle.SupportState.outOfSupport) {
-            severity = SeverityLevel.critical;
-        }
-        else {
-            severity = assessment.daysLeft < 30 ? SeverityLevel.error : SeverityLevel.warning;
-        }
-
-        issue = new Issue {
-            severity   = severity,
-            message    = message,
-            name       = nameAttribute?.value ?? String.Empty,
-            identifier = ipString,
-            category   = "Operating system",
-            source     = "Record",
-            file       = device.filename,
-            isUser     = false
-        };
-
-        return true;
     }
 
     public static bool CheckDiskSpace(string file, string target, double percent, string diskCaption, out Issue? issue) {

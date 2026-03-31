@@ -132,7 +132,7 @@ internal static class LiveStats {
 
             Lock mutex = new Lock();
 
-            if (Issues.CheckWindowsLifecycle(entry, out Issues.Issue? windowsLifecycleIssue) && windowsLifecycleIssue.HasValue) {
+            if (WindowsLifecycle.CheckEntry(entry, out Issues.Issue? windowsLifecycleIssue) && windowsLifecycleIssue.HasValue) {
                 WsWriteText(ws, windowsLifecycleIssue.Value.ToLiveStatsJsonBytes(), mutex);
             }
 
