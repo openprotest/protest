@@ -50,7 +50,6 @@ internal static class Data {
     public static readonly string DIR_DEVICES        = $"{DIR_DATA}{DELIMITER}devices";
     public static readonly string DIR_USERS          = $"{DIR_DATA}{DELIMITER}users";
 
-    public static readonly string DIR_CONFIG         = $"{DIR_DATA}{DELIMITER}configuration";
     public static readonly string DIR_DOCUMENTATION  = $"{DIR_DATA}{DELIMITER}documentation";
     public static readonly string DIR_LASTSEEN       = $"{DIR_DATA}{DELIMITER}lastseen";
     public static readonly string DIR_LIFELINE       = $"{DIR_DATA}{DELIMITER}lifeline";

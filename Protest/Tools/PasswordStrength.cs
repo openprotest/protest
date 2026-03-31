@@ -65,42 +65,46 @@ internal static class PasswordStrength {
     }
 
     public static double Entropy(string password, out int length, out int pool, string[] related = null) {
-        for (int i = 0; i < COMMON.Length; i++)
-            if (password.IndexOf(COMMON[i], StringComparison.InvariantCultureIgnoreCase) > -1)
+        for (int i = 0; i < COMMON.Length; i++) {
+            if (password.IndexOf(COMMON[i], StringComparison.InvariantCultureIgnoreCase) > -1) {
                 password = password.Replace(COMMON[i], String.Empty);
+            }
+        }
 
-        if (related != null)
-            for (int i = 0; i < related.Length; i++)
-                if (related[i].Length != 0)
-                    if (password.IndexOf(related[i], StringComparison.InvariantCultureIgnoreCase) > -1)
-                        password = password.Replace(related[i], String.Empty);
+        if (related != null) {
+            for (int i = 0; i < related.Length; i++) {
+                if (related[i].Length != 0 && password.IndexOf(related[i], StringComparison.InvariantCultureIgnoreCase) > -1) {
+                    password = password.Replace(related[i], String.Empty);
+                }
+            }
+        }
 
         bool hasNumbers = false, hasUppercase = false, hasLowercase = false, hasSymbols = false;
         int len = password.Length;
 
         for (int i = 0; i < len; i++) {
             byte b = (byte)password[i];
-            if (b > 47 && b < 58)
+            if (b > 47 && b < 58) {
                 hasNumbers = true;
-            else if (b > 64 && b < 91)
+            }
+            else if (b > 64 && b < 91) {
                 hasUppercase = true;
-            else if (b > 96 && b < 123)
+            }
+            else if (b > 96 && b < 123) {
                 hasLowercase = true;
-            else
+            }
+            else {
                 hasSymbols = true;
+            }
         }
 
         length = password.Length;
 
         pool = 0;
-        if (hasNumbers)
-            pool += 10;
-        if (hasUppercase)
-            pool += 26;
-        if (hasLowercase)
-            pool += 26;
-        if (hasSymbols)
-            pool += 30;
+        if (hasNumbers)   pool += 10;
+        if (hasUppercase) pool += 26;
+        if (hasLowercase) pool += 26;
+        if (hasSymbols)   pool += 30;
 
         double entropy = Math.Log(Math.Pow(pool, len), 2);
         //same as:       Math.Log(pool, 2) * len
@@ -294,211 +298,5 @@ internal static class PasswordStrength {
         catch {
             return null;
         }
-    }
-
-    public static byte[] GandalfThreadWrapper(HttpListenerContext ctx, string origin) {
-        using StreamReader reader = new StreamReader(ctx.Request.InputStream, ctx.Request.ContentEncoding);
-        string payload = reader.ReadToEnd();
-
-        string[] split = payload.Split((char)127);
-        if (split.Length < 4)
-            return Data.CODE_INVALID_ARGUMENT.Array;
-
-        Thread thread = new Thread(() => GandalfRequest(split)) {
-            Priority = ThreadPriority.BelowNormal
-        };
-        thread.Start();
-
-        Logger.Action(origin, $"Send email notification to users with weak passwords");
-
-        return Data.CODE_OK.Array;
-    }
-
-    private static void GandalfRequest(string[] split) {
-        _ = double.TryParse(split[0], out double threshold);
-        Guid smtpGuid = new Guid(split[1]);
-
-        string server = null;
-        int port = 587;
-        string sender = null;
-        string username = null;
-        string password = null;
-        bool ssl = true;
-
-        if (!File.Exists(Data.FILE_SMTP_PROFILES)) return;
-        try {
-            byte[] json = File.ReadAllBytes(Data.FILE_SMTP_PROFILES);
-
-            SmtpProfiles.Profile[] profiles = JsonSerializer.Deserialize<SmtpProfiles.Profile[]>(json, emailProfilesSerializerOptions);
-
-            for (int i=0; i<profiles.Length; i++) {
-                if (profiles[i].guid == smtpGuid) {
-                    server   = profiles[i].server;
-                    port     = profiles[i].port;
-                    sender   = profiles[i].sender;
-                    username = profiles[i].username;
-                    password = profiles[i].password;
-                    ssl      = profiles[i].ssl;
-                    break;
-                }
-            }
-
-        }
-        catch {
-            return;
-        }
-
-        if (server is null) return;
-        if (sender is null) return;
-        if (username is null) return;
-        if (password is null) return;
-
-        List<string> include = new List<string> { "password" };
-        for (int i = 2; i < split.Length; i++) {
-            include.Add(split[i]);
-        }
-
-        using SmtpClient smtp = new SmtpClient(server) {
-            Port = port,
-            EnableSsl = ssl,
-            Credentials = new NetworkCredential(username, password)
-        };
-
-        foreach (KeyValuePair<string, Database.Entry> entry in DatabaseInstances.users.dictionary) {
-            if (!entry.Value.attributes.TryGetValue("e-mail", out Database.Attribute email)) {
-                continue; //no e-mail
-            }
-
-            double minEntropy = double.MaxValue;
-            string ttc = String.Empty; //time to crack
-
-            foreach (KeyValuePair<string, Database.Attribute> attribute in entry.Value.attributes) {
-                if (!include.Contains(attribute.Key)) {
-                    continue;
-                }
-
-                double entropy = Entropy(attribute.Value.value, out int length, out int pool);
-                minEntropy = Math.Min(minEntropy, entropy);
-                ttc = CalculateTtc(length, pool);
-            }
-
-            if (minEntropy == double.MaxValue)
-                continue;
-
-            string name = String.Empty;
-            if (entry.Value.attributes.TryGetValue("first name", out Database.Attribute _firstname)) {
-                name = _firstname.value;
-            }
-            else if (entry.Value.attributes.TryGetValue("title", out Database.Attribute _title)) {
-                name = _title.value;
-            }
-            else if (email.value.Length > 0) {
-                name = email.value.Split('@')[0];
-            }
-            if (minEntropy < threshold && email.value.Length > 0) {
-                string[] mailSplit = email.value.Split(';');
-                SendGandalfMail(smtp, sender, mailSplit, name, ttc);
-            }
-        }
-    }
-
-    public static void SendGandalfMail(SmtpClient smtp, string sender, string[] recipients, string name, string ttc) {
-        try {
-            StringBuilder body = new StringBuilder();
-            body.Append("<html>");
-            body.Append("<table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\">");
-            body.Append("<tr><td>&nbsp;</td></tr>");
-
-            body.Append("<tr><td align=\"center\">");
-
-            body.Append("<p align=\"center\"0 style=\"color:#808080\">This is an automated e-mail from the IT Department.</p>");
-            body.Append("<br>");
-
-            body.Append("<table width=\"640\" bgcolor=\"#e0e0e0\">");
-            body.Append("<tr><td style=\"padding:40px; font-size:18px\">");
-
-            body.Append($"<p>Dear {(name.Length > 0 ? name.Trim() : "colleague")},</p>");
-
-            body.Append("<p><b>");
-            body.Append("Our records indicate that you're using a weak password. ");
-            body.Append("To enhance the security of your account, please reach out to your IT team and upgrade to a more robust and secure password.");
-            body.Append("</b></p>");
-
-            body.Append("<p>");
-            body.Append("As technology advance and computers are getting faster over time, passwords are getting weaker. ");
-            body.Append("In 1982, it took four years to crack an eight characters password. Today, such passwords can be compromised in less than a day.");
-            body.Append("</p>");
-
-            if (ttc is not null && ttc.Length > 0) {
-                body.Append("<p>");
-                body.Append($"Your password can be cracked in {ttc}.");
-                body.Append("</p>");
-            }
-
-            body.Append("<p>");
-            body.Append("<u>Here are some guidelines on selecting a strong password:</u>");
-            body.Append("<ul>");
-            body.Append("<li><b>Go Big: </b> Opt for a minimum of twelve characters. Longer passwords significantly enhance resistance to cracking attempts.</li>");
-            body.Append("<li><b>Mix Things Up: </b> Combine upper-case and lower-case letters, numbers, and symbols to add complexity.</li>");
-            body.Append("<li><b>Be Unpredictable: </b> Avoid easily guessable elements such as common words, your name, favorite movie, or pet names. For example, if your email address is info@domain.com, refrain from including the term \"info\" in your password.</li>");
-            body.Append("<li><b>Make It Random: </b> Use a random password generator. It can generate a sequence that is impossible to guess. (<a href=\"https://openprotest.github.io/#passgen\">link</a>)</li>");
-            body.Append("</ul>");
-            body.Append("</p>");
-
-            body.Append("<br>");
-
-            string[] quotes = new string[] {
-                "Sticky notes are not a secure means of storing passwords.",
-                "Sticky notes aren't exactly the Fort Knox of password storage.",
-                "Sticking your password on a note is like leaving the front door wide open.",
-                "Using sticky notes for your password is like sharing your secrets on a bulletin board.",
-                "Sticky notes are for grocery lists, not for guarding the keys to your digital kingdom. Upgrade your security game!",
-                "Posting passwords on sticky notes is like leaving your house key under the welcome mat – convenient, but not the smartest move for security.",
-                "Sticky notes are great for reminders, terrible for passwords. Let's trade convenience for cybersecurity, shall we?",
-                "Your passwords deserve better than the sticky note treatment. Think of them as VIPs – keep them exclusive, hidden, and away from prying eyes!",
-
-                "In the game of passwords, predictability is the opponent, and randomness is your secret weapon. Keep 'em guessing!",
-                "A password is like a toothbrush – choose a good one, change it regularly, and never share it with strangers!",
-                "Passwords are like spices in a digital kitchen – the right blend adds flavor, but too little or too much can ruin the dish. Find your perfect recipe!",
-            };
-
-            Random rnd = new Random((int)DateTime.Now.Ticks);
-            body.Append($"<p>P.S. <i>{rnd.Next(0, quotes.Length-1)}</i></p>");
-
-            body.Append("<p>Sincerely,<br>The IT Department</p>");
-
-            body.Append("</td></tr>");
-            body.Append("</table>");
-
-            body.Append("</td></tr>");
-
-            body.Append("<tr><td>&nbsp;</td></tr>");
-            body.Append("<tr><td align=\"center\" style=\"color:#808080\">Sent from <a href=\"https://github.com/openprotest/protest\" style=\"color:#e67624\">Pro-test</a></td></tr>");
-            body.Append("<tr><td>&nbsp;</td></tr>");
-
-            body.Append("</td></tr>");
-            body.Append("</table>");
-
-            body.Append("</html>");
-
-            using MailMessage mail = new MailMessage {
-                From = new MailAddress(sender, "Pro-test"),
-                Subject = "Upgrade your password",
-                IsBodyHtml = true
-            };
-
-            AlternateView view = AlternateView.CreateAlternateViewFromString(body.ToString(), null, "text/html");
-            mail.AlternateViews.Add(view);
-
-            for (int i = 0; i < recipients.Length; i++) {
-                mail.To.Add(recipients[i].Trim());
-            }
-
-            smtp.Send(mail);
-        }
-
-        catch (SmtpFailedRecipientException ex) { Logger.Error(ex); }
-        catch (SmtpException ex)                { Logger.Error(ex); }
-        catch (Exception ex)                    { Logger.Error(ex); }
     }
 }

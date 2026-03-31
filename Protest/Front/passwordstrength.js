@@ -17,7 +17,6 @@ class PasswordStrength extends List {
 		this.filterButton = this.SetupFilter();
 		this.SetupFind();
 		this.toolbar.appendChild(this.AddToolbarSeparator());
-		const gandalfButton = this.AddToolbarButton("Gandalf", "mono/gandalf.svg?light");
 		this.AddSendToChatButton();
 
 		if (this.args.find && this.args.find.length > 0) {
@@ -25,8 +24,6 @@ class PasswordStrength extends List {
 			this.findInput.parentElement.style.borderBottom = this.findInput.value.length === 0 ? "none" : "var(--clr-light) solid 2px";
 			this.findInput.parentElement.style.width = "200px";
 		}
-
-		gandalfButton.onclick = ()=> new Gandalf();
 
 		this.GetEntropy();
 	}

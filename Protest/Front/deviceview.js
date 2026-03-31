@@ -714,12 +714,9 @@ class DeviceView extends View {
 		if (this.link.type) {
 			const type = this.link.type.v.toLowerCase();
 			if (type === "router" || type === "switch") {
-				const configButton = this.CreateSideButton("mono/configfile.svg", "Configuration");
-				configButton.onclick = ()=> this.DeviceConfiguration();
-				configButton.style.marginTop = "16px";
-
 				const interfacesButton = this.CreateSideButton("mono/interfaces.svg", "Interfaces");
 				interfacesButton.onclick = ()=> this.EditInterfaces();
+				interfacesButton.style.marginTop = "16px";
 			}
 		}
 	}
@@ -2446,318 +2443,6 @@ class DeviceView extends View {
 		});
 	}
 
-	async DeviceConfiguration() {
-		const dialog = this.DialogBox("calc(100% - 40px)");
-		if (dialog === null) return;
-
-		const {okButton, cancelButton, buttonBox, innerBox} = dialog;
-
-		okButton.value = "Close";
-
-		buttonBox.style.maxHeight = "40px";
-		buttonBox.style.overflow = "hidden";
-
-		buttonBox.removeChild(cancelButton);
-
-		const fetchButton = document.createElement("input");
-		fetchButton.type = "button";
-		fetchButton.value = "Fetch";
-		fetchButton.className = "with-icon";
-		fetchButton.style.backgroundImage = "url(mono/ball.svg?light)";
-		fetchButton.style.float = "left";
-		buttonBox.appendChild(fetchButton);
-
-		const editButton = document.createElement("input");
-		editButton.type = "button";
-		editButton.value = "Edit";
-		editButton.className = "with-icon";
-		editButton.style.backgroundImage = "url(mono/edit.svg?light)";
-		editButton.style.float = "left";
-		buttonBox.appendChild(editButton);
-
-		innerBox.classList.add("view-config-code-box");
-		innerBox.style.margin = "8px";
-
-		innerBox.parentElement.style.maxWidth = "unset";
-		innerBox.parentElement.style.left = "40px";
-		innerBox.parentElement.style.right = "40px";
-		innerBox.style.padding = "20px";
-
-		innerBox.parentElement.style.backgroundColor = "#202020";
-
-		let hasCredentials = this.link.username && this.link.password;
-		if (!hasCredentials) {
-			hasCredentials = "ssh username" in this.link && "ssh password" in this.link;
-		}
-
-		const fetchBox = document.createElement("div");
-		fetchBox.style.position = "absolute";
-		fetchBox.style.visibility = "hidden";
-		fetchBox.style.left = "30%";
-		fetchBox.style.top = "28px";
-		fetchBox.style.width = "40%";
-		fetchBox.style.maxWidth = "400px";
-		fetchBox.style.minWidth = "220px";
-		fetchBox.style.borderRadius = "8px";
-		fetchBox.style.boxShadow = "rgba(0,0,0,.4) 0 0 8px";
-		fetchBox.style.backgroundColor = "var(--clr-pane)";
-		fetchBox.style.padding = "16px 8px";
-		fetchBox.style.overflow = "hidden";
-		fetchBox.style.textAlign = "center";
-		dialog.innerBox.parentElement.parentElement.appendChild(fetchBox);
-
-		const fetchUsernameLabel = document.createElement("div");
-		fetchUsernameLabel.style.display = "inline-block";
-		fetchUsernameLabel.style.minWidth = "96px";
-		fetchUsernameLabel.textContent = "Username:";
-
-		const fetchUsernameInput = document.createElement("input");
-		fetchUsernameInput.type = "text";
-
-		const fetchPasswordLabel = document.createElement("div");
-		fetchPasswordLabel.style.display = "inline-block";
-		fetchPasswordLabel.style.minWidth = "96px";
-		fetchPasswordLabel.textContent = "Password:";
-
-		const fetchPasswordInput = document.createElement("input");
-		fetchPasswordInput.type = "password";
-
-		const fetchOkButton = document.createElement("input");
-		fetchOkButton.type = "button";
-		fetchOkButton.value = "Fetch";
-
-		const fetchCancelButton = document.createElement("input");
-		fetchCancelButton.type = "button";
-		fetchCancelButton.value = "Cancel";
-
-		if (hasCredentials) {
-			const messageLabel = document.createElement("div");
-			messageLabel.style.display = "inline-block";
-			messageLabel.textContent = "Are you sure you want to fetch data from this device using SSH?";
-			fetchBox.appendChild(messageLabel);
-		}
-		else {
-			fetchBox.appendChild(fetchUsernameLabel);
-			fetchBox.appendChild(fetchUsernameInput);
-			fetchBox.appendChild(document.createElement("br"));
-			fetchBox.appendChild(fetchPasswordLabel);
-			fetchBox.appendChild(fetchPasswordInput);
-		}
-
-		fetchBox.appendChild(document.createElement("br"));
-		fetchBox.appendChild(document.createElement("br"));
-		fetchBox.appendChild(fetchOkButton);
-		fetchBox.appendChild(fetchCancelButton);
-
-
-		const DisplayScript = lines=> {
-			innerBox.textContent = "";
-			for (let i=0; i<lines.length; i++) {
-				lines[i] = lines[i].replaceAll("\\\"", "\\&quot;");
-
-				const lineElement = document.createElement("div");
-
-				if (lines[i].startsWith("#") || lines[i].startsWith("!")) { //comment
-					lineElement.textContent = lines[i];
-					lineElement.style.color = "#9C6";
-					lineElement.style.fontStyle = "italic";
-					innerBox.appendChild(lineElement);
-				}
-				else if (lines[i].startsWith("/")) { //location
-					lineElement.textContent = lines[i];
-					lineElement.style.color = "#8FD";
-					lineElement.style.paddingTop = ".5em";
-					innerBox.appendChild(lineElement);
-				}
-				else {
-					const line = [];
-
-					let temp = lines[i].split("\"");
-					for (let j=0; j<temp.length; j++) {
-						if (j % 2 === 0) {
-							line.push(temp[j]);
-						}
-						else {
-							line.push(`\"${temp[j]}\"`);
-						}
-					}
-
-					for (let j=0; j<line.length; j++) {
-						if (line[j].length === 0) continue;
-
-						if (line[j].startsWith("\"") && line[j].length > 2) { //quot
-							const newSpan = document.createElement("span");
-							newSpan.textContent = line[j];
-							newSpan.style.color = "#D98";
-							lineElement.appendChild(newSpan);
-						}
-						else {
-							let p = 0;
-
-							/*if (j === 0) { //verb
-								while (line[0].substring(0, p).trim().length === 0 && p < line[0].length) {p++; }
-								p = line[0].indexOf(" ", p);
-
-								const span = document.createElement("span");
-								span.textContent = line[0].substring(0, p);
-								span.style.color = "#A8F";
-								lineElement.appendChild(span);
-							}*/
-
-							while (p < line[j].length) {
-								let ep = line[j].indexOf("=", p); //equal position
-								if (ep < 0) break;
-
-								let sp = line[j].lastIndexOf(" ", ep); //space position
-								if (sp < 0) break;
-
-								if (p != sp) {
-									const spanA = document.createElement("span");
-									spanA.textContent = j === 0 ? line[j].substring(p, sp): line[j].substring(p, sp);
-									lineElement.appendChild(spanA);
-								}
-
-								const spanB = document.createElement("span");
-								spanB.textContent = j === 0 ? line[j].substring(sp, ep + 1) : line[j].substring(sp, ep + 1);
-								spanB.style.color = "#5BE";
-								lineElement.appendChild(spanB);
-
-								p = ep + 1;
-							}
-
-							if (p < line[j].length) {
-								const spanC = document.createElement("span");
-								spanC.textContent = j === 0 ? line[j].substring(p): line[j].substring(p);
-								lineElement.appendChild(spanC);
-							}
-						}
-					}
-
-					innerBox.appendChild(lineElement);
-				}
-			}
-		};
-
-		let fetchToggle = false;
-		const FetchToggle = ()=> {
-			dialog.innerBox.parentElement.style.transition = ".2s";
-			dialog.innerBox.parentElement.style.transform = fetchToggle ? "none" : "translateY(-25%)";
-			dialog.innerBox.parentElement.style.filter = fetchToggle ? "none" : "opacity(0)";
-			dialog.innerBox.parentElement.style.visibility = fetchToggle ? "visible" : "hidden";
-
-			fetchBox.style.transition = ".2s";
-			fetchBox.style.filter = fetchToggle ? "opacity(0)" : "none";
-			fetchBox.style.transform = fetchToggle ? "translateY(-25%)" : "none";
-			fetchBox.style.visibility = fetchToggle ? "hidden" : "visible";
-
-			fetchToggle = !fetchToggle;
-		};
-
-		const response = await fetch(`db/config/view?file=${this.args.file}`);
-		if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
-		const text = await response.text();
-
-		if (text.length > 0) {
-			DisplayScript(text.split("\n"));
-		}
-
-
-		fetchButton.onclick = ()=> FetchToggle();
-
-		fetchOkButton.onclick = async ()=> {
-			fetchBox.style.filter = "opacity(0)";
-			fetchBox.style.transform = "translateY(-25%)";
-			fetchBox.style.visibility = "hidden";
-
-			const spinner = document.createElement("div");
-			spinner.className = "spinner";
-			spinner.style.textAlign = "left";
-			spinner.style.marginTop = "32px";
-			spinner.style.marginBottom = "16px";
-			spinner.appendChild(document.createElement("div"));
-			dialog.innerBox.parentElement.parentElement.appendChild(spinner);
-
-			const status = document.createElement("div");
-			status.textContent = "Fetching...";
-			status.style.color = "var(--clr-light)";
-			status.style.textAlign = "center";
-			status.style.fontWeight = "bold";
-			status.style.animation = "delayed-fade-in 1.5s ease-in 1";
-			dialog.innerBox.parentElement.parentElement.appendChild(status);
-
-			try {
-				const response = await fetch(`db/config/fetch?file=${this.args.file}`, {
-					method: "POST",
-					body: hasCredentials ? "" : `${fetchUsernameInput.value}${String.fromCharCode(127)}${fetchPasswordInput.value}`
-				});
-
-				if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
-
-				const text = await response.text();
-				DisplayScript(text.split("\n"));
-
-			}
-			catch {
-				dialog.innerBox.textContent = "";
-			}
-			finally {
-				dialog.innerBox.parentElement.parentElement.removeChild(spinner);
-				dialog.innerBox.parentElement.parentElement.removeChild(status);
-
-				dialog.innerBox.parentElement.style.transition = ".2s";
-				dialog.innerBox.parentElement.style.transform = "none";
-				dialog.innerBox.parentElement.style.filter = "none";
-				dialog.innerBox.parentElement.style.visibility = "visible";
-			}
-
-		};
-
-		fetchCancelButton.onclick = ()=> fetchButton.onclick();
-
-		editButton.onclick = ()=> {
-			innerBox.contentEditable = true;
-
-			const saveButton = document.createElement("input");
-			saveButton.type = "button";
-			saveButton.value = "Save";
-
-			buttonBox.removeChild(editButton);
-			buttonBox.removeChild(okButton);
-
-			buttonBox.appendChild(saveButton);
-			buttonBox.appendChild(cancelButton);
-
-			saveButton.onclick = async ()=>{
-				const saveResponse = await fetch(`db/config/save?file=${this.args.file}`, {
-					method: "POST",
-					body: innerBox.innerText
-				});
-
-				if (saveResponse.status !== 200) LOADER.HttpErrorHandler(saveResponse.status);
-				const saveJson = await saveResponse.json();
-
-				if (saveJson.error) {
-					cancelButton.onclick();
-					this.ConfirmBox(saveJson.error, true);
-				}
-				else {
-					innerBox.contentEditable = false;
-					buttonBox.appendChild(editButton);
-					buttonBox.appendChild(okButton);
-					buttonBox.removeChild(saveButton);
-					buttonBox.removeChild(cancelButton);
-
-					DisplayScript(innerBox.innerText.split("\n"));
-				}
-			};
-		};
-
-		okButton.onclick = ()=> {
-			innerBox.textContent = "";
-			dialog.Close();
-		};
-	}
-
 	EditInterfaces() {
 		const dialog = this.DialogBox("calc(100% - 40px)");
 		if (dialog === null) return;
@@ -2770,7 +2455,6 @@ class DeviceView extends View {
 		innerBox.style.padding = "20px";
 
 		buttonBox.style.maxHeight = "40px";
-		//buttonBox.style.overflow = "hidden";
 
 		const fetchDropdownButton = document.createElement("button");
 		fetchDropdownButton.className = "with-icon view-fetch-dropdown";
@@ -2793,13 +2477,6 @@ class DeviceView extends View {
 		snmpButton.className = "with-icon";
 		snmpButton.style.backgroundImage = "url(mono/snmp.svg?light)";
 		fetchDropdownButtonMenu.appendChild(snmpButton);
-
-		const extractButton = document.createElement("input");
-		extractButton.type = "button";
-		extractButton.value = "From configuration";
-		extractButton.className = "with-icon";
-		extractButton.style.backgroundImage = "url(mono/configfile.svg?light)";
-		fetchDropdownButtonMenu.appendChild(extractButton);
 
 		const frame = document.createElement("div");
 		frame.style.backgroundColor = "var(--clr-control)";
@@ -3005,25 +2682,6 @@ class DeviceView extends View {
 		addBulkBox.appendChild(addBulkCancelButton);
 
 		let list = [];
-
-		let fetchToggle = false;
-		const FetchToggle = ()=> {
-			dialog.innerBox.parentElement.style.transition = ".2s";
-			dialog.innerBox.parentElement.style.transform = fetchToggle ? "none" : "translateY(-25%)";
-			dialog.innerBox.parentElement.style.filter = fetchToggle ? "none" : "opacity(0)";
-			dialog.innerBox.parentElement.style.visibility = fetchToggle ? "visible" : "hidden";
-
-			extractBox.style.transition = ".2s";
-			extractBox.style.filter = fetchToggle ? "opacity(0)" : "none";
-			extractBox.style.transform = fetchToggle ? "translateY(-25%)" : "none";
-			extractBox.style.visibility = fetchToggle ? "hidden" : "visible";
-
-			if (!fetchToggle) {
-				setTimeout(()=>extractOkButton.focus(), 200);
-			}
-
-			fetchToggle = !fetchToggle;
-		};
 
 		let snmpToggle = false;
 		const SnmpToggle = ()=> {
@@ -3456,72 +3114,6 @@ class DeviceView extends View {
 		titleBar.style.top = `${frame.clientHeight + 72}px`;
 		listBox.style.top = `${frame.clientHeight + 96}px`;
 
-		extractButton.onclick = ()=> FetchToggle();
-
-		extractOkButton.onclick = async ()=> {
-			extractBox.style.filter = "opacity(0)";
-			extractBox.style.transform = "translateY(-25%)";
-			extractBox.style.visibility = "hidden";
-
-			const spinner = document.createElement("div");
-			spinner.className = "spinner";
-			spinner.style.textAlign = "left";
-			spinner.style.marginTop = "32px";
-			spinner.style.marginBottom = "16px";
-			spinner.appendChild(document.createElement("div"));
-			dialog.innerBox.parentElement.parentElement.appendChild(spinner);
-
-			const status = document.createElement("div");
-			status.textContent = "Fetching...";
-			status.style.color = "var(--clr-light)";
-			status.style.textAlign = "center";
-			status.style.fontWeight = "bold";
-			status.style.animation = "delayed-fade-in 1.5s ease-in 1";
-			dialog.innerBox.parentElement.parentElement.appendChild(status);
-
-			try {
-				const response = await fetch(`db/config/extract?file=${this.args.file}`);
-
-				if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
-
-				const json = await response.json();
-
-				if (json.error) {
-					dialog.Close();
-					setTimeout(()=>this.ConfirmBox(json.error, true, "mono/error.svg"), 250);
-				}
-				else if (json instanceof Array) {
-					listBox.textContent = "";
-					frame.textContent = "";
-					list = [];
-
-					for (let i=0; i<json.length; i++) {
-						AddInterface(null, json[i].port, json[i].speed, json[i].untagged, json.tagged, null, json[i].comment);
-					}
-
-					SortList();
-					this.InitInterfaceComponents(frame, numberingInput.value, list);
-
-					titleBar.style.top = `${frame.clientHeight + 72}px`;
-					listBox.style.top = `${frame.clientHeight + 96}px`;
-
-					fetchButton.onclick();
-				}
-			}
-			catch {}
-			finally {
-				dialog.innerBox.parentElement.parentElement.removeChild(spinner);
-				dialog.innerBox.parentElement.parentElement.removeChild(status);
-
-				dialog.innerBox.parentElement.style.transition = ".2s";
-				dialog.innerBox.parentElement.style.transform = "none";
-				dialog.innerBox.parentElement.style.filter = "none";
-				dialog.innerBox.parentElement.style.visibility = "visible";
-			}
-		};
-
-		extractCancelButton.onclick = ()=> FetchToggle();
-
 		snmpButton.onclick = ()=> SnmpToggle();
 
 		snmpOkButton.onclick = async ()=> {
@@ -3539,7 +3131,7 @@ class DeviceView extends View {
 
 			const status = document.createElement("div");
 			status.textContent = "Fetching...";
-			status.style.color = "var(--clr-light)";
+			status.style.color = "var(--clr-contrast)";
 			status.style.textAlign = "center";
 			status.style.fontWeight = "bold";
 			status.style.animation = "delayed-fade-in 1.5s ease-in 1";

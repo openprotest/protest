@@ -421,7 +421,6 @@ internal static class Auth {
                 path.Add("/db/device/attribute");
                 path.Add("/db/user/attribute");
                 path.Add("/db/getentropy");
-                path.Add("/db/gandalf");
                 break;
 
             case "fetch:write":

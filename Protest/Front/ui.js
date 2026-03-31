@@ -372,7 +372,6 @@ const MENU = {
 		{ t:"Reverse proxy",   i:"mono/reverseproxy.svg?light", g:"tools", h:false, f:args=> new ReverseProxy(args), k:"man in the middle" },
 		{ t:"Issues",          i:"mono/issues.svg?light",       g:"tools", h:false, f:()=> new Issues() },
 		{ t:"IP discovery",    i:"mono/ipdiscovery.svg?light",  g:"tools", h:true,  f:()=> new IpDiscovery() },
-		{ t:"Gandalf",         i:"mono/gandalf.svg?light",      g:"tools", h:true,  f:()=> new Gandalf() },
 		//{ t:"Scripts",         i:"mono/scripts.svg?light",     g:"tools", h:false, f:args=> {} },
 		//{ t:"Script reports",  i:"mono/reportfile.svg?light",  g:"tools", h:true,  f:args=> {} },
 		//{ t:"Ongoing scripts", i:"mono/ongoingscript.svg?light", g:"tools", h:true,  f:args=> {} },

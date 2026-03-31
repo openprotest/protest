@@ -38,13 +38,7 @@ internal sealed class Listener {
         ["/db/device/grid"] =      (ctx, parameters, username) => DatabaseInstances.devices.GridHandler(ctx, username),
         ["/db/device/attribute"] = (ctx, parameters, username) => DatabaseInstances.devices.AttributeValue(parameters),
 
-        ["/db/config/view"] =      (ctx, parameters, username) => DeviceConfiguration.View(parameters),
-        ["/db/config/save"] =      (ctx, parameters, username) => DeviceConfiguration.Save(ctx, parameters, username),
-        ["/db/config/fetch"] =     (ctx, parameters, username) => DeviceConfiguration.Fetch(ctx, parameters, username),
-        ["/db/config/extract"] =   (ctx, parameters, username) => DeviceConfiguration.ExtractInterfaces(parameters),
-
         ["/db/getentropy"] =       (ctx, parameters, username) => Tools.PasswordStrength.GetEntropy(),
-        ["/db/gandalf"] =          (ctx, parameters, username) => Tools.PasswordStrength.GandalfThreadWrapper(ctx, username),
 
         ["/fetch/networkinfo"] =   (ctx, parameters, username) => Protocols.Ldap.NetworkInfo(),
         ["/fetch/singledevice"] =  (ctx, parameters, username) => Tasks.Fetch.SingleDeviceSerialize(parameters, true),
