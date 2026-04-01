@@ -122,7 +122,7 @@ internal static partial class Arp {
             process.Start();
 
             string output = process.StandardOutput.ReadToEnd();
-            string error = process.StandardError.ReadToEnd();
+            //string error = process.StandardError.ReadToEnd();
 
             process.WaitForExit();
 

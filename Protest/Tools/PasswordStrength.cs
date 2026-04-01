@@ -140,15 +140,15 @@ internal static class PasswordStrength {
                 string ttc    = CalculateTtc(length, pool);
                 long modified = pair.Value.date;
                 string name   = String.Empty;
-                string mail   = String.Empty;
+                //string mail   = String.Empty;
 
                 if (entry.attributes.TryGetValue("username", out Database.Attribute _username)) {
                     name = _username.value;
                 }
 
-                if (entry.attributes.TryGetValue("e-mail", out Database.Attribute _mail)) {
-                    mail = _mail.value;
-                }
+                //if (entry.attributes.TryGetValue("e-mail", out Database.Attribute _mail)) {
+                //    mail = _mail.value;
+                //}
 
                 if (!first) {
                     builder.Append(',');

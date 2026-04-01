@@ -220,7 +220,7 @@ internal class Mdns {
         query[index++] = (byte)type;
 
         query[index++] = 0x00; //class
-        query[index++] = (byte)Dns.Class.IN;
+        query[index] = (byte)Dns.Class.IN;
 
         return query;
     }

@@ -136,7 +136,7 @@ internal static partial class Polling {
             ObjectIdentifier oid = new ObjectIdentifier(oidArray[0]);
 
             List<Variable> result = new List<Variable>();
-            int count = Messenger.Walk(version, endpoint, community, oid, result, timeout, WalkMode.WithinSubtree);
+            _ = Messenger.Walk(version, endpoint, community, oid, result, timeout, WalkMode.WithinSubtree);
             return result;
         }
         else {
@@ -457,13 +457,14 @@ internal static partial class Polling {
 
         if (profile.version == 3) {
             try {
-                IList<Variable> result = result = Protocols.Snmp.Polling.SnmpRequestV3(
+                IList<Variable> result = Protocols.Snmp.Polling.SnmpRequestV3(
                     target,
                     3000,
                     profile,
                     oids,
                     operation
                 );
+
                 return result;
             }
             catch {

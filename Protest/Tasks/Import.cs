@@ -331,7 +331,7 @@ internal class Import {
         string[] split = payload.Split((char)127);
 
         for (int i = 0; i < split.Length - 9; i += 10) {
-            string code       = split[i+0];
+            string code       = split[i];
             string firstname  = split[i+1];
             string lastname   = split[i+2];
             string title      = split[i+3];

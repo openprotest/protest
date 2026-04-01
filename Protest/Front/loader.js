@@ -305,18 +305,18 @@ const LOADER = {
 
 		case "DevicesList"      : return new DevicesList(command.args);
 		case "UsersList"        : return new UsersList(command.args);
-		case "DevicesGrid"      : return new DevicesGrid(command.args);
-		case "UsersGrid"        : return new UsersGrid(command.args);
+		case "DevicesGrid"      : return new DevicesGrid();
+		case "UsersGrid"        : return new UsersGrid();
 		case "PasswordStrength" : return new PasswordStrength(command.args);
 		case "Topology"         : return new Topology(command.args);
 		case "Fetch"            : return new Fetch(command.args);
 		case "Monitor"          : return new Monitor(command.args);
 
 		case "AddressBook"   : return new AddressBook(command.args);
-		case "Chat"          : return new Chat(command.args);
+		case "Chat"          : return new Chat();
 		case "Documentation" : return new Documentation(command.args);
 		case "DebitNotes"    : return new DebitNotes(command.args);
-		case "Watchdog"      : return new Watchdog(command.args);
+		case "Watchdog"      : return new Watchdog();
 
 		case "Issues"    : return new Issues(command.args);
 
@@ -339,9 +339,9 @@ const LOADER = {
 		case "Wmi"          : return new Wmi(command.args);
 		case "Snmp"         : return new Snmp(command.args);
 
-		case "PassGen"        : return new PassGen(command.args);
+		case "PassGen"        : return new PassGen();
 		case "Encoder"        : return new Encoder(command.args);
-		case "NetCalc"        : return new NetCalc(command.args);
+		case "NetCalc"        : return new NetCalc();
 		case "KeyboardTester" : return new KeyboardTester(command.args);
 		case "MicTester"      : return new MicTester(command.args);
 		case "CameraTester"   : return new CameraTester(command.args);

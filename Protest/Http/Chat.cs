@@ -254,7 +254,7 @@ internal static class Chat {
                 pos += json.Length;
             }
 
-            result[pos++] = (byte)']';
+            result[pos] = (byte)']';
             return result;
         }
     }

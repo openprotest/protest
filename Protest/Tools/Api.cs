@@ -72,7 +72,6 @@ internal static class Api {
         case "lifeline" : buffer = HandleLifelineCall(ctx, parameters, link); break;
 
         default:
-            buffer = null;
             ctx.Response.StatusCode = (int)HttpStatusCode.NotFound;
             return;
         }
@@ -237,7 +236,7 @@ file sealed class ApiJsonConverter : JsonConverter<Api.Link[]> {
 
             string name        = null;
             string key         = null;
-            Guid   guid        = Guid.Empty;
+            //Guid   guid        = Guid.Empty;
             bool   readOnly    = true;
             byte   permissions = 0;
 

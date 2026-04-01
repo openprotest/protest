@@ -60,7 +60,6 @@ public partial class Stamp : Form {
                 this.Refresh();
             }
 
-            escaped = String.Empty;
             strokes = String.Empty;
 
             Application.Exit();

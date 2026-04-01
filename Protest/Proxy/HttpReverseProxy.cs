@@ -49,9 +49,9 @@ internal sealed class HttpReverseProxy : ReverseProxyAbstract {
                 webHost.ConfigureServices(services => this.ConfigureServices(services, routes, new ClusterConfig[] { cluster }));
             });
 
-            string destinations = cluster.Destinations.Values
-                .Select(o=> o.Address.ToString())
-                .Aggregate((destination, accumulator)=> String.IsNullOrEmpty(accumulator) ? destination : $"{accumulator}, {destination}");
+            //string destinations = cluster.Destinations.Values
+            //    .Select(o=> o.Address.ToString())
+            //    .Aggregate((destination, accumulator)=> String.IsNullOrEmpty(accumulator) ? destination : $"{accumulator}, {destination}");
 
             this.host = hostBuilder.Build();
 

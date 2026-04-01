@@ -68,7 +68,6 @@ internal static class Dns {
         parameters.TryGetValue("truncated", out string truncatedString);
         parameters.TryGetValue("recursive", out string recursiveString);
 
-        int timeout = 2000;
         TransportMethod transport = TransportMethod.auto;
 
         RecordType type = RecordType.A;
@@ -84,7 +83,8 @@ internal static class Dns {
         if (dnsServer is not null) dnsServer = Uri.UnescapeDataString(dnsServer);
         dnsServer ??= GetLocalDnsAddress(true).ToString();
 
-        timeout = int.Parse(Uri.UnescapeDataString(timeoutString));
+        int.TryParse(Uri.UnescapeDataString(timeoutString), out int timeout);
+        timeout = Math.Max(timeout, 2000);
 
         transport = transportString switch {
             //"auto"  => TransportMethod.auto,

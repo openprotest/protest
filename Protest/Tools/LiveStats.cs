@@ -266,7 +266,7 @@ internal static class LiveStats {
                         netBios = netBios.Split('.')[0].ToUpper();
                         if (netBios != dns) {
                             WsWriteText(ws, $"{{\"warning\":\"DNS mismatch: {Data.EscapeJsonText(netBios)}\",\"source\":\"NetBIOS\"}}", mutex);
-                            mismatch = true;
+                            //mismatch = true;
                         }
                     }
                 }

@@ -525,7 +525,7 @@ internal static class Dhcp {
             }
         }
 
-        buffer[index++] = 0xff; //end
+        buffer[index] = 0xff; //end
 
         return buffer;
     }

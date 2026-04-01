@@ -386,16 +386,19 @@ internal static class Fetch {
             }
 
             IList<Variable> macAddressResult = Protocols.Snmp.Polling.SnmpQuery(ipAddress, profile, [Protocols.Snmp.Oid.INT_MAC], Polling.SnmpOperation.Walk);
-            List<string> macAddresses = macAddressResult
-                .Select(o => o.Data.ToBytes())
-                .Where(o => o.Length == 8)
-                .Where(o => o[2]>0 && o[3]>0 && o[4]>0 && o[4]>0 && o[6]>0 && o[7]>0)
-                .Select(o => BitConverter.ToString(o, 2).Replace('-', ':'))
-                .Distinct()
-                .ToList();
+            
+            if (macAddressResult is not null) {
+                List<string> macAddresses = macAddressResult
+                    .Select(o => o.Data.ToBytes())
+                    .Where(o => o.Length == 8)
+                    .Where(o => o[2]>0 && o[3]>0 && o[4]>0 && o[4]>0 && o[6]>0 && o[7]>0)
+                    .Select(o => BitConverter.ToString(o, 2).Replace('-', ':'))
+                    .Distinct()
+                    .ToList();
 
-            if (macAddresses.Count > 0) {
-                data.TryAdd("mac address", new string[] { String.Join("; ", macAddresses), "SNMP", string.Empty });
+                if (macAddresses.Count > 0) {
+                    data.TryAdd("mac address", new string[] { String.Join("; ", macAddresses), "SNMP", string.Empty });
+                }
             }
 
             if (!data.ContainsKey("type")) {
@@ -531,10 +534,10 @@ internal static class Fetch {
                 snmp3 = payloadLines[i][6..].Trim();
             }
             else if (payloadLines[i].StartsWith("snmp2profiles=")) {
-                snmp2Profiles = payloadLines[i][14..].Trim().Split(',');
+                snmp2Profiles = payloadLines[i][14..].ToLower().Trim().Split(',');
             }
             else if (payloadLines[i].StartsWith("snmp3profiles=")) {
-                snmp3Profiles = payloadLines[i][14..].Trim().Split(',');
+                snmp3Profiles = payloadLines[i][14..].ToLower().Trim().Split(',');
             }
         }
 
@@ -548,16 +551,23 @@ internal static class Fetch {
         intervalStr ??= "-1";
 
         SnmpProfiles.Profile[] snmpProfiles = SnmpProfiles.Load();
+        List<SnmpProfiles.Profile> filteredSnmpProfiles = new List<SnmpProfiles.Profile>();
 
-        if (snmp2.Equals("true") && snmp2Profiles is null) {
-            snmp2Profiles = snmpProfiles.Where(o=>o.version != 3).Select(o=>o.guid.ToString()).ToArray();
+        if (snmp2.Equals("true")) {
+            snmp2Profiles ??= snmpProfiles.Where(o=>o.version != 3).Select(o=>o.guid.ToString()).ToArray();
+
+            filteredSnmpProfiles.AddRange(
+                snmpProfiles.Where(o => o.version != 3 && snmp2Profiles.Contains(o.guid.ToString().ToLower()))
+            );
         }
 
-        if (snmp3.Equals("true") && snmp3Profiles is null) {
-            snmp3Profiles = snmpProfiles.Where(o => o.version == 3).Select(o => o.guid.ToString()).ToArray();
-        }
+        if (snmp3.Equals("true")) {
+            snmp3Profiles ??= snmpProfiles.Where(o=>o.version == 3).Select(o=>o.guid.ToString()).ToArray();
 
-        if (!int.TryParse(retriesStr, out int retries)) { retries = 0; }
+            filteredSnmpProfiles.AddRange(
+                snmpProfiles.Where(o => o.version == 3 && snmp3Profiles.Contains(o.guid.ToString().ToLower()))
+            );
+        }
 
         float interval = intervalStr switch {
             "0" => .5f,
@@ -621,12 +631,14 @@ internal static class Fetch {
             return Data.CODE_INVALID_ARGUMENT.Array;
         }
 
+        int.TryParse(retriesStr, out int retries);
+
         return DevicesTask(
             hosts,
             dns?.Equals("true") ?? false,
             wmi?.Equals("true") ?? false,
             ldap?.Equals("true") ?? false,
-            null,
+            filteredSnmpProfiles.ToArray(),
             portScan,
             retries,
             interval,
@@ -688,7 +700,6 @@ internal static class Fetch {
                 (redo, queue) = (queue, redo);
 
                 if (retries > totalRetries++ && queue.Count > 0) {
-                    long wait0 = DateTime.UtcNow.Ticks;
                     task.status = TaskWrapper.TaskStatus.Idle;
 
                     KeepAlive.Broadcast($"{{\"action\":\"update-fetch\",\"type\":\"devices\",\"task\":{Encoding.UTF8.GetString(Status())}}}", "/fetch/status");

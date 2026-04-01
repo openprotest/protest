@@ -55,7 +55,7 @@ internal static class IpDiscovery {
         NetworkInterface[] nics = NetworkInterface.GetAllNetworkInterfaces();
         foreach (NetworkInterface nic in nics) {
             UnicastIPAddressInformationCollection unicast = nic.GetIPProperties().UnicastAddresses;
-            GatewayIPAddressInformationCollection gateway = nic.GetIPProperties().GatewayAddresses;
+            //GatewayIPAddressInformationCollection gateway = nic.GetIPProperties().GatewayAddresses;
 
             if (unicast.Count == 0) continue;
 
@@ -542,7 +542,7 @@ internal static class IpDiscovery {
                     else if (answer[j].type == Protocols.Dns.RecordType.SRV) {
                         string[] split = answer[j].answerString.Split(':');
                         if (split.Length >= 2) {
-                            hostname = split[0].EndsWith(".local") ? hostname = split[0][..^6] : hostname = split[0];
+                            hostname = split[0].EndsWith(".local") ? split[0][..^6] : hostname = split[0];
 
                             if (ushort.TryParse(split[1], out ushort port) && port > 0) {
                                 if (services.Length > 0) services.Append(',');

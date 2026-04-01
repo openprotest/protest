@@ -117,7 +117,6 @@ internal static class Issues {
             return;
         }
 
-        int lastIssuesCount = 0;
         long lastTimestamp = -1;
 
         await Task.Delay(200);
@@ -128,8 +127,6 @@ internal static class Issues {
                     ctx.Response.Close();
                     return;
                 }
-
-                lastIssuesCount = issues?.Count ?? 0;
 
                 IEnumerable<Issue> filtered = issues.Where(o => o.timestamp > lastTimestamp);
 

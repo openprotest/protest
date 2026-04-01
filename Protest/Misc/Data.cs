@@ -435,8 +435,6 @@ internal static class Data {
     public static string CompressIPv6(string ipv6) {
         string removedExtraZeros = ipv6.Replace("0000","*");
 
-        string[] blocks = ipv6.Split(':');
-
         Regex regex = new Regex(":0+");
         removedExtraZeros = regex.Replace(removedExtraZeros, ":");
 

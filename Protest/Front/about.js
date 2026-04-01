@@ -1,6 +1,6 @@
 class About extends Tabs {
 	constructor(args) {
-		super(null);
+		super();
 
 		this.args = args ?? "";
 
