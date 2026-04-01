@@ -496,7 +496,7 @@ class Watchdog extends Window {
 			let requiredFieldMissing = false;
 
 			if (targetInput.value.length === 0) {
-				if (!requiredFieldMissing) targetInput.focus();
+				targetInput.focus();
 				targetInput.required = true;
 				requiredFieldMissing = true;
 			}

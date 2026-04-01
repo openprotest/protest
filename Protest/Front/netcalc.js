@@ -267,20 +267,15 @@ class NetCalc extends Window {
 			broadcast.push(ip[i] | (255 - mask[i]));
 		}
 
-		let static_bits  = 0;
 		let default_cidr = 0;
-
 		if (octet > 0 && octet <= 127) {
 			default_cidr = 8;
-			static_bits = 8;
 		}
 		else if (octet > 127 && octet < 192) {
 			default_cidr = 12;
-			static_bits = 16;
 		}
 		else {
 			default_cidr = 16;
-			static_bits = 24;
 		}
 
 		for (let i=0; i<32; i++) {

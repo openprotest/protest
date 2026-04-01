@@ -232,7 +232,7 @@ class TraceRoute extends Console {
 				this.ws.send(this.pending[i]);
 
 			for (let i = 0; i < this.list.childNodes.length; i++) //remove warnings, if exist
-				if (this.list.childNodes[i].id="self_destruct")
+				if (this.list.childNodes[i].id === "self_destruct")
 					this.list.removeChild(this.list.childNodes[i]);
 		};
 
