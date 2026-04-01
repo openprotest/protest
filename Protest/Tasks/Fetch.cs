@@ -717,24 +717,26 @@ internal static class Fetch {
                 }
             }
 
-            if (task.cancellationToken.IsCancellationRequested) {
-                KeepAlive.Broadcast("{\"action\":\"abort-fetch\",\"type\":\"devices\"}"u8.ToArray(), "/fetch/status");
-                Logger.Action(origin, "Devices fetch task aborted");
+            if (task is not null) {
+                if (task.cancellationToken.IsCancellationRequested) {
+                    KeepAlive.Broadcast("{\"action\":\"abort-fetch\",\"type\":\"devices\"}"u8.ToArray(), "/fetch/status");
+                    Logger.Action(origin, "Devices fetch task aborted");
 
-                task?.Dispose();
-                task = null;
-                return;
+                    task?.Dispose();
+                    task = null;
+                    return;
+                }
+
+                result = new Result() {
+                    name         = task.name,
+                    type         = Type.devices,
+                    started      = task.started,
+                    finished     = DateTime.UtcNow.Ticks,
+                    dataset      = dataset,
+                    successful   = task.CompletedSteps,
+                    unsuccessful = task.TotalSteps - task.CompletedSteps,
+                };
             }
-
-            result = new Result() {
-                name = task.name,
-                type = Type.devices,
-                started = task.started,
-                finished = DateTime.UtcNow.Ticks,
-                dataset = dataset,
-                successful = task.CompletedSteps,
-                unsuccessful = task.TotalSteps - task.CompletedSteps,
-            };
 
             KeepAlive.Broadcast($"{{\"action\":\"finish-fetch\",\"type\":\"devices\",\"task\":{Encoding.UTF8.GetString(Status())}}}", "/fetch/status");
             Logger.Action(origin, "Fetch task finished");

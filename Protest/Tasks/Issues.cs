@@ -162,7 +162,7 @@ internal static class Issues {
         }
         catch { }
         finally {
-            if (ws?.State == WebSocketState.Open) {
+            if (ws.State == WebSocketState.Open) {
                 try {
                     await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, null, CancellationToken.None);
                 }

@@ -131,7 +131,7 @@ internal static class Telnet {
                 int count = stream.Read(data, 0, data.Length);
 
                 if (count == 0) { //remote host closed the connection
-                    if (ws.State == WebSocketState.Open) {
+                    if (ws!.State == WebSocketState.Open) {
                         try {
                             await ws?.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
                         }
@@ -146,7 +146,7 @@ internal static class Telnet {
                     if (data[i] > 127) data[i] = 46; //.
                 }
 
-                await ws.SendAsync(new ArraySegment<byte>(data, 0, count), WebSocketMessageType.Text, true, CancellationToken.None);
+                await ws!.SendAsync(new ArraySegment<byte>(data, 0, count), WebSocketMessageType.Text, true, CancellationToken.None);
 
                 //string dataString = Encoding.ASCII.GetString(data, 0, count);
                 //Console.Write(dataString);
