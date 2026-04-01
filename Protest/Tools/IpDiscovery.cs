@@ -445,7 +445,7 @@ internal static class IpDiscovery {
     private static async Task DiscoverServicesAsync(ConcurrentDictionary<string, HostEntry> dic, NetworkInterface nic, WebSocket ws, Lock mutex, CancellationToken token) {
         short[] ports = { 22, 23, 53, 80, 443, 445, 3389, 9100 };
         Task[] tasks = dic
-        .Where(o=>o.Value.services is not null && o.Value.services.Length > 0)
+        .Where(o => o.Value.services is null || o.Value.services.Length == 0)
         .Select(async pair => {
             if (token.IsCancellationRequested) {
                 return;
