@@ -526,7 +526,7 @@ internal class Mdns {
             builder.Append($"\"name\":\"{Data.EscapeJsonText(name)}\",");
 
             builder.Append($"\"ttl\":\"{answers[i].ttl}\",");
-            builder.Append($"\"remote\":\"{answers[i].remote.ToString()}\"");
+            builder.Append($"\"remote\":\"{answers[i].remote}\"");
 
             builder.Append('}');
 

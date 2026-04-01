@@ -239,14 +239,14 @@ internal static class PortScan {
                         }
 
                         if (result.Length > 0) {
-                            result = host + ((char)127).ToString() + result;
+                            result = host + ((char)127) + result;
                             lock (mutex) { //one send per socket
                                 ws.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(result), 0, result.Length), WebSocketMessageType.Text, true, CancellationToken.None);
                             }
                         }
                     }
 
-                    string done = "done" + ((char)127).ToString() + host;
+                    string done = "done" + ((char)127) + host;
                     lock (mutex) {
                         ws.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(done), 0, done.Length), WebSocketMessageType.Text, true, CancellationToken.None);
                     }

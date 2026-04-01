@@ -76,7 +76,7 @@ internal class Program {
 
     private static void StartServer(string[] prefixes) {
         Http.Listener listener = new Http.Listener(prefixes, Configuration.front_path);
-        Console.WriteLine(listener.ToString());
+        Console.WriteLine(listener);
         Console.WriteLine();
         listener.Start();
     }

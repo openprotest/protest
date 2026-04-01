@@ -90,7 +90,8 @@ internal static class Wmi {
             string value = String.Empty;
             for (int i = 0; i < array?.Length; i++) {
                 if (array[i].ToString().Length > 0) {
-                    value += (value.Length == 0) ? array[i].ToString() : "; " + array[i].ToString();
+                    value += (value.Length == 0) ? array[i].ToString() : $"; {array[i]}";
+
                 }
             }
 

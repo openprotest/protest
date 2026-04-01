@@ -349,7 +349,7 @@ internal class Import {
             builder.Append('{');
 
             if (dateSplit.Length == 3) {
-                builder.Append($"\"date\":{new DateTime(int.Parse(dateSplit[2]), int.Parse(dateSplit[1]), int.Parse(dateSplit[0])).Ticks.ToString()},");
+                builder.Append($"\"date\":{new DateTime(int.Parse(dateSplit[2]), int.Parse(dateSplit[1]), int.Parse(dateSplit[0])).Ticks},");
             }
             else {
                 builder.Append($"\"date\":{DateTime.UtcNow.Ticks},");

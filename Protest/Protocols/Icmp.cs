@@ -194,22 +194,22 @@ internal static class Icmp {
             return (int)reply.Status switch {
                 (int)IPStatus.DestinationUnreachable or
                 (int)IPStatus.DestinationHostUnreachable or
-                (int)IPStatus.DestinationNetworkUnreachable => id + ((char)127).ToString() + "Unreachable",
+                (int)IPStatus.DestinationNetworkUnreachable => id + ((char)127) + "Unreachable",
 
-                (int)IPStatus.Success  => id + ((char)127).ToString() + reply.RoundtripTime.ToString(),
-                (int)IPStatus.TimedOut => id + ((char)127).ToString() + "Timed out",
-                11050                  => id + ((char)127).ToString() + "General failure",
-                _                      => id + ((char)127).ToString() + reply.Status.ToString(),
+                (int)IPStatus.Success  => id + ((char)127) + reply.RoundtripTime.ToString(),
+                (int)IPStatus.TimedOut => id + ((char)127) + "Timed out",
+                11050                  => id + ((char)127) + "General failure",
+                _                      => id + ((char)127) + reply.Status.ToString(),
             };
         }
         catch (ArgumentException) {
-            return id + ((char)127).ToString() + "Invalid address";
+            return id + ((char)127) + "Invalid address";
         }
         catch (PingException) {
-            return id + ((char)127).ToString() + "Ping error";
+            return id + ((char)127) + "Ping error";
         }
         catch (Exception) {
-            return id + ((char)127).ToString() + "Unknown error";
+            return id + ((char)127) + "Unknown error";
         }
     }
 
@@ -217,27 +217,27 @@ internal static class Icmp {
         List<Task<string>> tasks = new List<Task<string>>(name.Length);
         for (int i = 0; i < name.Length; i++) tasks.Add(ArpPingAsync(name[i], id[i]));
         string[] result = await Task.WhenAll(tasks);
-        return String.Join(((char)127).ToString(), result);
+        return String.Join(((char)127), result);
     }
 
     private static async Task<string> ArpPingAsync(string name, string id) {
         try {
             IPAddress[] ips = await System.Net.Dns.GetHostAddressesAsync(name);
-            if (ips.Length == 0) return id + ((char)127).ToString() + "Unknown host";
+            if (ips.Length == 0) return id + ((char)127) + "Unknown host";
 
             IPAddress ip = ips.First(o => o.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork);
-            if (!ips[0].OnSameBroadcastDomain()) return id + ((char)127).ToString() + "Unknown net.";
+            if (!ips[0].OnSameBroadcastDomain()) return id + ((char)127) + "Unknown net.";
 
             string response = Arp.ArpRequest(ip.ToString());
 
             if (response is not null && response.Length > 0) {
-                return id + ((char)127).ToString() + "0";
+                return id + ((char)127) + "0";
             }
 
-            return id + ((char)127).ToString() + "Unreachable";
+            return id + ((char)127) + "Unreachable";
         }
         catch (Exception) {
-            return id + ((char)127).ToString() + "Unknown error";
+            return id + ((char)127) + "Unknown error";
         }
     }
 }

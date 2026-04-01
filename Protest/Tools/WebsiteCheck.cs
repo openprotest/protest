@@ -157,7 +157,7 @@ internal static class WebsiteCheck {
 
             for (int i = 0; i < ips.Length; i++) {
                 if (i > 0) result.Append(',');
-                result.Append($"\"{ips[i].ToString()}\"");
+                result.Append($"\"{ips[i]}\"");
             }
             result.Append("],");
 
