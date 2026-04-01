@@ -73,7 +73,7 @@ internal static class Topology {
         }
 
         string sessionId = ctx.Request.Cookies["sessionid"]?.Value ?? null;
-        string origin = IPAddress.IsLoopback(ctx.Request.RemoteEndPoint.Address) ? "loopback" : Auth.GetUsername(sessionId);
+        //string origin = IPAddress.IsLoopback(ctx.Request.RemoteEndPoint.Address) ? "loopback" : Auth.GetUsername(sessionId);
 
         byte[] buffer = new byte[1024];
         WebSocketReceiveResult targetResult = await ws.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
