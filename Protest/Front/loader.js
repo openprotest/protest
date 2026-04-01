@@ -113,7 +113,6 @@ const LOADER = {
 		"ssh.js",
 		"wmi.js",
 		"snmp.js",
-		"speedtest.js",
 		"websitecheck.js",
 		"ipdiscovery.js",
 		"reverseproxy.js",
@@ -326,7 +325,6 @@ const LOADER = {
 		case "DnsLookup"    : return new DnsLookup(command.args);
 		case "Mdns"         : return new Mdns(command.args);
 		case "TraceRoute"   : return new TraceRoute(command.args);
-		case "SpeedTest"    : return new SpeedTest(command.args);
 		case "PortScan"     : return new PortScan(command.args);
 		case "MacLookup"    : return new MacLookup(command.args);
 		case "DhcpDiscover" : return new DhcpDiscover(command.args);

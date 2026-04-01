@@ -386,7 +386,6 @@ const MENU = {
 		{ t:"DHCP client",        i:"mono/dhcp.svg?light",          g:"utilities", h:false, f:args=> new DhcpDiscover(args), k:"discover" },
 		{ t:"NTP client",         i:"mono/clock.svg?light",         g:"utilities", h:false, f:args=> new NtpClient(args),    k:"network time" },
 		{ t:"Website check",      i:"mono/websitecheck.svg?light",  g:"utilities", h:false, f:args=> new WebsiteCheck(args),    k:"www website" },
-		//{ t:"Speed test",        i:"mono/speedtest.svg?light",     g:"utilities",  h:false, f:args=> new SpeedTest(args) },
 		//{ t:"SNMP traps",        i:"mono/trap.svg?light",          g:"utilities", h:false, f:args=> new Snmp(args) },
 		{ t:"SNMP polling",       i:"mono/snmp.svg?light",          g:"utilities", h:false, f:args=> new Snmp(args) },
 		{ t:"WMI client",         i:"mono/wmi.svg?light",           g:"utilities", h:false, f:args=> new Wmi(args),        k:"windows management instrumentation viewer" },
