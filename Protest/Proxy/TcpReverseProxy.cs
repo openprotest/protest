@@ -68,7 +68,7 @@ internal sealed class TcpReverseProxy : ReverseProxyAbstract {
             Interlocked.Increment(ref this.errors);
         }
         finally {
-            proxyClient?.Close();
+            proxyClient.Close();
         }
     }
 

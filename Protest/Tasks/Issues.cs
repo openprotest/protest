@@ -17,6 +17,8 @@ using Protest.Tools;
 namespace Protest.Tasks;
 
 internal static class Issues {
+    public const long UNIX_BASE_TICKS = 62135596800000;
+
     private const int    MIN_LIFELINE_ENTRIES              = 10;
     private const double WEAK_PASSWORD_ENTROPY_THRESHOLD   = 36.0;
     private const double RTT_STANDARD_DEVIATION_MULTIPLIER = 20.0;
@@ -25,6 +27,7 @@ internal static class Issues {
     private const int MEMORY_USAGE_THRESHOLD    = 80;
     private const int DISK_SPACE_THRESHOLD      = 85;
     private const int DISK_IO_THRESHOLD         = 75;
+
 
     public enum SeverityLevel : byte {
         info     = 1,
@@ -132,7 +135,7 @@ internal static class Issues {
 
                 if (filtered.Any()) {
                     byte[] bytes = JsonSerializer.SerializeToUtf8Bytes(filtered.Select(o => new {
-                        timestamp  = o.timestamp / 10000 - 62135596800000,
+                        timestamp  = o.timestamp / 10000 - UNIX_BASE_TICKS,
                         severity   = o.severity,
                         issue      = o.message,
                         name       = o.name,
@@ -206,7 +209,7 @@ internal static class Issues {
         CheckMacAddresses();
 
         foreach (KeyValuePair<string, Database.Entry> host in ipAddresses) {
-            if (CheckRtt(host.Value, host.Key, out Issue? issue)) {
+            if (CheckRtt(host.Value, host.Key, out Issue? issue) && issue.HasValue) {
                 issues.Add(issue.Value);
             }
         }

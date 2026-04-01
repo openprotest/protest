@@ -44,13 +44,13 @@ internal sealed class ContactsJsonConverter : JsonConverter<Database> {
 
             writer.WriteStartObject();
 
-            if (title?.value.Length > 0)      writer.WriteString(_title, title?.value ?? String.Empty);
+            if (title?.value?.Length > 0)      writer.WriteString(_title, title?.value ?? String.Empty);
             if (name?.Length > 0)             writer.WriteString(_name, name);
-            if (department?.value.Length > 0) writer.WriteString(_department, department?.value ?? String.Empty);
+            if (department?.value?.Length > 0) writer.WriteString(_department, department?.value ?? String.Empty);
 
-            if (email?.value.Length > 0)           writer.WriteString(_email, email?.value ?? String.Empty);
-            if (telephoneNumber?.value.Length > 0) writer.WriteString(_telephone, telephoneNumber?.value ?? String.Empty);
-            if (mobileNumber?.value.Length > 0)    writer.WriteString(_mobile, mobileNumber?.value ?? String.Empty);
+            if (email?.value?.Length > 0)           writer.WriteString(_email, email?.value ?? String.Empty);
+            if (telephoneNumber?.value?.Length > 0) writer.WriteString(_telephone, telephoneNumber?.value ?? String.Empty);
+            if (mobileNumber?.value?.Length > 0)    writer.WriteString(_mobile, mobileNumber?.value ?? String.Empty);
 
             writer.WriteEndObject();
         }

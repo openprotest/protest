@@ -138,7 +138,7 @@ internal static class Watchdog {
         Thread.Sleep((int)gap);
 
         while (true) {
-            task.status = TaskWrapper.TaskStatus.Running;
+            task?.status = TaskWrapper.TaskStatus.Running;
 
             long loopStartTimeStamp = DateTime.UtcNow.Ticks;
 

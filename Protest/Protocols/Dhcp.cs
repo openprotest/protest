@@ -414,7 +414,7 @@ internal static class Dhcp {
 
         mac = mac.Replace(":", String.Empty);
         mac = mac.Replace("-", String.Empty);
-        if (mac is not null || mac.Length == 12) {
+        if (mac is not null && mac.Length == 12) {
             buffer[index++] = Convert.ToByte(mac[0..2], 16); //client mac address
             buffer[index++] = Convert.ToByte(mac[2..4], 16);
             buffer[index++] = Convert.ToByte(mac[4..6], 16);

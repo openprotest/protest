@@ -379,9 +379,7 @@ internal static class LiveStats {
                 WsWriteText(ws, $"{{\"activeUser\":\"{Data.EscapeJsonText(username)}\",\"source\":\"WMI\"}}", mutex);
             }
         }
-        catch (NullReferenceException ex) {
-            Logger.Error(ex);
-        }
+        //catch (NullReferenceException) { }
         catch { }
     }
 

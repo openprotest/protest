@@ -219,10 +219,10 @@ internal static class IpDiscovery {
         }
 
         if (gwIpV4 is not null || gwIpV6 is not null) {
-            string ipv4String = gwIpV4.ToString();
+            string ipv4String = gwIpV4?.ToString() ?? null;
 
-            string hostname = NetBios.GetBiosName(ipv4String, 200);
-            string mac = Arp.ArpRequest(ipv4String);
+            string hostname = ipv4String is null ? String.Empty : NetBios.GetBiosName(ipv4String, 200);
+            string mac      = ipv4String is null ? String.Empty : Arp.ArpRequest(ipv4String);
 
             HostEntry gwHost = new HostEntry() {
                 description  = String.Empty,
