@@ -913,10 +913,10 @@ class Terminal extends Window {
 		const top = this.scrollRegionTop || 0;
 		const bottom = this.scrollRegionBottom || this.GetScreenHeight();
 		const todo = {};
-		let x, y;
+		let y;
 
 		for (const key in this.screen) {
-			[x, y] = key.split(",");
+			[, y] = key.split(",");
 			if (y < top || y >= bottom) continue;
 			todo[key] = this.screen[key];
 		}
@@ -935,10 +935,10 @@ class Terminal extends Window {
 		const top = this.scrollRegionTop || 0;
 		const bottom = this.scrollRegionBottom || this.GetScreenHeight();
 		const todo = {};
-		let x, y;
+		let y;
 
 		for (const key in this.screen) {
-			[x, y] = key.split(",");
+			[, y] = key.split(",");
 			if (y < top || y >= bottom) continue;
 			todo[key] = this.screen[key];
 		}

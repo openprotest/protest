@@ -1066,7 +1066,6 @@ class DebitNotes extends Window {
 		issuerInput.value = this.selectedDebit.issuer;
 		statusCheckbox.checked = this.selectedDebit.status === "short";
 
-		const equip = this.selectedDebit.devices;
 		for (let i = 0; i < this.selectedDebit.devices.length; i++) {
 			const device = AddEquip();
 			device.descriptionBox.value = this.selectedDebit.devices[i].description;
