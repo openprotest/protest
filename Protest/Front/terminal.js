@@ -922,7 +922,7 @@ class Terminal extends Window {
 		}
 
 		for (const key in todo) {
-			[x, y] = key.split(",");
+			[, y] = key.split(",");
 			delete this.screen[key];
 			let y1 = parseInt(y) + 1;
 			if (this.scrollRegionBottom && y1 >= this.scrollRegionBottom) continue;
@@ -944,7 +944,7 @@ class Terminal extends Window {
 		}
 
 		for (const key in todo) {
-			[x, y] = key.split(",");
+			[, y] = key.split(",");
 			delete this.screen[key];
 			let y1 = parseInt(y) - 1;
 			if (this.scrollRegionTop && y1 <= this.scrollRegionTop) continue;
