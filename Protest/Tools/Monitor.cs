@@ -155,11 +155,12 @@ internal static class Monitor {
         };
 
         Func<Task> WmiDelegate = async () => {
-            ManagementScope scope = null;
             if (!OperatingSystem.IsWindows()) {
                 WsWriteText(ws, "{\"loglevel\":\"warning\",\"text\":\"WMI is not supported\"}"u8.ToArray());
                 return;
             }
+
+            ManagementScope scope = null;
 
             new Thread(async() => {
                 await Task.Delay(2000);
@@ -183,7 +184,7 @@ internal static class Monitor {
                     continue;
                 }
 
-                if (scope is not null && !scope.IsConnected) {
+                if (!scope.IsConnected) {
                     WsWriteText(ws, $"{{\"loglevel\":\"error\",\"text\":\"WMI connection to {target} has been interrupted\"}}");
                     //TODO: reconnect WMI
                 }

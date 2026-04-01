@@ -65,7 +65,7 @@ internal static class Icmp {
             return;
         }
 
-        if (ws == null) { return; }
+        if (ws == null) return;
 
         Hashtable hostnames = new Hashtable();
         Lock mutex = new Lock();
@@ -172,7 +172,7 @@ internal static class Icmp {
             Logger.Error(ex);
         }
 
-        if (ws?.State == WebSocketState.Open) {
+        if (ws.State == WebSocketState.Open) {
             try {
                 await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
             }

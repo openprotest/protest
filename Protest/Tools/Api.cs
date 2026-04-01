@@ -77,8 +77,9 @@ internal static class Api {
             return;
         }
 
+        ctx.Response.AddHeader("Length", buffer?.Length.ToString() ?? "0");
+
         if (buffer is not null) {
-            ctx.Response.AddHeader("Length", buffer?.Length.ToString() ?? "0");
             ctx.Response.OutputStream.Write(buffer, 0, buffer.Length);
         }
     }

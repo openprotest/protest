@@ -239,11 +239,11 @@ internal static class LiveStats {
 
             if (!String.IsNullOrEmpty(dns)) { //check dns mismatch
                 try {
-                    dns = dns?.Split('.')[0].ToUpper();
+                    dns = dns.Split('.')[0].ToUpper();
                     bool mismatch = false;
 
                     if (!mismatch && !String.IsNullOrEmpty(wmiHostname)) {
-                        wmiHostname = wmiHostname?.Split('.')[0].ToUpper();
+                        wmiHostname = wmiHostname.Split('.')[0].ToUpper();
                         if (wmiHostname != dns) {
                             WsWriteText(ws, $"{{\"warning\":\"DNS mismatch: {Data.EscapeJsonText(wmiHostname)}\",\"source\":\"WMI\"}}", mutex);
                             mismatch = true;
@@ -251,7 +251,7 @@ internal static class LiveStats {
                     }
 
                     if (!mismatch && !String.IsNullOrEmpty(adHostname)) {
-                        adHostname = adHostname?.Split('.')[0].ToUpper();
+                        adHostname = adHostname.Split('.')[0].ToUpper();
                         if (adHostname != dns) {
                             WsWriteText(ws, $"{{\"warning\":\"DNS mismatch: {Data.EscapeJsonText(adHostname)}\",\"source\":\"LDAP\"}}", mutex);
                             mismatch = true;
@@ -263,7 +263,7 @@ internal static class LiveStats {
                     }
 
                     if (!mismatch && !String.IsNullOrEmpty(netBios)) {
-                        netBios = netBios?.Split('.')[0].ToUpper();
+                        netBios = netBios.Split('.')[0].ToUpper();
                         if (netBios != dns) {
                             WsWriteText(ws, $"{{\"warning\":\"DNS mismatch: {Data.EscapeJsonText(netBios)}\",\"source\":\"NetBIOS\"}}", mutex);
                             mismatch = true;
@@ -359,23 +359,23 @@ internal static class LiveStats {
                     }
                 }
 
-                if (scope is not null) {
-                    string startTime = Wmi.WmiGet(scope, "Win32_LogonSession", "StartTime", false, new Wmi.FormatMethodPtr(Wmi.DateTimeToString));
-                    if (startTime.Length > 0) {
-                        WsWriteText(ws, $"{{\"info\":\"Start time: {Data.EscapeJsonText(startTime)}\",\"source\":\"WMI\"}}", mutex);
-                    }
-
-                    string username = Wmi.WmiGet(scope, "Win32_ComputerSystem", "UserName", false, null);
-                    if (username.Length > 0) {
-                        WsWriteText(ws, $"{{\"info\":\"Logged in user: {Data.EscapeJsonText(username)}\",\"source\":\"WMI\"}}", mutex);
-                    }
-                    wmiHostname = Wmi.WmiGet(scope, "Win32_ComputerSystem", "DNSHostName", false, null);
-
-                    WsWriteText(ws, $"{{\"activeUser\":\"{Data.EscapeJsonText(username)}\",\"source\":\"WMI\"}}", mutex);
+                string startTime = Wmi.WmiGet(scope, "Win32_LogonSession", "StartTime", false, new Wmi.FormatMethodPtr(Wmi.DateTimeToString));
+                if (startTime.Length > 0) {
+                    WsWriteText(ws, $"{{\"info\":\"Start time: {Data.EscapeJsonText(startTime)}\",\"source\":\"WMI\"}}", mutex);
                 }
+
+                string username = Wmi.WmiGet(scope, "Win32_ComputerSystem", "UserName", false, null);
+                if (username.Length > 0) {
+                    WsWriteText(ws, $"{{\"info\":\"Logged in user: {Data.EscapeJsonText(username)}\",\"source\":\"WMI\"}}", mutex);
+                }
+                wmiHostname = Wmi.WmiGet(scope, "Win32_ComputerSystem", "DNSHostName", false, null);
+
+                WsWriteText(ws, $"{{\"activeUser\":\"{Data.EscapeJsonText(username)}\",\"source\":\"WMI\"}}", mutex);
             }
         }
-        catch (NullReferenceException) { }
+        catch (NullReferenceException ex) {
+            Logger.Error(ex);
+        }
         catch { }
     }
 

@@ -71,7 +71,7 @@ internal static class Ldap {
             array[i] = result[i].Properties.Contains("name") ? result[i].Properties["name"][0].ToString() : String.Empty;
         }
 
-        result?.Dispose();
+        result.Dispose();
 
         return array;
     }
@@ -102,7 +102,7 @@ internal static class Ldap {
             }
         }
 
-        result?.Dispose();
+        result.Dispose();
 
         return list.ToArray();
     }

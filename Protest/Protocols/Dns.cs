@@ -84,8 +84,6 @@ internal static class Dns {
         if (dnsServer is not null) dnsServer = Uri.UnescapeDataString(dnsServer);
         dnsServer ??= GetLocalDnsAddress(true).ToString();
 
-        if (domainNames is null) return Array.Empty<byte>();
-
         timeout = int.Parse(Uri.UnescapeDataString(timeoutString));
 
         transport = transportString switch {

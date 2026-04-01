@@ -834,13 +834,13 @@ internal static class Fetch {
             StringBuilder response = new StringBuilder();
 
             response.Append('{');
-            response.Append($"\"name\":\"{Data.EscapeJsonText(result?.name)}\",");
-            response.Append($"\"type\":\"{result?.type}\",");
+            response.Append($"\"name\":\"{Data.EscapeJsonText(result.Value.name)}\",");
+            response.Append($"\"type\":\"{result.Value.type}\",");
             response.Append($"\"status\":\"pending\",");
-            response.Append($"\"started\":\"{result?.started}\",");
-            response.Append($"\"finished\":\"{result?.finished}\",");
-            response.Append($"\"successful\":\"{Data.EscapeJsonText(result?.successful.ToString())}\",");
-            response.Append($"\"unsuccessful\":\"{Data.EscapeJsonText(result?.unsuccessful.ToString())}\"");
+            response.Append($"\"started\":\"{result.Value.started}\",");
+            response.Append($"\"finished\":\"{result.Value.finished}\",");
+            response.Append($"\"successful\":\"{result.Value.successful}\",");
+            response.Append($"\"unsuccessful\":\"{result.Value.unsuccessful}\"");
             response.Append('}');
 
             return Encoding.UTF8.GetBytes(response.ToString());
@@ -854,22 +854,23 @@ internal static class Fetch {
                 response.Append($"\"name\":\"{Data.EscapeJsonText(task.name)}\",");
                 response.Append($"\"status\":\"canceling\",");
                 response.Append($"\"started\":\"{task.started}\",");
-                response.Append($"\"completed\":\"{Data.EscapeJsonText(task.CompletedSteps.ToString())}\",");
-                response.Append($"\"total\":\"{Data.EscapeJsonText(task.TotalSteps.ToString())}\",");
-                response.Append($"\"etc\":\"{Data.EscapeJsonText(task.CalculateEtc())}\"");
+                response.Append($"\"completed\":\"{task.CompletedSteps}\",");
+                response.Append($"\"total\":\"{task.TotalSteps}\",");
+                response.Append($"\"etc\":\"{task.CalculateEtc()}\"");
                 response.Append('}');
                 return Encoding.UTF8.GetBytes(response.ToString());
             }
-
-            response.Append('{');
-            response.Append($"\"name\":\"{Data.EscapeJsonText(task.name)}\",");
-            response.Append($"\"status\":\"{Data.EscapeJsonText(task.status.ToString())}\",");
-            response.Append($"\"started\":\"{task.started}\",");
-            response.Append($"\"completed\":\"{Data.EscapeJsonText(task.CompletedSteps.ToString())}\",");
-            response.Append($"\"total\":\"{Data.EscapeJsonText(task.TotalSteps.ToString())}\",");
-            response.Append($"\"etc\":\"{Data.EscapeJsonText(task.CalculateEtc())}\"");
-            response.Append('}');
-            return Encoding.UTF8.GetBytes(response.ToString());
+            else {
+                response.Append('{');
+                response.Append($"\"name\":\"{Data.EscapeJsonText(task.name)}\",");
+                response.Append($"\"status\":\"{task.status}\",");
+                response.Append($"\"started\":\"{task.started}\",");
+                response.Append($"\"completed\":\"{task.CompletedSteps}\",");
+                response.Append($"\"total\":\"{task.TotalSteps}\",");
+                response.Append($"\"etc\":\"{task.CalculateEtc()}\"");
+                response.Append('}');
+                return Encoding.UTF8.GetBytes(response.ToString());
+            }
         }
 
         return "{\"status\":\"none\"}"u8.ToArray();
@@ -905,13 +906,13 @@ internal static class Fetch {
 
         Database database;
 
-        if (result?.type == Type.devices) {
+        if (result.Value.type == Type.devices) {
             Logger.Action(origin, "Approve fetched devices");
             KeepAlive.Broadcast("{\"action\":\"approve-fetch\",\"type\":\"devices\"}"u8.ToArray(), "/fetch/status");
 
             database = DatabaseInstances.devices;
         }
-        else if (result?.type == Type.users) {
+        else if (result.Value.type == Type.users) {
             Logger.Action(origin, "Approve fetched users");
             KeepAlive.Broadcast("{\"action\":\"approve-fetch\",\"type\":\"users\"}"u8.ToArray(), "/fetch/status");
 
@@ -937,7 +938,7 @@ internal static class Fetch {
 
         long date = DateTime.UtcNow.Ticks;
 
-        foreach (KeyValuePair<string, ConcurrentDictionary<string, string[]>> pair in result?.dataset) {
+        foreach (KeyValuePair<string, ConcurrentDictionary<string, string[]>> pair in result.Value.dataset) {
             ConcurrentDictionary<string, Database.Attribute> attributes = new ConcurrentDictionary<string, Database.Attribute>();
             foreach (KeyValuePair<string, string[]> attr in pair.Value) {
                 attributes.TryAdd(attr.Key, new Database.Attribute() {
@@ -970,11 +971,11 @@ internal static class Fetch {
 
         conflicted.Clear();
 
-        if (result?.type == Type.devices) {
+        if (result.Value.type == Type.devices) {
             KeepAlive.Broadcast("{\"action\":\"approve-fetch\",\"type\":\"devices\"}"u8.ToArray(), "/fetch/status");
             Logger.Action(origin, "Devices fetched data approved");
         }
-        else if (result?.type == Type.users) {
+        else if (result.Value.type == Type.users) {
             KeepAlive.Broadcast("{\"action\":\"approve-fetch\",\"type\":\"users\"}"u8.ToArray(), "/fetch/status");
             Logger.Action(origin, "Users fetched data approved");
         }
