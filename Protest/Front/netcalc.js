@@ -283,12 +283,12 @@ class NetCalc extends Window {
 			static_bits = 24;
 		}
 
-		for (let i = 0; i < 32; i++) {
+		for (let i=0; i<32; i++) {
 			this.mapBox.childNodes[i].style.backgroundColor = i < this.cidrRange.value ? "rgb(52,169,228)" : "rgb(96,232,23)";
 		}
 
-		for (let i = 0; i < default_cidr; i++) {
-			this.mapBox.childNodes[i].style.backgroundColor = i < default_cidr ? "var(--clr-critical)" : "rgb(96,232,23)";
+		for (let i=0; i<default_cidr; i++) {
+			this.mapBox.childNodes[i].style.backgroundColor = "var(--clr-critical)";
 		}
 
 		this.maskError.style.opacity = this.cidrRange.value < default_cidr ? "1" : "0";
