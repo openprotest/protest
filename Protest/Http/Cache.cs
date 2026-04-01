@@ -103,8 +103,6 @@ internal sealed class Cache {
             watcher.Changed += OnFileChanged;
         }
 #endif
-
-        GC.Collect();
     }
 
     private void OnFileChanged(object source, FileSystemEventArgs e) {

@@ -158,8 +158,6 @@ internal class Import {
             }
         }
 
-        GC.Collect();
-
         return Data.CODE_OK.Array;
     }
 
