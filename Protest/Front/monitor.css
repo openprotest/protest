@@ -70,6 +70,7 @@
 
 .monitor-graph-inner {
 	position: relative;
+	color: var(--clr-light);
 	background-color: color-mix(in hsl shorter hue, var(--clr-dark) 50%, transparent 50%);
 	width: calc(100% - 200px);
 	padding: 2px;

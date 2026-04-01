@@ -226,9 +226,9 @@ internal static class Monitor {
 
         Thread icmpThread = null;
         Thread wmiThread = null;
-        Thread smtpThread = null;
+        Thread snmpThread = null;
 
-        icmpThread = new Thread(() => IcmpDelegate());
+        icmpThread = new Thread(async () => await IcmpDelegate());
         icmpThread.Start();
 
         try {
@@ -252,7 +252,7 @@ internal static class Monitor {
                 case Action.start:
                     paused = false;
                     if (icmpThread is null) {
-                        icmpThread = new Thread(() => IcmpDelegate());
+                        icmpThread = new Thread(async() => await IcmpDelegate());
                         icmpThread.Start();
                     }
                     break;
@@ -270,16 +270,16 @@ internal static class Monitor {
                 case Action.addwmi:
                     queries.TryAdd(query.index, query);
                     if (wmiThread is null) {
-                        wmiThread = new Thread(() => WmiDelegate());
+                        wmiThread = new Thread(async() => await WmiDelegate());
                         wmiThread.Start();
                     }
                     break;
 
                 case Action.addsnmp:
                     queries.TryAdd(query.index, query);
-                    if (smtpThread is null) {
-                        smtpThread = new Thread(() => SnmpDelegate());
-                        smtpThread.Start();
+                    if (snmpThread is null) {
+                        snmpThread = new Thread(async() => await SnmpDelegate());
+                        snmpThread.Start();
                     }
                     break;
 
