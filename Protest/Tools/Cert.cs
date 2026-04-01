@@ -80,7 +80,7 @@ internal static class Cert {
             validBefore = DateTime.Now.AddYears(5);
         }
 
-        string[] subjectAlternativeNames = altNamesString.Split(',').Select(o=>o.Trim()).ToArray();
+        string[] subjectAlternativeNames = altNamesString?.Split(',').Select(o=>o.Trim()).ToArray() ?? Array.Empty<String>();
 
         X509KeyUsageFlags keyUsageFlags = X509KeyUsageFlags.DigitalSignature | X509KeyUsageFlags.KeyEncipherment;
 

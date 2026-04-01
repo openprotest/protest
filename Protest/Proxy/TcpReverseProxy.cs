@@ -47,6 +47,8 @@ internal sealed class TcpReverseProxy : ReverseProxyAbstract {
     }
 
     private async Task ServeClient(TcpClient proxyClient) {
+        if (proxyClient is null) return;
+
         try {
             using TcpClient destinationClient = new TcpClient();
             await destinationClient.ConnectAsync(destinationEndPoint, cancellationToken);

@@ -188,9 +188,9 @@ internal static class IpDiscovery {
         }
 
         if (localIpV4 is not null || localIpV6 is not null) {
-            string ipv4String = localIpV4.ToString();
+            string ipv4String = localIpV4?.ToString();
 
-            string hostname = NetBios.GetBiosName(ipv4String, 200);
+            string hostname = String.IsNullOrEmpty(ipv4String) ? String.Empty : NetBios.GetBiosName(ipv4String, 200);
             string mac = String.Join(":", nic.GetPhysicalAddress().GetAddressBytes().Select(b => b.ToString("X2")));
 
             HostEntry host = new HostEntry() {

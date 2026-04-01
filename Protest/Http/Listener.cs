@@ -202,8 +202,13 @@ internal sealed class Listener {
     }
 
     public void Stop() {
-        if (listener is not null && listener.IsListening) listener.Stop();
-        listener.Abort();
+        if (listener is not null) {
+            if (listener.IsListening) {
+                listener.Stop();
+            }
+
+            listener.Abort();
+        }
     }
 
     private void ListenerCallback(IAsyncResult result) {
@@ -267,8 +272,8 @@ internal sealed class Listener {
         if (String.Equals(path, "/contacts", StringComparison.Ordinal)) {
             byte[] buffer = DatabaseInstances.users.SerializeContacts();
             ctx.Response.StatusCode = (int)HttpStatusCode.OK;
-            ctx.Response.OutputStream.Write(buffer, 0, buffer.Length);
-            ctx.Response.AddHeader("Content-Length", buffer?.Length.ToString() ?? "0");
+            ctx.Response.OutputStream.Write(buffer!, 0, buffer!.Length);
+            ctx.Response.AddHeader("Content-Length", buffer!.Length.ToString());
             ctx.Response.Close();
             return;
         }

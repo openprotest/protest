@@ -219,12 +219,12 @@ internal sealed class Database {
             _ => null
         };
 
+        if (newEntry is null) return true;
+
         string[] attributesWithNull = newEntry.attributes.Where(attr => attr.Value.value is null).Select(attr => attr.Key).ToArray();
         foreach (string key in attributesWithNull) {
             newEntry.attributes.TryRemove(key, out _);
         }
-
-        if (newEntry is null) return true;
 
         dictionary.TryAdd(file, newEntry);
 

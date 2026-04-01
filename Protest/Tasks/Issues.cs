@@ -128,7 +128,7 @@ internal static class Issues {
                     return;
                 }
 
-                IEnumerable<Issue> filtered = issues.Where(o => o.timestamp > lastTimestamp);
+                IEnumerable<Issue> filtered = issues?.Where(o => o.timestamp > lastTimestamp);
 
                 if (filtered.Any()) {
                     byte[] bytes = JsonSerializer.SerializeToUtf8Bytes(filtered.Select(o => new {
@@ -232,11 +232,11 @@ internal static class Issues {
                 ipString = ip.value.Split(';').Select(o => o.Trim()).ToArray()[0];
             }
 
-            if (CheckCpuLifeline(device, ipString, out Issue ? cpuIssue)) {
+            if (CheckCpuLifeline(device, ipString, out Issue ? cpuIssue) && cpuIssue.HasValue) {
                 issues.Add(cpuIssue.Value);
             }
 
-            if (CheckMemoryLifeline(device, ipString, out Issue? memoryIssue)) {
+            if (CheckMemoryLifeline(device, ipString, out Issue? memoryIssue) && memoryIssue.HasValue) {
                 issues.Add(memoryIssue.Value);
             }
 
@@ -246,11 +246,11 @@ internal static class Issues {
                 }
             }
 
-            if (CheckDiskIOLifeline(device, ipString, out Issue? diskIoIssue)) {
+            if (CheckDiskIOLifeline(device, ipString, out Issue? diskIoIssue) && diskIoIssue.HasValue) {
                 issues.Add(diskIoIssue.Value);
             }
 
-            if (CheckNicSpeed(device, ipString, out Issue ? nicSpeedIssue)) {
+            if (CheckNicSpeed(device, ipString, out Issue? nicSpeedIssue) && nicSpeedIssue.HasValue) {
                 issues.Add(nicSpeedIssue.Value);
             }
 
@@ -598,7 +598,7 @@ internal static class Issues {
             List<(long timestamp, double percentUsed)> usageData = diskEntry.Value;
 
             if (usageData.Count == 0) { continue; }
-            if (CheckDiskSpace(device.filename, host, 100 - usageData[^1].percentUsed, diskEntry.Key, out Issue? diskIssue)) {
+            if (CheckDiskSpace(device.filename, host, 100 - usageData[^1].percentUsed, diskEntry.Key, out Issue? diskIssue) && diskIssue.HasValue) {
                 issuesList.Add(diskIssue.Value);
                 continue;
             }
@@ -776,7 +776,8 @@ internal static class Issues {
                     isUser     = true,
                 });
             }
-            else {
+            
+            if (result is not null) {
                 bool isDisabled = false;
                 if (severityThreshold <= SeverityLevel.info
                     && result.Properties["userAccountControl"].Count > 0

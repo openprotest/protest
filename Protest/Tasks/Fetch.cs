@@ -283,7 +283,7 @@ internal static class Fetch {
             }
         }
 
-        if (!wmi.ContainsKey("manufacturer") && mac.Length > 0) {
+        if (!wmi.ContainsKey("manufacturer") && String.IsNullOrEmpty(mac)) {
             byte[] manufacturerArray = MacLookup.Lookup(mac);
             if (manufacturerArray is not null) {
                 string manufacturer = Encoding.UTF8.GetString(manufacturerArray);
@@ -645,6 +645,7 @@ internal static class Fetch {
             origin
         );
     }
+
     public static byte[] DevicesTask(string[] hosts, bool dns, bool wmi, bool ldap, SnmpProfiles.Profile[] snmpProfiles, string portScan, int retries, float interval, string origin) {
         if (task is not null) return Data.CODE_OTHER_TASK_IN_PROGRESS.Array;
         if (result is not null) return Data.CODE_OTHER_TASK_IN_PROGRESS.Array;
@@ -656,7 +657,7 @@ internal static class Fetch {
             const int WINDOW = 32;
             ConcurrentDictionary<string, ConcurrentDictionary<string, string[]>> dataset = new ConcurrentDictionary<string, ConcurrentDictionary<string, string[]>>();
 
-            task.status = TaskWrapper.TaskStatus.Running;
+            task?.status = TaskWrapper.TaskStatus.Running;
 
             List<string> queue = new List<string>(hosts);
             List<string> redo = new List<string>();

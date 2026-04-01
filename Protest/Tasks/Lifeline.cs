@@ -61,7 +61,7 @@ internal static partial class Lifeline {
         long lastVersion = 0;
 
         while (true) {
-            task.status = TaskWrapper.TaskStatus.Running;
+            task?.status = TaskWrapper.TaskStatus.Running;
 
             long startTimeStamp = DateTime.UtcNow.Ticks;
 

@@ -274,8 +274,11 @@ internal static class LiveStats {
             }
 
             if (String.IsNullOrEmpty(_hostname?.value) && String.IsNullOrEmpty(_ip?.value)) { //check reverse dns mismatch
-                string[] hostnames = _hostname?.value.Split(';').Select(o => o.Trim()).ToArray() ?? Array.Empty<string>();
-                string[] ips = _ip?.value.Split(';').Select(o => o.Trim()).ToArray() ?? Array.Empty<string>();
+                string hostnameValue = _hostname?.value ?? string.Empty;
+                string[] hostnames = hostnameValue.Split(';').Select(o => o.Trim()).ToArray();
+                
+                string ipValue = _ip?.value ?? string.Empty;
+                string[] ips = ipValue.Split(';').Select(o => o.Trim()).ToArray();
 
                 for (int i = 0; i < hostnames.Length; i++) {
                     if (String.IsNullOrEmpty(hostnames[i])) { continue; }

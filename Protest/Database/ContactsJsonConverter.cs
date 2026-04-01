@@ -40,17 +40,17 @@ internal sealed class ContactsJsonConverter : JsonConverter<Database> {
             entry.attributes.TryGetValue("first name", out Database.Attribute firstname);
             entry.attributes.TryGetValue("last name", out Database.Attribute lastname);
 
-            string name = $"{firstname?.value} {lastname?.value}".Trim();
+            string name = $"{firstname?.value ?? String.Empty} {lastname?.value ?? String.Empty}".Trim();
 
             writer.WriteStartObject();
 
-            if (title?.value.Length > 0)      writer.WriteString(_title, title.value);
+            if (title?.value.Length > 0)      writer.WriteString(_title, title?.value ?? String.Empty);
             if (name?.Length > 0)             writer.WriteString(_name, name);
-            if (department?.value.Length > 0) writer.WriteString(_department, department.value);
+            if (department?.value.Length > 0) writer.WriteString(_department, department?.value ?? String.Empty);
 
-            if (email?.value.Length > 0)           writer.WriteString(_email, email.value);
-            if (telephoneNumber?.value.Length > 0) writer.WriteString(_telephone, telephoneNumber.value);
-            if (mobileNumber?.value.Length > 0)    writer.WriteString(_mobile, mobileNumber.value);
+            if (email?.value.Length > 0)           writer.WriteString(_email, email?.value ?? String.Empty);
+            if (telephoneNumber?.value.Length > 0) writer.WriteString(_telephone, telephoneNumber?.value ?? String.Empty);
+            if (mobileNumber?.value.Length > 0)    writer.WriteString(_mobile, mobileNumber?.value ?? String.Empty);
 
             writer.WriteEndObject();
         }
