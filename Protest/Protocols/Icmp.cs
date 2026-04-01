@@ -72,7 +72,6 @@ internal static class Icmp {
         Method method = Method.ICMP;
         int timeout = 1000;
         int interval = 1000;
-        bool rolling = false;
 
         try {
             while (ws.State == WebSocketState.Open) {
@@ -129,10 +128,6 @@ internal static class Icmp {
 
                 case "interval":
                     _ = int.TryParse(msg[1], out interval);
-                    break;
-
-                case "rolling":
-                    rolling = msg[1] == "true";
                     break;
 
                 case "method":

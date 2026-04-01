@@ -238,6 +238,8 @@ internal static class Auth {
 
         if (!otpTokens.TryGetValue(tokenId, out OtpToken token)) return false;
 
+        if (username != token.username) return false;
+
         if (!token.enrolled) return false;
 
         bool isSuccessful = ValidateTotp(token.secret, totp);

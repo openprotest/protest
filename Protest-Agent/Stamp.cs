@@ -43,7 +43,6 @@ public partial class Stamp : Form {
 
             System.Threading.Thread.Sleep(50);
 
-            string escaped = String.Empty;
             for (int i = 0; i < strokes.Length && strokes.Length > 0; i++) {
                 if (char.IsLetterOrDigit(strokes[i])) {
                     SendKeys.SendWait(strokes[i].ToString());

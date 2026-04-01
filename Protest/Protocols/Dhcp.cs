@@ -455,7 +455,7 @@ internal static class Dhcp {
         buffer[index++] = 0x3d; //opt: client id
         buffer[index++] = 0x07; //length
         buffer[index++] = 0x01; //hardware type: ethernet
-        if (mac.Length == 12) {
+        if (mac is not null && mac.Length == 12) {
             buffer[index++] = Convert.ToByte(mac[0..2], 16); //mac address
             buffer[index++] = Convert.ToByte(mac[2..4], 16);
             buffer[index++] = Convert.ToByte(mac[4..6], 16);
@@ -486,7 +486,7 @@ internal static class Dhcp {
         buffer[index++] = dhcpServerIp[2];
         buffer[index++] = dhcpServerIp[3];
 
-        if (hostname.Length > 0) {
+        if (!String.IsNullOrEmpty(hostname)) {
             buffer[index++] = 0x0c; //opt: hostname
             buffer[index++] = (byte)hostname.Length; //length
             for (int i = 0; i < hostname.Length; i++) {

@@ -72,7 +72,7 @@ internal static class Topology {
             return;
         }
 
-        string sessionId = ctx.Request.Cookies["sessionid"]?.Value ?? null;
+        //string sessionId = ctx.Request.Cookies["sessionid"]?.Value ?? null;
         //string origin = IPAddress.IsLoopback(ctx.Request.RemoteEndPoint.Address) ? "loopback" : Auth.GetUsername(sessionId);
 
         byte[] buffer = new byte[1024];
