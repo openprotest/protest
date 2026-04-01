@@ -155,9 +155,9 @@ class Api extends List {
 			return [label, input];
 		};
 
-		const [nameLabel, nameInput] = AddParameter("Name:", "input", "text");
+		const [, nameInput] = AddParameter("Name:", "input", "text");
 
-		const [keyLabel, keyInput] = AddParameter("API key:", "input", "text");
+		const [, keyInput] = AddParameter("API key:", "input", "text");
 		keyInput.setAttribute("readonly", "true");
 
 		const copyButton = document.createElement("button");
@@ -176,7 +176,7 @@ class Api extends List {
 		renewButton.style.gridArea = " 2 / 5";
 		innerBox.append(renewButton);
 
-		const [readOnlyLabel, readOnlyInput] = AddParameter("Read-only:", "input", "toggle");
+		const [, readOnlyInput] = AddParameter("Read-only:", "input", "toggle");
 		readOnlyInput.checked = true;
 		readOnlyInput.disabled = true;
 

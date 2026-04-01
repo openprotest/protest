@@ -851,7 +851,6 @@ class ReverseProxy extends List {
 			this.ConfirmBox(ex, true, "mono/error.svg");
 
 			if (ex === "This proxy is already running") {
-				const index = ReverseProxy.RUNNING.indexOf(guid);
 				ReverseProxy.RUNNING.push(guid);
 
 				if (selected) {

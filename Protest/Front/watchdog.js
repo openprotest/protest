@@ -951,7 +951,7 @@ class Watchdog extends Window {
 
 	EditWatcher() {
 		if (this.selected === null) return;
-		const dialog = this.WatcherDialog(false);
+		this.WatcherDialog(false);
 	}
 
 	DeleteWatcher() {

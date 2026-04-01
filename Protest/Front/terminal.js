@@ -577,7 +577,7 @@ class Terminal extends Window {
 		if (!match) return 2;
 
 		const fullSequence = match[0];
-		const prefix = match[1] || ""; // ?, = or ""
+		//const prefix = match[1] || ""; // ?, = or ""
 		const paramsString = match[2] || "";
 		const command = match[4];
 

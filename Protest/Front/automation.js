@@ -82,7 +82,7 @@ class Automation extends List {
 		const dialog = this.DialogBox("460px");
 		if (dialog === null) return;
 
-		const {okButton, innerBox} = dialog;
+		const {okButton} = dialog;
 
 		okButton.value = entry ? "Save" : "Create";
 

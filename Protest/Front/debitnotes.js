@@ -1053,9 +1053,9 @@ class DebitNotes extends Window {
 		const titleInput = obj.titleInput;
 		const depInput = obj.depInput;
 		const issuerInput = obj.issuerInput;
-		const templateInput = obj.templateInput;
+		//const templateInput = obj.templateInput;
 		const statusCheckbox = obj.statusCheckbox;
-		const lstEquip = obj.lstEquip;
+		//const lstEquip = obj.lstEquip;
 		const AddEquip = obj.AddEquip;
 
 		firstNameInput.value = this.selectedDebit.firstname;

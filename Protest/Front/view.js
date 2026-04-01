@@ -699,9 +699,7 @@ class View extends Window {
 				let added = 0, modified = 0, unchanged = 0, removed = 0;
 
 				if (i === sorted.length - 1) {
-					for (let key in sorted[i].obj) {
-						added++;
-					}
+					added += Object.keys(sorted[i].obj).length;
 				}
 				else {
 					for (let key in sorted[i].obj) {

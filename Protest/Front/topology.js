@@ -1074,15 +1074,6 @@ class Topology extends Window {
 			return false;
 		};
 
-		const includesMac = (word, arr) => {
-			if (!word) return false;
-			for (let i=0; i<arr.length; i++) {
-				if (arr[i].length !== 12) continue;
-				if (word.includes(arr[i])) return true;
-			}
-			return false;
-		};
-
 		for (const file in this.devices) {
 			const device = this.devices[file];
 
