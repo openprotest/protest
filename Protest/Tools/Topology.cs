@@ -383,7 +383,6 @@ internal static class Topology {
         Dictionary<int, string> egress = new Dictionary<int, string>();
         Dictionary<int, string> untagged = new Dictionary<int, string>();
 
-        Dictionary<string, Variable> vlans = new Dictionary<string, Variable>();
         for (int i = 0; i < dot1q.Count; i++) {
             string oid = dot1q[i].Id.ToString();
             if (!int.TryParse(oid.Split('.')[^1], out int vlan)) continue;

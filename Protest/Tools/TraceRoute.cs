@@ -51,8 +51,6 @@ internal static class TraceRoute {
                 const short timeout = 2000; //2s
                 const short ttl = 30;
 
-                List<string> list = new List<string>();
-
                 new Thread(async () => {
                     List<IPAddress> ipList = new List<IPAddress>();
                     string lastAddress = String.Empty;

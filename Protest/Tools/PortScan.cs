@@ -18,7 +18,7 @@ internal static class PortScan {
         21, 22, 23, 25, 53, 67, 80, 110, 135, 139, 170, 239, 389, 443, 445, 515, 631, 636, 853, 990, 992, 993, 995, 3389, 5900, 6789, 7442, 7550, 8080, 8443, 9100, 10001
     };
 
-    private static readonly ReadOnlyDictionary<int, string> protocol;
+/*    private static readonly ReadOnlyDictionary<int, string> protocol;
 
     static PortScan() {
         protocol = new ReadOnlyDictionary<int, string>(new Dictionary<int, string>() {
@@ -160,6 +160,7 @@ internal static class PortScan {
             {10001,"UniFi Discovery Service"}
         });
     }
+*/
 
     public static async void WebSocketHandler(HttpListenerContext ctx) {
         WebSocket ws;

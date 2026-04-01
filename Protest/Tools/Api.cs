@@ -10,8 +10,8 @@ using Protest.Http;
 namespace Protest.Tools;
 internal static class Api {
     private static readonly Lock mutex;
-    private static readonly ConcurrentDictionary<string, ulong> counter;
-    private static readonly ConcurrentDictionary<string, ulong> traffic;
+    //private static readonly ConcurrentDictionary<string, ulong> counter;
+    //private static readonly ConcurrentDictionary<string, ulong> traffic;
     private static readonly JsonSerializerOptions apiLinksSerializerOptions;
 
     private static ConcurrentDictionary<string, Link> links;
@@ -31,8 +31,8 @@ internal static class Api {
 
     static Api() {
         mutex = new Lock();
-        counter = new ConcurrentDictionary<string, ulong>();
-        traffic = new ConcurrentDictionary<string, ulong>();
+        //counter = new ConcurrentDictionary<string, ulong>();
+        //traffic = new ConcurrentDictionary<string, ulong>();
 
         apiLinksSerializerOptions = new JsonSerializerOptions();
         apiLinksSerializerOptions.Converters.Add(new ApiJsonConverter());
