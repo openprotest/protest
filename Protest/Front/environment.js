@@ -494,7 +494,7 @@ class Environment extends Tabs {
 				if (event.key === "Enter") {
 					dialog.okButton.click();
 				}
-			}
+			};
 		};
 
 		this.GetSmtpProfiles();

@@ -354,7 +354,9 @@ class DeviceView extends View {
 
 			gradient += colors[i];
 			gradient += ` ${100 * i / colors.length}%`;
-			if (i != colors.length - 1) {gradient += ","}
+			if (i != colors.length - 1) {
+				gradient += ",";
+			}
 		}
 		gradient += `, ${colors[colors.length-1]} 100%`;
 		gradient += ")";
@@ -630,7 +632,7 @@ class DeviceView extends View {
 					else {
 						UI.PromptAgent(this, "rdp", `${host}:${overwriteProtocol.rdp}`);
 					}
-				}
+				};
 			}
 			else if (ports.includes(3389)) {
 				const actionButton = this.CreateSideButton("mono/rdp.svg", "Remote desktop");
@@ -641,7 +643,7 @@ class DeviceView extends View {
 					else {
 						UI.PromptAgent(this, "rdp", host);
 					}
-				}
+				};
 			}
 
 			if (overwriteProtocol.uvnc) { //uvnc
@@ -660,7 +662,7 @@ class DeviceView extends View {
 						}
 						UI.PromptAgent(this, "uvnc", `${host}:${overwriteProtocol.uvnc}`, uvncPassword);
 					}
-				}
+				};
 			}
 			else if (ports.includes(5900)) {
 				const actionButton = this.CreateSideButton("mono/uvnc.svg", "uVNC");
@@ -678,7 +680,7 @@ class DeviceView extends View {
 						}
 						UI.PromptAgent(this, "uvnc", host, uvncPassword);
 					}
-				}
+				};
 			}
 
 			if (overwriteProtocol.winbox) { //winbox
@@ -2124,7 +2126,7 @@ class DeviceView extends View {
 
 				if (type === "ping") {
 					valueLabel.textContent = data[closestIndex].v < 0 ? "Timed out" : `${data[closestIndex].v} ms`;
-					cy = 3 + Math.round(data[closestIndex].v < 0 ? height : 24 + Math.min((height - 24) * data[closestIndex].v / 1000, height - 10))
+					cy = 3 + Math.round(data[closestIndex].v < 0 ? height : 24 + Math.min((height - 24) * data[closestIndex].v / 1000, height - 10));
 				}
 				else if (type === "line") {
 					valueLabel.textContent = data[closestIndex].v;
@@ -3299,7 +3301,7 @@ class DeviceView extends View {
 
 			if (row % 2 === 1 && rows !== 1) {
 				list[i].frontElement.childNodes[0].style.transform = "rotateX(180deg)";
-				list[i].frontElement.childNodes[1].style.top = "-34px"
+				list[i].frontElement.childNodes[1].style.top = "-34px";
 			}
 			else {
 				list[i].frontElement.childNodes[0].style.transform = "none";

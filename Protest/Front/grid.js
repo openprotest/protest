@@ -456,7 +456,7 @@ class Grid extends Window {
 			if (event.key === "Enter") {
 				dialog.okButton.click();
 			}
-		}
+		};
 	}
 
 	ColumnOptions_HideNull() {
@@ -532,7 +532,7 @@ class Grid extends Window {
 			if (event.key === "Enter") {
 				dialog.okButton.click();
 			}
-		}
+		};
 	}
 
 	ColumnOptions_EditAll() {
@@ -571,7 +571,7 @@ class Grid extends Window {
 			if (event.key === "Enter") {
 				dialog.okButton.click();
 			}
-		}
+		};
 	}
 
 	ColumnOptions_RemoveAll() {

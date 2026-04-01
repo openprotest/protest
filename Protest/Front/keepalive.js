@@ -71,7 +71,7 @@ const KEEP = {
 			return {
 				first: first,
 				last: last
-			}
+			};
 		}
 		else if (slashSplit.length === 2) {
 			slashSplit.map(o=>o.trim());
@@ -109,7 +109,7 @@ const KEEP = {
 				first: first,
 				last: last,
 				cidr: cidr
-			}
+			};
 		}
 		else {
 			return {};

@@ -842,7 +842,8 @@ class DebitNotes extends Window {
 				descriptionBox : descriptionInput,
 				modelBox       : modelInput,
 				serialBox      : serialNoInput,
-				quantityBox    : quantityInput}
+				quantityBox    : quantityInput
+			};
 		};
 
 		findUserButton.onclick = ()=> {

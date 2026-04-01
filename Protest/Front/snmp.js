@@ -179,7 +179,7 @@ static OID_MAP_1_3_6_1_2_1 = [
 
 		if (this.args.profile) {
 			(async () => {
-				const response = await fetch("config/snmpprofiles/list")
+				const response = await fetch("config/snmpprofiles/list");
 
 				if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
 
@@ -613,7 +613,7 @@ static OID_MAP_1_3_6_1_2_1 = [
 			if (event.key === "Enter") {
 				dialog.okButton.click();
 			}
-		}
+		};
 	}
 
 	async WalkQuery() {
@@ -1097,7 +1097,7 @@ static OID_MAP_1_3_6_1_2_1 = [
 					const parentNode = container.parentNode;
 					if (parentNode === this.plotBox) return this.selected;
 					const element = parentNode?.parentNode?.children[1];
-					return element ? element : this.selected
+					return element ? element : this.selected;
 				}
 
 				const nextContainer = containerSiblings[nextContainerIndex];

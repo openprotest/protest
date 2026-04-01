@@ -214,7 +214,7 @@ class UserView extends View {
 					if (event.key === "Enter") {
 						dialog.okButton.click();
 					}
-				}
+				};
 			};
 		}
 

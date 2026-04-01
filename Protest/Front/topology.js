@@ -2639,7 +2639,7 @@ class Topology extends Window {
 		let text = options.name;
 		while (label.getBBox().width > 100 && text.length > 0) {
 			text = text.slice(0, -1);
-			label.textContent = text + "..."
+			label.textContent = text + "...";
 		}
 
 		this.AdjustSvgSize();

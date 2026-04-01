@@ -120,7 +120,10 @@ class Monitor extends Window {
 
 			gradient += colors[i];
 			gradient += ` ${100 * i / colors.length}%`;
-			if (i != colors.length - 1) {gradient += ","}
+
+			if (i != colors.length - 1) {
+				gradient += ",";
+			}
 		}
 		gradient += `, ${colors[colors.length-1]} 100%`;
 		gradient += ")";
