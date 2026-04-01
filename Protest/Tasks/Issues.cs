@@ -621,7 +621,7 @@ internal static class Issues {
             double slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
             double intercept = (sumY - slope * sumX) / n;
 
-            if (slope == 0) { continue; }
+            if (slope == 0d) { continue; }
 
             double currentTime = (double)(DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - firstTimestamp);
             double predictedTime = (DISK_SPACE_THRESHOLD - intercept) / slope;
