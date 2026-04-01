@@ -352,11 +352,11 @@ internal static class Issues {
         }
     }
 
-    public static bool CheckRtt(Database.Entry device, string host, out Issue? issue) {
+    public static bool CheckRtt(Database.Entry device, string host, out Issue? deviceIssue) {
         byte[] lifeline = Lifeline.LoadFile(host, 7, "rtt");
 
         if (lifeline is null || lifeline.Length < 10 * MIN_LIFELINE_ENTRIES) {
-            issue = null;
+            deviceIssue = null;
             return false;
         }
 
@@ -388,7 +388,7 @@ internal static class Issues {
         }
 
         if (rttValues.Count < MIN_LIFELINE_ENTRIES) {
-            issue = null;
+            deviceIssue = null;
             return false;
         }
 
@@ -408,7 +408,7 @@ internal static class Issues {
         if (hasSpike) {
             device.attributes.TryGetValue("name", out Database.Attribute nameAttribute);
 
-            issue = new Issue() {
+            deviceIssue = new Issue() {
                 severity   = SeverityLevel.info,
                 message    = $"RTT spike detected at {spike}ms",
                 name       = nameAttribute?.value ?? String.Empty,
@@ -421,15 +421,15 @@ internal static class Issues {
             return true;
         }
 
-        issue = null;
+        deviceIssue = null;
         return false;
     }
 
-    public static bool CheckCpuLifeline(Database.Entry device, string host, out Issue? issue) {
+    public static bool CheckCpuLifeline(Database.Entry device, string host, out Issue? cpuIssue) {
         byte[] lifeline = Lifeline.LoadFile(device.filename, 3, "cpu");
 
         if (lifeline is null || lifeline.Length < 9 * MIN_LIFELINE_ENTRIES) {
-            issue = null;
+            cpuIssue = null;
             return false;
         }
 
@@ -459,7 +459,7 @@ internal static class Issues {
         }
 
         if (values.Count < MIN_LIFELINE_ENTRIES) {
-            issue = null;
+            cpuIssue = null;
             return false;
         }
 
@@ -467,7 +467,7 @@ internal static class Issues {
         if (mean >= CPU_UTILIZATION_THRESHOLD) {
             device.attributes.TryGetValue("name", out Database.Attribute nameAttribute);
 
-            issue = new Issue {
+            cpuIssue = new Issue {
                 severity   = SeverityLevel.error,
                 message    = $"CPU utilization averaged {mean}% over the last 3 days",
                 name       = nameAttribute?.value ?? String.Empty,
@@ -480,15 +480,15 @@ internal static class Issues {
             return true;
         }
 
-        issue = null;
+        cpuIssue = null;
         return false;
     }
 
-    public static bool CheckMemoryLifeline(Database.Entry device, string host, out Issue? issue) {
+    public static bool CheckMemoryLifeline(Database.Entry device, string host, out Issue? memoryIssue) {
         byte[] lifeline = Lifeline.LoadFile(device.filename, 3, "memory");
 
         if (lifeline is null || lifeline.Length < 24 * MIN_LIFELINE_ENTRIES) {
-            issue = null;
+            memoryIssue = null;
             return false;
         }
 
@@ -525,7 +525,7 @@ internal static class Issues {
         }
 
         if (values.Count < MIN_LIFELINE_ENTRIES) {
-            issue = null;
+            memoryIssue = null;
             return false;
         }
 
@@ -533,7 +533,7 @@ internal static class Issues {
         if (mean > MEMORY_USAGE_THRESHOLD) {
             device.attributes.TryGetValue("name", out Database.Attribute nameAttribute);
 
-            issue = new Issue {
+            memoryIssue = new Issue {
                 severity   = SeverityLevel.error,
                 message    = $"Memory usage averaged {mean}% over the last 3 days",
                 name       = nameAttribute?.value ?? String.Empty,
@@ -546,11 +546,11 @@ internal static class Issues {
             return true;
         }
 
-        issue = null;
+        memoryIssue = null;
         return false;
     }
 
-    public static bool CheckDiskSpaceLifeline(Database.Entry device, string host, out Issue[] issues) {
+    public static bool CheckDiskSpaceLifeline(Database.Entry device, string host, out Issue[] diskIssues) {
         byte[] lifeline = Lifeline.ViewFile(device.filename, DateTime.Now.ToString("yyyyMM"), "disk");
 
         if (lifeline is null || lifeline.Length <= 12 + 17 * MIN_LIFELINE_ENTRIES) {
@@ -558,7 +558,7 @@ internal static class Issues {
             lifeline = Lifeline.ViewFile(device.filename, lastMonth.ToString("yyyyMM"), "disk");
 
             if (lifeline is null || lifeline.Length <= 12 + 17 * MIN_LIFELINE_ENTRIES) {
-                issues = null;
+                diskIssues = null;
                 return false;
             }
         }
@@ -656,19 +656,19 @@ internal static class Issues {
         }
 
         if (issuesList.Count > 0) {
-            issues = issuesList.ToArray();
+            diskIssues = issuesList.ToArray();
             return true;
         }
 
-        issues = null;
+        diskIssues = null;
         return false;
     }
 
-    public static bool CheckDiskIOLifeline(Database.Entry device, string host, out Issue? issue) {
+    public static bool CheckDiskIOLifeline(Database.Entry device, string host, out Issue? diskIssue) {
         byte[] lifeline = Lifeline.LoadFile(device.filename, 3, "diskio");
 
         if (lifeline is null || lifeline.Length < 9 * MIN_LIFELINE_ENTRIES) {
-            issue = null;
+            diskIssue = null;
             return false;
         }
 
@@ -698,7 +698,7 @@ internal static class Issues {
         }
 
         if (values.Count < MIN_LIFELINE_ENTRIES) {
-            issue = null;
+            diskIssue = null;
             return false;
         }
 
@@ -706,7 +706,7 @@ internal static class Issues {
         if (mean > DISK_IO_THRESHOLD) {
             device.attributes.TryGetValue("name", out Database.Attribute nameAttribute);
 
-            issue = new Issue {
+            diskIssue = new Issue {
                 severity   = SeverityLevel.error,
                 message    = $"Disk I/O averaged {mean}% over the last 3 days",
                 name       = nameAttribute?.value ?? String.Empty,
@@ -719,13 +719,13 @@ internal static class Issues {
             return true;
         }
 
-        issue = null;
+        diskIssue = null;
         return false;
     }
 
-    public static bool CheckNicSpeed(Database.Entry device, string host, out Issue? issue) {
+    public static bool CheckNicSpeed(Database.Entry device, string host, out Issue? nicIssue) {
         if (!device.attributes.TryGetValue("network adapter speed", out Database.Attribute speedAttr)) {
-            issue = null;
+            nicIssue = null;
             return false;
         }
 
@@ -737,7 +737,7 @@ internal static class Issues {
             if (split[i] == "10 Mbps" || split[i] == "100 Mbps") {
                 device.attributes.TryGetValue("name", out Database.Attribute nameAttribute);
 
-                issue = new Issue {
+                nicIssue = new Issue {
                     severity   = SeverityLevel.warning,
                     message    = $"Poor ethernet link speed: {split[i]}",
                     name       = nameAttribute?.value ?? String.Empty,
@@ -752,14 +752,14 @@ internal static class Issues {
             }
         }
 
-        issue = null;
+        nicIssue = null;
         return false;
     }
 
     [SupportedOSPlatform("windows")]
-    public static bool CheckDomainUser(Database.Entry user, out Issue[] issues, SeverityLevel severityThreshold) {
+    public static bool CheckDomainUser(Database.Entry user, out Issue[] userIssues, SeverityLevel severityThreshold) {
         if (!user.attributes.TryGetValue("username", out Database.Attribute username)) {
-            issues = null;
+            userIssues = null;
             return false;
         }
 
@@ -902,21 +902,21 @@ internal static class Issues {
             }
 
             if (list.Count > 0) {
-                issues = list.ToArray();
+                userIssues = list.ToArray();
                 return true;
             }
             else {
-                issues = null;
+                userIssues = null;
                 return false;
             }
         }
         catch { }
 
-        issues = null;
+        userIssues = null;
         return false;
     }
 
-    public static bool CheckPasswordStrength(Database.Entry entry, bool isUser, out Issue? issue) {
+    public static bool CheckPasswordStrength(Database.Entry entry, bool isUser, out Issue? passwordIssue) {
         if (entry.attributes.TryGetValue("password", out Database.Attribute password)) {
             string value = password.value;
             double entropy = PasswordStrength.Entropy(value);
@@ -952,7 +952,7 @@ internal static class Issues {
                     entry.attributes.TryGetValue("title", out nameAttribute);
                 }
 
-                issue = new Issue {
+                passwordIssue = new Issue {
                     severity   = Issues.SeverityLevel.critical,
                     message    = $"Weak password with {entropyRounded} bit{(entropyRounded <= 1 ? "" : "s")} of entropy",
                     name       = nameAttribute?.value ?? String.Empty,
@@ -966,18 +966,18 @@ internal static class Issues {
             }
         }
 
-        issue = null;
+        passwordIssue = null;
         return false;
     }
 
-    public static bool CheckDiskSpace(string file, string target, double percent, string diskCaption, out Issue? issue) {
+    public static bool CheckDiskSpace(string file, string target, double percent, string diskCaption, out Issue? diskIssue) {
         string message = $"{Math.Round(percent, 1)}% free space on disk {Data.EscapeJsonText(diskCaption)}:";
 
         if (percent <= 1) {
             Database.Entry device = DatabaseInstances.devices.GetEntry(file);
             device.attributes.TryGetValue("name", out Database.Attribute nameAttribute);
 
-            issue = new Issue {
+            diskIssue = new Issue {
                 severity = SeverityLevel.critical,
                 message    = message,
                 identifier = target,
@@ -994,7 +994,7 @@ internal static class Issues {
             Database.Entry device = DatabaseInstances.devices.GetEntry(file);
             device.attributes.TryGetValue("name", out Database.Attribute nameAttribute);
 
-            issue = new Issue {
+            diskIssue = new Issue {
                 severity   = SeverityLevel.error,
                 message    = message,
                 name       = nameAttribute?.value ?? String.Empty,
@@ -1011,7 +1011,7 @@ internal static class Issues {
             Database.Entry device = DatabaseInstances.devices.GetEntry(file);
             device.attributes.TryGetValue("name", out Database.Attribute nameAttribute);
 
-            issue = new Issue {
+            diskIssue = new Issue {
                 severity   = SeverityLevel.warning,
                 message    = message,
                 name       = nameAttribute?.value ?? String.Empty,
@@ -1024,18 +1024,18 @@ internal static class Issues {
             return true;
         }
 
-        issue = null;
+        diskIssue = null;
         return false;
     }
 
-    public static bool CheckPrinterComponent(Database.Entry entry, out Issue[] issues) {
+    public static bool CheckPrinterComponent(Database.Entry entry, out Issue[] printerIssues) {
         if (!entry.attributes.TryGetValue("snmp profile", out Database.Attribute snmpGuidAttribute)) {
-            issues = null;
+            printerIssues = null;
             return false;
         }
 
         if (!SnmpProfiles.FromGuid(snmpGuidAttribute.value, out SnmpProfiles.Profile profile)) {
-            issues = null;
+            printerIssues = null;
             return false;
         }
 
@@ -1051,19 +1051,19 @@ internal static class Issues {
         }
 
         if (targetsArray.Length == 0) {
-            issues = null;
+            printerIssues = null;
             return false;
         }
 
         if (!IPAddress.TryParse(targetsArray[0], out IPAddress ipAddress)) {
-            issues = null;
+            printerIssues = null;
             return false;
         }
 
-        return CheckPrinterComponent(entry.filename, ipAddress, profile, out issues);
+        return CheckPrinterComponent(entry.filename, ipAddress, profile, out printerIssues);
     }
 
-    public static bool CheckPrinterComponent(string file, IPAddress ipAddress, SnmpProfiles.Profile profile, out Issue[] issues) {
+    public static bool CheckPrinterComponent(string file, IPAddress ipAddress, SnmpProfiles.Profile profile, out Issue[] printerIssues) {
         Dictionary<string, string> componentName    = Protocols.Snmp.Polling.ParseResponse(Protocols.Snmp.Polling.SnmpQuery(ipAddress, profile, new string[] { Protocols.Snmp.Oid.PRINTER_TONERS }, Protocols.Snmp.Polling.SnmpOperation.Walk));
         Dictionary<string, string> componentMax     = Protocols.Snmp.Polling.ParseResponse(Protocols.Snmp.Polling.SnmpQuery(ipAddress, profile, new string[] { Protocols.Snmp.Oid.PRINTER_TONERS_MAX }, Protocols.Snmp.Polling.SnmpOperation.Walk));
         Dictionary<string, string> componentCurrent = Protocols.Snmp.Polling.ParseResponse(Protocols.Snmp.Polling.SnmpQuery(ipAddress, profile, new string[] { Protocols.Snmp.Oid.PRINTER_TONER_CURRENT }, Protocols.Snmp.Polling.SnmpOperation.Walk));
@@ -1110,12 +1110,12 @@ internal static class Issues {
             }
 
             if (list.Count > 0) {
-                issues = list.ToArray();
+                printerIssues = list.ToArray();
                 return true;
             }
         }
 
-        issues = null;
+        printerIssues = null;
         return false;
     }
 
