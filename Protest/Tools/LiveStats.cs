@@ -16,6 +16,7 @@ using Protest.Tasks;
 using Lextm.SharpSnmpLib;
 
 using static Protest.Protocols.Snmp.Polling;
+using System.Net.Sockets;
 
 namespace Protest.Tools;
 
@@ -273,7 +274,7 @@ internal static class LiveStats {
                 catch { }
             }
 
-            if (String.IsNullOrEmpty(_hostname?.value) && String.IsNullOrEmpty(_ip?.value)) { //check reverse dns mismatch
+            if (!String.IsNullOrEmpty(_hostname?.value) && !String.IsNullOrEmpty(_ip?.value)) { //check reverse dns mismatch
                 string hostnameValue = _hostname?.value ?? string.Empty;
                 string[] hostnames = hostnameValue.Split(';').Select(o => o.Trim()).ToArray();
                 
@@ -286,6 +287,7 @@ internal static class LiveStats {
                     try {
                         IPAddress[] reversed = System.Net.Dns.GetHostAddresses(hostnames[i]);
                         for (int j = 0; j < reversed.Length; j++) {
+                            if (reversed[i].AddressFamily != AddressFamily.InterNetwork) continue;
                             if (!ips.Contains(reversed[j].ToString())) {
                                 WsWriteText(ws, $"{{\"warning\":\"Reverse DNS mismatch: {Data.EscapeJsonText(reversed[j].ToString())}\",\"source\":\"DNS\"}}", mutex);
                                 break;

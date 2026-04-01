@@ -16,10 +16,10 @@ using Protest.Tools;
 namespace Protest.Tasks;
 
 internal static class Watchdog {
-    private const long WEEK_IN_TICKS = 6_048_000_000_000L;
+    private const long WEEK_IN_TICKS        = 6_048_000_000_000L;
     private const long FIVE_MINUTE_IN_TICKS = 3_000_000_000L;
-    private const long MINUTE_IN_TICKS = 600_000_000L;
-    private const int FIVE_MINUTE_IN_MILLI = 300_000;
+    private const long MINUTE_IN_TICKS      = 600_000_000L;
+    private const int FIVE_MINUTE_IN_MILLI  = 300_000;
 
     public enum WatcherType : byte {
         icmp,
@@ -296,8 +296,7 @@ internal static class Watchdog {
                 int statusCode = (int)response.StatusCode;
                 int category = statusCode / 100 - 1;
 
-                if (watcher.httpstatus.Length < category)
-                    continue;
+                if (watcher.httpstatus.Length < category) continue;
 
                 if (watcher.httpstatus[category]) {
                     result = 0;
@@ -362,7 +361,7 @@ internal static class Watchdog {
     }
 
     private static short CheckTls(Watcher watcher) {
-        short result = -1;
+        short result = short.MaxValue;
 
         using HttpClientHandler handler = new HttpClientHandler();
         handler.ServerCertificateCustomValidationCallback = (request, cert, chain, errors) => {
@@ -390,8 +389,7 @@ internal static class Watchdog {
             }
             catch { }
 
-            if (result == short.MaxValue)
-                continue;
+            if (result == short.MaxValue) continue;
             break;
         }
 
@@ -642,7 +640,7 @@ internal static class Watchdog {
         switch (watcher.type) {
         case WatcherType.icmp:
             if (status < 0) {
-                body.Append($"<b>{watcher.target}</b> stoped responding to ICMP requests.");
+                body.Append($"<b>{watcher.target}</b> stopped responding to ICMP requests.");
             }
             else {
                 body.Append($"<b>{watcher.target}</b> is now responding to ICMP requests.");
@@ -651,7 +649,7 @@ internal static class Watchdog {
 
         case WatcherType.tcp:
             if (status < 0) {
-                body.Append($"<b>{watcher.target}</b> stoped listening on TCP port {watcher.port}.");
+                body.Append($"<b>{watcher.target}</b> stopped listening on TCP port {watcher.port}.");
             }
             else {
                 body.Append($"<b>{watcher.target}</b> is now listening on TCP port {watcher.port}.");
