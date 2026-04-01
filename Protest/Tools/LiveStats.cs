@@ -320,8 +320,10 @@ internal static class LiveStats {
         try {
             ManagementScope scope = Protocols.Wmi.Scope(firstAlive, "cimv2", 3_000);
             if (scope is not null && scope.IsConnected) {
-                using ManagementObjectCollection logicalDisk = new ManagementObjectSearcher(scope, new SelectQuery("SELECT * FROM Win32_LogicalDisk WHERE DriveType = 3")).Get();
-                foreach (ManagementObject o in logicalDisk.Cast<ManagementObject>()) {
+
+                using ManagementObjectSearcher localDiskSearcher = new ManagementObjectSearcher(scope, new SelectQuery("SELECT * FROM Win32_LogicalDisk WHERE DriveType = 3"));
+                using ManagementObjectCollection logicalDiskCollection = localDiskSearcher.Get();
+                foreach (ManagementObject o in logicalDiskCollection.Cast<ManagementObject>()) {
                     string caption = o.GetPropertyValue("Caption").ToString().Replace(":", String.Empty);
 
                     object size = o.GetPropertyValue("Size");
@@ -343,8 +345,9 @@ internal static class LiveStats {
                     }
                 }
 
-                using ManagementObjectCollection currentTime = new ManagementObjectSearcher(scope, new SelectQuery("SELECT * FROM Win32_UTCTime")).Get();
-                foreach (ManagementObject o in currentTime.Cast<ManagementObject>()) {
+                using ManagementObjectSearcher timeSearcher = new ManagementObjectSearcher(scope, new SelectQuery("SELECT * FROM Win32_UTCTime"));
+                using ManagementObjectCollection timeCollection = timeSearcher.Get();
+                foreach (ManagementObject o in timeCollection.Cast<ManagementObject>()) {
                     int year   = Convert.ToInt32(o.GetPropertyValue("Year"));
                     int month  = Convert.ToInt32(o.GetPropertyValue("Month"));
                     int day    = Convert.ToInt32(o.GetPropertyValue("Day"));

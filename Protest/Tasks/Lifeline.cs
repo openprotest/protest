@@ -267,7 +267,8 @@ internal static partial class Lifeline {
         }
 
         try {
-            using ManagementObjectCollection os = new ManagementObjectSearcher(scope, new SelectQuery("SELECT PercentIdleTime FROM Win32_PerfFormattedData_PerfOS_Processor WHERE Name = '_Total'")).Get();
+            using ManagementObjectSearcher searcher = new ManagementObjectSearcher(scope, new SelectQuery("SELECT PercentIdleTime FROM Win32_PerfFormattedData_PerfOS_Processor WHERE Name = '_Total'"));
+            using ManagementObjectCollection os = searcher.Get();
             foreach (ManagementObject o in os.Cast<ManagementObject>()) {
                 if (o is null) continue;
                 ulong idle = (ulong)o.GetPropertyValue("PercentIdleTime");
@@ -278,7 +279,8 @@ internal static partial class Lifeline {
         catch { }
 
         try {
-            using ManagementObjectCollection os = new ManagementObjectSearcher(scope, new SelectQuery("SELECT PercentIdleTime FROM Win32_PerfFormattedData_PerfDisk_PhysicalDisk WHERE Name = '_Total'")).Get();
+            using ManagementObjectSearcher searcher = new ManagementObjectSearcher(scope, new SelectQuery("SELECT PercentIdleTime FROM Win32_PerfFormattedData_PerfDisk_PhysicalDisk WHERE Name = '_Total'"));
+            using ManagementObjectCollection os = searcher.Get();
             foreach (ManagementObject o in os.Cast<ManagementObject>()) {
                 if (o is null) continue;
                 ulong idle = (ulong)o.GetPropertyValue("PercentIdleTime");
@@ -289,7 +291,8 @@ internal static partial class Lifeline {
         catch { }
 
         try {
-            using ManagementObjectCollection os = new ManagementObjectSearcher(scope, new SelectQuery("Win32_OperatingSystem")).Get();
+            using ManagementObjectSearcher searcher = new ManagementObjectSearcher(scope, new SelectQuery("Win32_OperatingSystem"));
+            using ManagementObjectCollection os = searcher.Get();
             foreach (ManagementObject o in os.Cast<ManagementObject>()) {
                 if (o is null) continue;
                 memoryFree += (ulong)o.GetPropertyValue("FreePhysicalMemory");
@@ -299,7 +302,8 @@ internal static partial class Lifeline {
         catch { }
 
         try {
-            using ManagementObjectCollection logicalDisk = new ManagementObjectSearcher(scope, new SelectQuery("SELECT Caption, FreeSpace, Size FROM Win32_LogicalDisk WHERE DriveType = 3")).Get();
+            using ManagementObjectSearcher searcher = new ManagementObjectSearcher(scope, new SelectQuery("SELECT Caption, FreeSpace, Size FROM Win32_LogicalDisk WHERE DriveType = 3"));
+            using ManagementObjectCollection logicalDisk = searcher.Get();
             foreach (ManagementObject o in logicalDisk.Cast<ManagementObject>()) {
                 if (o is null) continue;
 

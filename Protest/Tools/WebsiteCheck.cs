@@ -271,7 +271,7 @@ internal static class WebsiteCheck {
             };
 
             using HttpClient client = new HttpClient(handler);
-            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, uri) {
+            using HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, uri) {
                 Version = version,
                 VersionPolicy = HttpVersionPolicy.RequestVersionExact
             };

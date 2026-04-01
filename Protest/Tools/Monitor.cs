@@ -351,7 +351,9 @@ internal static class Monitor {
 
     [SupportedOSPlatform("windows")]
     private static void HandleWmiQuery(WebSocket ws, ManagementScope scope, Query query) {
-        using ManagementObjectCollection moc = new ManagementObjectSearcher(scope, new SelectQuery(query.value)).Get();
+        using ManagementObjectSearcher searcher = new ManagementObjectSearcher(scope, new SelectQuery(query.value));
+        using ManagementObjectCollection moc = searcher.Get();
+        
         Dictionary<string, List<string>> data = new Dictionary<string, List<string>>();
 
         foreach (ManagementObject o in moc.Cast<ManagementObject>()) {

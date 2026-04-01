@@ -88,7 +88,7 @@ internal static class Ssh {
                 return;
             }
 
-            SshClient ssh = new SshClient(port == 22 ? host : $"{host}:{port}", username, password);
+            using SshClient ssh = new SshClient(port == 22 ? host : $"{host}:{port}", username, password);
             ssh.Connect();
 
             Logger.Action(origin, $"Establish ssh connection to {username}@{host}:{port}");

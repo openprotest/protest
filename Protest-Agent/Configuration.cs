@@ -40,7 +40,8 @@ namespace ProtestAgent {
             if (plain is null || plain.Length == 0) return new byte[0];
             if (key is null || key.Length == 0) return plain; //in case of a null key, don't encrypt
 
-            using (ICryptoTransform encryptor = Aes.Create().CreateEncryptor(key, iv))
+            using (Aes aes = Aes.Create())
+            using (ICryptoTransform encryptor = aes.CreateEncryptor(key, iv))
             using (MemoryStream memoryStream = new MemoryStream()) {
                 using (CryptoStream cryptoStream = new CryptoStream(memoryStream, encryptor, CryptoStreamMode.Write)) {
                     cryptoStream.Write(plain, 0, plain.Length);
@@ -54,7 +55,8 @@ namespace ProtestAgent {
             if (cipher is null || cipher.Length == 0) return new byte[0];
             if (key is null || key.Length == 0) return cipher; //in case of a null key, don't decrypt
 
-            using (ICryptoTransform decryptor = Aes.Create().CreateDecryptor(key, iv))
+            using (Aes aes = Aes.Create())
+            using (ICryptoTransform decryptor = aes.CreateDecryptor(key, iv))
             using (MemoryStream memoryStream = new MemoryStream()) {
                 using (CryptoStream cryptoStream = new CryptoStream(memoryStream, decryptor, CryptoStreamMode.Write)) {
                     cryptoStream.Write(cipher, 0, cipher.Length);
