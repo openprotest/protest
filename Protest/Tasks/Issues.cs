@@ -108,13 +108,14 @@ internal static class Issues {
         try {
             WebSocketContext wsc = await ctx.AcceptWebSocketAsync(null);
             ws = wsc.WebSocket;
-            if (ws is null) return;
         }
         catch (WebSocketException ex) {
             ctx.Response.Close();
             Logger.Error(ex);
             return;
         }
+
+        if (ws is null) return;
 
         if (!Auth.IsAuthenticatedAndAuthorized(ctx, ctx.Request.Url.AbsolutePath)) {
             await ws.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, null, CancellationToken.None);

@@ -49,13 +49,14 @@ internal static class WebsiteCheck {
         try {
             WebSocketContext wsc = await ctx.AcceptWebSocketAsync(null);
             ws = wsc.WebSocket;
-            if (ws is null) return;
         }
         catch (WebSocketException ex) {
             ctx.Response.Close();
             Logger.Error(ex);
             return;
         }
+
+        if (ws is null) return;
 
         if (!Auth.IsAuthenticatedAndAuthorized(ctx, ctx.Request.Url.AbsolutePath)) {
             await ws.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, null, CancellationToken.None);
@@ -137,7 +138,7 @@ internal static class WebsiteCheck {
             Logger.Error(ex);
         }
 
-        if (ws?.State == WebSocketState.Open) {
+        if (ws.State == WebSocketState.Open) {
             try {
                 await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
             }

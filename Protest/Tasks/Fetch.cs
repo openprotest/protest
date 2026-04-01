@@ -660,7 +660,7 @@ internal static class Fetch {
             List<string> queue = new List<string>(hosts);
             List<string> redo = new List<string>();
 
-            while (!task.cancellationToken.IsCancellationRequested) {
+            while (task is not null && !task.cancellationToken.IsCancellationRequested) {
 
                 while (queue.Count > 0) {
                     int size = Math.Min(WINDOW, queue.Count);

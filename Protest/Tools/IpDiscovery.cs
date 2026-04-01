@@ -106,13 +106,14 @@ internal static class IpDiscovery {
         try {
             WebSocketContext wsc = await ctx.AcceptWebSocketAsync(null);
             ws = wsc.WebSocket;
-            if (ws is null) return;
         }
         catch (WebSocketException ex) {
             ctx.Response.Close();
             Logger.Error(ex);
             return;
         }
+
+        if (ws is null) return;
 
         if (!Http.Auth.IsAuthenticatedAndAuthorized(ctx, ctx.Request.Url.AbsolutePath)) {
             await ws.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, null, CancellationToken.None);
@@ -162,7 +163,7 @@ internal static class IpDiscovery {
             }
         }
 
-        if (ws?.State == WebSocketState.Open) {
+        if (ws.State == WebSocketState.Open) {
             try {
                 await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, null, CancellationToken.None);
             }

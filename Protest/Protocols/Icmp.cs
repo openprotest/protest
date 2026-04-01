@@ -58,7 +58,6 @@ internal static class Icmp {
         try {
             WebSocketContext wsc = await ctx.AcceptWebSocketAsync(null);
             ws = wsc.WebSocket;
-            if (ws is null) return;
         }
         catch (WebSocketException ex) {
             ctx.Response.Close();
@@ -66,7 +65,7 @@ internal static class Icmp {
             return;
         }
 
-        if (ws == null) return;
+        if (ws is null) return;
 
         Hashtable hostnames = new Hashtable();
         Lock mutex = new Lock();

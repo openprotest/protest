@@ -26,13 +26,14 @@ internal static class Telnet {
         try {
             WebSocketContext wsc = await ctx.AcceptWebSocketAsync(null);
             ws = wsc.WebSocket;
-            if (ws is null) return;
         }
         catch (WebSocketException ex) {
             ctx.Response.Close();
             Logger.Error(ex);
             return;
         }
+
+        if (ws is null) return;
 
         if (!Auth.IsAuthenticatedAndAuthorized(ctx, ctx.Request.Url.AbsolutePath)) {
             await ws.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, null, CancellationToken.None);
@@ -119,7 +120,7 @@ internal static class Telnet {
     private static async void HandleDownstream(HttpListenerContext ctx, WebSocket ws, TcpClient telnet, Stream stream) {
         byte[] data = new byte[2048];
 
-        while (ws.State == WebSocketState.Open && telnet.Connected) {
+        while (ws!.State == WebSocketState.Open && telnet.Connected) {
             if (!Auth.IsAuthenticatedAndAuthorized(ctx, "/ws/telnet")) { //check session
                 ctx.Response.Close();
                 telnet.Close();

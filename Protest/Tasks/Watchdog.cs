@@ -159,14 +159,16 @@ internal static class Watchdog {
                 }
             }
 
-            task.status = TaskWrapper.TaskStatus.Idle;
-            task.Sleep(Math.Max(nextSleep - (int)((DateTime.UtcNow.Ticks - loopStartTimeStamp) / 10_000), 0));
+            if (task is not null) {
+                task.status = TaskWrapper.TaskStatus.Idle;
+                task.Sleep(Math.Max(nextSleep - (int)((DateTime.UtcNow.Ticks - loopStartTimeStamp) / 10_000), 0));
 
-            if (task.cancellationToken.IsCancellationRequested) {
-                task.status = TaskWrapper.TaskStatus.Canceling;
-                task?.Dispose();
-                task = null;
-                return;
+                if (task.cancellationToken.IsCancellationRequested) {
+                    task.status = TaskWrapper.TaskStatus.Canceling;
+                    task.Dispose();
+                    task = null;
+                    return;
+                }
             }
         }
     }

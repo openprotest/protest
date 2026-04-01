@@ -17,13 +17,14 @@ internal static class TraceRoute {
         try {
             WebSocketContext wsc = await ctx.AcceptWebSocketAsync(null);
             ws = wsc.WebSocket;
-            if (ws is null) return;
         }
         catch (WebSocketException ex) {
             ctx.Response.Close();
             Logger.Error(ex);
             return;
         }
+
+        if (ws is null) return;
 
         Lock mutex = new Lock();
 
@@ -126,7 +127,7 @@ internal static class TraceRoute {
             Logger.Error(ex);
         }
 
-        if (ws?.State == WebSocketState.Open) {
+        if (ws.State == WebSocketState.Open) {
             try {
                 await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
             }

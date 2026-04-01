@@ -189,14 +189,16 @@ internal static partial class Lifeline {
             wmiThread?.Join();
             snmpThread?.Join();
 
-            task?.status = TaskWrapper.TaskStatus.Idle;
-            task.Sleep(Math.Max((int)((TWO_HOURS_IN_TICKS - (DateTime.UtcNow.Ticks - startTimeStamp)) / 10_000), 0));
+            if (task is not null) {
+                task.status = TaskWrapper.TaskStatus.Idle;
+                task.Sleep(Math.Max((int)((TWO_HOURS_IN_TICKS - (DateTime.UtcNow.Ticks - startTimeStamp)) / 10_000), 0));
 
-            if (task.cancellationToken.IsCancellationRequested) {
-                task.status = TaskWrapper.TaskStatus.Canceling;
-                task?.Dispose();
-                task = null;
-                return;
+                if (task.cancellationToken.IsCancellationRequested) {
+                    task.status = TaskWrapper.TaskStatus.Canceling;
+                    task.Dispose();
+                    task = null;
+                    return;
+                }
             }
         }
     }

@@ -36,7 +36,6 @@ internal static class KeepAlive {
         try {
             WebSocketContext wsc = await ctx.AcceptWebSocketAsync(null);
             ws = wsc.WebSocket;
-            if (ws is null) return;
         }
         catch (WebSocketException ex) {
             ctx.Response.Close();
@@ -44,10 +43,12 @@ internal static class KeepAlive {
             return;
         }
 
+        if (ws is null) return;
+
         string sessionId = ctx.Request.Cookies["sessionid"]?.Value ?? null;
         string username = IPAddress.IsLoopback(ctx.Request.RemoteEndPoint.Address) ? "loopback" : Auth.GetUsername(sessionId);
 
-        string[] accessArray = Auth.rbac.TryGetValue(username, out Auth.AccessControl accessControl) ? accessControl.authorization : new string[] { "*" };
+        string[] accessArray = Auth.rbac.TryGetValue(username, out Auth.AccessControl accessControl) && accessControl is not null ? accessControl.authorization : new string[] { "*" };
 
         Entry keepAliveEntry = new Entry{
             ws = ws,
@@ -111,7 +112,7 @@ internal static class KeepAlive {
             connections.Remove(ws, out _);
         }
 
-        if (ws?.State == WebSocketState.Open) {
+        if (ws.State == WebSocketState.Open) {
             try {
                 await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
             }
