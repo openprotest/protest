@@ -290,7 +290,7 @@ internal static class PasswordStrength {
             }
 
             if (ttc.Length == 0) {
-                ttc = "less then a second";
+                ttc = "less than a second";
             }
 
             return ttc;
