@@ -49,7 +49,7 @@ internal sealed class TaskWrapper : IDisposable {
 
         long d = _lastSet - started; //total duration
 
-        double tps = d / CompletedSteps; //avg ticks/step
+        double tps = (double)d / CompletedSteps; //avg ticks/step
 
         long etc = (long)(tps * (TotalSteps - CompletedSteps));
         if (etc - (DateTime.UtcNow.Ticks - _lastSet) > 0) { //subtract time passed since last-set

@@ -235,7 +235,7 @@ internal static class Dhcp {
         buffer[index++] = transactionId[2];
         buffer[index++] = transactionId[3];
 
-        double secElapsed = (DateTime.Now.Ticks - timestamp) / 100_000_000;
+        double secElapsed = (DateTime.Now.Ticks - timestamp) / 100_000_000d;
         buffer[index++] = 0x00; //seconds elapsed
         buffer[index++] = secElapsed > 255 ? (byte)0xff : (byte)secElapsed;
 
@@ -385,7 +385,7 @@ internal static class Dhcp {
         buffer[index++] = transactionId[2];
         buffer[index++] = transactionId[3];
 
-        double secElapsed = (DateTime.Now.Ticks - timestamp) / 100_000_000;
+        double secElapsed = (DateTime.Now.Ticks - timestamp) / 100_000_000d;
         buffer[index++] = 0x00; //seconds elapsed
         buffer[index++] = secElapsed > 255 ? (byte)0xff : (byte)secElapsed;
 
