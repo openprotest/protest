@@ -114,6 +114,19 @@ internal static class Data {
         return size.ToString();
     }
 
+     public static string SizeToString(ulong size) {
+        if (size < 8_192) return $"{size} Bytes";
+        if (size < 8_192 * 1024) return $"{Math.Floor(size / 1024f)} KB";
+        if (size < 8_192 * Math.Pow(1024, 2)) return $"{Math.Floor(size / Math.Pow(1024, 2))} MB";
+        if (size < 8_192 * Math.Pow(1024, 3)) return $"{Math.Floor(size / Math.Pow(1024, 3))} GB";
+        if (size < 8_192 * Math.Pow(1024, 4)) return $"{Math.Floor(size / Math.Pow(1024, 4))} TB";
+        if (size < 8_192 * Math.Pow(1024, 5)) return $"{Math.Floor(size / Math.Pow(1024, 5))} EB"; //Exabyte
+        if (size < 8_192 * Math.Pow(1024, 6)) return $"{Math.Floor(size / Math.Pow(1024, 6))} ZB"; //Zettabyte
+        if (size < 8_192 * Math.Pow(1024, 7)) return $"{Math.Floor(size / Math.Pow(1024, 7))} YB"; //Yottabyte
+        if (size < 8_192 * Math.Pow(1024, 8)) return $"{Math.Floor(size / Math.Pow(1024, 8))} BB"; //Brontobyte
+        return size.ToString();
+    }
+
     public static byte[] VersionToJson() {
         Version ver = Assembly.GetExecutingAssembly().GetName().Version;
         StringBuilder result = new StringBuilder();

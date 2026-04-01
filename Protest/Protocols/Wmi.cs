@@ -117,7 +117,8 @@ internal static class Wmi {
     }
     public static string WmiGet(ManagementScope scope, string className, string property, bool isArray, FormatMethodPtr format = null) {
         try {
-            ManagementObjectCollection moc = new ManagementObjectSearcher(scope, new SelectQuery(className)).Get();
+            using ManagementObjectSearcher searcher = new ManagementObjectSearcher(scope, new SelectQuery(className));
+            using ManagementObjectCollection moc = searcher.Get();
             return WmiGet(moc, property, isArray, format);
         }
         catch { }
@@ -174,7 +175,8 @@ internal static class Wmi {
         ManagementScope scope = Scope(host, @namespace);
         if (scope is not null) {
             try {
-                using ManagementObjectCollection moc = new ManagementObjectSearcher(scope, new SelectQuery("Win32_SystemEnclosure")).Get();
+                using ManagementObjectSearcher searcher = new ManagementObjectSearcher(scope, new SelectQuery("Win32_SystemEnclosure"));
+                using ManagementObjectCollection moc = searcher.Get();
                 string chassis = String.Empty;
                 foreach (ManagementObject o in moc.Cast<ManagementObject>()) {
                     short chassisTypes = (short)o.GetPropertyValue("ChassisTypes");
@@ -190,7 +192,8 @@ internal static class Wmi {
             catch { }
 
             try {
-                using ManagementObjectCollection moc = new ManagementObjectSearcher(scope, new SelectQuery("SELECT * FROM Win32_NetworkAdapterConfiguration WHERE IPEnabled = True")).Get();
+                using ManagementObjectSearcher searcher = new ManagementObjectSearcher(scope, new SelectQuery("SELECT * FROM Win32_NetworkAdapterConfiguration WHERE IPEnabled = True"));
+                using ManagementObjectCollection moc = searcher.Get();
                 //ContentBuilderAddArray(moc, "IPAddress", "ipv6", hash, new FormatMethodPtr(IPv6Filter));
                 ContentBuilderAddArray(moc, "IPAddress", "ip", data, new FormatMethodPtr(IPv4Filter));
                 ContentBuilderAddArray(moc, "MACAddress", "mac address", data);
@@ -200,13 +203,15 @@ internal static class Wmi {
             catch { }
 
             try {
-                using ManagementObjectCollection moc = new ManagementObjectSearcher(scope, new SelectQuery("SELECT * FROM Win32_NetworkAdapter WHERE PhysicalAdapter = True")).Get();
+                using ManagementObjectSearcher searcher = new ManagementObjectSearcher(scope, new SelectQuery("SELECT * FROM Win32_NetworkAdapter WHERE PhysicalAdapter = True"));
+                using ManagementObjectCollection moc = searcher.Get();
                 ContentBuilderAddArray(moc, "Speed", "network adapter speed", data, new FormatMethodPtr(TransferRateToString));
             }
             catch { }
 
             try {
-                using ManagementObjectCollection moc = new ManagementObjectSearcher(scope, new SelectQuery("Win32_ComputerSystem")).Get();
+                using ManagementObjectSearcher searcher = new ManagementObjectSearcher(scope, new SelectQuery("Win32_ComputerSystem"));
+                using ManagementObjectCollection moc = searcher.Get();
                 ContentBuilderAddValue(moc, "Name", "name", data);
                 ContentBuilderAddValue(moc, "DNSHostName", "hostname", data);
                 ContentBuilderAddValue(moc, "Manufacturer", "manufacturer", data);
@@ -220,7 +225,8 @@ internal static class Wmi {
             }
 
             try {
-                using ManagementObjectCollection moc = new ManagementObjectSearcher(scope, new SelectQuery("Win32_Baseboard")).Get();
+                using ManagementObjectSearcher searcher = new ManagementObjectSearcher(scope, new SelectQuery("Win32_Baseboard"));
+                using ManagementObjectCollection moc = searcher.Get();
                 ContentBuilderAddValue(moc, "Manufacturer", "motherboard manufacturer", data);
                 ContentBuilderAddValue(moc, "Product", "motherboard", data);
                 ContentBuilderAddValue(moc, "SerialNumber", "motherboard serial number", data);
@@ -228,14 +234,16 @@ internal static class Wmi {
             catch { }
 
             try {
-                using ManagementObjectCollection moc = new ManagementObjectSearcher(scope, new SelectQuery("Win32_BIOS")).Get();
+                using ManagementObjectSearcher searcher = new ManagementObjectSearcher(scope, new SelectQuery("Win32_BIOS"));
+                using ManagementObjectCollection moc = searcher.Get();
                 ContentBuilderAddValue(moc, "Name", "bios", data);
                 ContentBuilderAddValue(moc, "SerialNumber", "serial number", data);
             }
             catch { }
 
             try {
-                using ManagementObjectCollection moc = new ManagementObjectSearcher(scope, new SelectQuery("Win32_Processor")).Get();
+                using ManagementObjectSearcher searcher = new ManagementObjectSearcher(scope, new SelectQuery("Win32_Processor"));
+                using ManagementObjectCollection moc = searcher.Get();
                 ContentBuilderAddArray(moc, "Name", "processor", data, new FormatMethodPtr(ProcessorString));
                 ContentBuilderAddValue(moc, "NumberOfCores", "cpu cores", data);
                 ContentBuilderAddValue(moc, "CurrentClockSpeed", "cpu frequency", data, new FormatMethodPtr(ToMHz));
@@ -246,38 +254,39 @@ internal static class Wmi {
             try {
                 UInt64 L1 = 0, L2 = 0, L3 = 0;
 
-                using (ManagementObjectCollection moc = new ManagementObjectSearcher(scope, new SelectQuery("SELECT BlockSize, NumberOfBlocks, Purpose FROM Win32_CacheMemory")).Get())
-                    foreach (ManagementObject o in moc.Cast<ManagementObject>()) {
-                        if (!o.GetPropertyValue("Purpose").ToString().Contains("L1")) continue;
-                        UInt64 numberOfBlocks = UInt64.Parse(o.GetPropertyValue("NumberOfBlocks").ToString());
-                        UInt64 blockSize = UInt64.Parse(o.GetPropertyValue("BlockSize").ToString());
-                        L1 += numberOfBlocks * blockSize;
-                    }
+                using ManagementObjectSearcher searcher = new ManagementObjectSearcher(scope, new SelectQuery("SELECT BlockSize, NumberOfBlocks, Purpose FROM Win32_CacheMemory"));
+                using ManagementObjectCollection collection = searcher.Get();
 
-                using (ManagementObjectCollection moc = new ManagementObjectSearcher(scope, new SelectQuery("SELECT BlockSize, NumberOfBlocks, Purpose FROM Win32_CacheMemory")).Get())
-                    foreach (ManagementObject o in moc.Cast<ManagementObject>()) {
-                        if (!o.GetPropertyValue("Purpose").ToString().Contains("L2")) continue;
-                        UInt64 numberOfBlocks = UInt64.Parse(o.GetPropertyValue("NumberOfBlocks").ToString());
-                        UInt64 blockSize = UInt64.Parse(o.GetPropertyValue("BlockSize").ToString());
-                        L2 += numberOfBlocks * blockSize;
-                    }
+                foreach (ManagementObject o in collection.Cast<ManagementObject>()) {
+                    if (!o.GetPropertyValue("Purpose").ToString().Contains("L1")) continue;
+                    UInt64 numberOfBlocks = UInt64.Parse(o.GetPropertyValue("NumberOfBlocks").ToString());
+                    UInt64 blockSize = UInt64.Parse(o.GetPropertyValue("BlockSize").ToString());
+                    L1 += numberOfBlocks * blockSize;
+                }
 
-                using (ManagementObjectCollection moc = new ManagementObjectSearcher(scope, new SelectQuery("SELECT BlockSize, NumberOfBlocks, Purpose FROM Win32_CacheMemory")).Get())
-                    foreach (ManagementObject o in moc.Cast<ManagementObject>()) {
-                        if (!o.GetPropertyValue("Purpose").ToString().Contains("L3")) continue;
-                        UInt64 numberOfBlocks = UInt64.Parse(o.GetPropertyValue("NumberOfBlocks").ToString());
-                        UInt64 blockSize = UInt64.Parse(o.GetPropertyValue("BlockSize").ToString());
-                        L3 += numberOfBlocks * blockSize;
-                    }
+                foreach (ManagementObject o in collection.Cast<ManagementObject>()) {
+                    if (!o.GetPropertyValue("Purpose").ToString().Contains("L2")) continue;
+                    UInt64 numberOfBlocks = UInt64.Parse(o.GetPropertyValue("NumberOfBlocks").ToString());
+                    UInt64 blockSize = UInt64.Parse(o.GetPropertyValue("BlockSize").ToString());
+                    L2 += numberOfBlocks * blockSize;
+                }
+
+                foreach (ManagementObject o in collection.Cast<ManagementObject>()) {
+                    if (!o.GetPropertyValue("Purpose").ToString().Contains("L3")) continue;
+                    UInt64 numberOfBlocks = UInt64.Parse(o.GetPropertyValue("NumberOfBlocks").ToString());
+                    UInt64 blockSize = UInt64.Parse(o.GetPropertyValue("BlockSize").ToString());
+                    L3 += numberOfBlocks * blockSize;
+                }
 
                 if (L1 > 0 || L2 > 0 || L3 > 0) {
-                    data.Add("cpu cache", $"{SizeToString(L1.ToString())}/{SizeToString(L2.ToString())}/{SizeToString(L3.ToString())}");
+                    data.Add("cpu cache", $"{Data.SizeToString(L1)}/{Data.SizeToString(L2)}/{Data.SizeToString(L3)}");
                 }
             }
             catch { }
 
             try {
-                using ManagementObjectCollection moc = new ManagementObjectSearcher(scope, new SelectQuery("Win32_PhysicalMemory")).Get();
+                using ManagementObjectSearcher searcher = new ManagementObjectSearcher(scope, new SelectQuery("Win32_PhysicalMemory"));
+                using ManagementObjectCollection moc = searcher.Get();
 
                 ulong totalMemory = 0;
                 string memoryType = String.Empty, smbiosType = String.Empty;
@@ -288,7 +297,7 @@ internal static class Wmi {
                     memoryType = o.GetPropertyValue("MemoryType").ToString();
                     smbiosType = o.GetPropertyValue("SMBIOSMemoryType").ToString();
                 }
-                data.Add("total memory", SizeToString(totalMemory.ToString()));
+                data.Add("total memory", Data.SizeToString(totalMemory));
 
                 ContentBuilderAddArray(moc, "Capacity", "memory modules", data, new FormatMethodPtr(SizeToString));
                 ContentBuilderAddValue(moc, "Speed", "ram speed", data, new FormatMethodPtr(ToMHz));
@@ -305,32 +314,37 @@ internal static class Wmi {
             catch { }
 
             try {
-                using ManagementObjectCollection moc = new ManagementObjectSearcher(scope, new SelectQuery("Win32_PhysicalMemoryArray")).Get();
+                using ManagementObjectSearcher searcher = new ManagementObjectSearcher(scope, new SelectQuery("Win32_PhysicalMemoryArray"));
+                using ManagementObjectCollection moc = searcher.Get();
                 ContentBuilderAddValue(moc, "MemoryDevices", "ram slot", data);
             }
             catch { }
 
             try {
-                using ManagementObjectCollection moc = new ManagementObjectSearcher(scope, new SelectQuery("SELECT * FROM Win32_DiskDrive WHERE MediaType = \"Fixed hard disk media\"")).Get();
+                using ManagementObjectSearcher searcher = new ManagementObjectSearcher(scope, new SelectQuery("SELECT * FROM Win32_DiskDrive WHERE MediaType = \"Fixed hard disk media\""));
+                using ManagementObjectCollection moc = searcher.Get();
                 ContentBuilderAddArray(moc, "Size", "physical disk", data, new FormatMethodPtr(SizeToString));
             }
             catch { }
 
             try {
-                using ManagementObjectCollection moc = new ManagementObjectSearcher(scope, new SelectQuery("SELECT * FROM Win32_LogicalDisk WHERE DriveType = 3")).Get();
+                using ManagementObjectSearcher searcher = new ManagementObjectSearcher(scope, new SelectQuery("SELECT * FROM Win32_LogicalDisk WHERE DriveType = 3"));
+                using ManagementObjectCollection moc = searcher.Get();
                 ContentBuilderAddArray(moc, "Size", "logical disk", data, new FormatMethodPtr(SizeToString));
             }
             catch { }
 
             try {
-                using ManagementObjectCollection moc = new ManagementObjectSearcher(scope, new SelectQuery("Win32_VideoController")).Get();
+                using ManagementObjectSearcher searcher = new ManagementObjectSearcher(scope, new SelectQuery("Win32_VideoController"));
+                using ManagementObjectCollection moc = searcher.Get();
                 ContentBuilderAddArray(moc, "Name", "video controller", data);
                 ContentBuilderAddArray(moc, "DriverVersion", "video driver", data);
             }
             catch { }
 
             try {
-                using ManagementObjectCollection moc = new ManagementObjectSearcher(scope, new SelectQuery("Win32_OperatingSystem")).Get();
+                using ManagementObjectSearcher searcher = new ManagementObjectSearcher(scope, new SelectQuery("Win32_OperatingSystem"));
+                using ManagementObjectCollection moc = searcher.Get();
                 ContentBuilderAddValue(moc, "Caption", "operating system", data);
                 ContentBuilderAddValue(moc, "OSArchitecture", "os architecture", data);
                 ContentBuilderAddValue(moc, "Version", "os version", data);
@@ -378,41 +392,41 @@ internal static class Wmi {
         ManagementScope scope = Scope(host, @namespace);
         if (scope is null) return null;
 
-        ManagementObjectCollection moc;
         try {
-            moc = new ManagementObjectSearcher(scope.Path.ToString(), query).Get();
+            using ManagementObjectSearcher searcher = new ManagementObjectSearcher(scope.Path.ToString(), query);
+            using ManagementObjectCollection moc = searcher.Get();
             if (moc.Count == 0) return null;
+
+            bool label_once = true;
+            StringBuilder builder = new StringBuilder();
+
+            foreach (ManagementObject o in moc.Cast<ManagementObject>()) {
+                if (label_once) { //header
+                    label_once = false;
+                    builder.Append(o.Properties.Count);
+                    builder.Append((char)127);
+
+                    foreach (PropertyData p in o.Properties) {
+                        builder.Append(p.Name.ToString() + (char)127);
+                    }
+                }
+
+                foreach (PropertyData p in o.Properties) { //values
+                    try {
+                        string value = FormatProperty(p);
+                        builder.Append(value + (char)127);
+                    }
+                    catch {
+                        builder.Append((char)127);
+                    }
+                }
+            }
+
+            return Encoding.UTF8.GetBytes(builder.ToString());
         }
         catch {
             return null;
         }
-
-        bool label_once = true;
-        StringBuilder builder = new StringBuilder();
-
-        foreach (ManagementObject o in moc.Cast<ManagementObject>()) {
-            if (label_once) { //header
-                label_once = false;
-                builder.Append(o.Properties.Count);
-                builder.Append((char)127);
-
-                foreach (PropertyData p in o.Properties) {
-                    builder.Append(p.Name.ToString() + (char)127);
-                }
-            }
-
-            foreach (PropertyData p in o.Properties) { //values
-                try {
-                    string value = FormatProperty(p);
-                    builder.Append(value + (char)127);
-                }
-                catch {
-                    builder.Append((char)127);
-                }
-            }
-        }
-
-        return Encoding.UTF8.GetBytes(builder.ToString());
     }
 
     public static byte[] WmiKillProcess(Dictionary<string, string> parameters) {
@@ -436,26 +450,27 @@ internal static class Wmi {
         ManagementScope scope = Scope(host);
         if (scope is null) return CODE_UNKNOWN.Array;
 
-        ManagementObjectCollection moc;
         try {
-            moc = new ManagementObjectSearcher(scope.Path.ToString(), "SELECT * FROM Win32_Process WHERE ProcessId = " + pid).Get();
+            using ManagementObjectSearcher searchable = new ManagementObjectSearcher(scope.Path.ToString(), "SELECT * FROM Win32_Process WHERE ProcessId = " + pid);
+            using ManagementObjectCollection moc = searchable.Get();
             if (moc.Count == 0) return "{\"error\":\"no such process id\"}"u8.ToArray();
+
+            foreach (ManagementObject o in moc.Cast<ManagementObject>()) {
+                object exit = o.InvokeMethod("Terminate", null);
+
+                return int.Parse(exit.ToString()) switch {
+                    0 => Data.CODE_OK.Array,
+                    2 => CODE_ACCESS_DENIED.Array,
+                    3 => CODE_INSUFFICIENT_PRIVILEGE.Array,
+                    8 => CODE_UNKNOWN.Array,
+                    9 => CODE_PATH_NOT_FOUND.Array,
+                    21 => Data.CODE_INVALID_ARGUMENT.Array,
+                    _ => CODE_UNKNOWN.Array,
+                };
+            }
         }
         catch {
             return CODE_UNKNOWN.Array;
-        }
-
-        foreach (ManagementObject o in moc.Cast<ManagementObject>()) {
-            object exit = o.InvokeMethod("Terminate", null);
-            return int.Parse(exit.ToString()) switch {
-                0 => Data.CODE_OK.Array,
-                2 => CODE_ACCESS_DENIED.Array,
-                3 => CODE_INSUFFICIENT_PRIVILEGE.Array,
-                8 => CODE_UNKNOWN.Array,
-                9 => CODE_PATH_NOT_FOUND.Array,
-                21 => Data.CODE_INVALID_ARGUMENT.Array,
-                _ => CODE_UNKNOWN.Array,
-            };
         }
 
         return CODE_UNKNOWN.Array;
@@ -599,8 +614,9 @@ internal static class Wmi {
 
             return new DateTime(year, month, day).ToString("dddd dd-MMM-yyyy");
         }
-        else
+        else {
             return value;
+        }
     }
 
     public static string DateTimeToString(string value) {
@@ -615,8 +631,9 @@ internal static class Wmi {
 
             return new DateTime(year, month, day, hour, minute, second).ToString("dddd dd-MMM-yyyy HH:mm:ss");
         }
-        else
+        else {
             return value;
+        }
     }
 
     private static string TransferRateToString(string value) {
@@ -748,11 +765,13 @@ internal static class Wmi {
 
         v = v.Replace("CPU", String.Empty);
 
-        if (v.Contains('@'))
+        if (v.Contains('@')) {
             v = v.Split('@')[0];
+        }
 
-        while (v.Contains("  "))
+        while (v.Contains("  ")) {
             v = v.Replace("  ", " ");
+        }
 
         return v.Trim();
     }
