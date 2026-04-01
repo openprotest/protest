@@ -678,7 +678,7 @@ const MENU = {
 
 		if (keywords.length > 0) { //inventory
 			let count = 0;
-			exactMatchDevices = [];
+			let exactMatchDevices = [];
 
 			for (const file in LOADER.devices.data) {
 				const match = keywords.every(
@@ -743,7 +743,7 @@ const MENU = {
 			}
 
 			count = 0;
-			exactMatchUsers = [];
+			let exactMatchUsers = [];
 
 			for (const file in LOADER.users.data) {
 				const match = keywords.every(
@@ -1383,7 +1383,7 @@ contextmenu.onblur = ()=> {
 	analog_clock_m.style.transform = "rotate(" + m * 6 + "deg)";
 	analog_clock_h.style.transform = "rotate(" + h * 30 + "deg)";
 
-	regionalFormat = localStorage.getItem("regional_format") ? localStorage.getItem("regional_format") : "sys";
+	const regionalFormat = localStorage.getItem("regional_format") ? localStorage.getItem("regional_format") : "sys";
 
 	date_month.textContent = now.toLocaleDateString(regionalFormat, { month: "short" }).toUpperCase();
 	date_date.textContent = now.getDate();
