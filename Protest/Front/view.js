@@ -829,12 +829,15 @@ class View extends Window {
 		this.timeline.onmouseenter = ()=> { this.floating.style.display = "initial"; };
 		this.timeline.onmouseleave = ()=> { this.floating.style.display = "none"; };
 
-		//TODO: need a better way
-		if (lastStamp < 0 && maxGap.length > 3) {
-			let diff = Math.abs(lastStamp);
-			if (diff > maxGap) diff = maxGap - 2;
-			for (let i = maxGap.index; i < sorted.length; i++) {
-				sorted[i].con.style.left = `calc(${sorted[i].x + diff}% - 5px)`;
+		if (lastStamp < 0 && maxGap.index >= 0) {
+			const availableShift = Math.max(0, maxGap.length - 2);
+			const diff = Math.min(Math.abs(lastStamp), availableShift);
+
+			if (diff > 0) {
+				for (let i = maxGap.index; i < sorted.length; i++) {
+					sorted[i].x += diff;
+					sorted[i].con.style.left = `calc(${sorted[i].x}% - 5px)`;
+				}
 			}
 		}
 	}
