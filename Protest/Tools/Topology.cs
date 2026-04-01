@@ -344,22 +344,21 @@ internal static class Topology {
             if (!pair.Key.StartsWith(Oid.INT_1D_TP_FDB)) continue;
             if (!int.TryParse(pair.Value, out int port)) continue;
 
-            string mac = String.Join(String.Empty, pair.Key.Split('.').TakeLast(6).Select(o=>int.Parse(o).ToString("x2")));
+            string mac = ExtractMacFromOid(pair.Key);
 
-            if (macTable.ContainsKey(port)) {
-                macTable[port].Add(mac);
+            if (!macTable.TryGetValue(port, out List<string> list)) {
+                list = new List<string>();
+                macTable[port] = list;
             }
-            else {
-                macTable[port] = new List<string>() { mac };
-            }
+            list.Add(mac);
         }
 
         Dictionary<int, string> dbEntry= new Dictionary<int, string>();
         foreach (KeyValuePair<int, List<string>> pair in macTable) {
+            if (pair.Value.Count != 1) continue;
+
             int port = pair.Key;
             List<string> list = pair.Value;
-
-            if (list.Count != 1) continue;
 
             string match = GetDatabaseEntryByMac(list[0]);
             if (match is not null) {
@@ -367,15 +366,35 @@ internal static class Topology {
             }
         }
 
-        byte[] payload = JsonSerializer.SerializeToUtf8Bytes(new {
+        return JsonSerializer.SerializeToUtf8Bytes(new {
             dot1tp = new {
-                file  = file,
+                file,
                 table = macTable,
                 entry = dbEntry
             }
         });
+    }
 
-        return payload;
+    private static string ExtractMacFromOid(string oid) {
+        Span<char> mac = stackalloc char[12];
+        int end = oid.Length;
+
+        for (int part = 5; part >= 0; part--) {
+            int dot = oid.LastIndexOf('.', end - 1);
+            int start = dot + 1;
+
+            int value = int.Parse(oid.AsSpan(start, end - start));
+            mac[part * 2] = ToHex((value >> 4) & 0xF);
+            mac[part * 2 + 1] = ToHex(value & 0xF);
+
+            end = dot;
+        }
+
+        return new string(mac);
+    }
+
+    private static char ToHex(int value) {
+        return (char)(value < 10 ? '0' + value : 'a' + (value - 10));
     }
 
     private static byte[] ComputeDotQ1Response(string file, IList<Variable> dot1q) {
