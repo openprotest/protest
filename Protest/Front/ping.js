@@ -757,6 +757,11 @@ class Ping extends Console {
 			this.count += 1;
 		}
 
+		if (this.args.entries.length === 0) {
+			this.playButton.disabled = this.args.status === "play";
+			this.pauseButton.disabled = this.args.status === "pause";
+		}
+
 		this.args.entries.push(host);
 	}
 
