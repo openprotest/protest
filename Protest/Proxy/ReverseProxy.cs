@@ -86,6 +86,7 @@ internal static class ReverseProxy {
         try {
             WebSocketContext wsc = await ctx.AcceptWebSocketAsync(null);
             ws = wsc.WebSocket;
+            if (ws is null) return;
         }
         catch (WebSocketException ex) {
             ctx.Response.Close();
