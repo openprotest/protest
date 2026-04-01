@@ -1763,6 +1763,13 @@ class Monitor extends Window {
 
 			if (options.isComplement) { value = max - value; }
 
+			if (last === null) {
+				last = value;
+				return;
+			}
+
+			let delta = value - last;
+
 			if (valley > delta) { valley = delta; }
 			if (peak < delta) { peak = delta; }
 
@@ -1770,13 +1777,6 @@ class Monitor extends Window {
 				min = valley * 1.05;
 				max = peak * 1.05;
 			}
-
-			if (last === null) {
-				last = value;
-				return;
-			}
-
-			let delta = value - last;
 
 			if (list.length * gap > canvas.width) list.shift();
 			list.push(delta);

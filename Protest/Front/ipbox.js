@@ -65,7 +65,7 @@ class IpBox {
 
 				if (event.target.selectionStart === 0 && event.target.selectionEnd === 4) {
 					let v = parseInt(event.target.value);
-					if (v === NaN) v = 0;
+					if (isNaN(v)) v = 0;
 					if (v > 255) event.target.value = 255;
 					if (!isNaN(event.key)) this.FocusNext(event.target);
 				}
