@@ -6,7 +6,7 @@ using System.Windows.Forms;
 
 namespace ProtestAgent {
     internal class Configuration {
-        private static readonly byte[] SALT = Encoding.UTF8.GetBytes("3pVDs55EbUDHL48qMm4oY13uUw69RQoI");
+        private const string SALT = "3pVDs55EbUDHL48qMm4oY13uUw69RQoH";
 
         public bool enabled;
         public string path;
