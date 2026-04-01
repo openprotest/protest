@@ -16,7 +16,7 @@ namespace ProtestAgent {
             LineAlignment = StringAlignment.Center
         };
 
-        private static Font font;
+        private readonly Font font;
         private GraphicsPath path;
 
         public event EventHandler OnPressed;

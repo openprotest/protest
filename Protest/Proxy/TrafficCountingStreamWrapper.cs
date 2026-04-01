@@ -7,7 +7,7 @@ namespace Protest.Proxy;
 internal sealed class TrafficCountingStreamWrapper : Stream {
     private readonly Stream baseStream;
     private readonly string key;
-    private ConcurrentDictionary<string, long> bytesRx, bytesTx;
+    private readonly ConcurrentDictionary<string, long> bytesRx, bytesTx;
 
     public TrafficCountingStreamWrapper(Stream stream, string clientIp, ConcurrentDictionary<string, long> bytesRx, ConcurrentDictionary<string, long> bytesTx) {
         this.baseStream = stream;

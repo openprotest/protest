@@ -37,24 +37,20 @@ internal sealed class DatabaseJsonConverter : JsonConverter<Database> {
                 }
             }
             //else if (propertyName == "length") {}
-            else if (propertyName == "data") {
-                if (reader.TokenType == JsonTokenType.StartObject) {
-                    while (reader.Read()) {
-                        if (reader.TokenType == JsonTokenType.EndObject) {
-                            break;
-                        }
+            else if (propertyName == "data" && reader.TokenType == JsonTokenType.StartObject) {
+                 while (reader.Read()) {
+                     if (reader.TokenType == JsonTokenType.EndObject) break;
 
-                        string entryKey = reader.GetString();
-                        reader.Read();
+                    string entryKey = reader.GetString();
+                    reader.Read();
 
-                        Database.Entry entry = new Database.Entry {
-                            filename   = entryKey,
-                            attributes = this.converter.Read(ref reader, typeof(Database.Attribute), options),
-                            mutex      = new Lock()
-                        };
+                    Database.Entry entry = new Database.Entry {
+                        filename   = entryKey,
+                        attributes = this.converter.Read(ref reader, typeof(Database.Attribute), options),
+                        mutex      = new Lock()
+                    };
 
-                        database.dictionary.TryAdd(entryKey, entry);
-                    }
+                    database.dictionary.TryAdd(entryKey, entry);
                 }
             }
         }

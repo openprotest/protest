@@ -17,9 +17,9 @@ namespace Protest.Tasks;
 internal static partial class Lifeline {
     private const long TWO_HOURS_IN_TICKS = 72_000_000_000L;
 
-    private static ConcurrentDictionary<string, Lock> pingMutexes = new ConcurrentDictionary<string, Lock>();
-    private static ConcurrentDictionary<string, Lock> wmiMutexes = new ConcurrentDictionary<string, Lock>();
-    private static ConcurrentDictionary<string, Lock> snmpMutexes = new ConcurrentDictionary<string, Lock>();
+    private static readonly ConcurrentDictionary<string, Lock> pingMutexes = new ConcurrentDictionary<string, Lock>();
+    private static readonly ConcurrentDictionary<string, Lock> wmiMutexes = new ConcurrentDictionary<string, Lock>();
+    private static readonly ConcurrentDictionary<string, Lock> snmpMutexes = new ConcurrentDictionary<string, Lock>();
 
     [GeneratedRegex("^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\\-]*[a-zA-Z0-9])\\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\\-]*[A-Za-z0-9])$")]
     private static partial Regex ValidHostnameRegex();
@@ -485,7 +485,7 @@ internal static partial class Lifeline {
             long traffic = 0, errors = 0;
             foreach (KeyValuePair<string, string> pair in switchCounters) {
                 if (!int.TryParse(pair.Key.Split('.')[^1], out int index)) continue;
-                if (!typeMap.ContainsKey(index) || typeMap[index] != 6) continue; //skip non-physical interfaces
+                if (!typeMap.TryGetValue(index, out int type) || type != 6) continue; //skip non-physical interfaces
 
                 if (pair.Key.StartsWith(Protocols.Snmp.Oid.INT_TRAFFIC_BYTES_IN)) {
                     traffic += long.TryParse(pair.Value, out long v) ? v : 0;

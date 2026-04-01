@@ -14,7 +14,7 @@ using Protest.Http;
 namespace Protest.Tools;
 
 internal static class PortScan {
-    public static short[] BASIC_PORTS = {
+    public static readonly short[] BASIC_PORTS = {
         21, 22, 23, 25, 53, 67, 80, 110, 135, 139, 170, 239, 389, 443, 445, 515, 631, 636, 853, 990, 992, 993, 995, 3389, 5900, 6789, 7442, 7550, 8080, 8443, 9100, 10001
     };
 

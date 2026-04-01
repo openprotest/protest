@@ -192,22 +192,16 @@ internal static class PasswordStrength {
                 long modified = pair.Value.date;
                 string name = String.Empty;
 
-                if (entry.attributes.TryGetValue("name", out Database.Attribute _name)) {
-                    if (name.Length == 0) {
-                        name = _name.value;
-                    }
+                if (entry.attributes.TryGetValue("name", out Database.Attribute _name) && name.Length == 0) {
+                    name = _name.value;
                 }
 
-                if (entry.attributes.TryGetValue("hostname", out Database.Attribute _hostname)) {
-                    if (name.Length == 0) {
-                        name = _hostname.value;
-                    }
+                if (entry.attributes.TryGetValue("hostname", out Database.Attribute _hostname) && name.Length == 0) {
+                    name = _hostname.value;
                 }
 
-                if (entry.attributes.TryGetValue("ip", out Database.Attribute _ip)) {
-                    if (name.Length == 0) {
-                        name = _ip.value;
-                    }
+                if (entry.attributes.TryGetValue("ip", out Database.Attribute _ip) && name.Length == 0) {
+                    name = _ip.value;
                 }
 
                 if (!first) {

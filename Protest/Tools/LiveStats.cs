@@ -68,12 +68,10 @@ internal static class LiveStats {
                     && entry.attributes.TryGetValue("type", out Database.Attribute typeAttribute)
                     && typeAttribute.value.ToLower() == "domain user"
                     && entry.attributes.TryGetValue("username", out Database.Attribute usernameAttribute)
-                    && Issues.CheckDomainUser(entry, out Issues.Issue[] issues, 0)) {
-
-                    if (issues is not null) {
-                        for (int i = 0; i < issues.Length; i++) {
-                            WsWriteText(ws, issues[i].ToLiveStatsJsonBytes(), mutex);
-                        }
+                    && Issues.CheckDomainUser(entry, out Issues.Issue[] issues, 0)
+                    && issues is not null) {
+                    for (int i = 0; i < issues.Length; i++) {
+                        WsWriteText(ws, issues[i].ToLiveStatsJsonBytes(), mutex);
                     }
                 }
             }

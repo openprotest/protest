@@ -7,7 +7,7 @@ namespace Protest.Tasks;
 
 internal static class LastSeen {
 
-    private static ConcurrentDictionary<string, Lock> mutexes = new ConcurrentDictionary<string, Lock>();
+    private static readonly ConcurrentDictionary<string, Lock> mutexes = new ConcurrentDictionary<string, Lock>();
 
     public static void Seen(string ip) {
         ip = ip.ToLower().Replace(':', '_');

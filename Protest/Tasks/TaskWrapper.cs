@@ -22,7 +22,7 @@ internal sealed class TaskWrapper : IDisposable {
     private int _totalSteps;
 
     public Thread thread;
-    public string name;
+    public readonly string name;
     public string origin;
     public TaskStatus status;
 

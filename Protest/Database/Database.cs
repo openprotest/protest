@@ -265,10 +265,10 @@ internal sealed class Database {
 
         //keep old origin and date, if data didn't change
         foreach (KeyValuePair<string, Attribute> pair in modifications) {
-            if (!oldEntry.attributes.ContainsKey(pair.Key)) continue;
-            if (oldEntry.attributes[pair.Key].value != pair.Value.value) continue;
-            pair.Value.origin = oldEntry.attributes[pair.Key].origin;
-            pair.Value.date = oldEntry.attributes[pair.Key].date;
+            if (!oldEntry.attributes.TryGetValue(pair.Key, out Attribute existingAttribute)) continue;
+            if (existingAttribute.value != pair.Value.value) continue;
+            pair.Value.origin = existingAttribute.origin;
+            pair.Value.date = existingAttribute.date;
         }
 
         oldEntry.attributes = modifications;

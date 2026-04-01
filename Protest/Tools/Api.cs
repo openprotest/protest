@@ -14,7 +14,7 @@ internal static class Api {
     //private static readonly ConcurrentDictionary<string, ulong> traffic;
     private static readonly JsonSerializerOptions apiLinksSerializerOptions;
 
-    private static ConcurrentDictionary<string, Link> links;
+    private static readonly ConcurrentDictionary<string, Link> links;
 
     public enum Permissions : byte {
         Users    = 0x01,

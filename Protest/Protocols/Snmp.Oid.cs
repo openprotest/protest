@@ -2,19 +2,19 @@
 
 internal static class Oid {
 
-    public static string[] GENERIC_OID = new string[] {
+    public static readonly string[] GENERIC_OID = new string[] {
         SYSTEM_DESCRIPTOR,
         SYSTEM_NAME,
         SYSTEM_LOCATION,
         SYSTEM_CONTACT,
     };
 
-    public static string[] PRINTERS_OID = new string[] {
+    public static readonly string[] PRINTERS_OID = new string[] {
         PRINTER_MODEL,
         PRINTER_SERIAL_NO,
     };
 
-    public static string[] SWITCH_OID = new string[] {
+    public static readonly string[] SWITCH_OID = new string[] {
         INT_TYPE,
         INT_DESCRIPTOR,
         INT_ALIAS,
@@ -24,7 +24,7 @@ internal static class Oid {
         INT_1D_TP_FDB,
     };
 
-    public static string[] LIVEVIEW_SWITCH_OID = new string[] {
+    public static readonly string[] LIVEVIEW_SWITCH_OID = new string[] {
         INT_TYPE,
         INT_SPEED,
         INT_1Q_VLAN,
@@ -37,19 +37,19 @@ internal static class Oid {
         INT_1D_TP_FDB,
     };
 
-    public static string[] LIVESTATS_OID = new string[] {
+    public static readonly string[] LIVESTATS_OID = new string[] {
         SYSTEM_UPTIME,
         SYSTEM_TEMPERATURE,
     };
 
-    public static string[] LIVESTATS_PRINTER_OID = new string[] {
+    public static readonly string[] LIVESTATS_PRINTER_OID = new string[] {
         PRINTER_STATUS,
         PRINTER_DISPLAY_MESSAGE,
         PRINTER_JOBS,
         PRINTER_MARKER_COUNTER_LIFE,
     };
 
-    public static string[] LIFELINE_PRINTER_OID = new string[] {
+    public static readonly string[] LIFELINE_PRINTER_OID = new string[] {
         PRINTER_MARKER_COUNTER_LIFE,
         PRINTER_MARKER_COUNTER_PRINTS,
         PRINTER_MARKER_COUNTER_MARKERS,
@@ -57,7 +57,7 @@ internal static class Oid {
         PRINTER_MARKER_COUNTER_COLOR,
     };
 
-    public static string[] LIFELINE_SWITCH_OID = new string[] {
+    public static readonly string[] LIFELINE_SWITCH_OID = new string[] {
         INT_TYPE,
         INT_TRAFFIC_BYTES_IN,
         INT_TRAFFIC_BYTES_OUT,
@@ -65,13 +65,13 @@ internal static class Oid {
         INT_ERROR_OUT,
     };
 
-    public static string[] TOPOLOGY_DOT1Q = new string[] {
+    public static readonly string[] TOPOLOGY_DOT1Q = new string[] {
         INT_1Q_STATIC_NAME,
         INT_1Q_VLAN_ENGRESS,
         INT_1Q_VLAN_UNTAGGED,
     };
 
-    public static string[] TOPOLOGY_TRAFFIC = new string[] {
+    public static readonly string[] TOPOLOGY_TRAFFIC = new string[] {
         INT_TRAFFIC_BYTES_IN,
         INT_TRAFFIC_PKTS_IN_UCAST,
         INT_TRAFFIC_PKTS_IN_MCAST,
@@ -82,7 +82,7 @@ internal static class Oid {
         INT_TRAFFIC_PKTS_OUT_BCAST,
     };
 
-    public static string[] TOPOLOGY_ERROR = new string[] {
+    public static readonly string[] TOPOLOGY_ERROR = new string[] {
         INT_ERROR_IN,
         INT_ERROR_OUT,
     };

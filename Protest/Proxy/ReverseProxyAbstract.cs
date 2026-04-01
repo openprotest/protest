@@ -8,13 +8,13 @@ internal abstract class ReverseProxyAbstract {
     protected readonly CancellationTokenSource cancellationTokenSource;
     protected readonly CancellationToken cancellationToken;
 
-    public Guid guid;
+    public readonly Guid guid;
     public bool isRunning = false;
     public ulong errors;
     protected Thread thread;
 
-    public ConcurrentDictionary<string, long> bytesRx;
-    public ConcurrentDictionary<string, long> bytesTx;
+    public readonly ConcurrentDictionary<string, long> bytesRx;
+    public readonly ConcurrentDictionary<string, long> bytesTx;
 
     public ReverseProxyAbstract(Guid guid) {
         this.guid = guid;

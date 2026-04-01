@@ -15,14 +15,14 @@ namespace ProtestAgent {
 
         public string password;
         public static string presharedKey;
-        public static Configuration stamp    = new Configuration();
-        public static Configuration smb      = new Configuration();
-        public static Configuration compmgmt = new Configuration();
-        public static Configuration rdp      = new Configuration();
-        public static Configuration pse      = new Configuration();
-        public static Configuration uvnc     = new Configuration();
-        public static Configuration anydesk  = new Configuration();
-        public static Configuration winbox   = new Configuration();
+        public static readonly Configuration stamp    = new Configuration();
+        public static readonly Configuration smb      = new Configuration();
+        public static readonly Configuration compmgmt = new Configuration();
+        public static readonly Configuration rdp      = new Configuration();
+        public static readonly Configuration pse      = new Configuration();
+        public static readonly Configuration uvnc     = new Configuration();
+        public static readonly Configuration anydesk  = new Configuration();
+        public static readonly Configuration winbox   = new Configuration();
 
         public static byte[] KeyToBytes(string key, byte length) {
             using (SHA512 sha = SHA512.Create()) {

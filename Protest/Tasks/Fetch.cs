@@ -309,12 +309,10 @@ internal static class Fetch {
             data.TryAdd("ip", new string[] { string.Join("; ", ipList.Select(o => o.ToString())), "IP", string.Empty });
         }
 
-        if (!data.ContainsKey("type")) {
-            if (data.TryGetValue("operating system", out string[] value)) {
-                string os = value[0];
-                if (os.Contains("server", StringComparison.CurrentCultureIgnoreCase)) { //if os is windows server, set type as server
-                    data.TryAdd("type", new string[] { "Server", "LDAP", string.Empty });
-                }
+        if (!data.ContainsKey("type") && data.TryGetValue("operating system", out string[] value)) {
+            string os = value[0];
+            if (os.Contains("server", StringComparison.CurrentCultureIgnoreCase)) { //if os is windows server, set type as server
+                data.TryAdd("type", new string[] { "Server", "LDAP", string.Empty });
             }
         }
 

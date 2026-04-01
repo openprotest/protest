@@ -19,7 +19,7 @@ internal static class Auth {
     private const int MAX_REQUESTS_PER_WIN_PERIOD = 8;
     private static readonly ConcurrentDictionary<IPAddress, List<long>> rateLimLog = new ConcurrentDictionary<IPAddress, List<long>>();
 
-    private static Random rng = new Random();
+    private static readonly Random rng = new Random();
     private static readonly JsonSerializerOptions serializerOptions;
     private static readonly ConcurrentDictionary<string, OtpToken> otpTokens = new();
 

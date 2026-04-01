@@ -22,19 +22,19 @@ internal static class ReverseProxy {
     }
 
     public struct ReverseProxyObject {
-        public Guid guid;
-        public string name;
+        public Guid          guid;
+        public string        name;
         public ProxyProtocol protocol;
-        public string certificate;
-        public string password;
-        public string proxyaddr;
-        public int proxyport;
-        public string destaddr;
-        public int destport;
-        public bool autostart;
+        public string        certificate;
+        public string        password;
+        public string        proxyaddr;
+        public int           proxyport;
+        public string        destaddr;
+        public int           destport;
+        public bool          autostart;
     }
 
-    public static ConcurrentDictionary<string, ReverseProxyAbstract> running = new ConcurrentDictionary<string, ReverseProxyAbstract>();
+    public static readonly ConcurrentDictionary<string, ReverseProxyAbstract> running = new ConcurrentDictionary<string, ReverseProxyAbstract>();
 
     private static readonly JsonSerializerOptions serializerOptions;
     private static readonly JsonSerializerOptions serializerOptionsWithPassword;
@@ -112,10 +112,8 @@ internal static class ReverseProxy {
                     await WsWriteText(ws, GetTotalTraffic());
 
                     clientsToggle = !clientsToggle;
-                    if (select != Guid.Empty) {
-                        if (interval > 500 || interval <= 500 && clientsToggle) {
-                            await WsWriteText(ws, GetProxyTraffic(select));
-                        }
+                    if (select != Guid.Empty && interval > 500 || interval <= 500 && clientsToggle) {
+                        await WsWriteText(ws, GetProxyTraffic(select));
                     }
 
                     await Task.Delay(interval);

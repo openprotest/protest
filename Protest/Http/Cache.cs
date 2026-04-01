@@ -246,20 +246,18 @@ internal sealed class Cache {
 #if SVG_TO_LIGHT
         byte[] pattern = "\"#202020\""u8.ToArray();
         byte[] target = "\"#c0c0c0\""u8.ToArray();
-        if (name.StartsWith("/mono/") && name.EndsWith(".svg")) {
-            if (Data.ContainsBytesSequence(entry.bytes, pattern)) {
-                Data.ReplaceAllBytesSequence(entry.bytes, Encoding.UTF8.GetBytes("\"#202020\""), target);
-                byte[] lightBytes = entry.bytes.ToArray();
-                string lightName = $"{name}?light";
-                Entry lightEntry = ConstructEntry(lightName, lightBytes, false, "svg");
-                cache.AddOrUpdate(lightName, key => lightEntry, (key, existingValue) => lightEntry);
+        if (name.StartsWith("/mono/") && name.EndsWith(".svg") && Data.ContainsBytesSequence(entry.bytes, pattern)) {
+            Data.ReplaceAllBytesSequence(entry.bytes, Encoding.UTF8.GetBytes("\"#202020\""), target);
+            byte[] lightBytes = entry.bytes.ToArray();
+            string lightName = $"{name}?light";
+            Entry lightEntry = ConstructEntry(lightName, lightBytes, false, "svg");
+            cache.AddOrUpdate(lightName, key => lightEntry, (key, existingValue) => lightEntry);
 
 #if SVG_TO_SVGZ //svgz
-                if (!files.ContainsKey($"{name}z?light")) {
-                    toSvg.Add($"{name}z?light", lightEntry.gzip);
-                }
-#endif
+            if (!files.ContainsKey($"{name}z?light")) {
+                toSvg.Add($"{name}z?light", lightEntry.gzip);
             }
+#endif
         }
 #endif
     }
