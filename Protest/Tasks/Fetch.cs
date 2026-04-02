@@ -350,22 +350,22 @@ internal static class Fetch {
         }
 
         if (snmpProfiles is not null) {
-            IList<Variable> result;
+            IList<Variable> snmpResult;
             SnmpProfiles.Profile profile;
 
             if (snmpProfiles.Length == 0) {
-                result = null;
+                snmpResult = null;
                 profile = null;
             }
             else if (snmpProfiles.Length == 1) {
-                result = Protocols.Snmp.Polling.SnmpQuery(ipAddress, snmpProfiles[0], Protocols.Snmp.Oid.GENERIC_OID, Polling.SnmpOperation.Get);
+                snmpResult = Protocols.Snmp.Polling.SnmpQuery(ipAddress, snmpProfiles[0], Protocols.Snmp.Oid.GENERIC_OID, Polling.SnmpOperation.Get);
                 profile = snmpProfiles[0];
             }
             else {
-                (result, profile) = Protocols.Snmp.Polling.SnmpQueryTrialAndError(ipAddress, snmpProfiles, Protocols.Snmp.Oid.GENERIC_OID);
+                (snmpResult, profile) = Protocols.Snmp.Polling.SnmpQueryTrialAndError(ipAddress, snmpProfiles, Protocols.Snmp.Oid.GENERIC_OID);
             }
 
-            Dictionary<string, string> formatted = Protocols.Snmp.Polling.ParseResponse(result);
+            Dictionary<string, string> formatted = Protocols.Snmp.Polling.ParseResponse(snmpResult);
             if (formatted is not null && formatted.TryGetValue(Protocols.Snmp.Oid.SYSTEM_DESCRIPTOR, out string snmpDescription)) {
                 data.TryAdd("descriptor", new string[] { snmpDescription, "SNMP", string.Empty });
             }
@@ -379,7 +379,7 @@ internal static class Fetch {
                 data.TryAdd("contact", new string[] { snmpContact, "SNMP", string.Empty });
             }
 
-            if (result is not null) {
+            if (snmpResult is not null) {
                 data.TryAdd("snmp profile", new string[] { profile.guid.ToString(), "SNMP", string.Empty });
             }
 
@@ -747,7 +747,7 @@ internal static class Fetch {
 
         task = new TaskWrapper("Fetch devices") {
             thread = thread,
-            origin = origin,
+            author = origin,
             TotalSteps = hosts.Length,
             CompletedSteps = 0
         };
@@ -832,7 +832,7 @@ internal static class Fetch {
 
         task = new TaskWrapper("Fetch users") {
             thread = thread,
-            origin = origin,
+            author = origin,
             TotalSteps = users.Length,
             CompletedSteps = 0
         };

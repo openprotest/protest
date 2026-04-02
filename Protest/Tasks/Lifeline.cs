@@ -35,7 +35,7 @@ internal static partial class Lifeline {
 
         task = new TaskWrapper("Lifeline") {
             thread = thread,
-            origin = origin,
+            author = origin,
             TotalSteps = 0,
             CompletedSteps = 0
         };

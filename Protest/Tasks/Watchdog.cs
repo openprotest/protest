@@ -114,7 +114,7 @@ internal static class Watchdog {
 
         task = new TaskWrapper("Watchdog") {
             thread = thread,
-            origin = origin,
+            author = origin,
             TotalSteps = 0,
             CompletedSteps = 0
         };

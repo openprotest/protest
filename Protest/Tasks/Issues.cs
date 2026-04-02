@@ -69,7 +69,7 @@ internal static class Issues {
 
         task = new TaskWrapper("Issues") {
             thread = thread,
-            origin = origin,
+            author = origin,
             TotalSteps = 0,
             CompletedSteps = 0
         };
