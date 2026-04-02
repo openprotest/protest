@@ -278,7 +278,7 @@ internal static class Issues {
                     issues.Add(lifecycleIssue.Value);
                 }
 
-                if (WindowsUpdate.CheckEntry(device, ipString,out Issue? updateIssue)) {
+                if (WindowsUpdate.CheckEntry(device, ipString,out Issue? updateIssue) && updateIssue.HasValue) {
                     issues.Add(updateIssue.Value);
                 }
             }

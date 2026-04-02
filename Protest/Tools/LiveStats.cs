@@ -197,7 +197,7 @@ internal static class LiveStats {
             string wmiHostname = null, adHostname = null, netBios = null, dns = null;
 
             if (OperatingSystem.IsWindows() && _os?.value?.Contains("windows", StringComparison.OrdinalIgnoreCase) == true) {
-                if (WindowsLifecycle.CheckEntry(entry, _ip.value.Split(';').ToArray()[0].Trim(), out Issues.Issue? windowsLifecycleIssue) && windowsLifecycleIssue.HasValue) {
+                if (WindowsLifecycle.CheckEntry(entry, _ip?.value?.Split(';').ToArray()[0].Trim(), out Issues.Issue? windowsLifecycleIssue) && windowsLifecycleIssue.HasValue) {
                     WsWriteText(ws, windowsLifecycleIssue.Value.ToLiveStatsJsonBytes(), mutex);
                 }
 
