@@ -505,7 +505,7 @@ class View extends Window {
 		};
 	}
 
-	CreateWarningBox(text, source, severity) {
+	CreateWarningBox(text, source, severity, additional=null) {
 		const box = document.createElement("div");
 		box.setAttribute("severity", severity);
 		box.className = {
@@ -514,6 +514,85 @@ class View extends Window {
 			30: "view-error-box",
 			40: "view-critical-box",
 		}[severity];
+
+		if (additional) {
+			box.classList.add("with-additional");
+			box.onclick = ()=> {
+				const dialog = this.DialogBox("80%");
+				if (dialog === null) return;
+
+				const {okButton, cancelButton, innerBox} = dialog;
+
+				innerBox.style.padding = "20px 20px 0 20px";
+				innerBox.style.userSelect = "text";
+				innerBox.parentElement.style.top = "10%";
+				innerBox.parentElement.style.maxWidth = "800px";
+
+				for (let i=0; i<additional.length; i++) {
+					const item = document.createElement("div");
+					item.style.minHeight = "32px";
+					item.style.margin = "4px";
+					item.style.border = "1px solid #777";
+					item.style.borderRadius = "4px";
+					innerBox.appendChild(item);
+
+					const titleBox = document.createElement("div");
+					titleBox.style.padding = "4px";
+					titleBox.style.borderRadius = "4px 4px 0 0";
+					titleBox.style.backgroundColor = "#A0A0A0";
+					item.appendChild(titleBox);
+					
+					const icon = document.createElement("div");
+					icon.style.display = "inline-block";
+					icon.style.width = "24px";
+					icon.style.height = "24px";
+					if (additional[i].icon) {
+						icon.style.maskImage = `url(mono/${additional[i].icon}.svg)`;
+						icon.style.maskSize = "24px 24px";
+						icon.style.maskRepeat = "no-repeat";
+						icon.style.backgroundColor = additional[i].color || "var(--clr-dark)";
+					}
+					titleBox.appendChild(icon);
+
+					const title = document.createElement("div");
+					title.textContent = additional[i].title;
+					title.style.display = "inline-block";
+					title.style.verticalAlign = "center";
+					title.style.fontWeight = "600";
+					title.style.margin = "0 4px";
+					title.style.padding = "4px";
+					title.style.width = "calc(100% - 40px)";
+					titleBox.appendChild(title);
+
+					for (let j=0; j<additional[i].boxes.length; j++) {
+						const box = document.createElement("div");
+						box.textContent = additional[i].boxes[j];
+						box.style.display = "inline-block";
+						box.style.padding = "2px 8px";
+						box.style.margin = "4px";
+						box.style.border = "1px solid #777";
+						box.style.borderRadius = "4px";
+						item.appendChild(box);
+					}
+
+					const content = document.createElement("div");
+					content.textContent = additional[i].content;
+					content.style.padding = "8px";
+					item.appendChild(content);
+
+					
+					const note = document.createElement("div");
+					note.textContent = additional[i].note;
+					note.style.fontStyle = "italic";
+					note.style.textAlign = "right";
+					note.style.padding = "8px";
+					item.appendChild(note);
+				}
+
+				okButton.style.display = "none";
+				cancelButton.value = "Close";
+			};
+		}
 
 		const iconBox = document.createElement("div");
 

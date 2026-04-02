@@ -19,6 +19,20 @@ internal static class Icmp {
         ARP  = 1
     }
 
+    public static bool Ping(string host, int timeout = 1000, int retries = 1) {
+        try {
+            using Ping p = new Ping();
+            for (int i = 0; i < retries; i++) {
+                PingReply reply = p.Send(host, timeout, ICMP_PAYLOAD);
+                if (reply.Status == IPStatus.Success) return true;
+            }
+            return false;
+        }
+        catch (Exception) {
+            return false;
+        }
+    }
+
     public static byte[] BulkPing(Dictionary<string, string> parameters) {
         if (parameters is null) { return null; }
 

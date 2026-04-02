@@ -26,7 +26,9 @@ internal static class Backup {
             DirectoryInfo backupDirectory = new DirectoryInfo(Data.DIR_BACKUP);
 
             lock (mutex) {
-                if (!backupDirectory.Exists) { backupDirectory.Create(); }
+                if (!backupDirectory.Exists) {
+                    backupDirectory.Create();
+                }
 
                 int count = 1;
                 string filename = $"{Data.DIR_BACKUP}{Data.DELIMITER}{name}.zip";

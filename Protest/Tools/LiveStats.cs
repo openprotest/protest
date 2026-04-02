@@ -4,6 +4,7 @@ using System.DirectoryServices;
 using System.Management;
 using System.Net;
 using System.Net.NetworkInformation;
+using System.Net.Sockets;
 using System.Net.WebSockets;
 using System.Runtime.Versioning;
 using System.Text;
@@ -14,9 +15,7 @@ using Protest.Protocols;
 using Protest.Protocols.Snmp;
 using Protest.Tasks;
 using Lextm.SharpSnmpLib;
-
 using static Protest.Protocols.Snmp.Polling;
-using System.Net.Sockets;
 
 namespace Protest.Tools;
 
@@ -135,10 +134,6 @@ internal static class LiveStats {
 
             Lock mutex = new Lock();
 
-            if (WindowsLifecycle.CheckEntry(entry, out Issues.Issue? windowsLifecycleIssue) && windowsLifecycleIssue.HasValue) {
-                WsWriteText(ws, windowsLifecycleIssue.Value.ToLiveStatsJsonBytes(), mutex);
-            }
-
             string firstAlive = null;
             PingReply firstReply = null;
             if (pingArray.Length > 0) {
@@ -194,10 +189,36 @@ internal static class LiveStats {
 
             string wmiHostname = null, adHostname = null, netBios = null, dns = null;
 
-            if (OperatingSystem.IsWindows()
-                && _os?.value?.Contains("windows", StringComparison.OrdinalIgnoreCase) == true
-                && firstAlive is not null && firstReply.Status == IPStatus.Success) {
-                WmiQuery(ws, mutex, firstAlive, ref wmiHostname);
+            if (OperatingSystem.IsWindows() && _os?.value?.Contains("windows", StringComparison.OrdinalIgnoreCase) == true) {
+                if (WindowsLifecycle.CheckEntry(entry, _ip.value.Split(';').ToArray()[0].Trim(), out Issues.Issue? windowsLifecycleIssue) && windowsLifecycleIssue.HasValue) {
+                    WsWriteText(ws, windowsLifecycleIssue.Value.ToLiveStatsJsonBytes(), mutex);
+                }
+
+                WindowsUpdate.UpdatesResult? updatesResult = WindowsUpdate.GetCache(entry.filename);
+                if (updatesResult.HasValue) {
+                    uint sum = updatesResult.Value.criticalCount + updatesResult.Value.securityCount;
+                    if (sum > 0) {
+                        byte[] bytes = JsonSerializer.SerializeToUtf8Bytes(new Dictionary<string, object> {
+                            { "critical", $"Critical/security updates are available ({sum})" },
+                            { "source", "WUA" },
+                            { "timestamp", updatesResult.Value.timestamp.ToString() },
+                            { "additional", updatesResult.Value.updates.Select(o => new {
+                                icon    = o.isCritical ? "critical" : (o.isSecurity ? "security" : null),
+                                color   = o.isCritical ? "rgb(240,16,16)" : (o.isSecurity ? "rgb(232,118,0)" : null),
+                                title   = o.title,
+                                boxes   = o.kbArticleIds.Split(","),
+                                content = o.description,
+                                note    = o.rebootRequired ? "Reboot required" : String.Empty
+                                })
+                            }
+                        });
+                        WsWriteText(ws, bytes, mutex);
+                    }
+                }
+
+                if (firstAlive is not null && firstReply.Status == IPStatus.Success) {
+                    WmiQuery(ws, mutex, firstAlive, ref wmiHostname);
+                }
             }
 
             if (firstAlive is not null

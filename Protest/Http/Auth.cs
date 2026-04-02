@@ -635,9 +635,8 @@ internal static class Auth {
 
         FileInfo[] files = dirRbac.GetFiles();
         for (int i = 0; i < files.Length; i++) {
-            byte[] cipher;
             try {
-                cipher = File.ReadAllBytes(files[i].FullName);
+                byte[] cipher = File.ReadAllBytes(files[i].FullName);
                 byte[] plain = Cryptography.Decrypt(cipher, Configuration.DB_KEY, Configuration.DB_KEY_IV);
 
                 AccessControl access = JsonSerializer.Deserialize<AccessControl>(plain, serializerOptions);

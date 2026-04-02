@@ -771,6 +771,29 @@ button.view-live-button:active {
 	border-radius: 4px;
 }
 
+.view-info-box.with-additional:hover,
+.view-warning-box.with-additional:hover,
+.view-error-box.with-additional:hover,
+.view-critical-box.with-additional:hover {
+	background-color: var(--clr-highlight);
+	border-left: 1px solid #777;
+	border-bottom: 1px solid #777;
+}
+
+.view-info-box.with-additional::after,
+.view-warning-box.with-additional::after,
+.view-error-box.with-additional:after,
+.view-critical-box.with-additional::after {
+	cursor: pointer;
+	content: "";
+	position: absolute;
+	width: 24px;
+	height: 24px;
+	mask-size: cover;
+	margin-left: 4px;
+	background-image: url(controls/popout.svg);
+}
+
 .view-info-box > div,
 .view-warning-box > div,
 .view-error-box > div,
@@ -837,8 +860,6 @@ button.view-live-button:active {
 	user-select: text;
 	font-weight: 600;
 }
-
-
 
 .view-side-tools {
 	position: absolute;

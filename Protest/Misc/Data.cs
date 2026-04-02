@@ -52,6 +52,7 @@ internal static class Data {
 
     public static readonly string DIR_DOCUMENTATION  = $"{DIR_DATA}{DELIMITER}documentation";
     public static readonly string DIR_LASTSEEN       = $"{DIR_DATA}{DELIMITER}lastseen";
+    public static readonly string DIR_WUA_CACHE      = $"{DIR_DATA}{DELIMITER}wuacache";
     public static readonly string DIR_LIFELINE       = $"{DIR_DATA}{DELIMITER}lifeline";
     public static readonly string DIR_WATCHDOG       = $"{DIR_DATA}{DELIMITER}watchdog";
     public static readonly string DIR_REVERSE_PROXY  = $"{DIR_DATA}{DELIMITER}reverseproxy";
@@ -77,6 +78,7 @@ internal static class Data {
         DirectoryInfo[] dirs = new DirectoryInfo[] {
             new DirectoryInfo(DIR_LOG),
             new DirectoryInfo(DIR_LASTSEEN),
+            new DirectoryInfo(DIR_WUA_CACHE),
             new DirectoryInfo(DIR_LIFELINE),
             new DirectoryInfo(DIR_DEBIT),
             //new DirectoryInfo(DIR_DEBIT_TEMPLATE),

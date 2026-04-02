@@ -77,12 +77,10 @@ internal static class WindowsLifecycle {
         ("Windows Server 2025",    26100, new DateOnly(2034, 11, 14)),
     };
 
-    internal static bool CheckEntry(Database.Entry device, out Issues.Issue? issue) {
+    internal static bool CheckEntry(Database.Entry device, string ipString, out Issues.Issue? issue) {
         issue = null;
 
-        if (device is null) {
-            return false;
-        }
+        if (device is null) return false;
 
         device.attributes.TryGetValue("operating system", out Database.Attribute osAttribute);
         device.attributes.TryGetValue("os version", out Database.Attribute osVersionAttribute);
@@ -105,11 +103,6 @@ internal static class WindowsLifecycle {
         string message = assessment.state == WindowsLifecycle.SupportState.outOfSupport
             ? $"{osName} ({assessment.version}) has reached EOS"
             : $"{osName} ({assessment.version}) reaches EOS on {assessment.endOfSupport:yyyy-MM-dd} ({assessment.daysLeft} days left)";
-
-        string ipString = string.Empty;
-        if (device.attributes.TryGetValue("ip", out Database.Attribute ip) && !String.IsNullOrEmpty(ip?.value)) {
-            ipString = ip.value.Split(';').Select(o => o.Trim()).ToArray()[0];
-        }
 
         Issues.SeverityLevel severity;
         if (assessment.state == WindowsLifecycle.SupportState.outOfSupport) {

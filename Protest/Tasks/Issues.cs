@@ -218,9 +218,20 @@ internal static class Issues {
 
         ipAddresses.Clear();
 
+/*#if DEBUG
         foreach (KeyValuePair<string, Database.Entry> device in DatabaseInstances.devices.dictionary) {
             ScanDevice(device.Value);
         }
+#else*/
+        Parallel.ForEach(
+            DatabaseInstances.devices.dictionary.Values,
+            new ParallelOptions { MaxDegreeOfParallelism = 64 },
+            device => {
+                ScanDevice(device);
+            }
+        );
+/*#endif*/
+
     }
 
     public static void ScanDevice(Database.Entry device) {
@@ -234,7 +245,10 @@ internal static class Issues {
         if (osAttribute?.value.Contains("windows", StringComparison.OrdinalIgnoreCase) == true) {
             string ipString = null;
             if (device.attributes.TryGetValue("ip", out Database.Attribute ip) && !String.IsNullOrEmpty(ip?.value)) {
-                ipString = ip.value.Split(';').Select(o => o.Trim()).ToArray()[0];
+                ipString = ip.value.Split(';').ToArray()[0].Trim();
+            }
+            else {
+                ipString = String.Empty;
             }
 
             if (CheckCpuLifeline(device, ipString, out Issue ? cpuIssue) && cpuIssue.HasValue) {
@@ -260,14 +274,12 @@ internal static class Issues {
             }
 
             if (OperatingSystem.IsWindows()) {
-                if (WindowsLifecycle.CheckEntry(device, out Issue? lifecycleIssue) && lifecycleIssue.HasValue) {
+                if (WindowsLifecycle.CheckEntry(device, ipString, out Issue? lifecycleIssue) && lifecycleIssue.HasValue) {
                     issues.Add(lifecycleIssue.Value);
                 }
 
-                if (WindowsUpdate.CheckEntry(device, out List<Issue?> osUpdateIssues)) {
-                    for (int i = 0; i < osUpdateIssues.Count; i++) {
-                        issues.Add(osUpdateIssues[i].Value);
-                    }
+                if (WindowsUpdate.CheckEntry(device, ipString,out Issue? updateIssue)) {
+                    issues.Add(updateIssue.Value);
                 }
             }
 
