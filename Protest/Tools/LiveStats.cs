@@ -1,4 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using Lextm.SharpSnmpLib;
+using Org.BouncyCastle.Utilities;
+using Protest.Protocols;
+using Protest.Protocols.Snmp;
+using Protest.Tasks;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.DirectoryServices;
 using System.Management;
@@ -11,10 +16,6 @@ using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using Protest.Protocols;
-using Protest.Protocols.Snmp;
-using Protest.Tasks;
-using Lextm.SharpSnmpLib;
 using static Protest.Protocols.Snmp.Polling;
 
 namespace Protest.Tools;
@@ -25,7 +26,8 @@ internal static class LiveStats {
 
     private static void WsWriteText(WebSocket ws, [StringSyntax(StringSyntaxAttribute.Json)] string text, Lock mutex) {
         lock (mutex) {
-            WsWriteText(ws, Encoding.UTF8.GetBytes(text), mutex);
+            byte[] bytes = Encoding.UTF8.GetBytes(text);
+            ws.SendAsync(new ArraySegment<byte>(bytes, 0, bytes.Length), WebSocketMessageType.Text, true, CancellationToken.None);
         }
     }
     private static void WsWriteText(WebSocket ws, byte[] bytes, Lock mutex) {
@@ -136,6 +138,8 @@ internal static class LiveStats {
 
             string firstAlive = null;
             PingReply firstReply = null;
+            Lock firstAliveLock = new Lock();
+
             if (pingArray.Length > 0) {
                 List<Task> pingTasks = new List<Task>(pingArray.Length);
 
@@ -148,10 +152,13 @@ internal static class LiveStats {
 
                             switch ((int)reply.Status) {
                             case (int)IPStatus.Success:
-                                if (firstAlive is null) {
-                                    firstAlive = pingArray[index];
-                                    firstReply = reply;
+                                lock (firstAliveLock) {
+                                    if (firstAlive is null) {
+                                        firstAlive = pingArray[index];
+                                        firstReply = reply;
+                                    }
                                 }
+
                                 WsWriteText(ws, $"{{\"echoReply\":\"{reply.RoundtripTime}\",\"for\":\"{pingArray[index]}\",\"source\":\"ICMP\"}}", mutex);
                                 //WsWriteText(ws, $"{{\"info\":\"Last seen {pingArray[index]}: Just now\",\"source\":\"ICMP\"}}", mutex);
                                 LastSeen.Seen(pingArray[index]);
@@ -203,8 +210,8 @@ internal static class LiveStats {
                             { "source", "WUA" },
                             { "timestamp", updatesResult.Value.timestamp.ToString() },
                             { "additional", updatesResult.Value.updates.Select(o => new {
-                                icon    = o.isCritical ? "critical" : (o.isSecurity ? "security" : null),
-                                color   = o.isCritical ? "rgb(240,16,16)" : (o.isSecurity ? "rgb(232,118,0)" : null),
+                                icon    = o.isCritical ? "critical" : (o.isSecurity ? "security" : "update"),
+                                color   = o.isCritical ? "rgb(240,16,16)" : (o.isSecurity ? "rgb(232,118,0)" : "rgb(32,148,240)"),
                                 title   = o.title,
                                 boxes   = o.kbArticleIds.Split(","),
                                 content = o.description,
@@ -307,7 +314,7 @@ internal static class LiveStats {
                     try {
                         IPAddress[] reversed = System.Net.Dns.GetHostAddresses(hostnames[i]);
                         for (int j = 0; j < reversed.Length; j++) {
-                            if (reversed[i].AddressFamily != AddressFamily.InterNetwork) continue;
+                            if (reversed[j].AddressFamily != AddressFamily.InterNetwork) continue;
                             if (!ips.Contains(reversed[j].ToString())) {
                                 WsWriteText(ws, $"{{\"warning\":\"Reverse DNS mismatch: {Data.EscapeJsonText(reversed[j].ToString())}\",\"source\":\"DNS\"}}", mutex);
                                 break;
@@ -383,7 +390,7 @@ internal static class LiveStats {
                     DateTime current = new DateTime(year, month, day, hour, minute, second);
                     DateTime now = DateTime.UtcNow;
                     if (Math.Abs(current.Ticks - now.Ticks) > 600_000_000L) {
-                        WsWriteText(ws, "{\"warning\":\"System time is off by more then 5 minutes\",\"source\":\"WMI\"}"u8.ToArray(), mutex);
+                        WsWriteText(ws, "{\"warning\":\"System time is off by more than 5 minutes\",\"source\":\"WMI\"}"u8.ToArray(), mutex);
                     }
                 }
 

@@ -149,7 +149,7 @@ internal static class Watchdog {
 
                 long ticksElapsed = DateTime.UtcNow.Ticks - watcher.lastCheck;
                 if (watcher.interval * MINUTE_IN_TICKS - ticksElapsed < 10_000_000) { // < 1s
-                    new Thread(()=> Watch(watcher, smtpProfiles)).Start();
+                    new Thread(() => Watch(watcher, smtpProfiles)).Start();
                 }
                 else {
                     int millisRemain = (int)((watcher.interval * MINUTE_IN_TICKS - ticksElapsed) / 10_000);
@@ -238,9 +238,9 @@ internal static class Watchdog {
                 using TcpClient client = new TcpClient();
                 client.ReceiveTimeout = watcher.timeout;
 
-                long before = DateTime.Now.Ticks;
+                long before = DateTime.UtcNow.Ticks;
                 client.Connect(watcher.target, watcher.port);
-                long after = DateTime.Now.Ticks;
+                long after = DateTime.UtcNow.Ticks;
 
                 if (!client.Connected) {
                     client.Close();

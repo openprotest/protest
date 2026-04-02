@@ -562,6 +562,9 @@ class View extends Window {
 					title.style.margin = "0 4px";
 					title.style.padding = "4px";
 					title.style.width = "calc(100% - 40px)";
+					title.style.overflow = "hidden";
+					title.style.textOverflow = "ellipsis";
+					title.style.whiteSpace = "nowrap";
 					titleBox.appendChild(title);
 
 					for (let j=0; j<additional[i].boxes.length; j++) {
