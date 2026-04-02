@@ -85,7 +85,7 @@ internal static class Icmp {
         Lock mutex = new Lock();
         Method method = Method.ICMP;
         int timeout = 1000;
-        int interval = 1000;
+        //int interval = 1000;
 
         try {
             while (ws.State == WebSocketState.Open) {
@@ -140,9 +140,9 @@ internal static class Icmp {
                     _ = int.TryParse(msg[1], out timeout);
                     break;
 
-                case "interval":
+                /*case "interval":
                     _ = int.TryParse(msg[1], out interval);
-                    break;
+                    break;*/
 
                 case "method":
                     method = msg[1] == "arp" ? Method.ARP : Method.ICMP;
