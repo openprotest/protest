@@ -10,52 +10,11 @@ public partial class Stamp : Form {
     private protected string strokes = String.Empty;
     private protected int progress = 0;
 
-    [StructLayout(LayoutKind.Sequential)]
-    private struct INPUT {
-        public uint type;
-        public MOUSEINPUT mi;
-    }
+    [DllImport("user32.dll", CharSet = CharSet.Auto, CallingConvention = CallingConvention.StdCall)]
+    public static extern void mouse_event(uint dwFlags, uint dx, uint dy, uint cButtons, uint dwExtraInfo);
 
-    [StructLayout(LayoutKind.Sequential)]
-    private struct MOUSEINPUT {
-        public int dx;
-        public int dy;
-        public uint mouseData;
-        public uint dwFlags;
-        public uint time;
-        public IntPtr dwExtraInfo;
-    }
-
-    private const uint INPUT_MOUSE = 0;
-    private const uint MOUSEEVENTF_LEFTDOWN = 0x0002;
-    private const uint MOUSEEVENTF_LEFTUP = 0x0004;
-
-    [DllImport("user32.dll", SetLastError = true)]
-
-    private static extern uint SendInput(uint nInputs, INPUT[] pInputs, int cbSize);
-
-
-    private static void SimulateLeftClick(int x, int y) {
-        INPUT[] inputs = new INPUT[2];
-        inputs[0].type = INPUT_MOUSE;
-        inputs[0].mi.dx = 0;
-        inputs[0].mi.dy = 0;
-        inputs[0].mi.mouseData = 0;
-        inputs[0].mi.dwFlags = MOUSEEVENTF_LEFTDOWN;
-        inputs[0].mi.time = 0;
-
-        inputs[0].mi.dwExtraInfo = IntPtr.Zero;
-        inputs[1].type = INPUT_MOUSE;
-        inputs[1].mi.dx = 0;
-        inputs[1].mi.dy = 0;
-        inputs[1].mi.mouseData = 0;
-        inputs[1].mi.dwFlags = MOUSEEVENTF_LEFTUP;
-        inputs[1].mi.time = 0;
-        inputs[1].mi.dwExtraInfo = IntPtr.Zero;
-
-        Cursor.Position = new Point(x, y);
-        SendInput((uint)inputs.Length, inputs, Marshal.SizeOf(typeof(INPUT)));
-    }
+    private const int MOUSEEVENTF_LEFTDOWN = 0x02;
+    private const int MOUSEEVENTF_LEFTUP = 0x04;
 
     public Stamp(string keystroke) {
         InitializeComponent();
@@ -76,10 +35,10 @@ public partial class Stamp : Form {
             progress = 100;
             this.Refresh();
 
-            int x = Cursor.Position.X;
-            int y = Cursor.Position.Y;
+            uint x = (uint)Cursor.Position.X;
+            uint y = (uint)Cursor.Position.Y;
             System.Threading.Thread.Sleep(1);
-            SimulateLeftClick(x, y);
+            mouse_event(MOUSEEVENTF_LEFTDOWN | MOUSEEVENTF_LEFTUP, x, y, 0, 0);
 
             System.Threading.Thread.Sleep(50);
 
