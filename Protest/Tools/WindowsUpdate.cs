@@ -57,14 +57,10 @@ internal static class WindowsUpdate {
             string name = !string.IsNullOrWhiteSpace(hostnameString) ? hostnameString : ipString;
 
             if (!String.IsNullOrWhiteSpace(ipString)) {
-                bool r =  CheckHost(ipString, device.filename, name, out issue, cacheMaxAge);
-                Console.WriteLine(r);
-                return r;
+                return CheckHost(ipString, device.filename, name, out issue, cacheMaxAge);
             }
             else if (hasHostname) {
-                bool r = CheckHost(hostnameString, device.filename, hostnameString, out issue, cacheMaxAge);
-                Console.WriteLine(r);
-                return r;
+                return CheckHost(hostnameString, device.filename, hostnameString, out issue, cacheMaxAge);
             }
             else {
                 issue = null;
@@ -86,9 +82,9 @@ internal static class WindowsUpdate {
 
         UpdatesResult result;
         UpdatesResult? cache = GetCache(file);
-        bool rechable = Protocols.Icmp.Ping(host);
+        bool reachable = Protocols.Icmp.Ping(host);
 
-        if (rechable) {
+        if (reachable) {
             long now = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
             bool useCache = cache is not null && now - cache.Value.timestamp < cacheMaxAge * 60;
             result = useCache ? cache.Value : GetUpdates(host, file);
