@@ -779,7 +779,7 @@ button.view-live-button:active {
 	width: 22px;
 	height: 22px;
 	mask-size: cover;
-	margin-left: 4px;
+	margin-left: 8px;
 	background-image: url(controls/popout.svg);
 	background-color: var(--clr-pane);
 	border-left: 1px solid #777;

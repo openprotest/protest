@@ -328,6 +328,8 @@ internal class Import {
         string payload = res.Result.Content.ReadAsStringAsync().GetAwaiter().GetResult();
         string[] split = payload.Split((char)127);
 
+        StringBuilder builder = new StringBuilder();
+
         for (int i = 0; i < split.Length - 9; i += 10) {
             //string code       = split[i];
             string firstname  = split[i+1];
@@ -345,7 +347,7 @@ internal class Import {
             string[] dateSplit = date.Split('-');
             string[] equipSplit = equip.Split(';');
 
-            StringBuilder builder = new StringBuilder();
+            builder.Clear();
             builder.Append('{');
 
             if (dateSplit.Length == 3) {

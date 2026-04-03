@@ -96,15 +96,18 @@ internal static class Dhcp {
             transactionId[i] = (byte)rnd.Next(0, 255);
         }
 
-        string id = "0x";
+        StringBuilder idBuilder = new StringBuilder("0x");
         for (int i = 0; i < 4; i++) {
-            id += transactionId[i].ToString("x2");
+            idBuilder.Append(transactionId[i].ToString("x2"));
         }
+        string id = idBuilder.ToString();
 
         if (mac.Length == 0) {
+            StringBuilder macBuilder = new StringBuilder();
             for (int i = 0; i < 6; i++) {
-                mac += rnd.Next(0, 255).ToString("x2");
+                macBuilder.Append(rnd.Next(0, 255).ToString("x2"));
             }
+            mac = macBuilder.ToString();
         }
 
         long timestamp = DateTime.Now.Ticks;
@@ -190,9 +193,11 @@ internal static class Dhcp {
         //string relayServerIp = $"{reply[24]}.{reply[25]}.{reply[26]}.{reply[27]}";
 
         //string offerMac = $"{reply[28]:x2}{reply[29]:x2}{reply[30]:x2}{reply[31]:x2}{reply[32]:x2}{reply[33]:x2}"; //client mac
+        StringBuilder macBuilder = new StringBuilder();
         for (int i = 0; i < macLength; i++) {
-            mac += $"{reply[28 + i]:x2}";
+            macBuilder.AppendFormat("{0:x2}", reply[28 + i]);
         }
+        mac = macBuilder.ToString();
 
         ip[0] = reply[16];
         ip[1] = reply[17];

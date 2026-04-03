@@ -531,7 +531,7 @@ class View extends Window {
 				for (let i=0; i<additional.length; i++) {
 					const item = document.createElement("div");
 					item.style.minHeight = "32px";
-					item.style.margin = "4px";
+					item.style.margin = "4px 4px 16px 4px";
 					item.style.border = "1px solid #777";
 					item.style.borderRadius = "4px";
 					innerBox.appendChild(item);
@@ -583,17 +583,21 @@ class View extends Window {
 					content.style.padding = "8px";
 					item.appendChild(content);
 
-					
-					const note = document.createElement("div");
-					note.textContent = additional[i].note;
-					note.style.fontStyle = "italic";
-					note.style.textAlign = "right";
-					note.style.padding = "8px";
-					item.appendChild(note);
+					if (additional[i].note) {
+						const note = document.createElement("div");
+						note.textContent = additional[i].note;
+						note.style.fontStyle = "italic";
+						note.style.textAlign = "right";
+						note.style.padding = "8px";
+						item.appendChild(note);
+					}
 				}
 
 				okButton.style.display = "none";
 				cancelButton.value = "Close";
+
+				innerBox.parentElement.onclick = event=> event.stopPropagation();
+				innerBox.parentElement.parentElement.onclick = ()=> dialog.Close();
 			};
 		}
 

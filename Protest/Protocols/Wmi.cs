@@ -88,14 +88,15 @@ internal static class Wmi {
             object[] array = (object[])property.Value;
 
             string value = String.Empty;
+
+            StringBuilder builder = new StringBuilder();
             for (int i = 0; i < array?.Length; i++) {
                 if (array[i].ToString().Length > 0) {
-                    value += (value.Length == 0) ? array[i].ToString() : $"; {array[i]}";
-
+                    builder.Append((value.Length == 0) ? array[i].ToString() : $"; {array[i]}");
                 }
             }
 
-            return value;
+            return builder.ToString();
         }
 
         if (property.Type == CimType.DateTime) {
@@ -129,7 +130,7 @@ internal static class Wmi {
     public static string WmiGet(ManagementObjectCollection moc, string property, bool isArray, FormatMethodPtr format = null) {
         if (isArray) {
 
-            string value = String.Empty;
+            StringBuilder builder = new StringBuilder();
             foreach (ManagementObject o in moc.Cast<ManagementObject>()) {
                 string v = ManagementObjectToString(o, property, format);
 
@@ -137,17 +138,24 @@ internal static class Wmi {
                     string[] split = v.Split(';');
                     for (int i = 0; i < split.Length; i++) {
                         split[i] = split[i].Trim();
-                        if (format != null) split[i] = format.Invoke(split[i]);
-                        if (split[i].Length > 0) value += (value.Length == 0) ? $"{split[i]}" : $"; {split[i]}";
+                        
+                        if (format != null) {
+                            split[i] = format.Invoke(split[i]);
+                        }
+
+                        if (split[i].Length > 0) {
+                            builder.Append((builder.Length == 0) ? $"{split[i]}" : $"; {split[i]}");
+                        }
                     }
                 }
                 else {
-                    if (!String.IsNullOrEmpty(v)) value += (value.Length == 0) ? $"{v}" : $"; {v}";
+                    if (!String.IsNullOrEmpty(v)) {
+                        builder.Append((builder.Length == 0) ? $"{v}" : $"; {v}");
+                    }
                 }
-
             }
-            if (value.Length > 0) return value.Trim();
 
+            if (builder.Length > 0) return builder.ToString().Trim();
         }
         else {
             foreach (ManagementObject o in moc.Cast<ManagementObject>()) {
