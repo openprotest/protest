@@ -19,6 +19,8 @@
 global using System;
 global using System.Linq;
 
+using System.Threading.Tasks;
+
 namespace Protest;
 internal class Program {
     static void Main(string[] args) {
@@ -78,6 +80,6 @@ internal class Program {
         Http.Listener listener = new Http.Listener(prefixes, Configuration.front_path);
         Console.WriteLine(listener);
         Console.WriteLine();
-        listener.Start();
+        _ = Task.Run(() => listener.StartAsync());
     }
 }

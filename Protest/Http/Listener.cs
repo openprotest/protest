@@ -6,6 +6,8 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Net;
+using System.Threading;
+using System.Threading.Tasks;
 using Protest.Tasks;
 using Protest.Tools;
 
@@ -192,13 +194,16 @@ internal sealed class Listener {
         }
     }
 
-    public void Start() {
+    public async Task StartAsync() {
         while (listener.IsListening) {
-            IAsyncResult result = listener.BeginGetContext(ListenerCallback, listener);
-            result.AsyncWaitHandle.WaitOne();
+            try {
+                HttpListenerContext ctx = await listener.GetContextAsync();
+                _ = Task.Run(() => ListenerCallback(ctx));
+            }
+            catch (HttpListenerException) when (!listener.IsListening) {
+                break; // Normal shutdown
+            }
         }
-
-        Console.WriteLine("Listener stopped");
     }
 
     public void Stop() {
@@ -211,13 +216,11 @@ internal sealed class Listener {
         }
     }
 
-    private void ListenerCallback(IAsyncResult result) {
+    private async Task ListenerCallback(HttpListenerContext ctx) {
 #if !DEBUG
         try
 #endif
         {
-
-        HttpListenerContext ctx = listener.EndGetContext(result);
 
         //Cross Site Request Forgery protection
         if (ctx.Request?.UrlReferrer is not null) {
@@ -272,13 +275,13 @@ internal sealed class Listener {
         if (String.Equals(path, "/contacts", StringComparison.Ordinal)) {
             byte[] buffer = DatabaseInstances.users.SerializeContacts();
             ctx.Response.StatusCode = (int)HttpStatusCode.OK;
-            ctx.Response.OutputStream.Write(buffer!, 0, buffer!.Length);
-            ctx.Response.AddHeader("Content-Length", buffer!.Length.ToString());
+            ctx.Response.ContentLength64 = buffer!.Length;
+            await ctx.Response.OutputStream.WriteAsync(buffer!, 0, buffer!.Length);
             ctx.Response.Close();
             return;
         }
 
-        if (CacheHandler(ctx, path)) { return; }
+        if (await CacheHandler(ctx, path)) { return; }
 
         if (!Auth.IsAuthenticated(ctx)) {
             ctx.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
@@ -292,7 +295,7 @@ internal sealed class Listener {
             return;
         }
 
-        if (WebSocketHandler(ctx)) { return; }
+        if (await WebSocketHandler(ctx)) { return; }
 
         Dictionary<string, string> parameters = null;
         string query = ctx.Request.Url.Query;
@@ -300,7 +303,7 @@ internal sealed class Listener {
             parameters = ParseQuery(query);
         }
 
-        if (DynamicHandler(ctx, parameters)) return;
+        if (await DynamicHandler(ctx, parameters)) return;
 
         ctx.Response.StatusCode = (int)HttpStatusCode.NotFound;
         ctx.Response.Close();
@@ -343,7 +346,7 @@ internal sealed class Listener {
         return parameters;
     }
 
-    private bool CacheHandler(HttpListenerContext ctx, string path) {
+    private async Task<bool> CacheHandler(HttpListenerContext ctx, string path) {
         if (!cache.cache.TryGetValue(path, out Cache.Entry entry)) return false;
 
         if (String.Equals(path, "/", StringComparison.Ordinal)) {
@@ -388,15 +391,17 @@ internal sealed class Listener {
 
         ctx.Response.StatusCode = (int)HttpStatusCode.OK;
         ctx.Response.ContentType = entry.contentType;
-        ctx.Response.AddHeader("Length", buffer?.Length.ToString() ?? "0");
+        ctx.Response.ContentLength64 = buffer?.Length ?? 0;
 
         for (int i = 0; i < entry.headers.Length; i++) {
             ctx.Response.AddHeader(entry.headers[i].Key, entry.headers[i].Value);
         }
 
         try {
-            if (buffer is not null) ctx.Response.OutputStream.Write(buffer, 0, buffer.Length);
-            ctx.Response.OutputStream.Flush();
+            if (buffer is not null) {
+                await ctx.Response.OutputStream.WriteAsync(buffer, 0, buffer.Length);
+            }
+            await ctx.Response.OutputStream.FlushAsync();
 #if DEBUG
         }
         catch (HttpListenerException ex) {
@@ -405,14 +410,14 @@ internal sealed class Listener {
         }
 #else
         }
-        catch (HttpListenerException) { /*do nothing*/ }
+        catch (HttpListenerException) { }
 #endif
 
         ctx.Response.Close();
         return true;
     }
 
-    private static bool DynamicHandler(HttpListenerContext ctx, Dictionary<string, string> parameters) {
+    private static async Task<bool> DynamicHandler(HttpListenerContext ctx, Dictionary<string, string> parameters) {
         string sessionId = ctx.Request.Cookies["sessionid"]?.Value ?? null;
         string username = IPAddress.IsLoopback(ctx.Request.RemoteEndPoint.Address) ? "loopback" : Auth.GetUsername(sessionId);
 
@@ -422,10 +427,10 @@ internal sealed class Listener {
         if (routing.TryGetValue(path, out Func<HttpListenerContext, Dictionary<string, string>, string, byte[]> handler)) {
             byte[] buffer = handler(ctx, parameters, username);
             ctx.Response.StatusCode = (int)HttpStatusCode.OK;
-            ctx.Response.AddHeader("Length", buffer?.Length.ToString() ?? "0");
+            ctx.Response.ContentLength64 = buffer?.Length ?? 0;
 
             if (buffer is not null) {
-                ctx.Response.OutputStream.Write(buffer, 0, buffer.Length);
+                await ctx.Response.OutputStream.WriteAsync(buffer, 0, buffer.Length);
             }
 
             ctx.Response.Close();
@@ -436,27 +441,27 @@ internal sealed class Listener {
         }
     }
 
-    private static bool WebSocketHandler(HttpListenerContext ctx) {
+    private static async Task<bool> WebSocketHandler(HttpListenerContext ctx) {
         if (!ctx.Request.IsWebSocketRequest) {
             return false;
         }
 
         switch (ctx.Request.Url.AbsolutePath) {
-        case "/ws/keepalive":        KeepAlive.WebSocketHandler(ctx).GetAwaiter().GetResult();          return true;
-        case "/ws/ping":             Protocols.Icmp.WebSocketHandler(ctx).GetAwaiter().GetResult();     return true;
-        case "/ws/dhcp":             Protocols.Dhcp.WebSocketHandler(ctx).GetAwaiter().GetResult();     return true;
-        case "/ws/telnet":           Protocols.Telnet.WebSocketHandler(ctx).GetAwaiter().GetResult();   return true;
-        case "/ws/ssh":              Protocols.Ssh.WebSocketHandler(ctx).GetAwaiter().GetResult();      return true;
-        case "/ws/issues":           Tasks.Issues.WebSocketHandler(ctx).GetAwaiter().GetResult();       return true;
-        case "/ws/reverseproxy":     Proxy.ReverseProxy.WebSocketHandler(ctx).GetAwaiter().GetResult(); return true;
-        case "/ws/ipdiscovery":      Tools.IpDiscovery.WebSocketHandler(ctx).GetAwaiter().GetResult();  return true;
-        case "/ws/portscan":         Tools.PortScan.WebSocketHandler(ctx).GetAwaiter().GetResult();     return true;
-        case "/ws/traceroute":       Tools.TraceRoute.WebSocketHandler(ctx).GetAwaiter().GetResult();   return true;
-        case "/ws/websitecheck":     Tools.WebsiteCheck.WebSocketHandler(ctx).GetAwaiter().GetResult(); return true;
-        case "/ws/monitor":          Tools.Monitor.WebSocketHandler(ctx).GetAwaiter().GetResult();      return true;
-        case "/ws/topology":         Tools.Topology.WebSocketHandler(ctx).GetAwaiter().GetResult();     return true;
-        case "/ws/livestats/device": Tools.LiveStats.DeviceStats(ctx).GetAwaiter().GetResult();         return true;
-        case "/ws/livestats/user":   Tools.LiveStats.UserStats(ctx).GetAwaiter().GetResult();           return true;
+        case "/ws/keepalive":        await KeepAlive.WebSocketHandler(ctx);          return true;
+        case "/ws/ping":             await Protocols.Icmp.WebSocketHandler(ctx);     return true;
+        case "/ws/dhcp":             await Protocols.Dhcp.WebSocketHandler(ctx);     return true;
+        case "/ws/telnet":           await Protocols.Telnet.WebSocketHandler(ctx);   return true;
+        case "/ws/ssh":              await Protocols.Ssh.WebSocketHandler(ctx);      return true;
+        case "/ws/issues":           await Tasks.Issues.WebSocketHandler(ctx);       return true;
+        case "/ws/reverseproxy":     await Proxy.ReverseProxy.WebSocketHandler(ctx); return true;
+        case "/ws/ipdiscovery":      await Tools.IpDiscovery.WebSocketHandler(ctx);  return true;
+        case "/ws/portscan":         await Tools.PortScan.WebSocketHandler(ctx);     return true;
+        case "/ws/traceroute":       await Tools.TraceRoute.WebSocketHandler(ctx);   return true;
+        case "/ws/websitecheck":     await Tools.WebsiteCheck.WebSocketHandler(ctx); return true;
+        case "/ws/monitor":          await Tools.Monitor.WebSocketHandler(ctx);      return true;
+        case "/ws/topology":         await Tools.Topology.WebSocketHandler(ctx);     return true;
+        case "/ws/livestats/device": await Tools.LiveStats.DeviceStats(ctx);         return true;
+        case "/ws/livestats/user":   await Tools.LiveStats.UserStats(ctx);           return true;
         }
 
         return false;

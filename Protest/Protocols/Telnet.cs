@@ -72,7 +72,7 @@ internal static class Telnet {
 
             await WsWriteText(ws, "{\"connected\":true}"u8.ToArray());
 
-            Thread fork = new Thread(() => HandleDownstream(ctx, ws, telnet, stream));
+            Thread fork = new Thread(() => HandleDownstream(ctx, ws, telnet, stream).GetAwaiter().GetResult());
             fork.Start();
 
             byte[] buff = new byte[2048];
@@ -117,7 +117,7 @@ internal static class Telnet {
         }
     }
 
-    private static async void HandleDownstream(HttpListenerContext ctx, WebSocket ws, TcpClient telnet, Stream stream) {
+    private static async Task HandleDownstream(HttpListenerContext ctx, WebSocket ws, TcpClient telnet, Stream stream) {
         byte[] data = new byte[2048];
 
         while (ws!.State == WebSocketState.Open && telnet.Connected) {
@@ -128,7 +128,7 @@ internal static class Telnet {
             }
 
             try {
-                int count = stream.Read(data, 0, data.Length);
+                int count = await stream.ReadAsync(data, 0, data.Length);
 
                 if (count == 0) { //remote host closed the connection
                     if (ws!.State == WebSocketState.Open) {

@@ -99,7 +99,7 @@ internal static class Ssh {
 
             ShellStream shellStream = ssh.CreateShellStream("xterm", 80, 24, 800, 600, 1024);
 
-            Thread fork = new Thread(() => HandleDownstream(ctx, ws, ssh, shellStream));
+            Thread fork = new Thread(() => HandleDownstream(ctx, ws, ssh, shellStream).GetAwaiter().GetResult());
             fork.Start();
 
             byte[] buff = new byte[2048];
@@ -144,7 +144,7 @@ internal static class Ssh {
         }
     }
 
-    private static async void HandleDownstream(HttpListenerContext ctx, WebSocket ws, SshClient ssh, ShellStream shellStream) {
+    private static async Task HandleDownstream(HttpListenerContext ctx, WebSocket ws, SshClient ssh, ShellStream shellStream) {
         byte[] data = new byte[2048];
 
         while (ws.State == WebSocketState.Open && ssh.IsConnected) {

@@ -23,7 +23,7 @@ public class ListenerTests {
     public void Setup() {
         Task.Run(() => {
             Http.Listener listener = new Http.Listener("127.0.0.1", 8080, front.FullName);
-            listener.Start();
+            _ = Task.Run(() => listener.StartAsync());
         });
     }
 
