@@ -116,7 +116,13 @@ internal static class KeepAlive {
             try {
                 await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
             }
+#if DEBUG
+            catch (Exception ex) {
+                Logger.Error(ex);
+            }
+#else
             catch { }
+#endif
         }
     }
 
@@ -156,7 +162,13 @@ internal static class KeepAlive {
                             entry.ws.SendAsync(new ArraySegment<byte>(message, 0, message.Length), WebSocketMessageType.Text, true, CancellationToken.None);
                         }
                     }
+#if DEBUG
+                    catch (Exception ex) {
+                        Logger.Error(ex);
+                    }
+#else
                     catch { }
+#endif
                 }).Start();
             }
             else {
@@ -187,7 +199,13 @@ internal static class KeepAlive {
                             entry.ws.SendAsync(new ArraySegment<byte>(message, 0, message.Length), WebSocketMessageType.Text, true, CancellationToken.None);
                         }
                     }
-                    catch { }
+#if DEBUG
+                catch (Exception ex) {
+                    Logger.Error(ex);
+                }
+#else
+                catch { }
+#endif
                 }).Start();
             }
         }

@@ -64,10 +64,22 @@ internal static class ReverseProxy {
                         StartProxy(obj, "system");
                     }
                 }
+#if DEBUG
+                catch (Exception ex) {
+                    Logger.Error(ex);
+                }
+#else
                 catch { }
+#endif
             }
         }
+#if DEBUG
+        catch (Exception ex) {
+            Logger.Error(ex);
+        }
+#else
         catch { }
+#endif
     }
 
     private static async Task WsWriteText(WebSocket ws, string data) {
@@ -159,13 +171,25 @@ internal static class ReverseProxy {
                 }
             }
         }
-        catch {}
+#if DEBUG
+        catch (Exception ex) {
+            Logger.Error(ex);
+        }
+#else
+        catch { }
+#endif
 
         if (ws.State == WebSocketState.Open) {
             try {
                 await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
             }
+#if DEBUG
+            catch (Exception ex) {
+                Logger.Error(ex);
+            }
+#else
             catch { }
+#endif
         }
     }
 

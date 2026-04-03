@@ -179,7 +179,13 @@ internal static class Ldap {
 
                     return Encoding.UTF8.GetBytes(result);
                 }
+#if DEBUG
+                catch (Exception ex) {
+                    Logger.Error(ex);
+                }
+#else
                 catch { }
+#endif
             }
 
         return null;
@@ -197,7 +203,13 @@ internal static class Ldap {
             normalizedDomain = NormalizeDomain(domain);
             if (String.IsNullOrEmpty(normalizedDomain)) return null;
         }
+#if DEBUG
+        catch (Exception ex) {
+            Logger.Error(ex);
+        }
+#else
         catch { }
+#endif
 
         if (name.Contains('.')) name = name.Split('.')[0];
 
@@ -229,7 +241,13 @@ internal static class Ldap {
             normalizedDomain = NormalizeDomain(domain);
             if (String.IsNullOrEmpty(normalizedDomain)) return null;
         }
+#if DEBUG
+        catch (Exception ex) {
+            Logger.Error(ex);
+        }
+#else
         catch { }
+#endif
 
         using DirectoryEntry directoryEntry = new DirectoryEntry($"LDAP://{normalizedDomain}");
         SearchResult result = null;
@@ -239,7 +257,13 @@ internal static class Ldap {
             searcher.Filter = $"(&(objectClass=user)(objectCategory=person)(userPrincipalName={EscapeLdapValue(username)}))";
             result = searcher.FindOne();
         }
+#if DEBUG
+        catch (Exception ex) {
+            Logger.Error(ex);
+        }
+#else
         catch { }
+#endif
 
         if (result is null)
             try {
@@ -249,7 +273,13 @@ internal static class Ldap {
                 searcher.Filter = $"(&(objectClass=user)(objectCategory=person)(cn={EscapeLdapValue(username)}))";
                 result = searcher.FindOne();
             }
+#if DEBUG
+            catch (Exception ex) {
+                Logger.Error(ex);
+            }
+#else
             catch { }
+#endif
 
         if (result is null) {
             username = username.ToLower();
@@ -269,7 +299,13 @@ internal static class Ldap {
                     if (un.ToLower() == username) return allUsers[i];
                 }
             }
+#if DEBUG
+            catch (Exception ex) {
+                Logger.Error(ex);
+            }
+#else
             catch { }
+#endif
         }
 
         if (result is null) return null;

@@ -693,7 +693,7 @@ class Personalize extends Tabs {
 
 				Apply();
 			}
-			catch { }
+			catch {}
 		};
 
 		Apply();

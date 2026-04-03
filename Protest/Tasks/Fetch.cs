@@ -91,7 +91,13 @@ internal static class Fetch {
                 reply = await ping.SendPingAsync(target, 1500);
             }
         }
+#if DEBUG
+        catch (Exception ex) {
+            Logger.Error(ex);
+        }
+#else
         catch { }
+#endif
 
         if (reply?.Status == IPStatus.Success) {
             ConcurrentDictionary<string, string[]> data = SingleDevice(target, useDns, useWmi, useLdap, snmpProfiles , argPortScan, asynchronous, cancellationToken);
@@ -115,14 +121,26 @@ internal static class Fetch {
             try {
                 hostname = Dns.GetHostEntry(target).HostName;
             }
+#if DEBUG
+            catch (Exception ex) {
+                Logger.Error(ex);
+            }
+#else
             catch { }
+#endif
         }
         else {
             hostname = target;
             try {
                 ipList = Dns.GetHostAddresses(target).Where(o => !IPAddress.IsLoopback(o)).ToArray();
             }
+#if DEBUG
+            catch (Exception ex) {
+                Logger.Error(ex);
+            }
+#else
             catch { }
+#endif
         }
 
         if (ipList.Length == 0) {

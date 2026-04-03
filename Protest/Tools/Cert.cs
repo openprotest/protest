@@ -158,7 +158,13 @@ internal static class Cert {
                     Logger.Action(origin, $"Upload certificate: {newName}");
                     break;
                 }
+#if DEBUG
+                catch (Exception ex) {
+                    Logger.Error(ex);
+                }
+#else
                 catch { }
+#endif
             }
         }
 

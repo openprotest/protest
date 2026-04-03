@@ -78,7 +78,13 @@ internal static class LiveStats {
                     }
                 }
             }
+#if DEBUG
+            catch (Exception ex) {
+                Logger.Error(ex);
+            }
+#else
             catch { }
+#endif
         }
         catch (WebSocketException ex) when (ex.WebSocketErrorCode == WebSocketError.ConnectionClosedPrematurely) {
             return;
@@ -94,7 +100,13 @@ internal static class LiveStats {
             try {
                 await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
             }
+#if DEBUG
+            catch (Exception ex) {
+                Logger.Error(ex);
+            }
+#else
             catch { }
+#endif
         }
     }
 
@@ -260,13 +272,25 @@ internal static class LiveStats {
                         }
                     }
                 }
+#if DEBUG
+                catch (Exception ex) {
+                    Logger.Error(ex);
+                }
+#else
                 catch { }
+#endif
             }
 
             try {
                 dns = (await System.Net.Dns.GetHostEntryAsync(firstAlive)).HostName;
             }
+#if DEBUG
+            catch (Exception ex) {
+                Logger.Error(ex);
+            }
+#else
             catch { }
+#endif
 
             if (!String.IsNullOrEmpty(dns)) { //check dns mismatch
                 try {
@@ -301,7 +325,13 @@ internal static class LiveStats {
                         }
                     }
                 }
+#if DEBUG
+                catch (Exception ex) {
+                    Logger.Error(ex);
+                }
+#else
                 catch { }
+#endif
             }
 
             if (!String.IsNullOrEmpty(_hostname?.value) && !String.IsNullOrEmpty(_ip?.value)) { //check reverse dns mismatch
@@ -321,7 +351,13 @@ internal static class LiveStats {
                             }
                         }
                     }
+#if DEBUG
+                    catch (Exception ex) {
+                        Logger.Error(ex);
+                    }
+#else
                     catch { }
+#endif
                 }
             }
 
@@ -343,7 +379,13 @@ internal static class LiveStats {
             try {
                 await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
             }
+#if DEBUG
+            catch (Exception ex) {
+                Logger.Error(ex);
+            }
+#else
             catch { }
+#endif
         }
     }
 
@@ -409,7 +451,13 @@ internal static class LiveStats {
             }
         }
         //catch (NullReferenceException) { }
+#if DEBUG
+        catch (Exception ex) {
+            Logger.Error(ex);
+        }
+#else
         catch { }
+#endif
     }
 
     private static void SnmpQuery(WebSocket ws, Lock mutex, string file, string firstAlive, string type, string snmpProfileGuid) {

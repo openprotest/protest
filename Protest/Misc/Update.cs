@@ -20,7 +20,13 @@ internal static class Update {
                 return Encoding.UTF8.GetBytes($"{{\"version\":\"{data}\",\"major\":\"{split[0]}\",\"minor\":\"{split[1]}\",\"build\":\"{split[2]}\",\"revision\":\"{split[3]}\"}}");
             }
         }
-        catch {}
+#if DEBUG
+        catch (Exception ex) {
+            Logger.Error(ex);
+        }
+#else
+        catch { }
+#endif
 
         return Data.CODE_FAILED.Array;
     }

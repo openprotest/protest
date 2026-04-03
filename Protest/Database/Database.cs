@@ -424,7 +424,13 @@ internal sealed class Database {
             }
             builder.Append('}');
         }
+#if DEBUG
+        catch (Exception ex) {
+            Logger.Error(ex);
+        }
+#else
         catch { }
+#endif
 
         return Encoding.UTF8.GetBytes(builder.ToString());
     }

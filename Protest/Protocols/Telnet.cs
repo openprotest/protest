@@ -100,7 +100,13 @@ internal static class Telnet {
                     await WsWriteText(ws, $"{{\"error\":\"{ex.Message}\"}}");
                     await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
                 }
-                catch {}
+#if DEBUG
+                catch (Exception exg) {
+                    Logger.Error(exg);
+                }
+#else
+                catch { }
+#endif
             }
             return;
         }
@@ -112,7 +118,13 @@ internal static class Telnet {
                 try {
                     await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
                 }
+#if DEBUG
+                catch (Exception ex) {
+                    Logger.Error(ex);
+                }
+#else
                 catch { }
+#endif
             }
         }
     }
@@ -135,7 +147,13 @@ internal static class Telnet {
                         try {
                             await ws?.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
                         }
+#if DEBUG
+                        catch (Exception ex) {
+                            Logger.Error(ex);
+                        }
+#else
                         catch { }
+#endif
                     }
                     return;
                 }

@@ -39,7 +39,13 @@ internal static class NetBios {
                 }
             }
         }
+#if DEBUG
+        catch (Exception ex) {
+            Logger.Error(ex);
+        }
+#else
         catch { }
+#endif
 
         return null;
     }

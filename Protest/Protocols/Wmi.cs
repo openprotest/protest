@@ -78,7 +78,13 @@ internal static class Wmi {
             string value = FormatProperty(obj.Properties[property], format);
             return value;
         }
+#if DEBUG
+        catch (Exception ex) {
+            Logger.Error(ex);
+        }
+#else
         catch { }
+#endif
 
         return String.Empty;
     }
@@ -123,7 +129,13 @@ internal static class Wmi {
             using ManagementObjectCollection moc = searcher.Get();
             return WmiGet(moc, property, isArray, format);
         }
+#if DEBUG
+        catch (Exception ex) {
+            Logger.Error(ex);
+        }
+#else
         catch { }
+#endif
 
         return String.Empty;
     }
@@ -198,7 +210,13 @@ internal static class Wmi {
                     }
                 }
             }
+#if DEBUG
+            catch (Exception ex) {
+                Logger.Error(ex);
+            }
+#else
             catch { }
+#endif
 
             try {
                 using ManagementObjectSearcher searcher = new ManagementObjectSearcher(scope, new SelectQuery("SELECT * FROM Win32_NetworkAdapterConfiguration WHERE IPEnabled = True"));
@@ -209,14 +227,26 @@ internal static class Wmi {
                 ContentBuilderAddArray(moc, "IPSubnet", "mask", data, new FormatMethodPtr(IPv4MaskFilter));
                 ContentBuilderAddArray(moc, "DHCPEnabled", "dhcp enabled", data);
             }
+#if DEBUG
+            catch (Exception ex) {
+                Logger.Error(ex);
+            }
+#else
             catch { }
+#endif
 
             try {
                 using ManagementObjectSearcher searcher = new ManagementObjectSearcher(scope, new SelectQuery("SELECT * FROM Win32_NetworkAdapter WHERE PhysicalAdapter = True"));
                 using ManagementObjectCollection moc = searcher.Get();
                 ContentBuilderAddArray(moc, "Speed", "network adapter speed", data, new FormatMethodPtr(TransferRateToString));
             }
+#if DEBUG
+            catch (Exception ex) {
+                Logger.Error(ex);
+            }
+#else
             catch { }
+#endif
 
             try {
                 using ManagementObjectSearcher searcher = new ManagementObjectSearcher(scope, new SelectQuery("Win32_ComputerSystem"));
@@ -227,7 +257,13 @@ internal static class Wmi {
                 ContentBuilderAddValue(moc, "UserName", "owner", data);
                 ContentBuilderAddValue(moc, "Model", "model", data);
             }
+#if DEBUG
+            catch (Exception ex) {
+                Logger.Error(ex);
+            }
+#else
             catch { }
+#endif
 
             if (data.TryGetValue("model", out string model) && model.ToLower().Contains("virtual")) {
                 type = "Virtual machine";
@@ -240,7 +276,13 @@ internal static class Wmi {
                 ContentBuilderAddValue(moc, "Product", "motherboard", data);
                 ContentBuilderAddValue(moc, "SerialNumber", "motherboard serial number", data);
             }
-            catch { }
+#if DEBUG
+                catch (Exception ex) {
+                    Logger.Error(ex);
+                }
+#else
+                catch { }
+#endif
 
             try {
                 using ManagementObjectSearcher searcher = new ManagementObjectSearcher(scope, new SelectQuery("Win32_BIOS"));
@@ -248,7 +290,13 @@ internal static class Wmi {
                 ContentBuilderAddValue(moc, "Name", "bios", data);
                 ContentBuilderAddValue(moc, "SerialNumber", "serial number", data);
             }
+#if DEBUG
+            catch (Exception ex) {
+                Logger.Error(ex);
+            }
+#else
             catch { }
+#endif
 
             try {
                 using ManagementObjectSearcher searcher = new ManagementObjectSearcher(scope, new SelectQuery("Win32_Processor"));
@@ -258,7 +306,13 @@ internal static class Wmi {
                 ContentBuilderAddValue(moc, "CurrentClockSpeed", "cpu frequency", data, new FormatMethodPtr(ToMHz));
                 ContentBuilderAddValue(moc, "AddressWidth", "cpu architecture", data, new FormatMethodPtr(ArchitectureString));
             }
+#if DEBUG
+            catch (Exception ex) {
+                Logger.Error(ex);
+            }
+#else
             catch { }
+#endif
 
             try {
                 UInt64 L1 = 0, L2 = 0, L3 = 0;
@@ -291,7 +345,13 @@ internal static class Wmi {
                     data.Add("cpu cache", $"{Data.SizeToString(L1)}/{Data.SizeToString(L2)}/{Data.SizeToString(L3)}");
                 }
             }
-            catch { }
+#if DEBUG
+                catch (Exception ex) {
+                    Logger.Error(ex);
+                }
+#else
+                catch { }
+#endif
 
             try {
                 using ManagementObjectSearcher searcher = new ManagementObjectSearcher(scope, new SelectQuery("Win32_PhysicalMemory"));
@@ -320,28 +380,52 @@ internal static class Wmi {
                 data.Add("ram type", memoryTypeString);
 
             }
+#if DEBUG
+            catch (Exception ex) {
+                Logger.Error(ex);
+            }
+#else
             catch { }
+#endif
 
             try {
                 using ManagementObjectSearcher searcher = new ManagementObjectSearcher(scope, new SelectQuery("Win32_PhysicalMemoryArray"));
                 using ManagementObjectCollection moc = searcher.Get();
                 ContentBuilderAddValue(moc, "MemoryDevices", "ram slot", data);
             }
+#if DEBUG
+            catch (Exception ex) {
+                Logger.Error(ex);
+            }
+#else
             catch { }
+#endif
 
             try {
                 using ManagementObjectSearcher searcher = new ManagementObjectSearcher(scope, new SelectQuery("SELECT * FROM Win32_DiskDrive WHERE MediaType = \"Fixed hard disk media\""));
                 using ManagementObjectCollection moc = searcher.Get();
                 ContentBuilderAddArray(moc, "Size", "physical disk", data, new FormatMethodPtr(SizeToString));
             }
+#if DEBUG
+            catch (Exception ex) {
+                Logger.Error(ex);
+            }
+#else
             catch { }
+#endif
 
             try {
                 using ManagementObjectSearcher searcher = new ManagementObjectSearcher(scope, new SelectQuery("SELECT * FROM Win32_LogicalDisk WHERE DriveType = 3"));
                 using ManagementObjectCollection moc = searcher.Get();
                 ContentBuilderAddArray(moc, "Size", "logical disk", data, new FormatMethodPtr(SizeToString));
             }
+#if DEBUG
+            catch (Exception ex) {
+                Logger.Error(ex);
+            }
+#else
             catch { }
+#endif
 
             try {
                 using ManagementObjectSearcher searcher = new ManagementObjectSearcher(scope, new SelectQuery("Win32_VideoController"));
@@ -349,7 +433,13 @@ internal static class Wmi {
                 ContentBuilderAddArray(moc, "Name", "video controller", data);
                 ContentBuilderAddArray(moc, "DriverVersion", "video driver", data);
             }
+#if DEBUG
+            catch (Exception ex) {
+                Logger.Error(ex);
+            }
+#else
             catch { }
+#endif
 
             try {
                 using ManagementObjectSearcher searcher = new ManagementObjectSearcher(scope, new SelectQuery("Win32_OperatingSystem"));
@@ -370,7 +460,13 @@ internal static class Wmi {
                     }
                 }
             }
+#if DEBUG
+            catch (Exception ex) {
+                Logger.Error(ex);
+            }
+#else
             catch { }
+#endif
         }
 
         if (type.Length > 0) data.Add("type", $"{type}");

@@ -494,7 +494,13 @@ internal static partial class Polling {
                         result.Add(single[j]);
                     }
                 }
+#if DEBUG
+                catch (Exception ex) {
+                    Logger.Error(ex);
+                }
+#else
                 catch { }
+#endif
             }
 
             return result.Count > 0 ? result : null;

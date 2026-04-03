@@ -51,7 +51,13 @@ internal static class Documentation {
                     builder.Append($"\"{Data.EscapeJsonText(files[i].Name)}\"");
                     first = false;
                 }
+#if DEBUG
+                catch (Exception ex) {
+                    Logger.Error(ex);
+                }
+#else
                 catch { }
+#endif
             }
         }
         builder.Append(']');

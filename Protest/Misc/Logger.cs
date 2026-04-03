@@ -30,13 +30,14 @@ internal static class Logger {
 #endif
 
     public static void Error(string ex) {
-        lock (errorMutex)
+        lock (errorMutex) {
             try {
                 using StreamWriter writer = new StreamWriter($"{Data.DIR_LOG}{Data.DELIMITER}error.log", true, System.Text.Encoding.UTF8);
                 writer.Write(DateTime.Now.ToString(Data.DATETIME_FORMAT_FILE));
                 writer.WriteLine($"\t{ex}");
             }
             catch { }
+        }
 
         Console.ForegroundColor = ConsoleColor.Red;
         Console.Error.WriteLine(ex);

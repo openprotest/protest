@@ -160,13 +160,25 @@ internal static class Issues {
                 await Task.Delay(5_000);
             }
         }
+#if DEBUG
+        catch (Exception ex) {
+            Logger.Error(ex);
+        }
+#else
         catch { }
+#endif
         finally {
             if (ws.State == WebSocketState.Open) {
                 try {
                     await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, null, CancellationToken.None);
                 }
+#if DEBUG
+                catch (Exception ex) {
+                    Logger.Error(ex);
+                }
+#else
                 catch { }
+#endif
             }
         }
     }
@@ -922,7 +934,13 @@ internal static class Issues {
                 return false;
             }
         }
+#if DEBUG
+        catch (Exception ex) {
+            Logger.Error(ex);
+        }
+#else
         catch { }
+#endif
 
         userIssues = null;
         return false;

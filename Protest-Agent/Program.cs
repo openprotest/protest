@@ -72,7 +72,7 @@ namespace ProtestAgent {
                         p.Start();
                     }
                 }
-                catch {}
+                catch { }
                 break;
 
             case "psremote":
