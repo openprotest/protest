@@ -2,7 +2,6 @@
 using System.Net;
 using System.Net.Http;
 using System.Collections.Generic;
-
 using System.Text;
 using System.Text.Json.Serialization;
 using System.Text.Json;
@@ -41,7 +40,6 @@ internal class Import {
 
         Uri uri = new Uri($"{protocol}://{ip}:{port}");
 
-        //TODO:
 #pragma warning disable SYSLIB0014
         ServicePointManager.ServerCertificateValidationCallback = (message, cert, chain, errors) => true;
 #pragma warning restore SYSLIB0014
