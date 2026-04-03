@@ -17,37 +17,23 @@ namespace Protest.Tools;
 internal static class WebsiteCheck {
 
     private class RequestData {
-        public bool v1 { get; set; }
-        public bool v2 { get; set; }
-        public bool v3 { get; set; }
-        public string uri { get; set; } = string.Empty;
+        public bool V1 { get; set; }
+        public bool V2 { get; set; }
+        public bool V3 { get; set; }
+        public string Uri { get; set; } = string.Empty;
     }
 
-    private static void WsWriteText(WebSocket ws, [StringSyntax(StringSyntaxAttribute.Json)] string text, Lock mutex) {
+    private static async Task WsWriteText(WebSocket ws, [StringSyntax(StringSyntaxAttribute.Json)] string text, Lock mutex) {
         lock (mutex) {
             if (ws.State != WebSocketState.Open) { return; }
             ws.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(text), 0, text.Length), WebSocketMessageType.Text, true, CancellationToken.None);
         }
     }
-    private static void WsWriteText(WebSocket ws, byte[] bytes, Lock mutex) {
-        lock (mutex) {
-            if (ws.State != WebSocketState.Open) { return; }
-            ws.SendAsync(new ArraySegment<byte>(bytes, 0, bytes.Length), WebSocketMessageType.Text, true, CancellationToken.None);
-        }
-    }
-
-    private static RequestData ParseJson(string json) {
-        JsonSerializerOptions options = new JsonSerializerOptions {
-            PropertyNameCaseInsensitive = true
-        };
-
-        return JsonSerializer.Deserialize<RequestData>(json, options);
-    }
 
     public static async Task WebSocketHandler(HttpListenerContext ctx) {
         WebSocket ws;
         try {
-            WebSocketContext wsc = await ctx.AcceptWebSocketAsync(null);
+            HttpListenerWebSocketContext wsc = await ctx.AcceptWebSocketAsync(null);
             ws = wsc.WebSocket;
         }
         catch (WebSocketException ex) {
@@ -69,7 +55,12 @@ internal static class WebsiteCheck {
             string json = Encoding.Default.GetString(buff, 0, receiveResult.Count);
             RequestData req = JsonSerializer.Deserialize<RequestData>(json);
 
-            string uri = req.uri;
+            if (req is null) {
+                await ws.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, null, CancellationToken.None);
+                return;
+            }
+
+            string uri = req.Uri;
 
             string protocol = String.Empty;
             string domain = String.Empty;
@@ -82,6 +73,11 @@ internal static class WebsiteCheck {
                 string keep = uri[(colon + 3)..];
                 keep = keep.Replace("\\", "/");
                 keep = keep.Split('/')[0];
+
+                if (String.IsNullOrWhiteSpace(keep)) {
+                    await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, null, CancellationToken.None);
+                    return;
+                }
 
                 if (keep.Contains(':')) {
                     string[] split = keep.Split(':');
@@ -112,15 +108,15 @@ internal static class WebsiteCheck {
 
             List<Task> tasks = new List<Task>();
 
-            if (req.v1) {
+            if (req.V1) {
                 tasks.Add(CheckHttp(ws, uri, HttpVersion.Version11, mutex));
             }
 
-            if (req.v2) {
+            if (req.V2) {
                 tasks.Add(CheckHttp(ws, uri, HttpVersion.Version20, mutex));
             }
 
-            if (req.v3) {
+            if (req.V3) {
                 tasks.Add(CheckHttp(ws, uri, HttpVersion.Version30, mutex));
             }
 
@@ -175,11 +171,11 @@ internal static class WebsiteCheck {
 
             result.Append('}');
 
-            WsWriteText(ws, result.ToString(), mutex);
+            await WsWriteText(ws, result.ToString(), mutex);
         }
         catch (Exception ex) {
             string fail = $"{{\"title\":\"DNS\",\"status\":\"failed\",\"error\":\"{Data.EscapeJsonText(ex.Message)}\"}}";
-            WsWriteText(ws, fail, mutex);
+            await WsWriteText(ws, fail, mutex);
             await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, null, CancellationToken.None);
         }
     }
@@ -201,16 +197,16 @@ internal static class WebsiteCheck {
             result.Append('}');
 
             client.Close();
-            WsWriteText(ws, result.ToString(), mutex);
+            await WsWriteText(ws, result.ToString(), mutex);
         }
         catch (SocketException ex) {
             string fail = $"{{\"title\":\"TCP\",\"status\":\"failed\",\"error\":\"{Data.EscapeJsonText(ex.SocketErrorCode.ToString())}\"}}";
-            WsWriteText(ws, fail, mutex);
+            await WsWriteText(ws, fail, mutex);
             await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, null, CancellationToken.None);
         }
         catch (Exception ex) {
             string fail = $"{{\"title\":\"TCP\",\"status\":\"failed\",\"error\":\"{Data.EscapeJsonText(ex.Message)}\"}}";
-            WsWriteText(ws, fail, mutex);
+            await WsWriteText(ws, fail, mutex);
             await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, null, CancellationToken.None);
         }
     }
@@ -253,17 +249,17 @@ internal static class WebsiteCheck {
                 //response.EnsureSuccessStatusCode();
 
                 if (result.Length > 0) {
-                    WsWriteText(ws, result.ToString(), mutex);
+                    await WsWriteText(ws, result.ToString(), mutex);
                 }
             }
         }
         catch (Exception ex) when (ex.HResult == -2146233087) {
             string fail = "{\"title\":\"TLS\",\"status\":\"failed\",\"error\":\"The remote certificate was rejected\"}";
-            WsWriteText(ws, fail, mutex);
+            await WsWriteText(ws, fail, mutex);
         }
         catch (Exception ex) {
             string fail = $"{{\"title\":\"TLS\",\"status\":\"failed\",\"error\":\"{Data.EscapeJsonText(ex?.InnerException?.Message ?? "Unknown error")}\"}}";
-            WsWriteText(ws, fail, mutex);
+            await WsWriteText(ws, fail, mutex);
         }
     }
 
@@ -315,15 +311,15 @@ internal static class WebsiteCheck {
 
             result.Append('}');
 
-            WsWriteText(ws, result.ToString(), mutex);
+            await WsWriteText(ws, result.ToString(), mutex);
         }
         catch (HttpRequestException) {
             string fail = $"{{\"title\":\"HTTP {version}\",\"status\":\"failed\",\"error\":\"HTTP request failed\"}}";
-            WsWriteText(ws, fail, mutex);
+            await WsWriteText(ws, fail, mutex);
         }
         catch (Exception ex) {
             string fail = $"{{\"title\":\"HTTP {version}\",\"status\":\"failed\",\"error\":\"{Data.EscapeJsonText(ex.Message)}\"}}";
-            WsWriteText(ws, fail, mutex);
+            await WsWriteText(ws, fail, mutex);
         }
     }
 

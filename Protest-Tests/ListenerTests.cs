@@ -38,7 +38,7 @@ public class ListenerTests {
     }
 
     [Test]
-    public void Listener_NoneExistingPage_ReturnNotFound() {
+    public void Listener_NonExistingPage_ReturnNotFound() {
         using HttpRequestMessage requestMessage = new HttpRequestMessage(HttpMethod.Get, "http://127.0.0.1:8080/i-dont-exists");
 
         using HttpClient httpClient = new HttpClient();

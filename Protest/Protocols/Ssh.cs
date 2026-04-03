@@ -26,7 +26,7 @@ internal static class Ssh {
     public static async Task WebSocketHandler(HttpListenerContext ctx) {
         WebSocket ws;
         try {
-            WebSocketContext wsc = await ctx.AcceptWebSocketAsync(null);
+            HttpListenerWebSocketContext wsc = await ctx.AcceptWebSocketAsync(null);
             ws = wsc.WebSocket;
         }
         catch (WebSocketException ex) {

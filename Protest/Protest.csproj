@@ -21,7 +21,7 @@
     <Nullable>disable</Nullable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 
-    <NoWarn>IDE0028, IDE0090, IDE0300, IDE0305</NoWarn>
+    <NoWarn>IDE0028, IDE0090, IDE0300, IDE0301, IDE0302, IDE0305</NoWarn>
     <WarningLevel>9999</WarningLevel>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 

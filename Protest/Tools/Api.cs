@@ -10,8 +10,8 @@ using Protest.Http;
 namespace Protest.Tools;
 internal static class Api {
     private static readonly Lock mutex;
-    //private static readonly ConcurrentDictionary<string, ulong> counter;
-    //private static readonly ConcurrentDictionary<string, ulong> traffic;
+    private static readonly ConcurrentDictionary<string, ulong> hits;
+    private static readonly ConcurrentDictionary<string, ulong> traffic;
     private static readonly JsonSerializerOptions apiLinksSerializerOptions;
 
     private static readonly ConcurrentDictionary<string, Link> links;
@@ -31,8 +31,8 @@ internal static class Api {
 
     static Api() {
         mutex = new Lock();
-        //counter = new ConcurrentDictionary<string, ulong>();
-        //traffic = new ConcurrentDictionary<string, ulong>();
+        hits = new ConcurrentDictionary<string, ulong>();
+        traffic = new ConcurrentDictionary<string, ulong>();
 
         apiLinksSerializerOptions = new JsonSerializerOptions();
         apiLinksSerializerOptions.Converters.Add(new ApiJsonConverter());
@@ -48,13 +48,7 @@ internal static class Api {
             return;
         }
 
-        if (!parameters.TryGetValue("key", out string apiKey)
-            || !Api.links.ContainsKey(apiKey)) {
-            ctx.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
-            return;
-        }
-
-        if (!Api.links.TryGetValue(apiKey, out Link link)) {
+        if (!parameters.TryGetValue("key", out string apiKey) || !Api.links.TryGetValue(apiKey, out Link link)) {
             ctx.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
             return;
         }
@@ -76,7 +70,11 @@ internal static class Api {
             return;
         }
 
-        ctx.Response.ContentLength64 = buffer?.Length ?? 0;
+        long length = buffer?.Length ?? 0;
+        hits.AddOrUpdate(link.key, 1, (k, v) => v + 1);
+        traffic.AddOrUpdate(link.key, (ulong)length, (k, v) => v + (ulong)length);
+
+        ctx.Response.ContentLength64 = length;
 
         if (buffer is not null) {
             ctx.Response.OutputStream.Write(buffer, 0, buffer.Length);
@@ -138,7 +136,7 @@ internal static class Api {
         }
 
         byte[] buffer = null;
-        //TODO:
+        //TODO: implement the lifeline endpoint
 
         ctx.Response.StatusCode = (int)HttpStatusCode.OK;
         return buffer;
@@ -193,7 +191,7 @@ internal static class Api {
                 if (String.IsNullOrEmpty(temp[i].key)) {
                     continue;
                 }
-                Api.links.TryAdd(temp[i].key.ToString(), temp[i]);
+                Api.links.TryAdd(temp[i].key, temp[i]);
             }
 
             byte[] plain = JsonSerializer.SerializeToUtf8Bytes(temp, apiLinksSerializerOptions);

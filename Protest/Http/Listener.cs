@@ -101,9 +101,6 @@ internal sealed class Listener {
         ["/tools/maclookup"] =         (ctx, parameters, username) => Tools.MacLookup.Lookup(ctx),
         ["/tools/nics/list"] =         (ctx, parameters, username) => Tools.IpDiscovery.ListNics(),
 
-        //["/tools/downstream"] =        (ctx, parameters, username) => Tools.SpeedTest.DownStream(ctx, parameters),
-        //["/tools/upstream"] =          (ctx, parameters, username) => Tools.SpeedTest.UpStream(ctx, parameters),
-
         ["/snmp/get"] =                (ctx, parameters, username) => Protocols.Snmp.Polling.GetHandler(ctx, parameters),
         ["/snmp/set"] =                (ctx, parameters, username) => Protocols.Snmp.Polling.SetHandler(ctx, parameters),
         ["/snmp/walk"] =               (ctx, parameters, username) => Protocols.Snmp.Polling.WalkHandler(ctx, parameters),

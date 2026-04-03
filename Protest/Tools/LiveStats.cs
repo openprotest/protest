@@ -39,7 +39,7 @@ internal static class LiveStats {
     public static async Task UserStats(HttpListenerContext ctx) {
         WebSocket ws;
         try {
-            WebSocketContext wsc = await ctx.AcceptWebSocketAsync(null);
+            HttpListenerWebSocketContext wsc = await ctx.AcceptWebSocketAsync(null);
             ws = wsc.WebSocket;
         }
         catch (WebSocketException ex) {
@@ -113,7 +113,7 @@ internal static class LiveStats {
     public static async Task DeviceStats(HttpListenerContext ctx) {
         WebSocket ws;
         try {
-            WebSocketContext wsc = await ctx.AcceptWebSocketAsync(null);
+            HttpListenerWebSocketContext wsc = await ctx.AcceptWebSocketAsync(null);
             ws = wsc.WebSocket;
         }
         catch (WebSocketException ex) {
