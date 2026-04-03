@@ -199,7 +199,7 @@ internal static class WebsiteCheck {
         }
     }
 
-    private static async Task TcpCheck(WebSocket ws , string domain, int port) {
+    private static async Task TcpCheck(WebSocket ws, string domain, int port) {
         try {
             StringBuilder result = new StringBuilder();
             result.Append("{\"title\":\"TCP\",");
@@ -263,8 +263,8 @@ internal static class WebsiteCheck {
                     return errors == SslPolicyErrors.None;
                 };
 
-                using  HttpClient client = new HttpClient(handler);
-                using  HttpResponseMessage response = await client.GetAsync(uri);
+                using HttpClient client = new HttpClient(handler);
+                using HttpResponseMessage response = await client.GetAsync(uri);
                 //response.EnsureSuccessStatusCode();
 
                 if (result.Length > 0) {
@@ -304,12 +304,6 @@ internal static class WebsiteCheck {
             using HttpResponseMessage response = await client.SendAsync(request);
 
             long endtime = DateTime.UtcNow.Ticks;
-
-            List<string> resultList = new List<string> {
-                $"HTTP/{response.Version} {(int)response.StatusCode} {response.StatusCode}"
-            };
-
-            resultList.AddRange(response.Headers.Select(h => $"{h.Key}: {string.Join(", ", h.Value)}"));
 
             StringBuilder result = new StringBuilder();
             result.Append($"{{\"title\":\"HTTP {version}\",");
