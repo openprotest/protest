@@ -55,7 +55,7 @@ internal static class Topology {
         }
     }
 
-    internal static async void WebSocketHandler(HttpListenerContext ctx) {
+    internal static async Task WebSocketHandler(HttpListenerContext ctx) {
         WebSocket ws;
         try {
             WebSocketContext wsc = await ctx.AcceptWebSocketAsync(null);

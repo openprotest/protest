@@ -24,19 +24,19 @@ internal static class LiveStats {
     private static readonly string[] PRINTER_TYPES = new string[] { "fax", "multiprinter", "ticket printer", "printer" };
     private static readonly string[] SWITCH_TYPES = new string[] { "switch", "router", "firewall" };
 
-    private static void WsWriteText(WebSocket ws, [StringSyntax(StringSyntaxAttribute.Json)] string text, Lock mutex) {
+    private static async Task WsWriteText(WebSocket ws, [StringSyntax(StringSyntaxAttribute.Json)] string text, Lock mutex) {
         lock (mutex) {
             byte[] bytes = Encoding.UTF8.GetBytes(text);
             ws.SendAsync(new ArraySegment<byte>(bytes, 0, bytes.Length), WebSocketMessageType.Text, true, CancellationToken.None);
         }
     }
-    private static void WsWriteText(WebSocket ws, byte[] bytes, Lock mutex) {
+    private static async Task WsWriteText(WebSocket ws, byte[] bytes, Lock mutex) {
         lock (mutex) {
             ws.SendAsync(new ArraySegment<byte>(bytes, 0, bytes.Length), WebSocketMessageType.Text, true, CancellationToken.None);
         }
     }
 
-    public static async void UserStats(HttpListenerContext ctx) {
+    public static async Task UserStats(HttpListenerContext ctx) {
         WebSocket ws;
         try {
             WebSocketContext wsc = await ctx.AcceptWebSocketAsync(null);
@@ -63,7 +63,7 @@ internal static class LiveStats {
             Lock mutex = new Lock();
 
             if (Issues.CheckPasswordStrength(entry, true, out Issues.Issue? weakPsIssue)) {
-                WsWriteText(ws, weakPsIssue?.ToLiveStatsJsonBytes(), mutex);
+                WsWriteText(ws, weakPsIssue?.ToLiveStatsJsonBytes(), mutex).GetAwaiter().GetResult();
             }
 
             try {
@@ -74,7 +74,7 @@ internal static class LiveStats {
                     && Issues.CheckDomainUser(entry, out Issues.Issue[] issues, 0)
                     && issues is not null) {
                     for (int i = 0; i < issues.Length; i++) {
-                        WsWriteText(ws, issues[i].ToLiveStatsJsonBytes(), mutex);
+                        WsWriteText(ws, issues[i].ToLiveStatsJsonBytes(), mutex).GetAwaiter().GetResult();
                     }
                 }
             }
@@ -98,7 +98,7 @@ internal static class LiveStats {
         }
     }
 
-    public static async void DeviceStats(HttpListenerContext ctx) {
+    public static async Task DeviceStats(HttpListenerContext ctx) {
         WebSocket ws;
         try {
             WebSocketContext wsc = await ctx.AcceptWebSocketAsync(null);
@@ -159,27 +159,27 @@ internal static class LiveStats {
                                     }
                                 }
 
-                                WsWriteText(ws, $"{{\"echoReply\":\"{reply.RoundtripTime}\",\"for\":\"{pingArray[index]}\",\"source\":\"ICMP\"}}", mutex);
+                                WsWriteText(ws, $"{{\"echoReply\":\"{reply.RoundtripTime}\",\"for\":\"{pingArray[index]}\",\"source\":\"ICMP\"}}", mutex).GetAwaiter().GetResult();
                                 //WsWriteText(ws, $"{{\"info\":\"Last seen {pingArray[index]}: Just now\",\"source\":\"ICMP\"}}", mutex);
                                 LastSeen.Seen(pingArray[index]);
                                 break;
 
                             case (int)IPStatus.TimedOut:
-                                WsWriteText(ws, $"{{\"echoReply\":\"Timed out\",\"for\":\"{pingArray[index]}\",\"source\":\"ICMP\"}}", mutex);
+                                WsWriteText(ws, $"{{\"echoReply\":\"Timed out\",\"for\":\"{pingArray[index]}\",\"source\":\"ICMP\"}}", mutex).GetAwaiter().GetResult();
                                 break;
 
                             case 11050:
-                                WsWriteText(ws, $"{{\"echoReply\":\"General failure\",\"for\":\"{pingArray[index]}\",\"source\":\"ICMP\"}}", mutex);
+                                WsWriteText(ws, $"{{\"echoReply\":\"General failure\",\"for\":\"{pingArray[index]}\",\"source\":\"ICMP\"}}", mutex).GetAwaiter().GetResult();
                                 break;
 
                             default:
-                                WsWriteText(ws, $"{{\"echoReply\":\"{Data.EscapeJsonText(reply.Status.ToString())}\",\"for\":\"{pingArray[index]}\",\"source\":\"ICMP\"}}", mutex);
+                                WsWriteText(ws, $"{{\"echoReply\":\"{Data.EscapeJsonText(reply.Status.ToString())}\",\"for\":\"{pingArray[index]}\",\"source\":\"ICMP\"}}", mutex).GetAwaiter().GetResult();
                                 break;
                             }
 
                         }
                         catch {
-                            WsWriteText(ws, $"{{\"echoReply\":\"Error\",\"for\":\"{Data.EscapeJsonText(pingArray[index])}\",\"source\":\"ICMP\"}}", mutex);
+                            WsWriteText(ws, $"{{\"echoReply\":\"Error\",\"for\":\"{Data.EscapeJsonText(pingArray[index])}\",\"source\":\"ICMP\"}}", mutex).GetAwaiter().GetResult();
                         }
                     }));
                 }
@@ -189,7 +189,7 @@ internal static class LiveStats {
                 if (firstAlive is null) {
                     for (int i = 0; i < pingArray.Length; i++) {
                         string lastSeen = LastSeen.HasBeenSeen(pingArray[i], true);
-                        WsWriteText(ws, $"{{\"info\":\"Last seen {pingArray[i]}: {lastSeen}\",\"source\":\"ICMP\"}}", mutex);
+                        WsWriteText(ws, $"{{\"info\":\"Last seen {pingArray[i]}: {lastSeen}\",\"source\":\"ICMP\"}}", mutex).GetAwaiter().GetResult();
                     }
                 }
             }
@@ -198,7 +198,7 @@ internal static class LiveStats {
 
             if (OperatingSystem.IsWindows() && _os?.value?.Contains("windows", StringComparison.OrdinalIgnoreCase) == true) {
                 if (WindowsLifecycle.CheckEntry(entry, _ip?.value?.Split(';').ToArray()[0].Trim(), out Issues.Issue? windowsLifecycleIssue) && windowsLifecycleIssue.HasValue) {
-                    WsWriteText(ws, windowsLifecycleIssue.Value.ToLiveStatsJsonBytes(), mutex);
+                    WsWriteText(ws, windowsLifecycleIssue.Value.ToLiveStatsJsonBytes(), mutex).GetAwaiter().GetResult();
                 }
 
                 WindowsUpdate.UpdatesResult? updatesResult = WindowsUpdate.GetCache(entry.filename);
@@ -219,7 +219,7 @@ internal static class LiveStats {
                                 })
                             }
                         });
-                        WsWriteText(ws, bytes, mutex);
+                        WsWriteText(ws, bytes, mutex).GetAwaiter().GetResult();
                     }
                 }
 
@@ -244,14 +244,14 @@ internal static class LiveStats {
                         if (result.Properties["lastLogonTimestamp"].Count > 0) {
                             string time = Ldap.FileTimeString(result.Properties["lastLogonTimestamp"][0].ToString());
                             if (time.Length > 0) {
-                                WsWriteText(ws, $"{{\"info\":\"Last logon: {Data.EscapeJsonText(time)}\",\"source\":\"LDAP\"}}", mutex);
+                                WsWriteText(ws, $"{{\"info\":\"Last logon: {Data.EscapeJsonText(time)}\",\"source\":\"LDAP\"}}", mutex).GetAwaiter().GetResult();
                             }
                         }
 
                         if (result.Properties["lastLogoff"].Count > 0) {
                             string time = Ldap.FileTimeString(result.Properties["lastLogoff"][0].ToString());
                             if (time.Length > 0) {
-                                WsWriteText(ws, $"{{\"info\":\"Last logoff: {Data.EscapeJsonText(time)}\",\"source\":\"LDAP\"}}", mutex);
+                                WsWriteText(ws, $"{{\"info\":\"Last logoff: {Data.EscapeJsonText(time)}\",\"source\":\"LDAP\"}}", mutex).GetAwaiter().GetResult();
                             }
                         }
 
@@ -276,7 +276,7 @@ internal static class LiveStats {
                     if (!mismatch && !String.IsNullOrEmpty(wmiHostname)) {
                         wmiHostname = wmiHostname.Split('.')[0].ToUpper();
                         if (wmiHostname != dns) {
-                            WsWriteText(ws, $"{{\"warning\":\"DNS mismatch: {Data.EscapeJsonText(wmiHostname)}\",\"source\":\"WMI\"}}", mutex);
+                            WsWriteText(ws, $"{{\"warning\":\"DNS mismatch: {Data.EscapeJsonText(wmiHostname)}\",\"source\":\"WMI\"}}", mutex).GetAwaiter().GetResult();
                             mismatch = true;
                         }
                     }
@@ -284,7 +284,7 @@ internal static class LiveStats {
                     if (!mismatch && !String.IsNullOrEmpty(adHostname)) {
                         adHostname = adHostname.Split('.')[0].ToUpper();
                         if (adHostname != dns) {
-                            WsWriteText(ws, $"{{\"warning\":\"DNS mismatch: {Data.EscapeJsonText(adHostname)}\",\"source\":\"LDAP\"}}", mutex);
+                            WsWriteText(ws, $"{{\"warning\":\"DNS mismatch: {Data.EscapeJsonText(adHostname)}\",\"source\":\"LDAP\"}}", mutex).GetAwaiter().GetResult();
                             mismatch = true;
                         }
                     }
@@ -296,7 +296,7 @@ internal static class LiveStats {
                     if (!mismatch && !String.IsNullOrEmpty(netBios)) {
                         netBios = netBios.Split('.')[0].ToUpper();
                         if (netBios != dns) {
-                            WsWriteText(ws, $"{{\"warning\":\"DNS mismatch: {Data.EscapeJsonText(netBios)}\",\"source\":\"NetBIOS\"}}", mutex);
+                            WsWriteText(ws, $"{{\"warning\":\"DNS mismatch: {Data.EscapeJsonText(netBios)}\",\"source\":\"NetBIOS\"}}", mutex).GetAwaiter().GetResult();
                             //mismatch = true;
                         }
                     }
@@ -316,7 +316,7 @@ internal static class LiveStats {
                         for (int j = 0; j < reversed.Length; j++) {
                             if (reversed[j].AddressFamily != AddressFamily.InterNetwork) continue;
                             if (!ips.Contains(reversed[j].ToString())) {
-                                WsWriteText(ws, $"{{\"warning\":\"Reverse DNS mismatch: {Data.EscapeJsonText(reversed[j].ToString())}\",\"source\":\"DNS\"}}", mutex);
+                                WsWriteText(ws, $"{{\"warning\":\"Reverse DNS mismatch: {Data.EscapeJsonText(reversed[j].ToString())}\",\"source\":\"DNS\"}}", mutex).GetAwaiter().GetResult();
                                 break;
                             }
                         }
@@ -326,7 +326,7 @@ internal static class LiveStats {
             }
 
             if (Issues.CheckPasswordStrength(entry, false, out Issues.Issue? weakPsIssue)) {
-                WsWriteText(ws, weakPsIssue?.ToLiveStatsJsonBytes(), mutex);
+                WsWriteText(ws, weakPsIssue?.ToLiveStatsJsonBytes(), mutex).GetAwaiter().GetResult();
             }
         }
         catch (WebSocketException ex) when (ex.WebSocketErrorCode == WebSocketError.ConnectionClosedPrematurely) {
@@ -370,10 +370,10 @@ internal static class LiveStats {
                     if (nSize == 0) continue;
                     double percent = Math.Round(100.0 * nFree / nSize, 1);
 
-                    WsWriteText(ws, $"{{\"drive\":\"{caption}:\",\"total\":{nSize},\"used\":{nSize - nFree},\"path\":\"{Data.EscapeJsonText($"\\\\{firstAlive}\\{caption}$")}\",\"source\":\"WMI\"}}", mutex);
+                    WsWriteText(ws, $"{{\"drive\":\"{caption}:\",\"total\":{nSize},\"used\":{nSize - nFree},\"path\":\"{Data.EscapeJsonText($"\\\\{firstAlive}\\{caption}$")}\",\"source\":\"WMI\"}}", mutex).GetAwaiter().GetResult();
 
                     if (Issues.CheckDiskSpace(null, firstAlive, percent, caption, out Issues.Issue? diskIssue)) {
-                        WsWriteText(ws, diskIssue?.ToLiveStatsJsonBytes(), mutex);
+                        WsWriteText(ws, diskIssue?.ToLiveStatsJsonBytes(), mutex).GetAwaiter().GetResult();
                     }
                 }
 
@@ -390,22 +390,22 @@ internal static class LiveStats {
                     DateTime current = new DateTime(year, month, day, hour, minute, second);
                     DateTime now = DateTime.UtcNow;
                     if (Math.Abs(current.Ticks - now.Ticks) > 600_000_000L) {
-                        WsWriteText(ws, "{\"warning\":\"System time is off by more than 5 minutes\",\"source\":\"WMI\"}"u8.ToArray(), mutex);
+                        WsWriteText(ws, "{\"warning\":\"System time is off by more than 5 minutes\",\"source\":\"WMI\"}"u8.ToArray(), mutex).GetAwaiter().GetResult();
                     }
                 }
 
                 string startTime = Wmi.WmiGet(scope, "Win32_LogonSession", "StartTime", false, new Wmi.FormatMethodPtr(Wmi.DateTimeToString));
                 if (startTime.Length > 0) {
-                    WsWriteText(ws, $"{{\"info\":\"Start time: {Data.EscapeJsonText(startTime)}\",\"source\":\"WMI\"}}", mutex);
+                    WsWriteText(ws, $"{{\"info\":\"Start time: {Data.EscapeJsonText(startTime)}\",\"source\":\"WMI\"}}", mutex).GetAwaiter().GetResult();
                 }
 
                 string username = Wmi.WmiGet(scope, "Win32_ComputerSystem", "UserName", false, null);
                 if (username.Length > 0) {
-                    WsWriteText(ws, $"{{\"info\":\"Logged in user: {Data.EscapeJsonText(username)}\",\"source\":\"WMI\"}}", mutex);
+                    WsWriteText(ws, $"{{\"info\":\"Logged in user: {Data.EscapeJsonText(username)}\",\"source\":\"WMI\"}}", mutex).GetAwaiter().GetResult();
                 }
                 wmiHostname = Wmi.WmiGet(scope, "Win32_ComputerSystem", "DNSHostName", false, null);
 
-                WsWriteText(ws, $"{{\"activeUser\":\"{Data.EscapeJsonText(username)}\",\"source\":\"WMI\"}}", mutex);
+                WsWriteText(ws, $"{{\"activeUser\":\"{Data.EscapeJsonText(username)}\",\"source\":\"WMI\"}}", mutex).GetAwaiter().GetResult();
             }
         }
         //catch (NullReferenceException) { }
@@ -428,11 +428,11 @@ internal static class LiveStats {
             if (dotIndex > -1) {
                 snmpUptime = snmpUptime[..dotIndex];
             }*/
-            WsWriteText(ws, $"{{\"info\":\"Uptime: {Data.EscapeJsonText(snmpUptime)}\",\"source\":\"SNMP\"}}", mutex);
+            WsWriteText(ws, $"{{\"info\":\"Uptime: {Data.EscapeJsonText(snmpUptime)}\",\"source\":\"SNMP\"}}", mutex).GetAwaiter().GetResult();
         }
 
         if (formatted is not null && formatted.TryGetValue(Protocols.Snmp.Oid.SYSTEM_TEMPERATURE, out string snmpTemperature)) {
-            WsWriteText(ws, $"{{\"info\":\"Temperature: {Data.EscapeJsonText(snmpTemperature)}\",\"source\":\"SNMP\"}}", mutex);
+            WsWriteText(ws, $"{{\"info\":\"Temperature: {Data.EscapeJsonText(snmpTemperature)}\",\"source\":\"SNMP\"}}", mutex).GetAwaiter().GetResult();
         }
 
         if (PRINTER_TYPES.Contains(type)) {
@@ -458,25 +458,25 @@ internal static class LiveStats {
                     "5" => "Warmup",
                     _   => snmpPrinterStatus
                 };
-                WsWriteText(ws, $"{{\"info\":\"Printer status: {Data.EscapeJsonText(status)}\",\"source\":\"SNMP\"}}", mutex);
+                WsWriteText(ws, $"{{\"info\":\"Printer status: {Data.EscapeJsonText(status)}\",\"source\":\"SNMP\"}}", mutex).GetAwaiter().GetResult();
             }
 
             if (printerFormatted.TryGetValue(Protocols.Snmp.Oid.PRINTER_MARKER_COUNTER_LIFE, out string snmpPageCounter)) {
-                WsWriteText(ws, $"{{\"info\":\"Total pages counter: {Data.EscapeJsonText(snmpPageCounter)}\",\"source\":\"SNMP\"}}", mutex);
+                WsWriteText(ws, $"{{\"info\":\"Total pages counter: {Data.EscapeJsonText(snmpPageCounter)}\",\"source\":\"SNMP\"}}", mutex).GetAwaiter().GetResult();
             }
 
             if (printerFormatted.TryGetValue(Protocols.Snmp.Oid.PRINTER_DISPLAY_MESSAGE, out string snmpDisplayMessage)) {
-                WsWriteText(ws, $"{{\"info\":\"Printer message: {Data.EscapeJsonText(snmpDisplayMessage)}\",\"source\":\"SNMP\"}}", mutex);
+                WsWriteText(ws, $"{{\"info\":\"Printer message: {Data.EscapeJsonText(snmpDisplayMessage)}\",\"source\":\"SNMP\"}}", mutex).GetAwaiter().GetResult();
             }
 
             if (printerFormatted.TryGetValue(Protocols.Snmp.Oid.PRINTER_JOBS, out string snmpPrinterJobs)) {
-                WsWriteText(ws, $"{{\"info\":\"Total jobs: {Data.EscapeJsonText(snmpPrinterJobs)}\",\"source\":\"SNMP\"}}", mutex);
+                WsWriteText(ws, $"{{\"info\":\"Total jobs: {Data.EscapeJsonText(snmpPrinterJobs)}\",\"source\":\"SNMP\"}}", mutex).GetAwaiter().GetResult();
             }
         }
 
         if (Issues.CheckPrinterComponent(file, ipAddress, profile, out Issues.Issue[] issues) && issues is not null) {
             for (int i = 0; i < issues.Length; i++) {
-                WsWriteText(ws, issues[i].ToLiveStatsJsonBytes(), mutex);
+                WsWriteText(ws, issues[i].ToLiveStatsJsonBytes(), mutex).GetAwaiter().GetResult();
             }
         }
     }
@@ -485,13 +485,13 @@ internal static class LiveStats {
         IList<Variable> result = Protocols.Snmp.Polling.SnmpQuery(ipAddress, profile, Protocols.Snmp.Oid.LIVEVIEW_SWITCH_OID, Protocols.Snmp.Polling.SnmpOperation.Walk);
 
         if (result is null) {
-            WsWriteText(ws, "{\"switchInfo\":{\"success\":false}}"u8.ToArray(), mutex);
+            WsWriteText(ws, "{\"switchInfo\":{\"success\":false}}"u8.ToArray(), mutex).GetAwaiter().GetResult();
             return;
         }
 
         Dictionary<string, string> parsedResult = Protocols.Snmp.Polling.ParseResponse(result);
         if (parsedResult is null) {
-            WsWriteText(ws, "{\"switchInfo\":{\"success\":false}}"u8.ToArray(), mutex);
+            WsWriteText(ws, "{\"switchInfo\":{\"success\":false}}"u8.ToArray(), mutex).GetAwaiter().GetResult();
             return;
         }
 
@@ -633,7 +633,7 @@ internal static class LiveStats {
             }
         });
 
-        WsWriteText(ws, payload, mutex);
+        WsWriteText(ws, payload, mutex).GetAwaiter().GetResult();
     }
 
 }

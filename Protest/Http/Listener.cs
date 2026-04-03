@@ -442,21 +442,21 @@ internal sealed class Listener {
         }
 
         switch (ctx.Request.Url.AbsolutePath) {
-        case "/ws/keepalive":        KeepAlive.WebSocketHandler(ctx);          return true;
-        case "/ws/ping":             Protocols.Icmp.WebSocketHandler(ctx);     return true;
-        case "/ws/dhcp":             Protocols.Dhcp.WebSocketHandler(ctx);     return true;
-        case "/ws/telnet":           Protocols.Telnet.WebSocketHandler(ctx);   return true;
-        case "/ws/ssh":              Protocols.Ssh.WebSocketHandler(ctx);      return true;
-        case "/ws/issues":           Tasks.Issues.WebSocketHandler(ctx);       return true;
-        case "/ws/reverseproxy":     Proxy.ReverseProxy.WebSocketHandler(ctx); return true;
-        case "/ws/ipdiscovery":      Tools.IpDiscovery.WebSocketHandler(ctx);  return true;
-        case "/ws/portscan":         Tools.PortScan.WebSocketHandler(ctx);     return true;
-        case "/ws/traceroute":       Tools.TraceRoute.WebSocketHandler(ctx);   return true;
-        case "/ws/websitecheck":     Tools.WebsiteCheck.WebSocketHandler(ctx);    return true;
-        case "/ws/monitor":          Tools.Monitor.WebSocketHandler(ctx);      return true;
-        case "/ws/topology":         Tools.Topology.WebSocketHandler(ctx);     return true;
-        case "/ws/livestats/device": Tools.LiveStats.DeviceStats(ctx);         return true;
-        case "/ws/livestats/user":   Tools.LiveStats.UserStats(ctx);           return true;
+        case "/ws/keepalive":        KeepAlive.WebSocketHandler(ctx).GetAwaiter().GetResult();          return true;
+        case "/ws/ping":             Protocols.Icmp.WebSocketHandler(ctx).GetAwaiter().GetResult();     return true;
+        case "/ws/dhcp":             Protocols.Dhcp.WebSocketHandler(ctx).GetAwaiter().GetResult();     return true;
+        case "/ws/telnet":           Protocols.Telnet.WebSocketHandler(ctx).GetAwaiter().GetResult();   return true;
+        case "/ws/ssh":              Protocols.Ssh.WebSocketHandler(ctx).GetAwaiter().GetResult();      return true;
+        case "/ws/issues":           Tasks.Issues.WebSocketHandler(ctx).GetAwaiter().GetResult();       return true;
+        case "/ws/reverseproxy":     Proxy.ReverseProxy.WebSocketHandler(ctx).GetAwaiter().GetResult(); return true;
+        case "/ws/ipdiscovery":      Tools.IpDiscovery.WebSocketHandler(ctx).GetAwaiter().GetResult();  return true;
+        case "/ws/portscan":         Tools.PortScan.WebSocketHandler(ctx).GetAwaiter().GetResult();     return true;
+        case "/ws/traceroute":       Tools.TraceRoute.WebSocketHandler(ctx).GetAwaiter().GetResult();   return true;
+        case "/ws/websitecheck":     Tools.WebsiteCheck.WebSocketHandler(ctx).GetAwaiter().GetResult(); return true;
+        case "/ws/monitor":          Tools.Monitor.WebSocketHandler(ctx).GetAwaiter().GetResult();      return true;
+        case "/ws/topology":         Tools.Topology.WebSocketHandler(ctx).GetAwaiter().GetResult();     return true;
+        case "/ws/livestats/device": Tools.LiveStats.DeviceStats(ctx).GetAwaiter().GetResult();         return true;
+        case "/ws/livestats/user":   Tools.LiveStats.UserStats(ctx).GetAwaiter().GetResult();           return true;
         }
 
         return false;

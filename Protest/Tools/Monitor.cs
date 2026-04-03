@@ -71,7 +71,7 @@ internal static class Monitor {
         }
     }
 
-    public static async void WebSocketHandler(HttpListenerContext ctx) {
+    public static async Task WebSocketHandler(HttpListenerContext ctx) {
         WebSocket ws;
         try {
             WebSocketContext wsc = await ctx.AcceptWebSocketAsync(null);

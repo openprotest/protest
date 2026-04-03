@@ -1,17 +1,18 @@
-﻿using System.Net.NetworkInformation;
-using System.Net.Sockets;
+﻿using Protest.Http;
 using System.Net;
-using System.Text;
+using System.Net.NetworkInformation;
+using System.Net.Sockets;
 using System.Net.WebSockets;
+using System.Text;
 using System.Threading;
-using Protest.Http;
+using System.Threading.Tasks;
 
 namespace Protest.Protocols;
 
 internal static class Dhcp {
     private static readonly byte[] NULL_IP = new byte[] {0,0,0,0};
 
-    public static async void WebSocketHandler(HttpListenerContext ctx) {
+    public static async Task WebSocketHandler(HttpListenerContext ctx) {
         WebSocket ws;
         try {
             WebSocketContext wsc = await ctx.AcceptWebSocketAsync(null);

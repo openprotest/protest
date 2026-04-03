@@ -149,7 +149,7 @@ internal class Import {
         }
 
         if (fetchDebitNotes) {
-            Logger.Action(origin, $"Importing users from {ip}");
+            Logger.Action(origin, $"Importing debit notes from {ip}");
             if (version >= 4f && version < 5f) {
                 ImportDebitNotesV4(uri, cookieContainer);
             }
@@ -411,7 +411,9 @@ internal class Import {
                 DatabaseInstances.devices.Save(entry.filename, entry.attributes, Database.SaveMethod.createnew, "Import task");
             }
         }
-        catch { }
+        catch (Exception ex) {
+            Logger.Error(ex);
+        }
     }
 
     public static void ImportUsersV5(Uri uri, CookieContainer cookieContainer) {
@@ -424,7 +426,7 @@ internal class Import {
         client.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("*/*"));
 
         Task<HttpResponseMessage> res = client.GetAsync("/db/user/list");
-        byte[] bytes = res.Result.Content.ReadAsByteArrayAsync().Result;
+        byte[] bytes = res.Result.Content.ReadAsByteArrayAsync().GetAwaiter().GetResult();
 
 #pragma warning disable CA1869 // Cache and reuse
         JsonSerializerOptions options = new JsonSerializerOptions();

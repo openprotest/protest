@@ -572,7 +572,7 @@ class View extends Window {
 						box.textContent = additional[i].boxes[j];
 						box.style.display = "inline-block";
 						box.style.padding = "2px 8px";
-						box.style.margin = "4px";
+						box.style.margin = "8px 0 0 8px";
 						box.style.border = "1px solid #777";
 						box.style.borderRadius = "4px";
 						item.appendChild(box);
