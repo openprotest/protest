@@ -17,10 +17,10 @@ namespace Protest.Tools;
 internal static class WebsiteCheck {
 
     private class RequestData {
-        public bool V1 { get; set; }
-        public bool V2 { get; set; }
-        public bool V3 { get; set; }
-        public string Uri { get; set; } = string.Empty;
+        public bool v1 { get; set; }
+        public bool v2 { get; set; }
+        public bool v3 { get; set; }
+        public string uri { get; set; } = string.Empty;
     }
 
     private static async Task WsWriteText(WebSocket ws, [StringSyntax(StringSyntaxAttribute.Json)] string text, Lock mutex) {
@@ -60,7 +60,7 @@ internal static class WebsiteCheck {
                 return;
             }
 
-            string uri = req.Uri;
+            string uri = req.uri;
 
             string protocol = String.Empty;
             string domain = String.Empty;
@@ -108,15 +108,15 @@ internal static class WebsiteCheck {
 
             List<Task> tasks = new List<Task>();
 
-            if (req.V1) {
+            if (req.v1) {
                 tasks.Add(CheckHttp(ws, uri, HttpVersion.Version11, mutex));
             }
 
-            if (req.V2) {
+            if (req.v2) {
                 tasks.Add(CheckHttp(ws, uri, HttpVersion.Version20, mutex));
             }
 
-            if (req.V3) {
+            if (req.v3) {
                 tasks.Add(CheckHttp(ws, uri, HttpVersion.Version30, mutex));
             }
 
