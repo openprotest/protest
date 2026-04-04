@@ -46,7 +46,7 @@ internal static class Topology {
 
         byte[] buffer = new byte[1024];
         WebSocketReceiveResult targetResult = await ws.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
-        string[] options = Encoding.Default.GetString(buffer, 0, targetResult.Count).ToLower().Split(';');
+        string[] options = Encoding.UTF8.GetString(buffer, 0, targetResult.Count).ToLower().Split(';');
 
         List<Database.Entry> candidates = new List<Database.Entry>();
 
@@ -233,15 +233,8 @@ internal static class Topology {
     }
 
     private static byte[] ComputeLldpResponse(string file, IList<Variable> rawLocal, IList<Variable> rawRemote) {
-        Dictionary<string, Variable> local = new Dictionary<string, Variable>();
-        for (int i = 0; i < rawLocal.Count; i++) {
-            local.Add(rawLocal[i].Id.ToString(), rawLocal[i]);
-        }
-
-        Dictionary<string, Variable> remote = new Dictionary<string, Variable>();
-        for (int i = 0; i < rawRemote.Count; i++) {
-            remote.Add(rawRemote[i].Id.ToString(), rawRemote[i]);
-        }
+        Dictionary<string, Variable> local  = rawLocal.ToDictionary(v => v.Id.ToString());
+        Dictionary<string, Variable> remote = rawRemote.ToDictionary(v => v.Id.ToString());
 
         local.TryGetValue("1.0.8802.1.1.2.1.3.1.0", out Variable localChassisIdSubtype);
         local.TryGetValue("1.0.8802.1.1.2.1.3.2.0", out Variable localChassisId);
@@ -630,39 +623,37 @@ internal static class Topology {
 
     private static string GetDatabaseEntryByLldp(int chassisIdSubtype, string chassisId, int portIdSubtype, string portId, string systemName) {
         switch (chassisIdSubtype) {
-        case 4: { //mac
+        case 4: //mac
             foreach (KeyValuePair<string, Database.Entry> device in DatabaseInstances.devices.dictionary) {
                 if (MatchDatabaseAttribute(device.Value, "mac address", chassisId)) return device.Key;
             }
             break;
-        }
-        case 5: { //ip address
+
+        case 5: //ip address
             foreach (KeyValuePair<string, Database.Entry> device in DatabaseInstances.devices.dictionary) {
                 if (MatchDatabaseAttribute(device.Value, "ip", chassisId)) return device.Key;
             }
             break;
-        }
-        case 7: { //local
+
+        case 7: //local
             foreach (KeyValuePair<string, Database.Entry> device in DatabaseInstances.devices.dictionary) {
                 if (MatchDatabaseAttribute(device.Value, "hostname", chassisId)) return device.Key;
             }
             break;
         }
-        }
 
         switch (portIdSubtype) {
-        case 3: { //mac
+        case 3: //mac
             foreach (KeyValuePair<string, Database.Entry> device in DatabaseInstances.devices.dictionary) {
                 if (MatchDatabaseAttribute(device.Value, "mac address", portId)) return device.Key;
             }
             break;
-        }
-        case 4: { //ip address
+        
+        case 4: //ip address
             foreach (KeyValuePair<string, Database.Entry> device in DatabaseInstances.devices.dictionary) {
                 if (MatchDatabaseAttribute(device.Value, "ip", portId)) return device.Key;
             }
             break;
-        }
         }
 
         foreach (KeyValuePair<string, Database.Entry> device in DatabaseInstances.devices.dictionary) {
