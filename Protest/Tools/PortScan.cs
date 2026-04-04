@@ -226,7 +226,7 @@ internal static class PortScan {
                     (portTo, portFrom) = (portFrom, portTo);
                 }
 
-                new Thread(async () => {
+                _ =Task.Run(async () => {
                     for (int i = portFrom; i <= portTo; i += 256) {
                         if (ws.State != WebSocketState.Open) { return; }
 
@@ -239,13 +239,13 @@ internal static class PortScan {
                         s.Wait();
 
                         for (int port = 0; port < s.Result.Length; port++) {
-                            if (s.Result[port]) {
-                                builder.Append($"{(port + from)}{(char)127}");
-                            }
+                            if (!s.Result[port]) continue;
+                            builder.Append($"{(port + from)}{(char)127}");
                         }
 
                         if (builder.Length > 0) {
-                            string result = host + ((char)127) + builder.ToString();
+                            string ports = builder.ToString();
+                            string result = host + (char)127 + ports;
                             try {
                                 await writeSemaphore.WaitAsync();
                                 await ws.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(result), 0, result.Length), WebSocketMessageType.Text, true, CancellationToken.None);
@@ -264,8 +264,7 @@ internal static class PortScan {
                     finally {
                         writeSemaphore.Release();
                     }
-
-                }).Start();
+                });
             }
         }
         catch (WebSocketException ex) when (ex.WebSocketErrorCode == WebSocketError.ConnectionClosedPrematurely) {
@@ -324,7 +323,7 @@ internal static class PortScan {
             }
         }
 
-        List<Task<bool>> tasks = new List<Task<bool>>(to - from);
+        List<Task<bool>> tasks = new List<Task<bool>>(to - from + 1);
         for (int port = from; port <= to; port++) {
             tasks.Add(PortScanAsync(host, port, timeout));
         }

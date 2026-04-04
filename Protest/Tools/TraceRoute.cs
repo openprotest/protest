@@ -53,7 +53,7 @@ internal static class TraceRoute {
                 const short timeout = 2_000; //2s
                 const short ttl = 30;
 
-                new Thread(async () => {
+                _ = Task.Run(async () => {
                     List<IPAddress> ipList = new List<IPAddress>();
                     string lastAddress = String.Empty;
 
@@ -125,7 +125,7 @@ internal static class TraceRoute {
                     finally {
                         writeSemaphore.Release();
                     }
-                }).Start();
+                });
             }
         }
         catch (WebSocketException ex) when (ex.WebSocketErrorCode == WebSocketError.ConnectionClosedPrematurely) {

@@ -1,8 +1,14 @@
-﻿using System.Collections.Generic;
+﻿using Lextm.SharpSnmpLib;
+using Microsoft.Extensions.Primitives;
+using Org.BouncyCastle.Utilities;
+using Protest.Http;
+using Protest.Protocols.Snmp;
+using Protest.Tools;
 using System.Collections.Concurrent;
-using System.IO;
+using System.Collections.Generic;
 using System.Data;
 using System.DirectoryServices;
+using System.IO;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Text;
@@ -10,10 +16,6 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
-using Protest.Http;
-using Protest.Tools;
-using Protest.Protocols.Snmp;
-using Lextm.SharpSnmpLib;
 
 namespace Protest.Tasks;
 
@@ -150,7 +152,6 @@ internal static class Fetch {
         Dictionary<string, string> wmi = new Dictionary<string, string>();
         Dictionary<string, string> ad = new Dictionary<string, string>();
         string netBios = Protocols.NetBios.GetBiosName(ipList.First()?.ToString());
-        StringBuilder builder = new StringBuilder();
 
         Thread tWmi = null, tAd = null, tPortScan = null;
 
@@ -222,24 +223,40 @@ internal static class Fetch {
             });
         }
 
+        StringBuilder portsBuilder = new StringBuilder();
         if (argPortScan is not null) {
             tPortScan = new Thread(() => {
-                short[] portsPool = argPortScan == "full" ? PortScan.BASIC_PORTS : PortScan.BASIC_PORTS;
 
-                bool[] ports = argPortScan == "full" 
-                    ? PortScan.PortsScanAsync(target, portsPool, 1000, true).GetAwaiter().GetResult()
-                    : PortScan.PortsScanAsync(target, 1, 5000, 500, true).GetAwaiter().GetResult();
+                switch (argPortScan) {
 
-                for (int i = 0; i < portsPool.Length; i++) {
-                    if (!(ports[i])) continue;
-                    if (builder.Length == 0) {
-                        builder.Append(portsPool[i]);
+                case "wellknown": {
+                    bool[] ports = PortScan.PortsScanAsync(target, 1, 1023, 500, true).GetAwaiter().GetResult();
+                    for (int i = 0; i < ports.Length; i++) {
+                        if (!ports[i]) continue;
+                        portsBuilder.Append(portsBuilder.Length == 0 ? i + 1 : $"; {i + 1}");
                     }
-                    else {
-                        builder.Append($"; {portsPool[i]}");
-                    }
+                    break;
                 }
 
+                case "extended": {
+                    bool[] ports = PortScan.PortsScanAsync(target, 1, 8191, 500, true).GetAwaiter().GetResult();
+                    for (int i = 0; i < ports.Length; i++) {
+                        if (!ports[i]) continue;
+                        portsBuilder.Append(portsBuilder.Length == 0 ? i + 1 : $"; {i + 1}");
+                    }
+                    break;
+                }
+
+                default: {
+                    short[] portsPool = PortScan.BASIC_PORTS;
+                    bool[] ports = PortScan.PortsScanAsync(target, portsPool, 1000, true).GetAwaiter().GetResult();
+                    for (int i = 0; i < ports.Length; i++) {
+                        if (!ports[i]) continue;
+                        portsBuilder.Append(portsBuilder.Length == 0 ? portsPool[i] : $"; {portsPool[i]}");
+                    }
+                    break;
+                }
+                }
             });
         }
 
@@ -290,7 +307,7 @@ internal static class Fetch {
             }
         }
 
-        string portsString = builder.ToString();
+        string portsString = portsBuilder.ToString();
         if (!String.IsNullOrEmpty(portsString)) {
             data.TryAdd("ports", new string[] { portsString, "Port-scan", string.Empty });
         }
@@ -462,10 +479,6 @@ internal static class Fetch {
         return data;
     }
 
-    private static void ParseSnmpAttributes() {
-
-    }
-
     public static byte[] SingleUserSerialize(Dictionary<string, string> parameters) {
         if (parameters is null) {
             return Data.CODE_INVALID_ARGUMENT.Array;
@@ -536,7 +549,7 @@ internal static class Fetch {
                 wmi = payloadLines[i][4..].Trim();
             }
             else if (payloadLines[i].StartsWith("ldap=")) {
-                ldap = payloadLines[i][9..].Trim();
+                ldap = payloadLines[i][5..].Trim();
             }
             else if (payloadLines[i].StartsWith("portscan=")) {
                 portScan = payloadLines[i][9..].Trim();
