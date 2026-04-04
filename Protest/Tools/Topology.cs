@@ -91,7 +91,7 @@ internal static class Topology {
 
             await WebSocketHelper.WsWriteText(ws, message);
 
-            SemaphoreSlim wsWriteSemaphore = new SemaphoreSlim(1, 1);
+            using SemaphoreSlim wsWriteSemaphore = new SemaphoreSlim(1, 1);
 
             IEnumerable<Task> tasks = candidates.Select(async candidate => {
                 if (!candidate.attributes.TryGetValue("ip", out Database.Attribute ipAttr))
@@ -110,7 +110,7 @@ internal static class Topology {
                 try {
                     await wsWriteSemaphore.WaitAsync();
                     try {
-                        WebSocketHelper.WsWriteText(ws, $"{{\"retrieve\":\"{candidate.filename}\"}}").GetAwaiter().GetResult();
+                        await WebSocketHelper.WsWriteText(ws, $"{{\"retrieve\":\"{candidate.filename}\"}}");
                     }
                     finally {
                         wsWriteSemaphore.Release();
@@ -122,8 +122,8 @@ internal static class Topology {
                     if (lldpLocal is null || lldpRemote is null) {
                         await wsWriteSemaphore.WaitAsync();
                         try {
-                            WebSocketHelper.WsWriteText(ws, $"{{\"nolldp\":\"{candidate.filename}\"}}").GetAwaiter().GetResult();
-                            WebSocketHelper.WsWriteText(ws, $"{{\"over\":\"{candidate.filename}\"}}").GetAwaiter().GetResult();
+                            await WebSocketHelper.WsWriteText(ws, $"{{\"nolldp\":\"{candidate.filename}\"}}");
+                            await WebSocketHelper.WsWriteText(ws, $"{{\"over\":\"{candidate.filename}\"}}");
                         }
                         finally {
                             wsWriteSemaphore.Release();
@@ -134,7 +134,7 @@ internal static class Topology {
                         byte[] response = ComputeLldpResponse(candidate.filename, lldpLocal, lldpRemote);
                         await wsWriteSemaphore.WaitAsync();
                         try  {
-                            WebSocketHelper.WsWriteText(ws, response).GetAwaiter().GetResult();
+                            await WebSocketHelper.WsWriteText(ws, response);
                         }
                         finally {
                             wsWriteSemaphore.Release();
@@ -147,7 +147,7 @@ internal static class Topology {
                             byte[] response = ComputeDot1TpFdpResponse(candidate.filename, dot1TpFdb);
                             await wsWriteSemaphore.WaitAsync();
                             try {
-                                WebSocketHelper.WsWriteText(ws, response).GetAwaiter().GetResult();
+                                await WebSocketHelper.WsWriteText(ws, response);
                             }
                             finally {
                                 wsWriteSemaphore.Release();
@@ -161,7 +161,7 @@ internal static class Topology {
                             byte[] response = ComputeDotQ1Response(candidate.filename, dot1q);
                             await wsWriteSemaphore.WaitAsync();
                             try {
-                                WebSocketHelper.WsWriteText(ws, response).GetAwaiter().GetResult();
+                                await WebSocketHelper.WsWriteText(ws, response);
                             }
                             finally {
                                 wsWriteSemaphore.Release();
@@ -175,7 +175,7 @@ internal static class Topology {
                             byte[] response = ComputeTrafficResponse(candidate.filename, traffic);
                             await wsWriteSemaphore.WaitAsync();
                             try {
-                                WebSocketHelper.WsWriteText(ws, response).GetAwaiter().GetResult();
+                                await WebSocketHelper.WsWriteText(ws, response);
                             }
                             finally {
                                 wsWriteSemaphore.Release();
@@ -189,7 +189,7 @@ internal static class Topology {
                             byte[] response = ComputeErrorResponse(candidate.filename, error);
                             await wsWriteSemaphore.WaitAsync();
                             try {
-                                WebSocketHelper.WsWriteText(ws, response).GetAwaiter().GetResult();
+                                await WebSocketHelper.WsWriteText(ws, response);
                             }
                             finally {
                                 wsWriteSemaphore.Release();
@@ -203,7 +203,7 @@ internal static class Topology {
                             byte[] response = ComputeSpeedResponse(candidate.filename, speed);
                             await wsWriteSemaphore.WaitAsync();
                             try {
-                                WebSocketHelper.WsWriteText(ws, response).GetAwaiter().GetResult();
+                                await WebSocketHelper.WsWriteText(ws, response);
                             }
                             finally {
                                 wsWriteSemaphore.Release();
@@ -213,7 +213,7 @@ internal static class Topology {
 
                     await wsWriteSemaphore.WaitAsync();
                     try {
-                        WebSocketHelper.WsWriteText(ws, $"{{\"over\":\"{candidate.filename}\"}}").GetAwaiter().GetResult();
+                        await WebSocketHelper.WsWriteText(ws, $"{{\"over\":\"{candidate.filename}\"}}");
                     }
                     finally {
                         wsWriteSemaphore.Release();
@@ -223,8 +223,8 @@ internal static class Topology {
                 catch (Exception ex) {
                     await wsWriteSemaphore.WaitAsync();
                     try {
-                        WebSocketHelper.WsWriteText(ws, $"{{\"nosnmp\":\"{candidate.filename}\"}}").GetAwaiter().GetResult();
-                        WebSocketHelper.WsWriteText(ws, $"{{\"over\":\"{candidate.filename}\"}}").GetAwaiter().GetResult();
+                        await WebSocketHelper.WsWriteText(ws, $"{{\"nosnmp\":\"{candidate.filename}\"}}");
+                        await WebSocketHelper.WsWriteText(ws, $"{{\"over\":\"{candidate.filename}\"}}");
                     }
                     finally {
                         wsWriteSemaphore.Release();
