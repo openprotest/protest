@@ -14,7 +14,19 @@ internal static class SnmpProfiles {
 
     private static readonly string DEFAULT_PROFILE = """
     [{
-        "name"             : "Public",
+        "name"             : "V1 - Public",
+        "priority"         : 101,
+        "version"          : 1,
+        "community"        : "public",
+        "username"         : "",
+        "authAlgorithm"    : 3,
+        "authPassword"     : "",
+        "privacyAlgorithm" : 3,
+        "privacyPassword"  : "",
+        "guid"             : "00000000-0000-0000-0000-000000000001"
+    },
+    {
+        "name"             : "V2 - Public",
         "priority"         : 100,
         "version"          : 2,
         "community"        : "public",
@@ -23,7 +35,7 @@ internal static class SnmpProfiles {
         "authPassword"     : "",
         "privacyAlgorithm" : 3,
         "privacyPassword"  : "",
-        "guid"             : "00000000-0000-0000-0000-000000000001"
+        "guid"             : "00000000-0000-0000-0000-000000000002"
     }]
     """;
 

@@ -386,8 +386,8 @@ internal static class LiveStats {
     private static async Task WmiQuery(WebSocket ws, string firstAlive, string wmiHostname) {
         try {
             ManagementScope scope = Protocols.Wmi.Scope(firstAlive, "cimv2", 3_000);
-            if (scope is not null && scope.IsConnected) {
 
+            if (scope is not null && scope.IsConnected) {
                 using ManagementObjectSearcher localDiskSearcher = new ManagementObjectSearcher(scope, new SelectQuery("SELECT * FROM Win32_LogicalDisk WHERE DriveType = 3"));
                 using ManagementObjectCollection logicalDiskCollection = localDiskSearcher.Get();
                 foreach (ManagementObject o in logicalDiskCollection.Cast<ManagementObject>()) {
@@ -465,15 +465,7 @@ internal static class LiveStats {
         Dictionary<string, string> formatted = Protocols.Snmp.Polling.ParseResponse(result);
 
         if (formatted is not null && formatted.TryGetValue(Protocols.Snmp.Oid.SYSTEM_UPTIME, out string snmpUptime)) {
-            /*int dotIndex = snmpUptime.LastIndexOf('.');
-            if (dotIndex > -1) {
-                snmpUptime = snmpUptime[..dotIndex];
-            }*/
             await WebSocketHelper.WsWriteText(ws, $"{{\"info\":\"Uptime: {Data.EscapeJsonText(snmpUptime)}\",\"source\":\"SNMP\"}}");
-        }
-
-        if (formatted is not null && formatted.TryGetValue(Protocols.Snmp.Oid.SYSTEM_TEMPERATURE, out string snmpTemperature)) {
-            await WebSocketHelper.WsWriteText(ws, $"{{\"info\":\"Temperature: {Data.EscapeJsonText(snmpTemperature)}\",\"source\":\"SNMP\"}}");
         }
 
         if (PRINTER_TYPES.Contains(type)) {

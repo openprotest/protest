@@ -38,8 +38,7 @@ internal static class Oid {
     };
 
     public static readonly string[] LIVESTATS_OID = new string[] {
-        SYSTEM_UPTIME,
-        SYSTEM_TEMPERATURE,
+        SYSTEM_UPTIME
     };
 
     public static readonly string[] LIVESTATS_PRINTER_OID = new string[] {
@@ -139,7 +138,6 @@ internal static class Oid {
     public const string UDP_RECEIVED    = "1.3.6.1.2.1.7.1.0";
     public const string UDP_SENT        = "1.3.6.1.2.1.7.4.0";
 
-    public const string SYSTEM_TEMPERATURE      = "1.3.6.1.2.1.25.1.8.0";
     public const string DISK_TOTAL              = "1.3.6.1.2.1.25.2.3.1.5";
     public const string DISK_USED               = "1.3.6.1.2.1.25.2.3.1.6";
     public const string DISK_FREE               = "1.3.6.1.2.1.25.2.3.1.7";
