@@ -33,17 +33,6 @@ internal static class Topology {
         return true;
     }
 
-    private static void WsWriteText(WebSocket ws, string text, Lock mutex) {
-        byte[] bytes = Encoding.UTF8.GetBytes(text);
-        WsWriteText(ws, bytes, mutex);
-        
-    }
-    private static void WsWriteText(WebSocket ws, byte[] bytes, Lock mutex) {
-        lock (mutex) {
-            ws.SendAsync(new ArraySegment<byte>(bytes, 0, bytes.Length), WebSocketMessageType.Text, true, CancellationToken.None);
-        }
-    }
-
     internal static async Task WebSocketHandler(HttpListenerContext ctx) {
         WebSocket ws;
         try {
@@ -107,36 +96,48 @@ internal static class Topology {
             Lock mutex = new Lock();
 
             IEnumerable<Task> tasks = candidates.Select(async candidate => {
-                if (!candidate.attributes.TryGetValue("ip", out Database.Attribute ipAttr)) return;
-                if (!candidate.attributes.TryGetValue("snmp profile", out Database.Attribute profileAttr)) return;
-                if (!SnmpProfiles.FromGuid(profileAttr.value, out SnmpProfiles.Profile snmpProfile) || snmpProfile is null) return;
+                if (!candidate.attributes.TryGetValue("ip", out Database.Attribute ipAttr))
+                    return;
+                if (!candidate.attributes.TryGetValue("snmp profile", out Database.Attribute profileAttr))
+                    return;
+                if (!SnmpProfiles.FromGuid(profileAttr.value, out SnmpProfiles.Profile snmpProfile) || snmpProfile is null)
+                    return;
 
                 string ipString = ipAttr.value.Split(';')[0].Trim();
-                if (!IPAddress.TryParse(ipString, out IPAddress ipAddress)) return;
+                if (!IPAddress.TryParse(ipString, out IPAddress ipAddress))
+                    return;
 
                 await Task.Delay(1);
 
                 try {
-                    WsWriteText(ws, Encoding.UTF8.GetBytes($"{{\"retrieve\":\"{candidate.filename}\"}}"), mutex);
+                    lock (mutex) {
+                        WebSocketHelper.WsWriteText(ws, $"{{\"retrieve\":\"{candidate.filename}\"}}").GetAwaiter().GetResult();
+                    }
 
                     IList<Variable> lldpLocal = Polling.SnmpQuery(ipAddress, snmpProfile, [Oid.LLDP_LOCAL_SYS_DATA], Polling.SnmpOperation.Walk);
                     IList<Variable> lldpRemote = Polling.SnmpQuery(ipAddress, snmpProfile, [Oid.LLDP_REMOTE_SYS_DATA], Polling.SnmpOperation.Walk);
 
                     if (lldpLocal is null || lldpRemote is null) {
-                        WsWriteText(ws, Encoding.UTF8.GetBytes($"{{\"nolldp\":\"{candidate.filename}\"}}"), mutex);
-                        WsWriteText(ws, Encoding.UTF8.GetBytes($"{{\"over\":\"{candidate.filename}\"}}"), mutex);
+                        lock (mutex){
+                            WebSocketHelper.WsWriteText(ws, $"{{\"nolldp\":\"{candidate.filename}\"}}").GetAwaiter().GetResult();
+                            WebSocketHelper.WsWriteText(ws, $"{{\"over\":\"{candidate.filename}\"}}").GetAwaiter().GetResult();
+                        }
                         return;
                     }
                     else {
                         byte[] response = ComputeLldpResponse(candidate.filename, lldpLocal, lldpRemote);
-                        WsWriteText(ws, response, mutex);
+                        lock (mutex) {
+                            WebSocketHelper.WsWriteText(ws, response).GetAwaiter().GetResult();
+                        }
                     }
 
                     if (options.Contains("mac")) {
                         IList<Variable> dot1TpFdb = Polling.SnmpQuery(ipAddress, snmpProfile, [Oid.INT_1D_TP_FDB], Polling.SnmpOperation.Walk);
                         if (dot1TpFdb is not null && dot1TpFdb.Count > 0) {
                             byte[] response = ComputeDot1TpFdpResponse(candidate.filename, dot1TpFdb);
-                            WsWriteText(ws, response, mutex);
+                            lock (mutex) {
+                                WebSocketHelper.WsWriteText(ws, response).GetAwaiter().GetResult();
+                            }
                         }
                     }
 
@@ -144,7 +145,9 @@ internal static class Topology {
                         IList<Variable> dot1q = Polling.SnmpQuery(ipAddress, snmpProfile, Oid.TOPOLOGY_DOT1Q, Polling.SnmpOperation.Walk);
                         if (dot1q is not null && dot1q.Count > 0) {
                             byte[] response = ComputeDotQ1Response(candidate.filename, dot1q);
-                            WsWriteText(ws, response, mutex);
+                            lock (mutex) {
+                                WebSocketHelper.WsWriteText(ws, response).GetAwaiter().GetResult();
+                            }
                         }
                     }
 
@@ -152,7 +155,9 @@ internal static class Topology {
                         IList<Variable> traffic = Polling.SnmpQuery(ipAddress, snmpProfile, Oid.TOPOLOGY_TRAFFIC, Polling.SnmpOperation.Walk);
                         if (traffic is not null && traffic.Count > 0) {
                             byte[] response = ComputeTrafficResponse(candidate.filename, traffic);
-                            WsWriteText(ws, response, mutex);
+                            lock (mutex) {
+                                WebSocketHelper.WsWriteText(ws, response).GetAwaiter().GetResult();
+                            }
                         }
                     }
 
@@ -160,7 +165,9 @@ internal static class Topology {
                         IList<Variable> error = Polling.SnmpQuery(ipAddress, snmpProfile, Oid.TOPOLOGY_ERROR, Polling.SnmpOperation.Walk);
                         if (error is not null && error.Count > 0) {
                             byte[] response = ComputeErrorResponse(candidate.filename, error);
-                            WsWriteText(ws, response, mutex);
+                            lock (mutex){
+                                WebSocketHelper.WsWriteText(ws, response).GetAwaiter().GetResult();
+                            }
                         }
                     }
 
@@ -168,16 +175,22 @@ internal static class Topology {
                         IList<Variable> speed = Polling.SnmpQuery(ipAddress, snmpProfile, [Oid.INT_SPEED], Polling.SnmpOperation.Walk);
                         if (speed is not null && speed.Count > 0) {
                             byte[] response = ComputeSpeedResponse(candidate.filename, speed);
-                            WsWriteText(ws, response, mutex);
+                            lock (mutex){
+                                WebSocketHelper.WsWriteText(ws, response).GetAwaiter().GetResult();
+                            }
                         }
                     }
 
-                    WsWriteText(ws, Encoding.UTF8.GetBytes($"{{\"over\":\"{candidate.filename}\"}}"), mutex);
+                    lock (mutex){
+                        WebSocketHelper.WsWriteText(ws, $"{{\"over\":\"{candidate.filename}\"}}").GetAwaiter().GetResult();
+                    }
 
                 }
                 catch (Exception ex) {
-                    WsWriteText(ws, Encoding.UTF8.GetBytes($"{{\"nosnmp\":\"{candidate.filename}\"}}"), mutex);
-                    WsWriteText(ws, Encoding.UTF8.GetBytes($"{{\"over\":\"{candidate.filename}\"}}"), mutex);
+                    lock (mutex){
+                        WebSocketHelper.WsWriteText(ws, $"{{\"nosnmp\":\"{candidate.filename}\"}}").GetAwaiter().GetResult();
+                        WebSocketHelper.WsWriteText(ws, $"{{\"over\":\"{candidate.filename}\"}}").GetAwaiter().GetResult();
+                    }
                     Logger.Error(ex);
                 }
             });

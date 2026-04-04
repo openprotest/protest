@@ -348,12 +348,9 @@ internal static class Watchdog {
         using HttpClient client = new HttpClient();
         short result = -1;
 
-        byte[] keywordArray = Encoding.UTF8.GetBytes(watcher.keyword.ToLower());
-
         for (int i = 0; i < watcher.retries; i++) {
             try {
-                HttpResponseMessage response = watcher.method switch
-                {
+                HttpResponseMessage response = watcher.method switch {
                     "GET" => client.GetAsync(watcher.target).GetAwaiter().GetResult(),
                     "POST" => client.PostAsync(watcher.target, null).GetAwaiter().GetResult(),
                     "PUT" => client.PutAsync(watcher.target, null).GetAwaiter().GetResult(),
@@ -371,12 +368,8 @@ internal static class Watchdog {
 
                 if (watcher.httpstatus[category]) {
                     byte[] buffer = response.Content.ReadAsByteArrayAsync().GetAwaiter().GetResult();
-                    for (int j = 0; j < buffer.Length; j++) { //to lower case
-                        if (buffer[j] > 64 && buffer[j] < 91) { buffer[j] -= 32; }
-                    }
-
-                    if (!Data.ContainsBytesSequence(buffer, keywordArray)) continue;
-
+                    string content = Encoding.UTF8.GetString(buffer);
+                    if (content.IndexOf(watcher.keyword, System.StringComparison.OrdinalIgnoreCase) < 0) continue;
                     result = 0;
                     break;
                 }

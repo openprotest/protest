@@ -215,7 +215,7 @@ internal static class ReverseProxy {
     public static byte[] List() {
         try {
             DirectoryInfo directory = new DirectoryInfo(Data.DIR_REVERSE_PROXY);
-            if (!directory.Exists) return "{}"U8.ToArray();
+            if (!directory.Exists) return "{}"u8.ToArray();
 
             FileInfo[] files = directory.GetFiles();
 
