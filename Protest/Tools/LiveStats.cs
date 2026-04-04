@@ -281,16 +281,18 @@ internal static class LiveStats {
 #endif
             }
 
-            try {
-                dns = (await System.Net.Dns.GetHostEntryAsync(firstAlive)).HostName;
-            }
+            if (!String.IsNullOrEmpty(firstAlive)) {
+                try {
+                    dns = (await System.Net.Dns.GetHostEntryAsync(firstAlive)).HostName;
+                }
 #if DEBUG
-            catch (Exception ex) {
-                Logger.Error(ex);
-            }
+                catch (Exception ex) {
+                    Logger.Error(ex);
+                }
 #else
-            catch { }
+                catch { }
 #endif
+            }
 
             if (!String.IsNullOrEmpty(dns)) { //check dns mismatch
                 try {
@@ -352,6 +354,11 @@ internal static class LiveStats {
                         }
                     }
 #if DEBUG
+                    catch (SocketException ex) {
+                        if (ex.SocketErrorCode != SocketError.HostNotFound) {
+                            Logger.Error(ex);
+                        }
+                    }
                     catch (Exception ex) {
                         Logger.Error(ex);
                     }

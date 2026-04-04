@@ -12,6 +12,10 @@ internal static class Logger {
     private static readonly Lock errorMutex = new Lock();
     private static readonly Lock actionMutex = new Lock();
 
+    private static StreamWriter errorWriter;
+    private static StreamWriter actionWriter;
+    private static string actionWriterDate;
+
 #if DEBUG
     public static void Error(Exception ex, [CallerLineNumber] int line = 0, [CallerMemberName] string caller = null, [CallerFilePath] string file = null) {
         ReadOnlySpan<char> span = file;
@@ -30,34 +34,57 @@ internal static class Logger {
 #endif
 
     public static void Error(string ex) {
-        lock (errorMutex) {
-            try {
-                using StreamWriter writer = new StreamWriter($"{Data.DIR_LOG}{Data.DELIMITER}error.log", true, System.Text.Encoding.UTF8);
-                writer.Write(DateTime.Now.ToString(Data.DATETIME_FORMAT_FILE));
-                writer.WriteLine($"\t{ex}");
+        string time = DateTime.Now.ToString(Data.DATETIME_FORMAT_FILE);
+        string text = $"{time}\t{ex}";
+
+        try {
+            lock (errorMutex) {
+                errorWriter ??= new StreamWriter($"{Data.DIR_LOG}{Data.DELIMITER}error.log", true, System.Text.Encoding.UTF8);
+                errorWriter.WriteLine(text);
+                errorWriter.Flush();
             }
-            catch { }
         }
+        catch { }
 
         Console.ForegroundColor = ConsoleColor.Red;
-        Console.Error.WriteLine(ex);
+        Console.Error.WriteLine(text);
         Console.ResetColor();
     }
 
     public static void Action(string origin, string action) {
-        new Thread(() => {
-            DateTime dateTime = DateTime.Now;
-            string date = dateTime.ToString(Data.DATETIME_FORMAT_FILE);
+        ThreadPool.QueueUserWorkItem(static state => {
+            var (origin, action) = ((string origin, string action))state!;
+
+            DateTime now = DateTime.Now;
+            string date = now.ToString(Data.DATETIME_FORMAT_FILE);
             string message = $"{date,-24}{origin,-32}{action}";
-            lock (actionMutex)
+            lock (actionMutex) {
                 try {
-                    using StreamWriter writer = new StreamWriter($"{Data.DIR_LOG}{Data.DELIMITER}{dateTime.ToString(Data.DATE_FORMAT_FILE)}.log", true, System.Text.Encoding.UTF8);
-                    writer.WriteLine(message);
+                    string fileDate = now.ToString(Data.DATE_FORMAT_FILE);
+
+                    if (actionWriter is null || actionWriterDate != fileDate) {
+                        actionWriter?.Dispose();
+                        actionWriter = new StreamWriter(
+                            $"{Data.DIR_LOG}{Data.DELIMITER}{fileDate}.log",
+                            true,
+                            System.Text.Encoding.UTF8
+                        );
+                        actionWriterDate = fileDate;
+                    }
+
+                    actionWriter.WriteLine(message);
+                    actionWriter.Flush();
                 }
                 catch { }
+            }
 
             Http.KeepAlive.Broadcast($"{{\"action\":\"log\",\"msg\":\"{Data.EscapeJsonText(message)}\"}}", "/log");
-        }).Start();
+
+#if DEBUG
+            string text = $"{date}\t{action}";
+            Console.Error.WriteLine(text);
+#endif
+        }, (origin, action));
     }
 
     public static byte[] List(Dictionary<string, string> parameters) {
@@ -66,7 +93,7 @@ internal static class Logger {
                 return ListToday();
             }
 
-            if (!int.TryParse(last, out int lastInt)) {
+            if (!int.TryParse(last, out _)) {
                 return null;
             }
 
@@ -82,25 +109,32 @@ internal static class Logger {
             }
 
             int firstIndex = Math.Max(0, lastIndex - 1);
-            long sizeCount = files.Skip(firstIndex)
-                .Take(lastIndex - firstIndex + 1)
-                .Where(file => file.Length <= 10240)
-                .Sum(file => file.Length);
+            int count = lastIndex - firstIndex + 1;
 
-            if (sizeCount > 10240) { //10Kb
-                firstIndex = Array.FindLastIndex(files, firstIndex, file => sizeCount <= 10240);
-            }
+            FileInfo[] selectedFiles = files
+                .Skip(firstIndex)
+                .Take(count)
+                .ToArray();
 
-            List<byte[]> byteList = files.Skip(firstIndex)
-                .Take(lastIndex - firstIndex + 1)
-                .Select(file => File.ReadAllBytes(file.FullName))
-                .ToList();
-
-            if (byteList.Count == 0) {
+            if (selectedFiles.Length == 0) {
                 return "end"u8.ToArray();
             }
 
-            return byteList.SelectMany(o => o).ToArray();
+            long totalLength = 0;
+            for (int i = 0; i < selectedFiles.Length; i++) {
+                totalLength += selectedFiles[i].Length;
+            }
+
+            byte[] result = new byte[totalLength];
+            int offset = 0;
+
+            for (int i = 0; i < selectedFiles.Length; i++) {
+                byte[] chunk = File.ReadAllBytes(selectedFiles[i].FullName);
+                Buffer.BlockCopy(chunk, 0, result, offset, chunk.Length);
+                offset += chunk.Length;
+            }
+
+            return result;
         }
         catch (Exception ex) {
             Logger.Error(ex);

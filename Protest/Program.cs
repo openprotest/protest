@@ -19,8 +19,6 @@
 global using System;
 global using System.Linq;
 
-using System.Threading.Tasks;
-
 namespace Protest;
 internal class Program {
     static void Main(string[] args) {
@@ -69,8 +67,7 @@ internal class Program {
         try {
             StartServer(Configuration.http_prefixes);
         }
-        catch (System.Net.HttpListenerException ex) {
-            if (ex.ErrorCode != 5) return; //access denied
+        catch (System.Net.HttpListenerException ex) when (ex.ErrorCode == 5) { //5: access denied
             Console.WriteLine("Switching to fallback uri prefix");
             StartServer(new string[] { "http://127.0.0.1:8080/" });
         }
@@ -80,6 +77,6 @@ internal class Program {
         Http.Listener listener = new Http.Listener(prefixes, Configuration.front_path);
         Console.WriteLine(listener);
         Console.WriteLine();
-        _ = Task.Run(() => listener.StartAsync());
+        _ = System.Threading.Tasks.Task.Run(() => listener.StartAsync());
     }
 }
