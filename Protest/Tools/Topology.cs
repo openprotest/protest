@@ -13,21 +13,12 @@ namespace Protest.Tools;
 
 internal static class Topology {
 
-    private static void Push(this Dictionary<int, List<string>> dic, int key, string value) {
-        if (dic.TryGetValue(key, out List<string> list)) {
+    private static void Push<T>(this Dictionary<int, List<T>> dic, int key, T value) {
+        if (dic.TryGetValue(key, out List<T> list)) {
             list.Add(value);
         }
         else {
-            dic.Add(key, new List<string> { value });
-        }
-    }
-
-    private static void Push(this Dictionary<int, List<int>> dic, int key, int value) {
-        if (dic.TryGetValue(key, out List<int> list)) {
-            list.Add(value);
-        }
-        else {
-            dic.Add(key, new List<int> { value });
+            dic.Add(key, new List<T> { value });
         }
     }
 
@@ -555,10 +546,10 @@ internal static class Topology {
             if (!int.TryParse(pair.Key.Split('.')[^1], out int index)) continue;
 
             if (pair.Key.StartsWith(Protocols.Snmp.Oid.INT_ERROR_IN)) {
-                errIn.Add(index, int.TryParse(pair.Value, out int bytes) ? bytes : 0);
+                errIn.Add(index, int.TryParse(pair.Value, out int errCount) ? errCount : 0);
             }
             else if (pair.Key.StartsWith(Protocols.Snmp.Oid.INT_ERROR_OUT)) {
-                errOut.Add(index, int.TryParse(pair.Value, out int pkts) ? pkts : 0);
+                errOut.Add(index, int.TryParse(pair.Value, out int errCount) ? errCount : 0);
             }
         }
 
@@ -751,29 +742,6 @@ internal static class Topology {
         }
 
         return hex.ToString();
-    }
-
-    private static byte[] HexToBytes(string hex) {
-        if (string.IsNullOrEmpty(hex)) return Array.Empty<byte>();
-
-        int length = hex.Length / 2;
-        byte[] bytes = new byte[length];
-        ReadOnlySpan<char> span = hex.AsSpan();
-
-        for (int i = 0; i < length; i++) {
-            int hi = FromHexChar(span[i * 2]);
-            int lo = FromHexChar(span[i * 2 + 1]);
-            bytes[i] = (byte)((hi << 4) | lo);
-        }
-
-        return bytes;
-    }
-
-    private static int FromHexChar(char c) {
-        if (c >= '0' && c <= '9') return c - '0';
-        if (c >= 'a' && c <= 'f') return c - 'a' + 10;
-        if (c >= 'A' && c <= 'F') return c - 'A' + 10;
-        return '0';
     }
 
 }
