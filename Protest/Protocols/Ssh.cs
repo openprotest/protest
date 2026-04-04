@@ -12,16 +12,6 @@ using Renci.SshNet.Common;
 namespace Protest.Protocols;
 
 internal static class Ssh {
-    private static async Task WsWriteText(WebSocket ws, string data) {
-        if (ws.State == WebSocketState.Open) {
-            await ws.SendAsync(new ArraySegment<byte>(Encoding.ASCII.GetBytes(data), 0, data.Length), WebSocketMessageType.Text, true, CancellationToken.None);
-        }
-    }
-    private static async Task WsWriteText(WebSocket ws, byte[] data) {
-        if (ws.State == WebSocketState.Open) {
-            await ws.SendAsync(new ArraySegment<byte>(data, 0, data.Length), WebSocketMessageType.Text, true, CancellationToken.None);
-        }
-    }
 
     public static async Task WebSocketHandler(HttpListenerContext ctx) {
         WebSocket ws;
@@ -85,7 +75,7 @@ internal static class Ssh {
             }
 
             if (String.IsNullOrEmpty(username) || String.IsNullOrEmpty(password)) {
-                await WsWriteText(ws, "{\"error\":\"Invalid username or password\"}"u8.ToArray());
+                await WebSocketHelper.WsWriteText(ws, "{\"error\":\"Invalid username or password\"}"u8.ToArray());
                 await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
                 return;
             }
@@ -95,7 +85,7 @@ internal static class Ssh {
 
             Logger.Action(origin, $"Establish ssh connection to {username}@{host}:{port}");
 
-            await WsWriteText(ws, "{\"connected\":true}"u8.ToArray());
+            await WebSocketHelper.WsWriteText(ws, "{\"connected\":true}"u8.ToArray());
 
             ShellStream shellStream = ssh.CreateShellStream("xterm", 80, 24, 800, 600, 1024);
 
@@ -122,12 +112,12 @@ internal static class Ssh {
             }
         }
         catch (SshAuthenticationException ex) {
-            await WsWriteText(ws, $"{{\"error\":\"{ex.Message}\"}}");
+            await WebSocketHelper.WsWriteText(ws, $"{{\"error\":\"{ex.Message}\"}}");
             await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
             return;
         }
         catch (SocketException ex) {
-            await WsWriteText(ws, $"{{\"error\":\"{ex.Message}\"}}");
+            await WebSocketHelper.WsWriteText(ws, $"{{\"error\":\"{ex.Message}\"}}");
             await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
             return;
         }

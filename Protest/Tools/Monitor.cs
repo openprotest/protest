@@ -41,34 +41,17 @@ internal static class Monitor {
         public Dictionary<string, List<string>> data;
     }
 
-    private static readonly Lock mutex;
-
     private static readonly JsonSerializerOptions actionSerializerOptions;
     private static readonly JsonSerializerOptions answerSerializerOptions;
 
     private static SnmpProfiles.Profile[] snmpProfiles;
 
     static Monitor() {
-        mutex = new Lock();
-
         actionSerializerOptions = new JsonSerializerOptions();
         actionSerializerOptions.Converters.Add(new ActionJsonConverter());
 
         answerSerializerOptions = new JsonSerializerOptions();
         answerSerializerOptions.Converters.Add(new AnswerJsonConverter());
-    }
-
-    private static void WsWriteText(WebSocket ws, [StringSyntax(StringSyntaxAttribute.Json)] string text) {
-        lock (mutex) {
-            if (ws.State != WebSocketState.Open) { return; }
-            ws.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(text), 0, text.Length), WebSocketMessageType.Text, true, CancellationToken.None);
-        }
-    }
-    private static void WsWriteText(WebSocket ws, byte[] bytes) {
-        lock (mutex) {
-            if (ws.State != WebSocketState.Open) { return; }
-            ws.SendAsync(new ArraySegment<byte>(bytes, 0, bytes.Length), WebSocketMessageType.Text, true, CancellationToken.None);
-        }
     }
 
     public static async Task WebSocketHandler(HttpListenerContext ctx) {
@@ -118,7 +101,7 @@ internal static class Monitor {
                 target = hostnameAttribute?.value.Split(";")[0].Trim();
             }
             else {
-                WsWriteText(ws, "{\"loglevel\":\"error\",\"text\":\"No IP or hostname\"}"u8.ToArray());
+                await WebSocketHelper.WsWriteText(ws, "{\"loglevel\":\"error\",\"text\":\"No IP or hostname\"}"u8.ToArray());
                 await ws.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, null, CancellationToken.None);
                 return;
             }
@@ -145,7 +128,7 @@ internal static class Monitor {
 
                 if (ping) {
                     long icmpResult = HandlePing(target, Math.Min(interval, 1000));
-                    WsWriteText(ws, $"{{\"index\":0,\"data\":{icmpResult}}}");
+                    await WebSocketHelper.WsWriteText(ws, $"{{\"index\":0,\"data\":{icmpResult}}}");
                 }
 
                 long elapsedTime = (DateTime.UtcNow.Ticks - startTime) / 10_000;
@@ -158,7 +141,7 @@ internal static class Monitor {
 
         Func<Task> WmiDelegate = async () => {
             if (!OperatingSystem.IsWindows()) {
-                WsWriteText(ws, "{\"loglevel\":\"warning\",\"text\":\"WMI is not supported\"}"u8.ToArray());
+                await WebSocketHelper.WsWriteText(ws, "{\"loglevel\":\"warning\",\"text\":\"WMI is not supported\"}"u8.ToArray());
                 return;
             }
 
@@ -167,18 +150,18 @@ internal static class Monitor {
             new Thread(async() => {
                 await Task.Delay(2000);
                 if (scope is null) {
-                    WsWriteText(ws, "{\"loglevel\":\"warning\",\"text\":\"Waiting for WMI\"}"u8.ToArray());
+                    await WebSocketHelper.WsWriteText(ws, "{\"loglevel\":\"warning\",\"text\":\"Waiting for WMI\"}"u8.ToArray());
                 }
             }).Start();
 
             scope = Protocols.Wmi.Scope(target);
 
             if (scope is null || !scope.IsConnected) {
-                WsWriteText(ws, $"{{\"loglevel\":\"error\",\"text\":\"Failed to established WMI connection with {target}\"}}");
+                await WebSocketHelper.WsWriteText(ws, $"{{\"loglevel\":\"error\",\"text\":\"Failed to established WMI connection with {target}\"}}");
                 return;
             }
 
-            WsWriteText(ws, "{\"loglevel\":\"info\",\"text\":\"WMI connection established\"}"u8.ToArray());
+            await WebSocketHelper.WsWriteText(ws, "{\"loglevel\":\"info\",\"text\":\"WMI connection established\"}"u8.ToArray());
 
             while (ws.State == WebSocketState.Open) {
                 if (paused) {
@@ -187,14 +170,14 @@ internal static class Monitor {
                 }
 
                 if (!scope.IsConnected) {
-                    WsWriteText(ws, $"{{\"loglevel\":\"error\",\"text\":\"WMI connection to {target} has been interrupted\"}}");
+                    await WebSocketHelper.WsWriteText(ws, $"{{\"loglevel\":\"error\",\"text\":\"WMI connection to {target} has been interrupted\"}}");
                     //TODO: reconnect WMI
                 }
 
                 long startTime = DateTime.UtcNow.Ticks;
 
                 if (OperatingSystem.IsWindows()) {
-                    HandleWmi(ws, scope, queries);
+                    await HandleWmi(ws, scope, queries);
                 }
 
                 long elapsedTime = (DateTime.UtcNow.Ticks - startTime) / 10_000;
@@ -215,7 +198,7 @@ internal static class Monitor {
                 long startTime = DateTime.UtcNow.Ticks;
 
                 if (snmpEndpoint is not null) {
-                    HandleSnmp(ws, snmpEndpoint, queries);
+                    await HandleSnmp(ws, snmpEndpoint, queries);
                 }
 
                 long elapsedTime = (DateTime.UtcNow.Ticks - startTime) / 10_000;
@@ -347,18 +330,18 @@ internal static class Monitor {
     }
 
     [SupportedOSPlatform("windows")]
-    private static void HandleWmi(WebSocket ws, ManagementScope scope, ConcurrentDictionary<int, Query> queries) {
+    private static async Task HandleWmi(WebSocket ws, ManagementScope scope, ConcurrentDictionary<int, Query> queries) {
         foreach (Query query in queries.Values) {
             if (query.action != Action.addwmi) { continue; }
             try {
-                HandleWmiQuery(ws, scope, query);
+                await HandleWmiQuery(ws, scope, query);
             }
             catch  { }
         }
     }
 
     [SupportedOSPlatform("windows")]
-    private static void HandleWmiQuery(WebSocket ws, ManagementScope scope, Query query) {
+    private static async Task HandleWmiQuery(WebSocket ws, ManagementScope scope, Query query) {
         using ManagementObjectSearcher searcher = new ManagementObjectSearcher(scope, new SelectQuery(query.value));
         using ManagementObjectCollection moc = searcher.Get();
         
@@ -390,16 +373,16 @@ internal static class Monitor {
         };
 
         byte[] bytes = JsonSerializer.SerializeToUtf8Bytes<Answer>(answer, answerSerializerOptions);
-        WsWriteText(ws, bytes);
+        await WebSocketHelper.WsWriteText(ws, bytes);
 
         data.Clear();
     }
 
-    private static void HandleSnmp(WebSocket ws, IPEndPoint endpoint, ConcurrentDictionary<int, Query> queries) {
+    private static async Task HandleSnmp(WebSocket ws, IPEndPoint endpoint, ConcurrentDictionary<int, Query> queries) {
         foreach (Query query in queries.Values) {
             if (query.action != Action.addsnmp) { continue; }
             try {
-                HandleSnmpQuery(ws, endpoint, query);
+                await HandleSnmpQuery(ws, endpoint, query);
             }
 #if DEBUG
             catch (Exception ex) {
@@ -411,7 +394,7 @@ internal static class Monitor {
         }
     }
 
-    private static void HandleSnmpQuery(WebSocket ws, IPEndPoint endpoint, Query query) {
+    private static async Task HandleSnmpQuery(WebSocket ws, IPEndPoint endpoint, Query query) {
         IList <Lextm.SharpSnmpLib.Variable> result = null;
 
         if (query.version == 3) {
@@ -470,7 +453,7 @@ internal static class Monitor {
         };
 
         byte[] bytes = JsonSerializer.SerializeToUtf8Bytes<Answer>(answer, answerSerializerOptions);
-        WsWriteText(ws, bytes);
+        await WebSocketHelper.WsWriteText(ws, bytes);
     }
 }
 

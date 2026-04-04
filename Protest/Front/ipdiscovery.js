@@ -51,7 +51,7 @@ class IpDiscovery extends List {
 		this.statusLabel.style.position = "absolute";
 		this.statusLabel.style.right = "8px";
 		this.statusLabel.style.bottom = "4px";
-		this.statusLabel.style.color = "var(--clr-pane)";
+		this.statusLabel.style.color = "var(--clr-contrast)";
 		this.statusLabel.style.fontWeight = "600";
 		this.content.appendChild(this.statusLabel);
 

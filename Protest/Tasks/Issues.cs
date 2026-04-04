@@ -92,17 +92,6 @@ internal static class Issues {
         return "{\"status\":\"stopped\"}"u8.ToArray();
     }
 
-    private static async Task WsWriteText(WebSocket ws, string data) {
-        if (ws.State == WebSocketState.Open) {
-            await ws.SendAsync(new ArraySegment<byte>(Encoding.ASCII.GetBytes(data), 0, data.Length), WebSocketMessageType.Text, true, CancellationToken.None);
-        }
-    }
-    private static async Task WsWriteText(WebSocket ws, byte[] data) {
-        if (ws.State == WebSocketState.Open) {
-            await ws.SendAsync(new ArraySegment<byte>(data, 0, data.Length), WebSocketMessageType.Text, true, CancellationToken.None);
-        }
-    }
-
     public static async Task WebSocketHandler(HttpListenerContext ctx) {
         WebSocket ws;
         try {
@@ -148,7 +137,7 @@ internal static class Issues {
                         isUser     = o.isUser,
                     }));
 
-                    await WsWriteText(ws, bytes);
+                    await WebSocketHelper.WsWriteText(ws, bytes);
 
                     lastTimestamp = filtered.Max(o => o.timestamp);
                 }

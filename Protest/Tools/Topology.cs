@@ -33,21 +33,10 @@ internal static class Topology {
         return true;
     }
 
-    private static async Task WsWriteText(WebSocket ws, string data) {
-        if (ws.State == WebSocketState.Open) {
-            await ws.SendAsync(new ArraySegment<byte>(Encoding.ASCII.GetBytes(data), 0, data.Length), WebSocketMessageType.Text, true, CancellationToken.None);
-        }
-    }
-    private static async Task WsWriteText(WebSocket ws, byte[] data) {
-        if (ws.State == WebSocketState.Open) {
-            await ws.SendAsync(new ArraySegment<byte>(data, 0, data.Length), WebSocketMessageType.Text, true, CancellationToken.None);
-        }
-    }
-
     private static void WsWriteText(WebSocket ws, string text, Lock mutex) {
-        lock (mutex) {
-            WsWriteText(ws, Encoding.UTF8.GetBytes(text), mutex);
-        }
+        byte[] bytes = Encoding.UTF8.GetBytes(text);
+        WsWriteText(ws, bytes, mutex);
+        
     }
     private static void WsWriteText(WebSocket ws, byte[] bytes, Lock mutex) {
         lock (mutex) {
@@ -113,7 +102,7 @@ internal static class Topology {
                 })
             });
 
-            await WsWriteText(ws, message);
+            await WebSocketHelper.WsWriteText(ws, message);
 
             Lock mutex = new Lock();
 

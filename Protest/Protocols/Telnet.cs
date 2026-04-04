@@ -10,17 +10,6 @@ using Protest.Http;
 namespace Protest.Protocols;
 
 internal static class Telnet {
-    private static async Task WsWriteText(WebSocket ws, string data) {
-        if (ws.State == WebSocketState.Open) {
-            await ws.SendAsync(new ArraySegment<byte>(Encoding.ASCII.GetBytes(data), 0, data.Length), WebSocketMessageType.Text, true, CancellationToken.None);
-        }
-    }
-    private static async Task WsWriteText(WebSocket ws, byte[] data) {
-        if (ws.State == WebSocketState.Open) {
-            await ws.SendAsync(new ArraySegment<byte>(data, 0, data.Length), WebSocketMessageType.Text, true, CancellationToken.None);
-        }
-    }
-
     public static async Task WebSocketHandler(HttpListenerContext ctx) {
         WebSocket ws;
         try {
@@ -70,7 +59,7 @@ internal static class Telnet {
 
             Logger.Action(username, $"Establish telnet connection to {host}:{port}");
 
-            await WsWriteText(ws, "{\"connected\":true}"u8.ToArray());
+            await WebSocketHelper.WsWriteText(ws, "{\"connected\":true}"u8.ToArray());
 
             Thread fork = new Thread(() => HandleDownstream(ctx, ws, telnet, stream).GetAwaiter().GetResult());
             fork.Start();
@@ -97,7 +86,7 @@ internal static class Telnet {
         catch (SocketException ex) {
             if (ws.State == WebSocketState.Open) {
                 try {
-                    await WsWriteText(ws, $"{{\"error\":\"{ex.Message}\"}}");
+                    await WebSocketHelper.WsWriteText(ws, $"{{\"error\":\"{ex.Message}\"}}");
                     await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
                 }
 #if DEBUG

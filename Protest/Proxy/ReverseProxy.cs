@@ -82,17 +82,6 @@ internal static class ReverseProxy {
 #endif
     }
 
-    private static async Task WsWriteText(WebSocket ws, string data) {
-        if (ws.State == WebSocketState.Open) {
-            await ws.SendAsync(new ArraySegment<byte>(Encoding.ASCII.GetBytes(data), 0, data.Length), WebSocketMessageType.Text, true, CancellationToken.None);
-        }
-    }
-    private static async Task WsWriteText(WebSocket ws, byte[] data) {
-        if (ws.State == WebSocketState.Open) {
-            await ws.SendAsync(new ArraySegment<byte>(data, 0, data.Length), WebSocketMessageType.Text, true, CancellationToken.None);
-        }
-    }
-
     public static async Task WebSocketHandler(HttpListenerContext ctx) {
         WebSocket ws;
         try {
@@ -120,14 +109,14 @@ internal static class ReverseProxy {
 
             bool clientsToggle = true;
             try {
-                await WsWriteText(ws, GetRunningProxies());
+                await WebSocketHelper.WsWriteText(ws, GetRunningProxies());
 
                 while (ws.State == WebSocketState.Open) {
-                    await WsWriteText(ws, GetTotalTraffic());
+                    await WebSocketHelper.WsWriteText(ws, GetTotalTraffic());
 
                     clientsToggle = !clientsToggle;
                     if (select != Guid.Empty && interval > 500 || interval <= 500 && clientsToggle) {
-                        await WsWriteText(ws, GetProxyTraffic(select));
+                        await WebSocketHelper.WsWriteText(ws, GetProxyTraffic(select));
                     }
 
                     await Task.Delay(interval);

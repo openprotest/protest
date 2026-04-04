@@ -11,6 +11,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
+using Protest.Http;
 using Protest.Protocols;
 
 namespace Protest.Tools;
@@ -90,17 +91,6 @@ internal static class IpDiscovery {
         return null;
     }
 
-    private static void WsWriteText(WebSocket ws, [StringSyntax(StringSyntaxAttribute.Json)] string text, Lock mutex) {
-        lock (mutex) {
-            WsWriteText(ws, Encoding.UTF8.GetBytes(text), mutex);
-        }
-    }
-    private static void WsWriteText(WebSocket ws, byte[] bytes, Lock mutex) {
-        lock (mutex) {
-            ws.SendAsync(new ArraySegment<byte>(bytes, 0, bytes.Length), WebSocketMessageType.Text, true, CancellationToken.None);
-        }
-    }
-
     public static async Task WebSocketHandler(HttpListenerContext ctx) {
         WebSocket ws;
         try {
@@ -140,7 +130,6 @@ internal static class IpDiscovery {
             return;
         }
 
-        Lock mutex = new Lock();
         ConcurrentDictionary<string, HostEntry> dic = new ConcurrentDictionary<string, HostEntry>();
 
         for (int i = 0; i < 2; i++) {
@@ -148,16 +137,16 @@ internal static class IpDiscovery {
 
             try {
                 Task[] phase1Tasks = new Task[] {
-                    Task.Run(() => DiscoverAdapter(dic, nic, ws, mutex)),
-                    Task.Run(() => DiscoverMdns(dic, nic, ws, mutex, tokenSource.Token)),
-                    Task.Run(() => DiscoverSsdp(dic, nic, ws, mutex, tokenSource.Token)),
-                    Task.Run(() => DiscoverIcmp(dic, nic, ws, mutex, tokenSource.Token))
+                    DiscoverAdapter(dic, nic, ws),
+                    DiscoverMdns(dic, nic, ws, tokenSource.Token),
+                    DiscoverSsdp(dic, nic, ws, tokenSource.Token),
+                    DiscoverIcmp(dic, nic, ws, tokenSource.Token)
                 };
                 await Task.WhenAll(phase1Tasks);
 
                 Task[] phase2Tasks = new Task[] {
-                    DiscoverHostnameAsync(dic, nic, ws, mutex, tokenSource.Token),
-                    DiscoverServicesAsync(dic, nic, ws, mutex, tokenSource.Token)
+                    DiscoverHostnameAsync(dic, nic, ws, tokenSource.Token),
+                    DiscoverServicesAsync(dic, nic, ws, tokenSource.Token)
                 };
                 await Task.WhenAll(phase2Tasks);
             }
@@ -185,7 +174,7 @@ internal static class IpDiscovery {
         dic.Clear();
     }
 
-    private static void DiscoverAdapter(ConcurrentDictionary<string, HostEntry> dic, NetworkInterface nic, WebSocket ws, Lock mutex) {
+    private static async Task DiscoverAdapter(ConcurrentDictionary<string, HostEntry> dic, NetworkInterface nic, WebSocket ws) {
         UnicastIPAddressInformationCollection unicast = nic.GetIPProperties().UnicastAddresses;
         GatewayIPAddressInformationCollection gateway = nic.GetIPProperties().GatewayAddresses;
 
@@ -219,7 +208,7 @@ internal static class IpDiscovery {
 
             dic.AddOrUpdate(ipv4String, host, (key, value) => value);
 
-            WsWriteText(ws, JsonSerializer.SerializeToUtf8Bytes<HostEntry>(host, hostSerializerOptions), mutex);
+            await WebSocketHelper.WsWriteText(ws, JsonSerializer.SerializeToUtf8Bytes<HostEntry>(host, hostSerializerOptions));
         }
 
         IPAddress gwIpV4 = null, gwIpV6 = null;
@@ -250,11 +239,11 @@ internal static class IpDiscovery {
 
             dic.AddOrUpdate(ipv4String, gwHost, (key, value) => value);
 
-            WsWriteText(ws, JsonSerializer.SerializeToUtf8Bytes<HostEntry>(gwHost, hostSerializerOptions), mutex);
+            await WebSocketHelper.WsWriteText(ws, JsonSerializer.SerializeToUtf8Bytes<HostEntry>(gwHost, hostSerializerOptions));
         }
     }
 
-    private static void DiscoverIcmp(ConcurrentDictionary<string, HostEntry> dic, NetworkInterface nic, WebSocket ws, Lock mutex, CancellationToken token) {
+    private static async Task DiscoverIcmp(ConcurrentDictionary<string, HostEntry> dic, NetworkInterface nic, WebSocket ws, CancellationToken token) {
         List<IPAddress> hosts = new List<IPAddress>();
 
         UnicastIPAddressInformationCollection addresses = nic.GetIPProperties().UnicastAddresses;
@@ -315,11 +304,11 @@ internal static class IpDiscovery {
 
             dic.AddOrUpdate(ipString, gwHost, (key, value) => value);
 
-            WsWriteText(ws, JsonSerializer.SerializeToUtf8Bytes<HostEntry>(gwHost, hostSerializerOptions), mutex);
+            await WebSocketHelper.WsWriteText(ws, JsonSerializer.SerializeToUtf8Bytes<HostEntry>(gwHost, hostSerializerOptions));
         }
     }
 
-    private static void DiscoverMdns(ConcurrentDictionary<string, HostEntry> dic, NetworkInterface nic, WebSocket ws, Lock mutex, CancellationToken token) {
+    private static async Task DiscoverMdns(ConcurrentDictionary<string, HostEntry> dic, NetworkInterface nic, WebSocket ws, CancellationToken token) {
         const int timeout = 1000;
         const Protocols.Dns.RecordType type = Protocols.Dns.RecordType.ANY;
 
@@ -341,7 +330,7 @@ internal static class IpDiscovery {
                 DateTime endTime = DateTime.Now.AddMilliseconds(timeout);
                 while (DateTime.Now <= endTime) {
                     if (token.IsCancellationRequested) break;
-                    ParseMdnsResponse(dic, ws, mutex, type, socket);
+                    ParseMdnsResponse(dic, ws, type, socket);
                 }
             }
 #if DEBUG
@@ -354,7 +343,7 @@ internal static class IpDiscovery {
         }
     }
 
-    private static void DiscoverSsdp(ConcurrentDictionary<string, HostEntry> dic, NetworkInterface nic, WebSocket ws, Lock mutex, CancellationToken token) {
+    private static async Task DiscoverSsdp(ConcurrentDictionary<string, HostEntry> dic, NetworkInterface nic, WebSocket ws, CancellationToken token) {
         const int timeout = 1000;
 
         Ssdp.SsdpDevice[] devices = Ssdp.Discover(nic, timeout, token);
@@ -386,20 +375,20 @@ internal static class IpDiscovery {
 
 
             for (int j = 0; j < devices[i].ipv4Address.Length; j++) {
-                WsWriteText(ws, JsonSerializer.SerializeToUtf8Bytes(new {
+                await WebSocketHelper.WsWriteText(ws, JsonSerializer.SerializeToUtf8Bytes(new {
                     name         = devices[i].hostname,
                     ip           = devices[i].ipv4Address[j],
                     ipv6         = ipv6,
                     mac          = devices[i].mac,
                     manufacturer = devices[i].manufacturer,
                     services     = services.ToString()
-                }), mutex);
+                }));
             }
 
         }
     }
 
-    private static async Task DiscoverHostnameAsync(ConcurrentDictionary<string, HostEntry> dic, NetworkInterface nic, WebSocket ws, Lock mutex, CancellationToken token) {
+    private static async Task DiscoverHostnameAsync(ConcurrentDictionary<string, HostEntry> dic, NetworkInterface nic, WebSocket ws, CancellationToken token) {
         List<Task> tasks = new List<Task>();
 
         foreach (KeyValuePair<string, HostEntry> pair in dic) {
@@ -421,10 +410,10 @@ internal static class IpDiscovery {
                 string name = NetBios.GetBiosName(pair.Key, 200);
 
                 if (name is not null) {
-                    WsWriteText(ws, JsonSerializer.SerializeToUtf8Bytes(new {
+                    await WebSocketHelper.WsWriteText(ws, JsonSerializer.SerializeToUtf8Bytes(new {
                         ip = pair.Key,
                         name = name,
-                    }), mutex);
+                    }));
                 }
                 else {
                     IPHostEntry hostEntry;
@@ -445,17 +434,17 @@ internal static class IpDiscovery {
                         Mdns.Answer[] filtered = answer.Where(o=> o.type == Protocols.Dns.RecordType.AAAA).ToArray();
 
                         if (filtered.Length > 0 && !String.IsNullOrEmpty(filtered[0].answerString)) {
-                            WsWriteText(ws, JsonSerializer.SerializeToUtf8Bytes(new {
+                            await WebSocketHelper.WsWriteText(ws, JsonSerializer.SerializeToUtf8Bytes(new {
                                 ip   = pair.Key,
                                 ipv6 = filtered[0].answerString,
                                 name = name,
-                            }), mutex);
+                            }));
                         }
                         else {
-                            WsWriteText(ws, JsonSerializer.SerializeToUtf8Bytes(new {
+                            await WebSocketHelper.WsWriteText(ws, JsonSerializer.SerializeToUtf8Bytes(new {
                                 ip   = pair.Key,
                                 name = name,
-                            }), mutex);
+                            }));
                         }
                     }
                 }
@@ -474,7 +463,7 @@ internal static class IpDiscovery {
 #endif
     }
 
-    private static async Task DiscoverServicesAsync(ConcurrentDictionary<string, HostEntry> dic, NetworkInterface nic, WebSocket ws, Lock mutex, CancellationToken token) {
+    private static async Task DiscoverServicesAsync(ConcurrentDictionary<string, HostEntry> dic, NetworkInterface nic, WebSocket ws, CancellationToken token) {
         short[] ports = { 22, 23, 53, 80, 443, 445, 3389, 9100 };
         Task[] tasks = dic
         .Where(o => o.Value.services is null || o.Value.services.Length == 0)
@@ -505,10 +494,10 @@ internal static class IpDiscovery {
                     }
                 }
 
-                WsWriteText(ws, JsonSerializer.SerializeToUtf8Bytes(new {
+                await WebSocketHelper.WsWriteText(ws, JsonSerializer.SerializeToUtf8Bytes(new {
                     ip = pair.Key,
                     services = services.ToString()
-                }), mutex);
+                }));
             }
         }).ToArray();
 
@@ -547,7 +536,7 @@ internal static class IpDiscovery {
         }
     }
 
-    private static void ParseMdnsResponse(ConcurrentDictionary<string, HostEntry> dic, WebSocket ws, Lock mutex, Protocols.Dns.RecordType type, Socket socket) {
+    private static void ParseMdnsResponse(ConcurrentDictionary<string, HostEntry> dic, WebSocket ws, Protocols.Dns.RecordType type, Socket socket) {
         byte[] reply = new byte[1024];
 
         try {
@@ -555,7 +544,7 @@ internal static class IpDiscovery {
             int length = socket.ReceiveFrom(reply, ref remoteEP);
             if (length == 0) return;
 
-            new Thread(() => {
+            new Thread(async () => {
                 byte[] actualReply = new byte[length];
                 Array.Copy(reply, actualReply, length);
 
@@ -644,7 +633,7 @@ internal static class IpDiscovery {
 
                 dic.AddOrUpdate(ipString, host, (key, value) => value);
 
-                WsWriteText(ws, JsonSerializer.SerializeToUtf8Bytes<HostEntry>(host, hostSerializerOptions), mutex);
+                await WebSocketHelper.WsWriteText(ws, JsonSerializer.SerializeToUtf8Bytes<HostEntry>(host, hostSerializerOptions));
 
             }).Start();
         }
