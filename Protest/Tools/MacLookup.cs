@@ -38,7 +38,7 @@ internal static partial class MacLookup {
 
         (byte, byte, string)[] subArray = table[a];
 
-        if (subArray == null || subArray.Length == 0) return "not found";
+        if (subArray is null || subArray.Length == 0) return "not found";
 
         int start = 0;
         int end = subArray.Length - 1;

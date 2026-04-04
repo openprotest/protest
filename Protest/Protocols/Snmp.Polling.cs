@@ -232,7 +232,7 @@ internal static partial class Polling {
                         ISnmpMessage response = request.GetResponse(timeout, endpoint);
                         Variable nextVar = response.Variables().FirstOrDefault();
 
-                        if (nextVar == null || !nextVar.Id.ToString().StartsWith(baseOid)) break;
+                        if (nextVar is null || !nextVar.Id.ToString().StartsWith(baseOid)) break;
 
                         result.Add(nextVar);
                         currentOid = nextVar.Id;
@@ -373,7 +373,7 @@ internal static partial class Polling {
         Dictionary<string, long> data = new Dictionary<string, long>(result.Count);
 
         foreach (Variable variable in result) {
-            if (variable.Data == null) continue;
+            if (variable.Data is null) continue;
 
             switch (variable.Data) {
             case Integer32 i32:

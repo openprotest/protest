@@ -435,10 +435,11 @@ internal static class Watchdog {
     }
 
     private static short CheckTls(string host, int port, int timeout, int retries, bool acknowledgeError) {
-        X509Certificate2 cert2 = null;
         SslPolicyErrors policyErrors = SslPolicyErrors.None;
 
         for (int i = 0; i < retries; i++) {
+            X509Certificate2 cert2 = null;
+    
             try {
                 using TcpClient tcp = new TcpClient {
                     ReceiveTimeout = timeout,
@@ -469,15 +470,29 @@ internal static class Watchdog {
 
                 ssl.AuthenticateAsClient(host);
 
-                if (cert2 == null) return -1;
+                if (cert2 is null) return -1;
 
                 long now = DateTime.UtcNow.Ticks;
 
-                if (cert2.NotBefore.Ticks > now) return -4;
-                if (cert2.NotAfter.Ticks < now) return -2;
-                if (cert2.NotAfter.Ticks < now + WEEK_IN_TICKS) return -3;
-                
-                if (acknowledgeError && policyErrors != SslPolicyErrors.None) return -1;
+                if (cert2.NotBefore.Ticks > now) {
+                    cert2.Dispose();
+                    return -4;
+                }
+
+                if (cert2.NotAfter.Ticks < now) {
+                    cert2.Dispose();
+                    return -2;
+                }
+
+                if (cert2.NotAfter.Ticks < now + WEEK_IN_TICKS) {
+                    cert2.Dispose();
+                    return -3;
+                }
+
+                if (acknowledgeError && policyErrors != SslPolicyErrors.None) {
+                    cert2.Dispose();
+                    return -1;
+                }
 
                 return 0;
             }

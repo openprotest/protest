@@ -88,7 +88,7 @@ internal class Mdns {
             if (IPAddress.IsLoopback(nics[i])) continue;
 
             using Socket socket = CreateAndBindSocket(nics[i], timeout, out IPEndPoint remoteEndPoint);
-            if (socket == null) continue;
+            if (socket is null) continue;
 
             try {
                 socket.SendTo(request, remoteEndPoint);

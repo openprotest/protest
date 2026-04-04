@@ -74,7 +74,7 @@ internal class Ssdp {
             if (token.IsCancellationRequested) break;
 
             using Socket socket = CreateAndBindSocket(localAddress, timeout, out IPEndPoint remoteEndPoint);
-            if (socket == null) continue;
+            if (socket is null) continue;
 
             socket.SendTo(ALL_SERVICES_QUERY, remoteEndPoint);
 

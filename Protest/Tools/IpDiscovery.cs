@@ -333,7 +333,7 @@ internal static class IpDiscovery {
             if (IPAddress.IsLoopback(address.Address)) continue;
 
             using Socket socket = Mdns.CreateAndBindSocket(address.Address, timeout, out IPEndPoint remoteEndPoint);
-            if (socket == null) continue;
+            if (socket is null) continue;
 
             try {
                 socket.SendTo(request, remoteEndPoint);
