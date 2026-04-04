@@ -85,18 +85,14 @@ internal static class Topology {
             using SemaphoreSlim wsWriteSemaphore = new SemaphoreSlim(1, 1);
 
             Task[] tasks = candidates.Select(async candidate => {
-                if (!candidate.attributes.TryGetValue("ip", out Database.Attribute ipAttr))
-                    return;
-                if (!candidate.attributes.TryGetValue("snmp profile", out Database.Attribute profileAttr))
-                    return;
-                if (!SnmpProfiles.FromGuid(profileAttr.value, out SnmpProfiles.Profile snmpProfile) || snmpProfile is null)
-                    return;
+                if (!candidate.attributes.TryGetValue("ip", out Database.Attribute ipAttr)) return;
+                if (!candidate.attributes.TryGetValue("snmp profile", out Database.Attribute profileAttr)) return;
+                if (!SnmpProfiles.FromGuid(profileAttr.value, out SnmpProfiles.Profile snmpProfile) || snmpProfile is null) return;
 
                 string ipString = ipAttr.value.Split(';')[0].Trim();
-                if (!IPAddress.TryParse(ipString, out IPAddress ipAddress))
-                    return;
+                if (!IPAddress.TryParse(ipString, out IPAddress ipAddress)) return;
 
-                await Task.Delay(1);
+                await Task.Yield();
 
                 try {
                     await wsWriteSemaphore.WaitAsync();
@@ -135,7 +131,7 @@ internal static class Topology {
                     if (options.Contains("mac")) {
                         IList<Variable> dot1TpFdb = Polling.SnmpQuery(ipAddress, snmpProfile, [Oid.INT_1D_TP_FDB], Polling.SnmpOperation.Walk);
                         if (dot1TpFdb is not null && dot1TpFdb.Count > 0) {
-                            byte[] response = ComputeDot1TpFdpResponse(candidate.filename, dot1TpFdb);
+                            byte[] response = ComputeDot1TpFdbResponse(candidate.filename, dot1TpFdb);
                             await wsWriteSemaphore.WaitAsync();
                             try {
                                 await WebSocketHelper.WsWriteText(ws, response);
@@ -369,7 +365,7 @@ internal static class Topology {
         return payload;
     }
 
-    private static byte[] ComputeDot1TpFdpResponse(string file, IList<Variable> dot1TpFdb) {
+    private static byte[] ComputeDot1TpFdbResponse(string file, IList<Variable> dot1TpFdb) {
         Dictionary<string, string> parsedResult = Protocols.Snmp.Polling.ParseResponse(dot1TpFdb);
 
         Dictionary<int, List<string>> macTable = new Dictionary<int, List<string>>();
