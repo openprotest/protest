@@ -84,7 +84,7 @@ internal static class Topology {
 
             using SemaphoreSlim wsWriteSemaphore = new SemaphoreSlim(1, 1);
 
-            IEnumerable<Task> tasks = candidates.Select(async candidate => {
+            Task[] tasks = candidates.Select(async candidate => {
                 if (!candidate.attributes.TryGetValue("ip", out Database.Attribute ipAttr))
                     return;
                 if (!candidate.attributes.TryGetValue("snmp profile", out Database.Attribute profileAttr))
@@ -222,7 +222,7 @@ internal static class Topology {
                     }
                     Logger.Error(ex);
                 }
-            });
+            }).ToArray();
 
             await Task.WhenAll(tasks);
 
@@ -386,7 +386,7 @@ internal static class Topology {
             list.Add(mac);
         }
 
-        Dictionary<int, string> dbEntry= new Dictionary<int, string>();
+        Dictionary<int, string> dbEntry = new Dictionary<int, string>();
         foreach (KeyValuePair<int, List<string>> pair in macTable) {
             if (pair.Value.Count != 1) continue;
 
@@ -442,7 +442,7 @@ internal static class Topology {
             if (oid.StartsWith(Protocols.Snmp.Oid.INT_1Q_STATIC_NAME)) {
                 names.Add(vlan, dot1q[i].Data.ToString());
             }
-            else if (oid.StartsWith(Protocols.Snmp.Oid.INT_1Q_VLAN_ENGRESS) || oid.StartsWith(Protocols.Snmp.Oid.INT_1Q_VLAN_UNTAGGED)) {
+            else if (oid.StartsWith(Protocols.Snmp.Oid.INT_1Q_VLAN_EGRESS) || oid.StartsWith(Protocols.Snmp.Oid.INT_1Q_VLAN_UNTAGGED)) {
                 byte[] raw = dot1q[i].Data.ToBytes();
 
                 int startIndex = GetPortBitmapStart(raw);
@@ -457,7 +457,7 @@ internal static class Topology {
 
                 string hex = PortsToHex(raw, startIndex, maxIndex);
 
-                if (oid.StartsWith(Protocols.Snmp.Oid.INT_1Q_VLAN_ENGRESS)) {
+                if (oid.StartsWith(Protocols.Snmp.Oid.INT_1Q_VLAN_EGRESS)) {
                     egress.Add(vlan, hex);
                 }
                 else if (oid.StartsWith(Protocols.Snmp.Oid.INT_1Q_VLAN_UNTAGGED)) {

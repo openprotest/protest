@@ -111,7 +111,7 @@ internal static partial class Polling {
         Dictionary<short, List<int>> taggedMap = new Dictionary<short, List<int>>();
         for (int i = 0; i < list.Count; i++) {
             string oid = list[i].Id.ToString();
-            if (!oid.StartsWith(Oid.INT_1Q_VLAN_ENGRESS)) continue;
+            if (!oid.StartsWith(Oid.INT_1Q_VLAN_EGRESS)) continue;
 
             int dotIndex = oid.LastIndexOf('.');
             if (dotIndex == -1) continue;

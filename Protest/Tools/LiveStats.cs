@@ -592,7 +592,7 @@ internal static class LiveStats {
         Dictionary<short, List<int>> taggedMap = new Dictionary<short, List<int>>();
         for (int i = 0; i < result.Count; i++) {
             string oid = result[i].Id.ToString();
-            if (!oid.StartsWith(Oid.INT_1Q_VLAN_ENGRESS)) continue;
+            if (!oid.StartsWith(Oid.INT_1Q_VLAN_EGRESS)) continue;
 
             int dotIndex = oid.LastIndexOf('.');
             if (dotIndex == -1) continue;
