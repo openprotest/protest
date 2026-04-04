@@ -454,16 +454,15 @@ internal static class Watchdog {
                 tcp.EndConnect(ar);
 
                 using NetworkStream networkStream = tcp.GetStream();
-                using SslStream ssl = new SslStream(
-                networkStream,
-                leaveInnerStreamOpen: false,
-                userCertificateValidationCallback: (_, certificate, chain, errors) => {
-                    policyErrors = errors;
-                    if (certificate != null) {
-                        cert2 = certificate as X509Certificate2 ?? new X509Certificate2(certificate);
+                using SslStream ssl = new SslStream(networkStream, false,
+                    userCertificateValidationCallback: (_, certificate, chain, errors) => {
+                        policyErrors = errors;
+                        if (certificate != null) {
+                            cert2 = certificate as X509Certificate2 ?? new X509Certificate2(certificate);
+                        }
+                        return true;
                     }
-                    return true;
-                });
+                );
 
                 ssl.ReadTimeout = timeout;
                 ssl.WriteTimeout = timeout;
@@ -804,7 +803,7 @@ internal static class Watchdog {
             case 0 : body.Append($"Certificate for <b>{watcher.target}</b> is now valid."); break;
             case -1: body.Append($"Host for <b>{watcher.target}</b> is unreachable."); break;
             case -2: body.Append($"Certificate for <b>{watcher.target}</b> is expired."); break;
-            case -3: body.Append($"Certificate for <b>{watcher.target}</b> is close to it's expiration date."); break;
+            case -3: body.Append($"Certificate for <b>{watcher.target}</b> is close to its expiration date."); break;
             case -4: body.Append($"Activation date of the certificate of <b>{watcher.target}</b> hasn't been reached."); break;
             //default: body.Append($""); break;
             }

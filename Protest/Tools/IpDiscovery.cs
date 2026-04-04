@@ -385,7 +385,7 @@ internal static class IpDiscovery {
             }
 
 
-            for (int j = 0; j < devices[j].ipv4Address.Length; j++) {
+            for (int j = 0; j < devices[i].ipv4Address.Length; j++) {
                 WsWriteText(ws, JsonSerializer.SerializeToUtf8Bytes(new {
                     name         = devices[i].hostname,
                     ip           = devices[i].ipv4Address[j],
