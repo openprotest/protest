@@ -1,17 +1,22 @@
-﻿using System.Collections.Concurrent;
+﻿using Microsoft.Extensions.Hosting;
+using Protest.Tools;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
+using System.Net;
+using System.Net.Http;
+using System.Net.Mail;
+using System.Net.NetworkInformation;
+using System.Net.Security;
+using System.Net.Sockets;
+using System.Net.WebSockets;
+using System.Security.Authentication;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
-using System.Net;
-using System.Net.NetworkInformation;
-using System.Net.Sockets;
-using System.Net.Http;
-using System.Net.Security;
-using System.Net.Mail;
-using Protest.Tools;
+using static Protest.Tasks.Watchdog;
 
 namespace Protest.Tasks;
 
@@ -52,6 +57,7 @@ internal static class Watchdog {
 
         public int interval;
         public int retries;
+        public bool ackerror;
 
         public long lastCheck;
         public short lastStatus = short.MinValue;
@@ -303,12 +309,11 @@ internal static class Watchdog {
         for (int i = 0; i < watcher.retries; i++) {
             try {
                 using HttpClient client = new HttpClient();
-                HttpResponseMessage response = watcher.method switch
-                {
-                    "GET" => client.GetAsync(watcher.target).GetAwaiter().GetResult(),
-                    "POST" => client.PostAsync(watcher.target, null).GetAwaiter().GetResult(),
-                    "PUT" => client.PutAsync(watcher.target, null).GetAwaiter().GetResult(),
-                    "PATCH" => client.PatchAsync(watcher.target, null).GetAwaiter().GetResult(),
+                HttpResponseMessage response = watcher.method switch {
+                    "GET"    => client.GetAsync(watcher.target).GetAwaiter().GetResult(),
+                    "POST"   => client.PostAsync(watcher.target, null).GetAwaiter().GetResult(),
+                    "PUT"    => client.PutAsync(watcher.target, null).GetAwaiter().GetResult(),
+                    "PATCH"  => client.PatchAsync(watcher.target, null).GetAwaiter().GetResult(),
                     "DELETE" => client.DeleteAsync(watcher.target).GetAwaiter().GetResult(),
                     _ => client.GetAsync(watcher.target).GetAwaiter().GetResult(),
                 };
@@ -392,46 +397,94 @@ internal static class Watchdog {
         return result;
     }
 
-    private static short CheckTls(Watcher watcher) {
-        short result = short.MaxValue;
+    //  0  = valid
+    // -1  = unreachable / failed
+    // -2  = expired
+    // -3  = expires within 7 days
+    // -4  = not yet valid
+    public static short CheckTls(Watcher watcher) {
+        if (string.IsNullOrWhiteSpace(watcher.target)) return -1;
 
-        using HttpClientHandler handler = new HttpClientHandler();
-        handler.ServerCertificateCustomValidationCallback = (request, cert, chain, errors) => {
-            long now = DateTime.UtcNow.Ticks;
-            if (cert.NotBefore.Ticks > now) { //not yet valid
-                result = -4;
-            }
-            else if (cert.NotAfter.Ticks < now) { //expired
-                result = -2;
-            }
-            else if (cert.NotAfter.Ticks < now + WEEK_IN_TICKS) { //7 days warning
-                result = -3;
-            }
-            else { //valid
-                result = 0;
-            }
+        string target = watcher.target.Trim();
+        string host;
+        int port;
 
-            return errors == SslPolicyErrors.None;
-        };
-
-        for (int i = 0; i < watcher.retries; i++) {
-            try {
-                using HttpClient client = new HttpClient(handler);
-                using HttpResponseMessage response = client.GetAsync(watcher.target).GetAwaiter().GetResult();
-            }
-#if DEBUG
-            catch (Exception ex) {
-                Logger.Error(ex);
-            }
-#else
-            catch { }
-#endif
-
-            if (result == short.MaxValue) continue;
-            break;
+        if (!target.Contains("://", StringComparison.Ordinal)) {
+            target = "https://" + target;
         }
 
-        return result;
+        if (!Uri.TryCreate(target, UriKind.Absolute, out Uri uri)) return -1;
+
+        string scheme = uri.Scheme.ToLowerInvariant();
+
+        if (scheme != "https" && scheme != "ftps") return -1;
+
+        host = uri.Host;
+        if (string.IsNullOrEmpty(host)) return -1;
+
+        port = uri.IsDefaultPort
+            ? scheme switch {
+                "ftps" => 990,
+                _ => 443
+            }
+            : uri.Port;
+
+        if (port < 1 || port > 65535) return -1;
+
+        return CheckTls(host, port, watcher.timeout, watcher.retries, watcher.ackerror);
+    }
+
+    private static short CheckTls(string host, int port, int timeout, int retries, bool acknowledgeError) {
+        X509Certificate2 cert2 = null;
+        SslPolicyErrors policyErrors = SslPolicyErrors.None;
+
+        for (int i = 0; i < retries; i++) {
+            try {
+                using TcpClient tcp = new TcpClient {
+                    ReceiveTimeout = timeout,
+                    SendTimeout = timeout
+                };
+
+                IAsyncResult ar = tcp.BeginConnect(host, port, null, null);
+                if (!ar.AsyncWaitHandle.WaitOne(timeout)) {
+                    return -5;
+                }
+
+                tcp.EndConnect(ar);
+
+                using NetworkStream networkStream = tcp.GetStream();
+                using SslStream ssl = new SslStream(
+                networkStream,
+                leaveInnerStreamOpen: false,
+                userCertificateValidationCallback: (_, certificate, chain, errors) => {
+                    policyErrors = errors;
+                    if (certificate != null) {
+                        cert2 = certificate as X509Certificate2 ?? new X509Certificate2(certificate);
+                    }
+                    return true;
+                });
+
+                ssl.ReadTimeout = timeout;
+                ssl.WriteTimeout = timeout;
+
+                ssl.AuthenticateAsClient(host);
+
+                if (cert2 == null) return -1;
+
+                long now = DateTime.UtcNow.Ticks;
+
+                if (cert2.NotBefore.Ticks > now) return -4;
+                if (cert2.NotAfter.Ticks < now) return -2;
+                if (cert2.NotAfter.Ticks < now + WEEK_IN_TICKS) return -3;
+                
+                if (acknowledgeError && policyErrors != SslPolicyErrors.None) return -1;
+
+                return 0;
+            }
+            catch { }
+        }
+
+        return -1;
     }
 
     private static bool WriteResult(Watcher watcher, short result) {
@@ -809,60 +862,42 @@ file sealed class WatcherJsonConverter : JsonConverter<Watchdog.Watcher> {
                 reader.Read();
 
                 switch (propertyName) {
-                case "file":
-                    watcher.file = reader.GetString();
-                    break;
-                case "enable":
-                    watcher.enable = reader.GetBoolean();
-                    break;
-                case "name":
-                    watcher.name = reader.GetString();
-                    break;
-                case "target":
-                    watcher.target = reader.GetString();
-                    break;
-                case "port":
-                    watcher.port = reader.GetInt32();
-                    break;
-                case "timeout":
-                    watcher.timeout = Math.Max(reader.GetInt32(), 5);
-                    break;
-                case "method":
-                    watcher.method = reader.GetString();
-                    break;
-                case "keyword":
-                    watcher.keyword = reader.GetString();
-                    break;
-                case "query":
-                    watcher.query = reader.GetString();
-                    break;
+                case "file"   : watcher.file    = reader.GetString(); break;
+                case "enable" : watcher.enable  = reader.GetBoolean(); break;
+                case "name"   : watcher.name    = reader.GetString(); break;
+                case "target" : watcher.target  = reader.GetString(); break;
+                case "port"   : watcher.port    = reader.GetInt32(); break;
+                case "timeout": watcher.timeout = Math.Max(reader.GetInt32(), 5); break;
+                case "method" : watcher.method  = reader.GetString(); break;
+                case "keyword": watcher.keyword = reader.GetString(); break;
+                case "query" : watcher.query    = reader.GetString(); break;
 
                 case "type":
                     string typeString = reader.GetString().ToUpper();
                     watcher.type = typeString switch {
-                        "ICMP" => Watchdog.WatcherType.icmp,
-                        "TCP" => Watchdog.WatcherType.tcp,
-                        "DNS" => Watchdog.WatcherType.dns,
-                        "HTTP" => Watchdog.WatcherType.http,
+                        "ICMP"         => Watchdog.WatcherType.icmp,
+                        "TCP"          => Watchdog.WatcherType.tcp,
+                        "DNS"          => Watchdog.WatcherType.dns,
+                        "HTTP"         => Watchdog.WatcherType.http,
                         "HTTP KEYWORD" => Watchdog.WatcherType.httpKeyword,
-                        "TLS" => Watchdog.WatcherType.tls,
-                        _ => Watchdog.WatcherType.icmp,
+                        "TLS"          => Watchdog.WatcherType.tls,
+                        _              => Watchdog.WatcherType.icmp,
                     };
                     break;
 
                 case "rrtype":
                     string rrtypeString = reader.GetString().ToUpper();
                     watcher.rrtype = rrtypeString switch {
-                        "A" => Protocols.Dns.RecordType.A,
-                        "NS" => Protocols.Dns.RecordType.NS,
+                        "A"     => Protocols.Dns.RecordType.A,
+                        "NS"    => Protocols.Dns.RecordType.NS,
                         "CNAME" => Protocols.Dns.RecordType.CNAME,
-                        "SOA" => Protocols.Dns.RecordType.SOA,
-                        "PTR" => Protocols.Dns.RecordType.PTR,
-                        "MX" => Protocols.Dns.RecordType.MX,
-                        "TXT" => Protocols.Dns.RecordType.TXT,
-                        "AAAA" => Protocols.Dns.RecordType.AAAA,
-                        "SRV" => Protocols.Dns.RecordType.SRV,
-                        _ => Protocols.Dns.RecordType.A,
+                        "SOA"   => Protocols.Dns.RecordType.SOA,
+                        "PTR"   => Protocols.Dns.RecordType.PTR,
+                        "MX"    => Protocols.Dns.RecordType.MX,
+                        "TXT"   => Protocols.Dns.RecordType.TXT,
+                        "AAAA"  => Protocols.Dns.RecordType.AAAA,
+                        "SRV"   => Protocols.Dns.RecordType.SRV,
+                        _       => Protocols.Dns.RecordType.A,
                     };
                     break;
 
@@ -877,8 +912,14 @@ file sealed class WatcherJsonConverter : JsonConverter<Watchdog.Watcher> {
                 case "interval":
                     watcher.interval = reader.GetInt32();
                     break;
+
                 case "retries":
                     watcher.retries = reader.GetInt32();
+                    break;
+
+
+                case "ackerror":
+                    watcher.ackerror = reader.GetBoolean();
                     break;
                 }
             }
@@ -936,6 +977,7 @@ file sealed class WatcherJsonConverter : JsonConverter<Watchdog.Watcher> {
 
         writer.WriteNumber("interval"u8, value.interval);
         writer.WriteNumber("retries"u8, value.retries);
+        writer.WriteBoolean("ackerror"u8, value.ackerror);
 
         writer.WriteEndObject();
     }

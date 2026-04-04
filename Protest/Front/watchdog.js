@@ -246,6 +246,7 @@ class Watchdog extends Window {
 		let types = ["ICMP", "TCP", "DNS", "HTTP", "HTTP keyword", "TLS"];
 		let methods = ["GET", "POST", "PUT", "PATCH", "DELETE"];
 		let dnsRecordTypes = ["A", "NS", "CNAME", "SOA", "PTR", "MX", "TXT", "AAAA", "SRV"];
+		let errorOptions = ["Acknowledge", "Ignore"];
 
 
 		const enableBox = document.createElement("div");
@@ -375,6 +376,17 @@ class Watchdog extends Window {
 		retriesInput.max = 4;
 		retriesInput.value = 1;
 
+		const errorsLabel = document.createElement("div");
+		errorsLabel.textContent = "Error handling:";
+
+		const errorsInput = document.createElement("select");
+		for (let i = 0; i < errorOptions.length; i++) {
+			const option = document.createElement("option");
+			option.text = errorOptions[i];
+			option.value = errorOptions[i];
+			errorsInput.appendChild(option);
+		}
+
 		let counter = 6;
 		const AppendRow = (label, input) => {
 			label.style.gridArea = `${counter} / 2`;
@@ -398,6 +410,7 @@ class Watchdog extends Window {
 			rrTypeInput.value = this.selected.rrtype;
 			intervalInput.value = this.selected.interval;
 			retriesInput.value = this.selected.retries;
+			errorsInput.value = this.selected.ackerror ? "Acknowledge" : "Ignore";
 
 			for (let i=0; i<5; i++) {
 				statusCodes[i].checked = this.selected.httpstatus[i];
@@ -473,11 +486,12 @@ class Watchdog extends Window {
 				break;
 
 			case "TLS":
-				innerBox.style.gridTemplateRows = "repeat(7, 40px) auto";
+				innerBox.style.gridTemplateRows = "repeat(8, 40px) auto";
 				targetLabel.textContent = "URL:";
 				targetInput.placeholder = "https://one.one.one.one";
 				AppendRow(intervalLabel, intervalInput);
 				AppendRow(retriesLabel, retriesInput);
+				AppendRow(errorsLabel, errorsInput);
 				break;
 			}
 
@@ -545,7 +559,8 @@ class Watchdog extends Window {
 					rrtype     : rrTypeInput.value,
 					httpstatus : [statusCodes[0].checked, statusCodes[1].checked, statusCodes[2].checked, statusCodes[3].checked, statusCodes[4].checked],
 					interval   : Math.max(parseInt(intervalInput.value), 5),
-					retries    : Math.max(parseInt(retriesInput.value), 0)
+					retries    : Math.max(parseInt(retriesInput.value), 0),
+					ackerror   : errorsInput.value === "Acknowledge" ? true : false,
 				};
 
 				let url = isNew ? "watchdog/create" : `watchdog/create?file=${this.selected.file}`;
