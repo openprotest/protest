@@ -145,7 +145,7 @@ internal static class Topology {
                     if (options.Contains("vlan")) {
                         IList<Variable> dot1q = Polling.SnmpQuery(ipAddress, snmpProfile, Oid.TOPOLOGY_DOT1Q, Polling.SnmpOperation.Walk);
                         if (dot1q is not null && dot1q.Count > 0) {
-                            byte[] response = ComputeDotQ1Response(candidate.filename, dot1q);
+                            byte[] response = ComputeDot1QResponse(candidate.filename, dot1q);
                             await wsWriteSemaphore.WaitAsync();
                             try {
                                 await WebSocketHelper.WsWriteText(ws, response);
@@ -426,7 +426,7 @@ internal static class Topology {
         return (char)(value < 10 ? '0' + value : 'a' + (value - 10));
     }
 
-    private static byte[] ComputeDotQ1Response(string file, IList<Variable> dot1q) {
+    private static byte[] ComputeDot1QResponse(string file, IList<Variable> dot1q) {
         Dictionary<int, string> names = new Dictionary<int, string>();
         Dictionary<int, string> egress = new Dictionary<int, string>();
         Dictionary<int, string> untagged = new Dictionary<int, string>();
@@ -444,7 +444,7 @@ internal static class Topology {
                 int startIndex = GetPortBitmapStart(raw);
                 if (startIndex == -1) continue;
 
-                int maxIndex = Math.Min(raw.Length, startIndex + Topology.GetPortBitmapLength(raw, startIndex));
+                int maxIndex = Math.Min(raw.Length, startIndex + GetPortBitmapLength(raw, startIndex));
 
                 for (int j = maxIndex - 1; j >= 1; j--) {
                     if (raw[j] != 0) break;
@@ -596,16 +596,7 @@ internal static class Topology {
                 return $"{bytes[3]}.{bytes[4]}.{bytes[5]}.{bytes[6]}";
             }
             else if (bytes.Length - 3 == 16) {
-                return $"""
-                {bytes[3].ToString("x2")}{bytes[4].ToString("x2")}:
-                {bytes[5].ToString("x2")}{bytes[6].ToString("x2")}:
-                {bytes[7].ToString("x2")}{bytes[8].ToString("x2")}:
-                {bytes[9].ToString("x2")}{bytes[10].ToString("x2")}:
-                {bytes[11].ToString("x2")}{bytes[12].ToString("x2")}:
-                {bytes[13].ToString("x2")}{bytes[14].ToString("x2")}:
-                {bytes[15].ToString("x2")}{bytes[16].ToString("x2")}:
-                {bytes[17].ToString("x2")}{bytes[18].ToString("x2")}
-                """;
+                return $"{bytes[3].ToString("x2")}{bytes[4].ToString("x2")}:{bytes[5].ToString("x2")}{bytes[6].ToString("x2")}:{bytes[7].ToString("x2")}{bytes[8].ToString("x2")}:{bytes[9].ToString("x2")}{bytes[10].ToString("x2")}:{bytes[11].ToString("x2")}{bytes[12].ToString("x2")}:{bytes[13].ToString("x2")}{bytes[14].ToString("x2")}:{bytes[15].ToString("x2")}{bytes[16].ToString("x2")}:{bytes[17].ToString("x2")}{bytes[18].ToString("x2")}";
             }
             return value.ToString();
 
@@ -628,16 +619,7 @@ internal static class Topology {
                 return $"{bytes[3]}.{bytes[4]}.{bytes[5]}.{bytes[6]}";
             }
             else if (bytes.Length - 3 == 16) {
-                return $"""
-                {bytes[3].ToString("x2")}{bytes[4].ToString("x2")}:
-                {bytes[5].ToString("x2")}{bytes[6].ToString("x2")}:
-                {bytes[7].ToString("x2")}{bytes[8].ToString("x2")}:
-                {bytes[9].ToString("x2")}{bytes[10].ToString("x2")}:
-                {bytes[11].ToString("x2")}{bytes[12].ToString("x2")}:
-                {bytes[13].ToString("x2")}{bytes[14].ToString("x2")}:
-                {bytes[15].ToString("x2")}{bytes[16].ToString("x2")}:
-                {bytes[17].ToString("x2")}{bytes[18].ToString("x2")}
-                """;
+                return $"{bytes[3].ToString("x2")}{bytes[4].ToString("x2")}:{bytes[5].ToString("x2")}{bytes[6].ToString("x2")}:{bytes[7].ToString("x2")}{bytes[8].ToString("x2")}:{bytes[9].ToString("x2")}{bytes[10].ToString("x2")}:{bytes[11].ToString("x2")}{bytes[12].ToString("x2")}:{bytes[13].ToString("x2")}{bytes[14].ToString("x2")}:{bytes[15].ToString("x2")}{bytes[16].ToString("x2")}:{bytes[17].ToString("x2")}{bytes[18].ToString("x2")}";
             }
             return value.ToString();
 
