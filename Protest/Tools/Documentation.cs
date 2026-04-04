@@ -153,26 +153,27 @@ internal static class Documentation {
             return "{\"error\":\"Unsafe content. Scripts are not allowed.\"}"u8.ToArray();
 
         int idx = 0;
-        string text = String.Empty;
+        StringBuilder textBuilder = new StringBuilder();
         while (idx < payload[1].Length) {
-
             if (payload[1][idx] == '<') {
+                string text = textBuilder.ToString();
                 if (text.Length > 0) {
                     string[] split = text.ToLower().Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
                     for (int i = 0; i < split.Length; i++)
-                        if (!keywords.Contains(split[i]))
+                        if (!keywords.Contains(split[i])) {
                             keywords.Add(split[i]);
-                    text = String.Empty;
+                        }
+                    textBuilder.Clear();
                 }
 
                 int tagStop = payload[1].IndexOf('>', idx);
-                if (tagStop == -1)
-                    break;
+                if (tagStop == -1) break;
                 idx = tagStop + 1;
+                
                 continue;
             }
 
-            text += payload[1][idx++];
+            textBuilder.Append(payload[1][idx++]);
         }
 
         keywords.Sort();

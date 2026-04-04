@@ -140,8 +140,7 @@ internal static class SnmpProfiles {
                     continue;
                 }
 
-                if (!String.IsNullOrEmpty(newProfiles[i].authPassword)
-                    && !String.IsNullOrEmpty(newProfiles[i].privacyPassword)) {
+                if (!String.IsNullOrEmpty(newProfiles[i].authPassword) && !String.IsNullOrEmpty(newProfiles[i].privacyPassword)) {
                     continue;
                 }
 
@@ -183,8 +182,7 @@ internal static class SnmpProfiles {
 
     public static bool FromGuid(string profileGuid, out Profile profile, SnmpProfiles.Profile[] snmpProfiles = null) {
         if (Guid.TryParse(profileGuid, out Guid guid)) {
-            FromGuid(guid, out profile);
-            return true;
+            return FromGuid(guid, out profile);
         }
 
         profile = null;

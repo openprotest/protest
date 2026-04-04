@@ -226,7 +226,7 @@ internal static class PortScan {
                     for (int i = portFrom; i <= portTo; i += 256) {
                         if (ws.State != WebSocketState.Open) { return; }
 
-                        string result = String.Empty;
+                        StringBuilder builder = new StringBuilder();
 
                         int from = i;
                         int to = Math.Min(i + 255, portTo);
@@ -236,12 +236,12 @@ internal static class PortScan {
 
                         for (int port = 0; port < s.Result.Length; port++) {
                             if (s.Result[port]) {
-                                result += (port + from) + ((char)127).ToString();
+                                builder.Append($"{(port + from)}{(char)127}");
                             }
                         }
 
-                        if (result.Length > 0) {
-                            result = host + ((char)127) + result;
+                        if (builder.Length > 0) {
+                            string result = host + ((char)127) + builder.ToString();
                             lock (mutex) { //one send per socket
                                 ws.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(result), 0, result.Length), WebSocketMessageType.Text, true, CancellationToken.None);
                             }

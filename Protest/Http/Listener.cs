@@ -6,6 +6,7 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Net;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Protest.Tasks;
@@ -465,11 +466,13 @@ internal sealed class Listener {
     }
 
     public override string ToString() {
-        string s = String.Empty;
+        StringBuilder builder = new StringBuilder();
         foreach (string prefix in listener.Prefixes) {
-            s += (s.Length == 0 ? String.Empty : "\n") + "Listening on " + prefix;
+            if (builder.Length > 0) {
+                builder.AppendLine();
+            }
+            builder.Append($"Listening on {prefix}");
         }
-
-        return s;
+        return builder.ToString();
     }
 }

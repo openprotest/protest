@@ -97,13 +97,19 @@ internal static class TraceRoute {
                     for (int j = 0; j < ipList.Count; j++) {
                         tasks.Add(Protocols.Dns.NativeReverseDnsLookupAsync(ipList[j]));
                     }
-                    string[] hostnameArray = await Task.WhenAll(tasks);
 
-                    string hostnames = $"[hostnames]{(char)127}{hostname}{(char)127}";
-                    for (int i = 0; i < hostnameArray.Length; i++)
-                        if (hostnameArray[i].Length > 0 && hostnameArray[i] != ipList[i].ToString())
-                            hostnames += $"{ipList[i]}{(char)127}{hostnameArray[i]}{(char)127}";
-                    if (hostnames.EndsWith(((char)127).ToString())) hostnames = hostnames[..^1];
+                    string[] hostnameArray = await Task.WhenAll(tasks);
+                    StringBuilder hostnamesBuilder = new StringBuilder($"[hostnames]{(char)127}{hostname}{(char)127}");
+                    for (int i = 0; i < hostnameArray.Length; i++) {
+                        if (hostnameArray[i].Length > 0 && hostnameArray[i] != ipList[i].ToString()) {
+                            hostnamesBuilder.Append($"{ipList[i]}{(char)127}{hostnameArray[i]}{(char)127}");
+                        }
+                    }
+
+                    string hostnames = hostnamesBuilder.ToString();
+                    if (hostnames.EndsWith(((char)127).ToString())) {
+                        hostnames = hostnames[..^1];
+                    }
 
                     lock (mutex) {
                         ws.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(hostnames), 0, hostnames.Length), WebSocketMessageType.Text, true, CancellationToken.None);

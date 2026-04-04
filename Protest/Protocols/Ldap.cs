@@ -156,12 +156,14 @@ internal static class Ldap {
                     IPAddress subnet = IpTools.GetNetworkAddress(ip.Address, ip.IPv4Mask);
                     IPAddress broadcast = IpTools.GetBroadcastAddress(ip.Address, ip.IPv4Mask);
 
-                    string bits = String.Empty;
-                    int prefix = 0;
+                    StringBuilder bitsBuilder = new StringBuilder();
                     for (int i = 0; i < 4; i++) {
                         byte b = ip.IPv4Mask.GetAddressBytes()[i];
-                        bits += Convert.ToString(b, 2).PadLeft(8, '0');
+                        bitsBuilder.Append(Convert.ToString(b, 2).PadLeft(8, '0'));
                     }
+
+                    int prefix = 0;
+                    string bits = bitsBuilder.ToString();
                     for (int i = 0; i < bits.Length; i++) {
                         if (bits[i] == '0') break;
                         prefix++;

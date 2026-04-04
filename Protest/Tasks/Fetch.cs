@@ -150,7 +150,7 @@ internal static class Fetch {
         Dictionary<string, string> wmi = new Dictionary<string, string>();
         Dictionary<string, string> ad = new Dictionary<string, string>();
         string netBios = Protocols.NetBios.GetBiosName(ipList.First()?.ToString());
-        string portScan = string.Empty;
+        StringBuilder builder = new StringBuilder();
 
         Thread tWmi = null, tAd = null, tPortScan = null;
 
@@ -229,14 +229,15 @@ internal static class Fetch {
                 bool[] ports = PortScan.PortsScanAsync(target, portsPool, 1000, true).GetAwaiter().GetResult();
 
                 for (int i = 0; i < portsPool.Length; i++) {
-                    if (ports[i]) {
-                        portScan += $"{portsPool[i]}; ";
+                    if (!(ports[i])) continue;
+                    if (builder.Length == 0) {
+                        builder.Append(portsPool[i]);
+                    }
+                    else {
+                        builder.Append($"; {portsPool[i]}");
                     }
                 }
 
-                if (portScan.EndsWith("; ")) {
-                    portScan = portScan[..^2];
-                }
             });
         }
 
@@ -287,8 +288,9 @@ internal static class Fetch {
             }
         }
 
-        if (portScan.Length > 0) {
-            data.TryAdd("ports", new string[] { portScan, "Port-scan", string.Empty });
+        string portsString = builder.ToString();
+        if (!String.IsNullOrEmpty(portsString)) {
+            data.TryAdd("ports", new string[] { portsString, "Port-scan", string.Empty });
         }
 
         if (wmi.TryGetValue("mac address", out string mac)) {
@@ -338,9 +340,9 @@ internal static class Fetch {
             return null;
         }
 
-        //if no type found, try to guess from ports
-        if (!data.ContainsKey("type") && portScan.Length > 0) {
-            int[] ports = portScan.Split(';').Select(o => int.Parse(o.Trim())).ToArray();
+        //if no type found, try guessing from ports
+        if (!data.ContainsKey("type") && !String.IsNullOrEmpty(portsString)) {
+            int[] ports = portsString.Split(';').Select(o => int.Parse(o.Trim())).ToArray();
 
             if (ports.Contains(445) && ports.Contains(3389) && (ports.Contains(53) || ports.Contains(67) || ports.Contains(389) || ports.Contains(636) || ports.Contains(853))) { //SMB, RDP, DNS, DHCP, LDAP
                 data.TryAdd("type", new string[] { "Server", "Port-scan", string.Empty });
