@@ -82,7 +82,7 @@ internal static class Topology {
 
             await WebSocketHelper.WsWriteText(ws, message);
 
-            using SemaphoreSlim wsWriteSemaphore = new SemaphoreSlim(1, 1);
+            using SemaphoreSlim writeSemaphore = new SemaphoreSlim(1, 1);
 
             Task[] tasks = candidates.Select(async candidate => {
                 if (!candidate.attributes.TryGetValue("ip", out Database.Attribute ipAttr)) return;
@@ -95,36 +95,36 @@ internal static class Topology {
                 await Task.Yield();
 
                 try {
-                    await wsWriteSemaphore.WaitAsync();
                     try {
+                        await writeSemaphore.WaitAsync();
                         await WebSocketHelper.WsWriteText(ws, $"{{\"retrieve\":\"{candidate.filename}\"}}");
                     }
                     finally {
-                        wsWriteSemaphore.Release();
+                        writeSemaphore.Release();
                     }
 
                     IList<Variable> lldpLocal = Polling.SnmpQuery(ipAddress, snmpProfile, [Oid.LLDP_LOCAL_SYS_DATA], Polling.SnmpOperation.Walk);
                     IList<Variable> lldpRemote = Polling.SnmpQuery(ipAddress, snmpProfile, [Oid.LLDP_REMOTE_SYS_DATA], Polling.SnmpOperation.Walk);
 
                     if (lldpLocal is null || lldpRemote is null) {
-                        await wsWriteSemaphore.WaitAsync();
                         try {
+                            await writeSemaphore.WaitAsync();
                             await WebSocketHelper.WsWriteText(ws, $"{{\"nolldp\":\"{candidate.filename}\"}}");
                             await WebSocketHelper.WsWriteText(ws, $"{{\"over\":\"{candidate.filename}\"}}");
                         }
                         finally {
-                            wsWriteSemaphore.Release();
+                            writeSemaphore.Release();
                         }
                         return;
                     }
                     else {
                         byte[] response = ComputeLldpResponse(candidate.filename, lldpLocal, lldpRemote);
-                        await wsWriteSemaphore.WaitAsync();
                         try  {
+                            await writeSemaphore.WaitAsync();
                             await WebSocketHelper.WsWriteText(ws, response);
                         }
                         finally {
-                            wsWriteSemaphore.Release();
+                            writeSemaphore.Release();
                         }
                     }
 
@@ -132,12 +132,12 @@ internal static class Topology {
                         IList<Variable> dot1TpFdb = Polling.SnmpQuery(ipAddress, snmpProfile, [Oid.INT_1D_TP_FDB], Polling.SnmpOperation.Walk);
                         if (dot1TpFdb is not null && dot1TpFdb.Count > 0) {
                             byte[] response = ComputeDot1TpFdbResponse(candidate.filename, dot1TpFdb);
-                            await wsWriteSemaphore.WaitAsync();
                             try {
+                                await writeSemaphore.WaitAsync();
                                 await WebSocketHelper.WsWriteText(ws, response);
                             }
                             finally {
-                                wsWriteSemaphore.Release();
+                                writeSemaphore.Release();
                             }
                         }
                     }
@@ -146,12 +146,12 @@ internal static class Topology {
                         IList<Variable> dot1q = Polling.SnmpQuery(ipAddress, snmpProfile, Oid.TOPOLOGY_DOT1Q, Polling.SnmpOperation.Walk);
                         if (dot1q is not null && dot1q.Count > 0) {
                             byte[] response = ComputeDot1QResponse(candidate.filename, dot1q);
-                            await wsWriteSemaphore.WaitAsync();
                             try {
+                                await writeSemaphore.WaitAsync();
                                 await WebSocketHelper.WsWriteText(ws, response);
                             }
                             finally {
-                                wsWriteSemaphore.Release();
+                                writeSemaphore.Release();
                             }
                         }
                     }
@@ -160,12 +160,12 @@ internal static class Topology {
                         IList<Variable> traffic = Polling.SnmpQuery(ipAddress, snmpProfile, Oid.TOPOLOGY_TRAFFIC, Polling.SnmpOperation.Walk);
                         if (traffic is not null && traffic.Count > 0) {
                             byte[] response = ComputeTrafficResponse(candidate.filename, traffic);
-                            await wsWriteSemaphore.WaitAsync();
                             try {
+                                await writeSemaphore.WaitAsync();
                                 await WebSocketHelper.WsWriteText(ws, response);
                             }
                             finally {
-                                wsWriteSemaphore.Release();
+                                writeSemaphore.Release();
                             }
                         }
                     }
@@ -174,12 +174,12 @@ internal static class Topology {
                         IList<Variable> error = Polling.SnmpQuery(ipAddress, snmpProfile, Oid.TOPOLOGY_ERROR, Polling.SnmpOperation.Walk);
                         if (error is not null && error.Count > 0) {
                             byte[] response = ComputeErrorResponse(candidate.filename, error);
-                            await wsWriteSemaphore.WaitAsync();
                             try {
+                                await writeSemaphore.WaitAsync();
                                 await WebSocketHelper.WsWriteText(ws, response);
                             }
                             finally {
-                                wsWriteSemaphore.Release();
+                                writeSemaphore.Release();
                             }
                         }
                     }
@@ -188,33 +188,33 @@ internal static class Topology {
                         IList<Variable> speed = Polling.SnmpQuery(ipAddress, snmpProfile, [Oid.INT_SPEED], Polling.SnmpOperation.Walk);
                         if (speed is not null && speed.Count > 0) {
                             byte[] response = ComputeSpeedResponse(candidate.filename, speed);
-                            await wsWriteSemaphore.WaitAsync();
                             try {
+                                await writeSemaphore.WaitAsync();
                                 await WebSocketHelper.WsWriteText(ws, response);
                             }
                             finally {
-                                wsWriteSemaphore.Release();
+                                writeSemaphore.Release();
                             }
                         }
                     }
 
-                    await wsWriteSemaphore.WaitAsync();
                     try {
+                        await writeSemaphore.WaitAsync();
                         await WebSocketHelper.WsWriteText(ws, $"{{\"over\":\"{candidate.filename}\"}}");
                     }
                     finally {
-                        wsWriteSemaphore.Release();
+                        writeSemaphore.Release();
                     }
 
                 }
                 catch (Exception ex) {
-                    await wsWriteSemaphore.WaitAsync();
                     try {
+                        await writeSemaphore.WaitAsync();
                         await WebSocketHelper.WsWriteText(ws, $"{{\"nosnmp\":\"{candidate.filename}\"}}");
                         await WebSocketHelper.WsWriteText(ws, $"{{\"over\":\"{candidate.filename}\"}}");
                     }
                     finally {
-                        wsWriteSemaphore.Release();
+                        writeSemaphore.Release();
                     }
                     Logger.Error(ex);
                 }
@@ -706,11 +706,11 @@ internal static class Topology {
 
         for (int i = 0; i < size; i++) {
             string a = raw[startIndex + i].ToString("x2");
-            hex[i * 2] = a.Length == 1 ? '0' : a[0];
-            hex[i * 2 + 1] = a.Length == 1 ? a[0] : a[1];
+            hex[i * 2] = a[0];
+            hex[i * 2 + 1] = a[1];
         }
 
-        return hex.ToString();
+        return new String(hex);
     }
 
 }
