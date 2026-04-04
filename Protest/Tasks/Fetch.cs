@@ -226,7 +226,9 @@ internal static class Fetch {
             tPortScan = new Thread(() => {
                 short[] portsPool = argPortScan == "full" ? PortScan.BASIC_PORTS : PortScan.BASIC_PORTS;
 
-                bool[] ports = PortScan.PortsScanAsync(target, portsPool, 1000, true).GetAwaiter().GetResult();
+                bool[] ports = argPortScan == "full" 
+                    ? PortScan.PortsScanAsync(target, portsPool, 1000, true).GetAwaiter().GetResult()
+                    : PortScan.PortsScanAsync(target, 1, 5000, 500, true).GetAwaiter().GetResult();
 
                 for (int i = 0; i < portsPool.Length; i++) {
                     if (!(ports[i])) continue;
@@ -303,7 +305,7 @@ internal static class Fetch {
             }
         }
 
-        if (!wmi.ContainsKey("manufacturer") && String.IsNullOrEmpty(mac)) {
+        if (!wmi.ContainsKey("manufacturer") && !String.IsNullOrEmpty(mac)) {
             byte[] manufacturerArray = MacLookup.Lookup(mac);
             if (manufacturerArray is not null) {
                 string manufacturer = Encoding.UTF8.GetString(manufacturerArray);
@@ -409,7 +411,7 @@ internal static class Fetch {
                 List<string> macAddresses = macAddressResult
                     .Select(o => o.Data.ToBytes())
                     .Where(o => o.Length == 8)
-                    .Where(o => o[2]>0 && o[3]>0 && o[4]>0 && o[4]>0 && o[6]>0 && o[7]>0)
+                    .Where(o => o[2]>0 && o[3]>0 && o[4]>0 && o[5]>0 && o[6]>0 && o[7]>0)
                     .Select(o => BitConverter.ToString(o, 2).Replace('-', ':'))
                     .Distinct()
                     .ToList();
@@ -985,12 +987,12 @@ internal static class Fetch {
                 && database.dictionary.TryGetValue(file, out Database.Entry oldEntry)) { //conflict triggered
 
                 //keep old name if exists
-                if (oldEntry.attributes.TryGetValue("name", out Database.Attribute oldName) && String.IsNullOrEmpty(oldName.value)) {
+                if (oldEntry.attributes.TryGetValue("name", out Database.Attribute oldName) && !String.IsNullOrEmpty(oldName.value)) {
                     attributes.AddOrUpdate("name", oldName, (_, _) => oldName);
                 }
 
                 //keep old type if exists
-                if (oldEntry.attributes.TryGetValue("type", out Database.Attribute oldType) && String.IsNullOrEmpty(oldType.value)) {
+                if (oldEntry.attributes.TryGetValue("type", out Database.Attribute oldType) && !String.IsNullOrEmpty(oldType.value)) {
                     attributes.AddOrUpdate("type", oldType, (_, _) => oldType);
                 }
 

@@ -26,7 +26,7 @@ internal static class TraceRoute {
 
         if (ws is null) return;
 
-        Lock mutex = new Lock();
+        using SemaphoreSlim writeSemaphore = new SemaphoreSlim(1, 1);
 
         try {
             while (ws.State == WebSocketState.Open) {
@@ -50,7 +50,7 @@ internal static class TraceRoute {
                     continue;
                 }
 
-                const short timeout = 2000; //2s
+                const short timeout = 2_000; //2s
                 const short ttl = 30;
 
                 new Thread(async () => {
@@ -88,8 +88,12 @@ internal static class TraceRoute {
                                 break;
                             }
 
-                            lock (mutex) { //once send per socket
-                                ws.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(result), 0, result.Length), WebSocketMessageType.Text, true, CancellationToken.None);
+                            try {
+                                await writeSemaphore.WaitAsync();
+                                await ws.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(result), 0, result.Length), WebSocketMessageType.Text, true, CancellationToken.None);
+                            }
+                            finally {
+                                writeSemaphore.Release();
                             }
                         }
 
@@ -111,15 +115,16 @@ internal static class TraceRoute {
                         hostnames = hostnames[..^1];
                     }
 
-                    lock (mutex) {
-                        ws.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(hostnames), 0, hostnames.Length), WebSocketMessageType.Text, true, CancellationToken.None);
+                    try {
+                        await writeSemaphore.WaitAsync();
+                        await ws.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(hostnames), 0, hostnames.Length), WebSocketMessageType.Text, true, CancellationToken.None);
 
-                        string over = $"over{((char)127)}{hostname}";
-                        ws.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(over), 0, over.Length), WebSocketMessageType.Text, true, CancellationToken.None);
-
-                        //ws.CloseAsync(WebSocketCloseStatus.NormalClosure, null, CancellationToken.None);
+                        byte[] over = Encoding.UTF8.GetBytes($"over{((char)127)}{hostname}");
+                        await ws.SendAsync(new ArraySegment<byte>(over, 0, over.Length), WebSocketMessageType.Text, true, CancellationToken.None);
                     }
-
+                    finally {
+                        writeSemaphore.Release();
+                    }
                 }).Start();
             }
         }

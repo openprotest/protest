@@ -176,7 +176,7 @@ internal static class PortScan {
 
         if (ws is null) return;
 
-        Lock mutex = new Lock();
+        using SemaphoreSlim writeSemaphore = new SemaphoreSlim(1, 1);
 
         try {
             byte[] buff = new byte[2048];
@@ -197,8 +197,12 @@ internal static class PortScan {
 
                 string host = message[0].Trim();
                 if (host.Length == 0) {
-                    lock (mutex) {
-                        ws.SendAsync(Data.CODE_INVALID_ARGUMENT, WebSocketMessageType.Text, true, CancellationToken.None);
+                    try {
+                        await writeSemaphore.WaitAsync();
+                        await ws.SendAsync(Data.CODE_INVALID_ARGUMENT, WebSocketMessageType.Text, true, CancellationToken.None);
+                    }
+                    finally {
+                        writeSemaphore.Release();
                     }
                     continue;
                 }
@@ -222,7 +226,7 @@ internal static class PortScan {
                     (portTo, portFrom) = (portFrom, portTo);
                 }
 
-                new Thread(() => {
+                new Thread(async () => {
                     for (int i = portFrom; i <= portTo; i += 256) {
                         if (ws.State != WebSocketState.Open) { return; }
 
@@ -242,16 +246,25 @@ internal static class PortScan {
 
                         if (builder.Length > 0) {
                             string result = host + ((char)127) + builder.ToString();
-                            lock (mutex) { //one send per socket
-                                ws.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(result), 0, result.Length), WebSocketMessageType.Text, true, CancellationToken.None);
+                            try {
+                                await writeSemaphore.WaitAsync();
+                                await ws.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(result), 0, result.Length), WebSocketMessageType.Text, true, CancellationToken.None);
+                            }
+                            finally {
+                                writeSemaphore.Release();
                             }
                         }
                     }
 
                     string done = "done" + ((char)127) + host;
-                    lock (mutex) {
-                        ws.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(done), 0, done.Length), WebSocketMessageType.Text, true, CancellationToken.None);
+                    try {
+                        await writeSemaphore.WaitAsync();
+                        await ws.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(done), 0, done.Length), WebSocketMessageType.Text, true, CancellationToken.None);
                     }
+                    finally {
+                        writeSemaphore.Release();
+                    }
+
                 }).Start();
             }
         }
@@ -303,7 +316,7 @@ internal static class PortScan {
         if (useRemoteNetstat && OperatingSystem.IsWindows()) {
             int[] q = RemoteNetstat(host);
             if (q is not null) {
-                bool[] p = new bool[to - from];
+                bool[] p = new bool[to - from + 1];
                 for (int i = 0; i < p.Length; i++) {
                     p[i] = q.Contains(i + from);
                 }
