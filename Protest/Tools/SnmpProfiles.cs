@@ -182,7 +182,7 @@ internal static class SnmpProfiles {
 
     public static bool FromGuid(string profileGuid, out Profile profile, SnmpProfiles.Profile[] snmpProfiles = null) {
         if (Guid.TryParse(profileGuid, out Guid guid)) {
-            return FromGuid(guid, out profile);
+            return FromGuid(guid, out profile, snmpProfiles);
         }
 
         profile = null;

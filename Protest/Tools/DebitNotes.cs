@@ -157,7 +157,7 @@ internal static class DebitNotes {
                 if (files[i].FullName.StartsWith(Data.DIR_DEBIT_SHORT)) {
                     record.status = "short";
                 }
-                else if (files[i].FullName.StartsWith(Data.DATETIME_FORMAT_LONG)) {
+                else if (files[i].FullName.StartsWith(Data.DIR_DEBIT_LONG)) {
                     record.status = "long";
                 }
                 else if (files[i].FullName.StartsWith(Data.DIR_DEBIT_RETURNED)) {
