@@ -124,7 +124,6 @@ internal static class SnmpProfiles {
             for (int i = 0; i < profiles.Length; i++) {
                 if (profiles[i].guid == Guid.Empty) {
                     profiles[i].guid = Guid.NewGuid();
-                    continue;
                 }
             }
 
@@ -134,7 +133,7 @@ internal static class SnmpProfiles {
                 File.WriteAllBytes(Data.FILE_SNMP_PROFILES, cipher);
             }
 
-            Logger.Action(origin, $"Modify SNMP profiles");
+            Logger.Action(origin, "Modify SNMP profiles");
         }
         catch (JsonException) {
             return Data.CODE_INVALID_ARGUMENT.Array;
@@ -205,8 +204,8 @@ internal sealed class SnmpProfilesJsonConverter : JsonConverter<SnmpProfiles.Pro
                         case "community"       : profile.community        = reader.GetString() ?? String.Empty; break;
                         case "context"         : profile.context          = reader.GetString() ?? String.Empty; break;
                         case "username"        : profile.username         = reader.GetString() ?? String.Empty; break;
-                        case "authPassword"    : profile.authPassword     = hidePasswords ? String.Empty : reader.GetString(); break;
-                        case "privacyPassword" : profile.privacyPassword  = hidePasswords ? String.Empty : reader.GetString(); break;
+                        case "authPassword"    : profile.authPassword     = hidePasswords ? String.Empty : reader.GetString() ?? String.Empty; break;
+                        case "privacyPassword" : profile.privacyPassword  = hidePasswords ? String.Empty : reader.GetString() ?? String.Empty; break;
                         case "guid"            : profile.guid             = reader.GetGuid(); break;
 
                         case "authAlgorithm":
