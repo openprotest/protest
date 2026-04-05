@@ -92,6 +92,9 @@ internal static class Data {
                     dirs[i].Create();
                 }
             }
+               catch (IOException ex) {
+                Logger.Error(ex);
+            }
             catch (Exception ex) {
                 Logger.Error(ex);
             }

@@ -104,6 +104,10 @@ internal sealed class Database {
                 mutex = new Lock()
             };
         }
+        catch (JsonException ex) {
+            Logger.Error(ex);
+            return null;
+        }
         catch (Exception ex) {
             Logger.Error(ex);
             return null;
@@ -325,6 +329,10 @@ internal sealed class Database {
                 Save(pair.Key, pair.Value, SaveMethod.merge, origin);
             }
         }
+        catch (JsonException ex) {
+            Logger.Error(ex);
+            return Encoding.UTF8.GetBytes($"{{\"error\":\"{Data.EscapeJsonText(ex.Message)}\"}}");
+        }
         catch (Exception ex) {
             Logger.Error(ex);
             return Encoding.UTF8.GetBytes($"{{\"error\":\"{Data.EscapeJsonText(ex.Message)}\"}}");
@@ -363,6 +371,10 @@ internal sealed class Database {
             }
 
             return Data.CODE_FAILED.Array;
+        }
+        catch (JsonException ex) {
+            Logger.Error(ex);
+            return null;
         }
         catch (Exception ex) {
             Logger.Error(ex);
@@ -425,11 +437,16 @@ internal sealed class Database {
             builder.Append('}');
         }
 #if DEBUG
+        catch (IOException ex) {
+            Logger.Error(ex);
+        }
         catch (Exception ex) {
             Logger.Error(ex);
         }
 #else
-        catch { }
+        catch (IOException ex) {
+            Logger.Error(ex);
+        }
 #endif
 
         return Encoding.UTF8.GetBytes(builder.ToString());

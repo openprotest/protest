@@ -360,7 +360,7 @@ internal static class DebitNotes {
     }
 
     public static byte[] ListBanners() {
-        DirectoryInfo dir = new DirectoryInfo($"{Configuration.front_path}{Data.DELIMITER}custom");
+        DirectoryInfo dir = new DirectoryInfo($"{Configuration.frontPath}{Data.DELIMITER}custom");
         if (!dir.Exists) return "[]"u8.ToArray();
 
         StringBuilder builder = new StringBuilder();

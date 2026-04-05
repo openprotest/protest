@@ -1,6 +1,4 @@
 ﻿using Lextm.SharpSnmpLib;
-using Microsoft.Extensions.Primitives;
-using Org.BouncyCastle.Utilities;
 using Protest.Http;
 using Protest.Protocols.Snmp;
 using Protest.Tools;

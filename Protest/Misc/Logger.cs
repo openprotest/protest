@@ -136,6 +136,10 @@ internal static class Logger {
 
             return result;
         }
+        catch (IOException ex) {
+            Logger.Error(ex);
+            return null;
+        }
         catch (Exception ex) {
             Logger.Error(ex);
             return null;

@@ -41,11 +41,16 @@ internal sealed class AttributesJsonConverter : JsonConverter<ConcurrentDictiona
                         attr.date = removeValue ? 0 : reader.GetInt64();
                     }
 #if DEBUG
+                    catch (JsonException ex) {
+                        Logger.Error(ex);
+                    }
                     catch (Exception ex) {
                         Logger.Error(ex);
                     }
 #else
-                    catch { }
+                    catch (JsonException ex) {
+                        Logger.Error(ex);
+                    }
 #endif
                 }
 

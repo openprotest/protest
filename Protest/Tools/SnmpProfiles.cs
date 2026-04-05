@@ -228,7 +228,6 @@ internal sealed class SnmpProfilesJsonConverter : JsonConverter<SnmpProfiles.Pro
                 while (reader.Read()) {
                     if (reader.TokenType == JsonTokenType.EndObject) break;
 
-
                     if (reader.TokenType == JsonTokenType.PropertyName) {
                         string propertyName = reader.GetString();
                         reader.Read();

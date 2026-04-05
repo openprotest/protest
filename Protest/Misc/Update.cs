@@ -21,10 +21,16 @@ internal static class Update {
             }
         }
 #if DEBUG
+        catch (HttpRequestException ex) {
+            Logger.Error(ex);
+        }
         catch (Exception ex) {
             Logger.Error(ex);
         }
 #else
+        catch (HttpRequestException ex) {
+            Logger.Error(ex);
+        }
         catch { }
 #endif
 

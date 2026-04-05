@@ -372,6 +372,10 @@ internal static class Auth {
         try {
             File.WriteAllBytes($"{Data.DIR_RBAC}{Data.DELIMITER}{access.username}", cipher);
         }
+        catch (IOException ex) {
+            Logger.Error(ex);
+            return false;
+        }
         catch (Exception ex) {
             Logger.Error(ex);
             return false;
@@ -643,6 +647,12 @@ internal static class Auth {
                 access.accessPath = PopulateAccessPath(access.authorization);
                 rbac.TryAdd(access.username, access);
             }
+            catch (IOException ex) {
+                Logger.Error(ex);
+            }
+            catch (JsonException ex) {
+                Logger.Error(ex);
+            }
             catch (Exception ex) {
                 Logger.Error(ex);
             }
@@ -766,6 +776,10 @@ internal static class Auth {
 
             File.WriteAllBytes($"{Data.DIR_RBAC}{Data.DELIMITER}{access.username}", cipher);
         }
+        catch (IOException ex) {
+            Logger.Error(ex);
+            return "{\"error\":\"failed to write user file.\"}"u8.ToArray();
+        }
         catch (Exception ex) {
             Logger.Error(ex);
             return "{\"error\":\"failed to write user file.\"}"u8.ToArray();
@@ -801,6 +815,10 @@ internal static class Auth {
 
         try {
             File.Delete($"{Data.DIR_RBAC}{Data.DELIMITER}{username}");
+        }
+        catch (IOException ex) {
+            Logger.Error(ex);
+            return "{\"error\":\"failed to write user file.\"}"u8.ToArray();
         }
         catch (Exception ex) {
             Logger.Error(ex);

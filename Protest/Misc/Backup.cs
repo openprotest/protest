@@ -60,6 +60,10 @@ internal static class Backup {
 
             return List();
         }
+        catch (IOException ex) {
+            Logger.Error(ex);
+            return Encoding.UTF8.GetBytes($"{{\"error\":\"{ex.Message}\"}}");
+        }
         catch (Exception ex) {
             Logger.Error(ex);
             return Encoding.UTF8.GetBytes($"{{\"error\":\"{ex.Message}\"}}");

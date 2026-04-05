@@ -65,16 +65,16 @@ internal class Program {
         Console.WriteLine();
 
         try {
-            StartServer(Configuration.http_prefixes);
+            StartServer(Configuration.httpPrefixes);
         }
         catch (System.Net.HttpListenerException ex) when (ex.ErrorCode == 5) { //5: access denied
             Console.WriteLine("Switching to fallback uri prefix");
-            StartServer(new string[] { "http://127.0.0.1:8080/" });
+            StartServer(Configuration.fallbackUri);
         }
     }
 
     private static void StartServer(string[] prefixes) {
-        Http.Listener listener = new Http.Listener(prefixes, Configuration.front_path);
+        Http.Listener listener = new Http.Listener(prefixes, Configuration.frontPath);
         Console.WriteLine(listener);
         Console.WriteLine();
         _ = System.Threading.Tasks.Task.Run(() => listener.StartAsync());

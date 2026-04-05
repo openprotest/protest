@@ -205,9 +205,9 @@ internal static class KeepAlive {
                         }
                     }
 #if DEBUG
-                catch (Exception ex) {
-                    Logger.Error(ex);
-                }
+                    catch (Exception ex) {
+                        Logger.Error(ex);
+                    }
 #else
                 catch { }
 #endif

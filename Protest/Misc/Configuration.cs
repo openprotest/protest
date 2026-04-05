@@ -6,19 +6,21 @@ using System.Text;
 
 namespace Protest;
 internal static class Configuration {
+    internal static readonly string[] fallbackUri = new string[] { "http://127.0.0.1:8080/" };
+
     internal static string DB_KEY_STRING;
     internal static byte[] DB_KEY;
     internal static byte[] DB_KEY_IV;
 
     internal static bool backdoor = true;
 
-    internal static string front_path = $"{Data.DIR_BASE}{Data.DELIMITER}front";
-    internal static string[] http_prefixes = new string[] { "http://127.0.0.1:8080/" };
+    internal static string frontPath = $"{Data.DIR_BASE}{Data.DELIMITER}front";
+    internal static string[] httpPrefixes = new string[] { "http://127.0.0.1:8080/" };
 
     internal static bool Load() {
         if (!File.Exists(Data.FILE_CONFIG)) return false;
 
-        List<string> httpPrefixes = new List<string>(1);
+        List<string> prefixesList = new List<string>(1);
 
         using StreamReader fileReader = new StreamReader(Data.FILE_CONFIG);
         while (!fileReader.EndOfStream) {
@@ -46,11 +48,11 @@ internal static class Configuration {
                 break;
 
             case "front_path":
-                front_path = value.ToString();
+                frontPath = value.ToString();
                 break;
 
             case "http_prefix":
-                httpPrefixes.Add(value.ToString());
+                prefixesList.Add(value.ToString());
                 break;
 
             case "backdoor":
@@ -61,13 +63,13 @@ internal static class Configuration {
 
         fileReader.Close();
 
-        if (httpPrefixes.Count > 0) http_prefixes = httpPrefixes.ToArray();
+        if (prefixesList.Count > 0) httpPrefixes = prefixesList.ToArray();
 
         return true;
     }
 
     internal static void LocateFrontEnd() {
-        DirectoryInfo frontDirectory = new DirectoryInfo(front_path);
+        DirectoryInfo frontDirectory = new DirectoryInfo(frontPath);
         int upCount = 5;
         while (!frontDirectory.Exists && upCount-- > 0) {
             string path = frontDirectory.FullName;
@@ -81,8 +83,8 @@ internal static class Configuration {
             }
         }
 
-        if (frontDirectory.Exists && frontDirectory.FullName != front_path) {
-            front_path = frontDirectory.FullName;
+        if (frontDirectory.Exists && frontDirectory.FullName != frontPath) {
+            frontPath = frontDirectory.FullName;
         }
     }
 
@@ -104,10 +106,10 @@ internal static class Configuration {
         builder.AppendLine();
 
 #if DEBUG
-        builder.AppendLine($"front_path = {front_path}");
+        builder.AppendLine($"front_path = {frontPath}");
         builder.AppendLine();
 #else
-        builder.AppendLine($"#front_path = {front_path}");
+        builder.AppendLine($"#front_path = {frontPath}");
         builder.AppendLine();
 #endif
 
