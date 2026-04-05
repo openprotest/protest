@@ -1,4 +1,5 @@
-﻿using Protest.Http;
+﻿using Org.BouncyCastle.Crypto.Modes;
+using Protest.Http;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.NetworkInformation;
@@ -13,6 +14,11 @@ internal static class TraceRoute {
 
     static readonly byte[] ICMP_PAYLOAD = "0123456789abcdef"u8.ToArray();
     public static async Task WebSocketHandler(HttpListenerContext ctx) {
+        if (!Auth.IsAuthenticatedAndAuthorized(ctx, ctx.Request.Url.AbsolutePath)) {
+            ctx.Response.Close();
+            return;
+        }
+
         WebSocket ws;
         try {
             HttpListenerWebSocketContext wsc = await ctx.AcceptWebSocketAsync(null);
@@ -26,40 +32,43 @@ internal static class TraceRoute {
 
         if (ws is null) return;
 
+        Task traceTask = null;
+        using CancellationTokenSource cts = new CancellationTokenSource();
         using SemaphoreSlim writeSemaphore = new SemaphoreSlim(1, 1);
 
         try {
             while (ws.State == WebSocketState.Open) {
                 byte[] buff = new byte[2048];
-                WebSocketReceiveResult receiveResult = await ws.ReceiveAsync(new ArraySegment<byte>(buff), CancellationToken.None);
+                WebSocketReceiveResult receiveResult = await ws.ReceiveAsync(new ArraySegment<byte>(buff), cts.Token);
 
                 if (!Auth.IsAuthenticatedAndAuthorized(ctx, ctx.Request.Url.AbsolutePath)) {
-                    await ws.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, null, CancellationToken.None);
+                    await ws.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, null, cts.Token);
                     return;
                 }
 
                 if (receiveResult.MessageType == WebSocketMessageType.Close) {
-                    await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
+                    await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, cts.Token);
                     break;
                 }
 
                 string hostname = Encoding.Default.GetString(buff, 0, receiveResult.Count);
                 hostname = hostname.Trim();
                 if (hostname.Length == 0) {
-                    await ws.SendAsync(Data.CODE_INVALID_ARGUMENT, WebSocketMessageType.Text, true, CancellationToken.None);
+                    await ws.SendAsync(Data.CODE_INVALID_ARGUMENT, WebSocketMessageType.Text, true, cts.Token);
                     continue;
                 }
 
                 const short timeout = 2_000; //2s
                 const short ttl = 30;
 
-                _ = Task.Run(async () => {
+                traceTask = Task.Run(async () => {
+
                     List<IPAddress> ipList = new List<IPAddress>();
                     string lastAddress = String.Empty;
 
                     using (Ping p = new Ping())
                         for (short i = 1; i < ttl; i++) {
-                            if (ws.State != WebSocketState.Open) break;
+                            if (cts.Token.IsCancellationRequested || ws.State != WebSocketState.Open) break;
                             string result = $"{hostname}{(char)127}";
 
                             try {
@@ -90,7 +99,7 @@ internal static class TraceRoute {
 
                             try {
                                 await writeSemaphore.WaitAsync();
-                                await ws.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(result), 0, result.Length), WebSocketMessageType.Text, true, CancellationToken.None);
+                                await ws.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(result), 0, result.Length), WebSocketMessageType.Text, true, cts.Token);
                             }
                             finally {
                                 writeSemaphore.Release();
@@ -117,10 +126,10 @@ internal static class TraceRoute {
 
                     try {
                         await writeSemaphore.WaitAsync();
-                        await ws.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(hostnames), 0, hostnames.Length), WebSocketMessageType.Text, true, CancellationToken.None);
+                        await ws.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(hostnames), 0, hostnames.Length), WebSocketMessageType.Text, true, cts.Token);
 
                         byte[] over = Encoding.UTF8.GetBytes($"over{((char)127)}{hostname}");
-                        await ws.SendAsync(new ArraySegment<byte>(over, 0, over.Length), WebSocketMessageType.Text, true, CancellationToken.None);
+                        await ws.SendAsync(new ArraySegment<byte>(over, 0, over.Length), WebSocketMessageType.Text, true, cts.Token);
                     }
                     finally {
                         writeSemaphore.Release();
@@ -131,11 +140,23 @@ internal static class TraceRoute {
         catch (WebSocketException ex) when (ex.WebSocketErrorCode == WebSocketError.ConnectionClosedPrematurely) {
             return;
         }
-        catch (WebSocketException ex) when (ex.WebSocketErrorCode != WebSocketError.ConnectionClosedPrematurely) {
-            //do nothing
-        }
+        catch (WebSocketException ex) when (ex.WebSocketErrorCode != WebSocketError.ConnectionClosedPrematurely) { }
         catch (Exception ex) {
             Logger.Error(ex);
+        }
+
+        cts.Cancel();
+
+        if (traceTask is not null) {
+            try {
+                await traceTask;
+            }
+            catch (OperationCanceledException) { } //ignored: task was canceled as part of shutdown
+#if DEBUG
+            catch (Exception ex) {
+                Logger.Error(ex);
+            }
+#endif
         }
 
         if (ws.State == WebSocketState.Open) {

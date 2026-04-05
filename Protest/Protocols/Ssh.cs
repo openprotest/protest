@@ -14,6 +14,11 @@ namespace Protest.Protocols;
 internal static class Ssh {
 
     public static async Task WebSocketHandler(HttpListenerContext ctx) {
+        if (!Auth.IsAuthenticatedAndAuthorized(ctx, ctx.Request.Url.AbsolutePath)) {
+            ctx.Response.Close();
+            return;
+        }
+
         WebSocket ws;
         try {
             HttpListenerWebSocketContext wsc = await ctx.AcceptWebSocketAsync(null);
@@ -26,11 +31,6 @@ internal static class Ssh {
         }
 
         if (ws is null) return;
-
-        if (!Auth.IsAuthenticatedAndAuthorized(ctx, ctx.Request.Url.AbsolutePath)) {
-            await ws.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, null, CancellationToken.None);
-            return;
-        }
 
         string sessionId = ctx.Request.Cookies["sessionid"]?.Value ?? null;
         string origin = IPAddress.IsLoopback(ctx.Request.RemoteEndPoint.Address) ? "loopback" : Auth.GetUsername(sessionId);
@@ -151,7 +151,7 @@ internal static class Ssh {
             }
 
             try {
-                int count = await shellStream.ReadAsync(data, 0, data.Length);
+                int count = await shellStream.ReadAsync(data);
 
                 if (count == 0) { //remote host closed the connection
                     if (ws.State == WebSocketState.Open) {

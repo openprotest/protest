@@ -55,6 +55,11 @@ internal static class Monitor {
     }
 
     public static async Task WebSocketHandler(HttpListenerContext ctx) {
+        if (!Auth.IsAuthenticatedAndAuthorized(ctx, ctx.Request.Url.AbsolutePath)) {
+            ctx.Response.Close();
+            return;
+        }
+
         WebSocket ws;
         try {
             HttpListenerWebSocketContext wsc = await ctx.AcceptWebSocketAsync(null);
@@ -67,11 +72,6 @@ internal static class Monitor {
         }
 
         if (ws is null) return;
-
-        if (!Auth.IsAuthenticatedAndAuthorized(ctx, ctx.Request.Url.AbsolutePath)) {
-            await ws.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, null, CancellationToken.None);
-            return;
-        }
 
         snmpProfiles = SnmpProfiles.Load();
 

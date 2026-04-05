@@ -23,6 +23,11 @@ internal static class Topology {
     }
 
     internal static async Task WebSocketHandler(HttpListenerContext ctx) {
+        if (!Auth.IsAuthenticatedAndAuthorized(ctx, ctx.Request.Url.AbsolutePath)) {
+            ctx.Response.Close();
+            return;
+        }
+
         WebSocket ws;
         try {
             HttpListenerWebSocketContext wsc = await ctx.AcceptWebSocketAsync(null);
@@ -35,11 +40,6 @@ internal static class Topology {
         }
 
         if (ws is null) return;
-
-        if (!Auth.IsAuthenticatedAndAuthorized(ctx, ctx.Request.Url.AbsolutePath)) {
-            await ws.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, null, CancellationToken.None);
-            return;
-        }
 
         //string sessionId = ctx.Request.Cookies["sessionid"]?.Value ?? null;
         //string origin = IPAddress.IsLoopback(ctx.Request.RemoteEndPoint.Address) ? "loopback" : Auth.GetUsername(sessionId);

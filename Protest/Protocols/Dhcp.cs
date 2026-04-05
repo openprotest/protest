@@ -10,9 +10,14 @@ using System.Threading.Tasks;
 namespace Protest.Protocols;
 
 internal static class Dhcp {
-    private static readonly byte[] NULL_IP = new byte[] {0,0,0,0};
+    private static readonly byte[] NULL_IP = new byte[] {0, 0, 0, 0};
 
     public static async Task WebSocketHandler(HttpListenerContext ctx) {
+        if (!Auth.IsAuthenticatedAndAuthorized(ctx, ctx.Request.Url.AbsolutePath)) {
+            ctx.Response.Close();
+            return;
+        }
+
         WebSocket ws;
         try {
             HttpListenerWebSocketContext wsc = await ctx.AcceptWebSocketAsync(null);
@@ -28,11 +33,6 @@ internal static class Dhcp {
 
         byte[] buff = new byte[1024];
         WebSocketReceiveResult receiveResult = await ws.ReceiveAsync(new ArraySegment<byte>(buff), CancellationToken.None);
-
-        if (!Auth.IsAuthenticatedAndAuthorized(ctx, ctx.Request.Url.AbsolutePath)) {
-            await ws.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, null, CancellationToken.None);
-            return;
-        }
 
         if (receiveResult.MessageType == WebSocketMessageType.Close) {
             await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);

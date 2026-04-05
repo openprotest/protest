@@ -61,14 +61,8 @@ const UI = {
 		UI.regionalFormat = localStorage.getItem("regional_format") ?
 			localStorage.getItem("regional_format") : "sys";
 
-		MENU.isAttached = localStorage.getItem("menu_attached") !== "false" ?? true;
-
-		if (MENU.isAttached) {
-			MENU.Attach();
-		}
-		else {
-			MENU.Detach();
-		}
+		MENU.isAttached = localStorage.getItem("menu_attached") !== "false";
+		MENU.isAttached ? MENU.Attach() : MENU.Detach();
 
 		const pos = JSON.parse(localStorage.getItem("menu_button_pos"));
 		if (pos) {
@@ -407,11 +401,11 @@ const MENU = {
 		{ t:"SMTP settings", i:"mono/email.svg?light",       g:"manage", h:true,  f:()=> new Environment("smtp") },
 		{ t:"SNMP settings", i:"mono/snmp.svg?light",        g:"manage", h:true,  f:()=> new Environment("snmp") },
 
-		{ t:"Personalize",    i:"mono/personalize.svg?light", g:"manage", h:false, f:()=> new Personalize() },
-		{ t:"Appearance",     i:"mono/tv.svg?light",          g:"manage", h:true,  f:()=> new Personalize("appearance") },
-		{ t:"Reginal format", i:"mono/earth.svg?light",       g:"manage", h:true,  f:()=> new Personalize("region") },
-		{ t:"Session",        i:"mono/hourglass.svg?light",   g:"manage", h:true,  f:()=> new Personalize("session") },
-		{ t:"Agent",          i:"mono/agent.svg?light",       g:"manage", h:true,  f:()=> new Personalize("agent") },
+		{ t:"Personalize",     i:"mono/personalize.svg?light", g:"manage", h:false, f:()=> new Personalize() },
+		{ t:"Appearance",      i:"mono/tv.svg?light",          g:"manage", h:true,  f:()=> new Personalize("appearance") },
+		{ t:"Regional format", i:"mono/earth.svg?light",       g:"manage", h:true,  f:()=> new Personalize("region") },
+		{ t:"Session",         i:"mono/hourglass.svg?light",   g:"manage", h:true,  f:()=> new Personalize("session") },
+		{ t:"Agent",           i:"mono/agent.svg?light",       g:"manage", h:true,  f:()=> new Personalize("agent") },
 
 		{ t:"RBAC",           i:"mono/rbac.svg?light",        g:"manage", h:false, f:()=> new AccessControl("rbac"), k:"rbac acl role based users access control list permissions" },
 		{ t:"Open sessions",  i:"mono/hourglass.svg?light",   g:"manage", h:true,  f:()=> new AccessControl("sessions"), k:"alive connections" },
@@ -432,7 +426,7 @@ const MENU = {
 	isOpen: false,
 	isDragging: false,
 	isMoved: false,
-	isDetached: true,
+	isAttached: true,
 	position: [0, 0],
 	index: -1,
 	list: [],
@@ -1148,7 +1142,7 @@ keyMux:
 		if (event.ctrlKey) {
 			MENU.list[MENU.index].onmousedown({ button: 1 });
 			searchinput.focus();
-			setTimeout(searchinput.focus(), 10);
+			setTimeout(() => searchinput.focus(), 10);
 		}
 		else {
 			if (MENU.index > -1) {

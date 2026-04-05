@@ -26,6 +26,11 @@ internal static class LiveStats {
     private static readonly string[] SWITCH_TYPES = new string[] { "switch", "router", "firewall" };
 
     public static async Task UserStats(HttpListenerContext ctx) {
+        if (!Auth.IsAuthenticatedAndAuthorized(ctx, ctx.Request.Url.AbsolutePath)) {
+            ctx.Response.Close();
+            return;
+        }
+
         WebSocket ws;
         try {
             HttpListenerWebSocketContext wsc = await ctx.AcceptWebSocketAsync(null);
@@ -48,7 +53,6 @@ internal static class LiveStats {
                 await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
                 return;
             }
-
 
             if (Issues.CheckPasswordStrength(entry, true, out Issues.Issue? weakPsIssue)) {
                 await WebSocketHelper.WsWriteText(ws, weakPsIssue?.ToLiveStatsJsonBytes());
@@ -99,6 +103,11 @@ internal static class LiveStats {
     }
 
     public static async Task DeviceStats(HttpListenerContext ctx) {
+        if (!Auth.IsAuthenticatedAndAuthorized(ctx, ctx.Request.Url.AbsolutePath)) {
+            ctx.Response.Close();
+            return;
+        }
+
         WebSocket ws;
         try {
             HttpListenerWebSocketContext wsc = await ctx.AcceptWebSocketAsync(null);

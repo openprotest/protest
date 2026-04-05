@@ -136,11 +136,9 @@
 
 .tool-element > .expanded .tool-after-label[after-label]::after {
 	position: sticky;
-	left: 180px;
+	left: 250px;
 	content: attr(after-label);
 	color: var(--clr-contrast);
-	overflow: hidden;
-	text-overflow: ellipsis;
 }
 
 .tool-element > .expanded .tool-after-label-far[after-label]::after {
