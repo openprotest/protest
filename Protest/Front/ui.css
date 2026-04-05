@@ -446,7 +446,7 @@
 }
 
 .glass > .window {
-	background-color: light-dark(rgba(184,184,184,.6), rgba(64,64,64,.5)) !important;
+	background-color: light-dark(rgba(184,184,184,.6), rgba(48,48,48,.5)) !important;
 	backdrop-filter: blur(12px) brightness(.85);
 }
 

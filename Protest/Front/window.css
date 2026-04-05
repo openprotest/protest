@@ -1,6 +1,6 @@
 .window {
 	position: absolute;
-	background-color: light-dark(rgb(168,168,168), rgb(64,64,64));
+	background-color: light-dark(rgb(168,168,168), rgb(48,48,48));
 	border-radius: 8px 8px 0 0;
 	border-top: 1px solid rgb(84,84,84);
 	outline: 0;
