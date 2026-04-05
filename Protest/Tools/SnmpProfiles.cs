@@ -56,16 +56,16 @@ internal static class SnmpProfiles {
 
     public record Profile {
         public Guid guid;
-        public string name;
-        public int priority = 0;
-        public int version = 2;
+        public string name      = String.Empty;
+        public int priority     = 0;
+        public int version      = 2;
         public string community = String.Empty;
-        public string context = String.Empty;
-        public string username;
+        public string context   = String.Empty;
+        public string username  = String.Empty;
         public AuthenticationAlgorithm authAlgorithm = AuthenticationAlgorithm.SHA256;
-        public string authPassword;
+        public string authPassword = String.Empty;
         public PrivacyAlgorithm privacyAlgorithm = PrivacyAlgorithm.AES128;
-        public string privacyPassword;
+        public string privacyPassword = String.Empty;
     }
 
     static SnmpProfiles() {
@@ -135,30 +135,9 @@ internal static class SnmpProfiles {
             Profile[] newProfiles = JsonSerializer.Deserialize<Profile[]>(payload, snmpProfilesSerializerOptionsWithPasswords);
 
             for (int i = 0; i < newProfiles.Length; i++) {
-                if (newProfiles[i].guid == default(Guid)) {
+                if (newProfiles[i].guid == Guid.Empty) {
                     newProfiles[i].guid = Guid.NewGuid();
                     continue;
-                }
-
-                if (!String.IsNullOrEmpty(newProfiles[i].authPassword) && !String.IsNullOrEmpty(newProfiles[i].privacyPassword)) {
-                    continue;
-                }
-
-                Profile old = null;
-                for (int j = 0; j < oldProfiles.Length; j++) {
-                    if (newProfiles[i].guid == oldProfiles[j].guid) {
-                        old = oldProfiles[j];
-                        break;
-                    }
-                }
-
-                if (old is not null) {
-                    if (String.IsNullOrEmpty(newProfiles[i].authPassword)) {
-                        newProfiles[i].authPassword = old.authPassword;
-                    }
-                    if (String.IsNullOrEmpty(newProfiles[i].privacyPassword)) {
-                        newProfiles[i].privacyPassword = old.privacyPassword;
-                    }
                 }
             }
 
