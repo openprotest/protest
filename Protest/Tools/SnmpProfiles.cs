@@ -92,6 +92,7 @@ internal static class SnmpProfiles {
 
             byte[] plain = Cryptography.Decrypt(bytes, Configuration.DB_KEY, Configuration.DB_KEY_IV);
             Profile[] profiles = JsonSerializer.Deserialize<Profile[]>(plain, snmpProfilesSerializerOptionsWithPasswords);
+            if (profiles is null) return Array.Empty<Profile>();
             return profiles;
         }
         catch {
@@ -116,32 +117,18 @@ internal static class SnmpProfiles {
         using StreamReader reader = new StreamReader(ctx.Request.InputStream, ctx.Request.ContentEncoding);
         string payload = reader.ReadToEnd();
 
-        Profile[] oldProfiles;
         try {
-            byte[] bytes;
-            lock (mutex) {
-                bytes = File.ReadAllBytes(Data.FILE_SNMP_PROFILES);
-            }
+            Profile[] profiles = JsonSerializer.Deserialize<Profile[]>(payload, snmpProfilesSerializerOptionsWithPasswords);
+            if (profiles is null) return "[]"u8.ToArray();
 
-            byte[] plain = Cryptography.Decrypt(bytes, Configuration.DB_KEY, Configuration.DB_KEY_IV);
-
-            oldProfiles = JsonSerializer.Deserialize<Profile[]>(plain, snmpProfilesSerializerOptionsWithPasswords);
-        }
-        catch {
-            oldProfiles = Array.Empty<Profile>();
-        }
-
-        try {
-            Profile[] newProfiles = JsonSerializer.Deserialize<Profile[]>(payload, snmpProfilesSerializerOptionsWithPasswords);
-
-            for (int i = 0; i < newProfiles.Length; i++) {
-                if (newProfiles[i].guid == Guid.Empty) {
-                    newProfiles[i].guid = Guid.NewGuid();
+            for (int i = 0; i < profiles.Length; i++) {
+                if (profiles[i].guid == Guid.Empty) {
+                    profiles[i].guid = Guid.NewGuid();
                     continue;
                 }
             }
 
-            byte[] plain = JsonSerializer.SerializeToUtf8Bytes(newProfiles, snmpProfilesSerializerOptionsWithPasswords);
+            byte[] plain = JsonSerializer.SerializeToUtf8Bytes(profiles, snmpProfilesSerializerOptionsWithPasswords);
             byte[] cipher = Cryptography.Encrypt(plain, Configuration.DB_KEY, Configuration.DB_KEY_IV);
             lock (mutex) {
                 File.WriteAllBytes(Data.FILE_SNMP_PROFILES, cipher);
@@ -212,12 +199,12 @@ internal sealed class SnmpProfilesJsonConverter : JsonConverter<SnmpProfiles.Pro
                         reader.Read();
 
                         switch (propertyName) {
-                        case "name"            : profile.name             = reader.GetString(); break;
+                        case "name"            : profile.name             = reader.GetString() ?? String.Empty; break;
                         case "priority"        : profile.priority         = reader.GetInt32(); break;
                         case "version"         : profile.version          = reader.GetInt32(); break;
-                        case "community"       : profile.community        = reader.GetString(); break;
-                        case "context"         : profile.context          = reader.GetString(); break;
-                        case "username"        : profile.username         = reader.GetString(); break;
+                        case "community"       : profile.community        = reader.GetString() ?? String.Empty; break;
+                        case "context"         : profile.context          = reader.GetString() ?? String.Empty; break;
+                        case "username"        : profile.username         = reader.GetString() ?? String.Empty; break;
                         case "authPassword"    : profile.authPassword     = hidePasswords ? String.Empty : reader.GetString(); break;
                         case "privacyPassword" : profile.privacyPassword  = hidePasswords ? String.Empty : reader.GetString(); break;
                         case "guid"            : profile.guid             = reader.GetGuid(); break;
