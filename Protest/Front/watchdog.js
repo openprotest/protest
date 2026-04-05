@@ -948,7 +948,7 @@ class Watchdog extends Window {
 			for (let i=0; i<this.list.childNodes.length; i++) {
 				this.list.childNodes[i].style.background = "";
 			}
-			element.style.backgroundColor = "rgb(80,80,80)";
+			element.style.backgroundColor = "light-dark(rgb(224,224,224), rgb(80,80,80))";
 			this.selected = watcher;
 			this.selectedElement = element;
 
@@ -1435,7 +1435,7 @@ class Watchdog extends Window {
 			return "rgb(0,162,232)";
 		}
 		else if (status >=0) { //alive
-			return UI.PingColor(status);
+			return `light-dark(${UI.PingColor(status, 35)}, ${UI.PingColor(status)})`;
 		}
 		else { //other
 			return "rgb(128,128,128)";

@@ -700,7 +700,7 @@ button.view-live-button:active {
 	position: relative;
 	width: 100%;
 	height: 132px;
-	background-color: #505050;
+	background-color: #00000080;
 	overflow: hidden;
 }
 

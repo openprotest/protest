@@ -226,7 +226,7 @@ const UI = {
 	},
 
 	PingColor_LightDark(pingResult) {
-		return `light-dark(${UI.PingColor(pingResult, 35)}, ${UI.PingColor(pingResult)})`;
+		return `light-dark(${UI.PingColor(pingResult, 30)}, ${UI.PingColor(pingResult)})`;
 	},
 
 	TicksToUnixDate: ticks=> {

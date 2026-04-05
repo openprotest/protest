@@ -32,7 +32,7 @@
 }
 
 .watchdog-list > div:hover {
-	background-color: rgba(80,80,80,.8) !important;
+	background-color: light-dark(rgba(224,224,224,.8), rgba(80,80,80,.8)) !important;
 }
 
 .watchdog-list > div > * {
