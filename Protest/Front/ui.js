@@ -1065,15 +1065,13 @@ document.body.addEventListener("mousemove", event=> {
 	MENU.UpdatePosition();
 });
 
-document.body.addEventListener("mouseup", event=> {
+document.body.addEventListener("mouseup", ()=> {
 	if (MENU.isMoved) {
 		MENU.StorePosition();
 	}
 
 	MENU.isDragging = false;
-	setTimeout(()=> {
-		MENU.isMoved = false;
-	}, 0);
+	setTimeout(()=> {MENU.isMoved = false;}, 0);
 });
 
 document.body.addEventListener("keyup", event=> {

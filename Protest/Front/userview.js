@@ -19,7 +19,7 @@ class UserView extends View {
 	];
 
 	constructor(args) {
-		super();
+		super(args);
 		this.args = args ?? { file: null };
 
 		this.SetIcon("mono/user.svg");

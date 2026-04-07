@@ -42,7 +42,7 @@ class DeviceView extends View {
 	static SWITCH_TYPES = ["switch", "router", "firewall"];
 
 	constructor(args) {
-		super();
+		super(args);
 		this.args = args ?? {file: null};
 
 		this.switchInfo = {success: false};

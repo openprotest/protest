@@ -1438,7 +1438,7 @@ class Watchdog extends Window {
 			return `light-dark(${UI.PingColor(status, 35)}, ${UI.PingColor(status)})`;
 		}
 		else { //other
-			return "rgb(128,128,128)";
+			return "light-dark(rgb(64,64,64), rgb(168,168,168))";
 		}
 	}
 

@@ -27,7 +27,7 @@
 .chat-group[sender]:not([sender=""])::before {
 	display: inline-block;
 	content: attr(sender);
-	color: var(--clr-pane);
+	color: light-dark(var(--clr-dark), var(--clr-pane));
 	padding: 4px 8px;
 }
 

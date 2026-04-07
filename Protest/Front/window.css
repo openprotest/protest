@@ -680,6 +680,11 @@
 	100% { opacity: 1; transform: none; }
 }
 
+@keyframes team-join {
+	0%   { opacity: 0; transform: translateX(-32px); }
+	100% { opacity: 1; transform: none; }
+}
+
 @keyframes blink {
 	30% { opacity: 1; }
 	60% { opacity: 1; }

@@ -372,6 +372,59 @@ const KEEP = {
 			}
 			break;
 
+		case "view-device-open":
+			for (let i=0; i<WIN.array.length; i++) {
+				if (!(WIN.array[i] instanceof DeviceView)) continue;
+				const current = WIN.array[i].team.querySelector(`#${message.username}`);
+				if (current) continue;
+				
+				const userIcon = document.createElement("div");
+				userIcon.id = message.username;
+				userIcon.setAttribute("tip-below", message.alias);
+				WIN.array[i].team.appendChild(userIcon);
+
+				const innerIcon = document.createElement("div");
+				innerIcon.style.backgroundColor = message.color;
+				userIcon.appendChild(innerIcon);
+			}
+			break;
+
+		case "view-device-close":
+			for (let i=0; i<WIN.array.length; i++) {
+				if (!(WIN.array[i] instanceof DeviceView)) continue;
+				const current = WIN.array[i].team.querySelector(`#${message.username}`);
+				WIN.array[i].team.removeChild(current);
+				if (current) continue;
+			}
+			break;
+
+		case "view-user-open":
+			for (let i=0; i<WIN.array.length; i++) {
+				if (!(WIN.array[i] instanceof UserView)) continue;
+				const current = WIN.array[i].team.querySelector(`#${message.username}`);
+				if (current) continue;
+				
+				const userIcon = document.createElement("div");
+				userIcon.id = message.username;
+				userIcon.setAttribute("tip-below", message.alias);
+				userIcon.style.backgroundColor = message.color;
+				WIN.array[i].team.appendChild(userIcon);
+
+				const innerIcon = document.createElement("div");
+				innerIcon.style.backgroundColor = message.color;
+				userIcon.appendChild(innerIcon);
+			}
+			break;
+
+		case "view-user-close":
+			for (let i=0; i<WIN.array.length; i++) {
+				if (!(WIN.array[i] instanceof UserView)) continue;
+				const current = WIN.array[i].team.querySelector(`#${message.username}`);
+				WIN.array[i].team.removeChild(current);
+				if (current) continue;
+			}
+			break;
+
 		default:
 			console.warn("none register action: " + message.action);
 			break;

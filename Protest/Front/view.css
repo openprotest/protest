@@ -1,3 +1,57 @@
+.view-team {
+	position: absolute;
+	z-index: 3;
+	top: 0;
+	left: 0;
+	width: 36px;
+	height: 36px;
+	margin: 0 4px 0 8px;
+	transition: .2s;
+}
+
+.view-team > div {
+	display: inline-block;
+	position: absolute;
+	left: 0px;
+	width: 28px;
+	height: 28px;
+	margin: 4px;
+	filter: drop-shadow(#777 -1px 1px 0);
+	animation: team-join .4s forwards;
+}
+
+.view-team > div > div {
+	width: 28px;
+	height: 28px;
+	mask-image: url(mono/user.svg);
+	mask-size: 28px 28px;
+	mask-repeat: no-repeat;
+}
+
+.view-team {
+	counter-reset: view-team-count;
+}
+
+.view-team > div {
+  counter-increment: view-team-count;
+}
+
+.view-team:has(> *)::after {
+	content: counter(view-team-count);
+	position: absolute;
+	right: 0px;
+	bottom: 0;
+	padding: 0 4px;
+	font-size: x-small;
+	font-weight: bold;
+	color: var(--clr-dark);
+	background-color: var(--clr-pane);
+	border-left: 1px solid #777;
+	border-bottom: 1px solid #777;
+	border-radius: 4px;
+	transition: .2s;
+}
+
 .view-toolbar {
 	position: absolute;
 	top: 0;
@@ -1003,6 +1057,21 @@ button.view-live-button:active {
 		left: 204px;
 	}
 
+	.view-team > div:nth-child(1) { left: 0px; }
+	.view-team > div:nth-child(2) { left: 32px; }
+	.view-team > div:nth-child(3) { left: 64px; }
+	.view-team > div:nth-child(4) { left: 96px; }
+	.view-team > div:nth-child(5) { left: 128px; }
+
+	.view-team:has(> :nth-child(6)) > div {
+		left: 0px;
+	}
+
+	.view-team::after {
+		opacity: 0;
+	}
+
+	.view-team,
 	.view-side-tools {
 		width: 192px;
 	}

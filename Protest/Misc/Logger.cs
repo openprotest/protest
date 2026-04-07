@@ -81,8 +81,7 @@ internal static class Logger {
             Http.KeepAlive.Broadcast($"{{\"action\":\"log\",\"msg\":\"{Data.EscapeJsonText(message)}\"}}", "/log");
 
 #if DEBUG
-            string text = $"{date}\t{action}";
-            Console.Error.WriteLine(text);
+            Console.Error.WriteLine($"{date}\t{action}");
 #endif
         }, (origin, action));
     }

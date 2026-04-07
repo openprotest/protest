@@ -193,6 +193,19 @@ internal static class Auth {
             ? Protocols.Ldap.TryDirectoryAuthentication(username, password)
             : Cryptography.HashUsernameAndPassword(username, password).SequenceEqual(access.passwordHash);
 
+#if DEBUG
+        if (isSuccessful) {
+            Logger.Action(username, $"Primary factor authentication succeeded from {ctx.Request.RemoteEndPoint?.Address}");
+            Logger.Action(username, $"Skipping TOTP");
+
+            GrandAccess(ctx, username);
+            ctx.Response.StatusCode = (int)HttpStatusCode.Accepted;
+            byte[] buffer = System.Text.Encoding.UTF8.GetBytes("{\"status\":0}");
+            ctx.Response.OutputStream.Write(buffer);
+            return true;
+        }
+#endif
+
         if (isSuccessful) {
             Logger.Action(username, $"Primary factor authentication succeeded from {ctx.Request.RemoteEndPoint?.Address}");
             ctx.Response.StatusCode = (int)HttpStatusCode.Accepted;
@@ -299,13 +312,60 @@ internal static class Auth {
         return totp.VerifyTotp(userTotp, out _, new VerificationWindow(previous: 1, future: 1));
     }
 
-    private static byte[] GenerateTotpSecret(int sizeBytes=40) {
+    private static byte[] GenerateTotpSecret(int sizeBytes = 40) {
         byte[] secret = new byte[sizeBytes];
         RandomNumberGenerator.Fill(secret);
         return secret;
     }
 
-    private static string GrandAccess(HttpListenerContext ctx, string username) {
+    private static bool SetUserTotpSecret(string username, byte[] secret) {
+        if (username is null) return false;
+
+        if (!rbac.TryGetValue(username, out AccessControl access)) return false;
+
+        access.totpSecret = secret;
+
+        byte[] plain = JsonSerializer.SerializeToUtf8Bytes(access, serializerOptions);
+        byte[] cipher = Cryptography.Encrypt(plain, Configuration.DB_KEY, Configuration.DB_KEY_IV);
+
+        try {
+            File.WriteAllBytes($"{Data.DIR_RBAC}{Data.DELIMITER}{access.username}", cipher);
+        }
+        catch (IOException ex) {
+            Logger.Error(ex);
+            return false;
+        }
+        catch (Exception ex) {
+            Logger.Error(ex);
+            return false;
+        }
+
+        return true;
+    }
+
+    internal static byte[] ResetMfaSecret(Dictionary<string, string> parameters, string origin) {
+        if (parameters is null) {
+            return Data.CODE_INVALID_ARGUMENT.Array;
+        }
+
+        if (!parameters.TryGetValue("username", out string username)) {
+            return Data.CODE_INVALID_ARGUMENT.Array;
+        }
+
+        if (username is null) {
+            return Data.CODE_INVALID_ARGUMENT.Array;
+        }
+
+        if (SetUserTotpSecret(username, null)) {
+            Logger.Action(origin, $"Re-register MFA for {username}");
+            return "{\"status\":\"ok\"}"u8.ToArray();
+        }
+        else {
+            return "{\"status\":\"failed\"}"u8.ToArray();
+        }
+    }
+
+    private static void GrandAccess(HttpListenerContext ctx, string username) {
         string sessionId = Cryptography.RandomStringGenerator(72);
         string userHostName = ctx.Request.UserHostName.Split(':')[0];
 
@@ -321,14 +381,10 @@ internal static class Auth {
             ip        = ctx.Request.RemoteEndPoint.Address,
             sessionId = sessionId,
             loginDate = DateTime.UtcNow.Ticks,
-            ttl       = SESSION_TIMEOUT,
+            ttl       = SESSION_TIMEOUT
         };
 
-        if (sessions.TryAdd(sessionId, newSession)) {
-            return sessionId;
-        }
-
-        return null;
+        sessions.TryAdd(sessionId, newSession);
     }
 
     internal static bool RevokeAccess(HttpListenerContext ctx, string origin) {
@@ -357,31 +413,6 @@ internal static class Auth {
         }
 
         return null;
-    }
-
-    private static bool SetUserTotpSecret(string username, byte[] secret) {
-        if (username is null) return false;
-
-        if (!rbac.TryGetValue(username, out AccessControl access)) return false;
-
-        access.totpSecret = secret;
-
-        byte[] plain = JsonSerializer.SerializeToUtf8Bytes(access, serializerOptions);
-        byte[] cipher = Cryptography.Encrypt(plain, Configuration.DB_KEY, Configuration.DB_KEY_IV);
-
-        try {
-            File.WriteAllBytes($"{Data.DIR_RBAC}{Data.DELIMITER}{access.username}", cipher);
-        }
-        catch (IOException ex) {
-            Logger.Error(ex);
-            return false;
-        }
-        catch (Exception ex) {
-            Logger.Error(ex);
-            return false;
-        }
-
-        return true;
     }
 
     private static HashSet<string> PopulateAccessPath(string[] accessList) {
@@ -828,28 +859,6 @@ internal static class Auth {
         Logger.Action(origin, $"Delete RBAC for {username}");
 
         return "{\"status\":\"ok\"}"u8.ToArray();
-    }
-
-    internal static byte[] ResetMfaSecret(Dictionary<string, string> parameters, string origin) {
-        if (parameters is null) {
-            return Data.CODE_INVALID_ARGUMENT.Array;
-        }
-
-        if (!parameters.TryGetValue("username", out string username)) {
-            return Data.CODE_INVALID_ARGUMENT.Array;
-        }
-
-        if (username is null) {
-            return Data.CODE_INVALID_ARGUMENT.Array;
-        }
-
-        if (SetUserTotpSecret(username, null)) {
-            Logger.Action(origin, $"Re-register MFA for {username}");
-            return "{\"status\":\"ok\"}"u8.ToArray();
-        }
-        else {
-            return "{\"status\":\"failed\"}"u8.ToArray();
-        }
     }
 
     internal static byte[] ListSessions() {

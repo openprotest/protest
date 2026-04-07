@@ -262,7 +262,7 @@ document.body.onbeforeunload = ()=> {
 			WIN.array[i].popOutWindow.close();
 };
 
-taskbar.oncontextmenu = event=> false;
+taskbar.oncontextmenu = ()=> false;
 
 class Window {
 	constructor() {

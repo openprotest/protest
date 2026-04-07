@@ -69,7 +69,9 @@ internal static class TraceRoute {
                     using (Ping p = new Ping())
                         for (short i = 1; i < ttl; i++) {
                             if (cts.Token.IsCancellationRequested || ws.State != WebSocketState.Open) break;
-                            string result = $"{hostname}{(char)127}";
+                            StringBuilder builder = new StringBuilder();
+                            builder.Append(hostname);
+                            builder.Append((char)127);
 
                             try {
                                 PingReply reply = p.Send(hostname, timeout, ICMP_PAYLOAD, new PingOptions(i, true));
@@ -82,11 +84,14 @@ internal static class TraceRoute {
                                         lastAddress = reply.Address.ToString();
                                     }
 
-                                    result += $"{reply.Address}{(char)127}{reply.RoundtripTime}";
+                                    builder.Append(lastAddress);
+                                    builder.Append((char)127);
+                                    builder.Append(reply.RoundtripTime);
+
                                     ipList.Add(reply.Address);
                                 }
                                 else if (reply.Status == IPStatus.TimedOut) {
-                                    result += "Timed out";
+                                    builder.Append("Timed out");
                                 }
                                 else {
                                     break;
@@ -98,6 +103,7 @@ internal static class TraceRoute {
                             }
 
                             try {
+                                string result = builder.ToString();
                                 await writeSemaphore.WaitAsync();
                                 await ws.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(result), 0, result.Length), WebSocketMessageType.Text, true, cts.Token);
                             }

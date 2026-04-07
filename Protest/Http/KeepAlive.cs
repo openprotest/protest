@@ -20,6 +20,8 @@ internal static class KeepAlive {
         public string sessionId;
         public string username;
         public Lock mutex;
+        public ConcurrentDictionary<string, int> devicesView;
+        public ConcurrentDictionary<string, int> usersView;
     }
 
     private static readonly ConcurrentDictionary<WebSocket, Entry> connections = new();
@@ -31,7 +33,7 @@ internal static class KeepAlive {
         messageSerializerOptions.Converters.Add(new MessageJsonConverter());
     }
 
-    public static async Task WebSocketHandler(HttpListenerContext ctx) {
+    internal static async Task WebSocketHandler(HttpListenerContext ctx) {
         if (!Auth.IsAuthenticatedAndAuthorized(ctx, ctx.Request.Url.AbsolutePath)) {
             ctx.Response.Close();
             return;
@@ -56,11 +58,13 @@ internal static class KeepAlive {
         string[] accessArray = Auth.rbac.TryGetValue(username, out Auth.AccessControl accessControl) && accessControl is not null ? accessControl.authorization : new string[] { "*" };
 
         Entry keepAliveEntry = new Entry{
-            ws = ws,
-            ctx = ctx,
-            sessionId = sessionId,
-            username = username,
-            mutex = new Lock()
+            ws          = ws,
+            ctx         = ctx,
+            sessionId   = sessionId,
+            username    = username,
+            mutex       = new Lock(),
+            devicesView = new ConcurrentDictionary<string, int>(),
+            usersView   = new ConcurrentDictionary<string, int>()
         };
 
         connections.TryAdd(ws, keepAliveEntry);
@@ -99,7 +103,7 @@ internal static class KeepAlive {
                 messageBuilder.Append(Encoding.Default.GetString(buff, 0, receive.Count));
 
                 if (receive.EndOfMessage) {
-                    HandleMessage(messageBuilder.ToString(), ctx, username);
+                    HandleMessage(messageBuilder.ToString(), ctx, keepAliveEntry, username);
                     messageBuilder.Clear();
                 }
             }
@@ -114,6 +118,11 @@ internal static class KeepAlive {
             Logger.Error(ex);
         }
         finally {
+
+            foreach (KeyValuePair<WebSocket, Entry> pair in connections) {
+                
+            }
+
             connections.Remove(ws, out _);
         }
 
@@ -131,7 +140,7 @@ internal static class KeepAlive {
         }
     }
 
-    public static async Task CloseConnection(string sessionId) {
+    internal static async Task CloseConnection(string sessionId) {
         foreach (KeyValuePair<WebSocket, Entry> pair in connections) {
             if (pair.Value.sessionId != sessionId) continue;
 
@@ -148,10 +157,10 @@ internal static class KeepAlive {
         }
     }
 
-    public static void Broadcast(string message, string accessPath, bool includeOrigin = true, string origin=null) {
+    internal static void Broadcast(string message, string accessPath, bool includeOrigin = true, string origin=null) {
         Broadcast(Encoding.UTF8.GetBytes(message), accessPath, includeOrigin, origin);
     }
-    public static void Broadcast(byte[] message, string accessPath, bool includeOrigin = true, string origin = null) {
+    internal static void Broadcast(byte[] message, string accessPath, bool includeOrigin = true, string origin = null) {
         List<WebSocket> remove = new List<WebSocket>();
 
         foreach (Entry entry in connections.Values) {
@@ -164,7 +173,7 @@ internal static class KeepAlive {
                 new Thread(() => {
                     try {
                         lock (entry.mutex) {
-                            entry.ws.SendAsync(new ArraySegment<byte>(message, 0, message.Length), WebSocketMessageType.Text, true, CancellationToken.None);
+                            entry.ws.SendAsync(new ArraySegment<byte>(message), WebSocketMessageType.Text, true, CancellationToken.None);
                         }
                     }
 #if DEBUG
@@ -186,22 +195,19 @@ internal static class KeepAlive {
         }
     }
 
-    public static void Unicast(string username, string message, string accessPath) {
+    internal static void Unicast(string username, string message, string accessPath) {
         Unicast(username, Encoding.UTF8.GetBytes(message), accessPath);
     }
-    public static void Unicast(string username, byte[] message, string accessPath) {
+    internal static void Unicast(string username, byte[] message, string accessPath) {
         foreach (Entry entry in connections.Values) {
             if (entry.username != username) continue;
-
-            if (!Auth.IsAuthorized(entry.ctx, accessPath)) {
-                continue;
-            }
+            if (!Auth.IsAuthorized(entry.ctx, accessPath)) continue;
 
             if (entry.ws.State == WebSocketState.Open) {
-                new Thread(()=> {
+                new Thread(() => {
                     try {
                         lock (entry.mutex) {
-                            entry.ws.SendAsync(new ArraySegment<byte>(message, 0, message.Length), WebSocketMessageType.Text, true, CancellationToken.None);
+                            entry.ws.SendAsync(new ArraySegment<byte>(message), WebSocketMessageType.Text, true, CancellationToken.None);
                         }
                     }
 #if DEBUG
@@ -216,7 +222,34 @@ internal static class KeepAlive {
         }
     }
 
-    private static void HandleMessage(string message, HttpListenerContext ctx, string origin) {
+    internal static void Unicast(Auth.Session session, string message, string accessPath) {
+        Unicast(session, Encoding.UTF8.GetBytes(message), accessPath);
+    }
+    internal static void Unicast(Auth.Session session, byte[] message, string accessPath) {
+        foreach (Entry entry in connections.Values) {
+            if (entry.sessionId != session.sessionId) continue;
+            if (!Auth.IsAuthorized(entry.ctx, accessPath)) continue;
+
+            if (entry.ws.State == WebSocketState.Open) {
+                new Thread(()=> {
+                    try {
+                        lock (entry.mutex) {
+                            entry.ws.SendAsync(new ArraySegment<byte>(message), WebSocketMessageType.Text, true, CancellationToken.None);
+                        }
+                    }
+#if DEBUG
+                    catch (Exception ex) {
+                        Logger.Error(ex);
+                    }
+#else
+                catch { }
+#endif
+                }).Start();
+            }
+        }
+    }
+
+    private static void HandleMessage(string message, HttpListenerContext ctx, Entry keepAliveEntry, string origin) {
         ConcurrentDictionary<string, string> dictionary;
         try {
             dictionary = JsonSerializer.Deserialize<ConcurrentDictionary<string, string>>(message, messageSerializerOptions);
@@ -225,11 +258,8 @@ internal static class KeepAlive {
             return;
         }
 
-        if (dictionary.IsEmpty) { return; }
-
-        if (!dictionary.TryGetValue("type", out string type)) {
-            return;
-        }
+        if (dictionary.IsEmpty) return;
+        if (!dictionary.TryGetValue("type", out string type)) return;
 
         switch (type) {
 
@@ -294,11 +324,110 @@ internal static class KeepAlive {
             }
             return;
 
+        case "view-device-action": {
+            if (!dictionary.TryGetValue("action", out string action) || String.IsNullOrEmpty(action)) return;
+            if (!dictionary.TryGetValue("file", out string file) || String.IsNullOrEmpty(file)) return;
+
+            if (action == "open") {
+                int value = keepAliveEntry.devicesView.AddOrUpdate(file, 1, (_, count) => Interlocked.Increment(ref count));
+                if (value > 0) {
+                    HandleViewDeviceAction(origin, action, file);
+                }
+            }
+            else if (action == "close") {
+                int value = keepAliveEntry.devicesView.AddOrUpdate(file, 0, (_, count) => Interlocked.Decrement(ref count));
+                if (value == 0) {
+                    keepAliveEntry.devicesView.Remove(file, out _);
+                    HandleViewDeviceAction(origin, action, file);
+                }
+            }
+
+            return;
+        }
+
+        case "view-user-action": {
+            if (!dictionary.TryGetValue("action", out string action) || String.IsNullOrEmpty(action)) return;
+            if (!dictionary.TryGetValue("file", out string file) || String.IsNullOrEmpty(file)) return;
+
+            if (action == "open") {
+                int value = keepAliveEntry.usersView.AddOrUpdate(file, 1, (_, count) => Interlocked.Increment(ref count));
+                if (value > 0) {
+                    HandleViewUserAction(origin, action, file);
+                }
+            }
+            else if (action == "close") {
+                int value = keepAliveEntry.usersView.AddOrUpdate(file, 0, (_, count) => Interlocked.Decrement(ref count));
+                if (value == 0) {
+                    keepAliveEntry.usersView.Remove(file, out _);
+                    HandleViewUserAction(origin, action, file);
+                }
+            }
+
+            return;
+        }
+
         default:
             Logger.Error($"Unhandle keep-alive message case: {type}");
             return;
         }
     }
+
+    private static void HandleViewDeviceAction(string username, string action, string file) {
+        byte[] message = JsonSerializer.SerializeToUtf8Bytes(new {
+            action   = $"view-device-{action}",
+            file     = file,
+            username = username,
+            color    = Auth.rbac.TryGetValue(username, out Auth.AccessControl rbac) ? rbac.color : "#606060",
+            alias    = rbac is not null && !String.IsNullOrEmpty(rbac.alias) ? rbac.alias : username,
+        });
+
+        foreach (Entry entry in connections.Values
+            .Where(o => !String.Equals(o.username, username))
+            .DistinctBy(o => o.username)) {
+
+            if (!entry.devicesView.TryGetValue(file, out int counter)) continue;
+
+            Unicast(entry.username, message, "/global");
+
+            byte[] reverse = JsonSerializer.SerializeToUtf8Bytes(new {
+                action   = $"view-device-{action}",
+                file     = file,
+                username = entry.username,
+                color    = Auth.rbac.TryGetValue(entry.username, out Auth.AccessControl rrbac) ? rrbac.color : "#606060",
+                alias    = rrbac is not null && !String.IsNullOrEmpty(rrbac.alias) ? rrbac.alias : username,
+            });
+            Unicast(username, reverse, "/global");
+        }
+    }
+
+    private static void HandleViewUserAction(string username, string action, string file) {
+        byte[] message = JsonSerializer.SerializeToUtf8Bytes(new {
+            action   = $"view-user-{action}",
+            file     = file,
+            username = username,
+            color    = Auth.rbac.TryGetValue(username, out Auth.AccessControl rbac) ? rbac.color : "#606060",
+            alias    = rbac is not null && !String.IsNullOrEmpty(rbac.alias) ? rbac.alias : username,
+        });
+
+        foreach (Entry entry in connections.Values
+            .Where(o => !String.Equals(o.username, username))
+            .DistinctBy(o => o.username)) {
+
+            if (!entry.devicesView.TryGetValue(file, out int counter)) continue;
+
+            Unicast(entry.username, message, "/global");
+
+            byte[] reverse = JsonSerializer.SerializeToUtf8Bytes(new {
+                action   = $"view-user-{action}",
+                file     = file,
+                username = entry.username,
+                color    = Auth.rbac.TryGetValue(entry.username, out Auth.AccessControl rrbac) ? rrbac.color : "#606060",
+                alias    = rrbac is null ? rrbac.alias : username,
+            });
+            Unicast(username, reverse, "/global");
+        }
+    }
+
 }
 
 file sealed class MessageJsonConverter : JsonConverter<ConcurrentDictionary<string, string>> {

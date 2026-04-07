@@ -10,8 +10,41 @@ class View extends Window {
 		this.content.style.containerType = "inline-size";
 
 		this.InitializeComponents();
+		
+		if (this instanceof DeviceView) {
+			KEEP.socket.send(JSON.stringify({
+				type  : "view-device-action",
+				action: "open",
+				file  : args.file
+			}));
+		}
+		else if (this instanceof UserView) {
+			KEEP.socket.send(JSON.stringify({
+				type  : "view-user-action",
+				action: "open",
+				file  : args.file
+			}));
+		}
 
 		setTimeout(()=>this.UpdateAuthorization(), 1);
+	}
+
+	Close() { //overrides
+		super.Close();
+		if (this instanceof DeviceView) {
+			KEEP.socket.send(JSON.stringify({
+				type  : "view-device-action",
+				action: "close",
+				file  : this.args.file
+			}));
+		}
+		else if (this instanceof UserView) {
+			KEEP.socket.send(JSON.stringify({
+				type  : "view-user-action",
+				action: "close",
+				file  : this.args.file
+			}));
+		}
 	}
 
 	AfterResize() { //overrides
@@ -38,6 +71,10 @@ class View extends Window {
 	}
 
 	InitializeComponents() {
+		this.team = document.createElement("div");
+		this.team.className = "view-team";
+		this.content.appendChild(this.team);
+
 		this.bar = document.createElement("div");
 		this.bar.className = "win-toolbar view-toolbar";
 		this.content.appendChild(this.bar);
