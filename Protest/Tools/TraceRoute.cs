@@ -1,12 +1,11 @@
-﻿using Org.BouncyCastle.Crypto.Modes;
-using Protest.Http;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.WebSockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Protest.Http;
 
 namespace Protest.Tools;
 
@@ -51,7 +50,7 @@ internal static class TraceRoute {
                     break;
                 }
 
-                string hostname = Encoding.Default.GetString(buff, 0, receiveResult.Count);
+                string hostname = Encoding.UTF8.GetString(buff, 0, receiveResult.Count);
                 hostname = hostname.Trim();
                 if (hostname.Length == 0) {
                     await ws.SendAsync(Data.CODE_INVALID_ARGUMENT, WebSocketMessageType.Text, true, cts.Token);

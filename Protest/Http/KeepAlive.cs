@@ -1,4 +1,7 @@
-﻿using System.Collections.Concurrent;
+﻿using Protest.Tools;
+using Renci.SshNet.Messages;
+using System.CodeDom.Compiler;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.WebSockets;
@@ -7,14 +10,13 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
-using Protest.Tools;
 
 namespace Protest.Http;
 
 internal static class KeepAlive {
     public static readonly ArraySegment<byte> MSG_FORCE_RELOAD = new(Encoding.UTF8.GetBytes(@"{""action"":""force-reload""}"));
 
-    private struct Entry {
+    private sealed class Entry {
         public WebSocket ws;
         public HttpListenerContext ctx;
         public string sessionId;
@@ -100,7 +102,7 @@ internal static class KeepAlive {
                     break;
                 }
 
-                messageBuilder.Append(Encoding.Default.GetString(buff, 0, receive.Count));
+                messageBuilder.Append(Encoding.UTF8.GetString(buff, 0, receive.Count));
 
                 if (receive.EndOfMessage) {
                     HandleMessage(messageBuilder.ToString(), ctx, keepAliveEntry, username);
@@ -118,12 +120,19 @@ internal static class KeepAlive {
             Logger.Error(ex);
         }
         finally {
+            Console.WriteLine("Disconnect: " + username);
 
-            foreach (KeyValuePair<WebSocket, Entry> pair in connections) {
-                
+            connections.TryRemove(ws, out _);
+
+            foreach (KeyValuePair<string, int> pair in keepAliveEntry.devicesView) {
+                if (pair.Value == 0) continue;
+                HandleViewDeviceAction(username, "close", pair.Key);
             }
 
-            connections.Remove(ws, out _);
+            foreach (KeyValuePair<string, int> pair in keepAliveEntry.usersView) {
+                if (pair.Value == 0) continue;
+                HandleViewDeviceAction(username, "close", pair.Key);
+            }
         }
 
         if (ws.State == WebSocketState.Open) {
@@ -190,7 +199,7 @@ internal static class KeepAlive {
             }
 
             for (int i = 0; i < remove.Count; i++) {
-                connections.Remove(remove[i], out _);
+                connections.TryRemove(remove[i], out _);
             }
         }
     }
@@ -329,19 +338,18 @@ internal static class KeepAlive {
             if (!dictionary.TryGetValue("file", out string file) || String.IsNullOrEmpty(file)) return;
 
             if (action == "open") {
-                int value = keepAliveEntry.devicesView.AddOrUpdate(file, 1, (_, count) => Interlocked.Increment(ref count));
+                int value = keepAliveEntry.devicesView.AddOrUpdate(file, 1, (_, count) => count + 1);
                 if (value > 0) {
                     HandleViewDeviceAction(origin, action, file);
                 }
             }
             else if (action == "close") {
-                int value = keepAliveEntry.devicesView.AddOrUpdate(file, 0, (_, count) => Interlocked.Decrement(ref count));
+                int value = keepAliveEntry.devicesView.AddOrUpdate(file, 0, (_, count) => count - 1);
                 if (value == 0) {
                     keepAliveEntry.devicesView.Remove(file, out _);
                     HandleViewDeviceAction(origin, action, file);
                 }
             }
-
             return;
         }
 
@@ -350,19 +358,18 @@ internal static class KeepAlive {
             if (!dictionary.TryGetValue("file", out string file) || String.IsNullOrEmpty(file)) return;
 
             if (action == "open") {
-                int value = keepAliveEntry.usersView.AddOrUpdate(file, 1, (_, count) => Interlocked.Increment(ref count));
+                int value = keepAliveEntry.usersView.AddOrUpdate(file, 1, (_, count) => count + 1);
                 if (value > 0) {
                     HandleViewUserAction(origin, action, file);
                 }
             }
             else if (action == "close") {
-                int value = keepAliveEntry.usersView.AddOrUpdate(file, 0, (_, count) => Interlocked.Decrement(ref count));
+                int value = keepAliveEntry.usersView.AddOrUpdate(file, 0, (_, count) => count - 1);
                 if (value == 0) {
                     keepAliveEntry.usersView.Remove(file, out _);
                     HandleViewUserAction(origin, action, file);
                 }
             }
-
             return;
         }
 
@@ -373,59 +380,55 @@ internal static class KeepAlive {
     }
 
     private static void HandleViewDeviceAction(string username, string action, string file) {
-        byte[] message = JsonSerializer.SerializeToUtf8Bytes(new {
-            action   = $"view-device-{action}",
-            file     = file,
-            username = username,
-            color    = Auth.rbac.TryGetValue(username, out Auth.AccessControl rbac) ? rbac.color : "#606060",
-            alias    = rbac is not null && !String.IsNullOrEmpty(rbac.alias) ? rbac.alias : username,
-        });
+        byte[] message = GenerateViewActionMessage(username, "device", action, file);
 
         foreach (Entry entry in connections.Values
             .Where(o => !String.Equals(o.username, username))
             .DistinctBy(o => o.username)) {
 
             if (!entry.devicesView.TryGetValue(file, out int counter)) continue;
-
             Unicast(entry.username, message, "/global");
 
-            byte[] reverse = JsonSerializer.SerializeToUtf8Bytes(new {
-                action   = $"view-device-{action}",
-                file     = file,
-                username = entry.username,
-                color    = Auth.rbac.TryGetValue(entry.username, out Auth.AccessControl rrbac) ? rrbac.color : "#606060",
-                alias    = rrbac is not null && !String.IsNullOrEmpty(rrbac.alias) ? rrbac.alias : username,
-            });
+            byte[] reverse = GenerateViewActionMessage(entry.username, "device", action, file);
             Unicast(username, reverse, "/global");
         }
     }
 
     private static void HandleViewUserAction(string username, string action, string file) {
-        byte[] message = JsonSerializer.SerializeToUtf8Bytes(new {
-            action   = $"view-user-{action}",
-            file     = file,
-            username = username,
-            color    = Auth.rbac.TryGetValue(username, out Auth.AccessControl rbac) ? rbac.color : "#606060",
-            alias    = rbac is not null && !String.IsNullOrEmpty(rbac.alias) ? rbac.alias : username,
-        });
+        byte[] message = GenerateViewActionMessage(username, "user", action, file);
 
         foreach (Entry entry in connections.Values
             .Where(o => !String.Equals(o.username, username))
             .DistinctBy(o => o.username)) {
 
-            if (!entry.devicesView.TryGetValue(file, out int counter)) continue;
-
+            if (!entry.usersView.TryGetValue(file, out int counter)) continue;
             Unicast(entry.username, message, "/global");
 
-            byte[] reverse = JsonSerializer.SerializeToUtf8Bytes(new {
-                action   = $"view-user-{action}",
-                file     = file,
-                username = entry.username,
-                color    = Auth.rbac.TryGetValue(entry.username, out Auth.AccessControl rrbac) ? rrbac.color : "#606060",
-                alias    = rrbac is null ? rrbac.alias : username,
-            });
+            byte[] reverse = GenerateViewActionMessage(entry.username, "user", action, file);
             Unicast(username, reverse, "/global");
         }
+    }
+
+    private static byte[] GenerateViewActionMessage(string username, string type, string action, string file) {
+        if (action == "open") {
+            return JsonSerializer.SerializeToUtf8Bytes(new {
+                action   = $"view-{type}-open",
+                file     = file,
+                username = username,
+                color    = Auth.rbac.TryGetValue(username, out Auth.AccessControl rbac) ? rbac.color : "#606060",
+                alias    = rbac is not null && !String.IsNullOrEmpty(rbac.alias) ? rbac.alias : username
+            });
+
+        }
+        else if (action == "close") {
+            return JsonSerializer.SerializeToUtf8Bytes(new {
+                action   = $"view-{type}-close",
+                file     = file,
+                username = username
+            });
+        }
+
+        return null;
     }
 
 }
