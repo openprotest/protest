@@ -394,8 +394,7 @@ const KEEP = {
 				if (!(WIN.array[i] instanceof DeviceView)) continue;
 				const current = WIN.array[i].team.querySelector(`#${message.username}`);
 				WIN.array[i].team.removeChild(current);
-
-				if (current) continue;
+				if (current) break;
 			}
 			break;
 
@@ -422,9 +421,7 @@ const KEEP = {
 				if (!(WIN.array[i] instanceof UserView)) continue;
 				const current = WIN.array[i].team.querySelector(`#${message.username}`);
 				WIN.array[i].team.removeChild(current);
-
-
-				if (current) continue;
+				if (current) break;
 			}
 			break;
 

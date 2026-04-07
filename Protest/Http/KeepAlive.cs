@@ -88,11 +88,9 @@ internal static class KeepAlive {
 
             while (ws.State == WebSocketState.Open) {
                 if (!Auth.IsAuthenticated(ctx)) {
-                    lock(keepAliveEntry.mutex) {
-                        ws.SendAsync(MSG_FORCE_RELOAD, WebSocketMessageType.Text, true, CancellationToken.None);
-                        ws.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, null, CancellationToken.None);
-                        return;
-                    }
+                    await ws.SendAsync(MSG_FORCE_RELOAD, WebSocketMessageType.Text, true, CancellationToken.None);
+                    await ws.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, null, CancellationToken.None);
+                    return;
                 }
 
                 WebSocketReceiveResult receive = await ws.ReceiveAsync(new ArraySegment<byte>(buff), CancellationToken.None);
@@ -131,7 +129,7 @@ internal static class KeepAlive {
 
             foreach (KeyValuePair<string, int> pair in keepAliveEntry.usersView) {
                 if (pair.Value == 0) continue;
-                HandleViewDeviceAction(username, "close", pair.Key);
+                HandleViewUserAction(username, "close", pair.Key);
             }
         }
 
@@ -224,7 +222,7 @@ internal static class KeepAlive {
                         Logger.Error(ex);
                     }
 #else
-                catch { }
+                    catch { }
 #endif
                 }).Start();
             }
@@ -415,7 +413,7 @@ internal static class KeepAlive {
                 action   = $"view-{type}-open",
                 file     = file,
                 username = username,
-                color    = Auth.rbac.TryGetValue(username, out Auth.AccessControl rbac) ? rbac.color : "#606060",
+                color    = Auth.rbac.TryGetValue(username, out Auth.AccessControl rbac) && !String.IsNullOrEmpty(rbac.color) ? rbac.color : "#606060",
                 alias    = rbac is not null && !String.IsNullOrEmpty(rbac.alias) ? rbac.alias : username
             });
 

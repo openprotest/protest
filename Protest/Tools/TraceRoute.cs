@@ -65,51 +65,52 @@ internal static class TraceRoute {
                     List<IPAddress> ipList = new List<IPAddress>();
                     string lastAddress = String.Empty;
 
-                    using (Ping p = new Ping())
-                        for (short i = 1; i < ttl; i++) {
-                            if (cts.Token.IsCancellationRequested || ws.State != WebSocketState.Open) break;
-                            StringBuilder builder = new StringBuilder();
-                            builder.Append(hostname);
-                            builder.Append((char)127);
+                    using Ping p = new Ping();
 
-                            try {
-                                PingReply reply = p.Send(hostname, timeout, ICMP_PAYLOAD, new PingOptions(i, true));
+                    for (short i = 1; i < ttl; i++) {
+                        if (cts.Token.IsCancellationRequested || ws.State != WebSocketState.Open) break;
+                        StringBuilder builder = new StringBuilder();
+                        builder.Append(hostname);
+                        builder.Append((char)127);
 
-                                if (reply.Status == IPStatus.Success || reply.Status == IPStatus.TtlExpired) {
-                                    if (lastAddress == reply.Address.ToString()) {
-                                        break;
-                                    }
-                                    else {
-                                        lastAddress = reply.Address.ToString();
-                                    }
+                        try {
+                            PingReply reply = p.Send(hostname, timeout, ICMP_PAYLOAD, new PingOptions(i, true));
 
-                                    builder.Append(lastAddress);
-                                    builder.Append((char)127);
-                                    builder.Append(reply.RoundtripTime);
-
-                                    ipList.Add(reply.Address);
-                                }
-                                else if (reply.Status == IPStatus.TimedOut) {
-                                    builder.Append("Timed out");
-                                }
-                                else {
+                            if (reply.Status == IPStatus.Success || reply.Status == IPStatus.TtlExpired) {
+                                if (lastAddress == reply.Address.ToString()) {
                                     break;
                                 }
+                                else {
+                                    lastAddress = reply.Address.ToString();
+                                }
+
+                                builder.Append(lastAddress);
+                                builder.Append((char)127);
+                                builder.Append(reply.RoundtripTime);
+
+                                ipList.Add(reply.Address);
                             }
-                            catch (Exception ex) {
-                                Logger.Error(ex);
+                            else if (reply.Status == IPStatus.TimedOut) {
+                                builder.Append("Timed out");
+                            }
+                            else {
                                 break;
                             }
-
-                            try {
-                                string result = builder.ToString();
-                                await writeSemaphore.WaitAsync();
-                                await ws.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(result), 0, result.Length), WebSocketMessageType.Text, true, cts.Token);
-                            }
-                            finally {
-                                writeSemaphore.Release();
-                            }
                         }
+                        catch (Exception ex) {
+                            Logger.Error(ex);
+                            break;
+                        }
+
+                        try {
+                            string result = builder.ToString();
+                            await writeSemaphore.WaitAsync(cts.Token);
+                            await ws.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(result), 0, result.Length), WebSocketMessageType.Text, true, cts.Token);
+                        }
+                        finally {
+                            writeSemaphore.Release();
+                        }
+                    }
 
                     List<Task<string>> tasks = new List<Task<string>>(ipList.Count);
                     for (int j = 0; j < ipList.Count; j++) {
@@ -130,7 +131,7 @@ internal static class TraceRoute {
                     }
 
                     try {
-                        await writeSemaphore.WaitAsync();
+                        await writeSemaphore.WaitAsync(cts.Token);
                         await ws.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(hostnames), 0, hostnames.Length), WebSocketMessageType.Text, true, cts.Token);
 
                         byte[] over = Encoding.UTF8.GetBytes($"over{((char)127)}{hostname}");
