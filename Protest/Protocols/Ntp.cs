@@ -77,13 +77,9 @@ internal static class Ntp {
 
         }
         catch (SocketException ex) {
-            if (ex.ErrorCode == 10060) { //timed out
-                return "{\"error\":\"connection timed out\"}"u8.ToArray();
-            }
-            else {
-                return "{\"error\":\"unknown error\"}"u8.ToArray();
-            }
-
+            return ex.ErrorCode == 10060
+                ? "{\"error\":\"connection timed out\"}"u8.ToArray()
+                : "{\"error\":\"unknown error\"}"u8.ToArray();
         }
         catch {
             return "{\"error\":\"unknown error\"}"u8.ToArray();

@@ -275,14 +275,7 @@ internal class Mdns {
             index += 4; //skip type, class amd null byte
         }
 
-        int totalRecords;
-
-        if (additionalString) {
-            totalRecords = answerCount + authorityCount + additionalCount;
-        }
-        else {
-            totalRecords = answerCount;
-        }
+        int totalRecords = additionalString ? answerCount + authorityCount + additionalCount : answerCount;
 
         List<Answer> result = new List<Answer>(totalRecords);
 
@@ -383,12 +376,9 @@ internal class Mdns {
                 break;
 
             default:
-                if (answer.length > 0 && index + answer.length < response.Length) {
-                    answer.answerString = BitConverter.ToString(response, index, answer.length);
-                }
-                else {
-                    answer.answerString = null;
-                }
+                answer.answerString = answer.length > 0 && index + answer.length < response.Length
+                    ? BitConverter.ToString(response, index, answer.length)
+                    : null;
                 break;
             }
 

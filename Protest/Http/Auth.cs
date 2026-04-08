@@ -900,12 +900,9 @@ internal static class Auth {
             if (session.ip.ToString() != ip) continue;
             if (session.sessionId.Length == 0 || !session.sessionId.StartsWith(id)) continue;
 
-            if (RevokeAccess(session.sessionId, origin)) {
-                return Data.CODE_OK.ToArray();
-            }
-            else {
-                return Data.CODE_FAILED.ToArray();
-            }
+            return RevokeAccess(session.sessionId, origin)
+                ? Data.CODE_OK.ToArray()
+                : Data.CODE_FAILED.ToArray();
         }
 
         return Data.CODE_FAILED.ToArray();

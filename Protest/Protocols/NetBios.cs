@@ -30,13 +30,10 @@ internal static class NetBios {
             byte[] receiveBuffer = new byte[1024];
             int receivedByteCount = socket.ReceiveFrom(receiveBuffer, ref remoteEndpoint);
             if (receivedByteCount >= 90) {
-                Encoding enc = new ASCIIEncoding();
-                if (receiveBuffer[72] == 0) {
-                    return enc.GetString(receiveBuffer, 57, 15).Trim('\0').Trim();
-                }
-                else {
-                    return enc.GetString(receiveBuffer, 57, 16).Trim('\0').Trim();
-                }
+                ASCIIEncoding encoding = new ASCIIEncoding();
+                return receiveBuffer[72] == 0
+                    ? encoding.GetString(receiveBuffer, 57, 15).Trim('\0').Trim()
+                    : encoding.GetString(receiveBuffer, 57, 16).Trim('\0').Trim();
             }
         }
 #if DEBUG

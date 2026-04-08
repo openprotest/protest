@@ -722,13 +722,9 @@ internal static class Watchdog {
             _ => string.Empty
         };
 
-        string target;
-        if (watcher.type == WatcherType.tcp) {
-            target = $"{watcher.target}:{watcher.port}";
-        }
-        else {
-            target = watcher.target;
-        }
+        string target = watcher.type == WatcherType.tcp
+            ? $"{watcher.target}:{watcher.port}"
+            : watcher.target;
 
         body.Append($"&nbsp;{stringStatus}");
         body.Append("</b></td></tr>");

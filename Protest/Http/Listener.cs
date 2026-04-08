@@ -348,11 +348,11 @@ internal sealed class Listener {
         if (!cache.cache.TryGetValue(path, out Cache.Entry entry)) return false;
 
         if (String.Equals(path, "/", StringComparison.Ordinal)) {
-            if (!Auth.IsAuthenticated(ctx)) {
-                entry = cache.cache.TryGetValue("/login", out Cache.Entry value) ? value : default;
+            if (Auth.IsAuthenticated(ctx)) {
+                entry = cache.cache["/"];
             }
             else {
-                entry = cache.cache["/"];
+                entry = cache.cache.TryGetValue("/login", out Cache.Entry value) ? value : default;
             }
         }
 

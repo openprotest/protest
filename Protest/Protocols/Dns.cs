@@ -637,12 +637,9 @@ internal static class Dns {
 
     public static string GetDomain() {
         try {
-            if (OperatingSystem.IsWindows()) {
-                return System.DirectoryServices.ActiveDirectory.Domain.GetComputerDomain().ToString();
-            }
-            else {
-                return String.Empty;
-            }
+            return OperatingSystem.IsWindows() 
+                ? System.DirectoryServices.ActiveDirectory.Domain.GetComputerDomain().ToString()
+                : String.Empty;
         }
         catch {
             return String.Empty;

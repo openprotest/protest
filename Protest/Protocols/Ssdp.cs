@@ -355,14 +355,10 @@ public static class DeviceXmlParser {
             using XmlReader xmlReader = XmlReader.Create(stringReader, settings);
             xmlReader.MoveToContent();
 
-            XmlSerializer serializer;
             string namespaceUri = xmlReader.NamespaceURI;
-            if (string.IsNullOrEmpty(namespaceUri)) {
-                serializer = new XmlSerializer(typeof(XmlRoot));
-            }
-            else {
-                serializer = new XmlSerializer(typeof(XmlRoot), namespaceUri);
-            }
+            XmlSerializer serializer = string.IsNullOrEmpty(namespaceUri)
+                ? new XmlSerializer(typeof(XmlRoot))
+                : new XmlSerializer(typeof(XmlRoot), namespaceUri);
 
             XmlRoot root = (XmlRoot)serializer.Deserialize(xmlReader);
             return root;

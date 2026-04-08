@@ -392,12 +392,9 @@ internal sealed class Database {
             return Data.CODE_INVALID_ARGUMENT.Array;
         }
 
-        if (Delete(file, origin)) {
-            return Data.CODE_OK.Array;
-        }
-        else {
-            return Data.CODE_FILE_NOT_FOUND.Array;
-        }
+        return Delete(file, origin)
+            ? Data.CODE_OK.Array
+            : Data.CODE_FILE_NOT_FOUND.Array;
     }
 
     public byte[] TimelineHandler(Dictionary<string, string> parameters) {

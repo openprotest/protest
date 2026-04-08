@@ -244,13 +244,9 @@ internal static class Issues {
         }
 
         if (osAttribute?.value.Contains("windows", StringComparison.OrdinalIgnoreCase) == true) {
-            string ipString = null;
-            if (device.attributes.TryGetValue("ip", out Database.Attribute ip) && !String.IsNullOrEmpty(ip?.value)) {
-                ipString = ip.value.Split(';').ToArray()[0].Trim();
-            }
-            else {
-                ipString = String.Empty;
-            }
+            string ipString = device.attributes.TryGetValue("ip", out Database.Attribute ip) && !String.IsNullOrEmpty(ip?.value)
+                ? ip.value.Split(';').ToArray()[0].Trim()
+                : String.Empty;
 
             if (CheckCpuLifeline(device, ipString, out Issue ? cpuIssue) && cpuIssue.HasValue) {
                 issues.Add(cpuIssue.Value);

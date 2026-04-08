@@ -10,12 +10,9 @@ internal static class Generic {
             return Data.CODE_INVALID_ARGUMENT.Array;
         }
 
-        if (parameters.TryGetValue("host", out string host)) {
-            return PrintTestPage(host);
-        }
-        else {
-            return Data.CODE_INVALID_ARGUMENT.Array;
-        }
+        return parameters.TryGetValue("host", out string host)
+            ? PrintTestPage(host)
+            : Data.CODE_INVALID_ARGUMENT.Array;
     }
 
     public static byte[] PrintTestPage(string target) {
@@ -48,7 +45,6 @@ internal static class Generic {
             stream.Flush();
             stream.Close();
             client.Close();
-
         }
         catch (ArgumentNullException) {
             return Data.CODE_INVALID_ARGUMENT.Array;
