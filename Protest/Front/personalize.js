@@ -414,9 +414,9 @@ class Personalize extends Tabs {
 
 			Apply();
 
-			for (let i = 0; i < WIN.array.length; i++) { //update all windows indicators
-				for (let j=0; j<this.accentIndicators.length; j++) {
-					if (WIN.array[i] instanceof Personalize && WIN.array[i].args !== "appearance") continue;
+			for (let i=0; i<WIN.array.length; i++) { //update all windows indicators
+				if (!(WIN.array[i] instanceof Personalize) || WIN.array[i].args !== "appearance") continue;
+				for (let j=0; j<WIN.array[i].accentIndicators.length; j++) {
 					const isSelected = nextIndex === j;
 					WIN.array[i].accentIndicators[j].style.width = isSelected ? "48px" : "8px";
 					WIN.array[i].accentIndicators[j].style.marginLeft = isSelected ? "0px" : "20px";

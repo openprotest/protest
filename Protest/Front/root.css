@@ -41,9 +41,9 @@
 	--clr-dark       : rgb(32,32,32);
 	--clr-contrast   : light-dark(rgb(32,32,32),rgb(192,192,192));
 
-	--clr-control: light-dark(rgb(152,152,152), rgb(144,144,144));
+	--clr-control  : light-dark(rgb(152,152,152), rgb(144,144,144));
 	--clr-highlight: light-dark(rgb(204,204,204), rgb(184,184,184));
-	--clr-pane: light-dark(rgb(192,192,192), rgb(168,168,168));
+	--clr-pane     : light-dark(rgb(192,192,192), rgb(168,168,168));
 
 	--grd-taskbar: linear-gradient(to bottom, rgb(199,64,0)0%, rgb(232,118,0)92%, rgb(199,64,0)100%);
 	--grd-taskbar-rev: linear-gradient(to bottom, rgb(199,64,0)0%, rgb(232,118,0)2%, rgb(199,64,0)100%);
@@ -63,7 +63,7 @@
 		linear-gradient(200deg,rgba(206,206,206,.09) 0%,rgba(206,206,206,.09) 58%,rgba(6,6,6,.09) 58%,rgba(6,6,6,.09) 100%),
 		linear-gradient(304deg,rgba(162,162,162,.07) 0%,rgba(162,162,162,.07) 27%,rgba(24,24,24,.07) 27%,rgba(24,24,24,.07) 100%),
 		linear-gradient(186deg,rgba(166,166,166,.04) 0%,rgba(166,166,166,.04) 5%,rgba(210,210,210,.04) 5%,rgba(210,210,210,.04) 100%),
-		linear-gradient(130deg,
+		linear-gradient(150deg,
 			light-dark(rgb(45,129,153), rgb(51,81,89)),
 			light-dark(rgb(68,148,211), rgb(62,81,97)),
 			light-dark(rgb(68,157,203), rgb(63,113,138))

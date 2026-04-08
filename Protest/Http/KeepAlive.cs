@@ -1,7 +1,4 @@
-﻿using Protest.Tools;
-using Renci.SshNet.Messages;
-using System.CodeDom.Compiler;
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.WebSockets;
@@ -10,6 +7,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
+using Protest.Tools;
 
 namespace Protest.Http;
 
@@ -22,11 +20,12 @@ internal static class KeepAlive {
         public string sessionId;
         public string username;
         public Lock mutex;
-        public ConcurrentDictionary<string, int> devicesView;
-        public ConcurrentDictionary<string, int> usersView;
     }
 
     private static readonly ConcurrentDictionary<WebSocket, Entry> connections = new();
+
+    private static ConcurrentDictionary<WebSocket, ConcurrentDictionary<string, int>> deviceViewCounter = new();
+    private static ConcurrentDictionary<WebSocket, ConcurrentDictionary<string, int>> userViewCounter = new();
 
     private static readonly JsonSerializerOptions messageSerializerOptions;
 
@@ -64,9 +63,7 @@ internal static class KeepAlive {
             ctx         = ctx,
             sessionId   = sessionId,
             username    = username,
-            mutex       = new Lock(),
-            devicesView = new ConcurrentDictionary<string, int>(),
-            usersView   = new ConcurrentDictionary<string, int>()
+            mutex       = new Lock()
         };
 
         connections.TryAdd(ws, keepAliveEntry);
@@ -118,18 +115,32 @@ internal static class KeepAlive {
             Logger.Error(ex);
         }
         finally {
-            Console.WriteLine("Disconnect: " + username);
-
             connections.TryRemove(ws, out _);
 
-            foreach (KeyValuePair<string, int> pair in keepAliveEntry.devicesView) {
-                if (pair.Value == 0) continue;
-                HandleViewDeviceAction(username, "close", pair.Key);
+            if (deviceViewCounter.TryRemove(ws, out ConcurrentDictionary<string, int> devicesCount)) {
+                foreach (KeyValuePair<string, int> pair in devicesCount) {
+                    if (pair.Value == 0) continue;
+
+                    bool otherConnectionHasFile = deviceViewCounter
+                        .Any(k => connections.TryGetValue(k.Key, out Entry e) && e.username == username && k.Value.TryGetValue(pair.Key, out int count) && count > 0);
+
+                    if (!otherConnectionHasFile) {
+                        HandleViewDeviceAction(username, "close", pair.Key, false);
+                    }
+                }
             }
 
-            foreach (KeyValuePair<string, int> pair in keepAliveEntry.usersView) {
-                if (pair.Value == 0) continue;
-                HandleViewUserAction(username, "close", pair.Key);
+            if (userViewCounter.TryRemove(ws, out ConcurrentDictionary<string, int> usersCount)) {
+                foreach (KeyValuePair<string, int> pair in usersCount) {
+                    if (pair.Value == 0) continue;
+
+                    bool otherConnectionHasFile = userViewCounter
+                        .Any(k => connections.TryGetValue(k.Key, out Entry e) && e.username == username && k.Value.TryGetValue(pair.Key, out int count) && count > 0);
+
+                    if (!otherConnectionHasFile) {
+                        HandleViewUserAction(username, "close", pair.Key, false);
+                    }
+                }
             }
         }
 
@@ -164,7 +175,7 @@ internal static class KeepAlive {
         }
     }
 
-    internal static void Broadcast(string message, string accessPath, bool includeOrigin = true, string origin=null) {
+    internal static void Broadcast(string message, string accessPath, bool includeOrigin = true, string origin = null) {
         Broadcast(Encoding.UTF8.GetBytes(message), accessPath, includeOrigin, origin);
     }
     internal static void Broadcast(byte[] message, string accessPath, bool includeOrigin = true, string origin = null) {
@@ -265,15 +276,13 @@ internal static class KeepAlive {
             return;
         }
 
-        if (dictionary.IsEmpty) return;
+        if (dictionary is null || dictionary.IsEmpty) return;
         if (!dictionary.TryGetValue("type", out string type)) return;
 
         switch (type) {
 
         case "update-session-ttl":
-            if (!dictionary.TryGetValue("ttl", out string ttl)) {
-                return;
-            }
+            if (!dictionary.TryGetValue("ttl", out string ttl)) return;
 
             if (long.TryParse(ttl, out long ttlLong)) {
                 string sessionId = ctx.Request.Cookies["sessionid"]?.Value ?? null;
@@ -335,17 +344,34 @@ internal static class KeepAlive {
             if (!dictionary.TryGetValue("action", out string action) || String.IsNullOrEmpty(action)) return;
             if (!dictionary.TryGetValue("file", out string file) || String.IsNullOrEmpty(file)) return;
 
+            WebSocket ws = keepAliveEntry.ws;
+            bool exists = deviceViewCounter.TryGetValue(ws, out ConcurrentDictionary<string, int> devicesCount);
+
             if (action == "open") {
-                int value = keepAliveEntry.devicesView.AddOrUpdate(file, 1, (_, count) => count + 1);
-                if (value > 0) {
-                    HandleViewDeviceAction(origin, action, file);
+                if (exists) {
+                    _ = devicesCount.AddOrUpdate(file, 1, (_, count) => count + 1);
                 }
+                else {
+                    _ = deviceViewCounter.TryAdd(ws, new ConcurrentDictionary<string, int>() { [file] = 1 });
+                }
+                HandleViewDeviceAction(origin, action, file, true);
             }
             else if (action == "close") {
-                int value = keepAliveEntry.devicesView.AddOrUpdate(file, 0, (_, count) => count - 1);
-                if (value == 0) {
-                    keepAliveEntry.devicesView.Remove(file, out _);
-                    HandleViewDeviceAction(origin, action, file);
+                if (exists && devicesCount.TryGetValue(file, out int count)) {
+                    if (count <= 1) {
+                        devicesCount.TryRemove(file, out _);
+
+                        bool otherConnectionHasFile = deviceViewCounter.Any(kv => kv.Key != ws
+                            && connections.TryGetValue(kv.Key, out Entry e) && e.username == origin
+                            && kv.Value.TryGetValue(file, out int c) && c > 0);
+
+                        if (!otherConnectionHasFile) {
+                            HandleViewDeviceAction(origin, action, file, false);
+                        }
+                    }
+                    else {
+                        devicesCount[file] = count - 1;
+                    }
                 }
             }
             return;
@@ -355,17 +381,34 @@ internal static class KeepAlive {
             if (!dictionary.TryGetValue("action", out string action) || String.IsNullOrEmpty(action)) return;
             if (!dictionary.TryGetValue("file", out string file) || String.IsNullOrEmpty(file)) return;
 
+            WebSocket ws = keepAliveEntry.ws;
+            bool exists = userViewCounter.TryGetValue(ws, out ConcurrentDictionary<string, int> usersCount);
+
             if (action == "open") {
-                int value = keepAliveEntry.usersView.AddOrUpdate(file, 1, (_, count) => count + 1);
-                if (value > 0) {
-                    HandleViewUserAction(origin, action, file);
+                if (exists) {
+                    _ = usersCount.AddOrUpdate(file, 1, (_, count) => count + 1);
                 }
+                else {
+                    _ =userViewCounter.TryAdd(ws, new ConcurrentDictionary<string, int>() { [file] = 1 });
+                }
+                HandleViewUserAction(origin, action, file, true);
             }
             else if (action == "close") {
-                int value = keepAliveEntry.usersView.AddOrUpdate(file, 0, (_, count) => count - 1);
-                if (value == 0) {
-                    keepAliveEntry.usersView.Remove(file, out _);
-                    HandleViewUserAction(origin, action, file);
+                if (exists && usersCount.TryGetValue(file, out int count)) {
+                    if (count <= 1) {
+                        usersCount.TryRemove(file, out _);
+
+                        bool otherConnectionHasFile = userViewCounter.Any(kv => kv.Key != ws
+                            && connections.TryGetValue(kv.Key, out Entry e) && e.username == origin
+                            && kv.Value.TryGetValue(file, out int c) && c > 0);
+
+                        if (!otherConnectionHasFile) {
+                            HandleViewUserAction(origin, action, file, false);
+                        }
+                    }
+                    else {
+                        usersCount[file] = count - 1;
+                    }
                 }
             }
             return;
@@ -377,33 +420,41 @@ internal static class KeepAlive {
         }
     }
 
-    private static void HandleViewDeviceAction(string username, string action, string file) {
+    private static void HandleViewDeviceAction(string username, string action, string file, bool sendReverse) {
         byte[] message = GenerateViewActionMessage(username, "device", action, file);
 
         foreach (Entry entry in connections.Values
             .Where(o => !String.Equals(o.username, username))
             .DistinctBy(o => o.username)) {
 
-            if (!entry.devicesView.TryGetValue(file, out int counter)) continue;
+            if (!deviceViewCounter.TryGetValue(entry.ws, out ConcurrentDictionary<string, int> devicesCount)) continue;
+            if (!devicesCount.TryGetValue(file, out int counter)) continue;
+
             Unicast(entry.username, message, "/global");
 
-            byte[] reverse = GenerateViewActionMessage(entry.username, "device", action, file);
-            Unicast(username, reverse, "/global");
+            if (sendReverse)  {
+                byte[] reverse = GenerateViewActionMessage(entry.username, "device", action, file);
+                Unicast(username, reverse, "/global");
+            }
         }
     }
 
-    private static void HandleViewUserAction(string username, string action, string file) {
+    private static void HandleViewUserAction(string username, string action, string file, bool sendReverse) {
         byte[] message = GenerateViewActionMessage(username, "user", action, file);
 
         foreach (Entry entry in connections.Values
             .Where(o => !String.Equals(o.username, username))
             .DistinctBy(o => o.username)) {
 
-            if (!entry.usersView.TryGetValue(file, out int counter)) continue;
+            if (!userViewCounter.TryGetValue(entry.ws, out ConcurrentDictionary<string, int> usersCount)) continue;
+            if (!usersCount.TryGetValue(file, out int counter)) continue;
+
             Unicast(entry.username, message, "/global");
 
-            byte[] reverse = GenerateViewActionMessage(entry.username, "user", action, file);
-            Unicast(username, reverse, "/global");
+            if (sendReverse) {
+                byte[] reverse = GenerateViewActionMessage(entry.username, "user", action, file);
+                Unicast(username, reverse, "/global");
+            }
         }
     }
 
@@ -416,7 +467,6 @@ internal static class KeepAlive {
                 color    = Auth.rbac.TryGetValue(username, out Auth.AccessControl rbac) && !String.IsNullOrEmpty(rbac.color) ? rbac.color : "#606060",
                 alias    = rbac is not null && !String.IsNullOrEmpty(rbac.alias) ? rbac.alias : username
             });
-
         }
         else if (action == "close") {
             return JsonSerializer.SerializeToUtf8Bytes(new {
@@ -428,7 +478,6 @@ internal static class KeepAlive {
 
         return null;
     }
-
 }
 
 file sealed class MessageJsonConverter : JsonConverter<ConcurrentDictionary<string, string>> {

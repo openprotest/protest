@@ -407,7 +407,6 @@ const KEEP = {
 				const userIcon = document.createElement("div");
 				userIcon.id = message.username;
 				userIcon.setAttribute("tip-below", message.alias);
-				userIcon.style.backgroundColor = message.color;
 				WIN.array[i].team.appendChild(userIcon);
 
 				const innerIcon = document.createElement("div");
