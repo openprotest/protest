@@ -29,7 +29,13 @@ internal static class TraceRoute {
             return;
         }
 
+<<<<<<< HEAD
         Task traceTask = null;
+=======
+        if (ws is null) return;
+
+        Task traceTask = Task.CompletedTask;
+>>>>>>> e1190312 (Keep alive, debugging)
         using CancellationTokenSource cts = new CancellationTokenSource();
         using SemaphoreSlim writeSemaphore = new SemaphoreSlim(1, 1);
 
@@ -64,7 +70,7 @@ internal static class TraceRoute {
 
                     using Ping p = new Ping();
 
-                    for (short i = 1; i < ttl; i++) {
+                    for (short i = 1; i <= ttl; i++) {
                         if (cts.Token.IsCancellationRequested || ws.State != WebSocketState.Open) break;
                         StringBuilder builder = new StringBuilder();
                         builder.Append(hostname);
@@ -149,17 +155,15 @@ internal static class TraceRoute {
 
         cts.Cancel();
 
-        if (traceTask is not null) {
-            try {
-                await traceTask;
-            }
-            catch (OperationCanceledException) { } //ignored: task was canceled as part of shutdown
-#if DEBUG
-            catch (Exception ex) {
-                Logger.Error(ex);
-            }
-#endif
+        try {
+            await traceTask;
         }
+        catch (OperationCanceledException) { } //ignored: task was canceled as part of shutdown
+#if DEBUG
+        catch (Exception ex) {
+            Logger.Error(ex);
+        }
+#endif
 
         if (ws.State == WebSocketState.Open) {
             try {

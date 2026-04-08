@@ -192,7 +192,7 @@ internal static class KeepAlive {
             if (!isAuthorized) continue;
 
             if (entry.ws.State == WebSocketState.Open) {
-                new Thread(async () => {
+                _ = Task.Run(async () => {
                     try {
                         await entry.semaphore.WaitAsync();
                         await entry.ws.SendAsync(new ArraySegment<byte>(message), WebSocketMessageType.Text, true, CancellationToken.None);
@@ -205,15 +205,15 @@ internal static class KeepAlive {
                     finally {
                         entry.semaphore.Release();
                     }
-                }).Start();
+                });
             }
             else {
                 remove.Add(entry.ws);
             }
+        }
 
-            for (int i = 0; i < remove.Count; i++) {
-                connections.TryRemove(remove[i], out _);
-            }
+        for (int i = 0; i < remove.Count; i++) {
+            connections.TryRemove(remove[i], out _);
         }
     }
 
@@ -226,7 +226,7 @@ internal static class KeepAlive {
             if (!Auth.IsAuthorized(entry.ctx, accessPath)) continue;
 
             if (entry.ws.State == WebSocketState.Open) {
-                new Thread(async () => {
+                Task.Run(async () => {
                     try {
                         await entry.semaphore.WaitAsync();
                         await entry.ws.SendAsync(new ArraySegment<byte>(message), WebSocketMessageType.Text, true, CancellationToken.None);
@@ -239,7 +239,7 @@ internal static class KeepAlive {
                     finally {
                         entry.semaphore.Release();
                     }
-                }).Start();
+                });
             }
         }
     }
@@ -415,7 +415,7 @@ internal static class KeepAlive {
         }
 
         default:
-            Logger.Error($"Unhandle keep-alive message case: {type}");
+            Logger.Error($"Unhandled keep-alive message case: {type}");
             return;
         }
     }
