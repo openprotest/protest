@@ -464,7 +464,7 @@ internal static class KeepAlive {
                 action   = $"view-{type}-open",
                 file     = file,
                 username = username,
-                color    = Auth.rbac.TryGetValue(username, out Auth.AccessControl rbac) && !String.IsNullOrEmpty(rbac.color) ? rbac.color : "#606060",
+                color    = Auth.rbac.TryGetValue(username, out Auth.AccessControl rbac) && rbac is not null && !String.IsNullOrEmpty(rbac.color) ? rbac.color : "#606060",
                 alias    = rbac is not null && !String.IsNullOrEmpty(rbac.alias) ? rbac.alias : username
             });
         }
