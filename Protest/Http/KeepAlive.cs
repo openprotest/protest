@@ -19,13 +19,12 @@ internal static class KeepAlive {
         public HttpListenerContext ctx;
         public string sessionId;
         public string username;
-        public Lock mutex;
+        public SemaphoreSlim semaphore;
     }
 
     private static readonly ConcurrentDictionary<WebSocket, Entry> connections = new();
-
-    private static ConcurrentDictionary<WebSocket, ConcurrentDictionary<string, int>> deviceViewCounter = new();
-    private static ConcurrentDictionary<WebSocket, ConcurrentDictionary<string, int>> userViewCounter = new();
+    private static readonly ConcurrentDictionary<WebSocket, ConcurrentDictionary<string, int>> deviceViewCounter = new();
+    private static readonly ConcurrentDictionary<WebSocket, ConcurrentDictionary<string, int>> userViewCounter = new();
 
     private static readonly JsonSerializerOptions messageSerializerOptions;
 
@@ -63,7 +62,7 @@ internal static class KeepAlive {
             ctx         = ctx,
             sessionId   = sessionId,
             username    = username,
-            mutex       = new Lock()
+            semaphore   = new SemaphoreSlim(1, 1)
         };
 
         connections.TryAdd(ws, keepAliveEntry);
@@ -163,9 +162,14 @@ internal static class KeepAlive {
             if (pair.Value.sessionId != sessionId) continue;
 
             if (pair.Value.ws.State == WebSocketState.Open) {
-                lock(pair.Value.mutex) {
-                    pair.Value.ws.SendAsync(MSG_FORCE_RELOAD, WebSocketMessageType.Text, true, CancellationToken.None);
+                try {
+                    await pair.Value.semaphore.WaitAsync();
+                    await pair.Value.ws.SendAsync(MSG_FORCE_RELOAD, WebSocketMessageType.Text, true, CancellationToken.None);
                 }
+                finally {
+                    pair.Value.semaphore.Release();
+                }
+
                 await pair.Value.ws.CloseAsync(WebSocketCloseStatus.NormalClosure, null, CancellationToken.None);
                 pair.Value.ws?.Dispose();
             }
@@ -188,19 +192,19 @@ internal static class KeepAlive {
             if (!isAuthorized) continue;
 
             if (entry.ws.State == WebSocketState.Open) {
-                new Thread(() => {
+                new Thread(async () => {
                     try {
-                        lock (entry.mutex) {
-                            entry.ws.SendAsync(new ArraySegment<byte>(message), WebSocketMessageType.Text, true, CancellationToken.None);
-                        }
+                        await entry.semaphore.WaitAsync();
+                        await entry.ws.SendAsync(new ArraySegment<byte>(message), WebSocketMessageType.Text, true, CancellationToken.None);
                     }
 #if DEBUG
                     catch (Exception ex) {
                         Logger.Error(ex);
                     }
-#else
-                    catch { }
 #endif
+                    finally {
+                        entry.semaphore.Release();
+                    }
                 }).Start();
             }
             else {
@@ -222,19 +226,19 @@ internal static class KeepAlive {
             if (!Auth.IsAuthorized(entry.ctx, accessPath)) continue;
 
             if (entry.ws.State == WebSocketState.Open) {
-                new Thread(() => {
+                new Thread(async () => {
                     try {
-                        lock (entry.mutex) {
-                            entry.ws.SendAsync(new ArraySegment<byte>(message), WebSocketMessageType.Text, true, CancellationToken.None);
-                        }
+                        await entry.semaphore.WaitAsync();
+                        await entry.ws.SendAsync(new ArraySegment<byte>(message), WebSocketMessageType.Text, true, CancellationToken.None);
                     }
 #if DEBUG
                     catch (Exception ex) {
                         Logger.Error(ex);
                     }
-#else
-                    catch { }
 #endif
+                    finally {
+                        entry.semaphore.Release();
+                    }
                 }).Start();
             }
         }
@@ -249,19 +253,19 @@ internal static class KeepAlive {
             if (!Auth.IsAuthorized(entry.ctx, accessPath)) continue;
 
             if (entry.ws.State == WebSocketState.Open) {
-                new Thread(()=> {
+                new Thread(async ()=> {
                     try {
-                        lock (entry.mutex) {
-                            entry.ws.SendAsync(new ArraySegment<byte>(message), WebSocketMessageType.Text, true, CancellationToken.None);
-                        }
+                        await entry.semaphore.WaitAsync();
+                        await entry.ws.SendAsync(new ArraySegment<byte>(message), WebSocketMessageType.Text, true, CancellationToken.None);
                     }
 #if DEBUG
                     catch (Exception ex) {
                         Logger.Error(ex);
                     }
-#else
-                catch { }
 #endif
+                    finally {
+                        entry.semaphore.Release();
+                    }
                 }).Start();
             }
         }
@@ -349,29 +353,27 @@ internal static class KeepAlive {
 
             if (action == "open") {
                 if (exists) {
-                    _ = devicesCount.AddOrUpdate(file, 1, (_, count) => count + 1);
+                    devicesCount.AddOrUpdate(file, 1, (_, count) => count + 1);
                 }
                 else {
-                    _ = deviceViewCounter.TryAdd(ws, new ConcurrentDictionary<string, int>() { [file] = 1 });
+                    deviceViewCounter.TryAdd(ws, new ConcurrentDictionary<string, int>() { [file] = 1 });
                 }
                 HandleViewDeviceAction(origin, action, file, true);
             }
-            else if (action == "close") {
-                if (exists && devicesCount.TryGetValue(file, out int count)) {
-                    if (count <= 1) {
-                        devicesCount.TryRemove(file, out _);
+            else if (action == "close" && exists && devicesCount.TryGetValue(file, out int count)) {
+                if (count <= 1) {
+                    devicesCount.TryRemove(file, out _);
 
-                        bool otherConnectionHasFile = deviceViewCounter.Any(kv => kv.Key != ws
-                            && connections.TryGetValue(kv.Key, out Entry e) && e.username == origin
-                            && kv.Value.TryGetValue(file, out int c) && c > 0);
+                    bool otherConnectionHasFile = deviceViewCounter.Any(kv => kv.Key != ws
+                        && connections.TryGetValue(kv.Key, out Entry e) && e.username == origin
+                        && kv.Value.TryGetValue(file, out int c) && c > 0);
 
-                        if (!otherConnectionHasFile) {
-                            HandleViewDeviceAction(origin, action, file, false);
-                        }
+                    if (!otherConnectionHasFile) {
+                        HandleViewDeviceAction(origin, action, file, false);
                     }
-                    else {
-                        devicesCount[file] = count - 1;
-                    }
+                }
+                else {
+                    devicesCount[file] = count - 1;
                 }
             }
             return;
@@ -386,29 +388,27 @@ internal static class KeepAlive {
 
             if (action == "open") {
                 if (exists) {
-                    _ = usersCount.AddOrUpdate(file, 1, (_, count) => count + 1);
+                    usersCount.AddOrUpdate(file, 1, (_, count) => count + 1);
                 }
                 else {
-                    _ =userViewCounter.TryAdd(ws, new ConcurrentDictionary<string, int>() { [file] = 1 });
+                    userViewCounter.TryAdd(ws, new ConcurrentDictionary<string, int>() { [file] = 1 });
                 }
                 HandleViewUserAction(origin, action, file, true);
             }
-            else if (action == "close") {
-                if (exists && usersCount.TryGetValue(file, out int count)) {
-                    if (count <= 1) {
-                        usersCount.TryRemove(file, out _);
+            else if (action == "close" && exists && usersCount.TryGetValue(file, out int count)) {
+                if (count <= 1) {
+                    usersCount.TryRemove(file, out _);
 
-                        bool otherConnectionHasFile = userViewCounter.Any(kv => kv.Key != ws
-                            && connections.TryGetValue(kv.Key, out Entry e) && e.username == origin
-                            && kv.Value.TryGetValue(file, out int c) && c > 0);
+                    bool otherConnectionHasFile = userViewCounter.Any(kv => kv.Key != ws
+                        && connections.TryGetValue(kv.Key, out Entry e) && e.username == origin
+                        && kv.Value.TryGetValue(file, out int c) && c > 0);
 
-                        if (!otherConnectionHasFile) {
-                            HandleViewUserAction(origin, action, file, false);
-                        }
+                    if (!otherConnectionHasFile) {
+                        HandleViewUserAction(origin, action, file, false);
                     }
-                    else {
-                        usersCount[file] = count - 1;
-                    }
+                }
+                else {
+                    usersCount[file] = count - 1;
                 }
             }
             return;
