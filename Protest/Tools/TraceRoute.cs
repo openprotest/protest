@@ -29,8 +29,6 @@ internal static class TraceRoute {
             return;
         }
 
-        if (ws is null) return;
-
         Task traceTask = null;
         using CancellationTokenSource cts = new CancellationTokenSource();
         using SemaphoreSlim writeSemaphore = new SemaphoreSlim(1, 1);
