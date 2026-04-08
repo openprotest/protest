@@ -61,7 +61,6 @@ internal static class TraceRoute {
                 const short ttl = 30;
 
                 traceTask = Task.Run(async () => {
-
                     List<IPAddress> ipList = new List<IPAddress>();
                     string lastAddress = String.Empty;
 
@@ -80,9 +79,8 @@ internal static class TraceRoute {
                                 if (lastAddress == reply.Address.ToString()) {
                                     break;
                                 }
-                                else {
-                                    lastAddress = reply.Address.ToString();
-                                }
+
+                                lastAddress = reply.Address.ToString();
 
                                 builder.Append(lastAddress);
                                 builder.Append((char)127);
