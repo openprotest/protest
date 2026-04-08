@@ -29,13 +29,10 @@ internal static class TraceRoute {
             return;
         }
 
-<<<<<<< HEAD
-        Task traceTask = null;
-=======
         if (ws is null) return;
 
         Task traceTask = Task.CompletedTask;
->>>>>>> e1190312 (Keep alive, debugging)
+
         using CancellationTokenSource cts = new CancellationTokenSource();
         using SemaphoreSlim writeSemaphore = new SemaphoreSlim(1, 1);
 
