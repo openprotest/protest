@@ -342,7 +342,7 @@ class Certificates extends List {
 
 			switch (this.columnsElements[i].textContent) {
 				case "name": newAttr.textContent = entry["name"].v; break;
-				case "date": newAttr.textContent = new Date(UI.TicksToUnixDate(entry["date"].v)).toLocaleDateString(regionalFormat);break;
+				case "date": newAttr.textContent = new Date(UI.TicksToUnixDate(entry["date"].v)).toLocaleDateString(UI.regionalFormat);break;
 				case "size": newAttr.textContent = UI.SizeToString(entry["size"].v); break;
 			}
 

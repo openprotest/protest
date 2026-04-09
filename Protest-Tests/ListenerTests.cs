@@ -7,12 +7,9 @@ public class ListenerTests {
     private readonly DirectoryInfo front;
 
     public ListenerTests() {
-        if (OperatingSystem.IsWindows()) {
-            front = new DirectoryInfo(@"..\..\..\..\..\Protest\front");
-        }
-        else {
-            front = new DirectoryInfo(@"../../../../../Protest/front");
-        }
+        front = OperatingSystem.IsWindows()
+            ? new DirectoryInfo(@"..\..\..\..\..\Protest\front")
+            : new DirectoryInfo(@"../../../../../Protest/front");
 
         if (!front.Exists) {
             Assert.Fail($"\"front\" directory not found: {front.FullName}");

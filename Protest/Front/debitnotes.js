@@ -414,7 +414,7 @@ class DebitNotes extends Window {
 			stampContainer.appendChild(returnedBox);
 
 			const returnedDateBox = document.createElement("div");
-			returnedDateBox.textContent = new Date(UI.TicksToUnixDate(content.returned)).toLocaleDateString(regionalFormat);
+			returnedDateBox.textContent = new Date(UI.TicksToUnixDate(content.returned)).toLocaleDateString(UI.regionalFormat);
 			returnedDateBox.style.textAlign = "center";
 			returnedDateBox.style.fontSize = "6px";
 			returnedDateBox.style.fontWeight = "700";
@@ -456,7 +456,7 @@ class DebitNotes extends Window {
 		grid.append(dateLabel);
 
 		const dateValueLabel = document.createElement("div");
-		dateValueLabel.textContent = new Date(UI.TicksToUnixDate(content.date)).toLocaleDateString(regionalFormat);
+		dateValueLabel.textContent = new Date(UI.TicksToUnixDate(content.date)).toLocaleDateString(UI.regionalFormat);
 		dateValueLabel.style.gridArea = "3 / 2";
 		dateValueLabel.style.borderBottom = underline_style;
 		dateValueLabel.style.marginRight = "20px";
@@ -695,7 +695,7 @@ class DebitNotes extends Window {
 		let now = new Date();
 		const dateInput = document.createElement("input");
 		dateInput.type = "text";
-		dateInput.value = now.toLocaleDateString(regionalFormat);
+		dateInput.value = now.toLocaleDateString(UI.regionalFormat);
 		dateInput.readOnly = true;
 		dateInput.style.gridArea = "1 / 5";
 		grid.appendChild(dateInput);

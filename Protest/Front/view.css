@@ -1007,6 +1007,7 @@ button.view-live-button:active {
 
 .view-fetch-floating-button {
 	position: absolute;
+	z-index: 4;
 	left: 2px;
 	width: 36px !important;
 	min-width: 36px !important;

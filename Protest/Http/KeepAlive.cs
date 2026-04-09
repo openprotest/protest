@@ -70,9 +70,15 @@ internal static class KeepAlive {
         byte[] buff = new byte[2048];
 
         try {
-            //init
-            ArraySegment<byte> initSegment = new(Encoding.UTF8.GetBytes($"{{\"action\":\"init\",\"version\":\"{Data.VersionToString()}\",\"username\":\"{username}\",\"color\":\"{accessControl?.color ?? "#606060"}\",\"authorization\":[\"{string.Join("\",\"", accessArray)}\"]}}"));
-            await ws.SendAsync(initSegment, WebSocketMessageType.Text, true, CancellationToken.None);
+
+            byte[] initPayload = JsonSerializer.SerializeToUtf8Bytes(new {
+                action        = "init",
+                version       = Data.VersionToString(),
+                username      = username,
+                color         = accessControl?.color ?? "#606060",
+                authorization = accessArray
+            });
+            await ws.SendAsync(initPayload, WebSocketMessageType.Text, true, CancellationToken.None);
 
             ArraySegment<byte> zonesSegment = new(Encoding.UTF8.GetBytes($"{{\"action\":\"zones\",\"list\":{Zones.ListZonesString()}}}"));
             await ws.SendAsync(zonesSegment, WebSocketMessageType.Text, true, CancellationToken.None);
