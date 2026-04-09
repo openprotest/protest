@@ -746,9 +746,9 @@ button.view-live-button:active {
 	display: inline-block;
 	font-size: small;
 	width: calc(100% - 20px);
-	white-Space: nowrap;
+	white-space: nowrap;
 	overflow: hidden;
-	text-Overflow: ellipsis;
+	text-overflow: ellipsis;
 }
 
 .view-lifeline-graph {
@@ -847,7 +847,7 @@ button.view-live-button:active {
 .view-error-box > div,
 .view-critical-box > div {
 	display: inline-block;
-	vertical-align: bottom;;
+	vertical-align: bottom;
 }
 
 .view-info-box > div:nth-child(1),
