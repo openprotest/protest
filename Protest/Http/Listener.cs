@@ -7,7 +7,6 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Net;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using Protest.Tasks;
 using Protest.Tools;
@@ -274,12 +273,12 @@ internal sealed class Listener {
             byte[] buffer = DatabaseInstances.users.SerializeContacts();
             ctx.Response.StatusCode = (int)HttpStatusCode.OK;
             ctx.Response.ContentLength64 = buffer!.Length;
-            await ctx.Response.OutputStream.WriteAsync(buffer!, 0, buffer!.Length);
+            await ctx.Response.OutputStream.WriteAsync(buffer!);
             ctx.Response.Close();
             return;
         }
 
-        if (await CacheHandler(ctx, path)) { return; }
+        if (await CacheHandler(ctx, path)) return;
 
         if (!Auth.IsAuthenticated(ctx)) {
             ctx.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
@@ -397,7 +396,7 @@ internal sealed class Listener {
 
         try {
             if (buffer is not null) {
-                await ctx.Response.OutputStream.WriteAsync(buffer, 0, buffer.Length);
+                await ctx.Response.OutputStream.WriteAsync(buffer);
             }
             await ctx.Response.OutputStream.FlushAsync();
 #if DEBUG
@@ -416,7 +415,7 @@ internal sealed class Listener {
     }
 
     private static async Task<bool> DynamicHandler(HttpListenerContext ctx, Dictionary<string, string> parameters) {
-        string sessionId = ctx.Request.Cookies["sessionid"]?.Value ?? null;
+        string sessionId = ctx.Request.Cookies["sessionid"]?.Value;
         string username = IPAddress.IsLoopback(ctx.Request.RemoteEndPoint.Address) ? "loopback" : Auth.GetUsername(sessionId);
 
         ctx.Response.AddHeader("Cache-Control", "no-cache");
@@ -428,7 +427,7 @@ internal sealed class Listener {
             ctx.Response.ContentLength64 = buffer?.Length ?? 0;
 
             if (buffer is not null) {
-                await ctx.Response.OutputStream.WriteAsync(buffer, 0, buffer.Length);
+                await ctx.Response.OutputStream.WriteAsync(buffer);
             }
 
             ctx.Response.Close();

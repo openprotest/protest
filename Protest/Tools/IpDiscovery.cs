@@ -222,7 +222,7 @@ internal static class IpDiscovery {
         }
 
         if (gwIpV4 is not null || gwIpV6 is not null) {
-            string ipv4String = gwIpV4?.ToString() ?? null;
+            string ipv4String = gwIpV4?.ToString();
 
             string hostname = ipv4String is null ? String.Empty : NetBios.GetBiosName(ipv4String, 200);
             string mac      = ipv4String is null ? String.Empty : Arp.ArpRequest(ipv4String);

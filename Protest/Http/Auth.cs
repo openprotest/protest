@@ -63,7 +63,7 @@ internal static class Auth {
         IPAddress remoteIp = ctx.Request.RemoteEndPoint.Address;
         if (IPAddress.IsLoopback(remoteIp) && Configuration.backdoor) return true;
 
-        string sessionId = ctx.Request.Cookies["sessionid"]?.Value ?? null;
+        string sessionId = ctx.Request.Cookies["sessionid"]?.Value;
         if (sessionId is null) return false;
 
         if (!sessions.TryGetValue(sessionId, out Session session)) {
@@ -82,10 +82,8 @@ internal static class Auth {
         IPAddress remoteIp = ctx.Request.RemoteEndPoint.Address;
         if (IPAddress.IsLoopback(remoteIp) && Configuration.backdoor) return true;
 
-        string sessionId = ctx.Request.Cookies["sessionid"]?.Value ?? null;
-        if (sessionId is null) {
-            return false;
-        }
+        string sessionId = ctx.Request.Cookies["sessionid"]?.Value;
+        if (sessionId is null) return false;
 
         if (!sessions.TryGetValue(sessionId, out Session session)) {
             return false;
@@ -98,10 +96,8 @@ internal static class Auth {
         IPAddress remoteIp = ctx.Request.RemoteEndPoint.Address;
         if (IPAddress.IsLoopback(remoteIp) && Configuration.backdoor) return true;
 
-        string sessionId = ctx.Request.Cookies["sessionid"]?.Value ?? null;
-        if (sessionId is null) {
-            return false;
-        }
+        string sessionId = ctx.Request.Cookies["sessionid"]?.Value;
+        if (sessionId is null) return false;
 
         if (!sessions.TryGetValue(sessionId, out Session session)) {
             return false;
@@ -388,7 +384,7 @@ internal static class Auth {
     }
 
     internal static bool RevokeAccess(HttpListenerContext ctx, string origin) {
-        string sessionId = ctx.Request.Cookies["sessionid"]?.Value ?? null;
+        string sessionId = ctx.Request.Cookies["sessionid"]?.Value;
         if (sessionId is null) return false;
         return RevokeAccess(sessionId, origin);
     }

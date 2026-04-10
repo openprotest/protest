@@ -32,7 +32,7 @@ internal static class Ssh {
 
         if (ws is null) return;
 
-        string sessionId = ctx.Request.Cookies["sessionid"]?.Value ?? null;
+        string sessionId = ctx.Request.Cookies["sessionid"]?.Value;
         string origin = IPAddress.IsLoopback(ctx.Request.RemoteEndPoint.Address) ? "loopback" : Auth.GetUsername(sessionId);
 
         try {

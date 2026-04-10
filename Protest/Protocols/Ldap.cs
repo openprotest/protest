@@ -112,7 +112,7 @@ internal static class Ldap {
         string normalizedDomain;
 
         try {
-            string domain = IPGlobalProperties.GetIPGlobalProperties()?.DomainName ?? null;
+            string domain = IPGlobalProperties.GetIPGlobalProperties()?.DomainName;
             if (String.IsNullOrEmpty(domain)) return false;
 
             normalizedDomain = NormalizeDomain(domain);
@@ -199,7 +199,7 @@ internal static class Ldap {
 
         string normalizedDomain = null;
         try {
-            string domain = IPGlobalProperties.GetIPGlobalProperties()?.DomainName ?? null;
+            string domain = IPGlobalProperties.GetIPGlobalProperties()?.DomainName;
             if (String.IsNullOrEmpty(domain)) return null;
 
             normalizedDomain = NormalizeDomain(domain);
@@ -237,7 +237,7 @@ internal static class Ldap {
 
         string normalizedDomain = null;
         try {
-            string domain = IPGlobalProperties.GetIPGlobalProperties()?.DomainName ?? null;
+            string domain = IPGlobalProperties.GetIPGlobalProperties()?.DomainName;
             if (String.IsNullOrEmpty(domain)) return null;
 
             normalizedDomain = NormalizeDomain(domain);

@@ -29,7 +29,7 @@ internal static class Telnet {
 
         if (ws is null) return;
 
-        string sessionId = ctx.Request.Cookies["sessionid"]?.Value ?? null;
+        string sessionId = ctx.Request.Cookies["sessionid"]?.Value;
         string username = IPAddress.IsLoopback(ctx.Request.RemoteEndPoint.Address) ? "loopback" : Auth.GetUsername(sessionId);
 
         try {
@@ -129,7 +129,7 @@ internal static class Telnet {
             }
 
             try {
-                int count = await stream.ReadAsync(data, 0, data.Length);
+                int count = await stream.ReadAsync(data);
 
                 if (count == 0) { //remote host closed the connection
                     if (ws!.State == WebSocketState.Open) {

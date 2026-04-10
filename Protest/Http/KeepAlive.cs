@@ -52,7 +52,7 @@ internal static class KeepAlive {
 
         if (ws is null) return;
 
-        string sessionId = ctx.Request.Cookies["sessionid"]?.Value ?? null;
+        string sessionId = ctx.Request.Cookies["sessionid"]?.Value;
         string username = IPAddress.IsLoopback(ctx.Request.RemoteEndPoint.Address) ? "loopback" : Auth.GetUsername(sessionId);
 
         string[] accessArray = Auth.rbac.TryGetValue(username, out Auth.AccessControl accessControl) && accessControl is not null ? accessControl.authorization : new string[] { "*" };
@@ -295,7 +295,7 @@ internal static class KeepAlive {
             if (!dictionary.TryGetValue("ttl", out string ttl)) return;
 
             if (long.TryParse(ttl, out long ttlLong)) {
-                string sessionId = ctx.Request.Cookies["sessionid"]?.Value ?? null;
+                string sessionId = ctx.Request.Cookies["sessionid"]?.Value;
                 if (sessionId is null) return;
                 Auth.UpdateSessionTtl(sessionId, ttlLong);
             }
@@ -482,7 +482,9 @@ internal static class KeepAlive {
             });
         }
 
-        return null;
+        return JsonSerializer.SerializeToUtf8Bytes(new {
+            action   = $"view-{type}-invalid-action"
+        });
     }
 }
 
