@@ -123,6 +123,10 @@ internal static class Issues {
 
                 IEnumerable<Issue> filtered = issues?.Where(o => o.timestamp > lastTimestamp);
 
+                if (filtered is null) {
+                    break;
+                }
+
                 if (filtered.Any()) {
                     byte[] bytes = JsonSerializer.SerializeToUtf8Bytes(filtered.Select(o => new {
                         timestamp  = o.timestamp / 10000 - UNIX_BASE_TICKS,
@@ -247,7 +251,7 @@ internal static class Issues {
                 ? ip.value.Split(';').ToArray()[0].Trim()
                 : String.Empty;
 
-            if (CheckCpuLifeline(device, ipString, out Issue ? cpuIssue) && cpuIssue.HasValue) {
+            if (CheckCpuLifeline(device, ipString, out Issue? cpuIssue) && cpuIssue.HasValue) {
                 issues.Add(cpuIssue.Value);
             }
 
@@ -274,7 +278,7 @@ internal static class Issues {
                     issues.Add(lifecycleIssue.Value);
                 }
 
-                if (WindowsUpdate.CheckEntry(device, ipString,out Issue? updateIssue) && updateIssue.HasValue) {
+                if (WindowsUpdate.CheckEntry(device, ipString, out Issue? updateIssue) && updateIssue.HasValue) {
                     issues.Add(updateIssue.Value);
                 }
             }
@@ -634,7 +638,7 @@ internal static class Issues {
             double slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
             double intercept = (sumY - slope * sumX) / n;
 
-            //check if slop is close to 0
+            //check if slope is close to 0
             if (Math.Abs(slope) < 1e-9) continue;
 
             double currentTime = (double)(DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - firstTimestamp);
@@ -940,7 +944,7 @@ internal static class Issues {
                     if (entry.attributes.TryGetValue("username", out Database.Attribute usernameAttr)) {
                         target = usernameAttr.value;
                     }
-                    else if (entry.attributes.TryGetValue("username", out Database.Attribute emailAttr)) {
+                    else if (entry.attributes.TryGetValue("e-mail", out Database.Attribute emailAttr)) {
                         target = emailAttr.value;
                     }
                     else {
