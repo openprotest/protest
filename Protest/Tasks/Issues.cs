@@ -5,7 +5,6 @@ using System.Net;
 using System.Net.WebSockets;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
-using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -1133,5 +1132,4 @@ internal static class Issues {
         printerIssues = null;
         return false;
     }
-
 }
