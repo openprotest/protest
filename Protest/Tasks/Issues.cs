@@ -67,9 +67,9 @@ internal static class Issues {
         Thread thread = new Thread(() => Scan());
 
         task = new TaskWrapper("Issues") {
-            thread = thread,
-            author = origin,
-            TotalSteps = 0,
+            thread         = thread,
+            author         = origin,
+            TotalSteps     = 0,
             CompletedSteps = 0
         };
 
@@ -302,7 +302,7 @@ internal static class Issues {
             if (device.Value.attributes.TryGetValue("ip", out Database.Attribute ipAttribute)) {
                 device.Value.attributes.TryGetValue("name", out Database.Attribute nameAttribute);
 
-                string[] ips = ipAttribute.value.Split(',').Select(o=>o.Trim()).ToArray();
+                string[] ips = ipAttribute.value.Split(',').Select(o=> o.Trim()).ToArray();
                 for (int i = 0; i < ips.Length; i++) {
                     if (string.IsNullOrEmpty(ips[i])) { continue; }
                     if (ips[i].Contains("dhcp", StringComparison.OrdinalIgnoreCase)) { continue; }
@@ -335,7 +335,7 @@ internal static class Issues {
             if (device.Value.attributes.TryGetValue("mac address", out Database.Attribute ipAttribute)) {
                 device.Value.attributes.TryGetValue("name", out Database.Attribute nameAttribute);
 
-                string[] macs = ipAttribute.value.Split(',').Select(o=>o.Trim()).ToArray();
+                string[] macs = ipAttribute.value.Split(',').Select(o=> o.Trim()).ToArray();
                 for (int i = 0; i < macs.Length; i++) {
                     if (string.IsNullOrEmpty(macs[i])) { continue; }
 
@@ -517,7 +517,7 @@ internal static class Issues {
             Array.Copy(lifeline, i, buffer, 0, 8);
             long timestamp = BitConverter.ToInt64(buffer, 0);
 
-            if (timestamp < targetDate) { continue; }
+            if (timestamp < targetDate) continue;
 
             Array.Copy(lifeline, i+8, buffer, 0, 8);
             ulong used = BitConverter.ToUInt64(buffer, 0);
@@ -525,10 +525,12 @@ internal static class Issues {
             Array.Copy(lifeline, i + 16, buffer, 0, 8);
             ulong total = BitConverter.ToUInt64(buffer, 0);
 
+            if (total == 0) continue;
+
             int value = (int)(100 * used / total);
 
             bool isMinorVariation = i > 0 && Math.Abs(lastValue - value) < 2 && timestamp - lastTimestamp < 600_000;
-            if (isMinorVariation) { continue; }
+            if (isMinorVariation) continue;
 
             lastTimestamp = timestamp;
             lastValue = value;
@@ -596,6 +598,7 @@ internal static class Issues {
 
                 Array.Copy(lifeline, index + i*17 + 9, buffer8, 0, 8);
                 ulong total = BitConverter.ToUInt64(buffer8, 0);
+                if (total == 0) continue;
 
                 double percentUsed = (double)used / total * 100;
 
@@ -646,11 +649,11 @@ internal static class Issues {
 
             if (predictedTime > currentTime) {
                 long predictedDateLong = (long)(predictedTime + firstTimestamp);
-                if (predictedDateLong < 0 || predictedDateLong > 253402300799999) { continue; }
+                if (predictedDateLong < 0 || predictedDateLong > 253402300799999) continue;
 
                 DateTime predictedDate = DateTimeOffset.FromUnixTimeMilliseconds(predictedDateLong).DateTime;
 
-                if (predictedDate > DateTime.Now.Date.AddYears(1)) { continue; }
+                if (predictedDate > DateTime.Now.Date.AddYears(1)) continue;
 
                 device.attributes.TryGetValue("name", out Database.Attribute nameAttribute);
 
@@ -743,7 +746,7 @@ internal static class Issues {
 
         string[] split = speedAttr.value
             .Split(';')
-            .Select(o=>o.Trim()).ToArray();
+            .Select(o=> o.Trim()).ToArray();
 
         for (int i = 0; i < split.Length; i++) {
             if (split[i] == "10 Mbps" || split[i] == "100 Mbps") {
