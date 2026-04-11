@@ -70,7 +70,6 @@ internal static class KeepAlive {
         byte[] buff = new byte[2048];
 
         try {
-
             byte[] initPayload = JsonSerializer.SerializeToUtf8Bytes(new {
                 action        = "init",
                 version       = Data.VersionToString(),

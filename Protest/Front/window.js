@@ -877,6 +877,11 @@ class Window {
 			this.win.appendChild(dim);
 		}
 
+		this.content.inert = true;
+		if (this.toolbar) {
+			this.toolbar.inert = true;
+		}
+
 		const confirmBox = document.createElement("div");
 		confirmBox.className = "win-confirm";
 		dim.appendChild(confirmBox);
@@ -911,11 +916,11 @@ class Window {
 
 		this.content.style.filter = "blur(4px)";
 
-		okButton.onkeydown = event=>{
+		okButton.onkeydown = event=> {
 			if (event.key === "ArrowRight") { cancelButton.focus(); }
 		};
 
-		cancelButton.onkeydown = event=>{
+		cancelButton.onkeydown = event=> {
 			if (event.key === "ArrowLeft") { okButton.focus(); }
 		};
 
@@ -931,6 +936,12 @@ class Window {
 			dim.style.filter = "opacity(0)";
 			confirmBox.style.transform = "scaleY(.2)";
 			this.content.style.filter = "none";
+
+			this.content.inert = false;
+			if (this.toolbar) {
+				this.toolbar.inert = false;
+			}
+
 			setTimeout(()=> {
 				if (this.popOutWindow) {
 					this.popOutWindow.document.body.removeChild(dim);
@@ -948,9 +959,7 @@ class Window {
 		okButton.focus();
 
 		confirmBox.onkeydown = event=> {
-			if (event.key === "Escape") {
-				cancelButton.onclick();
-			}
+			if (event.key === "Escape") cancelButton.onclick();
 		};
 
 		return okButton;
@@ -977,6 +986,11 @@ class Window {
 			this.win.appendChild(dim);
 		}
 
+		this.content.inert = true;
+		if (this.toolbar) {
+			this.toolbar.inert = true;
+		}
+
 		const dialogBox = document.createElement("div");
 		dialogBox.className = "win-dialog";
 		dim.appendChild(dialogBox);
@@ -985,7 +999,7 @@ class Window {
 		}
 		dim.appendChild(dialogBox);
 
-		let innerBox = document.createElement("div");
+		const innerBox = document.createElement("div");
 		innerBox.style.position = "absolute";
 		innerBox.style.left = "0";
 		innerBox.style.right = "0";
@@ -1035,6 +1049,12 @@ class Window {
 			dim.style.filter = "opacity(0)";
 			dialogBox.style.transform = "scaleY(.2)";
 			this.content.style.filter = "none";
+
+			this.content.inert = false;
+			if (this.toolbar) {
+				this.toolbar.inert = false;
+			}
+
 			setTimeout(()=> Abort(), WIN.ANIME_DURATION);
 			if (this.defaultElement) {
 				this.defaultElement.focus();
