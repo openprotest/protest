@@ -565,7 +565,7 @@ internal static class Issues {
     }
 
     public static bool CheckDiskSpaceLifeline(Database.Entry device, string host, out Issue[] diskIssues) {
-        byte[] lifeline = Lifeline.ViewFile(device.filename, DateTime.Now.ToString("yyyyMM"), "disk");
+        byte[] lifeline = Lifeline.ViewFile(device.filename, DateTime.UtcNow.ToString("yyyyMM"), "disk");
 
         if (lifeline is null || lifeline.Length <= 12 + 17 * MIN_LIFELINE_ENTRIES) {
             DateTime lastMonth = DateTime.UtcNow.AddMonths(-1);
@@ -653,7 +653,7 @@ internal static class Issues {
 
                 DateTime predictedDate = DateTimeOffset.FromUnixTimeMilliseconds(predictedDateLong).DateTime;
 
-                if (predictedDate > DateTime.Now.Date.AddYears(1)) continue;
+                if (predictedDate > DateTime.UtcNow.Date.AddYears(1)) continue;
 
                 device.attributes.TryGetValue("name", out Database.Attribute nameAttribute);
 
