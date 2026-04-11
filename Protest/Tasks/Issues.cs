@@ -302,7 +302,7 @@ internal static class Issues {
             if (device.Value.attributes.TryGetValue("ip", out Database.Attribute ipAttribute)) {
                 device.Value.attributes.TryGetValue("name", out Database.Attribute nameAttribute);
 
-                string[] ips = ipAttribute.value.Split(',').Select(o=> o.Trim()).ToArray();
+                string[] ips = ipAttribute.value.Split(',').Select(o => o.Trim()).ToArray();
                 for (int i = 0; i < ips.Length; i++) {
                     if (string.IsNullOrEmpty(ips[i])) { continue; }
                     if (ips[i].Contains("dhcp", StringComparison.OrdinalIgnoreCase)) { continue; }
@@ -332,10 +332,10 @@ internal static class Issues {
         Dictionary<string, Database.Entry> macAddresses = new Dictionary<string, Database.Entry>();
 
         foreach (KeyValuePair<string, Database.Entry> device in DatabaseInstances.devices.dictionary) {
-            if (device.Value.attributes.TryGetValue("mac address", out Database.Attribute ipAttribute)) {
+            if (device.Value.attributes.TryGetValue("mac address", out Database.Attribute macAttribute)) {
                 device.Value.attributes.TryGetValue("name", out Database.Attribute nameAttribute);
 
-                string[] macs = ipAttribute.value.Split(',').Select(o=> o.Trim()).ToArray();
+                string[] macs = macAttribute.value.Split(',').Select(o => o.Trim()).ToArray();
                 for (int i = 0; i < macs.Length; i++) {
                     if (string.IsNullOrEmpty(macs[i])) { continue; }
 
@@ -746,7 +746,7 @@ internal static class Issues {
 
         string[] split = speedAttr.value
             .Split(';')
-            .Select(o=> o.Trim()).ToArray();
+            .Select(o => o.Trim()).ToArray();
 
         for (int i = 0; i < split.Length; i++) {
             if (split[i] == "10 Mbps" || split[i] == "100 Mbps") {
