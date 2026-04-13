@@ -294,7 +294,7 @@ internal static class ReverseProxy {
 
             File.WriteAllBytes($"{Data.DIR_REVERSE_PROXY}{Data.DELIMITER}{entry.guid}", cipher);
 
-            Logger.Action(origin, $"Create reverse proxy server: {entry.name}");
+            Logger.Action(origin, "Reverse-proxy", $"Create reverse proxy server: {entry.name}");
 
             return plain;
         }
@@ -314,6 +314,7 @@ internal static class ReverseProxy {
 
         try {
             File.Delete($"{Data.DIR_REVERSE_PROXY}{Data.DELIMITER}{guid}");
+            Logger.Action(origin, "Reverse-proxy", $"Delete reverse proxy server: {guid}");
             return Data.CODE_OK.ToArray();
         }
         catch {
@@ -384,6 +385,8 @@ internal static class ReverseProxy {
 
         running.TryAdd(obj.guid.ToString(), proxy);
 
+        Logger.Action(origin, "Reverse-proxy", $"Start reverse proxy server: {obj.name}:{obj.guid}");
+
         return Data.CODE_OK.ToArray();
     }
 
@@ -403,6 +406,8 @@ internal static class ReverseProxy {
         if (!obj.Stop(origin)) {
             return Data.CODE_FAILED.ToArray();
         }
+
+        Logger.Action(origin, "Reverse-proxy", $"Stop reverse proxy server: {obj.guid}");
 
         return Data.CODE_OK.ToArray();
     }

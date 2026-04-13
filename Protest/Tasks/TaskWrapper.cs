@@ -75,7 +75,7 @@ internal sealed class TaskWrapper : IDisposable {
 
     public void RequestCancel(string origin) {
         status = TaskStatus.Canceling;
-        Logger.Action(origin, $"Canceling task: {name}");
+        Logger.Action(origin, String.Empty, $"Canceling task: {name}");
         cancellationTokenSource.Cancel();
     }
 

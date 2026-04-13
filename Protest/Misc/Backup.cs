@@ -56,7 +56,7 @@ internal static class Backup {
                 copyDirectory.Delete(true);
             }
 
-            Logger.Action(origin, $"Create backup: {name}");
+            Logger.Action(origin, "Backup", $"Create backup: {name}");
 
             return List();
         }
@@ -95,7 +95,7 @@ internal static class Backup {
         try {
             if (File.Exists(filename)) {
                 File.Delete(filename);
-                Logger.Action(origin, $"Delete backup: {name}");
+                Logger.Action(origin, "Backup", $"Delete backup: {name}");
                 return List();
             }
             else {
@@ -141,7 +141,7 @@ internal static class Backup {
             ctx.Response.StatusDescription = "OK";
             ctx.Response.OutputStream.Close();
 
-            Logger.Action(origin, $"Download backup: {name}");
+            Logger.Action(origin, "Backup", $"Download backup: {name}");
 
             return null;
         }

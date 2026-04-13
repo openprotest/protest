@@ -493,7 +493,7 @@ class DeviceView extends View {
 				const computerMngButton = this.CreateSideButton("mono/computermanage.svg", "Management");
 				computerMngButton.onclick = ()=> UI.PromptAgent(this, "management", host);
 
-				const psRemoteButton = this.CreateSideButton("mono/psremote.svg", "PS remote"); //psexec
+				const psRemoteButton = this.CreateSideButton("mono/remote.svg", "PS remote"); //psexec
 				psRemoteButton.onclick = ()=> UI.PromptAgent(this, "psremote", host);
 
 				if (ports.includes(445)) { //smb

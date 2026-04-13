@@ -436,7 +436,7 @@ internal static class Ldap {
         user.CommitChanges();
         user.Close();
 
-        Logger.Action(origin, $"Unlock domain user: {username}");
+        Logger.Action(origin, "ID-management", $"Unlock domain user: {username}");
 
         return Data.CODE_OK.Array;
     }
@@ -473,7 +473,7 @@ internal static class Ldap {
         user.CommitChanges();
         user.Close();
 
-        Logger.Action(origin, $"Enable domain user: {username}");
+        Logger.Action(origin, "ID-management", $"Enable domain user: {username}");
 
         return Data.CODE_OK.Array;
     }
@@ -510,7 +510,7 @@ internal static class Ldap {
         user.CommitChanges();
         user.Close();
 
-        Logger.Action(origin, $"Disable domain user: {username}");
+        Logger.Action(origin, "ID-management", $"Disable domain user: {username}");
 
         return Data.CODE_OK.Array;
     }

@@ -150,7 +150,7 @@ internal sealed class Database {
             return false;
         }
 
-        Logger.Action(origin, $"Delete entry from {this.name} database: {file}");
+        Logger.Action(origin, "Database", $"Delete entry from {this.name} database: {file}");
 
         version = DateTime.UtcNow.Ticks;
 
@@ -261,7 +261,7 @@ internal sealed class Database {
             mutex = new Lock()
         };
 
-        Logger.Action(origin, $"Create new entry on {this.name} database: {file}");
+        Logger.Action(origin, "Database", $"Create new entry on {this.name} database: {file}");
         return newEntry;
     }
     private Entry SaveOverwrite(string file, ConcurrentDictionary<string, Attribute> modifications, Entry oldEntry, string origin) {
@@ -277,7 +277,7 @@ internal sealed class Database {
 
         oldEntry.attributes = modifications;
 
-        Logger.Action(origin, $"Modify entry on {this.name} database: {file}");
+        Logger.Action(origin, "Database", $"Modify entry on {this.name} database: {file}");
         return oldEntry;
     }
     private Entry SaveAppend(string file, ConcurrentDictionary<string, Attribute> modifications, Entry oldEntry, string origin) {
@@ -289,7 +289,7 @@ internal sealed class Database {
             }
         }
 
-        Logger.Action(origin, $"Modify entry on {this.name} database: {file}");
+        Logger.Action(origin, "Database", $"Modify entry on {this.name} database: {file}");
         return oldEntry;
     }
     private Entry SaveMerge(string file, ConcurrentDictionary<string, Attribute> modifications, Entry oldEntry, string origin) {
@@ -303,7 +303,7 @@ internal sealed class Database {
 
         oldEntry.attributes = modifications;
 
-        Logger.Action(origin, $"Modify entry on {this.name} database: {file}");
+        Logger.Action(origin, "Database", $"Modify entry on {this.name} database: {file}");
         return oldEntry;
     }
 

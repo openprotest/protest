@@ -582,10 +582,10 @@ internal static class Watchdog {
             watchers[file] = watcher;
 
             if (exists) {
-                Logger.Action(origin, $"Modify a watcher: {watcher.name}");
+                Logger.Action(origin, "Watchdog", $"Modify a watcher: {watcher.name}");
             }
             else {
-                Logger.Action(origin, $"Create a new watcher: {watcher.name}");
+                Logger.Action(origin, "Watchdog", $"Create a new watcher: {watcher.name}");
             }
 
             return content;
@@ -617,7 +617,7 @@ internal static class Watchdog {
                 StopTask(origin);
             }
 
-            Logger.Action(origin, $"Delete watcher: {watcher.name}");
+            Logger.Action(origin, "Watchdog", $"Delete watcher: {watcher.name}");
         }
         catch (Exception ex) {
             Logger.Error(ex);
@@ -652,7 +652,7 @@ internal static class Watchdog {
                 File.WriteAllText(Data.FILE_NOTIFICATIONS, payload);
             }
 
-            Logger.Action(origin, $"Modified watchdog notifications");
+            Logger.Action(origin, "Watchdog", $"Modified watchdog notifications");
 
             return Data.CODE_OK.Array;
 

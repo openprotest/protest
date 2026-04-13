@@ -253,7 +253,7 @@ internal static class DebitNotes {
                 }
             }
 
-            Logger.Action(origin, $"Create a debit note: {name}");
+            Logger.Action(origin, "Debit-notes", $"Create a debit note: {name}");
         }
         catch (Exception ex) {
             Logger.Error(ex);
@@ -280,7 +280,7 @@ internal static class DebitNotes {
 
         try {
             File.Delete(filename);
-            Logger.Action(origin, $"Delete debit note: {file}");
+            Logger.Action(origin, "Debit-notes", $"Delete debit note: {file}");
             return Data.CODE_OK.Array;
         }
         catch {
@@ -315,7 +315,7 @@ internal static class DebitNotes {
 
             File.Delete(filename);
 
-            Logger.Action(origin, $"Mark a debit note as returned: {file}");
+            Logger.Action(origin, "Debit-notes", $"Mark a debit note as returned: {file}");
 
             return Encoding.UTF8.GetBytes($"{{\"file\":\"{file}\"}}");
         }

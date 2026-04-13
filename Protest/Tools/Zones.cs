@@ -45,7 +45,7 @@ internal static class Zones {
 
         KeepAlive.Broadcast($"{{\"action\":\"zones\",\"list\":{payload}}}", "/config/zones/list");
 
-        Logger.Action(origin, $"Modify zones list");
+        Logger.Action(origin, "Environment", $"Modify zones list");
 
         return Data.CODE_OK.Array;
     }

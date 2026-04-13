@@ -122,7 +122,7 @@ internal static class Auth {
         }
 
         if (rateLimLog[clientIP].Count >= MAX_REQUESTS_PER_WIN_PERIOD) {
-            Logger.Action("System", $"Rate limit triggered for host {clientIP}");
+            Logger.Action("System", "AAA", $"Rate limit triggered for host {clientIP}");
             return true;
         }
 
@@ -191,8 +191,8 @@ internal static class Auth {
 
 #if DEBUG
         if (isSuccessful) {
-            Logger.Action(username, $"Primary factor authentication succeeded from {ctx.Request.RemoteEndPoint?.Address}");
-            Logger.Action(username, $"Skipping TOTP");
+            Logger.Action(username, "AAA", $"Primary factor authentication succeeded from {ctx.Request.RemoteEndPoint?.Address}");
+            Logger.Action(username, "AAA", $"Skipping TOTP");
 
             GrandAccess(ctx, username);
             ctx.Response.StatusCode = (int)HttpStatusCode.Accepted;
@@ -203,7 +203,7 @@ internal static class Auth {
 #endif
 
         if (isSuccessful) {
-            Logger.Action(username, $"Primary factor authentication succeeded from {ctx.Request.RemoteEndPoint?.Address}");
+            Logger.Action(username, "AAA", $"Primary factor authentication succeeded from {ctx.Request.RemoteEndPoint?.Address}");
             ctx.Response.StatusCode = (int)HttpStatusCode.Accepted;
 
             string tokenId      = Cryptography.RandomStringGenerator(32);
@@ -230,7 +230,7 @@ internal static class Auth {
             return true;
         }
 
-        Logger.Action(username, $"Primary factor authentication failed from {ctx.Request.RemoteEndPoint?.Address}");
+        Logger.Action(username, "AAA", $"Primary factor authentication failed from {ctx.Request.RemoteEndPoint?.Address}");
         ctx.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
         return false;
     }
@@ -256,13 +256,13 @@ internal static class Auth {
         if (isSuccessful) {
             GrandAccess(ctx, token.username);
 
-            Logger.Action(token.username, $"Secondary factor authentication succeeded from {ctx.Request.RemoteEndPoint?.Address}");
+            Logger.Action(token.username, "AAA", $"Secondary factor authentication succeeded from {ctx.Request.RemoteEndPoint?.Address}");
             ctx.Response.StatusCode = (int)HttpStatusCode.Accepted;
             byte[] buffer = System.Text.Encoding.UTF8.GetBytes("{\"status\":0}");
             ctx.Response.OutputStream.Write(buffer, 0, buffer.Length);
         }
         else {
-            Logger.Action(token.username, $"Secondary factor authentication failed from {ctx.Request.RemoteEndPoint?.Address}");
+            Logger.Action(token.username, "AAA", $"Secondary factor authentication failed from {ctx.Request.RemoteEndPoint?.Address}");
             ctx.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
         }
 
@@ -289,13 +289,13 @@ internal static class Auth {
             GrandAccess(ctx, token.username);
             SetUserTotpSecret(token.username, token.secret);
 
-            Logger.Action(token.username, $"TOTP enrollment succeeded from {ctx.Request.RemoteEndPoint?.Address}");
+            Logger.Action(token.username, "AAA", $"TOTP enrollment succeeded from {ctx.Request.RemoteEndPoint?.Address}");
             ctx.Response.StatusCode = (int)HttpStatusCode.Accepted;
             byte[] buffer = System.Text.Encoding.UTF8.GetBytes("{\"status\":0}");
             ctx.Response.OutputStream.Write(buffer, 0, buffer.Length);
         }
         else {
-            Logger.Action(token.username, $"TOTP enrollment failed from {ctx.Request.RemoteEndPoint?.Address}");
+            Logger.Action(token.username, "AAA", $"TOTP enrollment failed from {ctx.Request.RemoteEndPoint?.Address}");
             ctx.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
         }
 
@@ -353,7 +353,7 @@ internal static class Auth {
         }
 
         if (SetUserTotpSecret(username, null)) {
-            Logger.Action(origin, $"Re-register MFA for {username}");
+            Logger.Action(origin, "AAA", $"Re-register MFA for {username}");
             return "{\"status\":\"ok\"}"u8.ToArray();
         }
         else {
@@ -393,7 +393,7 @@ internal static class Auth {
         if (!sessions.ContainsKey(sessionId)) return false;
 
         if (sessions.TryRemove(sessionId, out _)) {
-            if (origin != null) Logger.Action(origin, $"User actively logged out");
+            if (origin != null) Logger.Action(origin, "AAA", $"User actively logged out");
             ((Func<System.Threading.Tasks.Task>)(async () => await KeepAlive.CloseConnection(sessionId)))();
             return true;
         }
@@ -812,7 +812,7 @@ internal static class Auth {
             return "{\"error\":\"failed to write user file.\"}"u8.ToArray();
         }
 
-        Logger.Action(origin, $"Save RBAC for {username}");
+        Logger.Action(origin, "AAA", $"Save RBAC for {username}");
 
         KeepAlive.Unicast(username, $"{{\"action\":\"update-rbac\",\"authorization\":[{permissionsString}]}}", "/global");
 
@@ -852,7 +852,7 @@ internal static class Auth {
             return "{\"error\":\"failed to write user file.\"}"u8.ToArray();
         }
 
-        Logger.Action(origin, $"Delete RBAC for {username}");
+        Logger.Action(origin, "AAA", $"Delete RBAC for {username}");
 
         return "{\"status\":\"ok\"}"u8.ToArray();
     }

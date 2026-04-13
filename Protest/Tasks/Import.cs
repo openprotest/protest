@@ -127,7 +127,7 @@ internal class Import {
         }
 
         if (fetchDevices) {
-            Logger.Action(origin, $"Importing devices from {ip}");
+            Logger.Action(origin, "Fetch", $"Importing devices from {ip}");
             if (version >= 4f && version < 5f) {
                 ImportDevicesV4(uri, cookieContainer);
             }
@@ -137,7 +137,7 @@ internal class Import {
         }
 
         if (fetchUsers) {
-            Logger.Action(origin, $"Importing users from {ip}");
+            Logger.Action(origin, "Fetch", $"Importing users from {ip}");
             if (version >= 4f && version < 5f) {
                 ImportUsersV4(uri, cookieContainer);
             }
@@ -147,7 +147,7 @@ internal class Import {
         }
 
         if (fetchDebitNotes) {
-            Logger.Action(origin, $"Importing debit notes from {ip}");
+            Logger.Action(origin, "Fetch", $"Importing debit notes from {ip}");
             if (version >= 4f && version < 5f) {
                 ImportDebitNotesV4(uri, cookieContainer);
             }

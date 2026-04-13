@@ -45,7 +45,7 @@ internal static class DhcpRange {
 
         KeepAlive.Broadcast($"{{\"action\":\"dhcp-range\",\"list\":{payload}}}", "/config/dhcprange/list");
 
-        Logger.Action(origin, $"Modify DHCP range list");
+        Logger.Action(origin, "Environment", $"Modify DHCP range list");
 
         return Data.CODE_OK.Array;
     }

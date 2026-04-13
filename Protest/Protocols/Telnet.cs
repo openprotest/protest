@@ -57,7 +57,7 @@ internal static class Telnet {
 
             NetworkStream stream = telnet.GetStream();
 
-            Logger.Action(username, $"Establish telnet connection to {host}:{port}");
+            Logger.Action(username, "Remote-access", $"Establish telnet connection to {host}:{port}");
 
             await WebSocketHelper.WsWriteText(ws, "{\"connected\":true}"u8.ToArray());
 

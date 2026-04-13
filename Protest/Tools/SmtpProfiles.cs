@@ -117,7 +117,7 @@ internal static class SmtpProfiles {
                 File.WriteAllBytes(Data.FILE_SMTP_PROFILES, cipher);
             }
 
-            Logger.Action(origin, $"Modify SMTP profiles");
+            Logger.Action(origin, "Environment", $"Modify SMTP profiles");
         }
         catch (JsonException) {
             return Data.CODE_INVALID_ARGUMENT.Array;

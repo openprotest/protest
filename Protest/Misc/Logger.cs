@@ -51,13 +51,13 @@ internal static class Logger {
         Console.ResetColor();
     }
 
-    public static void Action(string origin, string action) {
+    public static void Action(string origin, string category, string action) {
         ThreadPool.QueueUserWorkItem(static state => {
-            var (origin, action) = ((string origin, string action))state!;
+            var (origin, category, action) = ((string origin, string category, string action))state!;
 
             DateTime now = DateTime.Now;
             string date = now.ToString(Data.DATETIME_FORMAT_FILE);
-            string message = $"{date,-24}{origin,-32}{action}";
+            string message = $"{date,-24}{category,-20}{origin,-24}{action}";
             lock (actionMutex) {
                 try {
                     string fileDate = now.ToString(Data.DATE_FORMAT_FILE);
@@ -83,7 +83,7 @@ internal static class Logger {
 #if DEBUG
             Console.Error.WriteLine($"{date}\t{action}");
 #endif
-        }, (origin, action));
+        }, (origin, category, action));
     }
 
     public static byte[] List(Dictionary<string, string> parameters) {

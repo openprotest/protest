@@ -102,7 +102,7 @@ internal static class Cert {
 
             ExportToPfx(cert, password, filename);
 
-            Logger.Action(origin, "Create certificate");
+            Logger.Action(origin, "Certificate", "Create certificate");
 
             return List();
         }
@@ -155,7 +155,7 @@ internal static class Cert {
 
                     File.WriteAllBytes($"{Data.DIR_CERTIFICATES}{Data.DELIMITER}{newName}", fileContent);
 
-                    Logger.Action(origin, $"Upload certificate: {newName}");
+                    Logger.Action(origin, "Certificate", $"Upload certificate: {newName}");
                     break;
                 }
 #if DEBUG
@@ -200,7 +200,7 @@ internal static class Cert {
             string filename = $"{Data.DIR_CERTIFICATES}{Data.DELIMITER}{name}";
             if (File.Exists(filename)) {
                 File.Delete(filename);
-                Logger.Action(origin, $"Delete certificate: {name}");
+                Logger.Action(origin, "Certificate", $"Delete certificate: {name}");
 
                 return List();
             }
@@ -247,7 +247,7 @@ internal static class Cert {
             ctx.Response.StatusDescription = "OK";
             ctx.Response.OutputStream.Close();
 
-            Logger.Action(origin, $"Download certificate: {name}");
+            Logger.Action(origin, "Certificate", $"Download certificate: {name}");
 
             return null;
         }

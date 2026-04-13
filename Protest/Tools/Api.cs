@@ -188,9 +188,7 @@ internal static class Api {
             Link[] temp = JsonSerializer.Deserialize<Link[]>(payload, apiLinksSerializerOptions);
 
             for (int i = 0; i < temp.Length; i++) {
-                if (String.IsNullOrEmpty(temp[i].key)) {
-                    continue;
-                }
+                if (String.IsNullOrEmpty(temp[i].key)) continue;
                 Api.links.TryAdd(temp[i].key, temp[i]);
             }
 
@@ -200,7 +198,7 @@ internal static class Api {
                 File.WriteAllBytes(Data.FILE_API_LINKS, cipher);
             }
 
-            Logger.Action(origin, $"Modify API links");
+            Logger.Action(origin, "API", $"Modify API links");
         }
         catch (JsonException ex) {
             Logger.Error(ex);

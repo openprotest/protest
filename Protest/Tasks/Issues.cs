@@ -77,7 +77,7 @@ internal static class Issues {
 
         KeepAlive.Broadcast("{\"action\":\"issues\",\"scan\":\"started\"}", "/issues/start");
 
-        Logger.Action(origin, "Issues scan started");
+        Logger.Action(origin, "Issues", "Issues scan started");
 
         return "{\"status\":\"started\"}"u8.ToArray();
     }
@@ -86,7 +86,7 @@ internal static class Issues {
         if (task is null) return "{\"error\":\"Scanning task is not running\"}"u8.ToArray();
         task.RequestCancel(origin);
 
-        Logger.Action(origin, $"Issues scan stopped");
+        Logger.Action(origin, "Issues", $"Issues scan stopped");
 
         return "{\"status\":\"stopped\"}"u8.ToArray();
     }

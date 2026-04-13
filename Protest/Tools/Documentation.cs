@@ -209,7 +209,7 @@ internal static class Documentation {
             }
         }
 
-        Logger.Action(origin, $"Create documentation: {filename}");
+        Logger.Action(origin, "Documentation", $"Create documentation: {filename}");
 
         return Data.CODE_OK.Array;
     }
@@ -238,7 +238,7 @@ internal static class Documentation {
                     html.Delete();
                 }
 
-                Logger.Action(origin, $"Delete documentation: {name}");
+                Logger.Action(origin, "Documentation", $"Delete documentation: {name}");
             }
             catch {
                 return Data.CODE_FAILED.Array;

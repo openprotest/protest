@@ -83,7 +83,7 @@ internal static class Ssh {
             using SshClient ssh = new SshClient(port == 22 ? host : $"{host}:{port}", username, password);
             ssh.Connect();
 
-            Logger.Action(origin, $"Establish ssh connection to {username}@{host}:{port}");
+            Logger.Action(origin, "Remote-access", $"Establish ssh connection to {username}@{host}:{port}");
 
             await WebSocketHelper.WsWriteText(ws, "{\"connected\":true}"u8.ToArray());
 

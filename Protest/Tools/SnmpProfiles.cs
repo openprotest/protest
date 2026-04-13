@@ -133,7 +133,7 @@ internal static class SnmpProfiles {
                 File.WriteAllBytes(Data.FILE_SNMP_PROFILES, cipher);
             }
 
-            Logger.Action(origin, "Modify SNMP profiles");
+            Logger.Action(origin, "Environment", "Modify SNMP profiles");
         }
         catch (JsonException) {
             return Data.CODE_INVALID_ARGUMENT.Array;
