@@ -13,7 +13,7 @@ const KEEP = {
 
 	Initialize: ()=> {
 		let server = window.location.href.replace("https://", "").replace("http://", "");
-		if (server.endsWith("/")) server = server.substring(0, server.indexOf("/"));
+		if (server.endsWith("/")) server = server.slice(0, -1);
 
 		KEEP.socket = new WebSocket((KEEP.isSecure ? "wss://" : "ws://") + server + "/ws/keepalive");
 

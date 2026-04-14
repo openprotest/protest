@@ -1056,7 +1056,9 @@ static OID_MAP_1_3_6_1_2_1 = [
 		const index = siblings.indexOf(current);
 
 		if (current.className === "snmp-list-item") {
-			const nextIndex = key === "ArrowUp" ? index - 1 : "ArrowDown" ? index + 1 : index;
+			const nextIndex = key === "ArrowUp"
+				? index - 1
+				: (key === "ArrowDown" ? index + 1 : index);
 
 			if (nextIndex >= 0 && nextIndex < siblings.length) {
 				return siblings[nextIndex];

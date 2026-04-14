@@ -8,7 +8,7 @@ class DeviceView extends View {
 		"ip", "ipv6", "mask", "hostname", "mac address", "dhcp enabled", "ports", "network adapter speed", "uplink", "overwriteprotocol",
 
 		[".", "device"],
-		"manufacturer", "model", "serial number", "chasse type", "description", "descriptor",
+		"manufacturer", "model", "serial number", "chassis type", "description", "descriptor",
 
 		["mono/motherboard.svg", "motherboard"],
 		"motherboard", "motherboard manufacturer", "motherboard serial number", "bios",
@@ -1415,7 +1415,7 @@ class DeviceView extends View {
 		if (this.liveStatsWebSockets !== null) return;
 
 		let server = window.location.href.replace("https://", "").replace("http://", "");
-		if (server.indexOf("/") > 0) server = server.substring(0, server.indexOf("/"));
+		if (server.endsWith("/")) server = server.slice(0, -1);
 
 		this.liveStatsWebSockets = new WebSocket((KEEP.isSecure ? "wss://" : "ws://") + server + "/ws/livestats/device");
 
@@ -1579,7 +1579,7 @@ class DeviceView extends View {
 						LOADER.OpenUserByFile(found);
 					}
 					else {
-						this.ConfirmBox("User don't exist in users list", true, "mono/user.svg");
+						this.ConfirmBox("User doesn't exist in users list", true, "mono/user.svg");
 					}
 				};
 			}
@@ -1634,7 +1634,7 @@ class DeviceView extends View {
 							new UserView({file: found});
 						}
 						else {
-							this.ConfirmBox("User don't exist in users list", true, "mono/user.svg");
+							this.ConfirmBox("User doesn't exist in users list", true, "mono/user.svg");
 						}
 					};
 				}

@@ -531,7 +531,7 @@ class Topology extends Window {
 
 	Connect(options) {
 		let server = window.location.href.replace("https://", "").replace("http://", "");
-		if (server.indexOf("/") > 0) server = server.substring(0, server.indexOf("/"));
+		if (server.endsWith("/")) server = server.slice(0, -1);
 
 		if (this.ws != null) {
 			try {

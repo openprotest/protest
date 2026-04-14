@@ -1,7 +1,7 @@
-﻿using Protest.Http;
-using System.IO;
+﻿using System.IO;
 using System.Net;
 using System.Threading;
+using Protest.Http;
 
 namespace Protest.Tools;
 internal static class Zones {
@@ -16,7 +16,8 @@ internal static class Zones {
                 return File.ReadAllBytes(Data.FILE_ZONES);
             }
         }
-        catch {
+        catch (Exception ex) {
+            Logger.Error(ex);
             return Data.CODE_FAILED.Array;
         }
     }
@@ -30,12 +31,17 @@ internal static class Zones {
                 return File.ReadAllText(Data.FILE_ZONES);
             }
         }
-        catch {
+        catch (Exception ex) {
+            Logger.Error(ex);
             return "[]";
         }
     }
 
     public static byte[] SaveZones(HttpListenerContext ctx, string origin) {
+        if (ctx.Request.ContentLength64 > 1024*1024) { //1MB
+            return Data.CODE_FAILED.Array;
+        }
+
         using StreamReader reader = new StreamReader(ctx.Request.InputStream, ctx.Request.ContentEncoding);
         string payload = reader.ReadToEnd();
 

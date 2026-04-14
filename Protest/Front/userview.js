@@ -140,7 +140,7 @@ class UserView extends View {
 		if (this.liveStatsWebSockets !== null) return;
 
 		let server = window.location.href.replace("https://", "").replace("http://", "");
-		if (server.indexOf("/") > 0) server = server.substring(0, server.indexOf("/"));
+		if (server.endsWith("/")) server = server.slice(0, -1);
 
 		this.liveStatsWebSockets = new WebSocket((KEEP.isSecure ? "wss://" : "ws://") + server + "/ws/livestats/user");
 
