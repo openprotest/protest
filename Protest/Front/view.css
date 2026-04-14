@@ -37,7 +37,7 @@
   counter-increment: view-team-count;
 }
 
-.view-team:has(> *)::after {
+.view-team:has(> :nth-child(2))::after {
 	content: counter(view-team-count);
 	position: absolute;
 	right: 0px;
@@ -908,6 +908,14 @@ button.view-live-button:active {
 	user-select: text;
 	font-weight: 600;
 	line-height: 24px;
+}
+
+.view-info-box.with-additional > div:nth-child(3),
+.view-warning-box.with-additional > div:nth-child(3),
+.view-error-box.with-additiona,
+.view-critical-box.with-additional > div:nth-child(3) {
+	-webkit-user-select: none;
+	user-select: none;
 }
 
 .view-side-tools {

@@ -112,7 +112,7 @@ internal static class Oid {
 
     public const string INT_1D_TP_FDB        = "1.3.6.1.2.1.17.4.3.1.2";
 
-    public const string INT_1Q_VLAN_EGRESS  = "1.3.6.1.2.1.17.7.1.4.2.1.4";
+    public const string INT_1Q_VLAN_EGRESS   = "1.3.6.1.2.1.17.7.1.4.2.1.4";
     public const string INT_1Q_STATIC_NAME   = "1.3.6.1.2.1.17.7.1.4.3.1.1";
     //public const string INT_1Q_BRIDGE        = "1.3.6.1.2.1.17.7.1.4.3.1.2";
     public const string INT_1Q_VLAN_UNTAGGED = "1.3.6.1.2.1.17.7.1.4.3.1.4";

@@ -47,7 +47,7 @@
 	"209":"link aggregation"
 }],
 ".2.1.4":["ifMtu"],
-".2.1.5":["ifSpeed"],
+".2.1.5":["ifSpeed", {"10000000":"10 Mbps", "100000000":"100 Mbps", "1000000000":"1 Gbps", "2500000000":"2.5G bps", "4294967295":"unknown"}],
 ".2.1.6":["ifPhysAddress"],
 ".2.1.7":["ifAdminStatus",{"1":"up","2":"down","3":"testing"}],
 ".2.1.8":["ifOperStatus",{"1":"up","2":"down","3":"testing"}],

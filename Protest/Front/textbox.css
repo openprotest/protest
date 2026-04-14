@@ -79,6 +79,30 @@ select > option {
 	font-family: var(--global-font-family);
 }
 
+select > option:checked {
+	color: var(--clr-dark);
+	background-color: var(--clr-select);
+}
+
+select {
+	appearance: base-select;
+}
+select::picker-icon {
+	content: "";
+	width: 20px;
+	height: 20px;
+	right: 0;
+	background: url("mono/guitarpick.svg");
+	background-size: 12px 12px;
+	background-position: center;
+	background-repeat: no-repeat;
+	transition: .4s;
+}
+select:open::picker-icon {
+	transform: rotate(180deg);
+	transition: .2s;
+}
+
 @keyframes required {
 	0%   { background-position: calc(100% + 40px); }
 	100% { background-position: calc(100%); }

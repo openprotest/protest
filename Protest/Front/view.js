@@ -456,7 +456,7 @@ class View extends Window {
 		setTimeout(()=> this.scroll.focus(), WIN.ANIME_DURATION);
 	}
 
-	InitializeAttributesList(hash, editMode = false) {
+	InitializeAttributesList(hash, editMode=false) {
 		this.attributes.textContent = "";
 
 		if (this.order === "group") {

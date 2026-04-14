@@ -116,7 +116,7 @@ class ReverseProxy extends List {
 		this.totalRxLabel.style.left = "8px";
 		this.totalRxLabel.style.top = "220px";
 		this.totalRxLabel.style.width = "96px";
-		this.totalRxLabel.style.color = "rgb(122,212,43)";
+		this.totalRxLabel.style.color = "light-dark(var(--clr-dark), rgb(122,212,43))";
 		this.totalRxLabel.style.textAlign = "right";
 		this.totalRxLabel.style.lineHeight = "20px";
 
@@ -126,7 +126,7 @@ class ReverseProxy extends List {
 		this.totalTxLabel.style.left = "8px";
 		this.totalTxLabel.style.top = "245px";
 		this.totalTxLabel.style.width = "96px";
-		this.totalTxLabel.style.color = "rgb(232,118,0)";
+		this.totalTxLabel.style.color = "light-dark(var(--clr-dark), rgb(232,118,0))";
 		this.totalTxLabel.style.textAlign = "right";
 		this.totalTxLabel.style.lineHeight = "20px";
 
@@ -166,7 +166,7 @@ class ReverseProxy extends List {
 		this.rxRateLabel.style.left = "260px";
 		this.rxRateLabel.style.top = "220px";
 		this.rxRateLabel.style.width = "80px";
-		this.rxRateLabel.style.color = "rgb(122,212,43)";
+		this.rxRateLabel.style.color = "light-dark(var(--clr-dark), rgb(122,212,43))";
 		this.rxRateLabel.style.textAlign = "right";
 		this.rxRateLabel.style.lineHeight = "20px";
 
@@ -176,7 +176,7 @@ class ReverseProxy extends List {
 		this.txRateLabel.style.left = "260px";
 		this.txRateLabel.style.top = "245px";
 		this.txRateLabel.style.width = "80px";
-		this.txRateLabel.style.color = "rgb(232,118,0)";
+		this.txRateLabel.style.color = "light-dark(var(--clr-dark), rgb(232,118,0))";
 		this.txRateLabel.style.textAlign = "right";
 		this.txRateLabel.style.lineHeight = "20px";
 

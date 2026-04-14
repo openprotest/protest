@@ -834,9 +834,7 @@ static OID_MAP_1_3_6_1_2_1 = [
 		element.appendChild(dot);
 
 		if (nearestAncestor in Snmp.OID_CACHE && Snmp.OID_CACHE[nearestAncestor].length > 1 && Snmp.OID_CACHE[nearestAncestor][1][value]) {
-			const stringValue = document.createElement("div");
-			stringValue.textContent = Snmp.OID_CACHE[nearestAncestor][1][value];
-			valueBox.appendChild(stringValue);
+			valueBox.setAttribute("description", Snmp.OID_CACHE[nearestAncestor][1][value]);
 		}
 
 		return element;

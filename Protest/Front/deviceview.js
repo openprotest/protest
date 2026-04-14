@@ -396,7 +396,7 @@ class DeviceView extends View {
 			});
 		}
 
-		if ("mac address" in this.link) {
+		if ("mac address" in this.link && this.link["mac address"].length > 0) {
 			const wolButton = this.CreateSideButton("mono/wol.svg", "Wake on LAN");
 			wolButton.onclick = async ()=> {
 				if (wolButton.hasAttribute("busy")) return;

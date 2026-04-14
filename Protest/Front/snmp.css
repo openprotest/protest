@@ -82,8 +82,21 @@
 
 .snmp-list-item > div:nth-child(3) {
 	width: 50%;
+	min-width: 64px;
 	max-width: 600px;
 	white-space: nowrap;
+}
+
+.snmp-list-item > div:nth-child(3)[description]::after {
+	content: attr(description);
+	display: inline-block;
+	height: 20px;
+	margin-left: 16px;
+	padding: 0px 2px;
+	line-height: 20px;
+	color: rgb(72,72,72);
+	border: rgb(72,72,72) 1px solid;
+	border-radius: 4px;
 }
 
 .snmp-list-item > div:nth-child(2)::before {
@@ -108,17 +121,6 @@
 }
 .snmp-list-item > div:nth-child(2).snmp-str::before {
 	content: "STR";
-}
-
-.snmp-list-item > div:nth-child(3) > div {
-	display: inline-block;
-	color: rgb(72,72,72);
-	border: rgb(72,72,72) 1px solid;
-	border-radius: 4px;
-	padding: 0px 2px;
-	margin-left: 8px;
-	height: 20px;
-	line-height: 20px;
 }
 
 .snmp-expand {

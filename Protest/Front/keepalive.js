@@ -9,7 +9,7 @@ const KEEP = {
 	reconnectCount: 0,
 	redDot: document.createElement("div"),
 	sessionTtlMapping: { 1:1, 2:2, 3:3, 4:4, 5:5, 6:6, 7:7, 8:14, 9:21, 10:28, 11:60, 12:90 },
-	ipv4Regex: /^(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)(?:\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)){3}$/gm,
+	ipv4Regex: /^(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)(?:\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)){3}$/,
 
 	Initialize: ()=> {
 		let server = window.location.href.replace("https://", "").replace("http://", "");
@@ -50,18 +50,20 @@ const KEEP = {
 		};
 
 		KEEP.socket.onmessage = event=> {
-			let message = JSON.parse(event.data);
-			KEEP.MessageHandler(message);
+			try {
+				const message = JSON.parse(event.data);
+				KEEP.MessageHandler(message);
+			} catch (e) {
+				console.error("Invalid message", e);
+			}
 		};
 	},
 
 	ParseRange: string=> {
-		const dashSplit = string.split("-");
-		const slashSplit = string.split("/");
+		const dashSplit = string.split("-").map(o=>o.trim());
+		const slashSplit = string.split("/").map(o=>o.trim());
 
 		if (dashSplit.length === 2) {
-			dashSplit.map(o=>o.trim());
-
 			let ipA = dashSplit[0].split(".").map(o=>parseInt(o));
 			let ipB = dashSplit[1].split(".").map(o=>parseInt(o));
 
@@ -74,8 +76,6 @@ const KEEP = {
 			};
 		}
 		else if (slashSplit.length === 2) {
-			slashSplit.map(o=>o.trim());
-
 			let gw = slashSplit[0].split(".").map(o=>parseInt(o));
 
 			if (gw.length != 4 || gw.find(o=> o<0 || o>255)) {
@@ -375,11 +375,13 @@ const KEEP = {
 		case "view-device-open":
 			for (let i=0; i<WIN.array.length; i++) {
 				if (!(WIN.array[i] instanceof DeviceView)) continue;
-				const current = WIN.array[i].team.querySelector(`#${message.username}`);
+				if (WIN.array[i].args.file !== message.file) continue;
+
+				const current = WIN.array[i].team.querySelector(`#user-${CSS.escape(message.username)}`);
 				if (current) continue;
 				
 				const userIcon = document.createElement("div");
-				userIcon.id = message.username;
+				userIcon.id = `user-${message.username}`;
 				userIcon.setAttribute("tip-below", message.alias);
 				WIN.array[i].team.appendChild(userIcon);
 
@@ -392,20 +394,26 @@ const KEEP = {
 		case "view-device-close":
 			for (let i=0; i<WIN.array.length; i++) {
 				if (!(WIN.array[i] instanceof DeviceView)) continue;
-				const current = WIN.array[i].team.querySelector(`#${message.username}`);
-				WIN.array[i].team.removeChild(current);
-				if (current) break;
+				if (WIN.array[i].args.file !== message.file) continue;
+
+				const current = WIN.array[i].team.querySelector(`#user-${CSS.escape(message.username)}`);
+				if (current) {
+					WIN.array[i].team.removeChild(current);
+					break;
+				}
 			}
 			break;
 
 		case "view-user-open":
 			for (let i=0; i<WIN.array.length; i++) {
 				if (!(WIN.array[i] instanceof UserView)) continue;
-				const current = WIN.array[i].team.querySelector(`#${message.username}`);
+				if (WIN.array[i].args.file !== message.file) continue;
+
+				const current = WIN.array[i].team.querySelector(`#user-${CSS.escape(message.username)}`);
 				if (current) continue;
-				
+
 				const userIcon = document.createElement("div");
-				userIcon.id = message.username;
+				userIcon.id = `user-${message.username}`;
 				userIcon.setAttribute("tip-below", message.alias);
 				WIN.array[i].team.appendChild(userIcon);
 
@@ -418,9 +426,13 @@ const KEEP = {
 		case "view-user-close":
 			for (let i=0; i<WIN.array.length; i++) {
 				if (!(WIN.array[i] instanceof UserView)) continue;
-				const current = WIN.array[i].team.querySelector(`#${message.username}`);
-				WIN.array[i].team.removeChild(current);
-				if (current) break;
+				if (WIN.array[i].args.file !== message.file) continue;
+
+				const current = WIN.array[i].team.querySelector(`#user-${CSS.escape(message.username)}`);
+				if (current) {
+					WIN.array[i].team.removeChild(current);
+					break;
+				}
 			}
 			break;
 
@@ -478,7 +490,9 @@ const KEEP = {
 
 			notification.notificationBox.style.opacity = "0";
 			setTimeout(()=> {
-				container.removeChild(notification.notificationBox);
+				if (notification.notificationBox.parentElement) {
+					container.removeChild(notification.notificationBox);
+				}
 			}, 400);
 		};
 
@@ -487,7 +501,9 @@ const KEEP = {
 		ignoreButton.onclick = ()=> {
 			notification.notificationBox.style.opacity = "0";
 			setTimeout(()=> {
-				container.removeChild(notification.notificationBox);
+				if (notification.notificationBox.parentElement) {
+					container.removeChild(notification.notificationBox);
+				}
 			}, 400);
 		};
 	}
