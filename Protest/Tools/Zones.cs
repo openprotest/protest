@@ -16,6 +16,14 @@ internal static class Zones {
                 return File.ReadAllBytes(Data.FILE_ZONES);
             }
         }
+        catch (IOException ex) {
+            Logger.Error(ex);
+            return Data.CODE_FAILED.Array;
+        }
+        catch (UnauthorizedAccessException ex) {
+            Logger.Error(ex);
+            return Data.CODE_FAILED.Array;
+        }
         catch (Exception ex) {
             Logger.Error(ex);
             return Data.CODE_FAILED.Array;
@@ -31,6 +39,14 @@ internal static class Zones {
                 return File.ReadAllText(Data.FILE_ZONES);
             }
         }
+        catch (IOException ex) {
+            Logger.Error(ex);
+            return "[]";
+        }
+        catch (UnauthorizedAccessException ex) {
+            Logger.Error(ex);
+            return "[]";
+        }
         catch (Exception ex) {
             Logger.Error(ex);
             return "[]";
@@ -39,6 +55,7 @@ internal static class Zones {
 
     public static byte[] SaveZones(HttpListenerContext ctx, string origin) {
         if (ctx.Request.ContentLength64 > 1024*1024) { //1MB
+            Logger.Action(origin, "Environment", $"Reject zones list update: payload too large");
             return Data.CODE_FAILED.Array;
         }
 
