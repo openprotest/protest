@@ -33,7 +33,7 @@ class Log extends Window {
 		this.list.style.position = "absolute";
 		this.list.style.left = "0px";
 		this.list.style.right = "0px";
-		this.list.style.top = "30px";
+		this.list.style.top = "31px";
 		this.list.style.bottom = "28px";
 		this.list.style.color = "var(--clr-dark)";
 		this.list.style.backgroundColor = "var(--clr-pane)";
@@ -268,44 +268,28 @@ class Log extends Window {
 			this.titleIcon.style.transition = ".4s";
 			this.options.style.transition = ".4s";
 
-			this.header.style.color = "var(--clr-select)";
+			this.header.style.color = "var(--clr-contrast)";
 			this.win.style.backgroundColor = "rgba(64,64,64,.7)";
-			this.win.style.boxShadow = "var(--clr-select) 0 0 1px 1px";
-			this.win.style.backdropFilter = "none";
-			this.resize.style.borderBottom = "16px solid var(--clr-select)";
+			this.win.style.backdropFilter = "blur(2px)";
 			this.content.style.backgroundColor = "transparent";
-			this.listTitle.style.color = "var(--clr-select)";
+			this.listTitle.style.color = "var(--clr-contrast)";
 			this.listTitle.style.background = "transparent";
-			this.listTitle.style.boxShadow = "var(--clr-select) 0 0 1px 1px";
-			this.list.style.color = "var(--clr-select)";
+			this.listTitle.style.boxShadow = "var(--clr-contrast) 0 0 1px 1px";
+			this.list.style.color = "light-dark(var(--clr-dark), var(--clr-light))";
 			this.list.style.backgroundColor = "transparent";
-			this.list.style.boxShadow = "var(--clr-select) 0 0 1px 1px";
-			this.closeButton.style.backgroundColor = "var(--clr-select)";
-			this.maximizeButton.style.backgroundColor = "var(--clr-select)";
-			this.minimizeButton.style.backgroundColor = "var(--clr-select)";
-			this.popOutButton.style.backgroundColor = "var(--clr-select)";
-			this.titleIcon.style.opacity = "0";
-			this.options.style.color = "var(--clr-select)";
-
+			this.list.style.boxShadow = "var(--clr-contrast) 0 0 1px 1px";
 		}
 		else {
 			this.header.style.color = "";
 			this.win.style.backgroundColor = "";
-			this.win.style.boxShadow = "";
 			this.win.style.backdropFilter = "";
-			this.resize.style.borderBottom = "";
 			this.content.style.backgroundColor = "";
 			this.listTitle.style.color = "";
 			this.listTitle.style.background = "";
 			this.listTitle.style.boxShadow = "";
-			this.list.style.boxShadow = "";
 			this.list.style.color = "var(--clr-dark)";
 			this.list.style.backgroundColor = "var(--clr-pane)";
-			this.maximizeButton.style.backgroundColor = "";
-			this.minimizeButton.style.backgroundColor = "";
-			this.popOutButton.style.backgroundColor = "";
-			this.titleIcon.style.opacity = "";
-			this.options.style.color = "";
+			this.list.style.boxShadow = "";
 		}
 	}
 

@@ -10,7 +10,7 @@ class View extends Window {
 		this.content.style.containerType = "inline-size";
 
 		this.InitializeComponents();
-		
+
 		if (this instanceof DeviceView) {
 			KEEP.socket.send(JSON.stringify({
 				type  : "view-device-action",
@@ -578,7 +578,7 @@ class View extends Window {
 					titleBox.style.borderRadius = "4px 4px 0 0";
 					titleBox.style.backgroundColor = "#A0A0A0";
 					item.appendChild(titleBox);
-					
+
 					const icon = document.createElement("div");
 					icon.style.display = "inline-block";
 					icon.style.width = "24px";

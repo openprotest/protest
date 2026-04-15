@@ -97,8 +97,9 @@ internal static class Wmi {
 
             StringBuilder builder = new StringBuilder();
             for (int i = 0; i < array?.Length; i++) {
-                if (array[i].ToString().Length > 0) {
-                    builder.Append((value.Length == 0) ? array[i].ToString() : $"; {array[i]}");
+                string stringValue = array[i].ToString();
+                if (stringValue.Length > 0) {
+                    builder.Append((builder.Length == 0) ? stringValue : $"; {stringValue}");
                 }
             }
 

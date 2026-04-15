@@ -90,9 +90,11 @@
 .snmp-list-item > div:nth-child(3)[description]::after {
 	content: attr(description);
 	display: inline-block;
+	min-width: 48px;
 	height: 20px;
+	text-align: center;
 	margin-left: 16px;
-	padding: 0px 2px;
+	padding: 0px 4px;
 	line-height: 20px;
 	color: rgb(72,72,72);
 	border: rgb(72,72,72) 1px solid;

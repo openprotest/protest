@@ -962,7 +962,7 @@ class DeviceView extends View {
 		const modeBox = document.createElement("div");
 		modeBox.tabIndex = 0;
 		modeBox.className = "view-interfaces-mode-box";
-		modeBox.style.gridArea = `${gridSize.rows+1} / 1`;
+		modeBox.style.gridArea = `${gridSize.rows+2} / 1`;
 		frame.appendChild(modeBox);
 
 		const modeButton = document.createElement("div");

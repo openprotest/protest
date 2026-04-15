@@ -379,7 +379,7 @@ const KEEP = {
 
 				const current = WIN.array[i].team.querySelector(`#user-${CSS.escape(message.username)}`);
 				if (current) continue;
-				
+
 				const userIcon = document.createElement("div");
 				userIcon.id = `user-${message.username}`;
 				userIcon.setAttribute("tip-below", message.alias);
