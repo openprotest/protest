@@ -52,7 +52,7 @@ internal static class Wmi {
 
                 Task task = Task.Run(() => scope.Connect(), tokenSource.Token);
                 //task.RunSynchronously();
-                task.Wait(timeout, tokenSource.Token);
+                task.WaitAsync(tokenSource.Token).GetAwaiter().GetResult();
             }
             else {
                 scope.Connect();
@@ -316,34 +316,36 @@ internal static class Wmi {
 #endif
 
             try {
-                UInt64 L1 = 0, L2 = 0, L3 = 0;
 
                 using ManagementObjectSearcher searcher = new ManagementObjectSearcher(scope, new SelectQuery("SELECT BlockSize, NumberOfBlocks, Purpose FROM Win32_CacheMemory"));
                 using ManagementObjectCollection collection = searcher.Get();
 
-                foreach (ManagementObject o in collection.Cast<ManagementObject>()) {
-                    if (!o.GetPropertyValue("Purpose").ToString().Contains("L1")) continue;
-                    UInt64 numberOfBlocks = UInt64.Parse(o.GetPropertyValue("NumberOfBlocks").ToString());
-                    UInt64 blockSize = UInt64.Parse(o.GetPropertyValue("BlockSize").ToString());
-                    L1 += numberOfBlocks * blockSize;
-                }
+                UInt64 L1 = 0, L2 = 0, L3 = 0;
 
                 foreach (ManagementObject o in collection.Cast<ManagementObject>()) {
-                    if (!o.GetPropertyValue("Purpose").ToString().Contains("L2")) continue;
-                    UInt64 numberOfBlocks = UInt64.Parse(o.GetPropertyValue("NumberOfBlocks").ToString());
-                    UInt64 blockSize = UInt64.Parse(o.GetPropertyValue("BlockSize").ToString());
-                    L2 += numberOfBlocks * blockSize;
-                }
+                    string purpose = o.GetPropertyValue("Purpose").ToString();
 
-                foreach (ManagementObject o in collection.Cast<ManagementObject>()) {
-                    if (!o.GetPropertyValue("Purpose").ToString().Contains("L3")) continue;
-                    UInt64 numberOfBlocks = UInt64.Parse(o.GetPropertyValue("NumberOfBlocks").ToString());
-                    UInt64 blockSize = UInt64.Parse(o.GetPropertyValue("BlockSize").ToString());
-                    L3 += numberOfBlocks * blockSize;
+                    string numberOfBlocksValue = o.GetPropertyValue("NumberOfBlocks")?.ToString();
+                    if (!UInt64.TryParse(numberOfBlocksValue, out UInt64 numberOfBlocks)) continue;
+
+                    string blockSizeValue = o.GetPropertyValue("BlockSize")?.ToString();
+                    if (!UInt64.TryParse(blockSizeValue, out UInt64 blockSize)) continue;
+
+                    if (purpose.Contains("L1")) {
+                        L1 += numberOfBlocks * blockSize;
+                    }
+
+                    if (purpose.Contains("L2")) {
+                        L2 += numberOfBlocks * blockSize;
+                    }
+
+                    if (purpose.Contains("L3")) {
+                        L3 += numberOfBlocks * blockSize;
+                    }
                 }
 
                 if (L1 > 0 || L2 > 0 || L3 > 0) {
-                    data.Add("cpu cache", $"{Data.SizeToString(L1)}/{Data.SizeToString(L2)}/{Data.SizeToString(L3)}");
+                    data.Add("cpu cache", $"{Data.SizeToString(L1)} / {Data.SizeToString(L2)} / {Data.SizeToString(L3)}");
                 }
             }
 #if DEBUG
@@ -736,39 +738,32 @@ internal static class Wmi {
     }
 
     private static string DateToString(string value) {
-        if (value.Length == 25) {
-            short year = short.Parse(value[..4]);
-            short month = short.Parse(value[4..6]);
-            short day = short.Parse(value[6..8]);
-
+        if (value.Length == 25
+         && short.TryParse(value[..4], out short year)
+         && short.TryParse(value[4..6], out short month)
+         && short.TryParse(value[6..8], out short day)) {
             return new DateTime(year, month, day).ToString("dddd dd-MMM-yyyy");
         }
-        else {
-            return value;
-        }
+
+        return value;
     }
 
     public static string DateTimeToString(string value) {
-        if (value.Length == 25) {
-            short year = short.Parse(value[..4]);
-            short month = short.Parse(value[4..6]);
-            short day = short.Parse(value[6..8]);
-
-            short hour = short.Parse(value[8..10]);
-            short minute = short.Parse(value[10..12]);
-            short second = short.Parse(value[12..14]);
-
+        if (value.Length == 25
+         && short.TryParse(value[..4], out short year)
+         && short.TryParse(value[4..6], out short month)
+         && short.TryParse(value[6..8], out short day)
+         && short.TryParse(value[8..10], out short hour)
+         && short.TryParse(value[10..12], out short minute)
+         && short.TryParse(value[12..14], out short second)) {
             return new DateTime(year, month, day, hour, minute, second).ToString("dddd dd-MMM-yyyy HH:mm:ss");
         }
-        else {
-            return value;
-        }
+
+        return value;
     }
 
     private static string TransferRateToString(string value) {
-        if (!UInt64.TryParse(value, out UInt64 v)) {
-            return String.Empty;
-        }
+        if (!UInt64.TryParse(value, out UInt64 v)) return String.Empty;
 
         if (v < 1000) return $"{v} bps";
         if (v < 1_000_000) return $"{v / 1000} Kbps";
