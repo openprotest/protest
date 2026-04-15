@@ -94,8 +94,10 @@ internal static class Wmi {
         if (property.IsArray) {
             object[] array = (object[])property.Value;
 
+            if (array is null || array.Length == 0) return String.Empty;
+
             StringBuilder builder = new StringBuilder();
-            for (int i = 0; i < array?.Length; i++) {
+            for (int i = 0; i < array.Length; i++) {
                 string stringValue = array[i].ToString();
                 if (stringValue.Length > 0) {
                     builder.Append((builder.Length == 0) ? stringValue : $"; {stringValue}");
@@ -453,7 +455,7 @@ internal static class Wmi {
 
                 foreach (ManagementObject o in moc.Cast<ManagementObject>()) {
                     string osName = o.GetPropertyValue("Caption").ToString();
-                    if (osName.ToLower().IndexOf("server") > -1) {
+                    if (osName.Contains("server", StringComparison.OrdinalIgnoreCase)) {
                         type = "Server";
                         break;
                     }
