@@ -61,12 +61,6 @@ internal static class Wmi {
             if (!scope.IsConnected) return null;
             return scope;
         }
-        catch (UnauthorizedAccessException) {
-            return null;
-        }
-        catch (ManagementException) {
-            return null;
-        }
         catch {
             return null;
         }
@@ -323,7 +317,7 @@ internal static class Wmi {
                 UInt64 L1 = 0, L2 = 0, L3 = 0;
 
                 foreach (ManagementObject o in collection.Cast<ManagementObject>()) {
-                    string purpose = o.GetPropertyValue("Purpose").ToString();
+                    string purpose = o.GetPropertyValue("Purpose")?.ToString();
 
                     string numberOfBlocksValue = o.GetPropertyValue("NumberOfBlocks")?.ToString();
                     if (!UInt64.TryParse(numberOfBlocksValue, out UInt64 numberOfBlocks)) continue;
@@ -363,11 +357,11 @@ internal static class Wmi {
                 ulong totalMemory = 0;
                 string memoryType = String.Empty, smbiosType = String.Empty;
                 foreach (ManagementObject o in moc.Cast<ManagementObject>()) {
-                    if (ulong.TryParse(o.GetPropertyValue("Capacity").ToString(), out ulong capacity)) {
+                    if (ulong.TryParse(o.GetPropertyValue("Capacity")?.ToString(), out ulong capacity)) {
                         totalMemory += capacity;
                     }
-                    memoryType = o.GetPropertyValue("MemoryType").ToString();
-                    smbiosType = o.GetPropertyValue("SMBIOSMemoryType").ToString();
+                    memoryType = o.GetPropertyValue("MemoryType")?.ToString() ?? String.Empty;
+                    smbiosType = o.GetPropertyValue("SMBIOSMemoryType")?.ToString() ?? String.Empty;
                 }
                 data.Add("total memory", Data.SizeToString(totalMemory));
 
@@ -505,12 +499,12 @@ internal static class Wmi {
             using ManagementObjectCollection moc = searcher.Get();
             if (moc.Count == 0) return null;
 
-            bool label_once = true;
+            bool labelOnce = true;
             StringBuilder builder = new StringBuilder();
 
             foreach (ManagementObject o in moc.Cast<ManagementObject>()) {
-                if (label_once) { //header
-                    label_once = false;
+                if (labelOnce) { //header
+                    labelOnce = false;
                     builder.Append(o.Properties.Count);
                     builder.Append((char)127);
 
