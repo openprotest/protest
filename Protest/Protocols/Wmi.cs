@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using Lextm.SharpSnmpLib.Messaging;
+using System.Collections.Generic;
 using System.IO;
 using System.Management;
 using System.Net;
@@ -198,7 +199,7 @@ internal static class Wmi {
                 using ManagementObjectCollection moc = searcher.Get();
                 string chassis = String.Empty;
                 foreach (ManagementObject o in moc.Cast<ManagementObject>()) {
-                    short chassisTypes = (short)o.GetPropertyValue("ChassisTypes");
+                    ushort[] chassisTypes = (ushort[])o.GetPropertyValue("ChassisTypes");
                     chassis = ChassisToString(chassisTypes);
                     type = ChassisToType(chassisTypes);
 
@@ -543,7 +544,9 @@ internal static class Wmi {
 
         int pid;
         if (parameters.TryGetValue("pid", out string pidString)) {
-            pid = int.Parse(pidString);
+            if (!int.TryParse(pidString, out pid)) {
+                return Data.CODE_INVALID_ARGUMENT.Array;
+            }
         }
         else {
             return Data.CODE_INVALID_ARGUMENT.Array;
@@ -634,79 +637,100 @@ internal static class Wmi {
         return Data.CODE_OK.Array;
     }
 
-    private static string ChassisToString(short chassisType) {
-        return chassisType switch {
-            3 => "Desktop",
-            4 => "Low profile desktop",
-            5 => "Pizza box",
-            6 => "Mini tower",
-            7 => "Tower",
-            8 => "Portable",
-            9 => "Laptop",
-            10 => "Notebook",
-            11 => "Hand held",
-            12 => "Docking station",
-            13 => "All in one",
-            14 => "Sub notebook",
-            15 => "Space-saving",
-            16 => "Lunch box",
-            17 => "Main system chassis",
-            18 => "Expansion chassis",
-            19 => "Sub-chassis",
-            20 => "Bus expansion chassis",
-            21 => "Peripheral chassis",
-            22 => "Storage chassis",
-            23 => "Rack mount chassis",
-            24 => "Sealed-case PC",
-            25 => "Multi-system chassis",
-            26 => "Compact PCI",
-            27 => "Advanced TCA",
-            28 => "Blade",
-            29 => "Blade Enclosure",
-            30 => "Tablet",
-            31 => "Convertible",
-            32 => "Detachable",
-            33 => "IoT Gateway",
-            34 => "Embedded PC",
-            35 => "Mini PC",
-            36 => "Stick PC",
-            _ => String.Empty
-        };
+    private static string ChassisToString(ushort[] chassisTypes) {
+        StringBuilder builder = new StringBuilder();
+        for (int i = 0; i < chassisTypes.Length; i++) {
+            string type = chassisTypes[i] switch {
+                3 => "Desktop",
+                4 => "Low profile desktop",
+                5 => "Pizza box",
+                6 => "Mini tower",
+                7 => "Tower",
+                8 => "Portable",
+                9 => "Laptop",
+                10 => "Notebook",
+                11 => "Hand held",
+                12 => "Docking station",
+                13 => "All in one",
+                14 => "Sub notebook",
+                15 => "Space-saving",
+                16 => "Lunch box",
+                17 => "Main system chassis",
+                18 => "Expansion chassis",
+                19 => "Sub-chassis",
+                20 => "Bus expansion chassis",
+                21 => "Peripheral chassis",
+                22 => "Storage chassis",
+                23 => "Rack mount chassis",
+                24 => "Sealed-case PC",
+                25 => "Multi-system chassis",
+                26 => "Compact PCI",
+                27 => "Advanced TCA",
+                28 => "Blade",
+                29 => "Blade Enclosure",
+                30 => "Tablet",
+                31 => "Convertible",
+                32 => "Detachable",
+                33 => "IoT Gateway",
+                34 => "Embedded PC",
+                35 => "Mini PC",
+                36 => "Stick PC",
+                _ => String.Empty
+            };
+
+            if (!String.IsNullOrEmpty(type)) {
+                builder.Append(builder.Length > 0 ? $" ;{type}" : type);
+            }
+        }
+
+        return builder.ToString();
     }
 
-    private static string ChassisToType(short chassisType) {
-        return chassisType switch {
-            //3 => "Workstation",
-            //4 => "Workstation",
-            //5 => "Workstation",
-            //6 => "Workstation",
-            //7 => "Workstation",
+    private static string ChassisToType(ushort[] chassisTypes) {
+        StringBuilder builder = new StringBuilder();
+        for (int i = 0; i < chassisTypes.Length; i++) {
+            string type = chassisTypes[i] switch {
+                //3 => "Workstation",
+                //4 => "Workstation",
+                //5 => "Workstation",
+                //6 => "Workstation",
+                //7 => "Workstation",
 
-            8 => "Laptop",
-            9 => "Laptop",
-            10 => "Laptop",
-            11 => "Laptop",
+                8 => "Laptop",
+                9 => "Laptop",
+                10 => "Laptop",
+                11 => "Laptop",
 
-            //12 => "Workstation",
-            13 => "All in one",
-            14 => "Laptop",
-            //15 => "Workstation",
+                //12 => "Workstation",
+                13 => "All in one",
+                14 => "Laptop",
+                //15 => "Workstation",
 
-            17 => "Server",
-            18 => "Server",
-            20 => "Server",
-            22 => "Server",
-            23 => "Server",
+                17 => "Server",
+                18 => "Server",
+                20 => "Server",
+                22 => "Server",
+                23 => "Server",
 
-            //24 => "Workstation",
+                //24 => "Workstation",
 
-            _ => "Workstation"
-        };
+                _ => "Workstation"
+            };
+
+            if (!String.IsNullOrEmpty(type)) {
+                builder.Append(builder.Length > 0 ? $" ;{type}" : type);
+            }
+        }
+
+        return builder.ToString();
     }
 
     public static string SizeToString(string value) {
-        long size = long.Parse(value);
-        return Data.SizeToString(size);
+        if (long.TryParse(value, out long size)) {
+            return Data.SizeToString(size);
+        }
+
+        return String.Empty;
     }
 
     private static string DateToString(string value) {
@@ -740,7 +764,10 @@ internal static class Wmi {
     }
 
     private static string TransferRateToString(string value) {
-        UInt64 v = UInt64.Parse(value);
+        if (!UInt64.TryParse(value, out UInt64 v)) {
+            return String.Empty;
+        }
+
         if (v < 1000) return $"{v} bps";
         if (v < 1_000_000) return $"{v / 1000} Kbps";
         if (v < 1_000_000_000) return $"{v / 1_000_000} Mbps";
