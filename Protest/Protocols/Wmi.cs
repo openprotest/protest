@@ -93,8 +93,6 @@ internal static class Wmi {
         if (property.IsArray) {
             object[] array = (object[])property.Value;
 
-            string value = String.Empty;
-
             StringBuilder builder = new StringBuilder();
             for (int i = 0; i < array?.Length; i++) {
                 string stringValue = array[i].ToString();
@@ -121,8 +119,7 @@ internal static class Wmi {
     public static string WmiGet(string host, string @namespace, string className, string property, bool isArray, FormatMethodPtr format = null) {
         ManagementScope scope = Scope(host, @namespace);
         if (scope is null) return String.Empty;
-        WmiGet(scope, className, property, isArray, format);
-        return String.Empty;
+        return WmiGet(scope, className, property, isArray, format);
     }
     public static string WmiGet(ManagementScope scope, string className, string property, bool isArray, FormatMethodPtr format = null) {
         try {
@@ -232,7 +229,7 @@ internal static class Wmi {
             catch (Exception ex) {
                 Logger.Error(ex);
             }
-#else
+#else 
             catch { }
 #endif
 
@@ -639,7 +636,7 @@ internal static class Wmi {
 
     private static string ChassisToString(short chassisType) {
         return chassisType switch {
-            3 => "Desktop;",
+            3 => "Desktop",
             4 => "Low profile desktop",
             5 => "Pizza box",
             6 => "Mini tower",
@@ -664,11 +661,11 @@ internal static class Wmi {
             25 => "Multi-system chassis",
             26 => "Compact PCI",
             27 => "Advanced TCA",
-            28 => "Blade ",
+            28 => "Blade",
             29 => "Blade Enclosure",
-            30 => "Tablet ",
-            31 => "Convertible ",
-            32 => "Detachable ",
+            30 => "Tablet",
+            31 => "Convertible",
+            32 => "Detachable",
             33 => "IoT Gateway",
             34 => "Embedded PC",
             35 => "Mini PC",
