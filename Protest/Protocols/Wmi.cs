@@ -50,7 +50,7 @@ internal static class Wmi {
                 using CancellationTokenSource tokenSource = new CancellationTokenSource();
                 tokenSource.CancelAfter(timeout);
 
-                Task task = Task.Run(() => scope.Connect(), tokenSource.Token);
+                Task task = Task.Run(() => scope.Connect());
                 //task.RunSynchronously();
                 task.WaitAsync(tokenSource.Token).GetAwaiter().GetResult();
             }
@@ -317,7 +317,8 @@ internal static class Wmi {
                 UInt64 L1 = 0, L2 = 0, L3 = 0;
 
                 foreach (ManagementObject o in collection.Cast<ManagementObject>()) {
-                    string purpose = o.GetPropertyValue("Purpose")?.ToString();
+                    string purpose = o.GetPropertyValue("Purpose")?.ToString() ?? String.Empty;
+                    if (String.IsNullOrEmpty(purpose)) continue;
 
                     string numberOfBlocksValue = o.GetPropertyValue("NumberOfBlocks")?.ToString();
                     if (!UInt64.TryParse(numberOfBlocksValue, out UInt64 numberOfBlocks)) continue;
@@ -611,7 +612,8 @@ internal static class Wmi {
     }
 
     public static byte[] Wmi_Win32Shutdown(string host, int flags) {
-        if (host.Contains(';')) host = host[..host.IndexOf(";")].Trim();
+        int semicolonIndex = host.IndexOf(';');
+        if (semicolonIndex >= 0) host = host[..semicolonIndex].Trim();
 
         ManagementScope scope = Scope(host);
         if (scope is null) return Data.CODE_HOST_UNKNOWN.Array;
@@ -758,13 +760,33 @@ internal static class Wmi {
 
     private static string TransferRateToString(string value) {
         if (!UInt64.TryParse(value, out UInt64 v)) return String.Empty;
-
         if (v < 1000) return $"{v} bps";
-        if (v < 1_000_000) return $"{v / 1000} Kbps";
-        if (v < 1_000_000_000) return $"{v / 1_000_000} Mbps";
-        if (v < 1_000_000_000_000) return $"{v / 1_000_000_000} Gbps";
-        if (v < 1_000_000_000_000_000) return $"{v / 1_000_000_000_000} Tbps";
-        return $"{v / 1_000_000_000_000_000} Pbps";
+
+        double rate;
+        string unit;
+
+        if (v < 1_000_000) {
+            rate = v / 1000d;
+            unit = "Kbps";
+        }
+        else if (v < 1_000_000_000) {
+            rate = v / 1_000_000d;
+            unit = "Mbps";
+        }
+        else if (v < 1_000_000_000_000) {
+            rate = v / 1_000_000_000d;
+            unit = "Gbps";
+        }
+        else if (v < 1_000_000_000_000_000) {
+            rate = v / 1_000_000_000_000d;
+            unit = "Tbps";
+        }
+        else {
+            rate = v / 1_000_000_000_000_000d;
+            unit = "Pbps";
+        }
+
+        return $"{rate:0.##} {unit}";
     }
 
     private static string ToMHz(string value) {
