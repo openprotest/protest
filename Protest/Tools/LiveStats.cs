@@ -297,7 +297,7 @@ internal static class LiveStats {
                     if (!mismatch && !String.IsNullOrEmpty(wmiHostname)) {
                         wmiHostname = wmiHostname.Split('.')[0].ToUpper();
                         if (wmiHostname != dns) {
-                            await WebSocketHelper.WsWriteText(ws, $"{{\"warning\":\"DNS mismatch: {Data.EscapeJsonText(wmiHostname)}\",\"source\":\"WMI\"}}");
+                            await WebSocketHelper.WsWriteText(ws, $"{{\"warning\":\"DNS mismatch: {Data.EscapeJsonText(wmiHostname)} ≠ {Data.EscapeJsonText(dns)}\",\"source\":\"WMI\"}}");
                             mismatch = true;
                         }
                     }
@@ -305,7 +305,7 @@ internal static class LiveStats {
                     if (!mismatch && !String.IsNullOrEmpty(adHostname)) {
                         adHostname = adHostname.Split('.')[0].ToUpper();
                         if (adHostname != dns) {
-                            await WebSocketHelper.WsWriteText(ws, $"{{\"warning\":\"DNS mismatch: {Data.EscapeJsonText(adHostname)}\",\"source\":\"LDAP\"}}");
+                            await WebSocketHelper.WsWriteText(ws, $"{{\"warning\":\"DNS mismatch: {Data.EscapeJsonText(adHostname)} ≠ {Data.EscapeJsonText(dns)}\",\"source\":\"LDAP\"}}");
                             mismatch = true;
                         }
                     }
@@ -317,7 +317,7 @@ internal static class LiveStats {
                     if (!mismatch && !String.IsNullOrEmpty(netBios)) {
                         netBios = netBios.Split('.')[0].ToUpper();
                         if (netBios != dns) {
-                            await WebSocketHelper.WsWriteText(ws, $"{{\"warning\":\"DNS mismatch: {Data.EscapeJsonText(netBios)}\",\"source\":\"NetBIOS\"}}");
+                            await WebSocketHelper.WsWriteText(ws, $"{{\"warning\":\"DNS mismatch: {Data.EscapeJsonText(netBios)} ≠ {Data.EscapeJsonText(dns)}\",\"source\":\"NetBIOS\"}}");
                             //mismatch = true;
                         }
                     }
