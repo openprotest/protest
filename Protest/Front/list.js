@@ -1,7 +1,8 @@
 class List extends Window {
+	static MIN_CELL_SIZE = 40;
+
 	constructor(args) {
 		super();
-		this.MIN_CELL_SIZE = 40;
 
 		this.args = args ?? { select: null, sort: "", filter: "", find: "" };
 		this.AddCssDependencies("list.css");
@@ -26,6 +27,10 @@ class List extends Window {
 		this.listTitle = document.createElement("div");
 		this.listTitle.className = "list-title";
 		this.content.appendChild(this.listTitle);
+
+		this.listTitleFill = document.createElement("div");
+		this.listTitleFill.className = "list-title-fill";
+		this.content.appendChild(this.listTitleFill);
 
 		this.columnsOptions = document.createElement("div");
 		this.columnsOptions.className = "list-columns-options";
@@ -160,7 +165,7 @@ class List extends Window {
 			const index = this.columnsElements.indexOf(this.resizingColumnElement);
 			const totalWidth = this.columnsWidth0.slice(index + 1).reduce((accu, current)=> accu + current);
 
-			let targetWidth = Math.max(this.width0 + event.x - this.mouseX0, this.MIN_CELL_SIZE);
+			let targetWidth = Math.max(this.width0 + event.x - this.mouseX0, List.MIN_CELL_SIZE);
 
 			const availableWidth = this.listTitle.offsetWidth - (this.resizingColumnElement.offsetLeft + targetWidth);
 
@@ -170,7 +175,7 @@ class List extends Window {
 				if (w < minWidth) minWidth = w;
 			}
 
-			if (minWidth < this.MIN_CELL_SIZE) return;
+			if (minWidth < List.MIN_CELL_SIZE) return;
 
 			this.resizingColumnElement.style.width = `${100 * targetWidth / this.listTitle.offsetWidth}%`;
 
@@ -548,6 +553,12 @@ class List extends Window {
 	FinalizeColumns() {
 		this.resizingColumnElement = null;
 		this.movingColumnElement = null;
+
+		const scrollBarWidth = this.list.offsetWidth - this.list.clientWidth;
+		this.listTitle.style.width = `calc(100% - ${scrollBarWidth}px)`;
+		this.listTitle.style.borderTopRightRadius = scrollBarWidth > 0 ? "0" : "4px";
+
+		this.listTitleFill.style.width = `${scrollBarWidth}px`;
 
 		this.columnsElements = this.columnsElements.sort((a, b)=> a.offsetLeft - b.offsetLeft);
 

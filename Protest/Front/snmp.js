@@ -210,10 +210,12 @@ class Snmp extends Window {
 			if (this.versionInput.value == 3) {
 				authLabel.textContent = "Profile:";
 				this.credentialsProfileInput.style.display = "block";
+				this.communityInput.style.display = "none";
 			}
 			else {
 				authLabel.textContent = "Community:";
 				this.credentialsProfileInput.style.display = "none";
+				this.communityInput.style.display = "block";
 			}
 		};
 
@@ -259,7 +261,7 @@ class Snmp extends Window {
 		if (oid.startsWith("1.0.8802.")) {
 			const iso8802 = oid.substring(9).split(".")[0];
 
-			if (!(iso8802 in Snmp.OID_MAP_1_0_8802)) return null;
+			if (!Snmp.OID_MAP_1_0_8802.includes(iso8802)) return null;
 
 			const filename = `1.0.8802.${iso8802}`;
 
@@ -282,7 +284,7 @@ class Snmp extends Window {
 		else if (oid.startsWith("1.3.6.1.2.1.")) {
 			const mib2 = oid.substring(12).split(".")[0];
 
-			if (!(mib2 in Snmp.OID_MAP_1_3_6_1_2_1)) return null;
+			if (!Snmp.OID_MAP_1_3_6_1_2_1.includes(mib2)) return null;
 
 			const filename = `1.3.6.1.2.1.${mib2}`;
 			if (!(filename in Snmp.OID_CACHE)) {

@@ -1,5 +1,6 @@
 {
 "":["interfaces"],
+".0":["ifNumber"],
 ".1":["ifNumber"],
 ".2":["ifTable"],
 ".2.1":["ifEntry"],

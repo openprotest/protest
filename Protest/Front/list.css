@@ -24,6 +24,17 @@
 	background: var(--grd-toolbar);
 }
 
+.list-title-fill {
+	position: absolute;
+	right: 0;
+	top: 0;
+	height: 30px;
+	color: var(--clr-light);
+
+	border-radius: 0 4px 0 0;
+	background: var(--grd-toolbar);
+}
+
 .list-title > div:not(:last-child) {
 	position: absolute;
 	top: 1px;
@@ -130,7 +141,7 @@
 	text-overflow: ellipsis;
 	white-space: nowrap;
 	box-sizing: border-box;
-	padding-left: 6px;
+	padding-left: 4px;
 }
 
 .list-inner-icon {

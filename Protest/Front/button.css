@@ -26,7 +26,7 @@ button:focus, input[type="button"]:focus, input[type="submit"]:focus, input[type
 }
 
 button:active, input[type="button"]:active, input[type="submit"]:active, input[type="reset"]:active, input[type="color"]:active {
-	background-color: rgb(128,128,128);
+	filter: brightness(85%);
 }
 
 button:disabled, input[type="button"]:disabled, input[type="submit"]:disabled, input[type="reset"]:disabled, input[type="color"]:disabled {

@@ -46,6 +46,10 @@ input[type="radio"] + label:focus::before {
 	box-shadow: var(--clr-accent) 0 0 0 3px;
 }
 
+input[type="radio"] + label:active::before {
+	filter: brightness(85%);
+}
+
 input[type="radio"]:checked + label::after {
 	transform: none;
 	opacity: 1;

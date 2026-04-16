@@ -44,6 +44,10 @@ input[type="checkbox"] + label:focus::before {
 	box-shadow: var(--clr-accent) 0 0 0 3px;
 }
 
+input[type="checkbox"] + label:active::before {
+filter: brightness(85%);
+}
+
 input[type="checkbox"]:checked + label::after {
 	transform: translateX(12px);
 	background-color: var(--clr-accent);
