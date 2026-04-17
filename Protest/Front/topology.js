@@ -102,7 +102,7 @@ class Topology extends Window {
 		this.AddToolbarSeparator();
 
 		this.zoomOutButton = this.AddToolbarButton("Zoom out", "mono/zoomout.svg?light");
-		this.zoomInButton = this.AddToolbarButton("Zoom out", "mono/zoomin.svg?light");
+		this.zoomInButton = this.AddToolbarButton("Zoom in", "mono/zoomin.svg?light");
 
 		//this.loopDetection = this.AddToolbarButton("Close loop detection", "mono/infinite.svg?light");
 
@@ -1874,7 +1874,7 @@ class Topology extends Window {
 		unicastInCheckbox.onchange    = ()=> Toggle_onchange();
 		unicastOutCheckbox.onchange   = ()=> Toggle_onchange();
 		multicastInCheckbox.onchange  = ()=> Toggle_onchange();
-		multicastOutBox.onchange      = ()=> Toggle_onchange();
+		multicastOutCheckbox.onchange      = ()=> Toggle_onchange();
 		broadcastInCheckbox.onchange  = ()=> Toggle_onchange();
 		broadcastOutCheckbox.onchange = ()=> Toggle_onchange();
 

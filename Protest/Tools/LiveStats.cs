@@ -231,7 +231,7 @@ internal static class LiveStats {
                 }
 
                 if (firstAlive is not null && firstReply.Status == IPStatus.Success) {
-                    await WmiQuery(ws, firstAlive, wmiHostname);
+                    await WmiQuery(ws, firstAlive);
                 }
             }
 
@@ -392,7 +392,7 @@ internal static class LiveStats {
     }
 
     [SupportedOSPlatform("windows")]
-    private static async Task WmiQuery(WebSocket ws, string firstAlive, string wmiHostname) {
+    private static async Task WmiQuery(WebSocket ws, string firstAlive) {
         try {
             ManagementScope scope = Protocols.Wmi.Scope(firstAlive, "cimv2", 3_000);
 
@@ -447,12 +447,10 @@ internal static class LiveStats {
                 if (username.Length > 0) {
                     await WebSocketHelper.WsWriteText(ws, $"{{\"info\":\"Logged in user: {Data.EscapeJsonText(username)}\",\"source\":\"WMI\"}}");
                 }
-                wmiHostname = Wmi.WmiGet(scope, "Win32_ComputerSystem", "DNSHostName", false, null);
 
                 await WebSocketHelper.WsWriteText(ws, $"{{\"activeUser\":\"{Data.EscapeJsonText(username)}\",\"source\":\"WMI\"}}");
             }
         }
-        //catch (NullReferenceException) { }
 #if DEBUG
         catch (Exception ex) {
             Logger.Error(ex);
