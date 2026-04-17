@@ -61,10 +61,9 @@ class ReverseProxy extends List {
 
 		this.list.style.right = "unset";
 		this.list.style.width = "min(50%, 640px)";
-		this.list.style.overflowY = "auto";
 
-		this.listTitle.style.right = "unset";
-		this.listTitle.style.width = "min(50%, 640px)";
+		this.listTitleOuter.style.right = "unset";
+		this.listTitleOuter.style.width = "min(50%, 640px)";
 
 		this.stats = document.createElement("div");
 		this.stats.style.position = "absolute";

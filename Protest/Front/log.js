@@ -269,7 +269,7 @@ class Log extends Window {
 			this.options.style.transition = ".4s";
 
 			this.header.style.color = "var(--clr-contrast)";
-			this.win.style.backgroundColor = "rgba(64,64,64,.7)";
+			this.win.style.backgroundColor = "light-dark(rgba(184,184,184,.6), rgba(64,64,64,.7))";
 			this.win.style.backdropFilter = "blur(2px)";
 			this.content.style.backgroundColor = "transparent";
 			this.listTitle.style.color = "var(--clr-contrast)";

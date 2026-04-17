@@ -24,18 +24,18 @@ class List extends Window {
 		this.list.onscroll = ()=> this.UpdateViewport();
 		this.content.appendChild(this.list);
 
+		this.listTitleOuter = document.createElement("div");
+		this.listTitleOuter.className = "list-title-outer";
+		this.content.appendChild(this.listTitleOuter);
+
 		this.listTitle = document.createElement("div");
 		this.listTitle.className = "list-title";
-		this.content.appendChild(this.listTitle);
-
-		this.listTitleFill = document.createElement("div");
-		this.listTitleFill.className = "list-title-fill";
-		this.content.appendChild(this.listTitleFill);
+		this.listTitleOuter.appendChild(this.listTitle);
 
 		this.columnsOptions = document.createElement("div");
 		this.columnsOptions.className = "list-columns-options";
 		this.columnsOptions.onclick = ()=> this.CustomizeColumns();
-		this.listTitle.appendChild(this.columnsOptions);
+		this.listTitleOuter.appendChild(this.columnsOptions);
 
 		this.counter = document.createElement("div");
 		this.counter.className = "list-counter";
@@ -48,7 +48,10 @@ class List extends Window {
 		this.win.addEventListener("mouseup", event=> this.List_mouseup(event));
 		this.win.addEventListener("mousemove", event=> this.List_mousemove(event));
 
-		requestAnimationFrame(()=> this.list.focus());
+		requestAnimationFrame(()=> {
+			this.list.focus();
+			this.FinalizeColumns();
+		});
 	}
 
 	List_keydown(event) {
@@ -274,7 +277,6 @@ class List extends Window {
 			const newColumn = document.createElement("div");
 			newColumn.style.left = `${100 * i / columns.length}%`;
 			newColumn.style.width = `${100 / columns.length}%`;
-			newColumn.style.textTransform = LOADER.alwaysUppercase.includes(columns[i]) ? "uppercase" : "capitalize";
 
 			if (this.args.sort === columns[i]) {
 				newColumn.className = "list-sort-ascend";
@@ -289,7 +291,7 @@ class List extends Window {
 			this.listTitle.appendChild(newColumn);
 		}
 
-		this.listTitle.appendChild(this.columnsOptions);
+		this.listTitleOuter.appendChild(this.columnsOptions);
 
 		setTimeout(()=> this.FinalizeColumns(), 400);
 
@@ -555,20 +557,12 @@ class List extends Window {
 		this.movingColumnElement = null;
 
 		const scrollBarWidth = this.list.offsetWidth - this.list.clientWidth;
-		this.listTitle.style.width = `calc(100% - ${scrollBarWidth}px)`;
-		this.listTitle.style.borderTopRightRadius = scrollBarWidth > 0 ? "0" : "4px";
-
-		this.listTitleFill.style.width = `${scrollBarWidth}px`;
+		this.listTitle.style.right = `${scrollBarWidth}px`;
 
 		this.columnsElements = this.columnsElements.sort((a, b)=> a.offsetLeft - b.offsetLeft);
 
-		//remove elements and append them in the correct order
-		this.listTitle.textContent = "";
-		for (let i = 0; i < this.columnsElements.length; i++) {
-			this.listTitle.appendChild(this.columnsElements[i]);
-		}
-		this.listTitle.appendChild(this.columnsOptions);
-
+		this.listTitle.replaceChildren(...this.columnsElements);
+		
 		for (let i = 0; i < this.columnsElements.length; i++) {
 			this.columnsElements[i].style.transition = ".2s";
 			this.columnsElements[i].style.opacity = "1";
@@ -583,6 +577,15 @@ class List extends Window {
 			this.columnsElements[i].style.left = `${100 * x / this.listTitle.offsetWidth}%`;
 			this.columnsElements[i].style.width = `${100 * this.columnsElements[i].offsetWidth / this.listTitle.offsetWidth}%`;
 		}
+
+		requestAnimationFrame(()=> {
+			for (let i = 0; i < this.columnsElements.length; i++) {
+				const text = this.columnsElements[i].textContent.trim();
+				this.columnsElements[i].style.textTransform = LOADER.alwaysUppercase.includes(text)
+					? "uppercase"
+					: "capitalize";
+			}
+		});
 
 		this.UpdateViewport(true);
 	}

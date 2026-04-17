@@ -2414,17 +2414,17 @@ class Topology extends Window {
 		};
 
 		const entry = {
-			isInferred    : true,
-			isRouter      : isRouter,
-			element       : element,
-			lldp          : lldp,
-			links         : [],
+			isInferred : true,
+			isRouter   : isRouter,
+			element    : element,
+			lldp       : lldp,
+			links      : [],
 			initial: {
-				file: file,
-				hostname: hostname,
-				ip: deviceIp,
-				location: deviceLocation,
-				type: deviceType
+				file     : file,
+				hostname : hostname,
+				ip       : deviceIp,
+				location : deviceLocation,
+				type     : deviceType
 			}
 		};
 
@@ -3514,6 +3514,10 @@ class Topology extends Window {
 			localPortName = "--";
 			localBox.style.color = "#404040";
 		}
+
+		localPortName = localPortName
+			.replace("TenGigabitEthernet", "10GB")
+			.replace("GigabitEthernet", "GE");
 
 		localBox.textContent = localPortName;
 

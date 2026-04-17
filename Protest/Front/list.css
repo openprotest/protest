@@ -12,7 +12,8 @@
 	overflow-y: scroll;
 }
 
-.list-title {
+
+.list-title-outer {
 	position: absolute;
 	left: 0;
 	right: 0;
@@ -24,25 +25,21 @@
 	background: var(--grd-toolbar);
 }
 
-.list-title-fill {
+.list-title {
 	position: absolute;
+	left: 0;
 	right: 0;
 	top: 0;
 	height: 30px;
-	color: var(--clr-light);
-
-	border-radius: 0 4px 0 0;
-	background: var(--grd-toolbar);
 }
 
-.list-title > div:not(:last-child) {
+.list-title > div {
 	position: absolute;
 	top: 1px;
 	height: 28px;
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
-	text-transform: capitalize;
 	line-height: 28px;
 	border-radius: 4px;
 
@@ -63,7 +60,6 @@
 .list-title > .list-sort-ascend::after,
 .list-title > .list-sort-descend::after {
 	position: absolute;
-	/*left: calc(100% - 16px);*/
 	transform: translate(4px, 10px);
 	content: "";
 	border: solid;
@@ -80,8 +76,8 @@
 
 .list-columns-options {
 	position: absolute;
-	right: 0;
-	top: 0;
+	right: 1px;
+	top: 1px;
 	width: 22px;
 	height: 24px;
 	border-radius: 2px;
@@ -94,7 +90,17 @@
 	background-repeat: no-repeat;
 }
 
-.list-title:hover > .list-columns-options {
+.list-columns-options:hover {
+	transition: .2s;
+	background-color: rgb(72,72,72);
+}
+
+.list-columns-options:active {
+	transition: .2s;
+	background-color: rgb(64,64,64);
+}
+
+.list-title-outer:hover > .list-columns-options {
 	opacity: 1;
 }
 
