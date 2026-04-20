@@ -264,6 +264,7 @@ class DhcpDiscover extends Window {
 		const titleBar = document.createElement("div");
 		titleBar.style.height = "25px";
 		titleBar.style.borderRadius = "4px 4px 0 0";
+		titleBar.style.color = "var(--clr-light)";
 		titleBar.style.background = "var(--grd-toolbar)";
 		this.content.appendChild(titleBar);
 

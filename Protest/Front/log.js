@@ -20,6 +20,7 @@ class Log extends Window {
 		this.listTitle = document.createElement("div");
 		this.listTitle.className = "list-title";
 		this.listTitle.textContent = `${"Date".padEnd(23)} ${"Category".padEnd(19)} ${"Origin".padEnd(23)} ${"Action"}`;
+		this.listTitle.style.borderRadius = "4px 4px 0 0 ";
 		this.listTitle.style.fontFamily = "monospace";
 		this.listTitle.style.lineHeight = "32px";
 		this.listTitle.style.paddingLeft = "28px";
@@ -285,7 +286,7 @@ class Log extends Window {
 			this.win.style.backdropFilter = "";
 			this.content.style.backgroundColor = "";
 			this.listTitle.style.color = "";
-			this.listTitle.style.background = "";
+			this.listTitle.style.background = "var(--grd-toolbar)";
 			this.listTitle.style.boxShadow = "";
 			this.list.style.color = "var(--clr-dark)";
 			this.list.style.backgroundColor = "var(--clr-pane)";

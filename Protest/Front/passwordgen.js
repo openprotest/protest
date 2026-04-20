@@ -50,7 +50,6 @@ class PassGen extends Window {
 		grid.style.padding = "40px";
 		grid.style.backgroundColor = "var(--clr-pane)";
 		grid.style.color = "var(--clr-dark)";
-		grid.style.fontWeight = "600";
 		grid.style.borderRadius = "4px";
 		grid.style.gridTemplateColumns = "210px 110px 180px";
 		grid.style.gridTemplateRows = "40px repeat(5, 32px)";
@@ -76,7 +75,6 @@ class PassGen extends Window {
 
 		let lengthLabel = document.createElement("div");
 		lengthLabel.textContent = "Length:";
-		lengthLabel.style.textDecoration = "underline";
 		lengthLabel.style.width = "100%";
 		lengthLabel.style.marginBottom = "4px";
 		lengthLabel.style.textAlign = "left";

@@ -31,8 +31,7 @@ internal static class Zones {
     }
 
     public static string ListZonesString() {
-        if (!File.Exists(Data.FILE_ZONES))
-            return "[]";
+        if (!File.Exists(Data.FILE_ZONES)) return "[]";
 
         try {
             lock (mutex) {
