@@ -21,12 +21,9 @@ class PassGen extends Window {
 
 		this.strengthBox = document.createElement("div");
 		this.strengthBox.style.marginTop = "4px";
-		this.strengthBox.style.marginTop = "4px";
-		this.strengthBox.style.marginTop = "4px";
 		this.content.appendChild(this.strengthBox);
 
 		this.strengthBar = document.createElement("div");
-		this.strengthBar.className = "passwors-strength-bar";
 		this.strengthBar.style.display = "inline-block";
 		this.strengthBar.style.width = "40px";
 		this.strengthBar.style.height = "12px";
@@ -278,7 +275,7 @@ class PassGen extends Window {
 					setTimeout(()=>copyButton.style.animation = "", 600);
 				}
 			}
-			catch {
+			catch (ex) {
 				this.ConfirmBox(ex, true, "mono/error.svg");
 			}
 		};
@@ -340,7 +337,7 @@ class PassGen extends Window {
 			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
 
 			const words = await response.text();
-			if (words.error) throw (json.error);
+			if (words.error) throw (words.error);
 
 			if (words.length > 2) this.words = words.split("\n");
 

@@ -73,7 +73,9 @@ class Log extends Window {
 		this.options.appendChild(this.onTopBox);
 		this.onTopCheckbox = this.CreateToggle("Always on top", this.args.onTop, this.onTopBox).checkbox;
 
-		this.autoScrollCheckbox.onchange = ()=> { this.args.autoScroll = this.onTopBox.checked; };
+		this.autoScrollCheckbox.onchange = ()=> {
+			this.args.autoScroll = this.autoScrollCheckbox.checked;
+		};
 
 		this.opaqueCheckbox.onchange = ()=> {
 			this.args.opaque = this.opaqueCheckbox.checked;
