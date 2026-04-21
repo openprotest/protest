@@ -25,8 +25,6 @@ class Documentation extends Window {
 		this.searchInput.style.gridArea = "1 / 2";
 		this.searchInput.type = "search";
 		this.searchInput.value = this.args.keywords;
-		this.searchInput.style.borderLeft = "1px solid #777";
-		this.searchInput.style.borderBottom = "1px solid #777";
 		this.sidebar.appendChild(this.searchInput);
 
 		this.list = document.createElement("div");
@@ -107,18 +105,22 @@ class Documentation extends Window {
 
 		this.addRelatedButton = document.createElement("input");
 		this.addRelatedButton.type = "button";
-		this.addRelatedButton.style.right = "4px";
+		this.addRelatedButton.style.zIndex = "1";
+		this.addRelatedButton.style.right = "5px";
 		this.addRelatedButton.style.top = "50px";
 		this.addRelatedButton.style.minWidth = "28px";
 		this.addRelatedButton.style.width = "28px";
 		this.addRelatedButton.style.height = "28px";
+		this.addRelatedButton.style.borderTop = "1px solid #777";
+		this.addRelatedButton.style.borderRight = "1px solid #777";
+		this.addRelatedButton.style.borderBottom = "1px solid #777";
+		this.addRelatedButton.style.borderLeft = "none";
 		this.addRelatedButton.style.borderRadius = "0 8px 8px 0";
 		this.addRelatedButton.style.backgroundColor = "var(--clr-control)";
 		this.addRelatedButton.style.backgroundImage = "url(mono/newdevice.svg)";
 		this.addRelatedButton.style.backgroundRepeat = "no-repeat";
 		this.addRelatedButton.style.backgroundSize = "24px 24px";
 		this.addRelatedButton.style.backgroundPosition = "center center";
-		this.addRelatedButton.style.borderBottom = "1px solid #777";
 
 		this.body.appendChild(this.addRelatedButton);
 

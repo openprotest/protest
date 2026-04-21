@@ -9,6 +9,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Runtime.Versioning;
+using Lextm.SharpSnmpLib;
 
 using Protest.Tools;
 
@@ -175,6 +176,9 @@ internal static partial class Lifeline {
                                     if (!p) continue;
                                     SnmpPrinterQuery(data[0], data[1], data[2], profiles);
                                 }
+                            }
+                            catch (OperationException ex) when (ex.Message.Contains("timed out", StringComparison.OrdinalIgnoreCase)) {
+                                //do nothing
                             }
 #if DEBUG
                             catch (Exception ex) {

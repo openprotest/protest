@@ -1874,7 +1874,7 @@ class Topology extends Window {
 		unicastInCheckbox.onchange    = ()=> Toggle_onchange();
 		unicastOutCheckbox.onchange   = ()=> Toggle_onchange();
 		multicastInCheckbox.onchange  = ()=> Toggle_onchange();
-		multicastOutCheckbox.onchange      = ()=> Toggle_onchange();
+		multicastOutCheckbox.onchange = ()=> Toggle_onchange();
 		broadcastInCheckbox.onchange  = ()=> Toggle_onchange();
 		broadcastOutCheckbox.onchange = ()=> Toggle_onchange();
 

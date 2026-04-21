@@ -28,8 +28,6 @@ class Wmi extends Window {
 		this.targetInput.type = "text";
 		this.targetInput.placeholder = "hostname or ip";
 		this.targetInput.style.gridArea = "1 / 2";
-		this.targetInput.style.borderLeft = "1px solid #777";
-		this.targetInput.style.borderBottom = "1px solid #777";
 		if (this.args.target != null) this.targetInput.value = this.args.target;
 		inputBox.appendChild(this.targetInput);
 
@@ -41,8 +39,6 @@ class Wmi extends Window {
 
 		this.namespaceInput = document.createElement("select");
 		this.namespaceInput.style.gridArea = "2 / 2";
-		this.namespaceInput.style.borderLeft = "1px solid #777";
-		this.namespaceInput.style.borderBottom = "1px solid #777";
 		if (this.args.namespace != null) this.namespaceInput.value = this.args.namespace;
 		inputBox.appendChild(this.namespaceInput);
 
@@ -92,8 +88,6 @@ class Wmi extends Window {
 		this.queryInput = document.createElement("textarea");
 		this.queryInput.placeholder = "SELECT * FROM Win32_BIOS WHERE Status = \"OK\"";
 		this.queryInput.style.gridArea = "3 / 2 / 2 span / auto";
-		this.queryInput.style.borderLeft = "1px solid #777";
-		this.queryInput.style.borderBottom = "1px solid #777";
 		//this.queryInput.style.fontFamily = "monospace";
 		this.queryInput.style.resize = "none";
 		if (this.args.query != null) this.queryInput.value = this.args.query;

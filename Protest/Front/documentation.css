@@ -57,8 +57,6 @@
 	top: 4px;
 	width: calc(100% - 148px);
 	max-width: 500px;
-	border-left: 1px solid #777;
-	border-bottom: 1px solid #777;
 }
 
 .doc-body-outer > .related-label {
@@ -74,12 +72,11 @@
 	height: 52px;
 	margin-left: 4px;
 	background-color: var(--clr-control);
-	border-left: 1px solid #777;
-	border-bottom: 1px solid #777;
+	border: 1px solid #777;
 	border-radius: 4px;
 	overflow-y: auto;
 
-	transition: .4s;
+	transition: all .4s, border 0s;
 }
 
 .doc-body-outer > .related-box > div {

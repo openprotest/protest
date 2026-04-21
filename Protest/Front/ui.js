@@ -111,7 +111,7 @@ const UI = {
 		let step3 = `hsl(${hsl[0] - 4},${hsl[1] * saturation}%,${hsl[2] * .8}%)`;
 		let gradient = `linear-gradient(to bottom, ${step1}0%, ${step2}92%, ${step3}100%)`;
 
-		let root = document.documentElement;
+		const root = document.documentElement;
 		root.style.setProperty("--clr-accent", `hsl(${hsl[0]},${hsl[1] * saturation}%,${hsl[2]}%)`);
 		root.style.setProperty("--clr-select", step2);
 		root.style.setProperty("--clr-transparent", `hsla(${hsl[0]},${hsl[1] * saturation}%,${hsl[2]}%,.6)`);

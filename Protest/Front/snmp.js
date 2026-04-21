@@ -52,7 +52,7 @@ class Snmp extends Window {
 		this.content.style.overflow = "hidden";
 
 		const inputBox = document.createElement("div");
-		inputBox.className = "snmp-input";
+		inputBox.className = "snmp-input-box";
 		this.content.appendChild(inputBox);
 
 		const targetLabel = document.createElement("div");
@@ -67,8 +67,6 @@ class Snmp extends Window {
 		this.targetInput.style.gridArea = "1 / 2 / 1 / 4";
 		this.targetInput.style.minWidth = "50px";
 		this.targetInput.value = this.args.target ?? "";
-		this.targetInput.style.borderLeft = "1px solid #777";
-		this.targetInput.style.borderBottom = "1px solid #777";
 		inputBox.appendChild(this.targetInput);
 
 		const authLabel = document.createElement("div");
@@ -83,14 +81,10 @@ class Snmp extends Window {
 		this.communityInput.style.gridArea = "2 / 2";
 		this.communityInput.style.marginRight = "0";
 		this.communityInput.style.minWidth = "50px";
-		this.communityInput.style.borderLeft = "1px solid #777";
-		this.communityInput.style.borderBottom = "1px solid #777";
 		inputBox.appendChild(this.communityInput);
 
 		this.credentialsProfileInput = document.createElement("select");
 		this.credentialsProfileInput.style.gridArea = "2 / 2";
-		this.credentialsProfileInput.style.borderLeft = "1px solid #777";
-		this.credentialsProfileInput.style.borderBottom = "1px solid #777";
 		this.credentialsProfileInput.style.marginRight = "0";
 		this.credentialsProfileInput.style.minWidth = "50px";
 		this.credentialsProfileInput.style.display = "none";
@@ -99,8 +93,6 @@ class Snmp extends Window {
 
 		this.versionInput = document.createElement("select");
 		this.versionInput.style.gridArea = "2 / 3";
-		this.versionInput.style.borderLeft = "1px solid #777";
-		this.versionInput.style.borderBottom = "1px solid #777";
 		if (this.args.version) this.versionInput.value = this.args.version;
 		inputBox.appendChild(this.versionInput);
 
@@ -126,8 +118,6 @@ class Snmp extends Window {
 		this.oidInput.style.resize = "none";
 		this.oidInput.style.minWidth = "50px";
 		this.oidInput.value = this.args.oid ?? "";
-		this.oidInput.style.borderLeft = "1px solid #777";
-		this.oidInput.style.borderBottom = "1px solid #777";
 		inputBox.appendChild(this.oidInput);
 
 		this.explorerButton = document.createElement("input");

@@ -165,8 +165,6 @@ class DhcpDiscover extends Window {
 		this.timeoutInput.value = this.args.timeout;
 		this.timeoutInput.style.gridRow = "1";
 		this.timeoutInput.style.gridColumn = "3";
-		this.timeoutInput.style.borderLeft = "1px solid #777";
-		this.timeoutInput.style.borderBottom = "1px solid #777";
 		grid.append(timeoutLabel, this.timeoutInput);
 
 		const hostLabel = document.createElement("div");
@@ -181,8 +179,6 @@ class DhcpDiscover extends Window {
 		this.hostnameInput.value = this.args.hostname;
 		this.hostnameInput.style.gridRow = "2";
 		this.hostnameInput.style.gridColumn = "3";
-		this.hostnameInput.style.borderLeft = "1px solid #777";
-		this.hostnameInput.style.borderBottom = "1px solid #777";
 		grid.append(hostLabel, this.hostnameInput);
 
 		const spoofMacLabel = document.createElement("div");
@@ -197,8 +193,6 @@ class DhcpDiscover extends Window {
 		this.macInput.value = this.args.mac;
 		this.macInput.style.gridRow = "3";
 		this.macInput.style.gridColumn = "3";
-		this.macInput.style.borderLeft = "1px solid #777";
-		this.macInput.style.borderBottom = "1px solid #777";
 		grid.append(spoofMacLabel, this.macInput);
 
 		const acceptLabel = document.createElement("div");

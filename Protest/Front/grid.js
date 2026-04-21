@@ -175,7 +175,7 @@ class Grid extends Window {
 		toggleButton.onclick =()=> {
 			if (this.table.style.left === "0px") {
 				toggleButton.style.left = "216px";
-				toggleButton.style.top = "32px";
+				toggleButton.style.top = "36px";
 				toggleButton.style.backgroundColor = "";
 				toggleButton.style.backgroundImage = "url(/mono/guitarpick.svg?light)";
 				toggleButton.style.transform = "rotate(90deg)";

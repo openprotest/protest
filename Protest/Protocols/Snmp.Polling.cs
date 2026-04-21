@@ -494,6 +494,9 @@ internal static partial class Polling {
                         result.Add(single[j]);
                     }
                 }
+                catch (OperationException ex) when (ex.Message.Contains("timed out", StringComparison.OrdinalIgnoreCase)) {
+                    //do nothing
+                }
 #if DEBUG
                 catch (Exception ex) {
                     Logger.Error(ex);

@@ -9,14 +9,14 @@ select {
 	font-size: var(--global-font-size);
 	font-family: var(--global-font-family);
 	outline: 0;
-	border: none;
+	border: 1px solid #777;
 	border-radius: 4px;
 	color: var(--clr-dark);
 	background-color: var(--clr-control);
 	background-position: calc(100%);
 	padding: 4px 8px;
 	margin: 2px 4px;
-	transition: .2s;
+	transition: all .2s, border 0s;
 }
 
 select {

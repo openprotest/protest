@@ -1,4 +1,4 @@
-.snmp-input {
+.snmp-input-box {
 	position: absolute;
 	left: 8px;
 	right: 40px;
@@ -6,7 +6,7 @@
 	top: 8px;
 	height: 122px;
 	display: grid;
-	grid-template-columns: 96px auto 112px 56px 56px 56px;
+	grid-template-columns: 96px auto 128px 56px 56px 56px;
 	grid-template-rows: 32px 32px 32px 24px;
 	transition: .2s;
 }
