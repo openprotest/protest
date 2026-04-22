@@ -25,6 +25,7 @@ internal static partial class MacLookup {
 
     public static string LookupToString(string mac) {
         if (table.Length == 0) return "not found";
+        if (mac.Length < 6) return "not found";
 
         mac = mac.Replace("-", "").Replace(":", "").Replace(" ", "").Replace(".", "");
         if (!byte.TryParse(mac[0..2], System.Globalization.NumberStyles.HexNumber, null, out byte a)) return "not found";
