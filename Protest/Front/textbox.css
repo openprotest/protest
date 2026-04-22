@@ -44,7 +44,8 @@ input[type="date"]:disabled,
 textarea:disabled,
 select:disabled {
 	background-color: transparent;
-	box-shadow: var(--clr-control) 0 0 0 2px inset;
+	border: 1px solid var(--clr-control);
+	box-shadow: var(--clr-control) 0 0 0 1px inset;
 }
 
 input[type="text"]::placeholder,

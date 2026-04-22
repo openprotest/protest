@@ -340,6 +340,7 @@ class List extends Window {
 			for (let i=0; i<types.length; i++) {
 				const newType = document.createElement("div");
 				newType.textContent = types[i];
+				newType.style.textTransform =  LOADER.alwaysUppercase.includes(types[i]) ? "uppercase" : "capitalize";
 				filtersList.appendChild(newType);
 
 				if (this instanceof DevicesList) {

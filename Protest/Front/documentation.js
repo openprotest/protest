@@ -655,7 +655,7 @@ class Documentation extends Window {
 				devicesColumns = JSON.parse(localStorage.getItem("deviceslist_columns"));
 			}
 			else {
-				devicesColumns = ["name","type","ip","hostname","mac address","serial number"];
+				devicesColumns = ["name", "type", "ip", "hostname", "mac address", "serial number"];
 			}
 
 			for (let key in LOADER.devices.data) {

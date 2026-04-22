@@ -1423,16 +1423,16 @@ class Watchdog extends Window {
 
 	StatusToColor(status) {
 		if (status === -1) { //unreachable
-			return "var(--clr-error)";
+			return "light-dark(hsl(from var(--clr-error) h s calc(l / 1.2)), var(--clr-error))";
 		}
 		else if (status === -2) { //expired
-			return "var(--clr-orange)";
+			return "light-dark(hsl(from var(--clr-orange) h s calc(l / 1.2)), var(--clr-orange))";
 		}
 		else if (status === -3) { //warning
-			return "var(--clr-warning)";
+			return "light-dark(hsl(from var(--clr-warning) h s calc(l / 1.4)), var(--clr-warning))";
 		}
 		else if (status === -4) { //tls not yet valid
-			return "rgb(0,162,232)";
+			return "light-dark(hsl(from rgb(0,162,232) h s calc(l / 1.2)), rgb(0,162,232))";
 		}
 		else if (status >=0) { //alive
 			return `light-dark(${UI.PingColor(status, 35)}, ${UI.PingColor(status)})`;

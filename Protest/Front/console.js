@@ -22,7 +22,6 @@ class Console extends Window {
 		this.inputBox.style.bottom = "40px";
 		this.inputBox.style.width = "calc(100% - 80px)";
 		this.inputBox.style.margin = "0";
-		this.inputBox.style.border = "0";
 		this.inputBox.style.boxSizing = "border-box";
 		this.content.appendChild(this.inputBox);
 

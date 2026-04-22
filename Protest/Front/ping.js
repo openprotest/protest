@@ -735,12 +735,12 @@ class Ping extends Console {
 		}
 
 		this.hashtable[this.count] = {
-			host: host,
+			host   : host,
 			element: div,
-			msg: msg,
-			graph: graph,
-			ping: ping,
-			ping_e: ping_e
+			msg    : msg,
+			graph  : graph,
+			ping   : ping,
+			ping_e : ping_e
 		};
 
 		this.request += this.count + ";";
@@ -907,16 +907,15 @@ class Ping extends Console {
 			const nodes = this.hashtable[key].graph.childNodes;
 			const y = Ping.MAP_SIZE * this.hashtable[key].element.offsetTop / this.list.scrollHeight;
 
-			for (let j = 0; j < nodes.length; j++) {
-				if (nodes[j].style.backgroundColor) {
-					if (nodes[j].style.backgroundColor === "transparent") {
-						this.minimapCtx.fillStyle = "rgba(240,64,24,.5)";
-					}
-					else {
-						this.minimapCtx.fillStyle = nodes[j].style.backgroundColor;
-					}
-					this.minimapCtx.fillRect(1 + j*6, y, 4, size);
+			for (let j=0; j<nodes.length; j++) {
+				const pingResult = this.hashtable[key].ping[j];
+				if (isNaN(pingResult)) {
+					this.minimapCtx.fillStyle = pingResult === "Timed out" ? "rgb(240,80,24)" : "rgb(232,118,0)";
 				}
+				else {
+					this.minimapCtx.fillStyle = UI.PingColor(this.hashtable[key].ping[j]);
+				}
+				this.minimapCtx.fillRect(1 + j*6, y, 4, size);
 			}
 		}
 	}
@@ -925,8 +924,8 @@ class Ping extends Console {
 		if (this.ws.readyState != 1) return;
 
 		for (let i=0; i < payload.length-1; i+=2) {
-			let index = payload[i];
-			let value = payload[i+1];
+			const index = payload[i];
+			const value = payload[i+1];
 
 			if (index in this.hashtable) {
 				for (let j=0; j<Ping.HISTORY_LIMIT-1; j++) this.hashtable[index].ping[j] = this.hashtable[index].ping[j+1];
@@ -941,7 +940,7 @@ class Ping extends Console {
 					this.hashtable[index].msg.style.fontSize = "medium";
 				}
 
-				for (let j = 0; j < Ping.HISTORY_LIMIT; j++) {
+				for (let j=0; j<Ping.HISTORY_LIMIT; j++) {
 					let color = UI.PingColor_LightDark(this.hashtable[index].ping[j]);
 					if (isNaN(this.hashtable[index].ping[j])) {
 						this.hashtable[index].ping_e[j].style.backgroundColor = "transparent";

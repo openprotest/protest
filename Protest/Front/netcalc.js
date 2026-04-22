@@ -8,7 +8,7 @@ class NetCalc extends Window {
 		this.content.style.overflow = "auto";
 		this.content.style.padding = "16px";
 		this.content.style.display = "grid";
-		this.content.style.gridTemplateColumns = "auto 192px 72px 192px 96px auto";
+		this.content.style.gridTemplateColumns = "auto 200px 72px 192px 96px auto";
 		this.content.style.gridTemplateRows = "repeat(12, 32px)";
 		this.content.style.alignItems = "end";
 		this.content.style.color = "var(--clr-dark)";

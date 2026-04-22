@@ -359,14 +359,14 @@ class PassGen extends Window {
 			if (this.words)
 				for (let i = 0; i < this.lengthRange.value; i++) {
 					if (this.lowercaseToggle.checkbox.checked && this.uppercaseToggle.checkbox.checked) {
-						let w = this.words[Math.round(Math.random() * this.words.length)];
+						let w = this.words[Math.floor(Math.random() * this.words.length)];
 						word += w[0].toUpperCase() + w.substring(1);
 					}
 					else if (this.uppercaseToggle.checkbox.checked){
-						word += this.words[Math.round(Math.random() * this.words.length)].toUpperCase();
+						word += this.words[Math.floor(Math.random() * this.words.length)].toUpperCase();
 					}
 					else {
-						word += this.words[Math.round(Math.random() * this.words.length)];
+						word += this.words[Math.floor(Math.random() * this.words.length)];
 					}
 
 					if (i+1 < this.lengthRange.value)word += "-";
@@ -422,7 +422,7 @@ class PassGen extends Window {
 
 		let word = "";
 		for (let i=0; i<this.lengthRange.value; i++) {
-			let dice = Math.round(Math.random() * (pool.length + 1));
+			let dice = Math.round(Math.random() * pool.length);
 			if (dice < pool.length) {
 				word += pool[dice][Math.round(Math.random() * (pool[dice].length - 1))];
 				flag[dice] = true;
@@ -457,7 +457,7 @@ class PassGen extends Window {
 		if (this.lowercaseToggle.checkbox.checked) pool += 26;
 		if (this.symbolsToggle.checkbox.checked) pool += 30;
 
-		let entropy = Math.log(pool, 2) * this.passwordInput.value.length;
+		let entropy = Math.log2(pool) * this.passwordInput.value.length;
 		//same as     Math.log(pool ** this.passwordInput.value.length, 2));
 
 		let strength = PassGen.StrengthBar(entropy);
@@ -508,7 +508,7 @@ class PassGen extends Window {
 		if (etc.length === 0) etc = "less than a second";
 
 		if (eon > 999999999999999) {
-			this.ttcLabel.textContent = "TTC: Infinity";
+			this.ttcLabel.textContent = "TTC: Infinite";
 		}
 		else {
 			this.ttcLabel.textContent = `TTC: ${etc}`;

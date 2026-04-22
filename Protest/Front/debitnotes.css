@@ -72,7 +72,7 @@
 	padding: 20px 50px 4px 50px;
 	display: grid;
 	grid-template-columns: 100px 250px 100px 100px 250px auto 40px;
-	grid-template-rows: repeat(5, 32px) auto;
+	grid-template-rows: repeat(5, 36px) auto;
 	align-items: center;
 }
 
@@ -85,7 +85,7 @@
 	min-height: 64px;
 	left: 40px;
 	right: 40px;
-	top: 220px;
+	top: 240px;
 	bottom: 8px;
 }
 
