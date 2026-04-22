@@ -30,9 +30,9 @@ internal static class Fetch {
         public Type   type;
         public long   started;
         public long   finished;
-        public ConcurrentDictionary<string, ConcurrentDictionary<string, string[]>> dataset;
         public int    successful;
         public int    unsuccessful;
+        public ConcurrentDictionary<string, ConcurrentDictionary<string, string[]>> dataset;
     }
 
     private static readonly JsonSerializerOptions fetchSerializerOptions;
@@ -82,7 +82,7 @@ internal static class Fetch {
 
         return JsonSerializer.SerializeToUtf8Bytes(data, fetchSerializerOptions);
     }
-    public static async Task<ConcurrentDictionary<string, string[]>> SingleDeviceAsync(string target, bool useDns, bool useWmi, bool useLdap, SnmpProfiles.Profile[] snmpProfiles, string argPortScan, bool asynchronous, CancellationToken cancellationToken) {
+    public static async Task<ConcurrentDictionary<string, string[]>> SingleDeviceAsync(string target, bool useDns, bool useWmi, bool useLdap, SnmpProfiles.Profile[] snmpProfiles, string argPortScan, bool asynchronous, CancellationToken token) {
         PingReply reply = null;
         try {
             using Ping ping = new Ping();
@@ -100,13 +100,13 @@ internal static class Fetch {
 #endif
 
         if (reply?.Status == IPStatus.Success) {
-            ConcurrentDictionary<string, string[]> data = SingleDevice(target, useDns, useWmi, useLdap, snmpProfiles , argPortScan, asynchronous, cancellationToken);
+            ConcurrentDictionary<string, string[]> data = SingleDevice(target, useDns, useWmi, useLdap, snmpProfiles , argPortScan, asynchronous, token);
             return data;
         }
 
         return null;
     }
-    public static ConcurrentDictionary<string, string[]> SingleDevice(string target, bool useDns, bool useWmi, bool useLdap, SnmpProfiles.Profile[] snmpProfiles, string argPortScan, bool asynchronous, CancellationToken cancellationToken) {
+    public static ConcurrentDictionary<string, string[]> SingleDevice(string target, bool useDns, bool useWmi, bool useLdap, SnmpProfiles.Profile[] snmpProfiles, string argPortScan, bool asynchronous, CancellationToken token) {
         if (target.Contains(';')) {
             target = target.Split(';')[0].Trim();
         }
@@ -156,7 +156,7 @@ internal static class Fetch {
         if (useWmi) {
             tWmi = new Thread(() => {
                 if (!OperatingSystem.IsWindows()) { return; }
-                wmi = Protocols.Wmi.WmiFetch(target);
+                wmi = Protocols.Wmi.WmiFetch(target, token);
 
                 if (wmi.TryGetValue("owner", out string owner)) {
                     if (owner.IndexOf('\\') > -1) {
@@ -228,7 +228,7 @@ internal static class Fetch {
                 switch (argPortScan) {
 
                 case "wellknown": {
-                    bool[] ports = PortScan.PortsScanAsync(target, 1, 1023, 500, true).GetAwaiter().GetResult();
+                    bool[] ports = PortScan.PortsScanAsync(target, 1, 1023, 500, true, token).GetAwaiter().GetResult();
                     for (int i = 0; i < ports.Length; i++) {
                         if (!ports[i]) continue;
                         portsBuilder.Append(portsBuilder.Length == 0 ? i + 1 : $"; {i + 1}");
@@ -237,7 +237,7 @@ internal static class Fetch {
                 }
 
                 case "extended": {
-                    bool[] ports = PortScan.PortsScanAsync(target, 1, 8191, 500, true).GetAwaiter().GetResult();
+                    bool[] ports = PortScan.PortsScanAsync(target, 1, 8191, 500, true, token).GetAwaiter().GetResult();
                     for (int i = 0; i < ports.Length; i++) {
                         if (!ports[i]) continue;
                         portsBuilder.Append(portsBuilder.Length == 0 ? i + 1 : $"; {i + 1}");
@@ -247,7 +247,7 @@ internal static class Fetch {
 
                 default: {
                     short[] portsPool = PortScan.BASIC_PORTS;
-                    bool[] ports = PortScan.PortsScanAsync(target, portsPool, 1000, true).GetAwaiter().GetResult();
+                    bool[] ports = PortScan.PortsScanAsync(target, portsPool, 1000, true, token).GetAwaiter().GetResult();
                     for (int i = 0; i < ports.Length; i++) {
                         if (!ports[i]) continue;
                         portsBuilder.Append(portsBuilder.Length == 0 ? portsPool[i] : $"; {portsPool[i]}");
@@ -270,19 +270,19 @@ internal static class Fetch {
         else {
             tWmi?.Start();
             tWmi?.Join();
-            if (cancellationToken.IsCancellationRequested) {
+            if (token.IsCancellationRequested) {
                 return null;
             }
 
             tAd?.Start();
             tAd?.Join();
-            if (cancellationToken.IsCancellationRequested) {
+            if (token.IsCancellationRequested) {
                 return null;
             }
 
             tPortScan?.Start();
             tPortScan?.Join();
-            if (cancellationToken.IsCancellationRequested) {
+            if (token.IsCancellationRequested) {
                 return null;
             }
         }
@@ -353,7 +353,7 @@ internal static class Fetch {
             }
         }
 
-        if (cancellationToken.IsCancellationRequested) {
+        if (token.IsCancellationRequested) {
             return null;
         }
 
@@ -382,7 +382,7 @@ internal static class Fetch {
             data.TryAdd("type", new string[] { "Workstation", "WMI", string.Empty });
         }
 
-        if (cancellationToken.IsCancellationRequested) {
+        if (token.IsCancellationRequested) {
             return null;
         }
 
@@ -399,7 +399,7 @@ internal static class Fetch {
                 profile = snmpProfiles[0];
             }
             else {
-                (snmpResult, profile) = Protocols.Snmp.Polling.SnmpQueryTrialAndError(ipAddress, snmpProfiles, Protocols.Snmp.Oid.GENERIC_OID);
+                (snmpResult, profile) = Protocols.Snmp.Polling.SnmpQueryTrialAndError(ipAddress, snmpProfiles, Protocols.Snmp.Oid.GENERIC_OID, token);
             }
 
             Dictionary<string, string> formatted = Protocols.Snmp.Polling.ParseResponse(snmpResult);
@@ -420,6 +420,7 @@ internal static class Fetch {
                 data.TryAdd("snmp profile", new string[] { profile.guid.ToString(), "SNMP", string.Empty });
             }
 
+            if (token.IsCancellationRequested) return null;
             IList<Variable> macAddressResult = Protocols.Snmp.Polling.SnmpQuery(ipAddress, profile, [Protocols.Snmp.Oid.INT_MAC], Polling.SnmpOperation.Walk);
             
             if (macAddressResult is not null) {
@@ -437,6 +438,7 @@ internal static class Fetch {
             }
 
             if (!data.ContainsKey("type")) {
+                if (token.IsCancellationRequested) return null;
                 IList<Variable> dot1dBaseBridgeAddress = Protocols.Snmp.Polling.SnmpQuery(ipAddress, profile, ["1.3.6.1.2.1.17.1.1.0"], Polling.SnmpOperation.Get);
                 if (dot1dBaseBridgeAddress?.Count > 0) {
                     data.TryAdd("type", new string[] { "Switch", "SNMP", string.Empty });
@@ -444,6 +446,8 @@ internal static class Fetch {
             }
 
             if (data.TryGetValue("type", out string[] type) && profile is not null) {
+                if (token.IsCancellationRequested) return null;
+
                 switch (type[0].ToLower().Trim()) {
                 case "fax":
                 case "multiprinter":
@@ -470,7 +474,7 @@ internal static class Fetch {
             }
         }
 
-        if (cancellationToken.IsCancellationRequested) {
+        if (token.IsCancellationRequested) {
             return null;
         }
 

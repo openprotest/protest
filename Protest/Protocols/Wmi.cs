@@ -183,7 +183,7 @@ internal static class Wmi {
         if (value != null && value.Length > 0) data.Add(label, value);
     }
 
-    public static Dictionary<string, string> WmiFetch(string host, string @namespace = "cimv2") {
+    public static Dictionary<string, string> WmiFetch(string host, CancellationToken token, string @namespace = "cimv2") {
         Dictionary<string, string> data = new Dictionary<string, string>();
 
         string type = String.Empty;
@@ -212,6 +212,8 @@ internal static class Wmi {
 #else
             catch { }
 #endif
+
+            if (token.IsCancellationRequested) return data;
 
             try {
                 using ManagementObjectSearcher searcher = new ManagementObjectSearcher(scope, new SelectQuery("SELECT * FROM Win32_NetworkAdapterConfiguration WHERE IPEnabled = True"));
@@ -242,6 +244,8 @@ internal static class Wmi {
 #else
             catch { }
 #endif
+
+            if (token.IsCancellationRequested) return data;
 
             try {
                 using ManagementObjectSearcher searcher = new ManagementObjectSearcher(scope, new SelectQuery("Win32_ComputerSystem"));
@@ -279,6 +283,8 @@ internal static class Wmi {
                 catch { }
 #endif
 
+            if (token.IsCancellationRequested) return data;
+
             try {
                 using ManagementObjectSearcher searcher = new ManagementObjectSearcher(scope, new SelectQuery("Win32_BIOS"));
                 using ManagementObjectCollection moc = searcher.Get();
@@ -308,6 +314,8 @@ internal static class Wmi {
 #else
             catch { }
 #endif
+
+            if (token.IsCancellationRequested) return data;
 
             try {
 
@@ -386,6 +394,8 @@ internal static class Wmi {
             catch { }
 #endif
 
+            if (token.IsCancellationRequested) return data;
+
             try {
                 using ManagementObjectSearcher searcher = new ManagementObjectSearcher(scope, new SelectQuery("Win32_PhysicalMemoryArray"));
                 using ManagementObjectCollection moc = searcher.Get();
@@ -411,6 +421,8 @@ internal static class Wmi {
 #else
             catch { }
 #endif
+
+            if (token.IsCancellationRequested) return data;
 
             try {
                 using ManagementObjectSearcher searcher = new ManagementObjectSearcher(scope, new SelectQuery("SELECT * FROM Win32_LogicalDisk WHERE DriveType = 3"));
@@ -439,14 +451,15 @@ internal static class Wmi {
             catch { }
 #endif
 
+            if (token.IsCancellationRequested) return data;
+
             try {
                 using ManagementObjectSearcher searcher = new ManagementObjectSearcher(scope, new SelectQuery("Win32_OperatingSystem"));
                 using ManagementObjectCollection moc = searcher.Get();
                 ContentBuilderAddValue(moc, "Caption", "operating system", data);
                 ContentBuilderAddValue(moc, "OSArchitecture", "os architecture", data);
                 ContentBuilderAddValue(moc, "Version", "os version", data);
-                ContentBuilderAddValue(moc, "BuildNumber", "os build", data);
-                ContentBuilderAddValue(moc, "CSDVersion", "service pack", data);
+                //ContentBuilderAddValue(moc, "BuildNumber", "os build", data);
                 ContentBuilderAddValue(moc, "InstallDate", "os install date", data, new FormatMethodPtr(DateToString));
                 ContentBuilderAddValue(moc, "SerialNumber", "os serial no", data);
 

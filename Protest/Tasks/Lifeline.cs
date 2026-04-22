@@ -280,7 +280,7 @@ internal static partial class Lifeline {
 
     [SupportedOSPlatform("windows")]
     private static void WmiQuery(string file, string host) {
-        byte cpuUsage = 255, diskIo = 255;
+        byte cpuIdle = 255, diskIo = 255;
         ulong memoryFree = 0, memoryTotal = 0;
 
         List<byte> diskCaption = new List<byte>();
@@ -302,7 +302,7 @@ internal static partial class Lifeline {
             foreach (ManagementObject o in os.Cast<ManagementObject>()) {
                 if (o is null) continue;
                 ulong idle = (ulong)o.GetPropertyValue("PercentIdleTime");
-                cpuUsage = (byte)idle;
+                cpuIdle = (byte)idle;
                 break;
             }
         }
@@ -382,7 +382,7 @@ internal static partial class Lifeline {
         Lock mutex = wmiMutexes.GetOrAdd(host, new Lock());
 
         lock (mutex) {
-            if (cpuUsage != 255) {
+            if (cpuIdle != 255) {
                 string dirCpu = $"{Data.DIR_LIFELINE}{Data.DELIMITER}cpu{Data.DELIMITER}{file}";
                 if (!Directory.Exists(dirCpu)) { Directory.CreateDirectory(dirCpu); }
 
@@ -390,7 +390,7 @@ internal static partial class Lifeline {
                     using FileStream stream = new FileStream($"{dirCpu}{Data.DELIMITER}{now:yyyyMM}", FileMode.Append);
                     using BinaryWriter writer = new BinaryWriter(stream, Encoding.UTF8, false);
                     writer.Write(((DateTimeOffset)now).ToUnixTimeMilliseconds()); //8 bytes
-                    writer.Write((byte)(100 - cpuUsage)); //1 byte
+                    writer.Write((byte)(100 - cpuIdle)); //1 byte
                 }
 #if DEBUG
                 catch (Exception ex) {

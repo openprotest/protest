@@ -6,6 +6,7 @@ using System.Text;
 using Lextm.SharpSnmpLib;
 using Lextm.SharpSnmpLib.Messaging;
 using Lextm.SharpSnmpLib.Security;
+using System.Threading;
 
 namespace Protest.Protocols.Snmp;
 
@@ -440,8 +441,9 @@ internal static partial class Polling {
         static char GetHexChar(int value) => (char)(value < 10 ? '0' + value : 'A' + (value - 10));
     }
 
-    internal static (IList<Variable>, SnmpProfiles.Profile) SnmpQueryTrialAndError(IPAddress target, SnmpProfiles.Profile[] snmpProfiles, string[] oids) {
+    internal static (IList<Variable>, SnmpProfiles.Profile) SnmpQueryTrialAndError(IPAddress target, SnmpProfiles.Profile[] snmpProfiles, string[] oids, CancellationToken token) {
         for (int i = 0; i < snmpProfiles.Length; i++) {
+            if (token.IsCancellationRequested) return (null, null);
             IList<Variable> result = SnmpQuery(target, snmpProfiles[i], oids, Polling.SnmpOperation.Get);
 
             if (result is not null) {
@@ -457,15 +459,13 @@ internal static partial class Polling {
 
         if (profile.version == 3) {
             try {
-                IList<Variable> result = Protocols.Snmp.Polling.SnmpRequestV3(
+                return Protocols.Snmp.Polling.SnmpRequestV3(
                     target,
                     3000,
                     profile,
                     oids,
                     operation
                 );
-
-                return result;
             }
             catch {
                 return null;

@@ -812,7 +812,7 @@ internal static class Auth {
             return "{\"error\":\"failed to write user file.\"}"u8.ToArray();
         }
 
-        Logger.Action(origin, "AAA", $"Save RBAC for {username}");
+        Logger.Action(origin, "AAA", $"Save RBAC entry for {username}");
 
         KeepAlive.Unicast(username, $"{{\"action\":\"update-rbac\",\"authorization\":[{permissionsString}]}}", "/global");
 
@@ -852,7 +852,7 @@ internal static class Auth {
             return "{\"error\":\"failed to write user file.\"}"u8.ToArray();
         }
 
-        Logger.Action(origin, "AAA", $"Delete RBAC for {username}");
+        Logger.Action(origin, "AAA", $"Delete RBAC entry for {username}");
 
         return "{\"status\":\"ok\"}"u8.ToArray();
     }

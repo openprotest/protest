@@ -239,7 +239,7 @@ internal static class PortScan {
                         int from = i;
                         int to = Math.Min(i + 255, portTo);
 
-                        Task<bool[]> s = PortsScanAsync(host, from, to, timeout, useRemoteNetstat);
+                        Task<bool[]> s = PortsScanAsync(host, from, to, timeout, useRemoteNetstat, CancellationToken.None);
                         s.Wait();
 
                         for (int port = 0; port < s.Result.Length; port++) {
@@ -295,7 +295,7 @@ internal static class PortScan {
         }
     }
 
-    public static async Task<bool[]> PortsScanAsync(string host, short[] ports, int timeout, bool useRemoteNetstat) {
+    public static async Task<bool[]> PortsScanAsync(string host, short[] ports, int timeout, bool useRemoteNetstat, CancellationToken token) {
         if (useRemoteNetstat && OperatingSystem.IsWindows()) {
             int[] q = RemoteNetstat(host);
             if (q is not null) {
@@ -309,13 +309,14 @@ internal static class PortScan {
 
         List<Task<bool>> tasks = new List<Task<bool>>(ports.Length);
         for (int i = 0; i < ports.Length; i++) {
+            if (token.IsCancellationRequested) break;
             tasks.Add(PortScanAsync(host, ports[i], timeout));
         }
         bool[] result = await Task.WhenAll(tasks);
         return result;
     }
 
-    public static async Task<bool[]> PortsScanAsync(string host, int from, int to, int timeout, bool useRemoteNetstat) {
+    public static async Task<bool[]> PortsScanAsync(string host, int from, int to, int timeout, bool useRemoteNetstat, CancellationToken token) {
         if (useRemoteNetstat && OperatingSystem.IsWindows()) {
             int[] q = RemoteNetstat(host);
             if (q is not null) {
@@ -329,6 +330,7 @@ internal static class PortScan {
 
         List<Task<bool>> tasks = new List<Task<bool>>(to - from + 1);
         for (int port = from; port <= to; port++) {
+            if (token.IsCancellationRequested) break;
             tasks.Add(PortScanAsync(host, port, timeout));
         }
         bool[] result = await Task.WhenAll(tasks);
