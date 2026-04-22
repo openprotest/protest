@@ -399,8 +399,10 @@ internal static class PortScan {
                 if (split[3] == "CLOSED" || split[3] == "CLOSE_WAIT" || split[3] == "BOUND") continue;
                 //if (split[0] != "TCP") continue; //only tcp
 
-                if (!int.TryParse(split[1].Split(':')[^1], out int port)) continue;
-                if (port >= 49152) continue; //public ports
+                string[] colonSplit = split[1].Split(':');
+                if (colonSplit.Length < 2) continue;
+                if (!int.TryParse(colonSplit[^1], out int port)) continue;
+                if (port >= 49152) continue; //ephemeral/dynamic ports
 
                 if (!ports.Contains(port)) ports.Add(port);
             }
