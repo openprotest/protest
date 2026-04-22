@@ -200,7 +200,8 @@ internal static class PortScan {
                 string[] message = Encoding.Default.GetString(buff, 0, receiveResult.Count).Trim().Split(';');
 
                 string host = message[0].Trim();
-                if (host.Length == 0) {
+
+                if (String.IsNullOrEmpty(host)) {
                     try {
                         await writeSemaphore.WaitAsync();
                         await ws.SendAsync(Data.CODE_INVALID_ARGUMENT, WebSocketMessageType.Text, true, CancellationToken.None);
@@ -217,13 +218,22 @@ internal static class PortScan {
                 bool useRemoteNetstat = false;
 
                 if (message.Length > 2) {
-                    portFrom = int.Parse(message[1]);
-                    portTo = int.Parse(message[2]);
+                    if (!int.TryParse(message[1], out portFrom)) {
+                        portFrom = 1;
+                    }
+
+                    if (int.TryParse(message[2], out portTo)) {
+                        portTo = 1023;
+                    }
                 }
 
                 if (message.Length > 4) {
-                    timeout = int.Parse(message[3]);
-                    useRemoteNetstat = message[4].Equals("true", StringComparison.OrdinalIgnoreCase);
+                    if (int.TryParse(message[3], out timeout)) {
+                        timeout = 2000;
+                    }
+                    if (bool.TryParse(message[4], out useRemoteNetstat)) {
+                        useRemoteNetstat = false;
+                    }
                 }
 
                 if (portFrom > portTo) {
