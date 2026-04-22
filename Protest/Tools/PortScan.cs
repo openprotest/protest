@@ -259,8 +259,7 @@ internal static class PortScan {
                             bool[] scanResult = await PortsScanAsync(host, from, to, timeout, useRemoteNetstat, tokenSource.Token);
 
                             for (int port = 0; port < scanResult.Length; port++) {
-                                if (!scanResult[port])
-                                    continue;
+                                if (!scanResult[port]) continue;
                                 builder.Append($"{(port + from)}{(char)127}");
                             }
 
@@ -276,17 +275,18 @@ internal static class PortScan {
                                 }
                             }
                         }
+
+                        string done = $"done{((char)127)}{host}";
+                        try {
+                            await writeSemaphore.WaitAsync();
+                            await ws.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(done), 0, done.Length), WebSocketMessageType.Text, true, CancellationToken.None);
+                        }
+                        finally {
+                            writeSemaphore.Release();
+                        }
                     }
                     finally {
                         tokenSource.Dispose();
-                    }
-                    string done = "done" + ((char)127) + host;
-                    try {
-                        await writeSemaphore.WaitAsync();
-                        await ws.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(done), 0, done.Length), WebSocketMessageType.Text, true, CancellationToken.None);
-                    }
-                    finally {
-                        writeSemaphore.Release();
                     }
                 });
             }
@@ -362,6 +362,7 @@ internal static class PortScan {
 
         try {
             using TcpClient client = new TcpClient();
+            client.LingerState = new LingerOption(false, 0);
             await client.ConnectAsync(host, port, tokenSource.Token);
             return client.Connected;
         }
