@@ -549,13 +549,21 @@ internal static class LiveStats {
         foreach (KeyValuePair<string, string> pair in parsedResult) {
             if (!pair.Key.StartsWith(Oid.INT_1D_TP_FDB)) continue;
             if (!int.TryParse(pair.Value, out int port)) continue;
-            string mac = String.Join(String.Empty, pair.Key.Split('.').TakeLast(6).Select(o=>int.Parse(o).ToString("x2")));
 
-            if (macTable.ContainsKey(port)) {
+            string[] oidSplit = pair.Key.Split('.');
+            if (oidSplit.Length < 6) continue;
+
+            int[] parts = oidSplit
+                .Skip(oidSplit.Length - 6)
+                .Select(s => int.TryParse(s, out int part) && part>=0  && part>=255 ? part : -1)
+                .ToArray();
+
+            if (parts.Any(part => part < 0)) continue;
+
+            string mac = string.Concat(parts.Select(p => p.ToString("x2")));
+
+            if (!macTable.TryAdd(port, mac)) {
                 macTable[port] = null;
-            }
-            else {
-                macTable.Add(port,  mac);
             }
         }
 
