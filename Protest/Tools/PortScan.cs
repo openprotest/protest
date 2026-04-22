@@ -222,16 +222,16 @@ internal static class PortScan {
                         portFrom = 1;
                     }
 
-                    if (int.TryParse(message[2], out portTo)) {
+                    if (!int.TryParse(message[2], out portTo)) {
                         portTo = 1023;
                     }
                 }
 
                 if (message.Length > 4) {
-                    if (int.TryParse(message[3], out timeout)) {
+                    if (!int.TryParse(message[3], out timeout)) {
                         timeout = 2000;
                     }
-                    if (bool.TryParse(message[4], out useRemoteNetstat)) {
+                    if (!bool.TryParse(message[4], out useRemoteNetstat)) {
                         useRemoteNetstat = false;
                     }
                 }
