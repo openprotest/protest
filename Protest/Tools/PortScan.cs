@@ -230,12 +230,12 @@ internal static class PortScan {
                     (portTo, portFrom) = (portFrom, portTo);
                 }
 
-                CancellationTokenSource scanCts = new CancellationTokenSource();
+                using CancellationTokenSource tokenSource = new CancellationTokenSource();
 
                 _ = Task.Run(async () => {
                     for (int i = portFrom; i <= portTo; i += 256) {
                         if (ws.State != WebSocketState.Open) {
-                            scanCts.Cancel();
+                            tokenSource.Cancel();
                             return;
                         }
 
@@ -244,7 +244,7 @@ internal static class PortScan {
                         int from = i;
                         int to = Math.Min(i + 255, portTo);
 
-                        Task<bool[]> scanResult = PortsScanAsync(host, from, to, timeout, useRemoteNetstat, scanCts.Token);
+                        Task<bool[]> scanResult = PortsScanAsync(host, from, to, timeout, useRemoteNetstat, tokenSource.Token);
                         scanResult.Wait();
 
                         for (int port = 0; port < scanResult.Result.Length; port++) {
@@ -256,8 +256,8 @@ internal static class PortScan {
                             string ports = builder.ToString();
                             string result = host + (char)127 + ports;
                             try {
-                                await writeSemaphore.WaitAsync(scanCts.Token);
-                                await ws.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(result), 0, result.Length), WebSocketMessageType.Text, true, scanCts.Token);
+                                await writeSemaphore.WaitAsync(tokenSource.Token);
+                                await ws.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(result), 0, result.Length), WebSocketMessageType.Text, true, tokenSource.Token);
                             }
                             finally {
                                 writeSemaphore.Release();
@@ -267,8 +267,8 @@ internal static class PortScan {
 
                     string done = "done" + ((char)127) + host;
                     try {
-                        await writeSemaphore.WaitAsync(scanCts.Token);
-                        await ws.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(done), 0, done.Length), WebSocketMessageType.Text, true, scanCts.Token);
+                        await writeSemaphore.WaitAsync(tokenSource.Token);
+                        await ws.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(done), 0, done.Length), WebSocketMessageType.Text, true, tokenSource.Token);
                     }
                     finally {
                         writeSemaphore.Release();
@@ -288,7 +288,7 @@ internal static class PortScan {
 
         if (ws.State == WebSocketState.Open) {
             try {
-                await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, scanCts.Token);
+                await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
             }
 #if DEBUG
             catch (Exception ex) {
