@@ -1080,7 +1080,7 @@ class Fetch extends Tabs {
 		const conflictConditionInput = document.createElement("select");
 		conflictConditionInput.style.gridArea = "8 / 5";
 		conflictConditionInput.style.marginLeft = "0";
-		conflictConditionInput.style.width = "160px";
+		conflictConditionInput.style.width = "168px";
 		this.tabsPanel.appendChild(conflictConditionInput);
 		const conflictConditionCommentLabel = document.createElement("div");
 		conflictConditionCommentLabel.style.gridArea = "8 / 6 / auto / 8";
@@ -1132,7 +1132,7 @@ class Fetch extends Tabs {
 		const conflictInput = document.createElement("select");
 		conflictInput.style.gridArea = "9 / 5";
 		conflictInput.style.marginLeft = "0";
-		conflictInput.style.width = "160px";
+		conflictInput.style.width = "168px";
 		this.tabsPanel.appendChild(conflictInput);
 		const conflictCommentLabel = document.createElement("div");
 		conflictCommentLabel.style.gridArea = "9 / 6 / auto / 8";
