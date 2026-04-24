@@ -129,7 +129,7 @@ internal static class Topology {
                     }
 
                     if (options.Contains("mac")) {
-                        IList<Variable> dot1TpFdb = Polling.SnmpQuery(ipAddress, snmpProfile, [Oid.INT_1D_TP_FDB], Polling.SnmpOperation.Walk);
+                        IList<Variable> dot1TpFdb = Polling.SnmpQuery(ipAddress, snmpProfile, [Oid.DOT_1D_TP_FDB], Polling.SnmpOperation.Walk);
                         if (dot1TpFdb is not null && dot1TpFdb.Count > 0) {
                             byte[] response = ComputeDot1TpFdbResponse(candidate.filename, dot1TpFdb);
                             try {
@@ -185,7 +185,7 @@ internal static class Topology {
                     }
 
                     if (options.Contains("speed")) {
-                        IList<Variable> speed = Polling.SnmpQuery(ipAddress, snmpProfile, [Oid.INT_SPEED], Polling.SnmpOperation.Walk);
+                        IList<Variable> speed = Polling.SnmpQuery(ipAddress, snmpProfile, [Oid.IF_HC_SPEED], Polling.SnmpOperation.Walk);
                         if (speed is not null && speed.Count > 0) {
                             byte[] response = ComputeSpeedResponse(candidate.filename, speed);
                             try {
@@ -363,7 +363,7 @@ internal static class Topology {
 
         Dictionary<int, List<string>> macTable = new Dictionary<int, List<string>>();
         foreach (KeyValuePair<string, string> pair in parsedResult) {
-            if (!pair.Key.StartsWith(Oid.INT_1D_TP_FDB)) continue;
+            if (!pair.Key.StartsWith(Oid.DOT_1D_TP_FDB)) continue;
             if (!int.TryParse(pair.Value, out int port)) continue;
 
             string mac = ExtractMacFromOid(pair.Key);
@@ -428,10 +428,10 @@ internal static class Topology {
             string oid = dot1q[i].Id.ToString();
             if (!int.TryParse(oid.Split('.')[^1], out int vlan)) continue;
 
-            if (oid.StartsWith(Protocols.Snmp.Oid.INT_1Q_STATIC_NAME)) {
+            if (oid.StartsWith(Protocols.Snmp.Oid.DOT_1Q_VLAN_STATIC_NAME)) {
                 names.Add(vlan, dot1q[i].Data.ToString());
             }
-            else if (oid.StartsWith(Protocols.Snmp.Oid.INT_1Q_VLAN_EGRESS) || oid.StartsWith(Protocols.Snmp.Oid.INT_1Q_VLAN_UNTAGGED)) {
+            else if (oid.StartsWith(Protocols.Snmp.Oid.DOT_1Q_VLAN_EGRESS) || oid.StartsWith(Protocols.Snmp.Oid.DOT_1Q_VLAN_STATIC_UNTAGGED)) {
                 byte[] raw = dot1q[i].Data.ToBytes();
 
                 int startIndex = GetPortBitmapStart(raw);
@@ -446,10 +446,10 @@ internal static class Topology {
 
                 string hex = PortsToHex(raw, startIndex, maxIndex);
 
-                if (oid.StartsWith(Protocols.Snmp.Oid.INT_1Q_VLAN_EGRESS)) {
+                if (oid.StartsWith(Protocols.Snmp.Oid.DOT_1Q_VLAN_EGRESS)) {
                     egress.Add(vlan, hex);
                 }
-                else if (oid.StartsWith(Protocols.Snmp.Oid.INT_1Q_VLAN_UNTAGGED)) {
+                else if (oid.StartsWith(Protocols.Snmp.Oid.DOT_1Q_VLAN_STATIC_UNTAGGED)) {
                     untagged.Add(vlan, hex);
                 }
             }
@@ -482,28 +482,28 @@ internal static class Topology {
         foreach (KeyValuePair<string, long> pair in parsedResult) {
             if (!int.TryParse(pair.Key.Split('.')[^1], out int index)) continue;
 
-            if (pair.Key.StartsWith(Protocols.Snmp.Oid.INT_TRAFFIC_BYTES_IN)) {
+            if (pair.Key.StartsWith(Protocols.Snmp.Oid.IF_HC_IN_OCTETS)) {
                 bytesIn.Add(index, pair.Value);
             }
-            else if (pair.Key.StartsWith(Protocols.Snmp.Oid.INT_TRAFFIC_PKTS_IN_UCAST)) {
+            else if (pair.Key.StartsWith(Protocols.Snmp.Oid.IF_HC_IN_UCAST_PKTS)) {
                 packetsInUnicast.Add(index, pair.Value);
             }
-            else if (pair.Key.StartsWith(Protocols.Snmp.Oid.INT_TRAFFIC_PKTS_IN_MCAST)) {
+            else if (pair.Key.StartsWith(Protocols.Snmp.Oid.IF_HC_IN_MCAST_PKTS)) {
                 packetsInMulticast.Add(index, pair.Value);
             }
-            else if (pair.Key.StartsWith(Protocols.Snmp.Oid.INT_TRAFFIC_PKTS_IN_BCAST)) {
+            else if (pair.Key.StartsWith(Protocols.Snmp.Oid.IF_HC_IN_BCAST_PKTS)) {
                 packetsInBroadcast.Add(index, pair.Value);
             }
-            else if (pair.Key.StartsWith(Protocols.Snmp.Oid.INT_TRAFFIC_BYTES_OUT)) {
+            else if (pair.Key.StartsWith(Protocols.Snmp.Oid.IF_HC_OUT_OCTETS)) {
                 bytesOut.Add(index, pair.Value);
             }
-            else if (pair.Key.StartsWith(Protocols.Snmp.Oid.INT_TRAFFIC_PKTS_OUT_UCAST)) {
+            else if (pair.Key.StartsWith(Protocols.Snmp.Oid.IF_HC_OUT_UCAST_PKTS)) {
                 packetsOutUnicast.Add(index, pair.Value);
             }
-            else if (pair.Key.StartsWith(Protocols.Snmp.Oid.INT_TRAFFIC_PKTS_OUT_MCAST)) {
+            else if (pair.Key.StartsWith(Protocols.Snmp.Oid.IF_HC_OUT_MCAST_PKTS)) {
                 packetsOutMulticast.Add(index, pair.Value);
             }
-            else if (pair.Key.StartsWith(Protocols.Snmp.Oid.INT_TRAFFIC_PKTS_OUT_BCAST)) {
+            else if (pair.Key.StartsWith(Protocols.Snmp.Oid.IF_HC_OUT_BCAST_PKTS)) {
                 packetsOutBroadcast.Add(index, pair.Value);
             }
         }
@@ -534,10 +534,10 @@ internal static class Topology {
         foreach (KeyValuePair<string, string> pair in parsedResult) {
             if (!int.TryParse(pair.Key.Split('.')[^1], out int index)) continue;
 
-            if (pair.Key.StartsWith(Protocols.Snmp.Oid.INT_ERROR_IN)) {
+            if (pair.Key.StartsWith(Protocols.Snmp.Oid.IF_IN_ERROR)) {
                 errIn.Add(index, int.TryParse(pair.Value, out int errCount) ? errCount : 0);
             }
-            else if (pair.Key.StartsWith(Protocols.Snmp.Oid.INT_ERROR_OUT)) {
+            else if (pair.Key.StartsWith(Protocols.Snmp.Oid.IF_OUT_ERROR)) {
                 errOut.Add(index, int.TryParse(pair.Value, out int errCount) ? errCount : 0);
             }
         }

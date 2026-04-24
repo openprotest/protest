@@ -547,7 +547,7 @@ internal static class LiveStats {
 
         Dictionary<int, string> macTable = new Dictionary<int, string>();
         foreach (KeyValuePair<string, string> pair in parsedResult) {
-            if (!pair.Key.StartsWith(Oid.INT_1D_TP_FDB)) continue;
+            if (!pair.Key.StartsWith(Oid.DOT_1D_TP_FDB)) continue;
             if (!int.TryParse(pair.Value, out int port)) continue;
 
             string[] oidSplit = pair.Key.Split('.');
@@ -570,28 +570,28 @@ internal static class LiveStats {
         foreach (KeyValuePair<string, string> pair in parsedResult) {
             if (!int.TryParse(pair.Key.Split('.')[^1], out int index)) continue;
 
-            if (pair.Key.StartsWith(Protocols.Snmp.Oid.INT_TYPE)) {
+            if (pair.Key.StartsWith(Protocols.Snmp.Oid.IF_TYPE)) {
                 typeDic.Add(index, pair.Value);
             }
-            else if (pair.Key.StartsWith(Protocols.Snmp.Oid.INT_SPEED)) {
+            else if (pair.Key.StartsWith(Protocols.Snmp.Oid.IF_HC_SPEED)) {
                 speedDic.Add(index, pair.Value);
             }
-            else if (pair.Key.StartsWith(Protocols.Snmp.Oid.INT_1Q_VLAN)) {
+            else if (pair.Key.StartsWith(Protocols.Snmp.Oid.DOT_1Q_PVLAN)) {
                 untaggedDic.Add(index, short.TryParse(pair.Value, out short v) ? v : (short)0);
             }
-            else if (pair.Key.StartsWith(Protocols.Snmp.Oid.INT_STATUS)) {
+            else if (pair.Key.StartsWith(Protocols.Snmp.Oid.IF_STATUS)) {
                 statusDic.Add(index, byte.TryParse(pair.Value, out byte v) ? v : (byte)0);
             }
-            else if (pair.Key.StartsWith(Protocols.Snmp.Oid.INT_TRAFFIC_BYTES_IN)) {
+            else if (pair.Key.StartsWith(Protocols.Snmp.Oid.IF_HC_IN_OCTETS)) {
                 trafficInDic.Add(index, long.TryParse(pair.Value, out long v) ? v : 0);
             }
-            else if (pair.Key.StartsWith(Protocols.Snmp.Oid.INT_TRAFFIC_BYTES_OUT)) {
+            else if (pair.Key.StartsWith(Protocols.Snmp.Oid.IF_HC_OUT_OCTETS)) {
                 trafficOutDic.Add(index, long.TryParse(pair.Value, out long v) ? v : 0);
             }
-            else if (pair.Key.StartsWith(Protocols.Snmp.Oid.INT_ERROR_IN)) {
+            else if (pair.Key.StartsWith(Protocols.Snmp.Oid.IF_IN_ERROR)) {
                 errorInDic.Add(index, int.TryParse(pair.Value, out int v) ? v : 0);
             }
-            else if (pair.Key.StartsWith(Protocols.Snmp.Oid.INT_ERROR_OUT)) {
+            else if (pair.Key.StartsWith(Protocols.Snmp.Oid.IF_OUT_ERROR)) {
                 errorOutDic.Add(index, int.TryParse(pair.Value, out int v) ? v : 0);
             }
         }
@@ -599,7 +599,7 @@ internal static class LiveStats {
         Dictionary<short, List<int>> taggedMap = new Dictionary<short, List<int>>();
         for (int i = 0; i < result.Count; i++) {
             string oid = result[i].Id.ToString();
-            if (!oid.StartsWith(Oid.INT_1Q_VLAN_EGRESS)) continue;
+            if (!oid.StartsWith(Oid.DOT_1Q_VLAN_EGRESS)) continue;
 
             int dotIndex = oid.LastIndexOf('.');
             if (dotIndex == -1) continue;

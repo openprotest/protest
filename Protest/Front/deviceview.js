@@ -3255,27 +3255,28 @@ class DeviceView extends View {
 
 	InitInterfaceComponents(frame, numbering, list) {
 		let rows = 1, columns = 4;
-		if (list.length > 0) {
-			if (list.length % 48 === 0) {
-				columns = 24;
-				rows = Math.ceil(list.length / columns);
-			}
-			else if (list.length % 52 === 0) {
-				columns = 26;
-				rows = Math.ceil(list.length / columns);
-			}
-			else if (list.length < 16) {
-				rows = 1;
-				columns = list.length;
-			}
-			else if (list.length <= 52) {
-				rows = 2;
-				columns = Math.ceil(list.length / 2);
-			}
-			else {
-				rows = Math.ceil(list.length / 26);
-				columns = Math.ceil(list.length / rows);
-			}
+
+		if (list.length === 0) return {rows:1, columns:1};
+
+		if (list.length % 48 === 0) {
+			columns = 24;
+			rows = Math.ceil(list.length / columns);
+		}
+		else if (list.length % 52 === 0) {
+			columns = 26;
+			rows = Math.ceil(list.length / columns);
+		}
+		else if (list.length < 16) {
+			rows = 1;
+			columns = list.length;
+		}
+		else if (list.length <= 52) {
+			rows = 2;
+			columns = Math.ceil(list.length / 2);
+		}
+		else {
+			rows = Math.ceil(list.length / 26);
+			columns = Math.ceil(list.length / rows);
 		}
 
 		for (let i=0; i<list.length; i++) {

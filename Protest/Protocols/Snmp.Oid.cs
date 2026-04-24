@@ -15,26 +15,26 @@ internal static class Oid {
     };
 
     public static readonly string[] SWITCH_OID = new string[] {
-        INT_TYPE,
-        INT_DESCRIPTOR,
-        INT_ALIAS,
-        INT_SPEED,
-        INT_1Q_VLAN,
-        INT_1Q_VLAN_EGRESS,
-        INT_1D_TP_FDB,
+        IF_TYPE,
+        IF_DESCRIPTOR,
+        IF_ALIAS,
+        IF_HC_SPEED,
+        DOT_1Q_PVLAN,
+        DOT_1Q_VLAN_EGRESS,
+        DOT_1D_TP_FDB,
     };
 
     public static readonly string[] LIVEVIEW_SWITCH_OID = new string[] {
-        INT_TYPE,
-        INT_SPEED,
-        INT_1Q_VLAN,
-        INT_1Q_VLAN_EGRESS,
-        INT_STATUS,
-        INT_TRAFFIC_BYTES_IN,
-        INT_TRAFFIC_BYTES_OUT,
-        INT_ERROR_IN,
-        INT_ERROR_OUT,
-        INT_1D_TP_FDB,
+        IF_TYPE,
+        IF_HC_SPEED,
+        DOT_1Q_PVLAN,
+        DOT_1Q_VLAN_EGRESS,
+        IF_STATUS,
+        IF_HC_IN_OCTETS,
+        IF_HC_OUT_OCTETS,
+        IF_IN_ERROR,
+        IF_OUT_ERROR,
+        DOT_1D_TP_FDB,
     };
 
     public static readonly string[] LIVESTATS_OID = new string[] {
@@ -57,38 +57,40 @@ internal static class Oid {
     };
 
     public static readonly string[] LIFELINE_SWITCH_OID = new string[] {
-        INT_TYPE,
-        INT_TRAFFIC_BYTES_IN,
-        INT_TRAFFIC_BYTES_OUT,
-        INT_ERROR_IN,
-        INT_ERROR_OUT,
+        IF_TYPE,
+        IF_HC_IN_OCTETS,
+        IF_HC_OUT_OCTETS,
+        IF_IN_ERROR,
+        IF_OUT_ERROR,
     };
 
     public static readonly string[] TOPOLOGY_DOT1Q = new string[] {
-        INT_1Q_STATIC_NAME,
-        INT_1Q_VLAN_EGRESS,
-        INT_1Q_VLAN_UNTAGGED,
+        DOT_1Q_VLAN_STATIC_NAME,
+        DOT_1Q_VLAN_EGRESS,
+        DOT_1Q_VLAN_STATIC_UNTAGGED,
     };
 
     public static readonly string[] TOPOLOGY_TRAFFIC = new string[] {
-        INT_TRAFFIC_BYTES_IN,
-        INT_TRAFFIC_PKTS_IN_UCAST,
-        INT_TRAFFIC_PKTS_IN_MCAST,
-        INT_TRAFFIC_PKTS_IN_BCAST,
-        INT_TRAFFIC_BYTES_OUT,
-        INT_TRAFFIC_PKTS_OUT_UCAST,
-        INT_TRAFFIC_PKTS_OUT_MCAST,
-        INT_TRAFFIC_PKTS_OUT_BCAST,
+        IF_HC_IN_OCTETS,
+        IF_HC_IN_UCAST_PKTS,
+        IF_HC_IN_MCAST_PKTS,
+        IF_HC_IN_BCAST_PKTS,
+        IF_HC_OUT_OCTETS,
+        IF_HC_OUT_UCAST_PKTS,
+        IF_HC_OUT_MCAST_PKTS,
+        IF_HC_OUT_BCAST_PKTS,
     };
 
     public static readonly string[] TOPOLOGY_ERROR = new string[] {
-        INT_ERROR_IN,
-        INT_ERROR_OUT,
+        IF_IN_ERROR,
+        IF_OUT_ERROR,
     };
 
 
-    public const string LLDP_LOCAL_SYS_DATA  = "1.0.8802.1.1.2.1.3";
-    public const string LLDP_REMOTE_SYS_DATA = "1.0.8802.1.1.2.1.4";
+    public const string LLDP_LOCAL_SYS_DATA        = "1.0.8802.1.1.2.1.3";
+    public const string LLDP_LOCAL_CHASSIS_ID_TYPE = "1.0.8802.1.1.2.1.3.1.0";
+    public const string LLDP_LOCAL_CHASSIS_ID      = "1.0.8802.1.1.2.1.3.2.0";
+    public const string LLDP_REMOTE_SYS_DATA       = "1.0.8802.1.1.2.1.4";
 
     public const string SYSTEM_DESCRIPTOR = "1.3.6.1.2.1.1.1.0";
     public const string SYSTEM_OBJECT_ID  = "1.3.6.1.2.1.1.2.0";
@@ -98,45 +100,41 @@ internal static class Oid {
     public const string SYSTEM_LOCATION   = "1.3.6.1.2.1.1.6.0";
     public const string SYSTEM_SERVICES   = "1.3.6.1.2.1.1.7.0";
 
-    public const string INT_TOTAL       = "1.3.6.1.2.1.2.1.0";
-    public const string INT_DESCRIPTOR  = "1.3.6.1.2.1.2.2.1.2";
-    public const string INT_TYPE        = "1.3.6.1.2.1.2.2.1.3";
-    //public const string INT_SPEED     = "1.3.6.1.2.1.2.2.1.5";
-    public const string INT_SPEED       = "1.3.6.1.2.1.31.1.1.1.15";
-    public const string INT_ENABLE      = "1.3.6.1.2.1.2.2.1.7";
-    public const string INT_STATUS      = "1.3.6.1.2.1.2.2.1.8";
-    //public const string INT_TRAFFIC_IN  = "1.3.6.1.2.1.2.2.1.10";
-    public const string INT_ERROR_IN    = "1.3.6.1.2.1.2.2.1.14";
-    //public const string INT_TRAFFIC_OUT = "1.3.6.1.2.1.2.2.1.16";
-    public const string INT_ERROR_OUT   = "1.3.6.1.2.1.2.2.1.20";
+    public const string IF_NUMBER      = "1.3.6.1.2.1.2.1.0";
+    public const string IF_DESCRIPTOR  = "1.3.6.1.2.1.2.2.1.2";
+    public const string IF_TYPE        = "1.3.6.1.2.1.2.2.1.3";
+    public const string IF_SPEED       = "1.3.6.1.2.1.2.2.1.5";
+    public const string IF_ENABLE      = "1.3.6.1.2.1.2.2.1.7";
+    public const string IF_STATUS      = "1.3.6.1.2.1.2.2.1.8";
+    //public const string IF_IN_OCTETS   = "1.3.6.1.2.1.2.2.1.10";
+    public const string IF_IN_ERROR    = "1.3.6.1.2.1.2.2.1.14";
+    //public const string IF_OUT_OCTETS  = "1.3.6.1.2.1.2.2.1.16";
+    public const string IF_OUT_ERROR   = "1.3.6.1.2.1.2.2.1.20";
 
-    public const string INT_1D_TP_FDB        = "1.3.6.1.2.1.17.4.3.1.2";
+    public const string DOT_1D_TP_FDB               = "1.3.6.1.2.1.17.4.3.1.2";
+    public const string DOT_1Q_VLAN_EGRESS          = "1.3.6.1.2.1.17.7.1.4.2.1.4";
+    public const string DOT_1Q_VLAN_STATIC_NAME     = "1.3.6.1.2.1.17.7.1.4.3.1.1";
+    //public const string DOT_1Q_VLAN_STATIS_EGRESS   = "1.3.6.1.2.1.17.7.1.4.3.1.2";
+    public const string DOT_1Q_VLAN_STATIC_UNTAGGED = "1.3.6.1.2.1.17.7.1.4.3.1.4";
+    public const string DOT_1Q_PVLAN                = "1.3.6.1.2.1.17.7.1.4.5.1.1";
 
-    public const string INT_1Q_VLAN_EGRESS   = "1.3.6.1.2.1.17.7.1.4.2.1.4";
-    public const string INT_1Q_STATIC_NAME   = "1.3.6.1.2.1.17.7.1.4.3.1.1";
-    //public const string INT_1Q_BRIDGE        = "1.3.6.1.2.1.17.7.1.4.3.1.2";
-    public const string INT_1Q_VLAN_UNTAGGED = "1.3.6.1.2.1.17.7.1.4.3.1.4";
-    public const string INT_1Q_VLAN          = "1.3.6.1.2.1.17.7.1.4.5.1.1";
-    public const string INT_ALIAS            = "1.3.6.1.2.1.31.1.1.1.18";
+    public const string IF_HC_IN_OCTETS             = "1.3.6.1.2.1.31.1.1.1.6";
+    public const string IF_HC_IN_UCAST_PKTS         = "1.3.6.1.2.1.31.1.1.1.7";
+    public const string IF_HC_IN_MCAST_PKTS         = "1.3.6.1.2.1.31.1.1.1.8";
+    public const string IF_HC_IN_BCAST_PKTS         = "1.3.6.1.2.1.31.1.1.1.9";
+    public const string IF_HC_OUT_OCTETS            = "1.3.6.1.2.1.31.1.1.1.10";
+    public const string IF_HC_OUT_UCAST_PKTS        = "1.3.6.1.2.1.31.1.1.1.11";
+    public const string IF_HC_OUT_MCAST_PKTS        = "1.3.6.1.2.1.31.1.1.1.12";
+    public const string IF_HC_OUT_BCAST_PKTS        = "1.3.6.1.2.1.31.1.1.1.13";
+    public const string IF_HC_SPEED                 = "1.3.6.1.2.1.31.1.1.1.15";
+    public const string IF_HC_CONNECTOR_PRESENT     = "1.3.6.1.2.1.31.1.1.1.17";
+    public const string IF_ALIAS                    = "1.3.6.1.2.1.31.1.1.1.18";
 
-    public const string INT_TRAFFIC_BYTES_IN       = "1.3.6.1.2.1.31.1.1.1.6";
-    public const string INT_TRAFFIC_PKTS_IN_UCAST  = "1.3.6.1.2.1.31.1.1.1.7";
-    public const string INT_TRAFFIC_PKTS_IN_MCAST  = "1.3.6.1.2.1.31.1.1.1.8";
-    public const string INT_TRAFFIC_PKTS_IN_BCAST  = "1.3.6.1.2.1.31.1.1.1.9";
-    public const string INT_TRAFFIC_BYTES_OUT      = "1.3.6.1.2.1.31.1.1.1.10";
-    public const string INT_TRAFFIC_PKTS_OUT_UCAST = "1.3.6.1.2.1.31.1.1.1.11";
-    public const string INT_TRAFFIC_PKTS_OUT_MCAST = "1.3.6.1.2.1.31.1.1.1.12";
-    public const string INT_TRAFFIC_PKTS_OUT_BCAST = "1.3.6.1.2.1.31.1.1.1.13";
+    public const string IF_PHYS_ADDRESS     = "1.3.6.1.2.1.2.2.1.6";
+    public const string IF_IP_ADDRESS_ENTRY = "1.3.6.1.2.1.4.20.1.1";
 
-
-    public const string INT_MAC       = "1.3.6.1.2.1.2.2.1.6";
-    public const string INTERFACE_IP  = "1.3.6.1.2.1.4.20.1.1";
-    public const string ROUTING_TABLE = "1.3.6.1.2.1.4.21";
-    public const string ARP_TABLE     = "1.3.6.1.2.1.4.22.1";
-
-    public const string TCP_CONNECTIONS = "1.3.6.1.2.1.6.9.0";
-    public const string UDP_RECEIVED    = "1.3.6.1.2.1.7.1.0";
-    public const string UDP_SENT        = "1.3.6.1.2.1.7.4.0";
+    public const string IP_ROUTING_TABLE      = "1.3.6.1.2.1.4.21";
+    public const string IP_NET_TO_MEDIA_TABLE = "1.3.6.1.2.1.4.22";
 
     public const string DISK_TOTAL              = "1.3.6.1.2.1.25.2.3.1.5";
     public const string DISK_USED               = "1.3.6.1.2.1.25.2.3.1.6";
@@ -172,5 +170,4 @@ internal static class Oid {
     public const string PRINTER_TRAYS        = "1.3.6.1.2.1.43.8.2.1.18";
 
     public const string PRINTER_JOBS = "1.3.6.1.4.1.11.2.3.9.4.2.1.1.6.5.1";
-
 }

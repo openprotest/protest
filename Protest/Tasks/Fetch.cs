@@ -421,19 +421,21 @@ internal static class Fetch {
             }
 
             if (token.IsCancellationRequested) return null;
-            IList<Variable> macAddressResult = Protocols.Snmp.Polling.SnmpQuery(ipAddress, profile, [Protocols.Snmp.Oid.INT_MAC], Polling.SnmpOperation.Walk);
-            
-            if (macAddressResult is not null) {
-                List<string> macAddresses = macAddressResult
-                    .Select(o => o.Data.ToBytes())
-                    .Where(o => o.Length == 8)
-                    .Where(o => o[2]>0 && o[3]>0 && o[4]>0 && o[5]>0 && o[6]>0 && o[7]>0)
-                    .Select(o => BitConverter.ToString(o, 2).Replace('-', ':'))
-                    .Distinct()
-                    .ToList();
 
-                if (macAddresses.Count > 0) {
-                    data.TryAdd("mac address", new string[] { String.Join("; ", macAddresses), "SNMP", string.Empty });
+            if (!data.ContainsKey("mac address")) {
+                IList<Variable> macAddressResult = Protocols.Snmp.Polling.SnmpQuery(ipAddress, profile, [Protocols.Snmp.Oid.LLDP_LOCAL_SYS_DATA], Polling.SnmpOperation.Walk);
+            
+                if (macAddressResult is not null) {
+                    Dictionary<string, byte[]> parsed = Protocols.Snmp.Polling.ParseResponseBytes(macAddressResult);
+                    if (parsed.TryGetValue(Protocols.Snmp.Oid.LLDP_LOCAL_CHASSIS_ID_TYPE, out byte[] chassisIdType)
+                        && chassisIdType.Length >= 3 && chassisIdType[2] == 4
+                        && parsed.TryGetValue(Protocols.Snmp.Oid.LLDP_LOCAL_CHASSIS_ID, out byte[] chassisId)
+                        && chassisId.Length == 8
+                        && chassisId.Any(o => o != 0)) {
+
+                        string macAddress = BitConverter.ToString(chassisId, 2).Replace('-', ':');
+                        data.TryAdd("mac address", new string[] { String.Join("; ", macAddress), "SNMP", string.Empty });
+                    }
                 }
             }
 

@@ -7,6 +7,7 @@ using Lextm.SharpSnmpLib;
 using Lextm.SharpSnmpLib.Messaging;
 using Lextm.SharpSnmpLib.Security;
 using System.Threading;
+using Org.BouncyCastle.Utilities;
 
 namespace Protest.Protocols.Snmp;
 
@@ -260,6 +261,18 @@ internal static partial class Polling {
             string value = ParseVariable(result[i], preserveOctet);
             if (value is null) continue;
             data.Add(result[i].Id.ToString(), value);
+        }
+
+        return data;
+    }
+
+    internal static Dictionary<string, byte[]> ParseResponseBytes(IList<Variable> result, bool preserveOctet = false) {
+        if (result is null || result.Count == 0) return null;
+
+        Dictionary<string, byte[]> data = new Dictionary<string, byte[]>();
+
+        for (int i = 0; i < result.Count; i++) {
+            data.Add(result[i].Id.ToString(), result[i].Data.ToBytes());
         }
 
         return data;

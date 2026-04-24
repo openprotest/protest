@@ -603,7 +603,6 @@ button.view-live-button:active {
 	height: 28px;
 }
 
-
 .view-interfaces-edit-list-element > *:nth-child(1) {
 	width: 8px;
 	height: 22px;
@@ -615,7 +614,10 @@ button.view-live-button:active {
 	background-color: var(--clr-control);
 }
 .view-interfaces-edit-list-element > *:nth-child(2) {
-	width: 64px;
+	width: 72px;
+	margin-left: 2px;
+	padding-left: 2px;
+	padding-right: 2px;
 	font-size: small;
 }
 .view-interfaces-edit-list-element > *:nth-child(3) {
