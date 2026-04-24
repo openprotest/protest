@@ -50,7 +50,7 @@ internal static class Topology {
 
         List<Database.Entry> candidates = new List<Database.Entry>();
 
-        string[] types = ["firewall", "router", "switch"]; //"access point"
+        string[] types = ["firewall", "router", "switch"];
 
         foreach (KeyValuePair<string, Database.Entry> pair in DatabaseInstances.devices.dictionary) {
             Database.Entry device = pair.Value;
@@ -64,7 +64,7 @@ internal static class Topology {
             if (!SnmpProfiles.FromGuid(profileAttr.value, out SnmpProfiles.Profile snmpProfile) || snmpProfile is null) continue;
 
             string ipString = ipAttr.value.Split(";")[0].Trim();
-            if (!IPAddress.TryParse(ipString, out IPAddress ipAddress)) continue;
+            if (!IPAddress.TryParse(ipString, out _)) continue;
 
             candidates.Add(device);
         }
@@ -307,18 +307,22 @@ internal static class Topology {
 
         foreach (KeyValuePair<int, List<int>> pair in remoteChassisIdSubtype) {
             int index = pair.Key;
+
             if (!remoteChassisIdSubtype.TryGetValue(index, out List<int> chassisIdSubtype)) continue;
+
             if (!remoteChassisId.TryGetValue(index, out List<string> chassisId)) continue;
+            if (chassisId.Count != chassisIdSubtype.Count) continue;
+
             if (!remotePortIdSubtype.TryGetValue(index, out List<int> portIdSubtype)) continue;
+            if (portIdSubtype.Count != chassisIdSubtype.Count) continue;
+
             if (!remotePortId.TryGetValue(index, out List<string> portId)) continue;
+            if (portId.Count != chassisIdSubtype.Count) continue;
+
             if (!remoteSystemName.TryGetValue(index, out List<string> systemName)) continue;
+            if (systemName.Count != chassisIdSubtype.Count) continue;
 
             for (int i = 0; i < chassisIdSubtype.Count; i++) {
-                if (chassisId.Count != chassisIdSubtype.Count) continue;
-                if (portIdSubtype.Count != chassisIdSubtype.Count) continue;
-                if (portId.Count != chassisIdSubtype.Count) continue;
-                if (systemName.Count != chassisIdSubtype.Count) continue;
-
                 string match = GetDatabaseEntryByLldp(
                     chassisIdSubtype[i],
                     chassisId[i].ToLower(),

@@ -3254,10 +3254,9 @@ class DeviceView extends View {
 	}
 
 	InitInterfaceComponents(frame, numbering, list) {
-		let rows = 1, columns = 4;
-
 		if (list.length === 0) return {rows:1, columns:1};
-
+		
+		let rows = 1, columns = 4;
 		if (list.length % 48 === 0) {
 			columns = 24;
 			rows = Math.ceil(list.length / columns);
