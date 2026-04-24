@@ -288,18 +288,6 @@ class Fetch extends Tabs {
 		};
 
 		this.portScanInput.onchange = ()=> {
-			if (this.portScanInput.checked) {
-				this.portScanInput.disabled = false;
-				this.portScanInput.onchange();
-			}
-			else {
-				this.portScanInput.disabled = true;
-				this.portScanCommentLabel.textContent = "";
-			}
-		};
-
-		this.portScanInput.onchange = ()=> {
-
 			this.portScanCommentLabel.textContent = {
 				"basic"      : "Scan only common protocols",
 				"wellknown"  : "Scan ports 1 to 1023",
