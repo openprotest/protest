@@ -3287,7 +3287,8 @@ class DeviceView extends View {
 					row = (i % 2 === 0 ? 1 : 2) + stack * 2;
 					column = pairIndex % columns + 1;
 					list[i].frontElement.style.gridArea = `${row} / ${column}`;
-				} else {
+				}
+				else {
 					row = i % rows + 1;
 					column = Math.floor(i / rows) + 1;
 					list[i].frontElement.style.gridArea = `${row} / ${column}`;

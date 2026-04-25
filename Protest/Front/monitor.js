@@ -1819,7 +1819,8 @@ class Monitor extends Window {
 
 			if (values.length > 0 && values[0].length > 0) {
 				valueBox.textContent = values[0][0];
-			} else {
+			}
+			else {
 				valueBox.textContent = "--";
 			}
 		};

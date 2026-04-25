@@ -1,6 +1,7 @@
 class Terminal extends Window {
 	static CHAR_WIDTH = 8;
 	static CHAR_HEIGHT = 18;
+	static DEFAULT_SCROLLBACK = 1500;
 
 	static SPECIAL_KEYS = {
 		"Enter"      : "\r",
@@ -135,7 +136,8 @@ class Terminal extends Window {
 			ansi: true,
 			autoScroll: true,
 			bell: false,
-			smoothCursor: false
+			smoothCursor: false,
+			scrollback: Terminal.DEFAULT_SCROLLBACK
 		}, args);
 
 		this.AddCssDependencies("terminal.css");
@@ -150,6 +152,7 @@ class Terminal extends Window {
 	InitializeTerminalState() {
 		this.cursor = {x:0, y:0};
 		this.screen = {};
+		this.pendingSequence = "";
 
 		this.scrollRegionTop = null;
 		this.scrollRegionBottom = null;
@@ -162,6 +165,7 @@ class Terminal extends Window {
 		this.lineWrappingMode = false; //TODO:
 		this.insertMode = false; //TODO:
 		this.localEchoMode = false; //TODO:
+		this.appCursorKeys = false;
 		this.keypadApplicationMode = false; //TODO:
 		this.bracketedMode = false;
 	}
@@ -212,6 +216,56 @@ class Terminal extends Window {
 		this.strikethrough = false;
 	}
 
+	CaptureTextAttributes() {
+		return {
+			foreColor: this.foreColor,
+			backColor: this.backColor,
+			bold: this.bold,
+			faint: this.faint,
+			italic: this.italic,
+			underline: this.underline,
+			blinking: this.blinking,
+			fastBlinking: this.fastBlinking,
+			inverse: this.inverse,
+			hidden: this.hidden,
+			strikethrough: this.strikethrough
+		};
+	}
+
+	RestoreTextAttributes(attributes) {
+		if (!attributes) {
+			this.ResetTextAttributes();
+			return;
+		}
+
+		this.foreColor = attributes.foreColor;
+		this.backColor = attributes.backColor;
+		this.bold = attributes.bold;
+		this.faint = attributes.faint;
+		this.italic = attributes.italic;
+		this.underline = attributes.underline;
+		this.blinking = attributes.blinking;
+		this.fastBlinking = attributes.fastBlinking;
+		this.inverse = attributes.inverse;
+		this.hidden = attributes.hidden;
+		this.strikethrough = attributes.strikethrough;
+	}
+
+	SaveCursorState() {
+		this.savedCursorPos = {
+			x: this.cursor.x,
+			y: this.cursor.y,
+			attributes: this.CaptureTextAttributes()
+		};
+	}
+
+	RestoreCursorState() {
+		if (!this.savedCursorPos) return;
+		this.cursor.x = this.savedCursorPos.x;
+		this.cursor.y = this.savedCursorPos.y;
+		this.RestoreTextAttributes(this.savedCursorPos.attributes);
+	}
+
 	Close() { //overrides
 		if (this.ws != null) this.ws.close();
 		super.Close();
@@ -220,7 +274,7 @@ class Terminal extends Window {
 	ConnectDialog(target="", isNew=false) {} //overridable
 
 	OptionsDialog() {
-		const dialog = this.DialogBox("240px");
+		const dialog = this.DialogBox("320px");
 		if (dialog === null) return;
 
 		const {okButton, innerBox} = dialog;
@@ -243,14 +297,42 @@ class Terminal extends Window {
 
 		const smoothCursorToggle = this.CreateToggle("Smooth cursor", this.args.smoothCursor, innerBox);
 
+		innerBox.appendChild(document.createElement("br"));
+		innerBox.appendChild(document.createElement("br"));
+
+		const scrollbackLabel = document.createElement("div");
+		scrollbackLabel.style.display = "inline-block";
+		scrollbackLabel.style.minWidth = "140px";
+		scrollbackLabel.textContent = "Scroll-back limit:";
+		innerBox.appendChild(scrollbackLabel);
+
+		const scrollbackInput = document.createElement("input");
+		scrollbackInput.type = "number";
+		scrollbackInput.min = "0";
+		scrollbackInput.step = "100";
+		scrollbackInput.style.width = "96px";
+		scrollbackInput.value = `${this.GetScrollbackLimit()}`;
+		innerBox.appendChild(scrollbackInput);
+
+		const scrollbackSuffix = document.createElement("span");
+		scrollbackSuffix.textContent = " lines";
+		scrollbackSuffix.style.marginLeft = "8px";
+		innerBox.appendChild(scrollbackSuffix);
+
 		okButton.onclick = ()=> {
+			const scrollback = Number.parseInt(scrollbackInput.value, 10);
+
 			this.args.ansi = ansiToggle.checkbox.checked;
 			this.args.bell = bellToggle.checkbox.checked;
 			this.args.autoScroll = autoScrollToggle.checkbox.checked;
 			this.args.smoothCursor = smoothCursorToggle.checkbox.checked;
+			this.args.scrollback = Number.isNaN(scrollback) ? Terminal.DEFAULT_SCROLLBACK : Math.max(0, scrollback);
 			dialog.Close();
 
+			this.TrimHistory();
 			this.cursorElement.style.transition = this.args.smoothCursor ? ".1s" : "0s";
+			this.cursorElement.style.left = Terminal.CHAR_WIDTH * this.cursor.x + "px";
+			this.cursorElement.style.top = Terminal.CHAR_HEIGHT * this.cursor.y + "px";
 		};
 
 		setTimeout(()=>ansiToggle.label.focus(), 200);
@@ -384,7 +466,7 @@ class Terminal extends Window {
 
 		//TODO: if (this.keypadApplicationMode) {}
 
-		if (event.shift && Terminal.SHIFT_KEYS[event.code]) {
+		if (event.shiftKey && Terminal.SHIFT_KEYS[event.code]) {
 			this.ws.send(Terminal.SHIFT_KEYS[event.code]);
 		}
 		else if (event.ctrlKey && Terminal.CTRL_KEYS[event.code]) {
@@ -403,19 +485,15 @@ class Terminal extends Window {
 	}
 
 	HandleMessage(data) {
+		if (data.length === 0) return;
+
+		if (this.pendingSequence.length > 0) {
+			data = this.pendingSequence + data;
+			this.pendingSequence = "";
+		}
+
+		messageLoop:
 		for (let i=0; i<data.length; i++) {
-			let char = this.screen[`${this.cursor.x},${this.cursor.y}`];
-			let isNew = false;
-
-			if (!char) {
-				isNew = true;
-				char = document.createElement("span");
-				char.style.left = `${this.cursor.x * Terminal.CHAR_WIDTH}px`;
-				char.style.top = `${this.cursor.y * Terminal.CHAR_HEIGHT}px`;
-				this.content.appendChild(char);
-				this.screen[`${this.cursor.x},${this.cursor.y}`] = char;
-			}
-
 			switch (data[i]) {
 			case "\x07":
 				if (this.args.bell) this.Bell();
@@ -427,27 +505,29 @@ class Terminal extends Window {
 				this.cursor.x = Math.max(0, this.cursor.x - 1);
 				break;
 
-			//case "\x09": break; //tab
+			case "\x09": //horizontal tab
+				if (this.GetScreenWidth() > 0) {
+					this.cursor.x = Math.min(this.GetScreenWidth() - 1, Math.floor(this.cursor.x / 8) * 8 + 8);
+				}
+				break;
 
 			case "\n": //lf 0x0a
-				char.innerHTML = "<br>";
-				this.cursor.x = 0;
 				this.cursor.y++;
 				break;
 
-			//case "\x0b": break; //vertical tab
-			//case "\x0c": break; //new page.
+			case "\x0b": //vertical tab
+			case "\x0c": //form feed
+				this.cursor.y++;
+				break;
 
 			case "\r": //cr 0x0d
 				if (i+2 < data.length && data[i+1]==="\r" && data[i+2]==="\n") {
-					char.innerHTML = "<br>";
 					this.cursor.x = 0;
 					this.cursor.y++;
 					i+=2;
 					break;
 				}
 				else if (i+1 < data.length && data[i+1]==="\n") {
-					char.innerHTML = "<br>";
 					this.cursor.x = 0;
 					this.cursor.y++;
 					i++;
@@ -460,21 +540,63 @@ class Terminal extends Window {
 
 			case "\x1b": //esc
 				if (this.args.ansi) {
-					i += this.HandleEscSequence(data, i) - 1;
+					const consumed = this.HandleEscSequence(data, i);
+					if (consumed === null) {
+						this.pendingSequence = data.slice(i);
+						break messageLoop;
+					}
+
+					i += consumed - 1;
 				}
 				else {
+					const width = this.GetScreenWidth();
+					if (width <= 0) break;
+					let char = this.screen[`${this.cursor.x},${this.cursor.y}`];
+					if (!char) {
+						char = document.createElement("span");
+						char.style.left = `${this.cursor.x * Terminal.CHAR_WIDTH}px`;
+						char.style.top = `${this.cursor.y * Terminal.CHAR_HEIGHT}px`;
+						this.content.appendChild(char);
+						this.screen[`${this.cursor.x},${this.cursor.y}`] = char;
+					}
 					char.textContent = data[i];
+					this.cursor.x++;
 				}
 				break;
 
-			//case "\x7f": break; //delete
+			case "\x7f": break; //delete
 
 			default:
-				if (!isNew) {
+				const width = this.GetScreenWidth();
+				if (width <= 0) break;
+
+				if (this.cursor.x >= width) {
+					if (this.lineWrappingMode) {
+						this.cursor.x = 0;
+						this.cursor.y++;
+					}
+					else {
+						this.cursor.x = width - 1;
+					}
+				}
+
+				if (this.insertMode) {
+					this.InsertBlankCharacters(1);
+				}
+
+				let char = this.screen[`${this.cursor.x},${this.cursor.y}`];
+				if (!char) {
+					char = document.createElement("span");
+					char.style.left = `${this.cursor.x * Terminal.CHAR_WIDTH}px`;
+					char.style.top = `${this.cursor.y * Terminal.CHAR_HEIGHT}px`;
+					this.content.appendChild(char);
+					this.screen[`${this.cursor.x},${this.cursor.y}`] = char;
+				}
+				else {
 					if (char.style.color) char.style.color = "unset";
 					if (char.style.backgroundColor) char.style.backgroundColor = "unset";
 					if (char.style.fontWeight) char.style.fontWeight = "normal";
-					if (char.style.fontStyle) char.style.fontStyle = "none";
+					if (char.style.fontStyle) char.style.fontStyle = "normal";
 					if (char.style.opacity) char.style.opacity = "1";
 					if (char.style.textDecoration) char.style.textDecoration = "none";
 					if (char.style.animation) char.style.animation = "none";
@@ -504,8 +626,10 @@ class Terminal extends Window {
 				if (this.bold)          char.style.fontWeight = "bold";
 				if (this.faint)         char.style.opacity = "0.6";
 				if (this.italic)        char.style.fontStyle = "italic";
-				if (this.underline)     char.style.textDecoration = "underline";
-				if (this.strikethrough) char.style.textDecoration = "line-through";
+				const textDecoration = [];
+				if (this.underline) textDecoration.push("underline");
+				if (this.strikethrough) textDecoration.push("line-through");
+				if (textDecoration.length > 0) char.style.textDecoration = textDecoration.join(" ");
 				if (this.blinking)      char.style.animation = "terminal-blinking 1s infinite";
 				if (this.fastBlinking)  char.style.animation = "terminal-fast-blinking .2s infinite";
 				if (this.hidden)        char.style.visibility = "hidden";
@@ -517,15 +641,20 @@ class Terminal extends Window {
 			this.lastCharacter = data[i];
 		}
 
+		if (this.scrollRegionTop !== null && this.cursor.y < this.scrollRegionTop) {
+			this.cursor.y = this.scrollRegionTop;
+		}
+		if (this.scrollRegionBottom !== null && this.cursor.y >= this.scrollRegionBottom) {
+			while (this.cursor.y >= this.scrollRegionBottom) {
+				this.ScrollUp(1);
+				this.cursor.y--;
+			}
+		}
+
+		this.TrimHistory();
+
 		this.cursorElement.style.left = Terminal.CHAR_WIDTH * this.cursor.x + "px";
 		this.cursorElement.style.top = Terminal.CHAR_HEIGHT * this.cursor.y + "px";
-
-		if (this.scrollRegionTop && this.cursor.y < this.scrollRegionTop) {
-			this.ScrollUp();
-		}
-		else if (this.scrollRegionBottom && this.cursor.y >= this.scrollRegionBottom-1) {
-			this.ScrollDown();
-		}
 
 		if (this.args.autoScroll) {
 			if (this.args.smoothCursor) {
@@ -538,7 +667,7 @@ class Terminal extends Window {
 	}
 
 	HandleEscSequence(data, index) {
-		if (index + 1 >= data.length) return 1;
+		if (index+1 >= data.length) return null;
 
 		switch (data[index+1]) {
 		case "[": return this.HandleCSI(data, index);
@@ -555,12 +684,28 @@ class Terminal extends Window {
 			return 2;
 
 		case "7": //save cursor position
-			this.savedCursorPos = {x:this.cursor.x, y:this.cursor.y};
+			this.SaveCursorState();
 			return 2;
 
 		case "8": //restore cursor position
-			this.cursor.x = this.savedCursorPos.x;
-			this.cursor.y = this.savedCursorPos.y;
+			this.RestoreCursorState();
+			return 2;
+
+		case "D": //index
+			this.Index();
+			return 2;
+
+		case "E": //next line
+			this.cursor.x = 0;
+			this.Index();
+			return 2;
+
+		case "M": //reverse index
+			this.ReverseIndex();
+			return 2;
+
+		case "c": //reset to initial state
+			this.ResetTerminal();
 			return 2;
 
 		default:
@@ -570,22 +715,36 @@ class Terminal extends Window {
 	}
 
 	HandleCSI(data, index) { //Control Sequence Introducer
-		if (index >= data.length) return 2;
-		const sequence = data.slice(index + 1);
+		if (index+1 >= data.length) return null;
 
-		const match = sequence.match(/^\[([?=]?)(\d*(;\d*)*)?([A-Za-z])/);
-		if (!match) return 2;
+		let offset = index+2;
+		let prefix = "";
+		if (offset < data.length && data[offset] >= "<" && data[offset] <= "?") {
+			prefix = data[offset++];
+		}
 
-		const fullSequence = match[0];
-		//const prefix = match[1] || ""; // ?, = or ""
-		const paramsString = match[2] || "";
-		const command = match[4];
+		const parameterStart = offset;
+		while (offset < data.length && ((data[offset] >= "0" && data[offset] <= "9") || data[offset] === ";" || data[offset] === ":")) {
+			offset++;
+		}
 
-		const params = paramsString.split(";").map(param => {
+		const intermediateStart = offset;
+		while (offset < data.length && data[offset] >= " " && data[offset] <= "/") {
+			offset++;
+		}
+
+		if (offset >= data.length) return null;
+		if (data[offset] < "@" || data[offset] > "~") return 2;
+
+		const paramsString = data.slice(parameterStart, intermediateStart);
+		const command = data[offset];
+		const params = paramsString.length === 0 ? [] : paramsString.split(";").map(param => {
 			return param === "" ? 0 : parseInt(param, 10);
 		});
 
 		switch (command) {
+		case "@": this.InsertBlankCharacters(params[0] || 1); break;
+
 		case "A": //cursor up
 			this.cursor.y = Math.max(0, this.cursor.y - (params[0] || 1));
 			break;
@@ -623,7 +782,7 @@ class Terminal extends Window {
 			break;
 
 		case "J":
-			switch (params[0]) {
+			switch (params.length === 0 ? 0 : params[0]) {
 			case 0: this.EraseFromCursorToEndOfScreen(); break;
 			case 1: this.EraseFromCursorToBeginningOfScreen(); break;
 			case 2: this.ClearScreen(); break;
@@ -635,7 +794,7 @@ class Terminal extends Window {
 			break;
 
 		case "K":
-			switch (params[0]) {
+			switch (params.length === 0 ? 0 : params[0]) {
 			case 0: this.EraseLineFromCursorToEnd(); break;
 			case 1: this.EraseLineFromBeginningToCursor(); break;
 			case 2: this.ClearLine(); break;
@@ -645,49 +804,33 @@ class Terminal extends Window {
 			}
 			break;
 
+		case "L": this.InsertLines(params[0] || 1); break;
+		case "M": this.DeleteLines(params[0] || 1); break;
 		case "P": this.DeleteN(params[0] || 1); break;
-		//case "S": break; //not ANSI
-		//case "T": break; //not ANSI
+		case "S": this.ScrollUp(params[0] || 1); break;
+		case "T": this.ScrollDown(params[0] || 1); break;
+		case "X": this.EraseCharacters(params[0] || 1); break;
 
 		case "d": //move cursor to the specified line
-			this.cursor.y = (params[0] || 1) - 1;
+			this.cursor.y = Math.max(0, (params[0] || 1) - 1);
 			break;
 
 		case "h": //enable mode
-			switch (params[0]) {
-			case 1   : this.appCursorKeys = true; break;
-			case 4   : this.insertMode = true; break;
-			case 7   : this.lineWrappingMode = true; break;
-			case 12  : this.localEchoMode = true; break;
-			case 25  : this.cursorElement.style.visibility = "visible"; break;
-			case 1049: this.EnableAlternateScreen(); break;
-			case 2004: this.bracketedMode = true; break;
-			default  : console.warn(`Unhandled enable mode: ${params.join(";")}h`);
-			}
+			this.SetMode(prefix, params, true);
 			break;
 
 		case "l": //disable mode
-			switch (params[0]) {
-			case 1   : this.appCursorKeys = false; break;
-			case 4   : this.insertMode = false; break;
-			case 7   : this.lineWrappingMode = false; break;
-			case 12  : this.localEchoMode = false; break;
-			case 25  : this.cursorElement.style.visibility = "hidden"; break;
-			case 1049: this.DisableAlternateScreen(); break;
-			case 2004: this.bracketedMode = false; break;
-			default  : console.warn(`Unhandled disable mode: ${params.join(";")}l`);
-			}
+			this.SetMode(prefix, params, false);
 			break;
 
 		case "m": this.ParseGraphicsModes(params); break;
 
 		case "r": //set scroll region
-			this.scrollRegionTop = parseInt(params[0]) || 1;
-			this.scrollRegionBottom = parseInt(params[1]);
+			this.SetScrollRegion(params[0], params[1]);
 			break;
 
 		case "s": //save cursor position
-			this.savedCursorPos = {x:this.cursor.x, y:this.cursor.y};
+			this.SaveCursorState();
 			break;
 
 		case "t": //window manipulation
@@ -709,8 +852,7 @@ class Terminal extends Window {
 			break;
 
 		case "u": //restore cursor position
-			this.cursor.x = this.savedCursorPos.x;
-			this.cursor.y = this.savedCursorPos.y;
+			this.RestoreCursorState();
 			break;
 
 		default:
@@ -718,29 +860,33 @@ class Terminal extends Window {
 			break;
 		}
 
-		return fullSequence.length + 1;
+		return offset - index+1;
 	}
 
 	HandleDCS(data, index) { //Device Control String
-		if (index >= data.length) return 2;
+		if (index+1 >= data.length) return null;
 
-		console.warn(`Unknown DCS: ${data[index+2]}`);
-		return 2;
+		const stEnd = data.indexOf("\x1b\\", index+2);
+		if (stEnd === -1) return null;
+
+		const command = data[index+2] || "";
+		console.warn(`Unhandled DCS: ${command}`);
+		return stEnd - index+2;
 	}
 
 	HandleOSC(data, index) { //Operating System Command
-		if (index >= data.length) return 2;
+		if (index+1 >= data.length) return null;
 
-		const oscEnd = data.indexOf("\x07", index + 2);
-		const stEnd = data.indexOf("\x1b\\", index + 2);
+		const oscEnd = data.indexOf("\x07", index+2);
+		const stEnd = data.indexOf("\x1b\\", index+2);
 		let end = Math.min(oscEnd !== -1 ? oscEnd : data.length, stEnd !== -1 ? stEnd : data.length);
+		const terminatorLength = end === stEnd ? 2 : 1;
 
 		if (end === data.length) {
-			console.warn("Incomplete OSC sequence");
-			return 2;
+			return null;
 		}
 
-		const sequence = data.slice(index + 2, end);
+		const sequence = data.slice(index+2, end);
 		const [command, ...params] = sequence.split(";");
 
 		switch (command) {
@@ -762,13 +908,13 @@ class Terminal extends Window {
 			break;
 		}
 
-		return end - index + 1;
+		return end - index + terminatorLength;
 	}
 
 	HandleCSD(data, index) { //Character Set Designation
-		if (index >= data.length) return 2;
+		if (index+2 >= data.length) return null;
 
-		const command = data[index + 2];
+		const command = data[index+2];
 		switch (command) {
 		//TODO:
 		//case "B": return 3;//ISO-8859-1
@@ -781,6 +927,15 @@ class Terminal extends Window {
 	}
 
 	MapColorId(id) {
+		if (typeof id === "string") {
+			if (/^\d+$/.test(id)) {
+				id = parseInt(id, 10);
+			}
+			else {
+				return id;
+			}
+		}
+
 		switch (id) {
 		case 0: return "#111";    //black
 		case 1: return "#de382b"; //red
@@ -806,10 +961,11 @@ class Terminal extends Window {
 			return `#${hex.repeat(3)}`;
 		}
 
+		const ramp = [0, 95, 135, 175, 215, 255];
 		let v = id - 16;
-		let r = Math.floor(v / 36) * 51;
-		let g = Math.floor((v % 36) / 6) * 51;
-		let b = (v % 6) * 51;
+		let r = ramp[Math.floor(v / 36)];
+		let g = ramp[Math.floor((v % 36) / 6)];
+		let b = ramp[v % 6];
 
 		return `#${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${b.toString(16).padStart(2, "0")}`;
 	}
@@ -848,18 +1004,16 @@ class Terminal extends Window {
 				break;
 
 			case 38: //set foreground color
-				if (params.length < 3) break;
-
-				if (params[1] === 5) { //id color
-					if (params.length < 3) break;
-					this.foreColor = this.MapColorId(params[2]);
+				if (params[i+1] === 5 && params.length >= i+3) { //id color
+					this.foreColor = this.MapColorId(params[i+2]);
+					i += 2;
 				}
-				else if (params[1] === 2) { //rgb color
-					if (params.length < 6) break;
-					this.foreColor = `rgb(${params[2]},${params[3]},${params[4]})`;
+				else if (params[i+1] === 2 && params.length >= i+5) { //rgb color
+					this.foreColor = `rgb(${params[i+2]},${params[i+3]},${params[i+4]})`;
+					i += 4;
 				}
 				else {
-					console.warn(`Unknown graphics mode: 38;${params[1]}`);
+					console.warn(`Unknown graphics mode: 38;${params[i+1]}`);
 				}
 				break;
 
@@ -873,18 +1027,16 @@ class Terminal extends Window {
 				break;
 
 			case 48: //set background color
-				if (params.length < 3) break;
-
-				if (params[1] === 5) { //id color
-					if (params.length < 3) break;
-					this.backColor = this.MapColorId(params[2]);
+				if (params[i+1] === 5 && params.length >= i+3) { //id color
+					this.backColor = this.MapColorId(params[i+2]);
+					i += 2;
 				}
-				else if (params[1] === 2) { //rgb color
-					if (params.length < 6) break;
-					this.backColor = `rgb(${params[2]},${params[3]},${params[4]})`;
+				else if (params[i+1] === 2 && params.length >= i+5) { //rgb color
+					this.backColor = `rgb(${params[i+2]},${params[i+3]},${params[i+4]})`;
+					i += 4;
 				}
 				else {
-					console.warn(`Unknown graphics mode: 48;${params[1]}`);
+					console.warn(`Unknown graphics mode: 48;${params[i+1]}`);
 				}
 				break;
 
@@ -903,60 +1055,64 @@ class Terminal extends Window {
 				break;
 
 			default:
-				console.warn(`Unknown graphics mode: ${params[0]}`);
+				console.warn(`Unknown graphics mode: ${params[i]}`);
 				break;
 			}
 		}
 	}
 
-	ScrollUp() {
-		const top = this.scrollRegionTop || 0;
-		const bottom = this.scrollRegionBottom || this.GetScreenHeight();
-		const todo = {};
-		let y;
+	ScrollUp(lines=1) {
+		const top = this.GetScrollRegionTop();
+		const bottom = this.GetScrollRegionBottom();
+		const amount = Math.min(Math.max(lines, 1), Math.max(0, bottom - top));
+		const width = this.GetScreenWidth();
 
-		for (const key in this.screen) {
-			[, y] = key.split(",");
-			if (y < top || y >= bottom) continue;
-			todo[key] = this.screen[key];
-		}
+		for (let i=0; i<amount; i++) {
+			for (let y=top; y<bottom; y++) {
+				for (let x=0; x<width; x++) {
+					if (y === top) {
+						this.RemoveCell(x, y);
+						continue;
+					}
 
-		for (const key in todo) {
-			[, y] = key.split(",");
-			delete this.screen[key];
-			let y1 = parseInt(y) + 1;
-			if (this.scrollRegionBottom && y1 >= this.scrollRegionBottom) continue;
-			this.screen[`${x},${y1}`] = todo[key];
-			todo[key].style.top = `${y1 * Terminal.CHAR_HEIGHT}px`;
+					this.MoveCell(x, y, x, y - 1);
+				}
+			}
+
+			for (let x=0; x<width; x++) {
+				this.RemoveCell(x, bottom - 1);
+			}
 		}
 	}
 
-	ScrollDown() {
-		const top = this.scrollRegionTop || 0;
-		const bottom = this.scrollRegionBottom || this.GetScreenHeight();
-		const todo = {};
-		let y;
+	ScrollDown(lines=1) {
+		const top = this.GetScrollRegionTop();
+		const bottom = this.GetScrollRegionBottom();
+		const amount = Math.min(Math.max(lines, 1), Math.max(0, bottom - top));
+		const width = this.GetScreenWidth();
 
-		for (const key in this.screen) {
-			[, y] = key.split(",");
-			if (y < top || y >= bottom) continue;
-			todo[key] = this.screen[key];
-		}
+		for (let i=0; i<amount; i++) {
+			for (let y=bottom - 1; y>=top; y--) {
+				for (let x=0; x<width; x++) {
+					if (y === bottom - 1) {
+						this.RemoveCell(x, y);
+						continue;
+					}
 
-		for (const key in todo) {
-			[, y] = key.split(",");
-			delete this.screen[key];
-			let y1 = parseInt(y) - 1;
-			if (this.scrollRegionTop && y1 <= this.scrollRegionTop) continue;
-			this.screen[`${x},${y1}`] = todo[key];
-			todo[key].style.top = `${y1 * Terminal.CHAR_HEIGHT}px`;
+					this.MoveCell(x, y, x, y+1);
+				}
+			}
+
+			for (let x=0; x<width; x++) {
+				this.RemoveCell(x, top);
+			}
 		}
 	}
 
 	EnableAlternateScreen() { //?1049h
 		this.savedScreen = this.screen;
 		this.ClearScreen();
-		this.savedCursorPos = {x:this.cursor.x, y:this.cursor.y};
+		this.SaveCursorState();
 	}
 
 	DisableAlternateScreen() { //?1049l
@@ -972,28 +1128,20 @@ class Terminal extends Window {
 
 			this.content.appendChild(this.cursorElement);
 
-			if (this.savedCursorPos) {
-				this.cursor.x = this.savedCursorPos.x;
-				this.cursor.y = this.savedCursorPos.y;
-			}
+			this.RestoreCursorState();
 		}
 	}
 
 	DeleteN(n) { //P
-		let x; //last char in current line
-		for (x=this.cursor.x; x<this.GetScreenWidth(); x++) {
-			const key = `${x},${this.cursor.y}`;
-			if (!this.screen[key]) {
-				x--;
-				break;
+		const width = this.GetScreenWidth();
+		for (let x=this.cursor.x; x<width; x++) {
+			const sourceX = x + n;
+			if (sourceX < width) {
+				this.MoveCell(sourceX, this.cursor.y, x, this.cursor.y);
 			}
-		}
-
-		for (let p=0; p<=n; p++) {
-			const key = `${x-p},${this.cursor.y}`;
-			if (!this.screen[key]) continue;
-			this.content.removeChild(this.screen[key]);
-			delete this.screen[key];
+			else {
+				this.RemoveCell(x, this.cursor.y);
+			}
 		}
 	}
 
@@ -1057,20 +1205,283 @@ class Terminal extends Window {
 
 	EraseLineFromBeginningToCursor() { //1K
 		for (let i=0; i<=this.cursor.x; i++) {
-			const key = `${i},${this.cursor.y}`;
-			if (!this.screen[key]) continue;
-			this.screen[key].textContent = " ";
+			this.RemoveCell(i, this.cursor.y);
 		}
 	}
 
 	ClearLine() { //2K
 		const w = this.GetScreenWidth();
 		for (let i=0; i<w; i++) {
-			const key = `${i},${this.cursor.y}`;
-			if (!this.screen[key]) continue;
-			this.content.removeChild(this.screen[key]);
-			delete this.screen[key];
+			this.RemoveCell(i, this.cursor.y);
 		}
+	}
+
+	InsertBlankCharacters(n) { //@
+		const width = this.GetScreenWidth();
+		const amount = Math.min(Math.max(n, 1), Math.max(0, width - this.cursor.x));
+		for (let x=width - 1; x>=this.cursor.x + amount; x--) {
+			this.MoveCell(x - amount, this.cursor.y, x, this.cursor.y);
+		}
+		for (let x=this.cursor.x; x<this.cursor.x + amount; x++) {
+			this.RemoveCell(x, this.cursor.y);
+		}
+	}
+
+	EraseCharacters(n) { //X
+		const width = this.GetScreenWidth();
+		const end = Math.min(width, this.cursor.x + Math.max(n, 1));
+		for (let x=this.cursor.x; x<end; x++) {
+			this.RemoveCell(x, this.cursor.y);
+		}
+	}
+
+	InsertLines(n) { //L
+		const top = this.cursor.y;
+		const bottom = this.GetScrollRegionBottom();
+		if (top < this.GetScrollRegionTop() || top >= bottom) return;
+
+		const amount = Math.min(Math.max(n, 1), bottom - top);
+		const width = this.GetScreenWidth();
+
+		for (let y=bottom - 1; y>=top; y--) {
+			for (let x=0; x<width; x++) {
+				if (y - amount >= top) {
+					this.MoveCell(x, y - amount, x, y);
+				}
+				else {
+					this.RemoveCell(x, y);
+				}
+			}
+		}
+	}
+
+	DeleteLines(n) { //M
+		const top = this.cursor.y;
+		const bottom = this.GetScrollRegionBottom();
+		if (top < this.GetScrollRegionTop() || top >= bottom) return;
+
+		const amount = Math.min(Math.max(n, 1), bottom - top);
+		const width = this.GetScreenWidth();
+
+		for (let y=top; y<bottom; y++) {
+			for (let x=0; x<width; x++) {
+				if (y + amount < bottom) {
+					this.MoveCell(x, y + amount, x, y);
+				}
+				else {
+					this.RemoveCell(x, y);
+				}
+			}
+		}
+	}
+
+	Index() {
+		const bottom = this.GetScrollRegionBottom();
+		if (this.cursor.y === bottom - 1) {
+			this.ScrollUp(1);
+			return;
+		}
+
+		this.cursor.y++;
+	}
+
+	ReverseIndex() {
+		const top = this.GetScrollRegionTop();
+		if (this.cursor.y === top) {
+			this.ScrollDown(1);
+			return;
+		}
+
+		this.cursor.y = Math.max(0, this.cursor.y - 1);
+	}
+
+	SetMode(prefix, params, enabled) {
+		for (const mode of params) {
+			switch (mode) {
+			case 1:
+				this.appCursorKeys = enabled;
+				break;
+
+			case 4:
+				if (prefix === "") this.insertMode = enabled;
+				else console.warn(`Unhandled ${prefix}${mode}${enabled ? "h" : "l"} mode`);
+				break;
+
+			case 7:
+				this.lineWrappingMode = enabled;
+				break;
+
+			case 12:
+				this.localEchoMode = enabled;
+				break;
+
+			case 25:
+				this.cursorElement.style.visibility = enabled ? "visible" : "hidden";
+				break;
+
+			case 1000:
+			case 1002:
+			case 1003:
+			case 1005:
+			case 1006:
+			case 1015:
+				// Mouse tracking is negotiated by the remote side; this base terminal
+				// accepts the mode change even if it does not emit mouse reports yet.
+				break;
+
+			case 1049:
+				if (enabled) this.EnableAlternateScreen();
+				else this.DisableAlternateScreen();
+				break;
+
+			case 2004:
+				this.bracketedMode = enabled;
+				break;
+
+			default:
+				console.warn(`Unhandled ${enabled ? "enable" : "disable"} mode: ${prefix}${mode}${enabled ? "h" : "l"}`);
+				break;
+			}
+		}
+	}
+
+	SetScrollRegion(top, bottom) {
+		const screenHeight = this.GetScreenHeight();
+		const newTop = Math.max(0, (top || 1) - 1);
+		const newBottom = Math.min(screenHeight, bottom || screenHeight);
+
+		if (newTop >= newBottom) {
+			this.scrollRegionTop = null;
+			this.scrollRegionBottom = null;
+		}
+		else if (newTop === 0 && newBottom === screenHeight) {
+			this.scrollRegionTop = null;
+			this.scrollRegionBottom = null;
+		}
+		else {
+			this.scrollRegionTop = newTop;
+			this.scrollRegionBottom = newBottom;
+		}
+
+		this.cursor.x = 0;
+		this.cursor.y = 0;
+	}
+
+	GetScrollbackLimit() {
+		const value = Number.parseInt(this.args.scrollback ?? this.args.historyLimit ?? Terminal.DEFAULT_SCROLLBACK, 10);
+		return Number.isNaN(value) ? Terminal.DEFAULT_SCROLLBACK : Math.max(0, value);
+	}
+
+	GetHistoryLineLimit() {
+		return this.GetScreenHeight() + this.GetScrollbackLimit();
+	}
+
+	GetScrollRegionTop() {
+		return this.scrollRegionTop ?? 0;
+	}
+
+	GetScrollRegionBottom() {
+		return this.scrollRegionBottom ?? this.GetScreenHeight();
+	}
+
+	GetBufferBottom() {
+		let bottom = this.cursor.y;
+
+		if (this.savedCursorPos) {
+			bottom = Math.max(bottom, this.savedCursorPos.y);
+		}
+
+		for (const key in this.screen) {
+			const split = key.indexOf(",");
+			const y = parseInt(key.substring(split+1), 10);
+			if (!Number.isNaN(y)) {
+				bottom = Math.max(bottom, y);
+			}
+		}
+
+		return bottom;
+	}
+
+	ShiftTrackedPosition(position, lines) {
+		if (!position) return;
+		position.y = Math.max(0, position.y - lines);
+	}
+
+	TrimHistory() {
+		const limit = this.GetHistoryLineLimit();
+		if (limit <= 0) return;
+
+		const overflow = this.GetBufferBottom()+1 - limit;
+		if (overflow <= 0) return;
+
+		const previousScrollTop = this.content.scrollTop;
+		const removedHeight = overflow * Terminal.CHAR_HEIGHT;
+		const newScreen = {};
+
+		for (const key in this.screen) {
+			const split = key.indexOf(",");
+			const x = key.substring(0, split);
+			const y = parseInt(key.substring(split+1), 10);
+			const cell = this.screen[key];
+
+			if (Number.isNaN(y)) continue;
+
+			if (y < overflow) {
+				if (cell.parentNode === this.content) {
+					this.content.removeChild(cell);
+				}
+				continue;
+			}
+
+			const newY = y - overflow;
+			newScreen[`${x},${newY}`] = cell;
+			cell.style.top = `${newY * Terminal.CHAR_HEIGHT}px`;
+		}
+
+		this.screen = newScreen;
+		this.ShiftTrackedPosition(this.cursor, overflow);
+		this.ShiftTrackedPosition(this.savedCursorPos, overflow);
+
+		if (this.scrollRegionTop !== null) {
+			this.scrollRegionTop = Math.max(0, this.scrollRegionTop - overflow);
+		}
+		if (this.scrollRegionBottom !== null) {
+			this.scrollRegionBottom = Math.max(0, this.scrollRegionBottom - overflow);
+			if (this.scrollRegionBottom <= this.scrollRegionTop) {
+				this.scrollRegionTop = null;
+				this.scrollRegionBottom = null;
+			}
+		}
+
+		this.content.scrollTop = Math.max(0, previousScrollTop - removedHeight);
+	}
+
+	RemoveCell(x, y) {
+		const key = `${x},${y}`;
+		if (!this.screen[key]) return;
+		if (this.screen[key].parentNode === this.content) {
+			this.content.removeChild(this.screen[key]);
+		}
+		delete this.screen[key];
+	}
+
+	MoveCell(fromX, fromY, toX, toY) {
+		const fromKey = `${fromX},${fromY}`;
+		const cell = this.screen[fromKey];
+
+		this.RemoveCell(toX, toY);
+		if (!cell) return;
+
+		delete this.screen[fromKey];
+		this.screen[`${toX},${toY}`] = cell;
+		cell.style.left = `${toX * Terminal.CHAR_WIDTH}px`;
+		cell.style.top = `${toY * Terminal.CHAR_HEIGHT}px`;
+	}
+
+	ResetTerminal() {
+		this.InitializeTerminalState();
+		this.ResetTextAttributes();
+		this.ClearScreen();
 	}
 
 	GetScreenWidth() {
