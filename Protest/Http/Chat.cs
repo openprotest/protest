@@ -54,6 +54,8 @@ internal static class Chat {
         if (!Auth.rbac.TryGetValue(origin, out Auth.AccessControl rbac) && origin != "loopback") return;
         if (!dictionary.TryGetValue("src", out string src)) return;
 
+        if (!src.StartsWith("data:image/")) return;
+
         dictionary.TryGetValue("id", out string id);
 
         string username = rbac?.username ?? "loopback";

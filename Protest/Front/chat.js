@@ -637,7 +637,9 @@ class Chat extends Window {
 		const images = [];
 		this.FindImgTags(this.input, images);
 
-		for (let i=0; i< images.length; i++) {
+		for (let i=0; i<images.length; i++) {
+			if (!images[i].src.startsWith("data:image/")) continue;
+
 			try {
 				KEEP.socket.send(JSON.stringify({
 					id: `${KEEP.username}${UI.GenerateUuid()}`,
@@ -657,7 +659,7 @@ class Chat extends Window {
 	FindImgTags(element, images) {
 		const childNodes = element.childNodes;
 		for (let i=0; i<childNodes.length; i++) {
-			if (childNodes[i].tagName === "IMG") {
+			if (childNodes[i].tagName === "IMG" && childNodes.src.startsWith("data:image/")) {
 				images.push(childNodes[i]);
 			}
 			else {
@@ -816,6 +818,8 @@ class Chat extends Window {
 	}
 
 	CreateImageBubble(src, direction, sender, alias, color, time, id=null) {
+		if (!src.startsWith("data:image/")) return null;
+
 		const bubble = this.CreateBubble(direction, sender, alias, color, time);
 		
 		const image = document.createElement("img");
