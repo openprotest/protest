@@ -307,6 +307,12 @@ internal static class KeepAlive {
             }
             return;
 
+        case "chat-image":
+            if (Auth.IsAuthorized(ctx, "/chat/write")) {
+                Chat.ImageHandler(dictionary, origin);
+            }
+            return;
+
         case "chat-emoji":
             if (Auth.IsAuthorized(ctx, "/chat/write")) {
                 Chat.EmojiHandler(dictionary, origin);

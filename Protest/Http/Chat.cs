@@ -18,8 +18,8 @@ internal static class Chat {
     private const string defaultColor = "#606060";
 
     public static void TextHandler(ConcurrentDictionary<string, string> dictionary, string origin) {
-        if (!Auth.rbac.TryGetValue(origin, out Auth.AccessControl rbac) && origin != "loopback") { return; }
-        if (!dictionary.TryGetValue("text", out string text)) { return; }
+        if (!Auth.rbac.TryGetValue(origin, out Auth.AccessControl rbac) && origin != "loopback") return;
+        if (!dictionary.TryGetValue("text", out string text)) return;
 
         dictionary.TryGetValue("id", out string id);
 
@@ -50,9 +50,43 @@ internal static class Chat {
         }
     }
 
+    public static void ImageHandler(ConcurrentDictionary<string, string> dictionary, string origin) {
+        if (!Auth.rbac.TryGetValue(origin, out Auth.AccessControl rbac) && origin != "loopback") return;
+        if (!dictionary.TryGetValue("src", out string src)) return;
+
+        dictionary.TryGetValue("id", out string id);
+
+        string username = rbac?.username ?? "loopback";
+        string alias = !String.IsNullOrEmpty(rbac?.alias) ? rbac.alias : username;
+
+        long now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        byte[] json = JsonSerializer.SerializeToUtf8Bytes(new {
+            action = "chat-image",
+            id     = id,
+            time   = now,
+            sender = username,
+            alias  = alias,
+            color  = rbac?.color ?? defaultColor,
+            src    = src
+        });
+
+        KeepAlive.Broadcast(json, "/chat/read");
+
+        Message message = new Message {
+            sender    = rbac?.username ?? "loopback",
+            timestamp = now,
+            json      = json
+        };
+
+        lock(mutex) {
+            history.Add(message);
+        }
+    }
+
     public static void EmojiHandler(ConcurrentDictionary<string, string> dictionary, string origin) {
-        if (!Auth.rbac.TryGetValue(origin, out Auth.AccessControl access) && origin != "loopback") { return; }
-        if (!dictionary.TryGetValue("url", out string url)) { return; }
+        if (!Auth.rbac.TryGetValue(origin, out Auth.AccessControl access) && origin != "loopback") return;
+        if (!dictionary.TryGetValue("url", out string url)) return;
 
         dictionary.TryGetValue("id", out string id);
 
@@ -84,11 +118,11 @@ internal static class Chat {
     }
 
     public static void CommandHandler(ConcurrentDictionary<string, string> dictionary, string origin) {
-        if (!Auth.rbac.TryGetValue(origin, out Auth.AccessControl access) && origin != "loopback") { return; }
-        if (!dictionary.TryGetValue("command", out string command)) { return; }
-        if (!dictionary.TryGetValue("args", out string args)) { return; }
-        if (!dictionary.TryGetValue("icon", out string icon)) { return; }
-        if (!dictionary.TryGetValue("title", out string title)) { return; }
+        if (!Auth.rbac.TryGetValue(origin, out Auth.AccessControl access) && origin != "loopback") return;
+        if (!dictionary.TryGetValue("command", out string command)) return;
+        if (!dictionary.TryGetValue("args", out string args)) return;
+        if (!dictionary.TryGetValue("icon", out string icon)) return;
+        if (!dictionary.TryGetValue("title", out string title)) return;
 
         dictionary.TryGetValue("id", out string id);
 
@@ -123,9 +157,9 @@ internal static class Chat {
     }
 
     public static void SdpHandler(ConcurrentDictionary<string, string> dictionary, string origin) {
-        if (!Auth.rbac.TryGetValue(origin, out Auth.AccessControl access) && origin != "loopback") { return; }
-        if (!dictionary.TryGetValue("type", out string type)) { return; }
-        if (!dictionary.TryGetValue("uuid", out string uuid)) { return; }
+        if (!Auth.rbac.TryGetValue(origin, out Auth.AccessControl access) && origin != "loopback") return;
+        if (!dictionary.TryGetValue("type", out string type)) return;
+        if (!dictionary.TryGetValue("uuid", out string uuid)) return;
 
         string username = access?.username ?? "loopback";
         string alias = !String.IsNullOrEmpty(access?.alias) ? access.alias : username;
@@ -133,11 +167,11 @@ internal static class Chat {
         string sdp = null;
         string action = null;
         if (type == "chat-sdp-offer") {
-            if (!dictionary.TryGetValue("offer", out sdp)) { return; }
+            if (!dictionary.TryGetValue("offer", out sdp)) return;
             action = "chat-offer";
         }
         else if (type == "chat-sdp-answer") {
-            if (!dictionary.TryGetValue("answer", out sdp)) { return; }
+            if (!dictionary.TryGetValue("answer", out sdp)) return;
             action = "chat-answer";
         }
 
@@ -155,9 +189,9 @@ internal static class Chat {
     }
 
     public static void IceHandler(ConcurrentDictionary<string, string> dictionary, string origin) {
-        if (!Auth.rbac.TryGetValue(origin, out Auth.AccessControl access) && origin != "loopback") { return; }
-        if (!dictionary.TryGetValue("candidate", out string candidate)) { return; }
-        if (!dictionary.TryGetValue("uuid", out string uuid)) { return; }
+        if (!Auth.rbac.TryGetValue(origin, out Auth.AccessControl access) && origin != "loopback") return;
+        if (!dictionary.TryGetValue("candidate", out string candidate)) return;
+        if (!dictionary.TryGetValue("uuid", out string uuid)) return;
 
         string username = access?.username ?? "loopback";
         string alias = !String.IsNullOrEmpty(access?.alias) ? access.alias : username;
@@ -176,7 +210,7 @@ internal static class Chat {
     }
 
     public static void JoinHandler(string origin) {
-        if (!Auth.rbac.TryGetValue(origin, out Auth.AccessControl access) && origin != "loopback") { return; }
+        if (!Auth.rbac.TryGetValue(origin, out Auth.AccessControl access) && origin != "loopback") return;
 
         string username = access?.username ?? "loopback";
         string alias = !String.IsNullOrEmpty(access?.alias) ? access.alias : username;
@@ -193,8 +227,8 @@ internal static class Chat {
     }
 
     public static void StreamHandler(ConcurrentDictionary<string, string> dictionary, string origin) {
-        if (!Auth.rbac.TryGetValue(origin, out Auth.AccessControl access) && origin != "loopback") { return; }
-        if (!dictionary.TryGetValue("uuid", out string uuid)) { return; }
+        if (!Auth.rbac.TryGetValue(origin, out Auth.AccessControl access) && origin != "loopback") return;
+        if (!dictionary.TryGetValue("uuid", out string uuid)) return;
 
         string username = access?.username ?? "loopback";
         string alias = !String.IsNullOrEmpty(access?.alias) ? access.alias : username;

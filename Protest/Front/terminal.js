@@ -1044,7 +1044,7 @@ class Terminal extends Window {
 				this.backColor = null;
 				break;
 
-			//reset foreground color (bright variants)
+			//set foreground color (bright variants)
 			case 90: case 91: case 92: case 93: case 94: case 95: case 96: case 97:
 				this.foreColor = this.MapColorId(params[i] - 82);
 				break;
