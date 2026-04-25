@@ -21,11 +21,11 @@ internal static class Chat {
 
     private static void PushMessage(Message message) {
         lock(mutex) {
-            while (history.Count > MAX_HISTORY_ENTRIES) {
-                history.RemoveAt(0);
-            }
-
             history.Add(message);
+
+            if (history.Count > MAX_HISTORY_ENTRIES) {
+                history.RemoveRange(0, history.Count - MAX_HISTORY_ENTRIES);
+            }
         }
     }
 
