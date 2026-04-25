@@ -303,7 +303,7 @@ class Chat extends Window {
 		};
 
 		const sendChannel = localConnection.createDataChannel("channel");
-		sendChannel.onmessage = event=> console.log(`message received: ${e.data}`);
+		sendChannel.onmessage = event=> console.log(`message received: ${event.data}`);
 
 		sendChannel.onopen = event=> {
 			console.log("local data channel open");
@@ -659,7 +659,7 @@ class Chat extends Window {
 	FindImgTags(element, images) {
 		const childNodes = element.childNodes;
 		for (let i=0; i<childNodes.length; i++) {
-			if (childNodes[i].tagName === "IMG" && childNodes.src.startsWith("data:image/")) {
+			if (childNodes[i].tagName === "IMG" && childNodes[i].src.startsWith("data:image/")) {
 				images.push(childNodes[i]);
 			}
 			else {

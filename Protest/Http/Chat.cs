@@ -13,9 +13,21 @@ internal static class Chat {
         public byte[] json;
     }
 
+    private const int MAX_HISTORY_ENTRIES = 1000;
+
     private static readonly List<Message> history = new List<Message>(32);
     private static readonly Lock mutex = new Lock();
     private const string defaultColor = "#606060";
+
+    private static void PushMessage(Message message) {
+        lock(mutex) {
+            while (history.Count > MAX_HISTORY_ENTRIES) {
+                history.RemoveAt(0);
+            }
+
+            history.Add(message);
+        }
+    }
 
     public static void TextHandler(ConcurrentDictionary<string, string> dictionary, string origin) {
         if (!Auth.rbac.TryGetValue(origin, out Auth.AccessControl rbac) && origin != "loopback") return;
@@ -45,9 +57,7 @@ internal static class Chat {
             json      = json
         };
 
-        lock(mutex) {
-            history.Add(message);
-        }
+        PushMessage(message);
     }
 
     public static void ImageHandler(ConcurrentDictionary<string, string> dictionary, string origin) {
@@ -81,9 +91,7 @@ internal static class Chat {
             json      = json
         };
 
-        lock(mutex) {
-            history.Add(message);
-        }
+        PushMessage(message);
     }
 
     public static void EmojiHandler(ConcurrentDictionary<string, string> dictionary, string origin) {
@@ -114,9 +122,7 @@ internal static class Chat {
             json      = json
         };
 
-        lock (mutex) {
-            history.Add(message);
-        }
+        PushMessage(message);
     }
 
     public static void CommandHandler(ConcurrentDictionary<string, string> dictionary, string origin) {
@@ -153,9 +159,7 @@ internal static class Chat {
             json      = json
         };
 
-        lock (mutex) {
-            history.Add(message);
-        }
+        PushMessage(message);
     }
 
     public static void SdpHandler(ConcurrentDictionary<string, string> dictionary, string origin) {
@@ -253,17 +257,20 @@ internal static class Chat {
             json      = json
         };
 
-        lock (mutex) {
-            history.Add(message);
-        }
+        PushMessage(message);
     }
 
     public static byte[] GetHistory() {
         long yesterday = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - 86_400_000;
 
         lock (mutex) {
-            while (history.Count > 0 && history[0].timestamp < yesterday) {
-                history.RemoveAt(0);
+            int expiredCount = 0;
+            while (expiredCount < history.Count && history[expiredCount].timestamp < yesterday) {
+                expiredCount++;
+            }
+
+            if (expiredCount > 0) {
+                history.RemoveRange(0, expiredCount);
             }
 
             if (history.Count == 0) { return "[]"u8.ToArray(); }
