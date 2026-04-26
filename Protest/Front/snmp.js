@@ -44,7 +44,7 @@ class Snmp extends Window {
 
 		this.args = args ?? { target: "", community:"", oid:"" };
 
-		this.SetTitle("SNMP pooling");
+		this.SetTitle("SNMP polling");
 		this.SetIcon("mono/snmp.svg");
 
 		this.content.style.overflow = "hidden";
@@ -118,14 +118,17 @@ class Snmp extends Window {
 		this.oidInput.value = this.args.oid ?? "";
 		inputBox.appendChild(this.oidInput);
 
-		this.explorerButton = document.createElement("input");
-		this.explorerButton.type = "button";
-		this.explorerButton.value = "...";
-		this.explorerButton.style.minWidth = "40px";
-		this.explorerButton.style.height = "auto";
-		this.explorerButton.style.gridArea = "2 / 4";
-		this.explorerButton.style.padding = "0";
-		inputBox.appendChild(this.explorerButton);
+		this.helperButton = document.createElement("input");
+		this.helperButton.type = "button";
+		this.helperButton.style.minWidth = "40px";
+		this.helperButton.style.height = "28px";
+		this.helperButton.style.gridArea = "2 / 4";
+		this.helperButton.style.padding = "0";
+		this.helperButton.style.backgroundImage = "url(mono/search.svg?light)";
+		this.helperButton.style.backgroundSize = "24px 24px";
+		this.helperButton.style.backgroundPosition = "50% 50%";
+		this.helperButton.style.backgroundRepeat = "no-repeat";
+		inputBox.appendChild(this.helperButton);
 
 		this.getButton = document.createElement("input");
 		this.getButton.type = "button";
@@ -207,7 +210,7 @@ class Snmp extends Window {
 			}
 		};
 
-		this.explorerButton.onclick = ()=> this.OidExplorer();
+		this.helperButton.onclick = ()=> this.OidExplorer();
 		this.getButton.onclick = ()=> this.GetQuery();
 		this.setButton.onclick = ()=> this.SetQueryDialog();
 		this.walkButton.onclick = ()=> this.WalkQuery();
@@ -315,7 +318,7 @@ class Snmp extends Window {
 
 			if (this.args.profile) {
 				for (let i=0; i<json.length; i++) {
-					if (json[i].guid != this.args.profile) continue;
+					if (json[i].guid !== this.args.profile) continue;
 
 					this.communityInput.value = json[i].community;
 					this.versionInput.value = json[i].version;

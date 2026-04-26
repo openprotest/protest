@@ -8,7 +8,7 @@ namespace Protest.Http;
 internal static class Chat {
 
     private readonly struct Message {
-        public readonly string sender {init; private get;}
+        public readonly string sender {init; internal get;}
         public readonly long timestamp {init; internal get;}
         public readonly byte[] json {init; internal get;}
     }

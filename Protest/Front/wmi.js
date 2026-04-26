@@ -95,8 +95,11 @@ class Wmi extends Window {
 
 		const helperButton = document.createElement("input");
 		helperButton.type = "button";
-		helperButton.value = "...";
 		helperButton.style.gridArea = "3 / 3";
+		helperButton.style.backgroundImage = "url(mono/search.svg?light)";
+		helperButton.style.backgroundSize = "24px 24px";
+		helperButton.style.backgroundPosition = "50% 50%";
+		helperButton.style.backgroundRepeat = "no-repeat";
 		inputBox.appendChild(helperButton);
 
 		this.executeButton = document.createElement("input");

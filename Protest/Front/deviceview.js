@@ -543,7 +543,7 @@ class DeviceView extends View {
 			}
 
 			if ("snmp profile" in this.link) {
-				const dnsButton = this.CreateSideButton("mono/snmp.svg", "SNMP pooling");
+				const dnsButton = this.CreateSideButton("mono/snmp.svg", "SNMP polling");
 				dnsButton.onclick = ()=> new Snmp({target:host, community:"", profile:this.link["snmp profile"].v});
 			}
 

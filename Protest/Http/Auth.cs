@@ -566,7 +566,7 @@ internal static class Auth {
                 path.Add("/wmi/killprocess");
                 break;
 
-            case "snmp pooling:write":
+            case "snmp polling:write":
                 path.Add("/ws/topology");
                 path.Add("/snmp/get");
                 path.Add("/snmp/set");
