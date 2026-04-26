@@ -335,10 +335,12 @@ class Snmp extends Window {
 	}
 
 	async OidExplorer() {
-		const dialog = this.DialogBox("640px");
+		const dialog = this.DialogBox("80%");
 		if (dialog === null) return;
 
 		const {okButton, innerBox} = dialog;
+		innerBox.parentElement.style.top = "10%";
+		innerBox.parentElement.style.maxWidth = "80%";
 
 		const tasks = [];
 		let taskCount = 0;
@@ -373,34 +375,145 @@ class Snmp extends Window {
 		innerBox.style.margin = "16px";
 		innerBox.style.display = "grid";
 		innerBox.style.gridTemplateColumns = "auto";
-		innerBox.style.gridTemplateRows = "32px 8px auto";
+		innerBox.style.gridTemplateRows = "32px 24px 8px auto";
 
 		const findInput = document.createElement("input");
 		findInput.type = "text";
 		findInput.placeholder = "Find..";
 		findInput.style.gridArea = "1 / 1";
 
+		const resultLabel = document.createElement("div");
+		resultLabel.style.gridArea = "2 / 1";
+		resultLabel.style.minHeight = "20px";
+		resultLabel.style.lineHeight = "20px";
+		resultLabel.style.textAlign = "right";
+		resultLabel.style.fontSize = "13px";
+		resultLabel.style.padding = "4px";
+		resultLabel.style.color = "var(--clr-dark)";
+		resultLabel.style.opacity = ".8";
+
 		const oidList = document.createElement("div");
 		oidList.className = "wmi-classes-list no-results";
 		oidList.style.border = "var(--clr-control) solid 1.5px";
-		oidList.style.gridArea = "3 / 1";
+		oidList.style.gridArea = "4 / 1";
 		oidList.style.overflowY = "scroll";
 
-		innerBox.append(findInput, oidList);
+		innerBox.append(findInput, resultLabel, oidList);
 
 		findInput.focus();
 
 		let selectedElement = null;
 		let selectedOid = null;
 
+		const SelectOid = element=> {
+			if (selectedElement) {
+				selectedElement.style.backgroundColor = "";
+			}
+
+			element.style.backgroundColor = "var(--clr-select)";
+			selectedElement = element;
+			selectedOid = element.getAttribute("oid");
+		};
+
+		const CreateOidTreeContainer = oid=> {
+			const container = document.createElement("div");
+			container.className = "snmp-container";
+
+			const expandButton = document.createElement("div");
+			expandButton.className = "snmp-expand";
+			container.appendChild(expandButton);
+
+			const item = document.createElement("div");
+			item.className = "snmp-container-item";
+			item.setAttribute("oid", oid);
+			item.onclick = ()=> SelectOid(item);
+			container.appendChild(item);
+
+			const oidBox = document.createElement("div");
+			oidBox.textContent = oid;
+			oidBox.style.userSelect = "text";
+			item.appendChild(oidBox);
+
+			const counter = document.createElement("div");
+			counter.textContent = "0";
+			counter.style.userSelect = "none";
+			oidBox.appendChild(counter);
+
+			if (oid in Snmp.OID_CACHE && isNaN(Snmp.OID_CACHE[oid][0])) {
+				const nameBox = document.createElement("div");
+				nameBox.textContent = Snmp.OID_CACHE[oid][0];
+				item.appendChild(nameBox);
+			}
+
+			const supBox = document.createElement("div");
+			supBox.className = "snmp-container-sup";
+			supBox.style.display = "none";
+			container.appendChild(supBox);
+
+			const hLine = document.createElement("div");
+			hLine.className = "snmp-tree-hline";
+			container.appendChild(hLine);
+
+			const vLine = document.createElement("div");
+			vLine.className = "snmp-tree-vline";
+			container.appendChild(vLine);
+
+			const dot = document.createElement("div");
+			dot.className = "snmp-tree-dot";
+			container.appendChild(dot);
+
+			const object = {
+				container,
+				supBox,
+				counter,
+				hLine,
+				vLine,
+				dot
+			};
+
+			expandButton.onclick = ()=> this.ToggleContainer(object);
+
+			return object;
+		};
+
+		const ShowEmptyState = message=> {
+			oidList.classList.add("no-results");
+			oidList.textContent = "";
+			resultLabel.textContent = "";
+
+			const empty = document.createElement("div");
+			empty.textContent = message;
+			empty.style.padding = "20px";
+			empty.style.color = "var(--clr-dark)";
+			empty.style.textAlign = "center";
+			empty.style.fontWeight = "bold";
+			empty.style.filter = "brightness(300%)";
+			empty.style.animation = "fade-in .4s ease-in";
+			oidList.appendChild(empty);
+		};
+
 		const FindOid = (container, keywords)=> {
+			container.textContent = "";
+			selectedElement = null;
+			selectedOid = null;
+
+			const trimmed = keywords
+				.map(keyword=> keyword.trim())
+				.filter(keyword=> keyword.length > 0);
+
+			if (trimmed.length === 0) {
+				ShowEmptyState("Type keywords to filter the OID tree");
+				return;
+			}
+
+			const matches = [];
 			for (const key in Snmp.OID_CACHE) {
 				const info = Snmp.OID_CACHE[key][0];
 
 				if (!isNaN(info)) continue;
 
 				let mismatch = false;
-				for (const keyword of keywords) {
+				for (const keyword of trimmed) {
 					if (!info.toLowerCase().includes(keyword) && !key.includes(keyword)) {
 						mismatch = true;
 						break;
@@ -408,41 +521,142 @@ class Snmp extends Window {
 				}
 
 				if (mismatch) continue;
+				matches.push(key);
+			}
 
-				const item = document.createElement("div");
-				item.className = "snmp-container-item";
-				container.appendChild(item);
+			if (matches.length === 0) {
+				ShowEmptyState("No matching OIDs found");
+				return;
+			}
 
-				const oidBox = document.createElement("div");
-				oidBox.textContent = key;
-				oidBox.style.userSelect = "text";
+			oidList.classList.remove("no-results");
 
-				const infoBox = document.createElement("div");
-				infoBox.textContent = info;
+			const compareOids = (left, right)=> {
+				const leftParts = left.split(".").map(o=> parseInt(o, 10));
+				const rightParts = right.split(".").map(o=> parseInt(o, 10));
+				const length = Math.max(leftParts.length, rightParts.length);
 
-				item.append(oidBox, infoBox);
+				for (let i=0; i<length; i++) {
+					const diff = (leftParts[i] ?? -1) - (rightParts[i] ?? -1);
+					if (diff !== 0) return diff;
+				}
 
-				item.onclick = ()=> {
-					if (selectedElement) {
-						selectedElement.style.backgroundColor = "";
+				return 0;
+			};
+
+			matches.sort(compareOids);
+
+			const matchSet = new Set();
+			const visibleOids = new Set();
+			let hasMoreResults = false;
+
+			for (let i=0; i<matches.length; i++) {
+				const parts = matches[i].split(".");
+				const branchOids = [];
+
+				for (let j=1; j<=parts.length; j++) {
+					branchOids.push(parts.slice(0, j).join("."));
+				}
+
+				let additionalCount = 0;
+				for (let j=0; j<branchOids.length; j++) {
+					if (!visibleOids.has(branchOids[j])) {
+						additionalCount++;
 					}
-					item.style.backgroundColor = "var(--clr-select)";
-					selectedElement = item;
-					selectedOid = key;
-				};
+				}
+
+				if (visibleOids.size + additionalCount > 1000) {
+					hasMoreResults = true;
+					break;
+				}
+
+				for (let j=0; j<branchOids.length; j++) {
+					visibleOids.add(branchOids[j]);
+				}
+
+				matchSet.add(matches[i]);
+			}
+
+			const sortedOids = Array.from(visibleOids).sort(compareOids);
+			if (sortedOids.length === 0) {
+				ShowEmptyState("No matching OIDs found");
+				return;
+			}
+
+			if (hasMoreResults) {
+				resultLabel.textContent = `${sortedOids.length} OID entries for ${matchSet.size} matches. Refine the filter to narrow the results.`;
+			}
+			else {
+				resultLabel.textContent = `${sortedOids.length} OID entries for ${matchSet.size} matches.`;
+			}
+
+			const rootOid = sortedOids[0].split(".")[0];
+			const containerMap = {};
+
+			const root = CreateOidTreeContainer(rootOid);
+			root.hLine.style.display = "none";
+			container.appendChild(root.container);
+			containerMap[rootOid] = root;
+
+			for (let i=0; i<sortedOids.length; i++) {
+				const oid = sortedOids[i];
+				if (oid === rootOid) continue;
+
+				const treeContainer = CreateOidTreeContainer(oid);
+				containerMap[oid] = treeContainer;
+
+				const parentOid = oid.split(".").slice(0, -1).join(".");
+				const parentContainer = containerMap[parentOid] || root;
+				parentContainer.supBox.appendChild(treeContainer.container);
+				parentContainer.counter.textContent = parentContainer.supBox.childNodes.length;
+			}
+
+			for (const oid of sortedOids) {
+				const treeContainer = containerMap[oid];
+				const hasChildren = treeContainer.supBox.childNodes.length > 0;
+				const expandButton = treeContainer.container.firstChild;
+				const item = treeContainer.container.childNodes[1];
+
+				if (matchSet.has(oid)) {
+					item.style.fontStyle = "italic";
+				}
+
+				if (hasChildren) {
+					this.ToggleContainer(treeContainer);
+				}
+				else {
+					expandButton.style.visibility = "hidden";
+					expandButton.style.pointerEvents = "none";
+					treeContainer.counter.style.display = "none";
+					treeContainer.vLine.style.display = "none";
+				}
+			}
+
+			root.container.firstChild.style.backgroundImage = "";
+			root.container.firstChild.style.backgroundColor = "var(--clr-dark)";
+			root.container.firstChild.style.borderRadius = "50%";
+
+			const currentOid = this.oidInput.value.split(",")[0].trim();
+			if (currentOid in containerMap) {
+				SelectOid(containerMap[currentOid].container.childNodes[1]);
+				containerMap[currentOid].container.childNodes[1].scrollIntoView({block: "nearest"});
 			}
 		};
 
-		findInput.onchange = ()=> {
-			oidList.textContent = "";
-			const keywords = new Set(findInput.value.trim().toLowerCase().split(" "));
+		const RefreshOidTree = ()=> {
+			const keywords = findInput.value.trim().toLowerCase().split(/\s+/);
 			FindOid(oidList, keywords);
 		};
+
+		findInput.onchange = RefreshOidTree;
 
 		if (this.oidInput.value.length > 0) {
 			const keyword = this.oidInput.value.split(",")[0].trim();
 			findInput.value = keyword;
-			FindOid(oidList, keyword);
+			RefreshOidTree();
+		}
+		else {
+			ShowEmptyState("Type keywords to filter the OID tree");
 		}
 
 		okButton.addEventListener("click", ()=> {
