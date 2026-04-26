@@ -14,10 +14,10 @@ internal static class Chat {
     }
 
     private const int MAX_HISTORY_ENTRIES = 1000;
+    private const string DEFAULT_COLOR = "#606060";
 
     private static readonly List<Message> history = new List<Message>(32);
     private static readonly Lock mutex = new Lock();
-    private const string defaultColor = "#606060";
 
     private static void PushMessage(Message message) {
         lock(mutex) {
@@ -45,7 +45,7 @@ internal static class Chat {
             time   = now,
             sender = username,
             alias  = alias,
-            color  = rbac?.color ?? defaultColor,
+            color  = rbac?.color ?? DEFAULT_COLOR,
             text   = text
         });
 
@@ -79,7 +79,7 @@ internal static class Chat {
             time   = now,
             sender = username,
             alias  = alias,
-            color  = rbac?.color ?? defaultColor,
+            color  = rbac?.color ?? DEFAULT_COLOR,
             src    = src
         });
 
@@ -110,7 +110,7 @@ internal static class Chat {
             time   = now,
             sender = username,
             alias  = alias,
-            color  = access?.color ?? defaultColor,
+            color  = access?.color ?? DEFAULT_COLOR,
             url    = url
         });
 
@@ -144,7 +144,7 @@ internal static class Chat {
             time    = now,
             sender  = username,
             alias   = alias,
-            color   = access?.color ?? defaultColor,
+            color   = access?.color ?? DEFAULT_COLOR,
             command = command,
             args    = args,
             icon    = icon,
@@ -190,7 +190,7 @@ internal static class Chat {
             time    = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
             sender  = username,
             alias   = alias,
-            color   = access?.color ?? defaultColor,
+            color   = access?.color ?? DEFAULT_COLOR,
             sdp     = sdp
         });
 
@@ -211,7 +211,7 @@ internal static class Chat {
             time      = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
             sender    = username,
             alias     = alias,
-            color     = access?.color ?? defaultColor,
+            color     = access?.color ?? DEFAULT_COLOR,
             candidate = candidate
         });
 
@@ -229,7 +229,7 @@ internal static class Chat {
             time   = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
             sender = username,
             alias  = alias,
-            color  = access?.color ?? defaultColor,
+            color  = access?.color ?? DEFAULT_COLOR,
         });
 
         KeepAlive.Broadcast(json, "/chat/read");
@@ -249,7 +249,7 @@ internal static class Chat {
             time   = now,
             sender = username,
             alias  = alias,
-            color  = access?.color ?? defaultColor,
+            color  = access?.color ?? DEFAULT_COLOR,
         });
 
         KeepAlive.Broadcast(json, "/chat/read");
