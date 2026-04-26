@@ -303,7 +303,7 @@ class Chat extends Window {
 		};
 
 		const sendChannel = localConnection.createDataChannel("channel");
-		sendChannel.onmessage = event=> console.log(`message received: ${e.data}`);
+		sendChannel.onmessage = event=> console.log(`message received: ${event.data}`);
 
 		sendChannel.onopen = event=> {
 			console.log("local data channel open");
@@ -350,6 +350,10 @@ class Chat extends Window {
 			switch (message.action) {
 			case "chat-text":
 				this.CreateTextBubble(message.text, direction, message.sender, message.alias, message.color, timeString, message.id);
+				break;
+
+			case "chat-image":
+				this.CreateImageBubble(message.src, direction, message.sender, message.alias, message.color, timeString, message.id);
 				break;
 
 			case "chat-emoji":
@@ -608,7 +612,7 @@ class Chat extends Window {
 			return;
 		}
 
-		const id = `${KEEP.username}${Date.now()}`;
+		const id = `${KEEP.username}${UI.GenerateUuid()}`;
 
 		try {
 			KEEP.socket.send(JSON.stringify({
@@ -621,14 +625,47 @@ class Chat extends Window {
 			this.ConfirmBox(ex, true, "mono/chat.svg");
 		}
 
-		let nowString = new Date().toLocaleTimeString(UI.regionalFormat, {});
+		const nowString = new Date().toLocaleTimeString(UI.regionalFormat, {});
 
 		const bubble = this.CreateTextBubble(this.input.textContent, "out", KEEP.username, "", KEEP.color, nowString, id);
-		bubble.style.color = "var(--clr-pane)";
-		bubble.style.backgroundColor = "transparent";
-		bubble.style.boxShadow = "var(--clr-pane) 0 0 0 2px inset";
+		if (bubble) {
+			bubble.style.color = "var(--clr-pane)";
+			bubble.style.backgroundColor = "transparent";
+			bubble.style.boxShadow = "var(--clr-pane) 0 0 0 2px inset";
+		}
+
+		const images = [];
+		this.FindImgTags(this.input, images);
+
+		for (let i=0; i<images.length; i++) {
+			if (!images[i].src.startsWith("data:image/")) continue;
+
+			try {
+				KEEP.socket.send(JSON.stringify({
+					id: `${KEEP.username}${UI.GenerateUuid()}`,
+					type: "chat-image",
+					src: images[i].src
+				}));
+			}
+			catch (ex) {
+				this.ConfirmBox(ex, true, "mono/chat.svg");
+				return;
+			}
+		}
 
 		this.ClearInput();
+	}
+
+	FindImgTags(element, images) {
+		const childNodes = element.childNodes;
+		for (let i=0; i<childNodes.length; i++) {
+			if (childNodes[i].tagName === "IMG" && childNodes[i].src.startsWith("data:image/")) {
+				images.push(childNodes[i]);
+			}
+			else {
+				this.FindImgTags(childNodes[i], images);
+			}
+		}
 	}
 
 	Input_onkeydown(event) {
@@ -768,8 +805,6 @@ class Chat extends Window {
 	CreateTextBubble(text, direction, sender, alias, color, time, id=null) {
 		if (text.length === 0) return;
 
-		//TODO: sanitize text and handle links, images, etc
-
 		const bubble = this.CreateBubble(direction, sender, alias, color, time);
 		bubble.textContent = text;
 
@@ -778,6 +813,48 @@ class Chat extends Window {
 				this.outdoing[id] = bubble;
 			}
 		}
+
+		return bubble;
+	}
+
+	CreateImageBubble(src, direction, sender, alias, color, time, id=null) {
+		if (!src.startsWith("data:image/")) return null;
+
+		const bubble = this.CreateBubble(direction, sender, alias, color, time);
+		
+		const image = document.createElement("img");
+		image.src = src;
+		image.style.maxWidth = "200px";
+		bubble.appendChild(image);
+
+		if (direction === "out") {
+			if (id && !(id in this.outdoing)) {
+				this.outdoing[id] = bubble;
+			}
+		}
+
+		image.onclick = ()=> {
+				const dialog = this.DialogBox("80%");
+				if (dialog === null) return;
+
+				const {okButton, cancelButton, innerBox} = dialog;
+
+				innerBox.style.margin = "20px 20px 0 20px";
+				innerBox.style.userSelect = "text";
+				innerBox.parentElement.style.top = "10%";
+				innerBox.parentElement.style.maxWidth = "80%";
+
+				innerBox.style.backgroundImage = `url(${src})`;
+				innerBox.style.backgroundSize = "contain";
+				innerBox.style.backgroundPosition = "center";
+				innerBox.style.backgroundRepeat = "no-repeat";
+
+				okButton.style.display = "none";
+				cancelButton.value = "Close";
+
+				innerBox.parentElement.onclick = event=> event.stopPropagation();
+				innerBox.parentElement.parentElement.onclick = ()=> dialog.Close();
+			};
 
 		return bubble;
 	}

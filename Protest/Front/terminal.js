@@ -667,9 +667,9 @@ class Terminal extends Window {
 	}
 
 	HandleEscSequence(data, index) {
-		if (index+1 >= data.length) return null;
+		if (index + 1 >= data.length) return null;
 
-		switch (data[index+1]) {
+		switch (data[index + 1]) {
 		case "[": return this.HandleCSI(data, index);
 		case "P": return this.HandleDCS(data, index);
 		case "]": return this.HandleOSC(data, index);
@@ -709,15 +709,15 @@ class Terminal extends Window {
 			return 2;
 
 		default:
-			console.warn("Unknown escape sequence: " + data[index+1]);
+			console.warn("Unknown escape sequence: " + data[index + 1]);
 			return 2;
 		}
 	}
 
 	HandleCSI(data, index) { //Control Sequence Introducer
-		if (index+1 >= data.length) return null;
+		if (index + 1 >= data.length) return null;
 
-		let offset = index+2;
+		let offset = index + 2;
 		let prefix = "";
 		if (offset < data.length && data[offset] >= "<" && data[offset] <= "?") {
 			prefix = data[offset++];
@@ -788,7 +788,7 @@ class Terminal extends Window {
 			case 2: this.ClearScreen(); break;
 			case 3: this.ClearScreenAndBuffer(); break;
 			default:
-				console.log(`Unhandled CSI command: ${params.join(";")}J`);
+				console.warn(`Unhandled CSI command: ${params.join(";")}J`);
 				break;
 			}
 			break;
@@ -799,7 +799,7 @@ class Terminal extends Window {
 			case 1: this.EraseLineFromBeginningToCursor(); break;
 			case 2: this.ClearLine(); break;
 			default:
-				console.log(`Unhandled CSI command: ${params.join(";")}K`);
+				console.warn(`Unhandled CSI command: ${params.join(";")}K`);
 				break;
 			}
 			break;
@@ -860,25 +860,25 @@ class Terminal extends Window {
 			break;
 		}
 
-		return offset - index+1;
+		return offset - index + 1;
 	}
 
 	HandleDCS(data, index) { //Device Control String
-		if (index+1 >= data.length) return null;
+		if (index + 1 >= data.length) return null;
 
-		const stEnd = data.indexOf("\x1b\\", index+2);
+		const stEnd = data.indexOf("\x1b\\", index + 2);
 		if (stEnd === -1) return null;
 
-		const command = data[index+2] || "";
+		const command = data[index + 2] || "";
 		console.warn(`Unhandled DCS: ${command}`);
-		return stEnd - index+2;
+		return stEnd - index + 2;
 	}
 
 	HandleOSC(data, index) { //Operating System Command
-		if (index+1 >= data.length) return null;
+		if (index + 1 >= data.length) return null;
 
-		const oscEnd = data.indexOf("\x07", index+2);
-		const stEnd = data.indexOf("\x1b\\", index+2);
+		const oscEnd = data.indexOf("\x07", index + 2);
+		const stEnd = data.indexOf("\x1b\\", index + 2);
 		let end = Math.min(oscEnd !== -1 ? oscEnd : data.length, stEnd !== -1 ? stEnd : data.length);
 		const terminatorLength = end === stEnd ? 2 : 1;
 
@@ -886,7 +886,7 @@ class Terminal extends Window {
 			return null;
 		}
 
-		const sequence = data.slice(index+2, end);
+		const sequence = data.slice(index + 2, end);
 		const [command, ...params] = sequence.split(";");
 
 		switch (command) {
@@ -912,9 +912,9 @@ class Terminal extends Window {
 	}
 
 	HandleCSD(data, index) { //Character Set Designation
-		if (index+2 >= data.length) return null;
+		if (index + 2 >= data.length) return null;
 
-		const command = data[index+2];
+		const command = data[index + 2];
 		switch (command) {
 		//TODO:
 		//case "B": return 3;//ISO-8859-1
@@ -1040,11 +1040,11 @@ class Terminal extends Window {
 				}
 				break;
 
-			case 49: //reset foreground color
+			case 49: //reset background color
 				this.backColor = null;
 				break;
 
-			//reset background color (bright variants)
+			//set foreground color (bright variants)
 			case 90: case 91: case 92: case 93: case 94: case 95: case 96: case 97:
 				this.foreColor = this.MapColorId(params[i] - 82);
 				break;

@@ -303,6 +303,7 @@ const KEEP = {
 			break;
 
 		case "chat-text":
+		case "chat-image":
 		case "chat-emoji":
 		case "chat-command":
 		case "chat-offer":
