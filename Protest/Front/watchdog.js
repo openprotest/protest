@@ -153,11 +153,12 @@ class Watchdog extends Window {
 	}
 
 	ZoomOut() {
-		if (this.dayPixels <= 30) return;
+		if (this.dayPixels <= 60) return;
 
 		let current = new Date(this.utcToday - this.offset * Watchdog.DAY_TICKS / this.dayPixels);
 
 		for (let key in this.watchers) {
+			this.watchers[key].svgCache = {};
 			this.watchers[key].element.childNodes[2].textContent = "";
 		}
 
@@ -175,6 +176,7 @@ class Watchdog extends Window {
 		let current = new Date(this.utcToday - this.offset * Watchdog.DAY_TICKS / this.dayPixels);
 
 		for (let key in this.watchers) {
+			this.watchers[key].svgCache = {};
 			this.watchers[key].element.childNodes[2].textContent = "";
 		}
 
@@ -217,6 +219,7 @@ class Watchdog extends Window {
 				const element = this.CreateWatcherElement(json[i]);
 				this.list.appendChild(element);
 				json[i].element = element;
+				json[i].svgCache = {};
 
 				this.watchers[json[i].file] = json[i];
 			}
@@ -928,6 +931,8 @@ class Watchdog extends Window {
 	}
 
 	CreateWatcherElement(watcher) {
+		watcher.svgCache = {};
+
 		const element = document.createElement("div");
 		element.className = "list-element";
 
@@ -1238,16 +1243,12 @@ class Watchdog extends Window {
 			this.cache[date][file][time] = status;
 		}
 
++		delete this.watchers[file].svgCache[date];
+
 		this.DrawWatcher(this.watchers[file]);
 	}
 
 	DrawWatcher(watcher) {
-		let previous = {};
-		for (let i = 0; i < watcher.element.childNodes[2].childNodes.length; i++) {
-			if (!watcher.element.childNodes[2].childNodes[i].getAttribute("date")) continue;
-			previous[watcher.element.childNodes[2].childNodes[i].getAttribute("date")] = watcher.element.childNodes[2].childNodes[i];
-		}
-
 		watcher.element.childNodes[2].textContent = "";
 
 		const daysInViewport = Math.round(this.timeline.offsetWidth / this.dayPixels);
@@ -1266,17 +1267,15 @@ class Watchdog extends Window {
 			let right = (this.utcToday - date) / Watchdog.DAY_TICKS * this.dayPixels - this.offset;
 			if (right <= -this.dayPixels) break;
 
-			if (date in previous && date) {
-				const svg = previous[date];
-				svg.style.right = `${right}px`;
-				watcher.element.childNodes[2].appendChild(svg);
-			}
-			else {
+			if (!(date in watcher.svgCache)) {
 				const svg = this.GenerateWatcherSvg(date, watcher.file);
-				svg.style.top = "0";
-				svg.style.right = `${right}px`;
-				watcher.element.childNodes[2].appendChild(svg);
+				watcher.svgCache[date] = svg;
 			}
+
+			const svg = watcher.svgCache[date];
+			svg.style.top = "0";
+			svg.style.right = `${right}px`;
+			watcher.element.childNodes[2].appendChild(svg);
 		}
 	}
 
