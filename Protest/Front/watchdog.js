@@ -908,7 +908,7 @@ class Watchdog extends Window {
 			const toggle = this.CreateToggle(this.watchers[file].name, true, watcher);
 			toggle.label.style.whiteSpace = "nowrap";
 			toggle.label.style.overflow = "hidden";
-			toggle.label.style.textOverflow = "ellipses";
+			toggle.label.style.textOverflow = "ellipsis";
 			toggle.label.style.left = "8px";
 			toggle.label.style.top = "5px";
 
@@ -1246,9 +1246,10 @@ class Watchdog extends Window {
 			this.cache[date][file][time] = status;
 		}
 
-+		delete this.watchers[file].svgCache[date];
-
-		this.DrawWatcher(this.watchers[file]);
+		if (file in this.watchers) {
+			delete this.watchers[file].svgCache[date];
+			this.DrawWatcher(this.watchers[file]);
+		}
 	}
 
 	DrawWatcher(watcher) {

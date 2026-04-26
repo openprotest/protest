@@ -180,6 +180,9 @@ internal static class Chat {
             if (!dictionary.TryGetValue("answer", out sdp)) return;
             action = "chat-answer";
         }
+        else {
+            return;
+        }
 
         byte[] json = JsonSerializer.SerializeToUtf8Bytes(new {
             action  = action,
