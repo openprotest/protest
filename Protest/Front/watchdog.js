@@ -794,11 +794,14 @@ class Watchdog extends Window {
 				recipientsInput.value = notifications[id].recipients.join("; ");
 				notifyInput.value = notifications[id].notify;
 
-				for (let file in watchersCheckboxes) {
+				for (const file in watchersCheckboxes) {
 					watchersCheckboxes[file].checked = false;
 				}
+
 				for (let i=0; i<notifications[id].watchers.length; i++) {
-					watchersCheckboxes[notifications[id].watchers[i]].checked = true;
+					if (notifications[id].watchers[i] in watchersCheckboxes) {
+						watchersCheckboxes[notifications[id].watchers[i]].checked = true;
+					}
 				}
 			};
 
