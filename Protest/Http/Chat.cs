@@ -7,10 +7,10 @@ namespace Protest.Http;
 
 internal static class Chat {
 
-    private struct Message {
-        public string sender;
-        public long timestamp;
-        public byte[] json;
+    private readonly struct Message {
+        public readonly string sender {init; private get;}
+        public readonly long timestamp {init; internal get;}
+        public readonly byte[] json {init; internal get;}
     }
 
     private const int MAX_HISTORY_ENTRIES = 1000;
