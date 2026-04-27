@@ -3312,11 +3312,10 @@ class DeviceView extends View {
 			index++;
 		}
 
-		if (columns > 24) {
+		if (columns > 12) {
 			for (let i=0; i<list.length; i++) {
 				let text = list[i].numberElement.textContent;
-				text = text.replace("10GB", "").replace("GE", "");
-				console.log(text, list[i].numberElement);
+				text = text.replace("10GB", "T").replace("10GE", "T").replace("GB", "").replace("GE", "");
 				list[i].numberElement.textContent = text;
 			}
 		}

@@ -3516,7 +3516,7 @@ class Topology extends Window {
 		}
 
 		localPortName = localPortName
-			.replace("TenGigabitEthernet", "10GB")
+			.replace("TenGigabitEthernet", "10GE")
 			.replace("GigabitEthernet", "GE");
 
 		localBox.textContent = localPortName;

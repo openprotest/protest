@@ -124,7 +124,7 @@ class Wmi extends Window {
 		this.plotBox.className = "wmi-plot no-results";
 		this.content.appendChild(this.plotBox);
 
-		this.duplicateButton.onclick = ()=> new Snmp(this.args);
+		this.duplicateButton.onclick = ()=> new Wmi(this.args);
 		this.targetInput.oninput     = ()=> { this.args.target = this.targetInput.value };
 		this.namespaceInput.onchange = ()=> { this.args.namespace = this.namespaceInput.value };
 		this.queryInput.oninput      = ()=> { this.args.query = this.queryInput.value };
@@ -275,7 +275,7 @@ class Wmi extends Window {
 		classFilterInput.onkeydown = event=>{
 			if (event.code === "Escape") {
 				classFilterInput.value = "";
-				classFilterInput.oninput()
+				classFilterInput.oninput();
 			}
 		};
 
