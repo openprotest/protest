@@ -519,7 +519,7 @@ button.view-live-button:active {
 
 .view-interface-port:hover {
 	background-color: var(--clr-select);
-	box-shadow: 0 0 0 2px var(--clr-select);
+	box-shadow: 0 0 0 1px var(--clr-select);
 }
 
 .view-interface-port > div:nth-child(1) {
@@ -541,7 +541,6 @@ button.view-live-button:active {
 .view-interface-port > div:nth-child(2) {
 	position: relative;
 	text-align: center;
-	font-size: 8px;
 	font-weight: bold;
 	color: #202020;
 	padding: 0 2px;
@@ -605,11 +604,12 @@ button.view-live-button:active {
 
 .view-interfaces-edit-list-element > *:nth-child(1) {
 	width: 8px;
-	height: 22px;
-	margin-left: 4px;
-	margin-right: 1px;
-	transform: translateY(5px) scaleY(1.2);
+	height: 26px;
+	margin-left: 2px;
+	margin-right: 2px;
+	transform: translateY(2px);
 	cursor: move;
+	border: 1px solid #777;
 	border-radius: 2px;
 	background-color: var(--clr-control);
 }
@@ -650,6 +650,7 @@ button.view-live-button:active {
 	min-width: 28px;
 	height: 28px;
 	margin: 2px 0px 0px 0px;
+	border: 1px solid #777;
 	background-color: var(--clr-control);
 	background-image: url(mono/delete.svg);
 	background-size: 24px 24px;

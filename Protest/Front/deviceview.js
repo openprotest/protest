@@ -758,7 +758,6 @@ class DeviceView extends View {
 		legend.style.overflowY = "auto";
 		this.liveC.appendChild(legend);
 
-		let numbering = obj.n ? obj.n : "vertical";
 		let list = [];
 
 		for (let i=0; i<obj.i.length; i++) {
@@ -815,6 +814,13 @@ class DeviceView extends View {
 
 			frontElement.onmouseenter = ()=> {
 				this.floating.textContent = "";
+
+				const nameBox = document.createElement("div");
+				nameBox.textContent = obj.i[i].n;
+				nameBox.style.fontSize = "small";
+				nameBox.style.fontWeight = "bold";
+				nameBox.style.textAlign = "center";
+				this.floating.appendChild(nameBox);
 
 				const speedBox = document.createElement("div");
 				speedBox.className = "view-interface-tooltip";
@@ -957,7 +963,7 @@ class DeviceView extends View {
 			frame.onmouseleave = ()=> {this.floating.style.display = "none"};
 		}
 
-		const gridSize = this.InitInterfaceComponents(frame, numbering, list);
+		const gridSize = this.InitInterfaceComponents(frame, list);
 
 		const modeBox = document.createElement("div");
 		modeBox.tabIndex = 0;
@@ -2486,28 +2492,6 @@ class DeviceView extends View {
 		frame.className = "view-interfaces-frame";
 		innerBox.appendChild(frame);
 
-		const numberingBox = document.createElement("div");
-		numberingBox.style.marginTop = "8px";
-		numberingBox.style.whiteSpace = "nowrap";
-		innerBox.appendChild(numberingBox);
-
-		const numberingLabel = document.createElement("div");
-		numberingLabel.textContent = "Numbering: ";
-		numberingLabel.style.display = "inline-block";
-		numberingLabel.style.width = "108px";
-		numberingBox.appendChild(numberingLabel);
-
-		const numberingInput = document.createElement("select");
-		numberingInput.style.width = "120px";
-		numberingBox.appendChild(numberingInput);
-		let numbering = ["Vertical", "Horizontal"];
-		for (let i=0; i<numbering.length; i++) {
-			const numberingOption = document.createElement("option");
-			numberingOption.value = numbering[i].toLowerCase();
-			numberingOption.textContent = numbering[i];
-			numberingInput.appendChild(numberingOption);
-		}
-
 		const bulkBox = document.createElement("div");
 		bulkBox.style.marginTop = "8px";
 		bulkBox.style.whiteSpace = "nowrap";
@@ -2566,7 +2550,7 @@ class DeviceView extends View {
 		titleBar.className = "view-interfaces-edit-title";
 		innerBox.appendChild(titleBar);
 
-		let titleArray = ["No.", "Type", "Speed", "Untagged", "Tagged", "Link"];
+		const titleArray = ["No.", "Type", "Speed", "Untagged", "Tagged", "Link"];
 		for (let i=0; i<titleArray.length; i++) {
 			const newLabel = document.createElement("div");
 			newLabel.textContent = titleArray[i];
@@ -2606,11 +2590,6 @@ class DeviceView extends View {
 		const extractCancelButton = document.createElement("input");
 		extractCancelButton.type = "button";
 		extractCancelButton.value = "Cancel";
-
-		const extractMessageLabel = document.createElement("div");
-		extractMessageLabel.style.display = "inline-block";
-		extractMessageLabel.textContent = "Are you sure you want to populate the interfaces from the device configuration?";
-		extractBox.appendChild(extractMessageLabel);
 
 		extractBox.appendChild(document.createElement("br"));
 		extractBox.appendChild(document.createElement("br"));
@@ -2746,8 +2725,6 @@ class DeviceView extends View {
 				addBulkOkButton.onclick();
 			}
 		};
-
-		numberingInput.onchange = ()=> this.InitInterfaceComponents(frame, numberingInput.value, list);
 
 		addBulkButton.onclick = ()=> BulkToggle();
 
@@ -2898,7 +2875,7 @@ class DeviceView extends View {
 
 				lastSelect = null;
 				SortList();
-				this.InitInterfaceComponents(frame, numberingInput.value, list);
+				this.InitInterfaceComponents(frame, list);
 			};
 
 			innerBox.parentElement.onmousemove = event => {
@@ -2910,7 +2887,7 @@ class DeviceView extends View {
 				lastSelect.listElement.style.boxShadow = "0 0 4px rgba(0,0,0,.5)";
 				lastSelect.listElement.style.top = `${pos}px`;
 				SortList();
-				this.InitInterfaceComponents(frame, numberingInput.value, list);
+				this.InitInterfaceComponents(frame, list);
 			};
 
 			txtN.onchange = ()=> {
@@ -2927,12 +2904,12 @@ class DeviceView extends View {
 				case "USB"     : icon.style.maskImage = "url(mono/usbport.svg)"; break;
 				case "Serial"  : icon.style.maskImage = "url(mono/serialport.svg)"; break;
 				}
-				this.InitInterfaceComponents(frame, numberingInput.value, list);
+				this.InitInterfaceComponents(frame, list);
 			};
 
 			txtS.onchange =
 			txtV.onchange = ()=> {
-				this.InitInterfaceComponents(frame, numberingInput.value, list);
+				this.InitInterfaceComponents(frame, list);
 			};
 
 			txtL.ondblclick = ()=> {
@@ -3082,7 +3059,7 @@ class DeviceView extends View {
 				frame.removeChild(frontElement);
 				list.splice(list.indexOf(obj), 1);
 				SortList();
-				this.InitInterfaceComponents(frame, numberingInput.value, list);
+				this.InitInterfaceComponents(frame, list);
 
 				titleBar.style.top = `${frame.clientHeight + 72}px`;
 				listBox.style.top = `${frame.clientHeight + 96}px`;
@@ -3093,7 +3070,7 @@ class DeviceView extends View {
 			txtP.onchange();
 
 			SortList();
-			this.InitInterfaceComponents(frame, numberingInput.value, list);
+			this.InitInterfaceComponents(frame, list);
 			titleBar.style.top = `${frame.clientHeight + 72}px`;
 			listBox.style.top = `${frame.clientHeight + 96}px`;
 		};
@@ -3112,7 +3089,7 @@ class DeviceView extends View {
 			}
 		};
 
-		this.InitInterfaceComponents(frame, numberingInput.value, list);
+		this.InitInterfaceComponents(frame, list);
 		titleBar.style.top = `${frame.clientHeight + 72}px`;
 		listBox.style.top = `${frame.clientHeight + 96}px`;
 
@@ -3167,7 +3144,7 @@ class DeviceView extends View {
 					}
 
 					SortList();
-					this.InitInterfaceComponents(frame, numberingInput.value, list);
+					this.InitInterfaceComponents(frame, list);
 
 					titleBar.style.top = `${frame.clientHeight + 72}px`;
 					listBox.style.top = `${frame.clientHeight + 96}px`;
@@ -3196,7 +3173,6 @@ class DeviceView extends View {
 		};
 
 		if (".interfaces" in this.link && this.link[".interfaces"].v) {
-			numberingInput.value = JSON.parse(this.link[".interfaces"].v).n;
 			let obj = JSON.parse(this.link[".interfaces"].v);
 			for (let i=0; i<obj.i.length; i++)
 				AddInterface(obj.i[i].n, obj.i[i].i, obj.i[i].s, obj.i[i].v, obj.i[i].t, obj.i[i].l, obj.i[i].c);
@@ -3207,7 +3183,7 @@ class DeviceView extends View {
 		}
 
 		okButton.addEventListener("click", async ()=> {
-			let interfaces = { i: [], n: numberingInput.value };
+			let interfaces = { i: [] };
 
 			for (let i=0; i<list.length; i++) {
 				interfaces.i.push({
@@ -3253,9 +3229,32 @@ class DeviceView extends View {
 		});
 	}
 
-	InitInterfaceComponents(frame, numbering, list) {
+	InitInterfaceComponents(frame, list) {
 		if (list.length === 0) return {rows:1, columns:4};
-		
+
+		const levels = [];
+		const levelCount = {};
+		for (let i=0; i<list.length; i++) {
+			const level = list[i].number.split("/").length;
+			levels.push(level);
+
+			if (level in levelCount) {
+				levelCount[level]++;
+			}
+			else {
+				levelCount[level] = 1;
+			}
+		}
+
+		let mode = null;
+		let maxCount = 0;
+		for (const level in levelCount) {
+			if (levelCount[level] > maxCount) {
+				maxCount = levelCount[level];
+				mode = Number(level);
+			}
+		}
+
 		let rows, columns;
 		if (list.length % 48 === 0) {
 			columns = 24;
@@ -3273,32 +3272,24 @@ class DeviceView extends View {
 			rows = 2;
 			columns = Math.ceil(list.length / 2);
 		}
+		else if (list.length % 56 < 8) {
+			columns = 28;
+			rows = Math.ceil(list.length / columns);
+		}
 		else {
 			rows = Math.ceil(list.length / 26);
 			columns = Math.ceil(list.length / rows);
 		}
 
+		let index = 0;
 		for (let i=0; i<list.length; i++) {
-			let row, column;
-			if (numbering === "vertical") {
-				if (rows > 2) {
-					const pairIndex = Math.floor(i / 2);
-					const stack = Math.floor(pairIndex / columns);
-					row = (i % 2 === 0 ? 1 : 2) + stack * 2;
-					column = pairIndex % columns + 1;
-					list[i].frontElement.style.gridArea = `${row} / ${column}`;
-				}
-				else {
-					row = i % rows + 1;
-					column = Math.floor(i / rows) + 1;
-					list[i].frontElement.style.gridArea = `${row} / ${column}`;
-				}
-			}
-			else {
-				row = Math.floor(i / columns) + 1;
-				column = i % columns + 1;
-				list[i].frontElement.style.gridArea = `${row} / ${column}`;
-			}
+			if (levels[i] !== mode) continue;
+
+			const pairIndex = Math.floor(index / 2);
+			const stack = Math.floor(pairIndex / columns);
+			const row = (index % 2 === 0 ? 1 : 2) + stack * 2;
+			const column = pairIndex % columns + 1;
+			list[i].frontElement.style.gridArea = `${row} / ${column}`;
 
 			if (row % 2 === 1 && rows !== 1) {
 				list[i].frontElement.childNodes[0].style.transform = "rotateX(180deg)";
@@ -3308,9 +3299,33 @@ class DeviceView extends View {
 				list[i].frontElement.childNodes[0].style.transform = "none";
 				list[i].frontElement.childNodes[1].style.top = "-16px";
 			}
+
+			index++;
 		}
 
-		const size = columns > 24 ? 28 : 32;
+		index = 0;
+		for (let i=0; i<list.length; i++) {
+			if (levels[i] === mode) continue;
+			list[i].frontElement.style.gridArea = `${rows} / ${index + 1}`;
+			list[i].frontElement.childNodes[0].style.transform = "none";
+			list[i].frontElement.childNodes[1].style.top = "-16px";
+			index++;
+		}
+
+		if (columns > 24) {
+			for (let i=0; i<list.length; i++) {
+				let text = list[i].numberElement.textContent;
+				text = text.replace("10GB", "").replace("GE", "");
+				console.log(text, list[i].numberElement);
+				list[i].numberElement.textContent = text;
+			}
+		}
+
+		frame.style.fontSize = columns > 24 ? "7px" : "8px";
+
+		console.log(frame);
+		
+		const size = columns > 24 ? (columns >= 28 ? 26 : 28) : 32;
 		frame.style.maxWidth = `${columns * size + 22}px`;
 		frame.style.gridTemplateColumns = `repeat(${columns}, ${size}px)`;
 		frame.style.gridTemplateRows = `repeat(${rows}, 44px)`;
