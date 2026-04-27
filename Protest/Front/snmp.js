@@ -49,6 +49,11 @@ class Snmp extends Window {
 
 		this.content.style.overflow = "hidden";
 
+		this.duplicateButton = document.createElement("input");
+		this.duplicateButton.type = "button";
+		this.duplicateButton.className = "snmp-duplicate-button";
+		this.content.appendChild(this.duplicateButton);
+
 		const inputBox = document.createElement("div");
 		inputBox.className = "snmp-input-box";
 		this.content.appendChild(inputBox);
@@ -61,10 +66,10 @@ class Snmp extends Window {
 
 		this.targetInput = document.createElement("input");
 		this.targetInput.type = "text";
+		this.targetInput.value = this.args.target ?? "";
 		this.targetInput.placeholder = "hostname or ip";
 		this.targetInput.style.gridArea = "1 / 2 / 1 / 4";
 		this.targetInput.style.minWidth = "50px";
-		this.targetInput.value = this.args.target ?? "";
 		inputBox.appendChild(this.targetInput);
 
 		const authLabel = document.createElement("div");
@@ -190,6 +195,7 @@ class Snmp extends Window {
 			})();
 		}
 
+		this.duplicateButton.onclick = ()=> new Snmp(this.args);
 		this.targetInput.oninput = ()=> { this.args.target = this.targetInput.value };
 		this.communityInput.oninput = ()=> { this.args.community = this.communityInput.value };
 		this.credentialsProfileInput.onchange = ()=> { this.args.profile = this.credentialsProfileInput.value };
@@ -217,6 +223,7 @@ class Snmp extends Window {
 
 		toggleButton.onclick = ()=> {
 			if (inputBox.style.visibility === "hidden") {
+				this.duplicateButton.style.right = "8px";
 				toggleButton.style.top = "96px";
 				toggleButton.style.transform = "rotate(-180deg)";
 				inputBox.style.visibility = "visible";
@@ -226,6 +233,7 @@ class Snmp extends Window {
 				this.args.hideInput = false;
 			}
 			else {
+				this.duplicateButton.style.right = "40px";
 				toggleButton.style.top = "0px";
 				toggleButton.style.transform = "rotate(0deg)";
 				inputBox.style.visibility = "hidden";
@@ -293,8 +301,6 @@ class Snmp extends Window {
 				catch {}
 			}
 		}
-
-		//return oid in Snmp.OID_CACHE ? Snmp.OID_CACHE[oid] : null;
 	}
 
 	async GetSnmpProfiles() {
@@ -359,7 +365,6 @@ class Snmp extends Window {
 		const getOidTask = async oid=> {
 			await this.GetOid(oid);
 			taskCount++;
-			//innerBox.textContent = `Loading OID database... (${tasks.length} / ${taskCount})`;
 		};
 
 		for (let i=0; i<Snmp.OID_MAP_1_0_8802.length; i++) {
@@ -394,9 +399,12 @@ class Snmp extends Window {
 		resultLabel.style.padding = "4px";
 		resultLabel.style.color = "var(--clr-dark)";
 		resultLabel.style.opacity = ".8";
+		resultLabel.style.whiteSpace = "nowrap";
+		resultLabel.style.overflow = "hidden";
+		resultLabel.style.textOverflow = "ellipsis";
 
 		const oidList = document.createElement("div");
-		oidList.className = "wmi-classes-list no-results";
+		oidList.className = "no-results";
 		oidList.style.border = "var(--clr-control) solid 1.5px";
 		oidList.style.gridArea = "4 / 1";
 		oidList.style.overflowY = "scroll";
@@ -437,11 +445,6 @@ class Snmp extends Window {
 			oidBox.style.userSelect = "text";
 			item.appendChild(oidBox);
 
-			const counter = document.createElement("div");
-			counter.textContent = "0";
-			counter.style.userSelect = "none";
-			oidBox.appendChild(counter);
-
 			if (oid in Snmp.OID_CACHE && isNaN(Snmp.OID_CACHE[oid][0])) {
 				const nameBox = document.createElement("div");
 				nameBox.textContent = Snmp.OID_CACHE[oid][0];
@@ -468,7 +471,6 @@ class Snmp extends Window {
 			const object = {
 				container,
 				supBox,
-				counter,
 				hLine,
 				vLine,
 				dot
@@ -480,19 +482,8 @@ class Snmp extends Window {
 		};
 
 		const ShowEmptyState = message=> {
-			oidList.classList.add("no-results");
 			oidList.textContent = "";
 			resultLabel.textContent = "";
-
-			const empty = document.createElement("div");
-			empty.textContent = message;
-			empty.style.padding = "20px";
-			empty.style.color = "var(--clr-dark)";
-			empty.style.textAlign = "center";
-			empty.style.fontWeight = "bold";
-			empty.style.filter = "brightness(300%)";
-			empty.style.animation = "fade-in .4s ease-in";
-			oidList.appendChild(empty);
 		};
 
 		const FindOid = (container, keywords)=> {
@@ -532,8 +523,6 @@ class Snmp extends Window {
 				return;
 			}
 
-			oidList.classList.remove("no-results");
-
 			const compareOids = (left, right)=> {
 				const leftParts = left.split(".").map(o=> parseInt(o, 10));
 				const rightParts = right.split(".").map(o=> parseInt(o, 10));
@@ -568,7 +557,7 @@ class Snmp extends Window {
 					}
 				}
 
-				if (visibleOids.size + additionalCount > 1000) {
+				if (visibleOids.size + additionalCount > 2000) {
 					hasMoreResults = true;
 					break;
 				}
@@ -611,7 +600,6 @@ class Snmp extends Window {
 				const parentOid = oid.split(".").slice(0, -1).join(".");
 				const parentContainer = containerMap[parentOid] || root;
 				parentContainer.supBox.appendChild(treeContainer.container);
-				parentContainer.counter.textContent = parentContainer.supBox.childNodes.length;
 			}
 
 			for (const oid of sortedOids) {
@@ -620,9 +608,7 @@ class Snmp extends Window {
 				const expandButton = treeContainer.container.firstChild;
 				const item = treeContainer.container.childNodes[1];
 
-				if (matchSet.has(oid)) {
-					item.style.fontStyle = "italic";
-				}
+				item.style.fontWeight = matchSet.has(oid) ? "bold" : "normal";
 
 				if (hasChildren) {
 					this.ToggleContainer(treeContainer);
@@ -630,7 +616,6 @@ class Snmp extends Window {
 				else {
 					expandButton.style.visibility = "hidden";
 					expandButton.style.pointerEvents = "none";
-					treeContainer.counter.style.display = "none";
 					treeContainer.vLine.style.display = "none";
 				}
 			}

@@ -1,3 +1,18 @@
+.wmi-duplicate-button {
+	position: absolute;
+	right: 8px;
+	top: 0;
+	width: 28px !important;
+	min-width: 28px !important;
+	height: 28px !important;
+	filter: drop-shadow(#202020 0 1px 2px);
+	background-color: transparent !important;
+	background-image: url(mono/copy.svg?light);
+	background-size: 24px 24px;
+	background-position: 50% 50%;
+	background-repeat: no-repeat;
+}
+
 .wmi-input {
 	position: absolute;
 	left: 8px;

@@ -14,6 +14,11 @@ class Wmi extends Window {
 
 		this.content.style.overflow = "hidden";
 
+		this.duplicateButton = document.createElement("input");
+		this.duplicateButton.type = "button";
+		this.duplicateButton.className = "wmi-duplicate-button";
+		this.content.appendChild(this.duplicateButton);
+
 		const inputBox = document.createElement("div");
 		inputBox.className = "wmi-input";
 		this.content.appendChild(inputBox);
@@ -96,6 +101,7 @@ class Wmi extends Window {
 		const helperButton = document.createElement("input");
 		helperButton.type = "button";
 		helperButton.style.gridArea = "3 / 3";
+		helperButton.style.height = "28px";
 		helperButton.style.backgroundImage = "url(mono/search.svg?light)";
 		helperButton.style.backgroundSize = "24px 24px";
 		helperButton.style.backgroundPosition = "50% 50%";
@@ -118,9 +124,10 @@ class Wmi extends Window {
 		this.plotBox.className = "wmi-plot no-results";
 		this.content.appendChild(this.plotBox);
 
-		this.targetInput.oninput    = ()=> { this.args.target = this.targetInput.value };
+		this.duplicateButton.onclick = ()=> new Snmp(this.args);
+		this.targetInput.oninput     = ()=> { this.args.target = this.targetInput.value };
 		this.namespaceInput.onchange = ()=> { this.args.namespace = this.namespaceInput.value };
-		this.queryInput.oninput     = ()=> { this.args.query = this.queryInput.value };
+		this.queryInput.oninput      = ()=> { this.args.query = this.queryInput.value };
 
 		helperButton.onclick = ()=> this.SequelAssistant();
 
@@ -128,6 +135,7 @@ class Wmi extends Window {
 
 		toggleButton.onclick = ()=> {
 			if (inputBox.style.visibility === "hidden") {
+				this.duplicateButton.style.right = "8px";
 				toggleButton.style.top = "128px";
 				toggleButton.style.transform = "rotate(-180deg)";
 				inputBox.style.visibility = "visible";
@@ -137,6 +145,7 @@ class Wmi extends Window {
 				this.args.hideInput = false;
 			}
 			else {
+				this.duplicateButton.style.right = "40px";
 				toggleButton.style.top = "0px";
 				toggleButton.style.transform = "rotate(0deg)";
 				inputBox.style.visibility = "hidden";

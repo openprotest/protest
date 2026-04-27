@@ -1,3 +1,18 @@
+.snmp-duplicate-button {
+	position: absolute;
+	right: 8px;
+	top: 0;
+	width: 28px !important;
+	min-width: 28px !important;
+	height: 28px !important;
+	filter: drop-shadow(#202020 0 1px 2px);
+	background-color: transparent !important;
+	background-image: url(mono/copy.svg?light);
+	background-size: 24px 24px;
+	background-position: 50% 50%;
+	background-repeat: no-repeat;
+}
+
 .snmp-input-box {
 	position: absolute;
 	left: 8px;
@@ -81,10 +96,8 @@
 }
 
 .snmp-list-item > div:nth-child(3) {
-	width: 50%;
-	min-width: 64px;
-	max-width: 600px;
 	white-space: nowrap;
+	width: calc(100% - min(35%, 400px) - min(15%, 150px));
 }
 
 .snmp-list-item > div:nth-child(3)[description]::after {
@@ -160,7 +173,6 @@
 }
 
 .snmp-container-item > div:nth-child(1) {
-	font-weight: 700;
 	width: 40%;
 	max-width: 300px;
 	padding-left: 32px;
