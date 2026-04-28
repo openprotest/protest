@@ -37,6 +37,8 @@ class Snmp extends Window {
 	22222222
 	];
 
+	static OID_MAP_1_3_6_1_4_1 = [2,9,11];
+
 	constructor(args) {
 		super();
 
@@ -49,10 +51,11 @@ class Snmp extends Window {
 
 		this.content.style.overflow = "hidden";
 
-		this.duplicateButton = document.createElement("input");
-		this.duplicateButton.type = "button";
-		this.duplicateButton.className = "snmp-duplicate-button";
-		this.content.appendChild(this.duplicateButton);
+		this.SetupToolbar();
+		this.helperButton = this.AddToolbarButton("OID helper", "mono/documentation.svg?light");
+		this.toolbar.appendChild(this.AddToolbarSeparator());
+		this.copyButton = this.AddToolbarButton("Copy", "mono/copy.svg?light");
+		this.AddSendToChatButton();
 
 		const inputBox = document.createElement("div");
 		inputBox.className = "snmp-input-box";
@@ -123,18 +126,6 @@ class Snmp extends Window {
 		this.oidInput.value = this.args.oid ?? "";
 		inputBox.appendChild(this.oidInput);
 
-		this.helperButton = document.createElement("input");
-		this.helperButton.type = "button";
-		this.helperButton.style.minWidth = "40px";
-		this.helperButton.style.height = "28px";
-		this.helperButton.style.gridArea = "2 / 4";
-		this.helperButton.style.padding = "0";
-		this.helperButton.style.backgroundImage = "url(mono/search.svg?light)";
-		this.helperButton.style.backgroundSize = "24px 24px";
-		this.helperButton.style.backgroundPosition = "50% 50%";
-		this.helperButton.style.backgroundRepeat = "no-repeat";
-		inputBox.appendChild(this.helperButton);
-
 		this.getButton = document.createElement("input");
 		this.getButton.type = "button";
 		this.getButton.value = "Get";
@@ -172,7 +163,6 @@ class Snmp extends Window {
 		this.plotBox.className = "snmp-plot no-results";
 		this.content.appendChild(this.plotBox);
 
-
 		if (this.args.profile) {
 			(async () => {
 				const response = await fetch("config/snmpprofiles/list");
@@ -195,7 +185,9 @@ class Snmp extends Window {
 			})();
 		}
 
-		this.duplicateButton.onclick = ()=> new Snmp(this.args);
+		this.helperButton.onclick = ()=> this.OidExplorer();
+		this.copyButton.onclick = ()=> new Snmp(this.args);
+
 		this.targetInput.oninput = ()=> { this.args.target = this.targetInput.value };
 		this.communityInput.oninput = ()=> { this.args.community = this.communityInput.value };
 		this.credentialsProfileInput.onchange = ()=> { this.args.profile = this.credentialsProfileInput.value };
@@ -216,14 +208,12 @@ class Snmp extends Window {
 			}
 		};
 
-		this.helperButton.onclick = ()=> this.OidExplorer();
 		this.getButton.onclick = ()=> this.GetQuery();
 		this.setButton.onclick = ()=> this.SetQueryDialog();
 		this.walkButton.onclick = ()=> this.WalkQuery();
 
 		toggleButton.onclick = ()=> {
 			if (inputBox.style.visibility === "hidden") {
-				this.duplicateButton.style.right = "8px";
 				toggleButton.style.top = "96px";
 				toggleButton.style.transform = "rotate(-180deg)";
 				inputBox.style.visibility = "visible";
@@ -233,7 +223,6 @@ class Snmp extends Window {
 				this.args.hideInput = false;
 			}
 			else {
-				this.duplicateButton.style.right = "40px";
 				toggleButton.style.top = "0px";
 				toggleButton.style.transform = "rotate(0deg)";
 				inputBox.style.visibility = "hidden";
@@ -289,6 +278,28 @@ class Snmp extends Window {
 			if (!(filename in Snmp.OID_CACHE)) {
 				try {
 					const response = await fetch(`snmp/1.3.6.1.2.1.${mib2}.json`);
+					if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
+
+					const json = await response.json();
+					if (json.error) return;
+
+					for (const key in json) {
+						Snmp.OID_CACHE[`${filename}${key}`] = json[key];
+					}
+				}
+				catch {}
+			}
+		}
+
+		else if (oid.startsWith("1.3.6.1.4.1.")) {
+			const priv = parseInt(oid.substring(12).split(".")[0]);
+
+			if (!Snmp.OID_MAP_1_3_6_1_4_1.includes(priv)) return null;
+
+			const filename = `1.3.6.1.4.1.${priv}`;
+			if (!(filename in Snmp.OID_CACHE)) {
+				try {
+					const response = await fetch(`snmp/1.3.6.1.4.1.${priv}.json`);
 					if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
 
 					const json = await response.json();
@@ -373,6 +384,10 @@ class Snmp extends Window {
 		}
 		for (let i=0; i<Snmp.OID_MAP_1_3_6_1_2_1.length; i++) {
 			const oid = `1.3.6.1.2.1.${Snmp.OID_MAP_1_3_6_1_2_1[i]}`;
+			tasks.push(getOidTask(oid));
+		}
+		for (let i=0; i<Snmp.OID_MAP_1_3_6_1_4_1.length; i++) {
+			const oid = `1.3.6.1.4.1.${Snmp.OID_MAP_1_3_6_1_4_1[i]}`;
 			tasks.push(getOidTask(oid));
 		}
 
