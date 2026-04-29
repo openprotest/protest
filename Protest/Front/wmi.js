@@ -15,7 +15,7 @@ class Wmi extends Window {
 		this.content.style.overflow = "hidden";
 
 		this.SetupToolbar();
-		this.helperButton = this.AddToolbarButton("WMI helper", "mono/documentation.svg?light");
+		this.helperButton = this.AddToolbarButton("Query helper", "mono/question.svg?light");
 		this.toolbar.appendChild(this.AddToolbarSeparator());
 		this.copyButton = this.AddToolbarButton("Copy", "mono/copy.svg?light");
 		this.AddSendToChatButton();
@@ -94,7 +94,7 @@ class Wmi extends Window {
 		this.queryInput = document.createElement("textarea");
 		this.queryInput.placeholder = "SELECT * FROM Win32_BIOS WHERE Status = \"OK\"";
 		this.queryInput.style.gridArea = "3 / 2 / 2 span / auto";
-		//this.queryInput.style.fontFamily = "monospace";
+		this.queryInput.style.fontFamily = "monospace";
 		this.queryInput.style.resize = "none";
 		if (this.args.query != null) this.queryInput.value = this.args.query;
 		inputBox.appendChild(this.queryInput);

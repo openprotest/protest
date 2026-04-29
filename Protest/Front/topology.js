@@ -768,7 +768,6 @@ class Topology extends Window {
 		const threshold = mean + Math.sqrt(variance);
 
 		const coreDevices = degrees.filter(d=> d.degree > threshold);
-		//const edgeDevices = degrees.filter(d=> d.degree <= threshold);
 
 		const groups = [];
 		const groupWidth = Topology.MAX_WIDTH / coreDevices.length;
@@ -808,7 +807,7 @@ class Topology extends Window {
 			groups[i].levels.push(level);
 		}
 
-		for (let i = 0; i < groups.length; i++) {
+		for (let i=0; i<groups.length; i++) {
 			let x = 0;
 			let y = groups[i].y;
 
@@ -866,7 +865,7 @@ class Topology extends Window {
 		let count = 0;
 
 		for (const file in this.devices) {
-			if (this.devices[file].nosnmp || this.devices[file].nolldp) {
+			if (this.devices[file].nosnmp || this.devices[file].nolldp || this.devices[file].links && Object.keys(this.devices[file].links).length === 0) {
 				const element = this.devices[file].element;
 				let x = Topology.MAX_WIDTH + (count % 2) * 150;
 				let y = 50 + Math.floor(count / 2) * 150;
@@ -1168,7 +1167,7 @@ class Topology extends Window {
 	}
 
 	IsMacAddress(str) {
-		const macRegex = /^(?:[0-9a-f]{12}|([0-9a-f]{2}([-:\s])){5}[0-9a-f]{2})$/;
+		const macRegex = /^(?:[0-9A-Fa-f]{12}|([0-9A-Fa-f]{2}([-:]))(?:[0-9A-Fa-f]{2}\2){4}[0-9A-Fa-f]{2}|[0-9A-Fa-f]{4}(?:-[0-9A-Fa-f]{4}){2})$/;
 		return macRegex.test(str);
 	}
 
@@ -2346,7 +2345,8 @@ class Topology extends Window {
 			}
 		}
 
-		if (device.lldp.remotePortIdSubtype[port][index] === 5) { //remote port is interface
+		const remotePortIdSubtype = device.lldp.remotePortIdSubtype[port][index];
+		if (remotePortIdSubtype === 5) {
 			const entry = this.CreateInferredEntry(device, port, index);
 			return entry.initial.file;
 		}

@@ -3235,7 +3235,7 @@ class DeviceView extends View {
 		const levels = [];
 		const levelCount = {};
 		for (let i=0; i<list.length; i++) {
-			const level = list[i].number.split("/").length;
+			const level = list[i].number ? list[i].number.split("/").length : 0;
 			levels.push(level);
 
 			if (level in levelCount) {

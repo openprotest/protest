@@ -52,7 +52,7 @@ class Snmp extends Window {
 		this.content.style.overflow = "hidden";
 
 		this.SetupToolbar();
-		this.helperButton = this.AddToolbarButton("OID helper", "mono/documentation.svg?light");
+		this.helperButton = this.AddToolbarButton("OID helper", "mono/question.svg?light");
 		this.toolbar.appendChild(this.AddToolbarSeparator());
 		this.copyButton = this.AddToolbarButton("Copy", "mono/copy.svg?light");
 		this.AddSendToChatButton();
