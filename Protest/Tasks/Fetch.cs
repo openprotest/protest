@@ -223,12 +223,12 @@ internal static class Fetch {
 
         StringBuilder portsBuilder = new StringBuilder();
         if (argPortScan is not null) {
-            tPortScan = new Task(() => {
+            tPortScan = new Task(async () => {
 
                 switch (argPortScan) {
 
                 case "wellknown": {
-                    bool[] ports = PortScan.PortsScanAsync(target, 1, 1023, 500, true, token).GetAwaiter().GetResult();
+                    bool[] ports = await PortScan.PortsScanAsync(target, 1, 1023, 500, true, token);
                     for (int i = 0; i < ports.Length; i++) {
                         if (!ports[i]) continue;
                         portsBuilder.Append(portsBuilder.Length == 0 ? i + 1 : $"; {i + 1}");
@@ -237,7 +237,7 @@ internal static class Fetch {
                 }
 
                 case "extended": {
-                    bool[] ports = PortScan.PortsScanAsync(target, 1, 8191, 500, true, token).GetAwaiter().GetResult();
+                    bool[] ports = await PortScan.PortsScanAsync(target, 1, 8191, 500, true, token);
                     for (int i = 0; i < ports.Length; i++) {
                         if (!ports[i]) continue;
                         portsBuilder.Append(portsBuilder.Length == 0 ? i + 1 : $"; {i + 1}");
@@ -247,7 +247,7 @@ internal static class Fetch {
 
                 default: {
                     short[] portsPool = PortScan.BASIC_PORTS;
-                    bool[] ports = PortScan.PortsScanAsync(target, portsPool, 1000, true, token).GetAwaiter().GetResult();
+                    bool[] ports = await PortScan.PortsScanAsync(target, portsPool, 1000, true, token);
                     for (int i = 0; i < ports.Length; i++) {
                         if (!ports[i]) continue;
                         portsBuilder.Append(portsBuilder.Length == 0 ? portsPool[i] : $"; {portsPool[i]}");
