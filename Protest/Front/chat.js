@@ -604,7 +604,6 @@ class Chat extends Window {
 	}
 
 	Send() {
-		//if (this.input.textContent.length === 0) return;
 		if (this.input.innerHTML.length === 0) return;
 
 		if (this.input.innerHTML.length === 4 && this.input.innerHTML === "<br>") {
@@ -614,11 +613,20 @@ class Chat extends Window {
 
 		const id = `${KEEP.username}${UI.GenerateUuid()}`;
 
+		let text = this.input.innerHTML
+			.replace(/<br\s*\/?>/gi, "\n")
+			.replace(/<\/div>/gi, "\n")
+			.replace(/<[^>]+>/g, "")
+			.replace("&nbsp;", "\n")
+			.trim();
+
+		console.log(text);
+
 		try {
 			KEEP.socket.send(JSON.stringify({
 				id: id,
 				type: "chat-text",
-				text: this.input.textContent
+				text: text
 			}));
 		}
 		catch (ex) {
@@ -627,7 +635,7 @@ class Chat extends Window {
 
 		const nowString = new Date().toLocaleTimeString(UI.regionalFormat, {});
 
-		const bubble = this.CreateTextBubble(this.input.textContent, "out", KEEP.username, "", KEEP.color, nowString, id);
+		const bubble = this.CreateTextBubble(text, "out", KEEP.username, "", KEEP.color, nowString, id);
 		if (bubble) {
 			bubble.style.color = "var(--clr-pane)";
 			bubble.style.backgroundColor = "transparent";

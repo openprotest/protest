@@ -78,8 +78,9 @@
 	color: var(--clr-dark);
 	overflow: hidden;
 	word-wrap: break-word;
-	background-color: var(--clr-pane);
+	white-space: pre-wrap;
 	max-width: 80%;
+	background-color: var(--clr-pane);
 	-webkit-user-select: text; user-select: text;
 }
 
