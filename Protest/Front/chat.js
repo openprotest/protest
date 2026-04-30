@@ -614,13 +614,11 @@ class Chat extends Window {
 		const id = `${KEEP.username}${UI.GenerateUuid()}`;
 
 		let text = this.input.innerHTML
-			.replace(/<br\s*\/?>/gi, "\n")
-			.replace(/<\/div>/gi, "\n")
-			.replace(/<[^>]+>/g, "")
-			.replace("&nbsp;", "\n")
+			.replaceAll(/<br\s*\/?>/gi, "\n")
+			.replaceAll(/<\/div>/gi, "\n")
+			.replaceAll(/<[^>]+>/g, "")
+			.replaceAll(/&nbsp;/g, "\n")
 			.trim();
-
-		console.log(text);
 
 		try {
 			KEEP.socket.send(JSON.stringify({
