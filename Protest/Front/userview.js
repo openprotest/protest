@@ -85,6 +85,7 @@ class UserView extends View {
 		this.SetTitle(this.link.title ? this.link.title.v : "untitled");
 		this.SetIcon(type in LOADER.userIcons ? LOADER.userIcons[type] : "mono/user.svg");
 		super.InitializePreview();
+		this.InitializeRelatedDevices();
 		this.InitializeLiveStats();
 	}
 
@@ -136,6 +137,26 @@ class UserView extends View {
 		}
 	}
 
+	InitializeRelatedDevices() {
+		this.liveA.textContent = "";
+
+		const devices = this.FindRelatedDevices();
+		for (let i=0; i<devices.length; i++) {
+			const device = LOADER.devices.data[devices[i]];
+			let name = device.name && device.name.v.length > 0 ? device.name.v : null;
+			name ??= device.hostname && device.hostname.v.length > 0 ? device.hostname.v : null;
+			name ??= device.ip && device.ip.v.length > 0 ? device.ip.v : null;
+
+			if (!name) continue;
+
+			const type = device.type && device.type.v.length > 0 ? device.type.v.toLowerCase() : null;
+			const icon = type in LOADER.deviceIcons ? LOADER.deviceIcons[type] : "mono/gear.svg";
+
+			const deviceButton = this.CreateInfoButton(name, icon);
+			deviceButton.button.onclick = ()=> LOADER.OpenDeviceByFile(devices[i]);
+		}
+	}
+
 	async InitializeLiveStats() {
 		if (this.liveStatsWebSockets !== null) return;
 
@@ -149,7 +170,6 @@ class UserView extends View {
 			this.refreshLiveStatsButton.style.animation = "spin 1.5s linear infinite reverse";
 
 			this.AfterResize();
-			this.liveA.textContent = "";
 			this.liveB.textContent = "";
 			//this.liveD.textContent = "";
 
@@ -179,6 +199,29 @@ class UserView extends View {
 
 			this.liveStatsWebSockets = null;
 		};
+	}
+
+	FindRelatedDevices() {
+		if (!this.link.username || this.link.username.v.length === 0) return [];
+		const username = this.link.username.v.toLowerCase();
+
+		let relatedDevices = [];
+		for (const file in LOADER.devices.data) {
+			const entry = LOADER.devices.data[file];
+			if (!entry.owner) continue;
+
+			const owners = entry.owner.v.toLowerCase().split(";").map(o=>o.trim());
+			for (let i=0; i<owners.length; i++) {
+				const ownerSplit = owners[i].split("\\");
+				const owner = ownerSplit.length > 1 ? ownerSplit[1] : ownerSplit[0];
+				if (owner === username) {
+					relatedDevices.push(file);
+					break;
+				}
+			}
+		}
+
+		return relatedDevices;
 	}
 
 	Edit(isNew = false) { //overrides
