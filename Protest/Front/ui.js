@@ -1251,12 +1251,10 @@ usernameLabel.onclick = event=> event.stopPropagation();
 logoutButton.onclick = async event=> {
 	event?.stopPropagation();
 
-	MENU.Close();
-
 	try {
 		const response = await fetch("/logout");
 		if (response.status === 200) {
-			location.reload();
+			location.replace("/");
 		}
 		else {
 			console.error(await response.text());

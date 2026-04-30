@@ -8,6 +8,29 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1"/>
 	<meta name="description" content="A management base for System Admins"/>
 	<style>
+		@media (prefers-reduced-motion: no-preference) {
+			@view-transition {
+				navigation: auto;
+			}
+			
+			::view-transition-old(root),
+			::view-transition-new(root) {
+				animation-duration: .4s;
+			}
+			
+			::view-transition-new(root) {
+				animation-name: login;
+				animation-timing-function: ease-out;
+			}
+		}
+
+		@media (prefers-reduced-motion: reduce) {
+			* {
+				transition-duration: 0s !important;
+				animation-duration: 0s !important;
+			}
+		}
+
 		body {
 			border: 0;
 			margin: 0;
@@ -125,6 +148,11 @@
 			0%   { transform: translateY(22px); }
 			50%  { transform: translateY(26px); }
 			100% { transform: translateY(22px); }
+		}
+
+		@keyframes login {
+			0%   { opacity:0; transform:scale(1.2);}
+			100% { opacity:1; transform:scale(1); }
 		}
 	</style>
 </head>
@@ -299,7 +327,7 @@
 				otpInput.focus();
 			}
 			else {
-				location.reload();
+				location.replace("/");
 			}
 
 			status = json.status;

@@ -327,7 +327,7 @@
 	border: #808080 1px solid;
 	border-radius: 4px;
 
-	transition-duration: .4s;
+	transition-duration: .2s;
 }
 
 #logoutButton {
@@ -415,7 +415,7 @@
 	position: absolute;
 	bottom: 32px;
 	opacity: 0;
-	transition: .4s;
+	transition: .2s;
 }
 
 #analog_clock {
@@ -424,7 +424,6 @@
 
 #date_calendar {
 	right: 152px;
-	transition-delay: .08s;
 }
 
 #analog_clock_h,
