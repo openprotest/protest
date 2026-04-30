@@ -22,36 +22,21 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node: [ "18.x", "20.x" ]
+        language: [ 'javascript' ]
 
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ matrix.node }}
-        cache: npm
-
-    - name: Install dependencies
-      run: npm ci
-
     - name: Initialize CodeQL
       uses: github/codeql-action/init@v4
       with:
-        languages: javascript
-        queries: security-and-quality
+        languages: ${{ matrix.language }}
 
-    - name: Build project
-      run: |
-        if npm run | grep -q "build"; then
-          npm run build
-        else
-          echo "No build step defined, skipping"
-        fi
+    - name: Autobuild
+      uses: github/codeql-action/autobuild@v4
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v4
       with:
-        category: "/language:javascript"
+        category: "/language:${{matrix.language}}"

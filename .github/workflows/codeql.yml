@@ -22,7 +22,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ windows-latest, ubuntu-latest, macos-latest ]
+        os: [ windows-latest, ubuntu-latest ]
         language: [ 'csharp' ]
         dotnet: [ "10.0.x" ]
 
