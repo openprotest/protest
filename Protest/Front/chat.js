@@ -613,11 +613,15 @@ class Chat extends Window {
 
 		const id = `${KEEP.username}${UI.GenerateUuid()}`;
 
-		let text = this.input.innerHTML
+		const normalizedHtml = this.input.innerHTML
 			.replaceAll(/<br\s*\/?>/gi, "\n")
-			.replaceAll(/<\/div>/gi, "\n")
-			.replaceAll(/<[^>]+>/g, "")
-			.replaceAll(/&nbsp;/g, "\n")
+			.replaceAll(/<\/div>/gi, "\n");
+
+		const sanitizer = document.createElement("div");
+		sanitizer.innerHTML = normalizedHtml;
+
+		let text = sanitizer.textContent
+			.replaceAll("\u00a0", "\n")
 			.trim();
 
 		try {
