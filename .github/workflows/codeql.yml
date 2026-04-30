@@ -24,7 +24,7 @@ jobs:
       matrix:
         os: [ windows-latest, ubuntu-latest, macos-latest ]
         language: [ 'csharp' ]
-        dotnet: [ "9.0.x", "10.0.x" ]
+        dotnet: [ "10.0.x" ]
 
     steps:
     - name: Checkout repository
