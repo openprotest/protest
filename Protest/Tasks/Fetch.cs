@@ -1,8 +1,4 @@
-﻿using Lextm.SharpSnmpLib;
-using Protest.Http;
-using Protest.Protocols.Snmp;
-using Protest.Tools;
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
 using System.DirectoryServices;
@@ -14,12 +10,16 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
+using Protest.Http;
+using Protest.Protocols.Snmp;
+using Protest.Tools;
+using Lextm.SharpSnmpLib;
 
 namespace Protest.Tasks;
 
 internal static class Fetch {
 
-    enum Type : byte {
+    enum FetchType : byte {
         none    = 0,
         devices = 1,
         users   = 2,
@@ -27,11 +27,11 @@ internal static class Fetch {
 
     struct Result {
         public string name;
-        public Type   type;
-        public long   started;
-        public long   finished;
-        public int    successful;
-        public int    unsuccessful;
+        public FetchType type;
+        public long      started;
+        public long      finished;
+        public int       successful;
+        public int       unsuccessful;
         public ConcurrentDictionary<string, ConcurrentDictionary<string, string[]>> dataset;
     }
 
@@ -100,7 +100,7 @@ internal static class Fetch {
 #endif
 
         if (reply?.Status == IPStatus.Success) {
-            ConcurrentDictionary<string, string[]> data = SingleDevice(target, useDns, useWmi, useLdap, snmpProfiles , argPortScan, asynchronous, token);
+            ConcurrentDictionary<string, string[]> data = SingleDevice(target, useDns, useWmi, useLdap, snmpProfiles, argPortScan, asynchronous, token);
             return data;
         }
 
@@ -151,10 +151,10 @@ internal static class Fetch {
         Dictionary<string, string> ad = new Dictionary<string, string>();
         string netBios = Protocols.NetBios.GetBiosName(ipList.First()?.ToString());
 
-        Thread tWmi = null, tAd = null, tPortScan = null;
+        Task tWmi = null, tAd = null, tPortScan = null;
 
         if (useWmi) {
-            tWmi = new Thread(() => {
+            tWmi = new Task(() => {
                 if (!OperatingSystem.IsWindows()) { return; }
                 wmi = Protocols.Wmi.WmiFetch(target, token);
 
@@ -180,7 +180,7 @@ internal static class Fetch {
         }
 
         if (useLdap) {
-            tAd = new Thread(() => {
+            tAd = new Task(() => {
                 if (!OperatingSystem.IsWindows()) { return; }
                 if (hostname is null) { return; }
 
@@ -223,7 +223,7 @@ internal static class Fetch {
 
         StringBuilder portsBuilder = new StringBuilder();
         if (argPortScan is not null) {
-            tPortScan = new Thread(() => {
+            tPortScan = new Task(() => {
 
                 switch (argPortScan) {
 
@@ -259,29 +259,33 @@ internal static class Fetch {
         }
 
         if (asynchronous) {
-            tWmi?.Start();
-            tAd?.Start();
-            tPortScan?.Start();
+            List<Task> tasks = new List<Task>();
+            if (tWmi is not null) tasks.Add(tWmi);
+            if (tAd is not null) tasks.Add(tAd);
+            if (tPortScan is not null) tasks.Add(tPortScan);
 
-            tWmi?.Join();
-            tAd?.Join();
-            tPortScan?.Join();
+
+            for (int i = 0; i < tasks.Count; i++) {
+                tasks[i].Start();
+            }
+
+            Task.WhenAll(tasks).GetAwaiter().GetResult();
         }
         else {
             tWmi?.Start();
-            tWmi?.Join();
+            tWmi?.Wait();
             if (token.IsCancellationRequested) {
                 return null;
             }
 
             tAd?.Start();
-            tAd?.Join();
+            tAd?.Wait();
             if (token.IsCancellationRequested) {
                 return null;
             }
 
             tPortScan?.Start();
-            tPortScan?.Join();
+            tPortScan?.Wait();
             if (token.IsCancellationRequested) {
                 return null;
             }
@@ -469,7 +473,7 @@ internal static class Fetch {
                 case "router":
                 case "switch":
                     string interfaces = Protocols.Snmp.Polling.FetchInterfaces(ipList[0], profile);
-                    if (interfaces is  null) break;
+                    if (interfaces is null) break;
                     data.TryAdd(".interfaces", new string[] { interfaces, "SNMP", string.Empty });
                     break;
                 }
@@ -768,7 +772,7 @@ internal static class Fetch {
 
                 result = new Result() {
                     name         = task.name,
-                    type         = Type.devices,
+                    type         = FetchType.devices,
                     started      = task.started,
                     finished     = DateTime.UtcNow.Ticks,
                     dataset      = dataset,
@@ -854,7 +858,7 @@ internal static class Fetch {
 
             result = new Result() {
                 name = task.name,
-                type = Type.users,
+                type = FetchType.users,
                 started = task.started,
                 finished = DateTime.UtcNow.Ticks,
                 dataset = dataset,
@@ -957,13 +961,13 @@ internal static class Fetch {
 
         Database database;
 
-        if (result.Value.type == Type.devices) {
+        if (result.Value.type == FetchType.devices) {
             Logger.Action(origin, "Fetch", "Approve fetched devices");
             KeepAlive.Broadcast("{\"action\":\"approve-fetch\",\"type\":\"devices\"}"u8.ToArray(), "/fetch/status");
 
             database = DatabaseInstances.devices;
         }
-        else if (result.Value.type == Type.users) {
+        else if (result.Value.type == FetchType.users) {
             Logger.Action(origin, "Fetch", "Approve fetched users");
             KeepAlive.Broadcast("{\"action\":\"approve-fetch\",\"type\":\"users\"}"u8.ToArray(), "/fetch/status");
 
@@ -1022,11 +1026,11 @@ internal static class Fetch {
 
         conflicted.Clear();
 
-        if (result.Value.type == Type.devices) {
+        if (result.Value.type == FetchType.devices) {
             KeepAlive.Broadcast("{\"action\":\"approve-fetch\",\"type\":\"devices\"}"u8.ToArray(), "/fetch/status");
             Logger.Action(origin, "Fetch", "Devices fetched data approved");
         }
-        else if (result.Value.type == Type.users) {
+        else if (result.Value.type == FetchType.users) {
             KeepAlive.Broadcast("{\"action\":\"approve-fetch\",\"type\":\"users\"}"u8.ToArray(), "/fetch/status");
             Logger.Action(origin, "Fetch", "Users fetched data approved");
         }
