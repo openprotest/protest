@@ -407,7 +407,7 @@ internal static class Fetch {
                 data.TryAdd("descriptor", new string[] { snmpDescription, "SNMP", string.Empty });
             }
             if (formatted is not null && formatted.TryGetValue(Protocols.Snmp.Oid.SYSTEM_NAME, out string snmpHostname) && !String.IsNullOrEmpty(snmpHostname)) {
-                data.TryAdd("hostname", new string[] { snmpHostname, "SNMP", string.Empty });
+                data.TryAdd("hostname", new string[] { snmpHostname.Split(".")[0], "SNMP", string.Empty });
             }
             if (formatted is not null && formatted.TryGetValue(Protocols.Snmp.Oid.SYSTEM_LOCATION, out string snmpLocation) && !String.IsNullOrEmpty(snmpLocation)) {
                 data.TryAdd("location", new string[] { snmpLocation, "SNMP", string.Empty });
@@ -427,7 +427,7 @@ internal static class Fetch {
             
                 if (macAddressResult is not null) {
                     Dictionary<string, byte[]> parsed = Protocols.Snmp.Polling.ParseResponseBytes(macAddressResult);
-                    if (parsed.TryGetValue(Protocols.Snmp.Oid.LLDP_LOCAL_CHASSIS_ID_TYPE, out byte[] chassisIdType)
+                    if (parsed is not null && parsed.TryGetValue(Protocols.Snmp.Oid.LLDP_LOCAL_CHASSIS_ID_TYPE, out byte[] chassisIdType)
                         && chassisIdType.Length >= 3 && chassisIdType[2] == 4
                         && parsed.TryGetValue(Protocols.Snmp.Oid.LLDP_LOCAL_CHASSIS_ID, out byte[] chassisId)
                         && chassisId.Length == 8

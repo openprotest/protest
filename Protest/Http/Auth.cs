@@ -16,10 +16,13 @@ internal static class Auth {
     private const long SESSION_TIMEOUT = 120L * HOUR; //5 days
 
     private const long RATE_LIMIT_TIME_WINDOW = 6_000_000_000; //10 minutes
-    private const int MAX_REQUESTS_PER_WIN_PERIOD = 8;
+    private const int MAX_REQUESTS_PER_WIN_PERIOD = 10;
     private static readonly ConcurrentDictionary<IPAddress, List<long>> rateLimLog = new ConcurrentDictionary<IPAddress, List<long>>();
 
+#if !DEBUG
     private static readonly Random rng = new Random();
+#endif
+
     private static readonly JsonSerializerOptions serializerOptions;
     private static readonly ConcurrentDictionary<string, OtpToken> otpTokens = new();
 
@@ -762,7 +765,7 @@ internal static class Auth {
             access.email        = email;
             access.domain       = domain;
             access.passwordHash = String.IsNullOrEmpty(password) ? access.passwordHash : Cryptography.HashUsernameAndPassword(username, password);
-            access.totpSecret   = null;
+            access.totpSecret   = exists.totpSecret;
             access.alias        = alias;
             access.color        = color;
             access.isDomainUser = isDomainUser;
