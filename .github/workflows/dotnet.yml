@@ -5,8 +5,6 @@ on:
     branches: [ "master" ]
   pull_request:
     branches: [ "master" ]
-  schedule:
-    - cron: '30 20 * * 5'
 
 jobs:
   build:
@@ -26,11 +24,11 @@ jobs:
       with:
         dotnet-version: ${{ matrix.dotnet }}
 
-    - name: Restore dependencies
+    - name: Restore
       run: dotnet restore OpenProtest.slnx
 
     - name: Build
-      run: dotnet build OpenProtest.slnx --no-restore --configuration Release
+      run: dotnet build OpenProtest.slnx --configuration Release --no-restore
 
     - name: Test
-      run: dotnet test OpenProtest.slnx --no-build --verbosity normal
+      run: dotnet test OpenProtest.slnx --configuration Release --no-build
