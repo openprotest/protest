@@ -1679,11 +1679,11 @@ class Terminal extends Window {
 	}
 
 	GetScreenWidth() {
-		return parseInt(this.content.clientWidth / Terminal.CHAR_WIDTH);
+		return Math.floor(this.content.clientWidth / Terminal.CHAR_WIDTH);
 	}
 
 	GetScreenHeight() {
-		return parseInt(this.content.clientHeight / Terminal.CHAR_HEIGHT);
+		return Math.floor(this.content.clientHeight / Terminal.CHAR_HEIGHT);
 	}
 
 	Bell() {
