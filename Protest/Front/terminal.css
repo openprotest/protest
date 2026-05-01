@@ -3,12 +3,24 @@
 	position: absolute;
 	margin: 20px;
 	margin-right: 88px;
+	overflow-x: auto;
 	overflow-y: scroll;
+	scrollbar-width: none;
 	-webkit-user-select: text; user-select: text;
 }
 
-.terminal-content {
-	scrollbar-width: none;
+.terminal-content::-webkit-scrollbar {
+	width: 0;
+	height: 8px;
+}
+
+.terminal-content::-webkit-scrollbar-track {
+	background: transparent;
+}
+
+.terminal-content::-webkit-scrollbar-thumb {
+	background: rgba(255,255,255,0.2);
+	border-radius: 4px;
 }
 
 .terminal-minimap {
@@ -37,9 +49,10 @@
 	left: 0;
 	right: 0;
 	pointer-events: none;
-	border-top: 1px solid rgba(200,200,200,0.3);
-	border-bottom: 1px solid rgba(200,200,200,0.3);
-	background-color: rgba(128,128,128,0.2);
+	border-top: 1px solid rgba(224,224,224,.2);
+	border-bottom: 1px solid rgba(224,224,224,.2);
+	background-color: color-mix(in srgb, var(--clr-accent) 40%, transparent);
+	mix-blend-mode: plus-lighter;
 }
 
 .terminal-line {
@@ -98,6 +111,17 @@
 
 .terminal-content:focus > .terminal-cursor {
 	display: initial;
+}
+
+@container (max-width: 400px) {
+	.terminal-content {
+		margin-right: 20px;
+		scrollbar-width: inherit;
+	}
+
+	.terminal-minimap {
+		display: none;
+	}
 }
 
 @keyframes terminal-blinking {

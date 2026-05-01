@@ -158,6 +158,7 @@ class Terminal extends Window {
 		this.cursor = {x:0, y:0};
 		this.screen = {};
 		this.lines = {};
+		this.maxLineY = 0;
 		this.pendingSequence = "";
 
 		this.scrollRegionTop = null;
@@ -186,6 +187,8 @@ class Terminal extends Window {
 		//this.saveText = this.AddToolbarButton("Save text", "mono/floppy.svg?light");
 
 		this.defaultElement = this.content;
+		
+		this.win.style.containerType = "inline-size";
 
 		this.content.tabIndex = 1;
 		this.content.classList.add("terminal-content");
@@ -229,6 +232,7 @@ class Terminal extends Window {
 		this.content.addEventListener("scroll", ()=> this.UpdateMinimap());
 
 		this.minimap.onmousedown = event=> {
+			if (event.buttons != 1) return;
 			event.preventDefault();
 			event.stopPropagation();
 			this.MinimapSeek(event);
@@ -1153,6 +1157,7 @@ class Terminal extends Window {
 	EnableAlternateScreen() { //?1049h
 		this.savedScreen = this.screen;
 		this.savedLines = this.lines;
+		this.savedMaxLineY = this.maxLineY;
 		this.ClearScreen();
 		this.SaveCursorState();
 	}
@@ -1161,8 +1166,10 @@ class Terminal extends Window {
 		if (this.savedScreen) {
 			this.screen = this.savedScreen;
 			this.lines = this.savedLines;
+			this.maxLineY = this.savedMaxLineY ?? 0;
 			this.savedScreen = null;
 			this.savedLines = null;
+			this.savedMaxLineY = null;
 
 			this.content.textContent = "";
 
@@ -1173,6 +1180,7 @@ class Terminal extends Window {
 			this.content.appendChild(this.cursorElement);
 
 			this.RestoreCursorState();
+			this.UpdateMinimap();
 		}
 	}
 
@@ -1223,6 +1231,7 @@ class Terminal extends Window {
 	ClearScreen() { //2J
 		this.screen = {};
 		this.lines = {};
+		this.maxLineY = 0;
 		this.content.textContent = "";
 		this.content.appendChild(this.cursorElement);
 		this.UpdateMinimap();
@@ -1486,6 +1495,7 @@ class Terminal extends Window {
 		this.lines = newLines;
 		this.ShiftTrackedPosition(this.cursor, overflow);
 		this.ShiftTrackedPosition(this.savedCursorPos, overflow);
+		this.maxLineY = Math.max(0, this.maxLineY - overflow);
 
 		if (this.scrollRegionTop !== null) {
 			this.scrollRegionTop = Math.max(0, this.scrollRegionTop - overflow);
@@ -1525,9 +1535,7 @@ class Terminal extends Window {
 		if (cw === 0 || ch === 0) return;
 
 		const CH = 2; // minimap pixels per terminal row
-		const CW = 1; // minimap pixels per terminal column
-
-		const totalLines   = this.GetBufferBottom() + 1;
+		const totalLines   = this.maxLineY + 1;
 		const totalMinimapH = totalLines * CH;
 		const scrollTop    = this.content.scrollTop;
 		const scrollH      = this.content.scrollHeight;
@@ -1549,11 +1557,10 @@ class Terminal extends Window {
 
 		const firstLine = Math.max(0, Math.floor(minimapOffset / CH));
 		const lastLine  = Math.min(totalLines - 1, firstLine + Math.ceil(ch / CH) + 1);
-		const maxX      = Math.floor(cw / CW);
 
 		for (let y = firstLine; y <= lastLine; y++) {
 			const py = Math.round(y * CH - minimapOffset);
-			for (let x = 0; x < maxX; x++) {
+			for (let x=0; x<cw; x+=2) {
 				const cell = this.screen[`${x},${y}`];
 				if (!cell) continue;
 				const text = cell.textContent;
@@ -1564,20 +1571,20 @@ class Terminal extends Window {
 					const row = py + dy;
 					if (row < 0 || row >= ch) continue;
 					const idx = (row * cw + x) * 4;
-					data[idx] = r; data[idx+1] = g; data[idx+2] = b; data[idx+3] = 255;
+					data[idx+0] = data[idx+4] = r;
+					data[idx+1] = data[idx+5] = g;
+					data[idx+2] = data[idx+6] = b;
+					data[idx+3] = 255;
+					data[idx+7] = 127;
 				}
 			}
 		}
 
 		ctx.putImageData(imageData, 0, 0);
 
-		const sliderTop = Math.round((scrollTop / Terminal.CHAR_HEIGHT) * CH - minimapOffset);
 		const sliderH   = Math.max(4, Math.round((viewportH / Terminal.CHAR_HEIGHT) * CH));
-		ctx.fillStyle   = "rgba(128,128,128,0.2)";
-		ctx.fillRect(0, sliderTop, cw, sliderH);
-		ctx.strokeStyle = "rgba(200,200,200,0.35)";
-		ctx.lineWidth = 1;
-		ctx.strokeRect(0.5, sliderTop + 0.5, cw - 1, sliderH - 1);
+		const sliderTop = Math.max(0, Math.min(ch - sliderH,
+			Math.round((scrollTop / Terminal.CHAR_HEIGHT) * CH - minimapOffset)));
 
 		this.minimapViewport.style.top    = `${sliderTop}px`;
 		this.minimapViewport.style.height = `${sliderH}px`;
@@ -1604,6 +1611,7 @@ class Terminal extends Window {
 
 	GetOrCreateLine(y) {
 		if (this.lines[y]) return this.lines[y];
+		if (y > this.maxLineY) this.maxLineY = y;
 		const lineDiv = document.createElement("div");
 		lineDiv.className = "terminal-line";
 		lineDiv.style.top = `${y * Terminal.CHAR_HEIGHT}px`;
