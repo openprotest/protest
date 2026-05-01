@@ -129,22 +129,22 @@ class Terminal extends Window {
 	};
 
 	static KEYPAD_KEYS = {
-		"Numpad0": "\xBbOp",
-		"Numpad1": "\xBbOq",
-		"Numpad2": "\xBbOr",
-		"Numpad3": "\xBbOs",
-		"Numpad4": "\xBbOt",
-		"Numpad5": "\xBbOu",
-		"Numpad6": "\xBbOv",
-		"Numpad7": "\xBbOw",
-		"Numpad8": "\xBbOx",
-		"Numpad9": "\xBbOy",
-		"NumpadDecimal": "\xBbOn",
-		"NumpadAdd": "\xBbOk",
-		"NumpadSubtract": "\xBbOm",
-		"NumpadMultiply": "\xBbOj",
-		"NumpadDivide": "\xBbOo",
-		"NumpadEnter": "\xBbOM"
+		"Numpad0": "\x1BOp",
+		"Numpad1": "\x1BOq",
+		"Numpad2": "\x1BOr",
+		"Numpad3": "\x1BOs",
+		"Numpad4": "\x1BOt",
+		"Numpad5": "\x1BOu",
+		"Numpad6": "\x1BOv",
+		"Numpad7": "\x1BOw",
+		"Numpad8": "\x1BOx",
+		"Numpad9": "\x1BOy",
+		"NumpadDecimal": "\x1BOn",
+		"NumpadAdd": "\x1BOk",
+		"NumpadSubtract": "\x1BOm",
+		"NumpadMultiply": "\x1BOj",
+		"NumpadDivide": "\x1BOo",
+		"NumpadEnter": "\x1BOM"
 	};
 
 	constructor(args) {
@@ -192,7 +192,7 @@ class Terminal extends Window {
 		this.insertMode = false; //TODO:
 		this.localEchoMode = false; //TODO:
 		this.appCursorKeys = false;
-		this.keypadApplicationMode = false; //TODO:
+		this.keypadApplicationMode = false;
 		this.bracketedMode = false;
 	}
 
