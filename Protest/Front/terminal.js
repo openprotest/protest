@@ -128,6 +128,25 @@ class Terminal extends Window {
 		"ArrowLeft"  : "\x1B[1;3D",
 	};
 
+	static KEYPAD_KEYS = {
+		"Numpad0": "\xBbOp",
+		"Numpad1": "\xBbOq",
+		"Numpad2": "\xBbOr",
+		"Numpad3": "\xBbOs",
+		"Numpad4": "\xBbOt",
+		"Numpad5": "\xBbOu",
+		"Numpad6": "\xBbOv",
+		"Numpad7": "\xBbOw",
+		"Numpad8": "\xBbOx",
+		"Numpad9": "\xBbOy",
+		"NumpadDecimal": "\xBbOn",
+		"NumpadAdd": "\xBbOk",
+		"NumpadSubtract": "\xBbOm",
+		"NumpadMultiply": "\xBbOj",
+		"NumpadDivide": "\xBbOo",
+		"NumpadEnter": "\xBbOM"
+	};
+
 	constructor(args) {
 		super();
 
@@ -510,7 +529,13 @@ class Terminal extends Window {
 
 		event.preventDefault();
 
-		//TODO: if (this.keypadApplicationMode) {}
+		if (this.keypadApplicationMode) {
+			const keypadKey = Terminal.KEYPAD_KEYS[event.code];
+			if (keypadKey) {
+				this.ws.send(keypadKey);
+				return;
+			}
+		}
 
 		if (event.shiftKey && Terminal.SHIFT_KEYS[event.code]) {
 			this.ws.send(Terminal.SHIFT_KEYS[event.code]);
@@ -1239,7 +1264,8 @@ class Terminal extends Window {
 
 	ClearScreenAndBuffer() { //3J
 		this.ClearScreen();
-		//TODO: clear scroll-back buffer
+		this.lines = {};
+		this.maxLineY = 0;
 	}
 
 	EraseLineFromCursorToEnd() { //0K
