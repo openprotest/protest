@@ -149,9 +149,15 @@ class Terminal extends Window {
 		this.ws = null;
 	}
 
+	AfterResize() { //overrides
+		super.AfterResize();
+		this.ResizeMinimap();
+	}
+
 	InitializeTerminalState() {
 		this.cursor = {x:0, y:0};
 		this.screen = {};
+		this.lines = {};
 		this.pendingSequence = "";
 
 		this.scrollRegionTop = null;
@@ -200,6 +206,42 @@ class Terminal extends Window {
 		this.optionsButton.onclick = ()=> this.OptionsDialog();
 		this.sendKeyButton.onclick = ()=> this.CustomKeyDialog();
 		this.pasteButton.onclick = ()=> this.TextFromClipboard();
+
+		this.minimap = document.createElement("div");
+		this.minimap.className = "terminal-minimap";
+
+		this.minimapCanvas = document.createElement("canvas");
+		this.minimapCanvas.className = "terminal-minimap-canvas";
+
+		this.minimapViewport = document.createElement("div");
+		this.minimapViewport.className = "terminal-minimap-viewport";
+
+		this.minimap.appendChild(this.minimapCanvas);
+		this.minimap.appendChild(this.minimapViewport);
+		this.win.appendChild(this.minimap);
+
+		const syncContentTop = ()=> {
+			this.win.style.setProperty("--content-top", this.content.style.top || "76px");
+		};
+		syncContentTop();
+		new MutationObserver(syncContentTop).observe(this.content, { attributes: true, attributeFilter: ["style"] });
+
+		this.content.addEventListener("scroll", ()=> this.UpdateMinimap());
+
+		this.minimap.onmousedown = event=> {
+			event.preventDefault();
+			event.stopPropagation();
+			this.MinimapSeek(event);
+			const onMove = e=> { e.preventDefault(); this.MinimapSeek(e); };
+			const onUp = ()=> {
+				document.removeEventListener("mousemove", onMove);
+				document.removeEventListener("mouseup", onUp);
+			};
+			document.addEventListener("mousemove", onMove);
+			document.addEventListener("mouseup", onUp);
+		};
+
+		this.minimap.onwheel = event=> this.content.scrollBy(0, event.deltaY);
 	}
 
 	ResetTextAttributes() {
@@ -555,8 +597,7 @@ class Terminal extends Window {
 					if (!char) {
 						char = document.createElement("span");
 						char.style.left = `${this.cursor.x * Terminal.CHAR_WIDTH}px`;
-						char.style.top = `${this.cursor.y * Terminal.CHAR_HEIGHT}px`;
-						this.content.appendChild(char);
+						this.GetOrCreateLine(this.cursor.y).appendChild(char);
 						this.screen[`${this.cursor.x},${this.cursor.y}`] = char;
 					}
 					char.textContent = data[i];
@@ -588,8 +629,7 @@ class Terminal extends Window {
 				if (!char) {
 					char = document.createElement("span");
 					char.style.left = `${this.cursor.x * Terminal.CHAR_WIDTH}px`;
-					char.style.top = `${this.cursor.y * Terminal.CHAR_HEIGHT}px`;
-					this.content.appendChild(char);
+					this.GetOrCreateLine(this.cursor.y).appendChild(char);
 					this.screen[`${this.cursor.x},${this.cursor.y}`] = char;
 				}
 				else {
@@ -652,6 +692,7 @@ class Terminal extends Window {
 		}
 
 		this.TrimHistory();
+		this.UpdateMinimap();
 
 		this.cursorElement.style.left = Terminal.CHAR_WIDTH * this.cursor.x + "px";
 		this.cursorElement.style.top = Terminal.CHAR_HEIGHT * this.cursor.y + "px";
@@ -1111,6 +1152,7 @@ class Terminal extends Window {
 
 	EnableAlternateScreen() { //?1049h
 		this.savedScreen = this.screen;
+		this.savedLines = this.lines;
 		this.ClearScreen();
 		this.SaveCursorState();
 	}
@@ -1118,12 +1160,14 @@ class Terminal extends Window {
 	DisableAlternateScreen() { //?1049l
 		if (this.savedScreen) {
 			this.screen = this.savedScreen;
+			this.lines = this.savedLines;
 			this.savedScreen = null;
+			this.savedLines = null;
 
 			this.content.textContent = "";
 
-			for (let o in this.screen) {
-				this.content.appendChild(this.screen[o]);
+			for (const y in this.lines) {
+				this.content.appendChild(this.lines[y]);
 			}
 
 			this.content.appendChild(this.cursorElement);
@@ -1158,10 +1202,7 @@ class Terminal extends Window {
 		for (let y=0; y<h; y++) {
 			for (let x=0; x<w; x++) {
 				if (w*y + x < c) continue;
-				const key = `${x},${y}`;
-				if (!this.screen[key]) continue;
-				this.content.removeChild(this.screen[key]);
-				delete this.screen[key];
+				this.RemoveCell(x, y);
 			}
 		}
 	}
@@ -1174,18 +1215,17 @@ class Terminal extends Window {
 		for (let y=0; y<h; y++) {
 			for (let x=0; x<w; x++) {
 				if (w*y + x > c) continue;
-				const key = `${x},${y}`;
-				if (!this.screen[key]) continue;
-				this.content.removeChild(this.screen[key]);
-				delete this.screen[key];
+				this.RemoveCell(x, y);
 			}
 		}
 	}
 
 	ClearScreen() { //2J
 		this.screen = {};
+		this.lines = {};
 		this.content.textContent = "";
 		this.content.appendChild(this.cursorElement);
+		this.UpdateMinimap();
 	}
 
 	ClearScreenAndBuffer() { //3J
@@ -1196,10 +1236,7 @@ class Terminal extends Window {
 	EraseLineFromCursorToEnd() { //0K
 		const w = this.GetScreenWidth();
 		for (let i=this.cursor.x; i<w; i++) {
-			const key = `${i},${this.cursor.y}`;
-			if (!this.screen[key]) continue;
-			this.content.removeChild(this.screen[key]);
-			delete this.screen[key];
+			this.RemoveCell(i, this.cursor.y);
 		}
 	}
 
@@ -1422,23 +1459,31 @@ class Terminal extends Window {
 			const split = key.indexOf(",");
 			const x = key.substring(0, split);
 			const y = parseInt(key.substring(split+1), 10);
-			const cell = this.screen[key];
 
 			if (Number.isNaN(y)) continue;
+			if (y < overflow) continue;
 
+			newScreen[`${x},${y - overflow}`] = this.screen[key];
+		}
+
+		const newLines = {};
+		for (const lineY in this.lines) {
+			const y = parseInt(lineY, 10);
+			const lineDiv = this.lines[lineY];
 			if (y < overflow) {
-				if (cell.parentNode === this.content) {
-					this.content.removeChild(cell);
+				if (lineDiv.parentNode === this.content) {
+					this.content.removeChild(lineDiv);
 				}
-				continue;
 			}
-
-			const newY = y - overflow;
-			newScreen[`${x},${newY}`] = cell;
-			cell.style.top = `${newY * Terminal.CHAR_HEIGHT}px`;
+			else {
+				const newY = y - overflow;
+				newLines[newY] = lineDiv;
+				lineDiv.style.top = `${newY * Terminal.CHAR_HEIGHT}px`;
+			}
 		}
 
 		this.screen = newScreen;
+		this.lines = newLines;
 		this.ShiftTrackedPosition(this.cursor, overflow);
 		this.ShiftTrackedPosition(this.savedCursorPos, overflow);
 
@@ -1456,11 +1501,123 @@ class Terminal extends Window {
 		this.content.scrollTop = Math.max(0, previousScrollTop - removedHeight);
 	}
 
+	ResizeMinimap() {
+		const h = this.minimap.clientHeight;
+		const w = this.minimap.clientWidth;
+		if (h === 0 || w === 0) return;
+		this.minimapCanvas.width  = w;
+		this.minimapCanvas.height = h;
+		this.DrawMinimap();
+	}
+
+	UpdateMinimap() {
+		if (!this.minimapCanvas || this.minimapRafId) return;
+		this.minimapRafId = requestAnimationFrame(()=> {
+			this.minimapRafId = null;
+			this.DrawMinimap();
+		});
+	}
+
+	DrawMinimap() {
+		const canvas = this.minimapCanvas;
+		const cw = canvas.width;
+		const ch = canvas.height;
+		if (cw === 0 || ch === 0) return;
+
+		const CH = 2; // minimap pixels per terminal row
+		const CW = 1; // minimap pixels per terminal column
+
+		const totalLines   = this.GetBufferBottom() + 1;
+		const totalMinimapH = totalLines * CH;
+		const scrollTop    = this.content.scrollTop;
+		const scrollH      = this.content.scrollHeight;
+		const viewportH    = this.content.clientHeight;
+
+		let minimapOffset = 0;
+		if (totalMinimapH > ch) {
+			const ratio = scrollTop / Math.max(1, scrollH - viewportH);
+			minimapOffset = ratio * (totalMinimapH - ch);
+		}
+
+		const ctx = canvas.getContext("2d");
+		const imageData = ctx.createImageData(cw, ch);
+		const data = imageData.data;
+
+		for (let i=0; i<data.length; i+=4) {
+			data[i] = 28; data[i+1] = 28; data[i+2] = 28; data[i+3] = 255;
+		}
+
+		const firstLine = Math.max(0, Math.floor(minimapOffset / CH));
+		const lastLine  = Math.min(totalLines - 1, firstLine + Math.ceil(ch / CH) + 1);
+		const maxX      = Math.floor(cw / CW);
+
+		for (let y = firstLine; y <= lastLine; y++) {
+			const py = Math.round(y * CH - minimapOffset);
+			for (let x = 0; x < maxX; x++) {
+				const cell = this.screen[`${x},${y}`];
+				if (!cell) continue;
+				const text = cell.textContent;
+				if (!text || text === " ") continue;
+
+				const [r, g, b] = Terminal.ParseMinimapColor(cell.style.color);
+				for (let dy = 0; dy < CH; dy++) {
+					const row = py + dy;
+					if (row < 0 || row >= ch) continue;
+					const idx = (row * cw + x) * 4;
+					data[idx] = r; data[idx+1] = g; data[idx+2] = b; data[idx+3] = 255;
+				}
+			}
+		}
+
+		ctx.putImageData(imageData, 0, 0);
+
+		const sliderTop = Math.round((scrollTop / Terminal.CHAR_HEIGHT) * CH - minimapOffset);
+		const sliderH   = Math.max(4, Math.round((viewportH / Terminal.CHAR_HEIGHT) * CH));
+		ctx.fillStyle   = "rgba(128,128,128,0.2)";
+		ctx.fillRect(0, sliderTop, cw, sliderH);
+		ctx.strokeStyle = "rgba(200,200,200,0.35)";
+		ctx.lineWidth = 1;
+		ctx.strokeRect(0.5, sliderTop + 0.5, cw - 1, sliderH - 1);
+
+		this.minimapViewport.style.top    = `${sliderTop}px`;
+		this.minimapViewport.style.height = `${sliderH}px`;
+	}
+
+	MinimapSeek(e) {
+		const rect  = this.minimap.getBoundingClientRect();
+		const ratio = Math.min(1, Math.max(0, (e.clientY - rect.top) / rect.height));
+		this.content.scrollTop = ratio * (this.content.scrollHeight - this.content.clientHeight);
+		this.DrawMinimap();
+	}
+
+	static ParseMinimapColor(str) {
+		if (!str) return [200, 200, 200];
+		const m = str.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
+		if (m) return [+m[1], +m[2], +m[3]];
+		if (str[0] === "#") {
+			const h = str.slice(1);
+			if (h.length === 3) return [parseInt(h[0]+h[0],16), parseInt(h[1]+h[1],16), parseInt(h[2]+h[2],16)];
+			return [parseInt(h.slice(0,2),16), parseInt(h.slice(2,4),16), parseInt(h.slice(4,6),16)];
+		}
+		return [200, 200, 200];
+	}
+
+	GetOrCreateLine(y) {
+		if (this.lines[y]) return this.lines[y];
+		const lineDiv = document.createElement("div");
+		lineDiv.className = "terminal-line";
+		lineDiv.style.top = `${y * Terminal.CHAR_HEIGHT}px`;
+		this.lines[y] = lineDiv;
+		this.content.appendChild(lineDiv);
+		return lineDiv;
+	}
+
 	RemoveCell(x, y) {
 		const key = `${x},${y}`;
 		if (!this.screen[key]) return;
-		if (this.screen[key].parentNode === this.content) {
-			this.content.removeChild(this.screen[key]);
+		const cell = this.screen[key];
+		if (cell.parentNode) {
+			cell.parentNode.removeChild(cell);
 		}
 		delete this.screen[key];
 	}
@@ -1475,7 +1632,10 @@ class Terminal extends Window {
 		delete this.screen[fromKey];
 		this.screen[`${toX},${toY}`] = cell;
 		cell.style.left = `${toX * Terminal.CHAR_WIDTH}px`;
-		cell.style.top = `${toY * Terminal.CHAR_HEIGHT}px`;
+		if (fromY !== toY) {
+			if (cell.parentNode) cell.parentNode.removeChild(cell);
+			this.GetOrCreateLine(toY).appendChild(cell);
+		}
 	}
 
 	ResetTerminal() {
