@@ -306,7 +306,9 @@ internal sealed class Listener {
         ctx.Response.Close();
         }
 #if !DEBUG
-        catch { }
+        catch (Exception ex) {
+            Logger.Debug(ex);
+        }
 #endif
     }
 

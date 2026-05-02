@@ -467,7 +467,9 @@ internal static class Watchdog {
 
                 return 0;
             }
-            catch { }
+            catch (Exception ex) {
+                Logger.Debug(ex);
+            }
         }
 
         return -1;

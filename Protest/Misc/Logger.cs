@@ -17,7 +17,14 @@ internal static class Logger {
     private static string actionWriterDate;
 
     static Logger() {
-        errorWriter ??= new StreamWriter($"{Data.DIR_LOG}{Data.DELIMITER}error.log", true, System.Text.Encoding.UTF8);
+        try {
+            errorWriter = new StreamWriter($"{Data.DIR_LOG}{Data.DELIMITER}error.log", true, System.Text.Encoding.UTF8);
+        }
+        catch (Exception ex) {
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine(ex);
+            Console.ResetColor();
+        }
     }
 
 #if DEBUG
@@ -47,10 +54,12 @@ internal static class Logger {
                 errorWriter.Flush();
             }
         }
-        catch { }
+        catch {
+            Console.WriteLine("Failed to log");
+        }
 
         Console.ForegroundColor = ConsoleColor.Red;
-        Console.Error.WriteLine(text);
+        Console.WriteLine(text);
         Console.ResetColor();
     }
 
@@ -64,7 +73,9 @@ internal static class Logger {
                 errorWriter.Flush();
             }
         }
-        catch { }
+        catch {
+            Console.WriteLine("Failed to log");
+        }
 
 #if DEBUG
         Console.ForegroundColor = ConsoleColor.Yellow;
@@ -97,7 +108,9 @@ internal static class Logger {
                     actionWriter.WriteLine(message);
                     actionWriter.Flush();
                 }
-                catch { }
+                catch {
+                    Console.WriteLine("Failed to log error");
+                }
             }
 
             Http.KeepAlive.Broadcast($"{{\"action\":\"log\",\"msg\":\"{Data.EscapeJsonText(message)}\"}}", "/log");

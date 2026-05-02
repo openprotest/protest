@@ -348,10 +348,9 @@ internal static class KeepAlive {
             return;
 
         case "chat-leave":
-            if (Auth.IsAuthorized(ctx, "/chat/write")) {
-                if (chatPeerIds.TryRemove(keepAliveEntry.ws, out string leavePeerId)) {
-                    Chat.LeaveHandler(leavePeerId, origin);
-                }
+            if (Auth.IsAuthorized(ctx, "/chat/write")
+                && chatPeerIds.TryRemove(keepAliveEntry.ws, out string leavePeerId)) {
+                Chat.LeaveHandler(leavePeerId, origin);
             }
             return;
 
