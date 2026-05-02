@@ -109,22 +109,14 @@ internal class Mdns {
                             senders.Add(((IPEndPoint)remoteEP).Address);
                         }
                     }
-#if DEBUG
                     catch (Exception ex) {
-                        Logger.Error(ex);
+                        Logger.Debug(ex);
                     }
-#else
-                    catch { }
-#endif
                 }
             }
-#if DEBUG
             catch (Exception ex) {
-                Logger.Error(ex);
+                Logger.Debug(ex);
             }
-#else
-            catch { }
-#endif
         }
 
         List<byte[]> matchingData = new List<byte[]>();
@@ -144,13 +136,9 @@ internal class Mdns {
                     matchingData.Add(response);
                 }
             }
-#if DEBUG
             catch (Exception ex) {
-                Logger.Error(ex);
+                Logger.Debug(ex);
             }
-#else
-            catch { }
-#endif
         }
 
         return (matchingData, answers);

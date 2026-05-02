@@ -95,13 +95,9 @@ internal static class Watchdog {
                     Watcher watcher = JsonSerializer.Deserialize<Watcher>(plain, watcherSerializerOptions);
                     watchers.TryAdd(files[i].Name, watcher);
                 }
-#if DEBUG
                 catch (Exception ex) {
-                    Logger.Error(ex);
+                    Logger.Debug(ex);
                 }
-#else
-                catch { }
-#endif
             }
         }
 
@@ -236,14 +232,9 @@ internal static class Watchdog {
                 result = (short)reply.RoundtripTime;
                 break;
             }
-#if DEBUG
             catch (Exception ex) {
-                Logger.Error(ex);
+                Logger.Debug(ex);
             }
-#else
-            catch { }
-#endif
-            //catch (Exception ex) when (ex is not PlatformNotSupportedException) { }
         }
 
         return result;
@@ -269,13 +260,9 @@ internal static class Watchdog {
                 result = (short)((after - before) / 10_000);
                 break;
             }
-#if DEBUG
             catch (Exception ex) {
-                Logger.Error(ex);
+                Logger.Debug(ex);
             }
-#else
-            catch { }
-#endif
         }
 
         return result;
@@ -332,13 +319,9 @@ internal static class Watchdog {
                     break;
                 }
             }
-#if DEBUG
             catch (Exception ex) {
-                Logger.Error(ex);
+                Logger.Debug(ex);
             }
-#else
-            catch { }
-#endif
         }
 
         return result;
@@ -378,13 +361,9 @@ internal static class Watchdog {
                     break;
                 }
             }
-#if DEBUG
             catch (Exception ex) {
-                Logger.Error(ex);
+                Logger.Debug(ex);
             }
-#else
-            catch { }
-#endif
         }
 
         return result;

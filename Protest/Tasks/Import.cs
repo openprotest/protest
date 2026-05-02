@@ -437,13 +437,9 @@ internal class Import {
                 DatabaseInstances.users.Save(entry.filename, entry.attributes, Database.SaveMethod.createnew, "Import task");
             }
         }
-#if DEBUG
         catch (Exception ex) {
-            Logger.Error(ex);
+            Logger.Debug(ex);
         }
-#else
-        catch { }
-#endif
     }
 
     private record DebitParseHelper {
@@ -474,13 +470,9 @@ internal class Import {
                 DebitNotes.Create(viewPayload, "Import task");
             }
         }
-#if DEBUG
         catch (Exception ex) {
-            Logger.Error(ex);
+            Logger.Debug(ex);
         }
-#else
-        catch { }
-#endif
     }
 
     public static string GetHiddenAttribute(Uri uri, CookieContainer cookieContainer, string path) {

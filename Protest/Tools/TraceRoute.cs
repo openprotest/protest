@@ -156,23 +156,17 @@ internal static class TraceRoute {
             await traceTask;
         }
         catch (OperationCanceledException) { } //ignored: task was canceled as part of shutdown
-#if DEBUG
         catch (Exception ex) {
-            Logger.Error(ex);
+            Logger.Debug(ex);
         }
-#endif
 
         if (ws.State == WebSocketState.Open) {
             try {
                 await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
             }
-#if DEBUG
             catch (Exception ex) {
-                Logger.Error(ex);
+                Logger.Debug(ex);
             }
-#else
-            catch { }
-#endif
         }
     }
 

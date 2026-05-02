@@ -345,13 +345,9 @@ internal static class DebitNotes {
                 builder.Append('}');
                 first = false;
             }
-#if DEBUG
             catch (Exception ex) {
-                Logger.Error(ex);
+                Logger.Debug(ex);
             }
-#else
-            catch { }
-#endif
         }
 
         builder.Append(']');

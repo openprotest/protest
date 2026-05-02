@@ -37,13 +37,9 @@ internal static class LastSeen {
                     return "Just now";
                 }
             }
-#if DEBUG
             catch (Exception ex) {
-                Logger.Error(ex);
+                Logger.Debug(ex);
             }
-#else
-            catch { }
-#endif
         }
 
         string filename = $"{Data.DIR_LASTSEEN}\\{ip}.txt";
@@ -56,13 +52,9 @@ internal static class LastSeen {
                 }
             }
         }
-#if DEBUG
         catch (Exception ex) {
-            Logger.Error(ex);
+            Logger.Debug(ex);
         }
-#else
-        catch { }
-#endif
 
         return "Never";
     }

@@ -129,13 +129,9 @@ internal static class Ssh {
                 try {
                     await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
                 }
-#if DEBUG
                 catch (Exception ex) {
-                    Logger.Error(ex);
+                    Logger.Debug(ex);
                 }
-#else
-                catch { }
-#endif
             }
         }
     }
@@ -158,13 +154,9 @@ internal static class Ssh {
                         try {
                             await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
                         }
-#if DEBUG
                         catch (Exception ex) {
-                            Logger.Error(ex);
+                            Logger.Debug(ex);
                         }
-#else
-                        catch { }
-#endif
                     }
                     return;
                 }

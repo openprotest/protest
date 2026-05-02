@@ -12,9 +12,13 @@ internal static class Logger {
     private static readonly Lock errorMutex = new Lock();
     private static readonly Lock actionMutex = new Lock();
 
-    private static StreamWriter errorWriter;
+    private static readonly StreamWriter errorWriter;
     private static StreamWriter actionWriter;
     private static string actionWriterDate;
+
+    static Logger() {
+        errorWriter ??= new StreamWriter($"{Data.DIR_LOG}{Data.DELIMITER}error.log", true, System.Text.Encoding.UTF8);
+    }
 
 #if DEBUG
     public static void Error(Exception ex, [CallerLineNumber] int line = 0, [CallerMemberName] string caller = null, [CallerFilePath] string file = null) {
@@ -39,7 +43,6 @@ internal static class Logger {
 
         try {
             lock (errorMutex) {
-                errorWriter ??= new StreamWriter($"{Data.DIR_LOG}{Data.DELIMITER}error.log", true, System.Text.Encoding.UTF8);
                 errorWriter.WriteLine(text);
                 errorWriter.Flush();
             }
@@ -49,6 +52,25 @@ internal static class Logger {
         Console.ForegroundColor = ConsoleColor.Red;
         Console.Error.WriteLine(text);
         Console.ResetColor();
+    }
+
+    public static void Debug(Exception ex) {
+        string time = DateTime.Now.ToString(Data.DATETIME_FORMAT_FILE);
+        string text = $"{time}\t{ex.Message}";
+
+        try {
+            lock (errorMutex) {
+                errorWriter.WriteLine(text);
+                errorWriter.Flush();
+            }
+        }
+        catch { }
+
+#if DEBUG
+        Console.ForegroundColor = ConsoleColor.Yellow;
+        Console.Error.WriteLine(text);
+        Console.ResetColor();
+#endif
     }
 
     public static void Action(string origin, string category, string action) {

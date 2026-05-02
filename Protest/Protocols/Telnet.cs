@@ -89,13 +89,9 @@ internal static class Telnet {
                     await WebSocketHelper.WsWriteText(ws, $"{{\"error\":\"{ex.Message}\"}}");
                     await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
                 }
-#if DEBUG
                 catch (Exception exg) {
-                    Logger.Error(exg);
+                    Logger.Debug(exg);
                 }
-#else
-                catch { }
-#endif
             }
             return;
         }
@@ -107,13 +103,9 @@ internal static class Telnet {
                 try {
                     await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
                 }
-#if DEBUG
                 catch (Exception ex) {
-                    Logger.Error(ex);
+                    Logger.Debug(ex);
                 }
-#else
-                catch { }
-#endif
             }
         }
     }
@@ -136,13 +128,9 @@ internal static class Telnet {
                         try {
                             await ws?.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
                         }
-#if DEBUG
                         catch (Exception ex) {
-                            Logger.Error(ex);
+                            Logger.Debug(ex);
                         }
-#else
-                        catch { }
-#endif
                     }
                     return;
                 }

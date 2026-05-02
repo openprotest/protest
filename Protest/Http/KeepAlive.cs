@@ -157,13 +157,9 @@ internal static class KeepAlive {
             try {
                 await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
             }
-#if DEBUG
             catch (Exception ex) {
-                Logger.Error(ex);
+                Logger.Debug(ex);
             }
-#else
-            catch { }
-#endif
         }
     }
 
@@ -207,11 +203,9 @@ internal static class KeepAlive {
                         await entry.semaphore.WaitAsync();
                         await entry.ws.SendAsync(new ArraySegment<byte>(message), WebSocketMessageType.Text, true, CancellationToken.None);
                     }
-#if DEBUG
                     catch (Exception ex) {
-                        Logger.Error(ex);
+                        Logger.Debug(ex);
                     }
-#endif
                     finally {
                         entry.semaphore.Release();
                     }
@@ -241,11 +235,9 @@ internal static class KeepAlive {
                         await entry.semaphore.WaitAsync();
                         await entry.ws.SendAsync(new ArraySegment<byte>(message), WebSocketMessageType.Text, true, CancellationToken.None);
                     }
-#if DEBUG
                     catch (Exception ex) {
-                        Logger.Error(ex);
+                        Logger.Debug(ex);
                     }
-#endif
                     finally {
                         entry.semaphore.Release();
                     }
@@ -268,11 +260,9 @@ internal static class KeepAlive {
                         await entry.semaphore.WaitAsync();
                         await entry.ws.SendAsync(new ArraySegment<byte>(message), WebSocketMessageType.Text, true, CancellationToken.None);
                     }
-#if DEBUG
                     catch (Exception ex) {
-                        Logger.Error(ex);
+                        Logger.Debug(ex);
                     }
-#endif
                     finally {
                         entry.semaphore.Release();
                     }

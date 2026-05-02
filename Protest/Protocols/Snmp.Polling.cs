@@ -510,13 +510,9 @@ internal static partial class Polling {
                 catch (OperationException ex) when (ex.Message.Contains("timed out", StringComparison.OrdinalIgnoreCase)) {
                     //do nothing
                 }
-#if DEBUG
                 catch (Exception ex) {
-                    Logger.Error(ex);
+                    Logger.Debug(ex);
                 }
-#else
-                catch { }
-#endif
             }
 
             return result.Count > 0 ? result : null;

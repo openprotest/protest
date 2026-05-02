@@ -190,13 +190,9 @@ internal static class Icmp {
             try {
                 await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
             }
-#if DEBUG
             catch (Exception ex) {
-                Logger.Error(ex);
+                Logger.Debug(ex);
             }
-#else
-            catch { }
-#endif
         }
     }
     private static async Task<string> PingArrayAsync(string[] name, string[] id, int timeout) {

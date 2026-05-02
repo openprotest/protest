@@ -70,13 +70,9 @@ internal static class LiveStats {
                     }
                 }
             }
-#if DEBUG
             catch (Exception ex) {
-                Logger.Error(ex);
+                Logger.Debug(ex);
             }
-#else
-            catch { }
-#endif
         }
         catch (WebSocketException ex) when (ex.WebSocketErrorCode == WebSocketError.ConnectionClosedPrematurely) {
             return;
@@ -92,13 +88,9 @@ internal static class LiveStats {
             try {
                 await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
             }
-#if DEBUG
             catch (Exception ex) {
-                Logger.Error(ex);
+                Logger.Debug(ex);
             }
-#else
-            catch { }
-#endif
         }
     }
 
@@ -267,26 +259,18 @@ internal static class LiveStats {
                         }
                     }
                 }
-#if DEBUG
                 catch (Exception ex) {
-                    Logger.Error(ex);
+                    Logger.Debug(ex);
                 }
-#else
-                catch { }
-#endif
             }
 
             if (!String.IsNullOrEmpty(firstAlive)) {
                 try {
                     dns = (await System.Net.Dns.GetHostEntryAsync(firstAlive)).HostName;
                 }
-#if DEBUG
                 catch (Exception ex) {
-                    Logger.Error(ex);
+                    Logger.Debug(ex);
                 }
-#else
-                catch { }
-#endif
             }
 
             if (!String.IsNullOrEmpty(dns)) { //check dns mismatch
@@ -322,13 +306,9 @@ internal static class LiveStats {
                         }
                     }
                 }
-#if DEBUG
                 catch (Exception ex) {
-                    Logger.Error(ex);
+                    Logger.Debug(ex);
                 }
-#else
-                catch { }
-#endif
             }
 
             if (!String.IsNullOrEmpty(_hostname?.value) && !String.IsNullOrEmpty(_ip?.value)) { //check reverse dns mismatch
@@ -348,18 +328,14 @@ internal static class LiveStats {
                             }
                         }
                     }
-#if DEBUG
                     catch (SocketException ex) {
                         if (ex.SocketErrorCode != SocketError.HostNotFound) {
-                            Logger.Error(ex);
+                            Logger.Debug(ex);
                         }
                     }
                     catch (Exception ex) {
-                        Logger.Error(ex);
+                        Logger.Debug(ex);
                     }
-#else
-                    catch { }
-#endif
                 }
             }
 
@@ -381,13 +357,9 @@ internal static class LiveStats {
             try {
                 await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
             }
-#if DEBUG
             catch (Exception ex) {
-                Logger.Error(ex);
+                Logger.Debug(ex);
             }
-#else
-            catch { }
-#endif
         }
     }
 
@@ -451,13 +423,9 @@ internal static class LiveStats {
                 await WebSocketHelper.WsWriteText(ws, $"{{\"activeUser\":\"{Data.EscapeJsonText(username)}\",\"source\":\"WMI\"}}");
             }
         }
-#if DEBUG
         catch (Exception ex) {
-            Logger.Error(ex);
+            Logger.Debug(ex);
         }
-#else
-        catch { }
-#endif
     }
 
     private static async Task SnmpQuery(WebSocket ws, string file, string firstAlive, string type, string snmpProfileGuid) {

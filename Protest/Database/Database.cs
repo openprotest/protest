@@ -433,18 +433,12 @@ internal sealed class Database {
             }
             builder.Append('}');
         }
-#if DEBUG
         catch (IOException ex) {
-            Logger.Error(ex);
+            Logger.Debug(ex);
         }
         catch (Exception ex) {
-            Logger.Error(ex);
+            Logger.Debug(ex);
         }
-#else
-        catch (IOException ex) {
-            Logger.Error(ex);
-        }
-#endif
 
         return Encoding.UTF8.GetBytes(builder.ToString());
     }

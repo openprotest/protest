@@ -117,13 +117,9 @@ internal static class IpDiscovery {
             string id = Encoding.Default.GetString(buff, 0, receiveResult.Count);
             nic = GetNic(id);
         }
-#if DEBUG
         catch (Exception ex) {
-            Logger.Error(ex);
+            Logger.Debug(ex);
         }
-#else
-        catch { }
-#endif
 
         if (nic is null) {
             await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, null, CancellationToken.None);
@@ -162,13 +158,9 @@ internal static class IpDiscovery {
             try {
                 await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, null, CancellationToken.None);
             }
-#if DEBUG
             catch (Exception ex) {
-                Logger.Error(ex);
+                Logger.Debug(ex);
             }
-#else
-            catch { }
-#endif
         }
 
         dic.Clear();
@@ -333,13 +325,9 @@ internal static class IpDiscovery {
                     ParseMdnsResponse(dic, ws, type, socket);
                 }
             }
-#if DEBUG
             catch (Exception ex) {
-                Logger.Error(ex);
+                Logger.Debug(ex);
             }
-#else
-            catch { }
-#endif
         }
     }
 
@@ -421,13 +409,9 @@ internal static class IpDiscovery {
                         hostEntry = await System.Net.Dns.GetHostEntryAsync(host.ip);
                         name = hostEntry.HostName;
                     }
-#if DEBUG
                     catch (Exception ex) {
-                        Logger.Error(ex);
+                        Logger.Debug(ex);
                     }
-#else
-                    catch { }
-#endif
 
                     if (!string.IsNullOrEmpty(name)) {
                         Mdns.Answer[] answer = Mdns.ResolveToArray($"{name}.local", 500, Protocols.Dns.RecordType.AAAA, false);
@@ -454,13 +438,9 @@ internal static class IpDiscovery {
         try {
             await Task.WhenAll(tasks);
         }
-#if DEBUG
         catch (Exception ex) {
-            Logger.Error(ex);
+            Logger.Debug(ex);
         }
-#else
-        catch { }
-#endif
     }
 
     private static async Task DiscoverServicesAsync(ConcurrentDictionary<string, HostEntry> dic, NetworkInterface nic, WebSocket ws, CancellationToken token) {
@@ -637,13 +617,9 @@ internal static class IpDiscovery {
 
             }).Start();
         }
-#if DEBUG
         catch (Exception ex) {
-            Logger.Error(ex);
+            Logger.Debug(ex);
         }
-#else
-        catch { }
-#endif
     }
 
 }

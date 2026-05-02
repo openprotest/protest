@@ -20,19 +20,12 @@ internal static class Update {
                 return Encoding.UTF8.GetBytes($"{{\"version\":\"{data}\",\"major\":\"{split[0]}\",\"minor\":\"{split[1]}\",\"build\":\"{split[2]}\",\"revision\":\"{split[3]}\"}}");
             }
         }
-#if DEBUG
         catch (HttpRequestException ex) {
-            Logger.Error(ex);
+            Logger.Debug(ex);
         }
         catch (Exception ex) {
-            Logger.Error(ex);
+            Logger.Debug(ex);
         }
-#else
-        catch (HttpRequestException ex) {
-            Logger.Error(ex);
-        }
-        catch { }
-#endif
 
         return Data.CODE_FAILED.Array;
     }

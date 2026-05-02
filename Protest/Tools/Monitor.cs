@@ -291,13 +291,9 @@ internal static class Monitor {
             try {
                 await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
             }
-#if DEBUG
             catch (Exception ex) {
-                Logger.Error(ex);
+                Logger.Debug(ex);
             }
-#else
-            catch { }
-#endif
         }
     }
 
@@ -384,13 +380,9 @@ internal static class Monitor {
             try {
                 await HandleSnmpQuery(ws, endpoint, query);
             }
-#if DEBUG
             catch (Exception ex) {
-                Logger.Error(ex);
+                Logger.Debug(ex);
             }
-#else
-            catch { }
-#endif
         }
     }
 
@@ -411,13 +403,9 @@ internal static class Monitor {
                     new string[] { query.value },
                     Protocols.Snmp.Polling.SnmpOperation.Get);
             }
-#if DEBUG
             catch (Exception ex) {
-                Logger.Error(ex);
+                Logger.Debug(ex);
             }
-#else
-            catch { }
-#endif
         }
         else {
             string community = String.IsNullOrEmpty(query.auth) ? "public" : query.auth;
@@ -430,13 +418,9 @@ internal static class Monitor {
                     new string[] { query.value },
                     Protocols.Snmp.Polling.SnmpOperation.Get);
             }
-#if DEBUG
             catch (Exception ex) {
-                Logger.Error(ex);
+                Logger.Debug(ex);
             }
-#else
-            catch { }
-#endif
         }
 
         if (result is null || result.Count == 0) return;

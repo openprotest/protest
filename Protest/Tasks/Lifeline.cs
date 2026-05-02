@@ -122,13 +122,9 @@ internal static partial class Lifeline {
                             IcmpQuery(host);
                         }
                     }
-#if DEBUG
                     catch (Exception ex) {
-                        Logger.Error(ex);
+                        Logger.Debug(ex);
                     }
-#else
-                    catch { }
-#endif
                 }
             });
 
@@ -149,13 +145,9 @@ internal static partial class Lifeline {
                                 WmiQuery(data[0], data[1]);
                             }
                         }
-#if DEBUG
                         catch (Exception ex) {
-                            Logger.Error(ex);
+                            Logger.Debug(ex);
                         }
-#else
-                        catch { }
-#endif
                     }
                 });
             }
@@ -180,13 +172,9 @@ internal static partial class Lifeline {
                             catch (OperationException ex) when (ex.Message.Contains("timed out", StringComparison.OrdinalIgnoreCase)) {
                                 //do nothing
                             }
-#if DEBUG
                             catch (Exception ex) {
-                                Logger.Error(ex);
+                                Logger.Debug(ex);
                             }
-#else
-                            catch { }
-#endif
                         }
                         else if (Data.SWITCH_TYPES.Contains(type)) {
                             try {
@@ -197,13 +185,9 @@ internal static partial class Lifeline {
                                     SnmpSwitchQuery(data[0], data[1], data[2], profiles);
                                 }
                             }
-#if DEBUG
                             catch (Exception ex) {
-                                Logger.Error(ex);
+                                Logger.Debug(ex);
                             }
-#else
-                            catch { }
-#endif
                         }
                     }
                 });
@@ -306,13 +290,9 @@ internal static partial class Lifeline {
                 break;
             }
         }
-#if DEBUG
         catch (Exception ex) {
-            Logger.Error(ex);
+            Logger.Debug(ex);
         }
-#else
-        catch { }
-#endif
 
         try {
             using ManagementObjectSearcher searcher = new ManagementObjectSearcher(scope, new SelectQuery("SELECT PercentIdleTime FROM Win32_PerfFormattedData_PerfDisk_PhysicalDisk WHERE Name = '_Total'"));
@@ -324,13 +304,9 @@ internal static partial class Lifeline {
                 break;
             }
         }
-#if DEBUG
         catch (Exception ex) {
-            Logger.Error(ex);
+            Logger.Debug(ex);
         }
-#else
-        catch { }
-#endif
 
         try {
             using ManagementObjectSearcher searcher = new ManagementObjectSearcher(scope, new SelectQuery("Win32_OperatingSystem"));
@@ -341,13 +317,9 @@ internal static partial class Lifeline {
                 memoryTotal += (ulong)o.GetPropertyValue("TotalVisibleMemorySize");
             }
         }
-#if DEBUG
         catch (Exception ex) {
-            Logger.Error(ex);
+            Logger.Debug(ex);
         }
-#else
-        catch { }
-#endif
 
         try {
             using ManagementObjectSearcher searcher = new ManagementObjectSearcher(scope, new SelectQuery("SELECT Caption, FreeSpace, Size FROM Win32_LogicalDisk WHERE DriveType = 3"));
@@ -368,14 +340,9 @@ internal static partial class Lifeline {
                 diskTotal.Add((ulong)size);
             }
         }
-#if DEBUG
-                catch (Exception ex) {
-                    Logger.Error(ex);
-                }
-#else
-                catch { }
-#endif
-
+        catch (Exception ex) {
+            Logger.Debug(ex);
+        }
 
         DateTime now = DateTime.UtcNow;
 
@@ -392,13 +359,9 @@ internal static partial class Lifeline {
                     writer.Write(((DateTimeOffset)now).ToUnixTimeMilliseconds()); //8 bytes
                     writer.Write((byte)(100 - cpuIdle)); //1 byte
                 }
-#if DEBUG
                 catch (Exception ex) {
-                    Logger.Error(ex);
+                    Logger.Debug(ex);
                 }
-#else
-                catch { }
-#endif
             }
 
             if (diskIo != 255) {
@@ -411,13 +374,9 @@ internal static partial class Lifeline {
                     writer.Write(((DateTimeOffset)now).ToUnixTimeMilliseconds()); //8 bytes
                     writer.Write((byte)(100 - diskIo)); //1 byte
                 }
-#if DEBUG
                 catch (Exception ex) {
-                    Logger.Error(ex);
+                    Logger.Debug(ex);
                 }
-#else
-                catch { }
-#endif
             }
 
             if (memoryTotal > 0) {
@@ -431,13 +390,9 @@ internal static partial class Lifeline {
                     writer.Write(memoryTotal - memoryFree); //8 bytes
                     writer.Write(memoryTotal); //8 bytes
                 }
-#if DEBUG
                 catch (Exception ex) {
-                    Logger.Error(ex);
+                    Logger.Debug(ex);
                 }
-#else
-                catch { }
-#endif
             }
 
             if (diskCaption.Count > 0) {
@@ -456,13 +411,9 @@ internal static partial class Lifeline {
                         writer.Write(diskTotal[i]); //8 bytes
                     }
                 }
-#if DEBUG
                 catch (Exception ex) {
-                    Logger.Error(ex);
+                    Logger.Debug(ex);
                 }
-#else
-                catch { }
-#endif
             }
         }
     }
@@ -473,13 +424,9 @@ internal static partial class Lifeline {
             try {
                 ipAddress = System.Net.Dns.GetHostEntry(host).AddressList[0];
             }
-#if DEBUG
             catch (Exception ex) {
-                Logger.Error(ex);
+                Logger.Debug(ex);
             }
-#else
-            catch { }
-#endif
         }
 
         if (!SnmpProfiles.FromGuid(_profile, out SnmpProfiles.Profile profile, snmpProfiles)) {
@@ -524,13 +471,9 @@ internal static partial class Lifeline {
                     //writer.Write((uint)0); //4 bytes, duplex placeholder
                 }
             }
-#if DEBUG
-                catch (Exception ex) {
-                    Logger.Error(ex);
-                }
-#else
-                catch { }
-#endif
+            catch (Exception ex) {
+                Logger.Debug(ex);
+            }
         }
     }
 
@@ -540,13 +483,9 @@ internal static partial class Lifeline {
             try {
                 ipAddress = System.Net.Dns.GetHostEntry(host).AddressList[0];
             }
-#if DEBUG
             catch (Exception ex) {
-                Logger.Error(ex);
+                Logger.Debug(ex);
             }
-#else
-            catch { }
-#endif
         }
 
         if (!SnmpProfiles.FromGuid(_profile, out SnmpProfiles.Profile profile, snmpProfiles)) {
@@ -604,13 +543,9 @@ internal static partial class Lifeline {
                 writer.Write(traffic); //8 bytes
                 writer.Write(errors); //8 bytes
             }
-#if DEBUG
             catch (Exception ex) {
-                Logger.Error(ex);
+                Logger.Debug(ex);
             }
-#else
-            catch { }
-#endif
         }
     }
 

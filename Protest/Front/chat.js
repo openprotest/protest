@@ -937,11 +937,12 @@ class Chat extends Window {
 	FindImgTags(element, images) {
 		const childNodes = element.childNodes;
 		for (let i=0; i<childNodes.length; i++) {
-			if (childNodes[i].tagName === "IMG" && childNodes[i].src.startsWith("data:image/")) {
-				images.push(childNodes[i]);
+			const node = childNodes[i];
+			if (node.tagName === "IMG" && node.src.startsWith("data:image/")) {
+				images.push(node);
 			}
 			else {
-				this.FindImgTags(childNodes[i], images);
+				this.FindImgTags(node, images);
 			}
 		}
 	}
@@ -1144,7 +1145,7 @@ class Chat extends Window {
 
 		const emoji = document.createElement("div");
 		emoji.className = "chat-emoji-bubble";
-		emoji.style.background = `linear-gradient(to bottom, ${color} 0%, color-mix(in hsl shorter hue, ${color} 80%, black 20%)100%)`;
+		emoji.style.background = `linear-gradient(to bottom, ${color} 0%, color-mix(in hsl shorter hue, ${color} 80%, black 20%) 100%)`;
 		emoji.style.webkitMaskImage = `url(${url})`;
 		emoji.style.maskImage = `url(${url})`;
 		emojiBox.appendChild(emoji);

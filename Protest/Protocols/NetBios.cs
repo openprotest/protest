@@ -36,13 +36,9 @@ internal static class NetBios {
                     : encoding.GetString(receiveBuffer, 57, 16).Trim('\0').Trim();
             }
         }
-#if DEBUG
         catch (Exception ex) {
-            Logger.Error(ex);
+            Logger.Debug(ex);
         }
-#else
-        catch { }
-#endif
 
         return null;
     }
