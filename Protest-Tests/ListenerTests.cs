@@ -73,7 +73,7 @@ public class ListenerTests {
         using HttpClient httpClient = new HttpClient();
         HttpResponseMessage result = httpClient.Send(requestMessage);
 
-        Assert.That((int)result.StatusCode, Is.EqualTo(418)); //I'm a teapot
+        Assert.That((int)result.StatusCode, Is.EqualTo(400));
     }
 
 }
