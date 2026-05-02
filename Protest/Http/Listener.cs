@@ -272,8 +272,10 @@ internal sealed class Listener {
         if (String.Equals(path, "/contacts", StringComparison.Ordinal)) {
             byte[] buffer = DatabaseInstances.users.SerializeContacts();
             ctx.Response.StatusCode = (int)HttpStatusCode.OK;
-            ctx.Response.ContentLength64 = buffer!.Length;
-            await ctx.Response.OutputStream.WriteAsync(buffer!);
+            ctx.Response.ContentLength64 = buffer?.Length ?? 0;
+            if (buffer is not null) {
+                await ctx.Response.OutputStream.WriteAsync(buffer);
+            }
             ctx.Response.Close();
             return;
         }
@@ -401,17 +403,10 @@ internal sealed class Listener {
                 await ctx.Response.OutputStream.WriteAsync(buffer);
             }
             await ctx.Response.OutputStream.FlushAsync();
-#if DEBUG
         }
         catch (HttpListenerException ex) {
             Logger.Debug(ex);
         }
-#else
-        }
-        catch (HttpListenerException ex) {
-            Logger.Debug(ex);
-        }
-#endif
 
         ctx.Response.Close();
         return true;
