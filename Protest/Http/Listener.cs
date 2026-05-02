@@ -408,7 +408,7 @@ internal sealed class Listener {
         }
 #else
         }
-        catch (HttpListenerException) {
+        catch (HttpListenerException ex) {
             Logger.Debug(ex);
         }
 #endif
