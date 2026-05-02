@@ -106,7 +106,7 @@ internal static partial class Arp {
 
     [SupportedOSPlatform("macos")]
     private static string ArpRequest_Mac(IPAddress ip) {
-        if (!ip.OnSameBroadcastDomain()) return string.Empty;
+        if (!ip.OnSameBroadcastDomain()) return String.Empty;
 
         try {
             using Process process = new Process();
@@ -126,30 +126,30 @@ internal static partial class Arp {
 
             process.WaitForExit();
 
-            if (process.ExitCode != 0 || string.IsNullOrWhiteSpace(output)) {
-                return string.Empty;
+            if (process.ExitCode != 0 || String.IsNullOrWhiteSpace(output)) {
+                return String.Empty;
             }
 
             Match match = MacAddressRegex().Match(output);
             if (!match.Success) {
-                return string.Empty;
+                return String.Empty;
             }
 
             string mac = match.Groups[1].Value.Replace("-", ":");
 
             string[] parts = mac.Split(':');
             if (parts.Length != 6)
-            return string.Empty;
+            return String.Empty;
 
             for (int i = 0; i < parts.Length; i++) {
                 parts[i] = parts[i].PadLeft(2, '0');
             }
 
-            return string.Join(":", parts).ToLowerInvariant();;
+            return String.Join(":", parts).ToLowerInvariant();;
         }
         catch (Exception ex) {
             Logger.Error(ex);
-            return string.Empty;
+            return String.Empty;
         }
     }
 }

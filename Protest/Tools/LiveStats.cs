@@ -528,7 +528,7 @@ internal static class LiveStats {
 
             if (parts.Any(part => part < 0)) continue;
 
-            string mac = string.Concat(parts.Select(p => p.ToString("x2")));
+            string mac = String.Concat(parts.Select(p => p.ToString("x2")));
 
             if (!macTable.TryAdd(port, mac)) {
                 macTable[port] = null;
@@ -602,7 +602,7 @@ internal static class LiveStats {
                 taggedDic.TryGetValue(port, out string existing);
                 short.TryParse(pair.Key.ToString(), out short currentVlan);
                 if (untaggedDic.TryGetValue(port, out short untaggedVlanId) && untaggedVlanId == currentVlan) continue;
-                taggedDic[port] = string.IsNullOrEmpty(existing) ? currentVlan.ToString() : $"{existing},{currentVlan}";
+                taggedDic[port] = String.IsNullOrEmpty(existing) ? currentVlan.ToString() : $"{existing},{currentVlan}";
             }
         }
 

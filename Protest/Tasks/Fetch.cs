@@ -151,7 +151,7 @@ internal static class Fetch {
                         owner = owner.Split('\\')[1];
                     }
                     SearchResult user = Protocols.Ldap.GetUser(owner);
-                    string fn = string.Empty, sn = string.Empty;
+                    string fn = String.Empty, sn = String.Empty;
 
                     if (user is not null && user.Properties["givenName"].Count > 0)
                         fn = user.Properties["givenName"][0].ToString();
@@ -282,24 +282,24 @@ internal static class Fetch {
         ConcurrentDictionary<string, string[]> data = new ConcurrentDictionary<string, string[]>();
 
         foreach (KeyValuePair<string, string> o in wmi) {
-            data.TryAdd(o.Key, new string[] { o.Value, "WMI", string.Empty });
+            data.TryAdd(o.Key, new string[] { o.Value, "WMI", String.Empty });
         }
 
         foreach (KeyValuePair<string, string> o in ad) {
             string key = o.Key;
             if (key == "operating system") { //os not found in ad, use wmi
                 if (!wmi.ContainsKey("operating system")) {
-                    data.TryAdd(key, new string[] { o.Value, "LDAP", string.Empty });
+                    data.TryAdd(key, new string[] { o.Value, "LDAP", String.Empty });
                 }
             }
             else {
-                data.TryAdd(key, new string[] { o.Value, "LDAP", string.Empty });
+                data.TryAdd(key, new string[] { o.Value, "LDAP", String.Empty });
             }
         }
 
         string portsString = portsBuilder.ToString();
         if (!String.IsNullOrEmpty(portsString)) {
-            data.TryAdd("ports", new string[] { portsString, "Port-scan", string.Empty });
+            data.TryAdd("ports", new string[] { portsString, "Port-scan", String.Empty });
         }
 
         if (wmi.TryGetValue("mac address", out string mac)) {
@@ -308,7 +308,7 @@ internal static class Fetch {
         else {
             mac = Protocols.Arp.ArpRequest(target);
             if (mac is not null && mac.Length > 0) {
-                data.TryAdd("mac address", new string[] { mac, "ARP", string.Empty });
+                data.TryAdd("mac address", new string[] { mac, "ARP", String.Empty });
             }
         }
 
@@ -317,31 +317,31 @@ internal static class Fetch {
             if (manufacturerArray is not null) {
                 string manufacturer = Encoding.UTF8.GetString(manufacturerArray);
                 if (manufacturer.Length > 0 && manufacturer != "not found") {
-                    data.TryAdd("manufacturer", new string[] { manufacturer, "MAC lookup", string.Empty });
+                    data.TryAdd("manufacturer", new string[] { manufacturer, "MAC lookup", String.Empty });
                 }
             }
         }
 
         if (!wmi.ContainsKey("hostname")) {
             if (netBios is not null && netBios.Length > 0) { //use netbios
-                data.TryAdd("hostname", new string[] { netBios, "NetBIOS", string.Empty });
+                data.TryAdd("hostname", new string[] { netBios, "NetBIOS", String.Empty });
             }
             else if (useDns && hostname is not null && hostname.Length > 0) { //use dns
                 if (hostname.Contains('.')) {
                     hostname = hostname.Split('.')[0];
                 }
-                data.TryAdd("hostname", new string[] { hostname, "DNS", string.Empty });
+                data.TryAdd("hostname", new string[] { hostname, "DNS", String.Empty });
             }
         }
 
         if (!data.ContainsKey("ip") && ipList is not null) {
-            data.TryAdd("ip", new string[] { string.Join("; ", ipList.Select(o => o.ToString())), "IP", string.Empty });
+            data.TryAdd("ip", new string[] { String.Join("; ", ipList.Select(o => o.ToString())), "IP", String.Empty });
         }
 
         if (!data.ContainsKey("type") && data.TryGetValue("operating system", out string[] value)) {
             string os = value[0];
             if (os.Contains("server", StringComparison.CurrentCultureIgnoreCase)) { //if os is windows server, set type as server
-                data.TryAdd("type", new string[] { "Server", "LDAP", string.Empty });
+                data.TryAdd("type", new string[] { "Server", "LDAP", String.Empty });
             }
         }
 
@@ -354,24 +354,24 @@ internal static class Fetch {
             int[] ports = portsString.Split(';').Select(o => int.Parse(o.Trim())).ToArray();
 
             if (ports.Contains(445) && ports.Contains(3389) && (ports.Contains(53) || ports.Contains(67) || ports.Contains(389) || ports.Contains(636) || ports.Contains(853))) { //SMB, RDP, DNS, DHCP, LDAP
-                data.TryAdd("type", new string[] { "Server", "Port-scan", string.Empty });
+                data.TryAdd("type", new string[] { "Server", "Port-scan", String.Empty });
             }
             else if (ports.Contains(445) && ports.Contains(3389)) { //SMB, RDP
-                data.TryAdd("type", new string[] { "Workstation", "Port-scan", string.Empty });
+                data.TryAdd("type", new string[] { "Workstation", "Port-scan", String.Empty });
             }
             else if (ports.Contains(515) || ports.Contains(631) || ports.Contains(9100)) { //LPD, IPP, Print-server
-                data.TryAdd("type", new string[] { "Printer", "Port-scan", string.Empty });
+                data.TryAdd("type", new string[] { "Printer", "Port-scan", String.Empty });
             }
             else if (ports.Contains(6789)) { //ap
-                data.TryAdd("type", new string[] { "Access point", "Port-scan", string.Empty });
+                data.TryAdd("type", new string[] { "Access point", "Port-scan", String.Empty });
             }
             else if (ports.Contains(7442) || ports.Contains(7550)) { //cam
-                data.TryAdd("type", new string[] { "Camera", "Port-scan", string.Empty });
+                data.TryAdd("type", new string[] { "Camera", "Port-scan", String.Empty });
             }
         }
 
         if (!data.ContainsKey("type") && wmi.Count > 0) {
-            data.TryAdd("type", new string[] { "Workstation", "WMI", string.Empty });
+            data.TryAdd("type", new string[] { "Workstation", "WMI", String.Empty });
         }
 
         if (token.IsCancellationRequested) {
@@ -396,20 +396,20 @@ internal static class Fetch {
 
             Dictionary<string, string> formatted = Protocols.Snmp.Polling.ParseResponse(snmpResult);
             if (formatted is not null && formatted.TryGetValue(Protocols.Snmp.Oid.SYSTEM_DESCRIPTOR, out string snmpDescription)) {
-                data.TryAdd("descriptor", new string[] { snmpDescription, "SNMP", string.Empty });
+                data.TryAdd("descriptor", new string[] { snmpDescription, "SNMP", String.Empty });
             }
             if (formatted is not null && formatted.TryGetValue(Protocols.Snmp.Oid.SYSTEM_NAME, out string snmpHostname) && !String.IsNullOrEmpty(snmpHostname)) {
-                data.TryAdd("hostname", new string[] { snmpHostname.Split(".")[0], "SNMP", string.Empty });
+                data.TryAdd("hostname", new string[] { snmpHostname.Split(".")[0], "SNMP", String.Empty });
             }
             if (formatted is not null && formatted.TryGetValue(Protocols.Snmp.Oid.SYSTEM_LOCATION, out string snmpLocation) && !String.IsNullOrEmpty(snmpLocation)) {
-                data.TryAdd("location", new string[] { snmpLocation, "SNMP", string.Empty });
+                data.TryAdd("location", new string[] { snmpLocation, "SNMP", String.Empty });
             }
             if (formatted is not null && formatted.TryGetValue(Protocols.Snmp.Oid.SYSTEM_CONTACT, out string snmpContact) && !String.IsNullOrEmpty(snmpContact)) {
-                data.TryAdd("contact", new string[] { snmpContact, "SNMP", string.Empty });
+                data.TryAdd("contact", new string[] { snmpContact, "SNMP", String.Empty });
             }
 
             if (snmpResult is not null) {
-                data.TryAdd("snmp profile", new string[] { profile.guid.ToString(), "SNMP", string.Empty });
+                data.TryAdd("snmp profile", new string[] { profile.guid.ToString(), "SNMP", String.Empty });
             }
 
             if (token.IsCancellationRequested) return null;
@@ -426,7 +426,7 @@ internal static class Fetch {
                         && chassisId.Any(o => o != 0)) {
 
                         string macAddress = BitConverter.ToString(chassisId, 2).Replace('-', ':');
-                        data.TryAdd("mac address", new string[] { String.Join("; ", macAddress), "SNMP", string.Empty });
+                        data.TryAdd("mac address", new string[] { String.Join("; ", macAddress), "SNMP", String.Empty });
                     }
                 }
             }
@@ -435,7 +435,7 @@ internal static class Fetch {
                 if (token.IsCancellationRequested) return null;
                 IList<Variable> dot1dBaseBridgeAddress = Protocols.Snmp.Polling.SnmpQuery(ipAddress, profile, ["1.3.6.1.2.1.17.1.1.0"], Polling.SnmpOperation.Get);
                 if (dot1dBaseBridgeAddress?.Count > 0) {
-                    data.TryAdd("type", new string[] { "Switch", "SNMP", string.Empty });
+                    data.TryAdd("type", new string[] { "Switch", "SNMP", String.Empty });
                 }
             }
 
@@ -450,10 +450,10 @@ internal static class Fetch {
                     IList<Variable> printerResult = Protocols.Snmp.Polling.SnmpQuery(ipAddress, profile, Protocols.Snmp.Oid.PRINTERS_OID, Polling.SnmpOperation.Get);
                     Dictionary<string, string> printerFormatted = Protocols.Snmp.Polling.ParseResponse(printerResult);
                     if (printerFormatted is not null && printerFormatted.TryGetValue(Protocols.Snmp.Oid.PRINTER_MODEL, out string snmpModel)) {
-                        data.TryAdd("model", new string[] { snmpModel, "SNMP", string.Empty });
+                        data.TryAdd("model", new string[] { snmpModel, "SNMP", String.Empty });
                     }
                     if (printerFormatted is not null && printerFormatted.TryGetValue(Protocols.Snmp.Oid.PRINTER_SERIAL_NO, out string snmpSerialNo)) {
-                        data.TryAdd("serial number", new string[] { snmpSerialNo, "SNMP", string.Empty });
+                        data.TryAdd("serial number", new string[] { snmpSerialNo, "SNMP", String.Empty });
                     }
                     break;
 
@@ -462,7 +462,7 @@ internal static class Fetch {
                 case "switch":
                     string interfaces = Protocols.Snmp.Polling.FetchInterfaces(ipList[0], profile);
                     if (interfaces is null) break;
-                    data.TryAdd(".interfaces", new string[] { interfaces, "SNMP", string.Empty });
+                    data.TryAdd(".interfaces", new string[] { interfaces, "SNMP", String.Empty });
                     break;
                 }
             }
@@ -506,7 +506,7 @@ internal static class Fetch {
         ConcurrentDictionary<string, string[]> data = new ConcurrentDictionary<string, string[]>();
 
         foreach (KeyValuePair<string, string> o in fetch) {
-            data.TryAdd(o.Key, new string[] { o.Value.ToString(), "LDAP", string.Empty });
+            data.TryAdd(o.Key, new string[] { o.Value.ToString(), "LDAP", String.Empty });
         }
 
         return data;
@@ -632,7 +632,7 @@ internal static class Fetch {
             for (uint i = intFrom; i < intTo + 1 && i < uint.MaxValue - 1; i++) {
                 byte[] bytes = BitConverter.GetBytes(i);
                 Array.Reverse(bytes);
-                hosts[i - intFrom] = string.Join(".", bytes);
+                hosts[i - intFrom] = String.Join(".", bytes);
             }
         }
         else if (!String.IsNullOrEmpty(domain)) {

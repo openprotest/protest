@@ -97,7 +97,7 @@ internal static class Ssh {
                 WebSocketReceiveResult receiveResult = await ws.ReceiveAsync(buff, CancellationToken.None);
 
                 if (receiveResult.MessageType == WebSocketMessageType.Close) {
-                    await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, string.Empty, CancellationToken.None);
+                    await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
                     ssh.Disconnect();
                     break;
                 }

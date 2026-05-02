@@ -577,7 +577,7 @@ internal static class Topology {
     }
 
     private static string GetChassisId(string subtype, ISnmpData value) {
-        if (value is null) return string.Empty;
+        if (value is null) return String.Empty;
 
         byte[] bytes = value.ToBytes();
 

@@ -73,7 +73,7 @@ namespace ProtestAgent {
                     }
                 }
                 catch (Exception ex) {
-                    Console.Error(ex);
+                    Console.WriteLine(ex);
                 }
                 break;
 
@@ -86,8 +86,8 @@ namespace ProtestAgent {
                     builder.AppendLine("@ECHO OFF");
                     builder.AppendLine();
                     builder.Append($"{Configuration.pse.path} \\\\{value}");
-                    if (String.IsNullOrEmpty(Configuration.pse.username)) { builder.Append($" -u {Configuration.pse.username}");}
-                    if (String.IsNullOrEmpty(Configuration.pse.password)) { builder.Append($" -p {Configuration.pse.password}"); }
+                    if (!String.IsNullOrEmpty(Configuration.pse.username)) { builder.Append($" -u {Configuration.pse.username}");}
+                    if (!String.IsNullOrEmpty(Configuration.pse.password)) { builder.Append($" -p {Configuration.pse.password}"); }
                     builder.Append($" cmd.exe");
 
                     File.WriteAllText(filename, builder.ToString());

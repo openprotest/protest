@@ -320,7 +320,7 @@ internal class Mdns {
 
             case RecordType.AAAA:
                 if (answer.length == 16 && index + 16 <= response.Length) {
-                    string answerString = string.Join(":", Enumerable.Range(0, 8).Select(j => ((response[index + 2 * j] << 8) | response[index + 2 * j + 1]).ToString("x4")));
+                    string answerString = String.Join(":", Enumerable.Range(0, 8).Select(j => ((response[index + 2 * j] << 8) | response[index + 2 * j + 1]).ToString("x4")));
                     answer.answerString = Data.CompressIPv6(answerString);
                 }
                 break;

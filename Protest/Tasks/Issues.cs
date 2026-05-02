@@ -296,7 +296,7 @@ internal static class Issues {
 
                 string[] ips = ipAttribute.value.Split(',').Select(o => o.Trim()).ToArray();
                 for (int i = 0; i < ips.Length; i++) {
-                    if (string.IsNullOrEmpty(ips[i])) { continue; }
+                    if (String.IsNullOrEmpty(ips[i])) { continue; }
                     if (ips[i].Contains("dhcp", StringComparison.OrdinalIgnoreCase)) { continue; }
 
                     if (ipAddresses.ContainsKey(ips[i])) {
@@ -329,11 +329,11 @@ internal static class Issues {
 
                 string[] macs = macAttribute.value.Split(',').Select(o => o.Trim()).ToArray();
                 for (int i = 0; i < macs.Length; i++) {
-                    if (string.IsNullOrEmpty(macs[i])) { continue; }
+                    if (String.IsNullOrEmpty(macs[i])) { continue; }
 
                     macs[i] = macs[i].Replace(":", "").Replace("-", "").ToUpper();
 
-                    if (string.IsNullOrEmpty(macs[i])) { continue; }
+                    if (String.IsNullOrEmpty(macs[i])) { continue; }
 
                     if (macAddresses.ContainsKey(macs[i])) {
                         issues.Add(new Issue {
@@ -1084,9 +1084,9 @@ internal static class Issues {
             string[][] componentMaxArray     = componentMax.Select(pair=> new string[] { pair.Key, pair.Value }).ToArray();
             string[][] componentCurrentArray = componentCurrent.Select(pair=> new string[] { pair.Key, pair.Value }).ToArray();
 
-            Array.Sort(componentNameArray, (x, y) => string.Compare(x[0], y[0]));
-            Array.Sort(componentMaxArray, (x, y) => string.Compare(x[0], y[0]));
-            Array.Sort(componentCurrentArray, (x, y) => string.Compare(x[0], y[0]));
+            Array.Sort(componentNameArray, (x, y)    => String.Compare(x[0], y[0]));
+            Array.Sort(componentMaxArray, (x, y)     => String.Compare(x[0], y[0]));
+            Array.Sort(componentCurrentArray, (x, y) => String.Compare(x[0], y[0]));
 
             Database.Entry device = DatabaseInstances.devices.GetEntry(file);
             device.attributes.TryGetValue("name", out Database.Attribute nameAttribute);

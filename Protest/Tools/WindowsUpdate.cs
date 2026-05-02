@@ -54,7 +54,7 @@ internal static class WindowsUpdate {
                 return false;
             }
 
-            string name = !string.IsNullOrWhiteSpace(hostnameString) ? hostnameString : ipString;
+            string name = !String.IsNullOrWhiteSpace(hostnameString) ? hostnameString : ipString;
 
             if (!String.IsNullOrWhiteSpace(ipString)) {
                 return CheckHost(ipString, device.filename, name, out issue, cacheMaxAge);
@@ -138,17 +138,17 @@ internal static class WindowsUpdate {
             for (int j = 0; j < update.Categories.Count; j++) {
                 dynamic category = update.Categories.Item(j);
                 string categoryType = category.Type;
-                if (!string.Equals(categoryType, "UpdateClassification", StringComparison.OrdinalIgnoreCase)) {
+                if (!String.Equals(categoryType, "UpdateClassification", StringComparison.OrdinalIgnoreCase)) {
                     continue;
                 }
 
                 string categoryId = Convert.ToString(category.CategoryID);
                 if (!String.IsNullOrEmpty(categoryId)) {
-                    if (string.Equals(categoryId, CRITICAL_CATEGORY_ID, StringComparison.OrdinalIgnoreCase)) {
+                    if (String.Equals(categoryId, CRITICAL_CATEGORY_ID, StringComparison.OrdinalIgnoreCase)) {
                         isCritical = true;
                         criticalCount++;
                     }
-                    else if (string.Equals(categoryId, SECURITY_CATEGORY_ID, StringComparison.OrdinalIgnoreCase)) {
+                    else if (String.Equals(categoryId, SECURITY_CATEGORY_ID, StringComparison.OrdinalIgnoreCase)) {
                         isSecurity = true;
                         securityCount++;
                     }
@@ -270,9 +270,9 @@ file sealed class UpdatesJsonConverter : JsonConverter<WindowsUpdate.UpdatesResu
                         throw new JsonException();
                     }
 
-                    string title          = string.Empty;
-                    string description    = string.Empty;
-                    string kbArticleIds   = string.Empty;
+                    string title          = String.Empty;
+                    string description    = String.Empty;
+                    string kbArticleIds   = String.Empty;
                     bool   isCritical     = false;
                     bool   isSecurity     = false;
                     bool   rebootRequired = false;
@@ -286,9 +286,9 @@ file sealed class UpdatesJsonConverter : JsonConverter<WindowsUpdate.UpdatesResu
                         reader.Read();
 
                         switch (updatePropertyName) {
-                        case "title"          : title = reader.GetString() ?? string.Empty; break;
-                        case "description"    : description = reader.GetString() ?? string.Empty; break;
-                        case "kbArticleIds"   : kbArticleIds = reader.GetString() ?? string.Empty; break;
+                        case "title"          : title = reader.GetString() ?? String.Empty; break;
+                        case "description"    : description = reader.GetString() ?? String.Empty; break;
+                        case "kbArticleIds"   : kbArticleIds = reader.GetString() ?? String.Empty; break;
                         case "isCritical"     : isCritical = reader.GetBoolean(); break;
                         case "isSecurity"     : isSecurity = reader.GetBoolean(); break;
                         case "rebootRequired" : rebootRequired = reader.GetBoolean(); break;

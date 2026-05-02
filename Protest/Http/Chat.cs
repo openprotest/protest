@@ -263,7 +263,7 @@ internal static class Chat {
     }
 
     public static void LeaveHandler(string peerId, string origin) {
-        if (string.IsNullOrEmpty(peerId)) return;
+        if (String.IsNullOrEmpty(peerId)) return;
 
         Auth.rbac.TryGetValue(origin, out Auth.AccessControl access);
         string username = access?.username ?? origin ?? "loopback";

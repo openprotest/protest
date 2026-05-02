@@ -137,7 +137,7 @@ internal static class Logger {
                 .OrderBy(file => file.Name)
                 .ToArray();
 
-            int lastIndex = Array.FindLastIndex(files, file => string.Compare(file.Name[..8], last) < 0);
+            int lastIndex = Array.FindLastIndex(files, file => String.Compare(file.Name[..8], last) < 0);
             if (lastIndex == -1) {
                 return "end"u8.ToArray();
             }

@@ -28,7 +28,7 @@ internal static class WebsiteCheck {
         public bool EnableHttpV3 { get; set; }
 
         [JsonPropertyName("uri")]
-        public string Uri { get; set; } = string.Empty;
+        public string Uri { get; set; } = String.Empty;
     }
 
     public static async Task WebSocketHandler(HttpListenerContext ctx) {

@@ -1,5 +1,4 @@
-﻿using Microsoft.Extensions.Hosting;
-using Protest.Tools;
+﻿using Protest.Tools;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
@@ -9,14 +8,11 @@ using System.Net.Mail;
 using System.Net.NetworkInformation;
 using System.Net.Security;
 using System.Net.Sockets;
-using System.Net.WebSockets;
-using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
-using static Protest.Tasks.Watchdog;
 
 namespace Protest.Tasks;
 
@@ -77,10 +73,12 @@ internal static class Watchdog {
     private static readonly ConcurrentDictionary<string, Watcher> watchers = new ConcurrentDictionary<string, Watcher>();
     private static ConcurrentBag<Notification> notifications = new ConcurrentBag<Notification>();
 
-    private static readonly object notificationMutex = new object();
+    private static readonly Lock notificationMutex = new Lock();
 
     private static readonly JsonSerializerOptions watcherSerializerOptions = new();
     private static readonly JsonSerializerOptions notificationSerializerOptions = new();
+
+    private static readonly HttpClient sharedHttpClient = new HttpClient();
 
     public static void Initialize() {
         watcherSerializerOptions.Converters.Add(new WatcherJsonConverter());
@@ -295,14 +293,13 @@ internal static class Watchdog {
         short result = -1;
         for (int i = 0; i < watcher.retries; i++) {
             try {
-                using HttpClient client = new HttpClient();
                 HttpResponseMessage response = watcher.method switch {
-                    "GET"    => client.GetAsync(watcher.target).GetAwaiter().GetResult(),
-                    "POST"   => client.PostAsync(watcher.target, null).GetAwaiter().GetResult(),
-                    "PUT"    => client.PutAsync(watcher.target, null).GetAwaiter().GetResult(),
-                    "PATCH"  => client.PatchAsync(watcher.target, null).GetAwaiter().GetResult(),
-                    "DELETE" => client.DeleteAsync(watcher.target).GetAwaiter().GetResult(),
-                    _ => client.GetAsync(watcher.target).GetAwaiter().GetResult(),
+                    "GET"    => sharedHttpClient.GetAsync(watcher.target).GetAwaiter().GetResult(),
+                    "POST"   => sharedHttpClient.PostAsync(watcher.target, null).GetAwaiter().GetResult(),
+                    "PUT"    => sharedHttpClient.PutAsync(watcher.target, null).GetAwaiter().GetResult(),
+                    "PATCH"  => sharedHttpClient.PatchAsync(watcher.target, null).GetAwaiter().GetResult(),
+                    "DELETE" => sharedHttpClient.DeleteAsync(watcher.target).GetAwaiter().GetResult(),
+                    _        => sharedHttpClient.GetAsync(watcher.target).GetAwaiter().GetResult(),
                 };
 
                 int statusCode = (int)response.StatusCode;
@@ -328,25 +325,23 @@ internal static class Watchdog {
     }
 
     private static short CheckHttpKeyword(Watcher watcher) {
-        using HttpClient client = new HttpClient();
         short result = -1;
 
         for (int i = 0; i < watcher.retries; i++) {
             try {
                 HttpResponseMessage response = watcher.method switch {
-                    "GET" => client.GetAsync(watcher.target).GetAwaiter().GetResult(),
-                    "POST" => client.PostAsync(watcher.target, null).GetAwaiter().GetResult(),
-                    "PUT" => client.PutAsync(watcher.target, null).GetAwaiter().GetResult(),
-                    "PATCH" => client.PatchAsync(watcher.target, null).GetAwaiter().GetResult(),
-                    "DELETE" => client.DeleteAsync(watcher.target).GetAwaiter().GetResult(),
-                    _ => client.GetAsync(watcher.target).GetAwaiter().GetResult(),
+                    "GET"    => sharedHttpClient.GetAsync(watcher.target).GetAwaiter().GetResult(),
+                    "POST"   => sharedHttpClient.PostAsync(watcher.target, null).GetAwaiter().GetResult(),
+                    "PUT"    => sharedHttpClient.PutAsync(watcher.target, null).GetAwaiter().GetResult(),
+                    "PATCH"  => sharedHttpClient.PatchAsync(watcher.target, null).GetAwaiter().GetResult(),
+                    "DELETE" => sharedHttpClient.DeleteAsync(watcher.target).GetAwaiter().GetResult(),
+                    _        => sharedHttpClient.GetAsync(watcher.target).GetAwaiter().GetResult(),
                 };
 
                 int statusCode = (int)response.StatusCode;
                 int category = statusCode / 100 - 1;
 
-                if (watcher.httpstatus.Length < category)
-                    continue;
+                if (watcher.httpstatus.Length < category) continue;
                 //if (!watcher.httpstatus[category]) continue;
 
                 if (watcher.httpstatus[category]) {
@@ -375,7 +370,7 @@ internal static class Watchdog {
     // -3  = expires within 7 days
     // -4  = not yet valid
     public static short CheckTls(Watcher watcher) {
-        if (string.IsNullOrWhiteSpace(watcher.target)) return -1;
+        if (String.IsNullOrWhiteSpace(watcher.target)) return -1;
 
         string target = watcher.target.Trim();
         string host;
@@ -392,7 +387,7 @@ internal static class Watchdog {
         if (scheme != "https" && scheme != "ftps") return -1;
 
         host = uri.Host;
-        if (string.IsNullOrEmpty(host)) return -1;
+        if (String.IsNullOrEmpty(host)) return -1;
 
         port = uri.IsDefaultPort
             ? scheme switch {
@@ -622,7 +617,7 @@ internal static class Watchdog {
         using StreamReader reader = new StreamReader(ctx.Request.InputStream, ctx.Request.ContentEncoding);
         string payload = reader.ReadToEnd();
 
-        if (string.IsNullOrEmpty(payload)) {
+        if (String.IsNullOrEmpty(payload)) {
             return Data.CODE_INVALID_ARGUMENT.Array;
         }
 
@@ -700,7 +695,7 @@ internal static class Watchdog {
                 _  => "Certificate is valid",
             },
 
-            _ => string.Empty
+            _ => String.Empty
         };
 
         string target = watcher.type == WatcherType.tcp

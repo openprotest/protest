@@ -422,7 +422,7 @@ internal static partial class Polling {
     }
 
     internal static string ParseOctetStringAsHex(byte[] bytes) {
-        if (bytes.Length < 2) return string.Empty;
+        if (bytes.Length < 2) return String.Empty;
 
         byte lenByte = bytes[1];
         int size, startIndex;
@@ -440,7 +440,7 @@ internal static partial class Polling {
         }
 
         int count = Math.Min(size, bytes.Length - startIndex);
-        if (count <= 0) return string.Empty;
+        if (count <= 0) return String.Empty;
 
         Span<char> hex = stackalloc char[count * 2];
         for (int i = 0; i < count; i++) {

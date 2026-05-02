@@ -25,7 +25,7 @@ internal static class Ldap {
     }
 
     private static string EscapeLdapValue(string value) {
-        if (string.IsNullOrEmpty(value)) return string.Empty;
+        if (String.IsNullOrEmpty(value)) return String.Empty;
 
         StringBuilder escaped = new StringBuilder(value.Length);
         foreach (char c in value) {

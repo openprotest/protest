@@ -151,7 +151,7 @@ internal static partial class Polling {
                 tagged.TryGetValue(port, out string existing);
                 string currentVlan = pair.Key.ToString();
                 if (untagged.TryGetValue(port, out string untaggedVlanId) && untaggedVlanId == currentVlan) continue;
-                tagged[port] = string.IsNullOrEmpty(existing) ? currentVlan : $"{existing},{currentVlan}";
+                tagged[port] = String.IsNullOrEmpty(existing) ? currentVlan : $"{existing},{currentVlan}";
             }
         }
 

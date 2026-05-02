@@ -356,7 +356,7 @@ public static class DeviceXmlParser {
             xmlReader.MoveToContent();
 
             string namespaceUri = xmlReader.NamespaceURI;
-            XmlSerializer serializer = string.IsNullOrEmpty(namespaceUri)
+            XmlSerializer serializer = String.IsNullOrEmpty(namespaceUri)
                 ? new XmlSerializer(typeof(XmlRoot))
                 : new XmlSerializer(typeof(XmlRoot), namespaceUri);
 

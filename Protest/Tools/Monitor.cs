@@ -352,7 +352,7 @@ internal static class Monitor {
                     value = Protocols.Wmi.FormatProperty(p);
                 }
                 catch {
-                    value = string.Empty;
+                    value = String.Empty;
                 }
 
                 if (!data.ContainsKey(name)) {

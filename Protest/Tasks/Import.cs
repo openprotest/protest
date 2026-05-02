@@ -59,10 +59,10 @@ internal class Import {
                 }
                 else {
                     string[] ver = versionResponse.Content.ReadAsStringAsync().GetAwaiter().GetResult()
-                                   .Replace("{", string.Empty)
-                                   .Replace("}", string.Empty)
-                                   .Replace("\"", string.Empty)
-                                   .Replace(" ", string.Empty)
+                                   .Replace("{", String.Empty)
+                                   .Replace("}", String.Empty)
+                                   .Replace("\"", String.Empty)
+                                   .Replace(" ", String.Empty)
                                    .Split(',');
 
                     string major = "0", minor = "0";

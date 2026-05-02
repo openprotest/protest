@@ -165,7 +165,7 @@ namespace ProtestAgent {
                 }
             }
             catch (Exception ex) {
-                Logger.Debug(ex);
+                Logger.WriteLine(ex);
             }
             finally {
                 fileReader.Close();

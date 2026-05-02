@@ -413,7 +413,7 @@ internal static class IpDiscovery {
                         Logger.Debug(ex);
                     }
 
-                    if (!string.IsNullOrEmpty(name)) {
+                    if (!String.IsNullOrEmpty(name)) {
                         Mdns.Answer[] answer = Mdns.ResolveToArray($"{name}.local", 500, Protocols.Dns.RecordType.AAAA, false);
                         Mdns.Answer[] filtered = answer.Where(o=> o.type == Protocols.Dns.RecordType.AAAA).ToArray();
 
@@ -528,7 +528,7 @@ internal static class IpDiscovery {
                 byte[] actualReply = new byte[length];
                 Array.Copy(reply, actualReply, length);
 
-                string hostname = string.Empty;
+                string hostname = String.Empty;
                 IPAddress ipAddress = ((IPEndPoint)remoteEP).Address;
                 string ipString = ipAddress.ToString();
                 string ipv6 = String.Empty;
