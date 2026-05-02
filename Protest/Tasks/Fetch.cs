@@ -660,7 +660,9 @@ internal static class Fetch {
             return Data.CODE_INVALID_ARGUMENT.Array;
         }
 
-        int.TryParse(retriesStr, out int retries);
+        if (!int.TryParse(retriesStr, out int retries)) {
+            retries = 0;
+        }
 
         return DevicesTask(
             hosts,

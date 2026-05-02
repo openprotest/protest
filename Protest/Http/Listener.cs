@@ -4,7 +4,6 @@
 #endif
 
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
@@ -222,7 +221,7 @@ internal sealed class Listener {
         //Cross Site Request Forgery protection
         if (ctx.Request?.UrlReferrer is not null) {
             if (!Uri.IsWellFormedUriString(ctx.Request.UrlReferrer.ToString(), UriKind.Absolute)) {
-                ctx.Response.StatusCode = 418; //I'm a teapot
+                ctx.Response.StatusCode = 400;
                 ctx.Response.Close();
                 return;
             }
@@ -232,28 +231,46 @@ internal sealed class Listener {
             int    referrerPort = ctx.Request.UrlReferrer.Port;
             bool isSameHost = String.Equals(referrerHost, userHostName, StringComparison.Ordinal);
             if (!isSameHost && !String.Equals($"{referrerHost}:{referrerPort}", userHostName, StringComparison.Ordinal)) {
-                ctx.Response.StatusCode = 418; //I'm a teapot
+                ctx.Response.StatusCode = 400;
                 ctx.Response.Close();
                 return;
             }
 
             UriHostNameType type = Uri.CheckHostName(referrerHost);
             if (type != UriHostNameType.Dns && type != UriHostNameType.IPv4 && type != UriHostNameType.IPv6) {
-                ctx.Response.StatusCode = 418; //I'm a teapot
+                ctx.Response.StatusCode = 400;
                 ctx.Response.Close();
                 return;
             }
         }
 
+        IPAddress realIp;
         string xRealIpHeader = ctx.Request?.Headers?.Get("X-Real-IP");
-        if (xRealIpHeader is not null && IPAddress.TryParse(xRealIpHeader, out IPAddress realIp)) {
-            if (IPAddress.IsLoopback(realIp)) {
-                ctx.Response.StatusCode = 418; //I'm a teapot
+        if (xRealIpHeader is not null && IPAddress.TryParse(xRealIpHeader, out IPAddress xRealIp)) {
+            IPAddress remoteIp = ctx.Request.RemoteEndPoint.Address;
+
+            if (IPAddress.IsLoopback(xRealIp)) {
+                Logger.Action("Unauthenticated", "AAA", $"Rejected loopback X-Real-IP from {remoteIp}");
+                ctx.Response.StatusCode = 400;
                 ctx.Response.Close();
                 return;
             }
-            ctx.Request.RemoteEndPoint.Address = realIp;
+
+            bool isTrustedProxy = Configuration.trustedProxies.Contains(remoteIp);
+            if (!isTrustedProxy) {
+                Logger.Action("Unauthenticated", "AAA", $"Rejected X-Real-IP from non-trusted peer {remoteIp}");
+                ctx.Response.StatusCode = 400;
+                ctx.Response.Close();
+                return;
+            }
+
+            realIp = xRealIp;
         }
+        else {
+            realIp = ctx.Request.RemoteEndPoint.Address;
+        }
+
+        ctx.Request.RemoteEndPoint.Address = realIp;
 
         string path = ctx.Request.Url.PathAndQuery;
 

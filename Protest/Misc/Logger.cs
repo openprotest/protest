@@ -110,7 +110,7 @@ internal static class Logger {
                     actionWriter.Flush();
                 }
                 catch {
-                    Console.WriteLine("Failed to log error");
+                    Console.WriteLine("Failed to log");
                 }
             }
 

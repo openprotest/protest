@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Runtime.Versioning;
 using System.Text;
+using System.Net;
 
 namespace Protest;
 internal static class Configuration {
@@ -12,6 +13,7 @@ internal static class Configuration {
     internal static byte[] DB_KEY;
     internal static byte[] DB_KEY_IV;
 
+    internal static HashSet<IPAddress> trustedProxies = new HashSet<IPAddress>();
     internal static bool backdoor = true;
 
     internal static string frontPath = $"{Data.DIR_BASE}{Data.DELIMITER}front";
@@ -53,6 +55,12 @@ internal static class Configuration {
 
             case "http_prefix":
                 prefixesList.Add(value.ToString());
+                break;
+
+            case "trusted_proxy":
+                if (IPAddress.TryParse(value.ToString(), out IPAddress trustedProxy)) {
+                    trustedProxies.Add(trustedProxy);
+                }
                 break;
 
             case "backdoor":
@@ -116,6 +124,10 @@ internal static class Configuration {
         builder.AppendLine("http_prefix = http://127.0.0.1:8080/");
         builder.AppendLine("#http_prefix = http://[::1]:8080/");
         builder.AppendLine("#http_prefix = https://+:443/");
+        builder.AppendLine();
+
+        builder.AppendLine($"# If using a reverse proxy, define its IP here to mark it as trusted.");
+        builder.AppendLine($"#trusted_proxy = 0.0.0.0");
         builder.AppendLine();
 
         builder.AppendLine($"# When the backdoor flag set to true, requests originating from the loopback address bypass authentication");
