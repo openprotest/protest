@@ -1,4 +1,4 @@
-﻿using System.Collections.Concurrent;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Text.Json;
 using System.Threading;
@@ -8,9 +8,9 @@ namespace Protest.Http;
 internal static class Chat {
 
     private readonly struct Message {
-        public readonly string sender {init; internal get;}
-        public readonly long timestamp {init; internal get;}
-        public readonly byte[] json {init; internal get;}
+        public readonly string Sender {init; internal get;}
+        public readonly long Timestamp {init; internal get;}
+        public readonly byte[] Json {init; internal get;}
     }
 
     private const int MAX_HISTORY_ENTRIES = 1000;
@@ -52,9 +52,9 @@ internal static class Chat {
         KeepAlive.Broadcast(json, "/chat/read");
 
         Message message = new Message {
-            sender    = rbac?.username ?? "loopback",
-            timestamp = now,
-            json      = json
+            Sender    = rbac?.username ?? "loopback",
+            Timestamp = now,
+            Json      = json
         };
 
         PushMessage(message);
@@ -86,9 +86,9 @@ internal static class Chat {
         KeepAlive.Broadcast(json, "/chat/read");
 
         Message message = new Message {
-            sender    = rbac?.username ?? "loopback",
-            timestamp = now,
-            json      = json
+            Sender    = rbac?.username ?? "loopback",
+            Timestamp = now,
+            Json      = json
         };
 
         PushMessage(message);
@@ -117,9 +117,9 @@ internal static class Chat {
         KeepAlive.Broadcast(json, "/chat/read");
 
         Message message = new Message {
-            sender    = access?.username ?? "loopback",
-            timestamp = now,
-            json      = json
+            Sender    = access?.username ?? "loopback",
+            Timestamp = now,
+            Json      = json
         };
 
         PushMessage(message);
@@ -154,9 +154,9 @@ internal static class Chat {
         KeepAlive.Broadcast(json, "/chat/read");
 
         Message message = new Message {
-            sender    = access?.username ?? "loopback",
-            timestamp = now,
-            json      = json
+            Sender    = access?.username ?? "loopback",
+            Timestamp = now,
+            Json      = json
         };
 
         PushMessage(message);
@@ -165,13 +165,11 @@ internal static class Chat {
     public static void SdpHandler(ConcurrentDictionary<string, string> dictionary, string origin) {
         if (!Auth.rbac.TryGetValue(origin, out Auth.AccessControl access) && origin != "loopback") return;
         if (!dictionary.TryGetValue("type", out string type)) return;
-        if (!dictionary.TryGetValue("uuid", out string uuid)) return;
+        if (!dictionary.TryGetValue("peerId", out string peerId)) return;
+        if (!dictionary.TryGetValue("target", out string target)) return;
 
-        string username = access?.username ?? "loopback";
-        string alias = !String.IsNullOrEmpty(access?.alias) ? access.alias : username;
-
-        string sdp = null;
-        string action = null;
+        string sdp;
+        string action;
         if (type == "chat-sdp-offer") {
             if (!dictionary.TryGetValue("offer", out sdp)) return;
             action = "chat-offer";
@@ -184,9 +182,13 @@ internal static class Chat {
             return;
         }
 
+        string username = access?.username ?? "loopback";
+        string alias = !String.IsNullOrEmpty(access?.alias) ? access.alias : username;
+
         byte[] json = JsonSerializer.SerializeToUtf8Bytes(new {
             action  = action,
-            uuid    = uuid,
+            peerId  = peerId,
+            target  = target,
             time    = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
             sender  = username,
             alias   = alias,
@@ -194,20 +196,22 @@ internal static class Chat {
             sdp     = sdp
         });
 
-        KeepAlive.Broadcast(json, "/chat/read", false, origin);
+        KeepAlive.Broadcast(json, "/chat/read");
     }
 
     public static void IceHandler(ConcurrentDictionary<string, string> dictionary, string origin) {
         if (!Auth.rbac.TryGetValue(origin, out Auth.AccessControl access) && origin != "loopback") return;
         if (!dictionary.TryGetValue("candidate", out string candidate)) return;
-        if (!dictionary.TryGetValue("uuid", out string uuid)) return;
+        if (!dictionary.TryGetValue("peerId", out string peerId)) return;
+        if (!dictionary.TryGetValue("target", out string target)) return;
 
         string username = access?.username ?? "loopback";
         string alias = !String.IsNullOrEmpty(access?.alias) ? access.alias : username;
 
         byte[] json = JsonSerializer.SerializeToUtf8Bytes(new {
             action    = "chat-ice",
-            uuid      = uuid,
+            peerId    = peerId,
+            target    = target,
             time      = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
             sender    = username,
             alias     = alias,
@@ -215,17 +219,59 @@ internal static class Chat {
             candidate = candidate
         });
 
-        KeepAlive.Broadcast(json, "/chat/read", false, origin);
+        KeepAlive.Broadcast(json, "/chat/read");
     }
 
-    public static void JoinHandler(string origin) {
+    public static void JoinHandler(ConcurrentDictionary<string, string> dictionary, string origin) {
         if (!Auth.rbac.TryGetValue(origin, out Auth.AccessControl access) && origin != "loopback") return;
+        if (!dictionary.TryGetValue("peerId", out string peerId)) return;
 
         string username = access?.username ?? "loopback";
         string alias = !String.IsNullOrEmpty(access?.alias) ? access.alias : username;
 
         byte[] json = JsonSerializer.SerializeToUtf8Bytes(new {
             action = "chat-join",
+            peerId = peerId,
+            time   = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+            sender = username,
+            alias  = alias,
+            color  = access?.color ?? DEFAULT_COLOR,
+        });
+
+        KeepAlive.Broadcast(json, "/chat/read");
+    }
+
+    public static void PresenceHandler(ConcurrentDictionary<string, string> dictionary, string origin) {
+        if (!Auth.rbac.TryGetValue(origin, out Auth.AccessControl access) && origin != "loopback") return;
+        if (!dictionary.TryGetValue("peerId", out string peerId)) return;
+        if (!dictionary.TryGetValue("target", out string target)) return;
+
+        string username = access?.username ?? "loopback";
+        string alias = !String.IsNullOrEmpty(access?.alias) ? access.alias : username;
+
+        byte[] json = JsonSerializer.SerializeToUtf8Bytes(new {
+            action = "chat-presence",
+            peerId = peerId,
+            target = target,
+            time   = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+            sender = username,
+            alias  = alias,
+            color  = access?.color ?? DEFAULT_COLOR,
+        });
+
+        KeepAlive.Broadcast(json, "/chat/read");
+    }
+
+    public static void LeaveHandler(string peerId, string origin) {
+        if (string.IsNullOrEmpty(peerId)) return;
+
+        Auth.rbac.TryGetValue(origin, out Auth.AccessControl access);
+        string username = access?.username ?? origin ?? "loopback";
+        string alias = !String.IsNullOrEmpty(access?.alias) ? access.alias : username;
+
+        byte[] json = JsonSerializer.SerializeToUtf8Bytes(new {
+            action = "chat-leave",
+            peerId = peerId,
             time   = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
             sender = username,
             alias  = alias,
@@ -253,14 +299,6 @@ internal static class Chat {
         });
 
         KeepAlive.Broadcast(json, "/chat/read");
-
-        Message message = new Message {
-            sender    = access?.username ?? "loopback",
-            timestamp = now,
-            json      = json
-        };
-
-        PushMessage(message);
     }
 
     public static byte[] GetHistory() {
@@ -268,7 +306,7 @@ internal static class Chat {
 
         lock (mutex) {
             int expiredCount = 0;
-            while (expiredCount < history.Count && history[expiredCount].timestamp < yesterday) {
+            while (expiredCount < history.Count && history[expiredCount].Timestamp < yesterday) {
                 expiredCount++;
             }
 
@@ -283,8 +321,8 @@ internal static class Chat {
                 totalSize += history.Count - 1; //commas
             }
 
-            foreach (var msg in history) {
-                totalSize += msg.json.Length;
+            foreach (Message msg in history) {
+                totalSize += msg.Json.Length;
             }
 
             byte[] result = new byte[totalSize];
@@ -295,7 +333,7 @@ internal static class Chat {
                 if (i > 0) {
                     result[pos++] = (byte)',';
                 }
-                var json = history[i].json;
+                byte[] json = history[i].Json;
                 Buffer.BlockCopy(json, 0, result, pos, json.Length);
                 pos += json.Length;
             }

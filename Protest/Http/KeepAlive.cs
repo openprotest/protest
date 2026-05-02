@@ -25,6 +25,7 @@ internal static class KeepAlive {
     private static readonly ConcurrentDictionary<WebSocket, Entry> connections = new();
     private static readonly ConcurrentDictionary<WebSocket, ConcurrentDictionary<string, int>> deviceViewCounter = new();
     private static readonly ConcurrentDictionary<WebSocket, ConcurrentDictionary<string, int>> userViewCounter = new();
+    private static readonly ConcurrentDictionary<WebSocket, string> chatPeerIds = new();
 
     private static readonly JsonSerializerOptions messageSerializerOptions;
 
@@ -120,6 +121,10 @@ internal static class KeepAlive {
         }
         finally {
             connections.TryRemove(ws, out _);
+
+            if (chatPeerIds.TryRemove(ws, out string leftPeerId)) {
+                Chat.LeaveHandler(leftPeerId, username);
+            }
 
             if (deviceViewCounter.TryRemove(ws, out ConcurrentDictionary<string, int> devicesCount)) {
                 foreach (KeyValuePair<string, int> pair in devicesCount) {
@@ -339,7 +344,24 @@ internal static class KeepAlive {
 
         case "chat-join":
             if (Auth.IsAuthorized(ctx, "/chat/write")) {
-                Chat.JoinHandler(origin);
+                if (dictionary.TryGetValue("peerId", out string joinPeerId) && !String.IsNullOrEmpty(joinPeerId)) {
+                    chatPeerIds[keepAliveEntry.ws] = joinPeerId;
+                }
+                Chat.JoinHandler(dictionary, origin);
+            }
+            return;
+
+        case "chat-presence":
+            if (Auth.IsAuthorized(ctx, "/chat/write")) {
+                Chat.PresenceHandler(dictionary, origin);
+            }
+            return;
+
+        case "chat-leave":
+            if (Auth.IsAuthorized(ctx, "/chat/write")) {
+                if (chatPeerIds.TryRemove(keepAliveEntry.ws, out string leavePeerId)) {
+                    Chat.LeaveHandler(leavePeerId, origin);
+                }
             }
             return;
 

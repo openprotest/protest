@@ -305,9 +305,7 @@ const KEEP = {
 		case "chat-text":
 		case "chat-image":
 		case "chat-emoji":
-		case "chat-command":
-		case "chat-offer":
-		case "chat-answer": {
+		case "chat-command": {
 			if (!KEEP.chatNotificationSound) {
 				KEEP.chatNotificationSound = new Audio("notification.ogg");
 				const volume = localStorage.getItem("notification_volume") == null ? 80 : parseInt(localStorage.getItem("notification_volume"));
@@ -347,10 +345,6 @@ const KEEP = {
 					newChat.Minimize();
 				}
 
-				if (message.action === "chat-offer" || message.action === "chat-answer") {
-					newChat.HandleMessage(message);
-				}
-
 				setTimeout(()=>{newChat.win.style.display = "initial";}, WIN.ANIME_DURATION);
 				if (localStorage.getItem("enable_notification_sound") !== "false") {
 					KEEP.chatNotificationSound.play();
@@ -361,15 +355,15 @@ const KEEP = {
 		}
 
 		case "chat-join":
-		case "chat-stream":
+		case "chat-presence":
+		case "chat-leave":
+		case "chat-offer":
+		case "chat-answer":
 		case "chat-ice":
+		case "chat-stream":
 			for (let i=0; i<WIN.array.length; i++) {
 				if (!(WIN.array[i] instanceof Chat)) continue;
 				WIN.array[i].HandleMessage(message, true);
-
-				/*if (WIN.focused !== WIN.array[i] && message.sender !== KEEP.username && localStorage.getItem("enable_notification_sound") !== "false") {
-					KEEP.chatNotificationSound.play();
-				}*/
 			}
 			break;
 

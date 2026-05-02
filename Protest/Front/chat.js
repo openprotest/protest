@@ -11,12 +11,10 @@ class Chat extends Window {
 		"mono/handthumbsdown.svg"
 	];
 
-	static STUN_SERVERS = {
+	static RTC_CONFIG = {
 		iceServers: [
 			{
-				urls: ["stun:stun2.l.google.com:19302", "stun:stun4.l.google.com:19302"],
-				//username: "", //optional
-				//credentials: "" //token
+				urls: ["stun:stun2.l.google.com:19302", "stun:stun4.l.google.com:19302"]
 			}
 		]
 	};
@@ -33,17 +31,19 @@ class Chat extends Window {
 		this.lastBubble = null;
 		this.outdoing = {};
 
+		this.peerId = UI.GenerateUuid();
+
 		this.userStream = null;
 		this.displayStreams = [];
-		this.remoteStreams = [];
+		this.peers = {};
 
-		this.localConnections = {};
-		this.remoteConnections = {};
+		this.remoteStreamOrder = [];
+		this.primaryStreamKey = null;
 
 		this.isMicEnable = false;
 		this.isCamEnable = false;
 
-		this.upstreamUserSocket = null;
+		this.hasJoined = false;
 
 		this.InitializeComponents();
 	}
@@ -64,6 +64,13 @@ class Chat extends Window {
 		this.localStreamsBox = document.createElement("div");
 		this.localStreamsBox.className = "local-streams-box";
 		this.content.appendChild(this.localStreamsBox);
+
+		this.remoteStreamsBox = document.createElement("div");
+		this.remoteStreamsBox.className = "remote-streams-box";
+		this.remoteStreamsBox.style.display = "block";
+		this.remoteStreamsBox.style.padding = "0";
+		this.remoteStreamsBox.style.overflow = "hidden";
+		this.content.appendChild(this.remoteStreamsBox);
 
 		this.chatBox = document.createElement("div");
 		this.chatBox.className = "chat-box";
@@ -145,197 +152,438 @@ class Chat extends Window {
 
 		await this.GetHistory();
 
-		KEEP.socket.send(JSON.stringify({
-			type: "chat-join"
-		}));
+		this.SendChatJoin();
+
+		this.AdjustUI();
+	}
+
+	Close() { //overrides
+		this.LeaveChat();
+		super.Close();
+	}
+
+	SendChatJoin() {
+		try {
+			KEEP.socket.send(JSON.stringify({
+				type: "chat-join",
+				peerId: this.peerId
+			}));
+			this.hasJoined = true;
+		}
+		catch {}
+	}
+
+	LeaveChat() {
+		for (const peerId in this.peers) {
+			this.RemovePeer(peerId);
+		}
+		this.peers = {};
+
+		if (this.userStream) {
+			try { this.userStream.stream.getTracks().forEach(t=>t.stop()); } catch {}
+			if (this.userStream.element && this.userStream.element.container.parentElement) {
+				this.localStreamsBox.removeChild(this.userStream.element.container);
+			}
+			this.userStream = null;
+		}
+
+		for (const ds of this.displayStreams) {
+			try { ds.stream.getTracks().forEach(t=>t.stop()); } catch {}
+			if (ds.element && ds.element.container.parentElement) {
+				this.localStreamsBox.removeChild(ds.element.container);
+			}
+		}
+		this.displayStreams = [];
+
+		if (this.hasJoined) {
+			try {
+				KEEP.socket.send(JSON.stringify({
+					type: "chat-leave",
+					peerId: this.peerId
+				}));
+			}
+			catch {}
+			this.hasJoined = false;
+		}
 	}
 
 	async SetupLocalUserMediaStream() {
-		/*try*/ {
+		try {
 			const stream = await navigator.mediaDevices.getUserMedia({
 				audio: {
 					echoCancellation: true,
 					noiseSuppression: true
 				},
 				video: {
-					//aspectRatio: { ideal: 1.333333},
 					width: { min: 640, ideal: 1280, max: 1920 },
 					height: { min: 480, ideal: 720, max: 1080 }
 				}
 			});
 
-			const element = this.CreateLocalStreamElement(true);
+			const element = this.CreateLocalStreamElement(stream, true);
 			this.localStreamsBox.appendChild(element.container);
-			element.videoFeedback.srcObject = stream;
-			element.videoFeedback.muted = true;
+			element.video.srcObject = stream;
+			element.video.muted = true;
 
-			const userStream = {
+			this.userStream = {
 				stream: stream,
 				element: element,
-				feedbackElement: element.videoFeedback
+				kind: "user"
 			};
 
-			this.userStream = userStream;
-
+			const audioTrack = stream.getAudioTracks()[0];
 			const videoTrack = stream.getVideoTracks()[0];
-			const audioTrack = this.userStream.stream.getAudioTracks()[0];
-			audioTrack.enabled = this.isMicEnable;
-			videoTrack.enabled = this.isCamEnable;
+			if (audioTrack) audioTrack.enabled = this.isMicEnable;
+			if (videoTrack) videoTrack.enabled = this.isCamEnable;
 
-			videoTrack.onended = ()=> {
-				this.localStreamsBox.removeChild(element.container);
-				this.userStream.stream.getTracks().forEach(track=>track.enabled = false);
-				this.userStream = null;
-				this.isMicEnable = false;
-				this.isCamEnable = false;
-				this.AdjustUI();
-			};
+			const onLocalEnd = ()=> this.StopUserStream();
+			if (audioTrack) audioTrack.onended = onLocalEnd;
+			if (videoTrack) videoTrack.onended = onLocalEnd;
 
-			await this.InitializeRtc();
+			element.stopButton.onclick = ()=> this.StopUserStream();
+
+			this.AddStreamToAllPeers(stream);
 		}
-		/*catch (ex) {
-			this.ConfirmBox(ex, true, "mono/mic.svg");
-			this.micButton.style.backgroundColor = "transparent";
-			this.micButton.style.backgroundImage = "url(mono/mic.svg?light)";
+		catch (ex) {
+			this.ConfirmBox(ex.message || String(ex), true, "mono/mic.svg");
 			this.isMicEnable = false;
 			this.isCamEnable = false;
-		}*/
+		}
 
+		this.AdjustUI();
+	}
+
+	StopUserStream() {
+		if (!this.userStream) return;
+
+		const stream = this.userStream.stream;
+		this.RemoveStreamFromAllPeers(stream);
+
+		try { stream.getTracks().forEach(t=>t.stop()); } catch {}
+
+		if (this.userStream.element.container.parentElement) {
+			this.localStreamsBox.removeChild(this.userStream.element.container);
+		}
+
+		this.userStream = null;
+		this.isMicEnable = false;
+		this.isCamEnable = false;
 		this.AdjustUI();
 	}
 
 	async SetupLocalDisplayMediaStream() {
-		/*try*/ {
+		try {
 			const stream = await navigator.mediaDevices.getDisplayMedia({
-				video: true
+				video: true,
+				audio: true
 			});
 
-			const element = this.CreateLocalStreamElement();
+			const element = this.CreateLocalStreamElement(stream, false);
 			this.localStreamsBox.appendChild(element.container);
-			element.videoFeedback.srcObject = stream;
+			element.video.srcObject = stream;
+			element.video.muted = true;
 
 			const displayStream = {
 				stream: stream,
 				element: element,
-				feedbackElement: element.videoFeedback
+				kind: "display"
 			};
 
 			this.displayStreams.push(displayStream);
 
-			const videoTrack = stream.getVideoTracks()[0];
-			videoTrack.onended = ()=> {
-				this.localStreamsBox.removeChild(element.container);
-				let index = this.displayStreams.indexOf(displayStream);
-				if (index > -1) {
-					this.displayStreams.splice(index, 1);
+			const stopThis = ()=> this.StopDisplayStream(displayStream);
+			stream.getTracks().forEach(t=>t.onended = stopThis);
+			element.stopButton.onclick = stopThis;
+
+			this.AddStreamToAllPeers(stream);
+		}
+		catch (ex) {
+			if (ex && ex.name !== "NotAllowedError") {
+				this.ConfirmBox(ex.message || String(ex), true, "mono/screenshare.svg");
+			}
+		}
+
+		this.AdjustUI();
+	}
+
+	StopDisplayStream(displayStream) {
+		const index = this.displayStreams.indexOf(displayStream);
+		if (index < 0) return;
+
+		this.RemoveStreamFromAllPeers(displayStream.stream);
+
+		try { displayStream.stream.getTracks().forEach(t=>t.stop()); } catch {}
+
+		if (displayStream.element.container.parentElement) {
+			this.localStreamsBox.removeChild(displayStream.element.container);
+		}
+
+		this.displayStreams.splice(index, 1);
+		this.AdjustUI();
+	}
+
+	GetAllLocalStreams() {
+		const result = [];
+		if (this.userStream) result.push(this.userStream.stream);
+		for (const ds of this.displayStreams) result.push(ds.stream);
+		return result;
+	}
+
+	AddStreamToAllPeers(stream) {
+		for (const peerId in this.peers) {
+			this.AddStreamToPeer(this.peers[peerId], stream);
+		}
+	}
+
+	AddStreamToPeer(peer, stream) {
+		const existingSenders = peer.pc.getSenders();
+		for (const track of stream.getTracks()) {
+			const already = existingSenders.find(s=>s.track === track);
+			if (already) continue;
+			try {
+				peer.pc.addTrack(track, stream);
+			}
+			catch (ex) {
+				console.error("addTrack failed:", ex);
+			}
+		}
+	}
+
+	RemoveStreamFromAllPeers(stream) {
+		const trackIds = new Set(stream.getTracks().map(t=>t.id));
+		for (const peerId in this.peers) {
+			const peer = this.peers[peerId];
+			for (const sender of peer.pc.getSenders()) {
+				if (sender.track && trackIds.has(sender.track.id)) {
+					try { peer.pc.removeTrack(sender); } catch {}
 				}
+			}
+		}
+	}
+
+	EnsurePeer(peerId, info) {
+		if (this.peers[peerId]) {
+			if (info) {
+				if (info.alias) this.peers[peerId].info.alias = info.alias;
+				if (info.color) this.peers[peerId].info.color = info.color;
+				if (info.sender) this.peers[peerId].info.sender = info.sender;
+			}
+			return this.peers[peerId];
+		}
+
+		const pc = new RTCPeerConnection(Chat.RTC_CONFIG);
+
+		const peer = {
+			pc: pc,
+			peerId: peerId,
+			polite: this.peerId > peerId,
+			makingOffer: false,
+			ignoreOffer: false,
+			isSettingRemoteAnswerPending: false,
+			info: info || {},
+			remoteStreams: {} //streamId -> {stream, container, video, label}
+		};
+		this.peers[peerId] = peer;
+
+		pc.onicecandidate = ({candidate})=> {
+			if (!candidate) return;
+			try {
+				KEEP.socket.send(JSON.stringify({
+					type: "chat-ice",
+					target: peerId,
+					peerId: this.peerId,
+					candidate: JSON.stringify(candidate)
+				}));
+			}
+			catch {}
+		};
+
+		pc.ontrack = event=> {
+			const stream = event.streams && event.streams[0]
+				? event.streams[0]
+				: new MediaStream([event.track]);
+			this.AttachRemoteStream(peer, stream, event.track);
+		};
+
+		pc.onnegotiationneeded = async ()=> {
+			try {
+				peer.makingOffer = true;
+				await pc.setLocalDescription();
+				if (!pc.localDescription) return;
+				KEEP.socket.send(JSON.stringify({
+					type: "chat-sdp-offer",
+					target: peerId,
+					peerId: this.peerId,
+					offer: JSON.stringify(pc.localDescription)
+				}));
+			}
+			catch (ex) {
+				console.error("negotiationneeded:", ex);
+			}
+			finally {
+				peer.makingOffer = false;
+			}
+		};
+
+		pc.oniceconnectionstatechange = ()=> {
+			if (pc.iceConnectionState === "failed") {
+				try { pc.restartIce(); } catch {}
+			}
+		};
+
+		pc.onconnectionstatechange = ()=> {
+			if (pc.connectionState === "failed" || pc.connectionState === "closed") {
+				this.RemovePeer(peerId);
+			}
+		};
+
+		for (const stream of this.GetAllLocalStreams()) {
+			this.AddStreamToPeer(peer, stream);
+		}
+
+		return peer;
+	}
+
+	RemovePeer(peerId) {
+		const peer = this.peers[peerId];
+		if (!peer) return;
+
+		try { peer.pc.close(); } catch {}
+
+		for (const id in peer.remoteStreams) {
+			const remote = peer.remoteStreams[id];
+			if (remote.container && remote.container.parentElement) {
+				this.remoteStreamsBox.removeChild(remote.container);
+			}
+			this.RemoveStreamFromOrder(peerId, id);
+		}
+
+		delete this.peers[peerId];
+		this.LayoutRemoteStreams();
+		this.AdjustUI();
+	}
+
+	RemoveStreamFromOrder(peerId, streamId) {
+		const key = `${peerId}|${streamId}`;
+		this.remoteStreamOrder = this.remoteStreamOrder.filter(o=> !(o.peerId === peerId && o.streamId === streamId));
+		if (this.primaryStreamKey === key) {
+			this.primaryStreamKey = null;
+		}
+	}
+
+	AttachRemoteStream(peer, stream, track) {
+		let remote = peer.remoteStreams[stream.id];
+
+		if (!remote) {
+			const element = this.CreateRemoteStreamElement(peer.info);
+			this.remoteStreamsBox.appendChild(element.container);
+			element.video.srcObject = stream;
+
+			const key = `${peer.peerId}|${stream.id}`;
+
+			remote = {
+				stream: stream,
+				container: element.container,
+				video: element.video,
+				label: element.label,
+				peerId: peer.peerId,
+				streamId: stream.id,
+				key: key
+			};
+			peer.remoteStreams[stream.id] = remote;
+			this.remoteStreamOrder.push({peerId: peer.peerId, streamId: stream.id});
+
+			if (!this.primaryStreamKey) {
+				this.primaryStreamKey = key;
+			}
+
+			element.container.onclick = ()=> {
+				if (this.primaryStreamKey === key) return;
+				this.primaryStreamKey = key;
+				this.LayoutRemoteStreams();
+			};
+
+			const removeRemote = ()=> {
+				if (remote.container.parentElement) {
+					this.remoteStreamsBox.removeChild(remote.container);
+				}
+				delete peer.remoteStreams[stream.id];
+				this.RemoveStreamFromOrder(peer.peerId, stream.id);
+				this.LayoutRemoteStreams();
 				this.AdjustUI();
 			};
 
-			await this.InitializeRtc();
-		}
-		/*catch (ex) {
-			this.ConfirmBox(ex, true, "mono/screenshare.svg");
-			this.displayButton.style.backgroundColor = "transparent";
-			this.displayButton.style.backgroundImage = "url(mono/screenshare.svg?light)";
-		}*/
+			stream.onremovetrack = ()=> {
+				if (stream.getTracks().length === 0) removeRemote();
+			};
+			stream.onaddtrack = ()=> {
+				remote.video.srcObject = stream;
+			};
 
+			remote._cleanup = removeRemote;
+		}
+
+		track.onended = ()=> {
+			try { stream.removeTrack(track); } catch {}
+			if (stream.getTracks().length === 0 && remote._cleanup) {
+				remote._cleanup();
+			}
+		};
+
+		this.LayoutRemoteStreams();
 		this.AdjustUI();
 	}
 
-	async InitializeRtc() {
-		const uuid = UI.GenerateUuid(KEEP.username);
+	LayoutRemoteStreams() {
+		const list = [];
+		for (const entry of this.remoteStreamOrder) {
+			const peer = this.peers[entry.peerId];
+			if (!peer) continue;
+			const remote = peer.remoteStreams[entry.streamId];
+			if (!remote) continue;
+			list.push(remote);
+		}
 
-		await KEEP.socket.send(JSON.stringify({
-			type: "chat-stream",
-			uuid: uuid
-		}));
-		console.log("send chat-stream:", uuid);
+		if (list.length === 0) return;
 
-		const localConnection = new RTCPeerConnection(Chat.STUN_SERVERS);
-		this.localConnections[uuid] = localConnection;
+		if (!this.primaryStreamKey || !list.find(r=> r.key === this.primaryStreamKey)) {
+			this.primaryStreamKey = list[0].key;
+		}
 
-		console.log("pushing into local connections:", uuid);
+		const primary = list.find(r=> r.key === this.primaryStreamKey);
+		const secondaries = list.filter(r=> r.key !== this.primaryStreamKey);
+		const hasSecondaries = secondaries.length > 0;
 
-		localConnection.onicecandidate = event=> {
-			/*const time = new Date();
-			this.CreateBurstedBubble(`ICE: ${JSON.stringify(event.candidate)}`, "out", KEEP.username, KEEP.alias, KEEP.color, time.toLocaleTimeString(UI.regionalFormat, {}));
+		primary.container.style.top    = "0%";
+		primary.container.style.left   = "0%";
+		primary.container.style.width  = "100%";
+		primary.container.style.height = hasSecondaries ? "75%" : "100%";
+		primary.container.classList.add("primary");
+		primary.container.style.zIndex = "2";
 
-			if (event.candidate) {
-				KEEP.socket.send(JSON.stringify({
-					type: "chat-ice",
-					uuid: uuid,
-					candidate: JSON.stringify(event.candidate)
-				}));
-			}*/
+		const n = secondaries.length;
+		if (n === 0) return;
 
-			if (localConnection.iceGatheringState !== "complete") { return; }
-
-			KEEP.socket.send(JSON.stringify({
-				type: "chat-sdp-offer",
-				uuid: uuid,
-				offer: JSON.stringify(offer)
-			}));
-
-			console.log("send chat-sdp-offer:", uuid);
-		};
-
-		/*localConnection.onnegotiationneeded = async event=> {
-			console.log("negotiation needed");
-
-			let offer = await localConnection.createOffer();
-
-			if (localConnection.signalingState != "stable") { return; }
-
-			await localConnection.setLocalDescription(offer);
-
-			console.log({description: localConnection.localDescription});
-
-			KEEP.socket.send(JSON.stringify({
-				type: "chat-sdp-negotiation",
-				uuid: uuid,
-				answer: JSON.stringify({description: localConnection.localDescription})
-			}));
-		};*/
-
-		localConnection.onopen = event=>{
-			console.log("local connection open");
-		};
-
-		const sendChannel = localConnection.createDataChannel("channel");
-		sendChannel.onmessage = event=> console.log(`message received: ${event.data}`);
-
-		sendChannel.onopen = event=> {
-			console.log("local data channel open");
-			setInterval(()=>{
-				sendChannel.send("if you see this, we good!");
-			}, 2000);
-		};
-
-		sendChannel.onclose = event=> {
-			console.log("local data channel close");
-		};
-
-		setTimeout(()=>{
-			this.userStream.stream.getTracks().forEach(track=> {
-				console.log("adding track");
-				localConnection.addTrack(track, this.userStream.stream);
-			});
-
-			/*this.displayStreams[0].stream.getTracks().forEach(track=> {
-				console.log("adding track");
-				localConnection.addTrack(track, this.displayStreams[0].stream);
-			});*/
-		}, 2000);
-
-		const offer = await localConnection.createOffer();
-
-		await localConnection.setLocalDescription(offer);
-
-		this.AdjustUI();
+		const w = 100 / n;
+		for (let i=0; i<n; i++) {
+			const s = secondaries[i];
+			s.container.style.top    = "75%";
+			s.container.style.left   = `${i * w}%`;
+			s.container.style.width  = `${w}%`;
+			s.container.style.height = "25%";
+			s.container.style.zIndex = "1";
+			s.container.classList.remove("primary");
+		}
 	}
 
 	async HandleMessage(message, ignoreDot=false) {
+		if (message.peerId && message.peerId === this.peerId
+			&& (message.action === "chat-offer" || message.action === "chat-answer"
+				|| message.action === "chat-ice" || message.action === "chat-join"
+				|| message.action === "chat-presence" || message.action === "chat-leave")) {
+			return;
+		}
+
 		if (message.id in this.outdoing) {
 			this.outdoing[message.id].style.color = "var(--clr-dark)";
 			this.outdoing[message.id].style.backgroundColor = "var(--clr-pane)";
@@ -364,31 +612,31 @@ class Chat extends Window {
 				this.CreateCommandBubble(message.command, message.args, message.icon, message.title, direction, message.sender, message.alias, message.color, timeString);
 				break;
 
+			case "chat-join":
+				this.HandleJoin(message);
+				break;
+
+			case "chat-presence":
+				this.HandlePresence(message);
+				break;
+
+			case "chat-leave":
+				this.HandleLeave(message);
+				break;
+
 			case "chat-offer":
-				this.CreateBurstedBubble("SDP: Offer", direction, message.sender, message.alias, message.color, timeString);
-				if (direction === "out") break;
 				this.HandleOffer(message);
 				break;
 
 			case "chat-answer":
-				this.CreateBurstedBubble("SDP: Answer", direction, message.sender, message.alias, message.color, timeString);
-				this.HandleAnswer(message, direction);
-				break;
-
-			/*case "chat-join":
-				this.CreateBurstedBubble("Join", direction, message.sender, message.alias, message.color, timeString);
-				break;*/
-
-			case "chat-stream":
-				this.CreateBurstedBubble(`Starting a stream: ${message.uuid}`, direction, message.sender, message.alias, message.color, timeString);
-				if (direction === "out") break;
-
-				console.log("receive chat-stream:", message.uuid);
+				this.HandleAnswer(message);
 				break;
 
 			case "chat-ice":
-				this.CreateBurstedBubble(`ICE: ${message.candidate}`, direction, message.sender, message.alias, message.color, timeString);
-				this.HandleIce(message, direction);
+				this.HandleIce(message);
+				break;
+
+			case "chat-stream":
 				break;
 			}
 		}
@@ -399,130 +647,117 @@ class Chat extends Window {
 		}
 	}
 
+	HandleJoin(message) {
+		if (!message.peerId || message.peerId === this.peerId) return;
+
+		this.EnsurePeer(message.peerId, {
+			sender: message.sender,
+			alias: message.alias,
+			color: message.color
+		});
+
+		try {
+			KEEP.socket.send(JSON.stringify({
+				type: "chat-presence",
+				target: message.peerId,
+				peerId: this.peerId
+			}));
+		}
+		catch {}
+	}
+
+	HandlePresence(message) {
+		if (!message.peerId || message.peerId === this.peerId) return;
+		if (message.target !== this.peerId) return;
+
+		this.EnsurePeer(message.peerId, {
+			sender: message.sender,
+			alias: message.alias,
+			color: message.color
+		});
+	}
+
+	HandleLeave(message) {
+		if (!message.peerId) return;
+		this.RemovePeer(message.peerId);
+	}
+
 	async HandleOffer(message) {
-		console.log("receive chat-sdp-offer:", message.uuid);
+		if (!message.peerId || message.peerId === this.peerId) return;
+		if (message.target !== this.peerId) return;
 
-		const remoteConnection = new RTCPeerConnection(Chat.STUN_SERVERS);
+		const peer = this.EnsurePeer(message.peerId, {
+			sender: message.sender,
+			alias: message.alias,
+			color: message.color
+		});
 
-		this.remoteConnections[message.uuid] = remoteConnection;
-		console.log("pushing in remote connections:", message.uuid);
+		const description = JSON.parse(message.sdp);
+		const pc = peer.pc;
 
-		remoteConnection.onicecandidate = event=> {
-			const time = new Date();
-			this.CreateBurstedBubble(
-				`ICE: ${JSON.stringify(event.candidate)}`,
-				"out",
-				KEEP.username,
-				KEEP.alias,
-				KEEP.color,
-				time.toLocaleTimeString(UI.regionalFormat, {})
-			);
+		const readyForOffer =
+			!peer.makingOffer &&
+			(pc.signalingState === "stable" || peer.isSettingRemoteAnswerPending);
 
-			if (event.candidate) {
+		const offerCollision = description.type === "offer" && !readyForOffer;
+		peer.ignoreOffer = !peer.polite && offerCollision;
+		if (peer.ignoreOffer) return;
+
+		try {
+			peer.isSettingRemoteAnswerPending = description.type === "answer";
+			await pc.setRemoteDescription(description);
+			peer.isSettingRemoteAnswerPending = false;
+
+			if (description.type === "offer") {
+				await pc.setLocalDescription();
 				KEEP.socket.send(JSON.stringify({
-					type: "chat-ice",
-					uuid: message.uuid,
-					candidate: JSON.stringify(event.candidate)
+					type: "chat-sdp-answer",
+					target: message.peerId,
+					peerId: this.peerId,
+					answer: JSON.stringify(pc.localDescription)
 				}));
 			}
-
-			if (remoteConnection.iceGatheringState !== "complete") { return; }
-
-			KEEP.socket.send(JSON.stringify({
-				type: "chat-sdp-answer",
-				uuid: message.uuid,
-				answer: JSON.stringify(remoteConnection.localDescription)
-			}));
-
-			console.log("sending chat-sdp-answer:", message.uuid);
-		};
-
-		/*remoteConnection.onnegotiationneeded = async event=> {
-			console.log("negotiation needed");
-
-			let offer = await remoteConnection.createOffer();
-
-			if (remoteConnection.signalingState != "stable") { return; }
-
-			await remoteConnection.setLocalDescription(offer);
-
-			console.log({description: remoteConnection.localDescription});
-
-			KEEP.socket.send(JSON.stringify({
-				type: "chat-sdp-negotiation",
-				uuid: message.uuid,
-				answer: JSON.stringify({description: remoteConnection.localDescription})
-			}));
-		};*/
-
-		remoteConnection.onopen = event=> {
-			console.log("remote connection open");
-		};
-
-		remoteConnection.ondatachannel = event=> {
-			const receiveChannel = event.channel;
-			receiveChannel.onmessage = event=> console.log("message received:", event.data);
-
-			receiveChannel.onopen = event=> {
-				console.log("remote data channel open");
-			};
-
-			receiveChannel.onclose = event=> {
-				console.log("remote data channel close");
-			};
-
-			remoteConnection.channel = receiveChannel;
-		};
-
-		remoteConnection.ontrack = event=> {
-			console.log("getting track");
-
-			/*const track = event.track;
-			if (track.kind === "audio") {
-				const remoteAudio = document.createElement("audio");
-				remoteAudio.controls = true;
-				remoteAudio.srcObject = new MediaStream([track]);
-				this.chatBox.appendChild(remoteAudio);
-				try {
-					remoteAudio.play();
-				}
-				catch {}
-			}
-			else if (track.kind === "video") {
-				const remoteVideo = document.createElement("video");
-				remoteVideo.controls = true;
-				remoteVideo.srcObject = new MediaStream([track]);
-				this.chatBox.appendChild(remoteVideo);
-				try {
-					remoteVideo.play();
-				}
-				catch {}
-			}*/
-		};
-
-		await remoteConnection.setRemoteDescription(JSON.parse(message.sdp));
-
-		const answer = await remoteConnection.createAnswer();
-		await remoteConnection.setLocalDescription(answer);
+		}
+		catch (ex) {
+			console.error("HandleOffer:", ex);
+		}
 	}
 
 	async HandleAnswer(message) {
-		const answer = JSON.parse(message.sdp);
+		if (!message.peerId || message.peerId === this.peerId) return;
+		if (message.target !== this.peerId) return;
 
-		console.log("looking for local connection:", message.uuid);
-		if (message.uuid in this.localConnections) {
-			this.localConnections[message.uuid].setRemoteDescription(answer);
+		const peer = this.peers[message.peerId];
+		if (!peer) return;
+
+		const description = JSON.parse(message.sdp);
+
+		try {
+			peer.isSettingRemoteAnswerPending = true;
+			await peer.pc.setRemoteDescription(description);
+			peer.isSettingRemoteAnswerPending = false;
+		}
+		catch (ex) {
+			console.error("HandleAnswer:", ex);
 		}
 	}
 
 	async HandleIce(message) {
-		/*if (message.uuid in this.remoteConnections) {
-			await this.remoteConnections[message.uuid].addIceCandidate(JSON.parse(message.candidate));
-		}
+		if (!message.peerId || message.peerId === this.peerId) return;
+		if (message.target !== this.peerId) return;
 
-		if (message.uuid in this.localConnections) {
-			await this.localConnections[message.uuid].addIceCandidate(JSON.parse(message.candidate));
-		}*/
+		const peer = this.peers[message.peerId];
+		if (!peer) return;
+
+		try {
+			const candidate = JSON.parse(message.candidate);
+			await peer.pc.addIceCandidate(candidate);
+		}
+		catch (ex) {
+			if (!peer.ignoreOffer) {
+				console.error("HandleIce:", ex);
+			}
+		}
 	}
 
 	async GetHistory() {
@@ -557,10 +792,20 @@ class Chat extends Window {
 		}
 	}
 
+	HasRemoteStreams() {
+		for (const peerId in this.peers) {
+			if (Object.keys(this.peers[peerId].remoteStreams).length > 0) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	AdjustUI() {
 		const hasUserStream = this.userStream !== null;
 		const hasDisplayStreams = this.displayStreams.length > 0;
-		const hasRemoteStreams = this.remoteStreams.length > 0;
+		const hasLocalStreams = hasUserStream || hasDisplayStreams;
+		const hasRemoteStreams = this.HasRemoteStreams();
 
 		this.micButton.style.backgroundColor = this.isMicEnable ? "var(--clr-accent)" : "transparent";
 		this.micButton.style.backgroundImage = this.isMicEnable ? "url(mono/mic.svg)" : "url(mono/mic.svg?light)";
@@ -570,27 +815,41 @@ class Chat extends Window {
 		this.displayButton.style.backgroundColor = hasDisplayStreams ? "var(--clr-accent)" : "transparent";
 		this.displayButton.style.backgroundImage = hasDisplayStreams ? "url(mono/screenshare.svg)" : "url(mono/screenshare.svg?light)";
 
-		if ((hasUserStream || hasDisplayStreams) && !hasRemoteStreams) {
+		if (hasLocalStreams) {
 			this.localStreamsBox.style.visibility = "visible";
 			this.localStreamsBox.style.opacity = "1";
-			this.chatBox.style.left = "150px";
-			this.chatBox.style.width = "unset";
-		}
-		else if ((hasUserStream || hasDisplayStreams) && hasRemoteStreams) {
-			this.localStreamsBox.style.visibility = "visible";
-			this.localStreamsBox.style.opacity = "1";
-			this.chatBox.style.left = "unset";
-			this.chatBox.style.width = "33%";
-		}
-		else if (hasRemoteStreams) {
-			this.localStreamsBox.style.visibility = "hidden";
-			this.localStreamsBox.style.opacity = "0";
-			this.chatBox.style.left = "unset";
-			this.chatBox.style.width = "33%";
 		}
 		else {
 			this.localStreamsBox.style.visibility = "hidden";
 			this.localStreamsBox.style.opacity = "0";
+		}
+
+		if (hasRemoteStreams) {
+			this.remoteStreamsBox.style.visibility = "visible";
+			this.remoteStreamsBox.style.opacity = "1";
+		}
+		else {
+			this.remoteStreamsBox.style.visibility = "hidden";
+			this.remoteStreamsBox.style.opacity = "0";
+		}
+
+		if (hasLocalStreams && hasRemoteStreams) {
+			this.remoteStreamsBox.style.left = "156px";
+			this.remoteStreamsBox.style.right = "calc(min(33%, 400px) + 24px)";
+			this.chatBox.style.left = "unset";
+			this.chatBox.style.width = "min(33%, 400px)";
+		}
+		else if (hasLocalStreams && !hasRemoteStreams) {
+			this.chatBox.style.left = "156px";
+			this.chatBox.style.width = "unset";
+		}
+		else if (!hasLocalStreams && hasRemoteStreams) {
+			this.remoteStreamsBox.style.left = "8px";
+			this.remoteStreamsBox.style.right = "calc(min(33%, 400px) + 24px)";
+			this.chatBox.style.left = "unset";
+			this.chatBox.style.width = "min(33%, 400px)";
+		}
+		else {
 			this.chatBox.style.left = "8px";
 			this.chatBox.style.width = "unset";
 		}
@@ -621,7 +880,7 @@ class Chat extends Window {
 		sanitizer.innerHTML = normalizedHtml;
 
 		let text = sanitizer.textContent
-			.replaceAll("\u00a0", "\n")
+			.replaceAll(" ", "\n")
 			.trim();
 
 		try {
@@ -689,52 +948,47 @@ class Chat extends Window {
 	}
 
 	async Mic_onclick() {
-		this.isMicEnable = !this.isMicEnable;
+		if (this.userStream === null) {
+			this.isMicEnable = true;
+			this.isCamEnable = false;
+			await this.SetupLocalUserMediaStream();
+		}
+		else {
+			this.isMicEnable = !this.isMicEnable;
+			const audioTrack = this.userStream.stream.getAudioTracks()[0];
+			if (audioTrack) audioTrack.enabled = this.isMicEnable;
 
-		try {
-			if (this.userStream === null) {
-				this.isMicEnable = true;
-				this.isCamEnable = false;
-				await this.SetupLocalUserMediaStream();
+			if (!this.isMicEnable && !this.isCamEnable) {
+				this.StopUserStream();
+				return;
 			}
-		}
-		catch (ex) {
-			this.isMicEnable = false;
-			console.log("mic error:", ex);
-		}
-
-		if (this.userStream) {
-			let audioTrack = this.userStream.stream.getAudioTracks()[0];
-			if (audioTrack) { audioTrack.enabled = this.isMicEnable; }
 		}
 
 		this.AdjustUI();
 	}
 
 	async Webcam_onclick() {
-		this.isCamEnable = !this.isCamEnable;
+		if (this.userStream === null) {
+			this.isMicEnable = false;
+			this.isCamEnable = true;
+			await this.SetupLocalUserMediaStream();
+		}
+		else {
+			this.isCamEnable = !this.isCamEnable;
+			const videoTrack = this.userStream.stream.getVideoTracks()[0];
+			if (videoTrack) videoTrack.enabled = this.isCamEnable;
 
-		try {
-			if (this.userStream === null) {
-				this.isMicEnable = false;
-				this.isCamEnable = true;
-				await this.SetupLocalUserMediaStream();
+			if (!this.isMicEnable && !this.isCamEnable) {
+				this.StopUserStream();
+				return;
 			}
-		}
-		catch {
-			this.isCamEnable = false;
-		}
-
-		if (this.userStream) {
-			let videoTrack = this.userStream.stream.getVideoTracks()[0];
-			if (videoTrack) { videoTrack.enabled = this.isCamEnable; }
 		}
 
 		this.AdjustUI();
 	}
 
 	async Display_onclick() {
-		this.SetupLocalDisplayMediaStream();
+		await this.SetupLocalDisplayMediaStream();
 	}
 
 	CreateBubble(direction, sender, alias, color, time) {
@@ -831,7 +1085,7 @@ class Chat extends Window {
 		if (!src.startsWith("data:image/")) return null;
 
 		const bubble = this.CreateBubble(direction, sender, alias, color, time);
-		
+
 		const image = document.createElement("img");
 		image.src = src;
 		image.style.maxWidth = "200px";
@@ -919,14 +1173,18 @@ class Chat extends Window {
 		return bubble;
 	}
 
-	CreateLocalStreamElement(isUserMedia=false) {
+	CreateLocalStreamElement(stream, isUserMedia=false) {
 		const container = document.createElement("div");
+		container.className = "local-stream";
 
-		const videoFeedback = document.createElement("video");
-		videoFeedback.setAttribute("autoplay", true);
-		videoFeedback.style.width = "100%";
-		videoFeedback.style.height = "100%";
-		container.appendChild(videoFeedback);
+		const video = document.createElement("video");
+		video.autoplay = true;
+		video.playsInline = true;
+		video.muted = true;
+		video.style.width = "100%";
+		video.style.height = "100%";
+		video.style.objectFit = "cover";
+		container.appendChild(video);
 
 		const stopButton = document.createElement("div");
 		stopButton.className = "chat-stop-stream-button";
@@ -934,12 +1192,39 @@ class Chat extends Window {
 
 		return {
 			container: container,
-			videoFeedback: videoFeedback
+			video: video,
+			videoFeedback: video,
+			stopButton: stopButton
 		};
 	}
 
-	CreateRemoteStream() {
-		const element = document.createElement("div");
-		return element;
+	CreateRemoteStreamElement(info) {
+		const container = document.createElement("div");
+		container.className = "remote-stream";
+		container.style.position = "absolute";
+		container.style.top = "0%";
+		container.style.left = "0%";
+		container.style.width = "100%";
+		container.style.height = "100%";
+		container.style.minHeight = "0";
+		container.style.boxSizing = "border-box";
+		container.style.overflow = "hidden";
+		container.style.transition = ".2s";
+
+		const video = document.createElement("video");
+		video.autoplay = true;
+		video.playsInline = true;
+		video.style.objectFit = "contain";
+		container.appendChild(video);
+
+		const label = document.createElement("div");
+		label.className = "remote-stream-label";
+		label.textContent = info && info.alias ? info.alias : (info && info.sender ? info.sender : "");
+		if (info && info.color) {
+			label.style.backgroundColor = info.color;
+		}
+		container.appendChild(label);
+
+		return {container, video, label};
 	}
 }
