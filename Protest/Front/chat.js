@@ -207,54 +207,96 @@ class Chat extends Window {
 		}
 	}
 
-	async SetupLocalUserMediaStream() {
+	async EnsureUserStream() {
+		const wantAudio = this.isMicEnable;
+		const wantVideo = this.isCamEnable;
+
+		if (!wantAudio && !wantVideo) {
+			if (this.userStream) this.StopUserStream();
+			return;
+		}
+
+		const haveAudio = !!(this.userStream && this.userStream.stream.getAudioTracks().length > 0);
+		const haveVideo = !!(this.userStream && this.userStream.stream.getVideoTracks().length > 0);
+
+		if (this.userStream && haveAudio === wantAudio && haveVideo === wantVideo) {
+			const audioTrack = this.userStream.stream.getAudioTracks()[0];
+			const videoTrack = this.userStream.stream.getVideoTracks()[0];
+			if (audioTrack) audioTrack.enabled = wantAudio;
+			if (videoTrack) videoTrack.enabled = wantVideo;
+			return;
+		}
+
+		if (this.userStream && (haveAudio || haveVideo) && !(wantAudio && !haveAudio) && !(wantVideo && !haveVideo)) {
+			const audioTrack = this.userStream.stream.getAudioTracks()[0];
+			const videoTrack = this.userStream.stream.getVideoTracks()[0];
+			if (audioTrack) audioTrack.enabled = wantAudio;
+			if (videoTrack) videoTrack.enabled = wantVideo;
+			return;
+		}
+
+		if (this.userStream) {
+			this.StopUserStream({preserveFlags: true});
+		}
+
+		await this.AcquireUserStream(wantAudio, wantVideo);
+	}
+
+	async AcquireUserStream(wantAudio, wantVideo) {
+		const constraints = {
+			audio: wantAudio ? {
+				echoCancellation: true,
+				noiseSuppression: true
+			} : false,
+			video: wantVideo ? {
+					width: { ideal:1280, max:1920 },
+					height: { ideal:720, max:1080 }
+			} : false
+		};
+
+		let stream;
 		try {
-			const stream = await navigator.mediaDevices.getUserMedia({
-				audio: {
-					echoCancellation: true,
-					noiseSuppression: true
-				},
-				video: {
-					width: { min: 640, ideal: 1280, max: 1920 },
-					height: { min: 480, ideal: 720, max: 1080 }
-				}
-			});
-
-			const element = this.CreateLocalStreamElement(stream, true);
-			this.localStreamsBox.appendChild(element.container);
-			element.video.srcObject = stream;
-			element.video.muted = true;
-
-			this.userStream = {
-				stream: stream,
-				element: element,
-				kind: "user"
-			};
-
-			const audioTrack = stream.getAudioTracks()[0];
-			const videoTrack = stream.getVideoTracks()[0];
-			if (audioTrack) audioTrack.enabled = this.isMicEnable;
-			if (videoTrack) videoTrack.enabled = this.isCamEnable;
-
-			const onLocalEnd = ()=> this.StopUserStream();
-			if (audioTrack) audioTrack.onended = onLocalEnd;
-			if (videoTrack) videoTrack.onended = onLocalEnd;
-
-			element.stopButton.onclick = ()=> this.StopUserStream();
-
-			this.AddStreamToAllPeers(stream);
+			stream = await navigator.mediaDevices.getUserMedia(constraints);
 		}
 		catch (ex) {
-			this.ConfirmBox(ex.message || String(ex), true, "mono/mic.svg");
-			this.isMicEnable = false;
-			this.isCamEnable = false;
+			const icon = wantVideo ? "mono/webcam.svg" : "mono/mic.svg";
+			this.ConfirmBox(ex, true, icon);
+			if (wantAudio) this.isMicEnable = false;
+			if (wantVideo) this.isCamEnable = false;
+			this.AdjustUI();
+			return;
 		}
 
+		const element = this.CreateLocalStreamElement(stream, true);
+		this.localStreamsBox.appendChild(element.container);
+		element.video.srcObject = stream;
+		element.video.muted = true;
+
+		this.userStream = {
+			stream: stream,
+			element: element,
+			kind: "user"
+		};
+
+		const audioTrack = stream.getAudioTracks()[0];
+		const videoTrack = stream.getVideoTracks()[0];
+		if (audioTrack) audioTrack.enabled = this.isMicEnable;
+		if (videoTrack) videoTrack.enabled = this.isCamEnable;
+
+		const onLocalEnd = ()=> this.StopUserStream();
+		if (audioTrack) audioTrack.onended = onLocalEnd;
+		if (videoTrack) videoTrack.onended = onLocalEnd;
+
+		element.stopButton.onclick = ()=> this.StopUserStream();
+
+		this.AddStreamToAllPeers(stream);
 		this.AdjustUI();
 	}
 
-	StopUserStream() {
+	StopUserStream(options) {
 		if (!this.userStream) return;
+
+		const preserveFlags = !!(options && options.preserveFlags);
 
 		const stream = this.userStream.stream;
 		this.RemoveStreamFromAllPeers(stream);
@@ -266,43 +308,10 @@ class Chat extends Window {
 		}
 
 		this.userStream = null;
-		this.isMicEnable = false;
-		this.isCamEnable = false;
-		this.AdjustUI();
-	}
-
-	async SetupLocalDisplayMediaStream() {
-		try {
-			const stream = await navigator.mediaDevices.getDisplayMedia({
-				video: true,
-				audio: true
-			});
-
-			const element = this.CreateLocalStreamElement(stream, false);
-			this.localStreamsBox.appendChild(element.container);
-			element.video.srcObject = stream;
-			element.video.muted = true;
-
-			const displayStream = {
-				stream: stream,
-				element: element,
-				kind: "display"
-			};
-
-			this.displayStreams.push(displayStream);
-
-			const stopThis = ()=> this.StopDisplayStream(displayStream);
-			stream.getTracks().forEach(t=>t.onended = stopThis);
-			element.stopButton.onclick = stopThis;
-
-			this.AddStreamToAllPeers(stream);
+		if (!preserveFlags) {
+			this.isMicEnable = false;
+			this.isCamEnable = false;
 		}
-		catch (ex) {
-			if (ex && ex.name !== "NotAllowedError") {
-				this.ConfirmBox(ex.message || String(ex), true, "mono/screenshare.svg");
-			}
-		}
-
 		this.AdjustUI();
 	}
 
@@ -948,47 +957,50 @@ class Chat extends Window {
 	}
 
 	async Mic_onclick() {
-		if (this.userStream === null) {
-			this.isMicEnable = true;
-			this.isCamEnable = false;
-			await this.SetupLocalUserMediaStream();
-		}
-		else {
-			this.isMicEnable = !this.isMicEnable;
-			const audioTrack = this.userStream.stream.getAudioTracks()[0];
-			if (audioTrack) audioTrack.enabled = this.isMicEnable;
-
-			if (!this.isMicEnable && !this.isCamEnable) {
-				this.StopUserStream();
-				return;
-			}
-		}
-
+		this.isMicEnable = !this.isMicEnable;
+		await this.EnsureUserStream();
 		this.AdjustUI();
 	}
 
 	async Webcam_onclick() {
-		if (this.userStream === null) {
-			this.isMicEnable = false;
-			this.isCamEnable = true;
-			await this.SetupLocalUserMediaStream();
-		}
-		else {
-			this.isCamEnable = !this.isCamEnable;
-			const videoTrack = this.userStream.stream.getVideoTracks()[0];
-			if (videoTrack) videoTrack.enabled = this.isCamEnable;
-
-			if (!this.isMicEnable && !this.isCamEnable) {
-				this.StopUserStream();
-				return;
-			}
-		}
-
+		this.isCamEnable = !this.isCamEnable;
+		await this.EnsureUserStream();
 		this.AdjustUI();
 	}
 
 	async Display_onclick() {
-		await this.SetupLocalDisplayMediaStream();
+		try {
+			const stream = await navigator.mediaDevices.getDisplayMedia({
+				video: true,
+				audio: true
+			});
+
+			const element = this.CreateLocalStreamElement(stream, false);
+			this.localStreamsBox.appendChild(element.container);
+			element.video.srcObject = stream;
+			element.video.muted = true;
+
+			const displayStream = {
+				stream: stream,
+				element: element,
+				kind: "display"
+			};
+
+			this.displayStreams.push(displayStream);
+
+			const stopThis = ()=> this.StopDisplayStream(displayStream);
+			stream.getTracks().forEach(t=>t.onended = stopThis);
+			element.stopButton.onclick = stopThis;
+
+			this.AddStreamToAllPeers(stream);
+		}
+		catch (ex) {
+			if (ex && ex.name !== "NotAllowedError") {
+				this.ConfirmBox(ex.message || String(ex), true, "mono/screenshare.svg");
+			}
+		}
+
+		this.AdjustUI();
 	}
 
 	CreateBubble(direction, sender, alias, color, time) {
@@ -1060,7 +1072,7 @@ class Chat extends Window {
 		group.appendChild(wrapper);
 
 		if (isScrolledToBottom) {
-			setTimeout(()=>wrapper.scrollIntoView({behavior:"smooth"}),50);
+			setTimeout(()=> wrapper.scrollIntoView({behavior:"smooth"}),50);
 		}
 
 		return bubble;
