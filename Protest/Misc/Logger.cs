@@ -79,7 +79,8 @@ internal static class Logger {
 
 #if DEBUG
         Console.ForegroundColor = ConsoleColor.Yellow;
-        Console.Error.WriteLine(text);
+        Console.WriteLine(text);
+        Console.WriteLine(ex.StackTrace);
         Console.ResetColor();
 #endif
     }
@@ -116,7 +117,7 @@ internal static class Logger {
             Http.KeepAlive.Broadcast($"{{\"action\":\"log\",\"msg\":\"{Data.EscapeJsonText(message)}\"}}", "/log");
 
 #if DEBUG
-            Console.Error.WriteLine($"{date}\t{action}");
+            Console.WriteLine($"{date}\t{action}");
 #endif
         }, (origin, category, action));
     }

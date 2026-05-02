@@ -404,12 +404,13 @@ internal sealed class Listener {
 #if DEBUG
         }
         catch (HttpListenerException ex) {
-            Console.Error.WriteLine(ex.Message);
-            Console.Error.WriteLine(ex.StackTrace);
+            Logger.Debug(ex);
         }
 #else
         }
-        catch (HttpListenerException) { }
+        catch (HttpListenerException) {
+            Logger.Debug(ex);
+        }
 #endif
 
         ctx.Response.Close();

@@ -332,7 +332,9 @@ internal static class Monitor {
             try {
                 await HandleWmiQuery(ws, scope, query);
             }
-            catch  { }
+            catch (Exception ex) {
+                Logger.Debug(ex);
+            }
         }
     }
 
