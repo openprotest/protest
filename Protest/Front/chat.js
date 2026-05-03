@@ -224,6 +224,7 @@ class Chat extends Window {
 			const videoTrack = this.userStream.stream.getVideoTracks()[0];
 			if (audioTrack) audioTrack.enabled = wantAudio;
 			if (videoTrack) videoTrack.enabled = wantVideo;
+			this.UpdateLocalAudioVisualizer();
 			return;
 		}
 
@@ -232,6 +233,7 @@ class Chat extends Window {
 			const videoTrack = this.userStream.stream.getVideoTracks()[0];
 			if (audioTrack) audioTrack.enabled = wantAudio;
 			if (videoTrack) videoTrack.enabled = wantVideo;
+			this.UpdateLocalAudioVisualizer();
 			return;
 		}
 
@@ -290,7 +292,176 @@ class Chat extends Window {
 		element.stopButton.onclick = ()=> this.StopUserStream();
 
 		this.AddStreamToAllPeers(stream);
+		this.UpdateLocalAudioVisualizer();
 		this.AdjustUI();
+	}
+
+	SetupAudioVisualizer(container, stream, color) {
+		if (!container) return null;
+		if (container._visualizer) {
+			container._visualizer.color = color || container._visualizer.color;
+			return container._visualizer;
+		}
+		if (!stream || stream.getAudioTracks().length === 0) return null;
+
+		const AudioCtx = window.AudioContext || window.webkitAudioContext;
+		if (!AudioCtx) return null;
+
+		let audioCtx;
+		try { audioCtx = new AudioCtx(); }
+		catch { return null; }
+
+		let source;
+		try { source = audioCtx.createMediaStreamSource(stream); }
+		catch {
+			try { audioCtx.close(); } catch {}
+			return null;
+		}
+
+		const analyser = audioCtx.createAnalyser();
+		analyser.fftSize = 512;
+		analyser.smoothingTimeConstant = 0.65;
+		source.connect(analyser);
+
+		const canvas = document.createElement("canvas");
+		canvas.className = "chat-audio-viz";
+		canvas.style.position = "absolute";
+		canvas.style.left = "0";
+		canvas.style.top = "0";
+		canvas.style.width = "100%";
+		canvas.style.height = "100%";
+		canvas.style.pointerEvents = "none";
+		canvas.style.zIndex = "1";
+		container.appendChild(canvas);
+
+		const data = new Uint8Array(analyser.frequencyBinCount);
+		const handle = {
+			canvas: canvas,
+			audioCtx: audioCtx,
+			source: source,
+			analyser: analyser,
+			color: color || "#888",
+			stopped: false,
+			raf: 0,
+			stop: ()=> {
+				if (handle.stopped) return;
+				handle.stopped = true;
+				if (handle.raf) cancelAnimationFrame(handle.raf);
+				try { source.disconnect(); } catch {}
+				try { audioCtx.close(); } catch {}
+				if (canvas.parentElement) canvas.parentElement.removeChild(canvas);
+				if (container._visualizer === handle) container._visualizer = null;
+			}
+		};
+
+		const draw = ()=> {
+			if (handle.stopped) return;
+			const w = canvas.clientWidth | 0;
+			const h = canvas.clientHeight | 0;
+			if (w === 0 || h === 0) {
+				handle.raf = requestAnimationFrame(draw);
+				return;
+			}
+			const dpr = Math.min(window.devicePixelRatio || 1, 2);
+			const targetW = (w * dpr) | 0;
+			const targetH = (h * dpr) | 0;
+			if (canvas.width !== targetW) canvas.width = targetW;
+			if (canvas.height !== targetH) canvas.height = targetH;
+
+			analyser.getByteTimeDomainData(data);
+			let sum = 0;
+			for (let i=0; i<data.length; i++) {
+				const v = (data[i] - 128) / 128;
+				sum += v * v;
+			}
+			const rms = Math.sqrt(sum / data.length);
+			const amplitude = Math.min(1, rms * 4);
+
+			const ctx = canvas.getContext("2d");
+			ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+			ctx.clearRect(0, 0, w, h);
+
+			const cx = w / 2;
+			const cy = h / 2;
+			const baseR = Math.min(w, h) * 0.18;
+			const r = baseR * (1 + amplitude * 0.5);
+
+			ctx.fillStyle = handle.color;
+
+			ctx.globalAlpha = 0.15;
+			ctx.beginPath();
+			ctx.arc(cx, cy, r * 1.85 + amplitude * 18, 0, Math.PI * 2);
+			ctx.fill();
+
+			ctx.globalAlpha = 0.30;
+			ctx.beginPath();
+			ctx.arc(cx, cy, r * 1.35 + amplitude * 10, 0, Math.PI * 2);
+			ctx.fill();
+
+			ctx.globalAlpha = 1.0;
+			ctx.beginPath();
+			ctx.arc(cx, cy, r, 0, Math.PI * 2);
+			ctx.fill();
+
+			handle.raf = requestAnimationFrame(draw);
+		};
+
+		if (audioCtx.state === "suspended") {
+			audioCtx.resume().catch(()=>{});
+		}
+		handle.raf = requestAnimationFrame(draw);
+
+		container._visualizer = handle;
+		return handle;
+	}
+
+	RemoveAudioVisualizer(container) {
+		if (container && container._visualizer) {
+			container._visualizer.stop();
+		}
+	}
+
+	UpdateLocalAudioVisualizer() {
+		if (!this.userStream) return;
+		const container = this.userStream.element.container;
+		const showViz = this.isMicEnable && !this.isCamEnable;
+		if (showViz) {
+			this.SetupAudioVisualizer(container, this.userStream.stream, KEEP.color || "#888");
+		}
+		else {
+			this.RemoveAudioVisualizer(container);
+		}
+	}
+
+	UpdateRemoteAudioVisualizer(remote) {
+		if (!remote || !remote.container) return;
+		const peer = this.peers[remote.peerId];
+		const color = peer && peer.info && peer.info.color ? peer.info.color : "#888";
+
+		const stream = remote.stream;
+		const audioTracks = stream.getAudioTracks();
+		const videoTracks = stream.getVideoTracks();
+
+		const hasAudio = audioTracks.some(t=> t.readyState === "live");
+		const hasLiveVideo = videoTracks.some(t=> t.readyState === "live" && !t.muted);
+
+		if (hasAudio && !hasLiveVideo) {
+			this.SetupAudioVisualizer(remote.container, stream, color);
+		}
+		else {
+			this.RemoveAudioVisualizer(remote.container);
+		}
+	}
+
+	WireRemoteTrackForVisualizer(remote, track) {
+		if (!track) return;
+		const update = ()=> this.UpdateRemoteAudioVisualizer(remote);
+		try {
+			track.addEventListener("mute", update);
+			track.addEventListener("unmute", update);
+			track.addEventListener("ended", update);
+		}
+		catch {}
 	}
 
 	StopUserStream(options) {
@@ -302,6 +473,8 @@ class Chat extends Window {
 		this.RemoveStreamFromAllPeers(stream);
 
 		try { stream.getTracks().forEach(t=>t.stop()); } catch {}
+
+		this.RemoveAudioVisualizer(this.userStream.element.container);
 
 		if (this.userStream.element.container.parentElement) {
 			this.localStreamsBox.removeChild(this.userStream.element.container);
@@ -374,7 +547,15 @@ class Chat extends Window {
 		if (this.peers[peerId]) {
 			if (info) {
 				if (info.alias) this.peers[peerId].info.alias = info.alias;
-				if (info.color) this.peers[peerId].info.color = info.color;
+				if (info.color) {
+					this.peers[peerId].info.color = info.color;
+					for (const sid in this.peers[peerId].remoteStreams) {
+						const remote = this.peers[peerId].remoteStreams[sid];
+						if (remote.container && remote.container._visualizer) {
+							remote.container._visualizer.color = info.color;
+						}
+					}
+				}
 				if (info.sender) this.peers[peerId].info.sender = info.sender;
 			}
 			return this.peers[peerId];
@@ -461,6 +642,7 @@ class Chat extends Window {
 
 		for (const id in peer.remoteStreams) {
 			const remote = peer.remoteStreams[id];
+			this.RemoveAudioVisualizer(remote.container);
 			if (remote.container && remote.container.parentElement) {
 				this.remoteStreamsBox.removeChild(remote.container);
 			}
@@ -513,6 +695,7 @@ class Chat extends Window {
 			};
 
 			const removeRemote = ()=> {
+				this.RemoveAudioVisualizer(remote.container);
 				if (remote.container.parentElement) {
 					this.remoteStreamsBox.removeChild(remote.container);
 				}
@@ -522,14 +705,28 @@ class Chat extends Window {
 				this.AdjustUI();
 			};
 
-			stream.onremovetrack = ()=> {
-				if (stream.getTracks().length === 0) removeRemote();
+			stream.onremovetrack = ev=> {
+				if (stream.getTracks().length === 0) {
+					removeRemote();
+				}
+				else {
+					this.UpdateRemoteAudioVisualizer(remote);
+				}
 			};
-			stream.onaddtrack = ()=> {
+			stream.onaddtrack = ev=> {
 				remote.video.srcObject = stream;
+				if (ev && ev.track) this.WireRemoteTrackForVisualizer(remote, ev.track);
+				this.UpdateRemoteAudioVisualizer(remote);
 			};
 
 			remote._cleanup = removeRemote;
+
+			for (const t of stream.getTracks()) {
+				this.WireRemoteTrackForVisualizer(remote, t);
+			}
+		}
+		else {
+			this.WireRemoteTrackForVisualizer(remote, track);
 		}
 
 		track.onended = ()=> {
@@ -537,8 +734,12 @@ class Chat extends Window {
 			if (stream.getTracks().length === 0 && remote._cleanup) {
 				remote._cleanup();
 			}
+			else {
+				this.UpdateRemoteAudioVisualizer(remote);
+			}
 		};
 
+		this.UpdateRemoteAudioVisualizer(remote);
 		this.LayoutRemoteStreams();
 		this.AdjustUI();
 	}
