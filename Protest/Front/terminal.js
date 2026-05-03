@@ -1,7 +1,7 @@
 class Terminal extends Window {
 	static CHAR_WIDTH = 8;
 	static CHAR_HEIGHT = 18;
-	static DEFAULT_SCROLLBACK = 5000;
+	static DEFAULT_SCROLLBACK = 1000;
 
 	static SPECIAL_KEYS = {
 		"Enter"      : "\r",
@@ -151,6 +151,7 @@ class Terminal extends Window {
 		super();
 
 		this.args = Object.assign({
+			darkMode: false,
 			host: "",
 			ansi: true,
 			autoScroll: true,
@@ -211,6 +212,8 @@ class Terminal extends Window {
 
 		this.content.tabIndex = 1;
 		this.content.classList.add("terminal-content");
+
+		this.win.style.colorScheme = this.args.darkMode ? "dark" : "inherit";
 
 		this.cursorElement = document.createElement("div");
 		this.cursorElement.className = "terminal-cursor";
@@ -339,7 +342,7 @@ class Terminal extends Window {
 	ConnectDialog(target="", isNew=false) {} //overridable
 
 	OptionsDialog() {
-		const dialog = this.DialogBox("320px");
+		const dialog = this.DialogBox("340px");
 		if (dialog === null) return;
 
 		const {okButton, innerBox} = dialog;
@@ -347,6 +350,10 @@ class Terminal extends Window {
 		innerBox.style.padding = "20px";
 		innerBox.parentElement.style.maxWidth = "480px";
 		innerBox.parentElement.parentElement.onclick = event=> { event.stopPropagation(); };
+
+		const darkModeToggle = this.CreateToggle("Force dark mode", this.args.darkMode, innerBox);
+		innerBox.appendChild(document.createElement("br"));
+		innerBox.appendChild(document.createElement("br"));
 
 		const ansiToggle = this.CreateToggle("Escape ANSI codes", this.args.ansi, innerBox);
 		innerBox.appendChild(document.createElement("br"));
@@ -387,6 +394,7 @@ class Terminal extends Window {
 		okButton.onclick = ()=> {
 			const scrollback = Number.parseInt(scrollbackInput.value, 10);
 
+			this.args.darkMode = darkModeToggle.checkbox.checked;
 			this.args.ansi = ansiToggle.checkbox.checked;
 			this.args.bell = bellToggle.checkbox.checked;
 			this.args.autoScroll = autoScrollToggle.checkbox.checked;
@@ -394,13 +402,16 @@ class Terminal extends Window {
 			this.args.scrollback = Number.isNaN(scrollback) ? Terminal.DEFAULT_SCROLLBACK : Math.max(0, scrollback);
 			dialog.Close();
 
+			this.win.style.colorScheme = this.args.darkMode ? "dark" : "inherit";
+
 			this.TrimHistory();
+
 			this.cursorElement.style.transition = this.args.smoothCursor ? ".1s" : "0s";
 			this.cursorElement.style.left = Terminal.CHAR_WIDTH * this.cursor.x + "px";
 			this.cursorElement.style.top = Terminal.CHAR_HEIGHT * this.cursor.y + "px";
 		};
 
-		setTimeout(()=>ansiToggle.label.focus(), 200);
+		setTimeout(()=>darkModeToggle.label.focus(), 200);
 	}
 
 	CustomKeyDialog() {
