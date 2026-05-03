@@ -185,23 +185,23 @@ public class DatabaseTests {
     public void Database4_Merge() {
         Database database = new Database("test", directory.FullName);
 
-        Database.Entry liliGotMarried = new Database.Entry {
+        Database.Entry lilyGotMarried = new Database.Entry {
             filename = lilyFilename,
             mutex = new Lock(),
             attributes = new ConcurrentDictionary<string, Database.Attribute>()
         };
-        liliGotMarried.attributes.TryAdd("lastname", new Database.Attribute() {
+        lilyGotMarried.attributes.TryAdd("lastname", new Database.Attribute() {
             value = "Rodriguez",
             date = DateTime.Now.Ticks,
             origin = origin
         });
-        liliGotMarried.attributes.TryAdd("phone", new Database.Attribute() {
+        lilyGotMarried.attributes.TryAdd("phone", new Database.Attribute() {
             value = "555-12345678",
             date = DateTime.Now.Ticks,
             origin = origin
         });
 
-        bool a = database.Save(liliGotMarried.filename, liliGotMarried.attributes, Database.SaveMethod.merge, origin);
+        bool a = database.Save(lilyGotMarried.filename, lilyGotMarried.attributes, Database.SaveMethod.merge, origin);
         if (!a) Assert.Fail("Failed to save Lily after getting married");
 
         Database.Entry john = database.GetEntry(johnFilename);
