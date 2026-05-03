@@ -127,6 +127,7 @@ const LOADER = {
 		"ntpclient.js",
 		"telnet.js",
 		"ssh.js",
+		"shell.js",
 		"wmi.js",
 		"snmp.js",
 		"websitecheck.js",
@@ -351,6 +352,7 @@ const LOADER = {
 		case "Telnet"       : return new Telnet(command.args);
 		case "Ssh"          : return new Ssh(command.args);
 		case "Wmi"          : return new Wmi(command.args);
+		case "Shell"        : return new Shell(command.args);
 		case "Snmp"         : return new Snmp(command.args);
 
 		case "PassGen"        : return new PassGen();

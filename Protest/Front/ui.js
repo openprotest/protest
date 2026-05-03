@@ -385,6 +385,7 @@ const MENU = {
 		{ t:"WMI client",         i:"mono/wmi.svg?light",           g:"utilities", h:false, f:args=> new Wmi(args),        k:"windows management instrumentation viewer" },
 		{ t:"Secure shell",       i:"mono/ssh.svg?light",           g:"utilities", h:true,  f:()=> new Ssh({host:""}),     k:"ssh terminal" },
 		{ t:"Telnet",             i:"mono/telnet.svg?light",        g:"utilities", h:true,  f:()=> new Telnet({host:""}),  k:"terminal" },
+		{ t:"Shell",              i:"mono/console.svg?light",       g:"utilities", h:true,  f:()=> new Shell({}),          k:"shell terminal cmd bash console" },
 		//{ t:"RS-232",             i:"mono/serialconsole.svg?light", g:"utilities", h:true,  f:()=>{}, k:"rs 232 serial terminal console" },
 		{ t:"Encoder",            i:"mono/encoder.svg?light",       g:"utilities", h:true,  f:args=> new Encoder(args),    k:"binary hex base64 url html decode" },
 		{ t:"Network calculator", i:"mono/netcalc.svg?light",       g:"utilities", h:false, f:args=> new NetCalc(),        k:"subnet" },
@@ -395,7 +396,7 @@ const MENU = {
 		{ t:"Keyboard tester",    i:"mono/keyboard.svg?light",      g:"utilities", h:true,  f:args=> new KeyboardTester(), k:"keys" },
 		{ t:"Gamepad tester",     i:"mono/gamepad.svg?light",       g:"utilities", h:true,  f:args=> new KeyboardTester("gamepad"), k:"joystick" },
 
-		{ t:"Environment",   i:"mono/environment.svg?light",  g:"manage", h:false, f:()=> new Environment(), k:"settings" },
+		{ t:"Environment",   i:"mono/environment.svg?light", g:"manage", h:false, f:()=> new Environment(), k:"settings" },
 		{ t:"Zones",         i:"mono/router.svg?light",      g:"manage", h:true,  f:()=> new Environment("zones") },
 		{ t:"DHCP range",    i:"mono/dhcp.svg?light",        g:"manage", h:true,  f:()=> new Environment("dhcp"), k:"ip addresses"},
 		{ t:"SMTP settings", i:"mono/email.svg?light",       g:"manage", h:true,  f:()=> new Environment("smtp") },

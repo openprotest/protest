@@ -1,7 +1,7 @@
 class Terminal extends Window {
 	static CHAR_WIDTH = 8;
 	static CHAR_HEIGHT = 18;
-	static DEFAULT_SCROLLBACK = 1500;
+	static DEFAULT_SCROLLBACK = 5000;
 
 	static SPECIAL_KEYS = {
 		"Enter"      : "\r",
