@@ -238,14 +238,14 @@ internal static partial class Lifeline {
             rtt = -1;
         }
 
-        string dir = Path.Combine(Data.DIR_LIFELINE, "rtt", host);
+        string dir = Path.Join(Data.DIR_LIFELINE, "rtt", host);
         if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
 
         try {
             Lock mutex = pingMutexes.GetOrAdd(host, new Lock());
 
             lock (mutex) {
-                string path = Path.Combine(dir, $"{now:yyyyMM}");
+                string path = Path.Join(dir, $"{now:yyyyMM}");
                 using FileStream stream = new FileStream(path, FileMode.Append);
                 using BinaryWriter writer = new BinaryWriter(stream, Encoding.UTF8, false);
                 writer.Write(((DateTimeOffset)now).ToUnixTimeMilliseconds()); //8 bytes
@@ -353,11 +353,11 @@ internal static partial class Lifeline {
 
         lock (mutex) {
             if (cpuIdle != 255) {
-                string dirCpu = Path.Combine(Data.DIR_LIFELINE, "cpu", file);
+                string dirCpu = Path.Join(Data.DIR_LIFELINE, "cpu", file);
                 if (!Directory.Exists(dirCpu)) { Directory.CreateDirectory(dirCpu); }
 
                 try {
-                    using FileStream stream = new FileStream(Path.Combine(dirCpu, $"{now:yyyyMM}"), FileMode.Append);
+                    using FileStream stream = new FileStream(Path.Join(dirCpu, $"{now:yyyyMM}"), FileMode.Append);
                     using BinaryWriter writer = new BinaryWriter(stream, Encoding.UTF8, false);
                     writer.Write(((DateTimeOffset)now).ToUnixTimeMilliseconds()); //8 bytes
                     writer.Write((byte)(100 - cpuIdle)); //1 byte
@@ -368,11 +368,11 @@ internal static partial class Lifeline {
             }
 
             if (diskIo != 255) {
-                string dirDiskIo = Path.Combine(Data.DIR_LIFELINE, "diskio", file);
+                string dirDiskIo = Path.Join(Data.DIR_LIFELINE, "diskio", file);
                 if (!Directory.Exists(dirDiskIo)) { Directory.CreateDirectory(dirDiskIo); }
 
                 try {
-                    using FileStream stream = new FileStream(Path.Combine(dirDiskIo, $"{now:yyyyMM}"), FileMode.Append);
+                    using FileStream stream = new FileStream(Path.Join(dirDiskIo, $"{now:yyyyMM}"), FileMode.Append);
                     using BinaryWriter writer = new BinaryWriter(stream, Encoding.UTF8, false);
                     writer.Write(((DateTimeOffset)now).ToUnixTimeMilliseconds()); //8 bytes
                     writer.Write((byte)(100 - diskIo)); //1 byte
@@ -383,11 +383,11 @@ internal static partial class Lifeline {
             }
 
             if (memoryTotal > 0) {
-                string dirMemory = Path.Combine(Data.DIR_LIFELINE, "memory", file);
+                string dirMemory = Path.Join(Data.DIR_LIFELINE, "memory", file);
                 if (!Directory.Exists(dirMemory)) { Directory.CreateDirectory(dirMemory); }
 
                 try {
-                    using FileStream stream = new FileStream(Path.Combine(dirMemory, $"{now:yyyyMM}"), FileMode.Append);
+                    using FileStream stream = new FileStream(Path.Join(dirMemory, $"{now:yyyyMM}"), FileMode.Append);
                     using BinaryWriter writer = new BinaryWriter(stream, Encoding.UTF8, false);
                     writer.Write(((DateTimeOffset)now).ToUnixTimeMilliseconds()); //8 bytes
                     writer.Write(memoryTotal - memoryFree); //8 bytes
@@ -399,11 +399,11 @@ internal static partial class Lifeline {
             }
 
             if (diskCaption.Count > 0) {
-                string dirDisk = Path.Combine(Data.DIR_LIFELINE, "disk", file);
+                string dirDisk = Path.Join(Data.DIR_LIFELINE, "disk", file);
                 if (!Directory.Exists(dirDisk)) Directory.CreateDirectory(dirDisk);
 
                 try {
-                    using FileStream stream = new FileStream(Path.Combine(dirDisk, $"{now:yyyyMM}"), FileMode.Append);
+                    using FileStream stream = new FileStream(Path.Join(dirDisk, $"{now:yyyyMM}"), FileMode.Append);
                     using BinaryWriter writer = new BinaryWriter(stream, Encoding.UTF8, false);
                     writer.Write(((DateTimeOffset)now).ToUnixTimeMilliseconds()); //8 bytes
                     writer.Write(diskCaption.Count); //4 bytes
@@ -457,7 +457,7 @@ internal static partial class Lifeline {
         Lock mutex = snmpMutexes.GetOrAdd(ipAddress.ToString(), new Lock());
 
         lock (mutex) {
-            string dirPrintCounter = Path.Combine(Data.DIR_LIFELINE, "printcount", file);
+            string dirPrintCounter = Path.Join(Data.DIR_LIFELINE, "printcount", file);
             if (!Directory.Exists(dirPrintCounter)) {
                 Directory.CreateDirectory(dirPrintCounter);
             }
@@ -466,7 +466,7 @@ internal static partial class Lifeline {
 
             try {
                 if (blackCounter > 0) {
-                    using FileStream stream = new FileStream(Path.Combine(dirPrintCounter, $"{now:yyyyMM}"), FileMode.Append);
+                    using FileStream stream = new FileStream(Path.Join(dirPrintCounter, $"{now:yyyyMM}"), FileMode.Append);
                     using BinaryWriter writer = new BinaryWriter(stream, Encoding.UTF8, false);
                     writer.Write(((DateTimeOffset)now).ToUnixTimeMilliseconds()); //8 bytes
                     writer.Write(blackCounter); //4 bytes
@@ -503,7 +503,7 @@ internal static partial class Lifeline {
         Lock mutex = snmpMutexes.GetOrAdd(ipAddress.ToString(), new Lock());
 
         lock (mutex) {
-            string dirPrintCounter = Path.Combine(Data.DIR_LIFELINE, "switchcount", file);
+            string dirPrintCounter = Path.Join(Data.DIR_LIFELINE, "switchcount", file);
             if (!Directory.Exists(dirPrintCounter)) {
                 Directory.CreateDirectory(dirPrintCounter);
             }
@@ -540,7 +540,7 @@ internal static partial class Lifeline {
             }
 
             try {
-                using FileStream stream = new FileStream(Path.Combine(dirPrintCounter, $"{now:yyyyMM}"), FileMode.Append);
+                using FileStream stream = new FileStream(Path.Join(dirPrintCounter, $"{now:yyyyMM}"), FileMode.Append);
                 using BinaryWriter writer = new BinaryWriter(stream, Encoding.UTF8, false);
                 writer.Write(((DateTimeOffset)now).ToUnixTimeMilliseconds()); //8 bytes
                 writer.Write(traffic); //8 bytes
@@ -569,7 +569,7 @@ internal static partial class Lifeline {
         }
 
         try {
-            return File.ReadAllBytes(Path.Combine(Data.DIR_LIFELINE, type, file, date));
+            return File.ReadAllBytes(Path.Join(Data.DIR_LIFELINE, type, file, date));
         }
         catch {
             return null;
@@ -593,7 +593,7 @@ internal static partial class Lifeline {
         }
 
         try {
-            return File.ReadAllBytes(Path.Combine(Data.DIR_LIFELINE, "rtt", host, date));
+            return File.ReadAllBytes(Path.Join(Data.DIR_LIFELINE, "rtt", host, date));
         }
         catch {
             return null;
@@ -606,7 +606,7 @@ internal static partial class Lifeline {
 
         byte[] latest;
         try {
-            latest = File.ReadAllBytes(Path.Combine(Data.DIR_LIFELINE, type, file, date));
+            latest = File.ReadAllBytes(Path.Join(Data.DIR_LIFELINE, type, file, date));
         }
         catch {
             latest = null;
@@ -629,7 +629,7 @@ internal static partial class Lifeline {
 
             byte[] old;
             try {
-                old = File.ReadAllBytes(Path.Combine(Data.DIR_LIFELINE, type, file, previousMonthDate));
+                old = File.ReadAllBytes(Path.Join(Data.DIR_LIFELINE, type, file, previousMonthDate));
             }
             catch {
                 old = null;

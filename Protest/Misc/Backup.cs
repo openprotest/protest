@@ -31,9 +31,9 @@ internal static class Backup {
                 }
 
                 int count = 1;
-                string filename = Path.Combine(Data.DIR_BACKUP, $"{name}.zip");
+                string filename = Path.Join(Data.DIR_BACKUP, $"{name}.zip");
                 while (File.Exists(filename)) {
-                    filename = Path.Combine(Data.DIR_BACKUP, $"{name}-{++count}.zip");
+                    filename = Path.Join(Data.DIR_BACKUP, $"{name}-{++count}.zip");
                 }
 
                 DirectoryInfo copyDirectory = new DirectoryInfo($"{filename}.tmp");
@@ -48,7 +48,7 @@ internal static class Backup {
 
                 for (int i = 0; i < directories.Length; i++) {
                     if (directories[i].Exists) {
-                        CopyAll(directories[i], new DirectoryInfo(Path.Combine(copyDirectory.FullName, directories[i].Name)));
+                        CopyAll(directories[i], new DirectoryInfo(Path.Join(copyDirectory.FullName, directories[i].Name)));
                     }
                 }
 
@@ -75,7 +75,7 @@ internal static class Backup {
 
         FileInfo[] files = source.GetFiles();
         for (int i = 0; i < files.Length; i++) {
-            files[i].CopyTo(Path.Combine(destination.FullName, files[i].Name));
+            files[i].CopyTo(Path.Join(destination.FullName, files[i].Name));
         }
 
         DirectoryInfo[] subfolders = source.GetDirectories();
@@ -90,7 +90,7 @@ internal static class Backup {
         parameters.TryGetValue("name", out string name);
         if (String.IsNullOrEmpty(name)) { return Data.CODE_INVALID_ARGUMENT.Array; }
 
-        string filename = Path.Combine(Data.DIR_BACKUP, name);
+        string filename = Path.Join(Data.DIR_BACKUP, name);
 
         try {
             if (File.Exists(filename)) {
@@ -113,7 +113,7 @@ internal static class Backup {
         parameters.TryGetValue("name", out string name);
         if (String.IsNullOrEmpty(name)) { return Data.CODE_INVALID_ARGUMENT.Array; }
 
-        string filename = Path.Combine(Data.DIR_BACKUP, name);
+        string filename = Path.Join(Data.DIR_BACKUP, name);
 
         if (!File.Exists(filename)) {
             return Data.CODE_FILE_NOT_FOUND.Array;

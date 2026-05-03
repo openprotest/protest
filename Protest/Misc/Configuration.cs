@@ -8,15 +8,15 @@ using System.Net;
 namespace Protest;
 internal static class Configuration {
     internal static readonly string[] fallbackUri = new string[] { "http://127.0.0.1:8080/" };
+    internal static readonly HashSet<IPAddress> trustedProxies = new HashSet<IPAddress>();
 
     internal static string DB_KEY_STRING;
     internal static byte[] DB_KEY;
     internal static byte[] DB_KEY_IV;
 
-    internal static HashSet<IPAddress> trustedProxies = new HashSet<IPAddress>();
     internal static bool backdoor = true;
 
-    internal static string frontPath = Path.Combine(Data.DIR_BASE, "front");
+    internal static string frontPath = Path.Join(Data.DIR_BASE, "front");
     internal static string[] httpPrefixes = new string[] { "http://127.0.0.1:8080/" };
 
     internal static bool Load() {
@@ -87,7 +87,7 @@ internal static class Configuration {
 
             int separatorIndex = path.LastIndexOf(Path.DirectorySeparatorChar);
             if (separatorIndex > 0) {
-                frontDirectory = new DirectoryInfo(Path.Combine(path[..separatorIndex], "front"));
+                frontDirectory = new DirectoryInfo(Path.Join(path[..separatorIndex], "front"));
             }
         }
 

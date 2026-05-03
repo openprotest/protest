@@ -328,7 +328,7 @@ internal static class Auth {
         byte[] cipher = Cryptography.Encrypt(plain, Configuration.DB_KEY, Configuration.DB_KEY_IV);
 
         try {
-            File.WriteAllBytes(Path.Combine(Data.DIR_RBAC, access.username), cipher);
+            File.WriteAllBytes(Path.Join(Data.DIR_RBAC, access.username), cipher);
         }
         catch (IOException ex) {
             Logger.Error(ex);
@@ -804,7 +804,7 @@ internal static class Auth {
                 Directory.CreateDirectory(Data.DIR_RBAC);
             }
 
-            File.WriteAllBytes(Path.Combine(Data.DIR_RBAC, $"{access.username}"), cipher);
+            File.WriteAllBytes(Path.Join(Data.DIR_RBAC, $"{access.username}"), cipher);
         }
         catch (IOException ex) {
             Logger.Error(ex);
@@ -844,7 +844,7 @@ internal static class Auth {
         }
 
         try {
-            File.Delete(Path.Combine(Data.DIR_RBAC, username));
+            File.Delete(Path.Join(Data.DIR_RBAC, username));
         }
         catch (IOException ex) {
             Logger.Error(ex);

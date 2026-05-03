@@ -39,37 +39,37 @@ internal static class Data {
     public static readonly ArraySegment<byte> CODE_OTHER_TASK_IN_PROGRESS = new ArraySegment<byte>("{\"error\":\"another task is already in progress\"}"u8.ToArray());
     public static readonly ArraySegment<byte> CODE_TASK_DONT_EXIST        = new ArraySegment<byte>("{\"error\":\"this task no longer exists\"}"u8.ToArray());
 
-    public static readonly string DIR_BASE           = Path.Combine(AppContext.BaseDirectory, "protest_");
-    public static readonly string DIR_RBAC           = Path.Combine(DIR_BASE, "rbac");
-    public static readonly string DIR_LOG            = Path.Combine(DIR_BASE, "log");
-    public static readonly string DIR_BACKUP         = Path.Combine(DIR_BASE, "backup");
-    public static readonly string DIR_CERTIFICATES   = Path.Combine(DIR_BASE, "certificates");
+    public static readonly string DIR_BASE           = Path.Join(AppContext.BaseDirectory, "protest_");
+    public static readonly string DIR_RBAC           = Path.Join(DIR_BASE, "rbac");
+    public static readonly string DIR_LOG            = Path.Join(DIR_BASE, "log");
+    public static readonly string DIR_BACKUP         = Path.Join(DIR_BASE, "backup");
+    public static readonly string DIR_CERTIFICATES   = Path.Join(DIR_BASE, "certificates");
 
-    public static readonly string DIR_DATA           = Path.Combine(DIR_BASE, "data");
-    public static readonly string DIR_DEVICES        = Path.Combine(DIR_DATA, "devices");
-    public static readonly string DIR_USERS          = Path.Combine(DIR_DATA, "users");
+    public static readonly string DIR_DATA           = Path.Join(DIR_BASE, "data");
+    public static readonly string DIR_DEVICES        = Path.Join(DIR_DATA, "devices");
+    public static readonly string DIR_USERS          = Path.Join(DIR_DATA, "users");
 
-    public static readonly string DIR_DOCUMENTATION  = Path.Combine(DIR_DATA, "documentation");
-    public static readonly string DIR_LASTSEEN       = Path.Combine(DIR_DATA, "lastseen");
-    public static readonly string DIR_WUA_CACHE      = Path.Combine(DIR_DATA, "wuacache");
-    public static readonly string DIR_LIFELINE       = Path.Combine(DIR_DATA, "lifeline");
-    public static readonly string DIR_WATCHDOG       = Path.Combine(DIR_DATA, "watchdog");
-    public static readonly string DIR_REVERSE_PROXY  = Path.Combine(DIR_DATA, "reverseproxy");
-    public static readonly string DIR_SCRIPTS        = Path.Combine(DIR_DATA, "scripts");
-    public static readonly string DIR_DEBIT          = Path.Combine(DIR_DATA, "debit");
-    public static readonly string DIR_DEBIT_SHORT    = Path.Combine(DIR_DEBIT, "short");
-    public static readonly string DIR_DEBIT_LONG     = Path.Combine(DIR_DEBIT, "long");
-    public static readonly string DIR_DEBIT_RETURNED = Path.Combine(DIR_DEBIT, "returned");
-    public static readonly string DIR_DEBIT_TEMPLATE = Path.Combine(DIR_DEBIT, "templates");
+    public static readonly string DIR_DOCUMENTATION  = Path.Join(DIR_DATA, "documentation");
+    public static readonly string DIR_LASTSEEN       = Path.Join(DIR_DATA, "lastseen");
+    public static readonly string DIR_WUA_CACHE      = Path.Join(DIR_DATA, "wuacache");
+    public static readonly string DIR_LIFELINE       = Path.Join(DIR_DATA, "lifeline");
+    public static readonly string DIR_WATCHDOG       = Path.Join(DIR_DATA, "watchdog");
+    public static readonly string DIR_REVERSE_PROXY  = Path.Join(DIR_DATA, "reverseproxy");
+    public static readonly string DIR_SCRIPTS        = Path.Join(DIR_DATA, "scripts");
+    public static readonly string DIR_DEBIT          = Path.Join(DIR_DATA, "debit");
+    public static readonly string DIR_DEBIT_SHORT    = Path.Join(DIR_DEBIT, "short");
+    public static readonly string DIR_DEBIT_LONG     = Path.Join(DIR_DEBIT, "long");
+    public static readonly string DIR_DEBIT_RETURNED = Path.Join(DIR_DEBIT, "returned");
+    public static readonly string DIR_DEBIT_TEMPLATE = Path.Join(DIR_DEBIT, "templates");
 
-    public static readonly string FILE_API_LINKS     = Path.Combine("api.json");
-    public static readonly string FILE_ZONES         = Path.Combine("zones.json");
-    public static readonly string FILE_DHCP_RANGE    = Path.Combine("dhcprange.json");
-    public static readonly string FILE_SMTP_PROFILES = Path.Combine("smtpprofiles.json");
-    public static readonly string FILE_SNMP_PROFILES = Path.Combine("snmpprofiles.json");
-    public static readonly string FILE_NOTIFICATIONS = Path.Combine("notifications.json");
+    public static readonly string FILE_API_LINKS     = Path.Join("api.json");
+    public static readonly string FILE_ZONES         = Path.Join("zones.json");
+    public static readonly string FILE_DHCP_RANGE    = Path.Join("dhcprange.json");
+    public static readonly string FILE_SMTP_PROFILES = Path.Join("smtpprofiles.json");
+    public static readonly string FILE_SNMP_PROFILES = Path.Join("snmpprofiles.json");
+    public static readonly string FILE_NOTIFICATIONS = Path.Join("notifications.json");
 
-    public static readonly string FILE_CONFIG        = Path.Combine(DIR_BASE, "protest.cfg");
+    public static readonly string FILE_CONFIG        = Path.Join(DIR_BASE, "protest.cfg");
 
     private static readonly byte[] DEBIT_TEMPLATE = "The aforementioned items are company property and must be returned in pristine condition at the conclusion of the contract. Any loss, damage, or failure to return these items will result in their value being deducted from the employee's salary."u8.ToArray();
 
@@ -101,7 +101,7 @@ internal static class Data {
 
         if (!Directory.Exists(DIR_DEBIT_TEMPLATE)) {
             Directory.CreateDirectory(DIR_DEBIT_TEMPLATE);
-            File.WriteAllBytes(Path.Combine(DIR_DEBIT_TEMPLATE, "Company.txt"), DEBIT_TEMPLATE);
+            File.WriteAllBytes(Path.Join(DIR_DEBIT_TEMPLATE, "Company.txt"), DEBIT_TEMPLATE);
         }
     }
 

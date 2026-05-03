@@ -260,11 +260,11 @@ internal static class ReverseProxy {
                 return "{\"error\":\"Unable to modify this proxy while it's running.\"}"u8.ToArray();
             }
 
-            string path = Path.Combine(Data.DIR_REVERSE_PROXY, entry.guid.ToString());
+            string path = Path.Join(Data.DIR_REVERSE_PROXY, entry.guid.ToString());
 
             if (entry.guid == Guid.Empty) {
                 entry.guid = Guid.NewGuid();
-                path = Path.Combine(Data.DIR_REVERSE_PROXY, entry.guid.ToString());
+                path = Path.Join(Data.DIR_REVERSE_PROXY, entry.guid.ToString());
             }
             else if (String.IsNullOrEmpty(entry.password) && File.Exists(path)) {
                 byte[] oldCipher = File.ReadAllBytes(path);
@@ -300,7 +300,7 @@ internal static class ReverseProxy {
         }
 
         try {
-            string path = Path.Combine(Data.DIR_REVERSE_PROXY, guid);
+            string path = Path.Join(Data.DIR_REVERSE_PROXY, guid);
             File.Delete(path);
             Logger.Action(origin, "Reverse-proxy", $"Delete reverse proxy server: {guid}");
             return Data.CODE_OK.ToArray();
@@ -326,7 +326,7 @@ internal static class ReverseProxy {
 
         ReverseProxyObject obj;
         try {
-            string path = Path.Combine(Data.DIR_REVERSE_PROXY, guid);
+            string path = Path.Join(Data.DIR_REVERSE_PROXY, guid);
             byte[] cipher = File.ReadAllBytes(path);
             byte[] plain = Cryptography.Decrypt(cipher, Configuration.DB_KEY, Configuration.DB_KEY_IV);
 
@@ -360,7 +360,7 @@ internal static class ReverseProxy {
             else if (obj.protocol == ProxyProtocol.HTTP || obj.protocol == ProxyProtocol.HTTPS) {
                 string certificateFilename = null;
                 if (obj.certificate is not null) {
-                    string path = Path.Combine(Data.DIR_CERTIFICATES, obj.certificate);
+                    string path = Path.Join(Data.DIR_CERTIFICATES, obj.certificate);
                     certificateFilename = path;
                 }
 

@@ -472,8 +472,8 @@ internal static class Watchdog {
 
     private static bool WriteResult(Watcher watcher, short result) {
         DateTime now = DateTime.UtcNow;
-        string dir = Path.Combine(Data.DIR_WATCHDOG, $"{watcher.file}_");
-        string path = Path.Combine(dir, now.ToString(Data.DATE_FORMAT_FILE));
+        string dir = Path.Join(Data.DIR_WATCHDOG, $"{watcher.file}_");
+        string path = Path.Join(dir, now.ToString(Data.DATE_FORMAT_FILE));
         lock (watcher.mutex) {
             try {
                 if (!Directory.Exists(dir)) { Directory.CreateDirectory(dir); }
@@ -521,7 +521,7 @@ internal static class Watchdog {
         }
 
         try {
-            string path = Path.Combine(Data.DIR_WATCHDOG, $"{file}_", date);
+            string path = Path.Join(Data.DIR_WATCHDOG, $"{file}_", date);
             byte[] bytes = File.ReadAllBytes(path);
             return bytes;
         }
@@ -539,7 +539,7 @@ internal static class Watchdog {
         }
 
         try {
-            string path = Path.Combine(Data.DIR_WATCHDOG, file);
+            string path = Path.Join(Data.DIR_WATCHDOG, file);
             bool exists = File.Exists(path);
             Watcher watcher = JsonSerializer.Deserialize<Watcher>(watcherString, watcherSerializerOptions);
             watcher.file = file;
@@ -587,7 +587,7 @@ internal static class Watchdog {
             }
 
             lock (watcher.mutex) {
-                string path = Path.Combine(Data.DIR_WATCHDOG, file);
+                string path = Path.Join(Data.DIR_WATCHDOG, file);
 
                 Directory.Delete($"path_", true);
                 File.Delete(path);

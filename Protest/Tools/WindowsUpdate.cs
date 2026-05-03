@@ -204,7 +204,7 @@ internal static class WindowsUpdate {
 
         try {
             byte[] bytes = JsonSerializer.SerializeToUtf8Bytes<UpdatesResult>(updatesResult, serializerOptions);
-            File.WriteAllBytes(Path.Combine(Data.DIR_WUA_CACHE, file), bytes);
+            File.WriteAllBytes(Path.Join(Data.DIR_WUA_CACHE, file), bytes);
         }
         catch (Exception ex) {
             Logger.Error(ex);
@@ -215,7 +215,7 @@ internal static class WindowsUpdate {
         DirectoryInfo cacheDirectory = new DirectoryInfo(Data.DIR_WUA_CACHE);
         if (!cacheDirectory.Exists) return null;
 
-        string fullname = Path.Combine(Data.DIR_WUA_CACHE, file);
+        string fullname = Path.Join(Data.DIR_WUA_CACHE, file);
 
         if (!File.Exists(fullname)) return null;
 
