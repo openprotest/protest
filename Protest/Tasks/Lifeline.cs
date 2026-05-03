@@ -290,6 +290,7 @@ internal static partial class Lifeline {
                 break;
             }
         }
+        catch (Exception ex) when (ex.Message.Contains("invalid query", StringComparison.OrdinalIgnoreCase)) { }
         catch (Exception ex) {
             Logger.Debug(ex);
         }
@@ -304,6 +305,7 @@ internal static partial class Lifeline {
                 break;
             }
         }
+        catch (Exception ex) when (ex.Message.Contains("invalid query", StringComparison.OrdinalIgnoreCase)) { }
         catch (Exception ex) {
             Logger.Debug(ex);
         }
