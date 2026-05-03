@@ -10,7 +10,7 @@ public class DatabaseTests {
     private string lilyFilename;
 
 
-    private readonly DirectoryInfo directory = new DirectoryInfo($"{Data.DIR_DATA}{Data.DELIMITER}database_test");
+    private readonly DirectoryInfo directory = new DirectoryInfo($"{Data.DIR_DATA}{Path.DirectorySeparatorChar}database_test");
     private readonly string origin = "unit test";
 
     public DatabaseTests() {
