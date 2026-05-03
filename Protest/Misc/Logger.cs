@@ -18,7 +18,8 @@ internal static class Logger {
 
     static Logger() {
         try {
-            errorWriter = new StreamWriter($"{Data.DIR_LOG}{Data.DELIMITER}error.log", true, System.Text.Encoding.UTF8);
+            string path = Path.Combine(Data.DIR_LOG, "error.log");
+            errorWriter = new StreamWriter(path, true, System.Text.Encoding.UTF8);
         }
         catch (Exception ex) {
             Console.ForegroundColor = ConsoleColor.Red;
@@ -98,11 +99,8 @@ internal static class Logger {
 
                     if (actionWriter is null || actionWriterDate != fileDate) {
                         actionWriter?.Dispose();
-                        actionWriter = new StreamWriter(
-                            $"{Data.DIR_LOG}{Data.DELIMITER}{fileDate}.log",
-                            true,
-                            System.Text.Encoding.UTF8
-                        );
+                        string path = Path.Combine(Data.DIR_LOG, $"{fileDate}.log");
+                        actionWriter = new StreamWriter(path, true, System.Text.Encoding.UTF8);
                         actionWriterDate = fileDate;
                     }
 
@@ -182,7 +180,7 @@ internal static class Logger {
     }
 
     private static byte[] ListToday() {
-        string filename = $"{Data.DIR_LOG}{Data.DELIMITER}{DateTime.UtcNow.ToString(Data.DATE_FORMAT_FILE)}.log";
+        string filename = Path.Combine(Data.DIR_LOG, $"{DateTime.UtcNow.ToString(Data.DATE_FORMAT_FILE)}.log");
         if (!File.Exists(filename)) {
             return null;
         }

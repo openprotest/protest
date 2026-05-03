@@ -189,9 +189,9 @@ internal static class DebitNotes {
         if (String.IsNullOrEmpty(file)) return Data.CODE_INVALID_ARGUMENT.Array;
 
         string filename = status switch  {
-            "short"    => $"{Data.DIR_DEBIT_SHORT}{Data.DELIMITER}{file}",
-            "long"     => $"{Data.DIR_DEBIT_LONG}{Data.DELIMITER}{file}",
-            "returned" => $"{Data.DIR_DEBIT_RETURNED}{Data.DELIMITER}{file}",
+            "short"    => Path.Combine(Data.DIR_DEBIT_SHORT, file),
+            "long"     => Path.Combine(Data.DIR_DEBIT_LONG, file),
+            "returned" => Path.Combine(Data.DIR_DEBIT_RETURNED, file),
             _ => null
         };
 
@@ -231,12 +231,14 @@ internal static class DebitNotes {
                 if (record.status == "short") {
                     DirectoryInfo dirShort = new DirectoryInfo(Data.DIR_DEBIT_SHORT);
                     if (!dirShort.Exists) dirShort.Create();
-                    File.WriteAllText($"{dirShort}{Data.DELIMITER}{name}", payload, Encoding.UTF8);
+                    string path = Path.Combine(dirShort.FullName, name);
+                    File.WriteAllText(path, payload, Encoding.UTF8);
                 }
                 else if (record.status == "long") {
                     DirectoryInfo dirLong = new DirectoryInfo(Data.DIR_DEBIT_LONG);
                     if (!dirLong.Exists) dirLong.Create();
-                    File.WriteAllText($"{dirLong}{Data.DELIMITER}{name}", payload, Encoding.UTF8);
+                    string path = Path.Combine(dirLong.FullName, name);
+                    File.WriteAllText(path, payload, Encoding.UTF8);
                 }
                 else if (record.status == "returned") {
                     DirectoryInfo dirReturned = new DirectoryInfo(Data.DIR_DEBIT_RETURNED);
@@ -246,7 +248,8 @@ internal static class DebitNotes {
                     record.returnedDate = DateTime.UtcNow.Ticks;
 
                     byte[] json = JsonSerializer.SerializeToUtf8Bytes(record, debitSerializerOptions);
-                    File.WriteAllBytes($"{dirReturned}{Data.DELIMITER}{name}", json);
+                    string path = Path.Combine(dirReturned.FullName, name);
+                    File.WriteAllBytes(path, json);
                 }
                 else {
                     return Data.CODE_INVALID_ARGUMENT.Array;
@@ -271,8 +274,8 @@ internal static class DebitNotes {
         if (String.IsNullOrEmpty(file)) return Data.CODE_INVALID_ARGUMENT.Array;
 
         string filename = status switch  {
-            "short" => $"{Data.DIR_DEBIT_SHORT}{Data.DELIMITER}{file}",
-            "long"  => $"{Data.DIR_DEBIT_LONG}{Data.DELIMITER}{file}",
+            "short" => Path.Combine(Data.DIR_DEBIT_SHORT, file),
+            "long"  => Path.Combine(Data.DIR_DEBIT_LONG, file),
             _       => null
         };
 
@@ -296,8 +299,8 @@ internal static class DebitNotes {
         if (String.IsNullOrEmpty(file)) return Data.CODE_INVALID_ARGUMENT.Array;
 
         string filename = status switch  {
-            "short" => $"{Data.DIR_DEBIT_SHORT}{Data.DELIMITER}{file}",
-            "long"  => $"{Data.DIR_DEBIT_LONG}{Data.DELIMITER}{file}",
+            "short" => Path.Combine(Data.DIR_DEBIT_SHORT, file),
+            "long"  => Path.Combine(Data.DIR_DEBIT_LONG, file),
             _       => null
         };
 
@@ -311,7 +314,7 @@ internal static class DebitNotes {
             record.returnedDate = DateTime.UtcNow.Ticks;
 
             byte[] json = JsonSerializer.SerializeToUtf8Bytes(record, debitSerializerOptions);
-            File.WriteAllBytes($"{Data.DIR_DEBIT_RETURNED}{Data.DELIMITER}{file}", json);
+            File.WriteAllBytes(Path.Combine(Data.DIR_DEBIT_RETURNED, file), json);
 
             File.Delete(filename);
 
@@ -356,7 +359,7 @@ internal static class DebitNotes {
     }
 
     public static byte[] ListBanners() {
-        DirectoryInfo dir = new DirectoryInfo($"{Configuration.frontPath}{Data.DELIMITER}custom");
+        DirectoryInfo dir = new DirectoryInfo(Path.Combine(Configuration.frontPath, "custom"));
         if (!dir.Exists) return "[]"u8.ToArray();
 
         StringBuilder builder = new StringBuilder();

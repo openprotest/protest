@@ -7,7 +7,6 @@ namespace Protest;
 
 internal static class Data {
     public const string GUID = "72f5bca3-7752-45e8-8027-2060ebbda456"; //from Protest.csproj
-    public static readonly char DELIMITER = Path.DirectorySeparatorChar;
 
     public const string TIME_FORMAT              = "HH:mm:ss";
     public const string TIME_FORMAT_MILLI        = "HH:mm:ss:fff";
@@ -40,37 +39,37 @@ internal static class Data {
     public static readonly ArraySegment<byte> CODE_OTHER_TASK_IN_PROGRESS = new ArraySegment<byte>("{\"error\":\"another task is already in progress\"}"u8.ToArray());
     public static readonly ArraySegment<byte> CODE_TASK_DONT_EXIST        = new ArraySegment<byte>("{\"error\":\"this task no longer exists\"}"u8.ToArray());
 
-    public static readonly string DIR_BASE           = $"{AppContext.BaseDirectory}{DELIMITER}protest_";
-    public static readonly string DIR_RBAC           = $"{DIR_BASE}{DELIMITER}rbac";
-    public static readonly string DIR_LOG            = $"{DIR_BASE}{DELIMITER}log";
-    public static readonly string DIR_BACKUP         = $"{DIR_BASE}{DELIMITER}backup";
-    public static readonly string DIR_CERTIFICATES   = $"{DIR_BASE}{DELIMITER}certificates";
+    public static readonly string DIR_BASE           = Path.Combine(AppContext.BaseDirectory, "protest_");
+    public static readonly string DIR_RBAC           = Path.Combine(DIR_BASE, "rbac");
+    public static readonly string DIR_LOG            = Path.Combine(DIR_BASE, "log");
+    public static readonly string DIR_BACKUP         = Path.Combine(DIR_BASE, "backup");
+    public static readonly string DIR_CERTIFICATES   = Path.Combine(DIR_BASE, "certificates");
 
-    public static readonly string DIR_DATA           = $"{DIR_BASE}{DELIMITER}data";
-    public static readonly string DIR_DEVICES        = $"{DIR_DATA}{DELIMITER}devices";
-    public static readonly string DIR_USERS          = $"{DIR_DATA}{DELIMITER}users";
+    public static readonly string DIR_DATA           = Path.Combine(DIR_BASE, "data");
+    public static readonly string DIR_DEVICES        = Path.Combine(DIR_DATA, "devices");
+    public static readonly string DIR_USERS          = Path.Combine(DIR_DATA, "users");
 
-    public static readonly string DIR_DOCUMENTATION  = $"{DIR_DATA}{DELIMITER}documentation";
-    public static readonly string DIR_LASTSEEN       = $"{DIR_DATA}{DELIMITER}lastseen";
-    public static readonly string DIR_WUA_CACHE      = $"{DIR_DATA}{DELIMITER}wuacache";
-    public static readonly string DIR_LIFELINE       = $"{DIR_DATA}{DELIMITER}lifeline";
-    public static readonly string DIR_WATCHDOG       = $"{DIR_DATA}{DELIMITER}watchdog";
-    public static readonly string DIR_REVERSE_PROXY  = $"{DIR_DATA}{DELIMITER}reverseproxy";
-    public static readonly string DIR_SCRIPTS        = $"{DIR_DATA}{DELIMITER}scripts";
-    public static readonly string DIR_DEBIT          = $"{DIR_DATA}{DELIMITER}debit";
-    public static readonly string DIR_DEBIT_SHORT    = $"{DIR_DATA}{DELIMITER}debit{DELIMITER}short";
-    public static readonly string DIR_DEBIT_LONG     = $"{DIR_DATA}{DELIMITER}debit{DELIMITER}long";
-    public static readonly string DIR_DEBIT_RETURNED = $"{DIR_DATA}{DELIMITER}debit{DELIMITER}returned";
-    public static readonly string DIR_DEBIT_TEMPLATE = $"{DIR_DATA}{DELIMITER}debit{DELIMITER}templates";
+    public static readonly string DIR_DOCUMENTATION  = Path.Combine(DIR_DATA, "documentation");
+    public static readonly string DIR_LASTSEEN       = Path.Combine(DIR_DATA, "lastseen");
+    public static readonly string DIR_WUA_CACHE      = Path.Combine(DIR_DATA, "wuacache");
+    public static readonly string DIR_LIFELINE       = Path.Combine(DIR_DATA, "lifeline");
+    public static readonly string DIR_WATCHDOG       = Path.Combine(DIR_DATA, "watchdog");
+    public static readonly string DIR_REVERSE_PROXY  = Path.Combine(DIR_DATA, "reverseproxy");
+    public static readonly string DIR_SCRIPTS        = Path.Combine(DIR_DATA, "scripts");
+    public static readonly string DIR_DEBIT          = Path.Combine(DIR_DATA, "debit");
+    public static readonly string DIR_DEBIT_SHORT    = Path.Combine(DIR_DEBIT, "short");
+    public static readonly string DIR_DEBIT_LONG     = Path.Combine(DIR_DEBIT, "long");
+    public static readonly string DIR_DEBIT_RETURNED = Path.Combine(DIR_DEBIT, "returned");
+    public static readonly string DIR_DEBIT_TEMPLATE = Path.Combine(DIR_DEBIT, "templates");
 
-    public static readonly string FILE_API_LINKS     = $"{DIR_DATA}{DELIMITER}api.json";
-    public static readonly string FILE_ZONES         = $"{DIR_DATA}{DELIMITER}zones.json";
-    public static readonly string FILE_DHCP_RANGE    = $"{DIR_DATA}{DELIMITER}dhcprange.json";
-    public static readonly string FILE_SMTP_PROFILES = $"{DIR_DATA}{DELIMITER}smtpprofiles.json";
-    public static readonly string FILE_SNMP_PROFILES = $"{DIR_DATA}{DELIMITER}snmpprofiles.json";
-    public static readonly string FILE_NOTIFICATIONS = $"{DIR_DATA}{DELIMITER}notifications.json";
+    public static readonly string FILE_API_LINKS     = Path.Combine("api.json");
+    public static readonly string FILE_ZONES         = Path.Combine("zones.json");
+    public static readonly string FILE_DHCP_RANGE    = Path.Combine("dhcprange.json");
+    public static readonly string FILE_SMTP_PROFILES = Path.Combine("smtpprofiles.json");
+    public static readonly string FILE_SNMP_PROFILES = Path.Combine("snmpprofiles.json");
+    public static readonly string FILE_NOTIFICATIONS = Path.Combine("notifications.json");
 
-    public static readonly string FILE_CONFIG        = $"{DIR_BASE}{DELIMITER}protest.cfg";
+    public static readonly string FILE_CONFIG        = Path.Combine(DIR_BASE, "protest.cfg");
 
     private static readonly byte[] DEBIT_TEMPLATE = "The aforementioned items are company property and must be returned in pristine condition at the conclusion of the contract. Any loss, damage, or failure to return these items will result in their value being deducted from the employee's salary."u8.ToArray();
 
@@ -102,7 +101,7 @@ internal static class Data {
 
         if (!Directory.Exists(DIR_DEBIT_TEMPLATE)) {
             Directory.CreateDirectory(DIR_DEBIT_TEMPLATE);
-            File.WriteAllBytes($"{DIR_DEBIT_TEMPLATE}{DELIMITER}Company.txt", DEBIT_TEMPLATE);
+            File.WriteAllBytes(Path.Combine(DIR_DEBIT_TEMPLATE, "Company.txt"), DEBIT_TEMPLATE);
         }
     }
 

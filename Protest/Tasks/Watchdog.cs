@@ -472,8 +472,8 @@ internal static class Watchdog {
 
     private static bool WriteResult(Watcher watcher, short result) {
         DateTime now = DateTime.UtcNow;
-        string dir = $"{Data.DIR_WATCHDOG}{Data.DELIMITER}{watcher.file}_";
-        string path = $"{dir}{Data.DELIMITER}{now.ToString(Data.DATE_FORMAT_FILE)}";
+        string dir = Path.Combine(Data.DIR_WATCHDOG, $"{watcher.file}_");
+        string path = Path.Combine(dir, now.ToString(Data.DATE_FORMAT_FILE));
         lock (watcher.mutex) {
             try {
                 if (!Directory.Exists(dir)) { Directory.CreateDirectory(dir); }
@@ -521,7 +521,8 @@ internal static class Watchdog {
         }
 
         try {
-            byte[] bytes = File.ReadAllBytes($"{Data.DIR_WATCHDOG}{Data.DELIMITER}{file}_{Data.DELIMITER}{date}");
+            string path = Path.Combine(Data.DIR_WATCHDOG, $"{file}_", date);
+            byte[] bytes = File.ReadAllBytes(path);
             return bytes;
         }
         catch {
@@ -538,7 +539,8 @@ internal static class Watchdog {
         }
 
         try {
-            bool exists = File.Exists($"{Data.DIR_WATCHDOG}{Data.DELIMITER}{file}");
+            string path = Path.Combine(Data.DIR_WATCHDOG, file);
+            bool exists = File.Exists(path);
             Watcher watcher = JsonSerializer.Deserialize<Watcher>(watcherString, watcherSerializerOptions);
             watcher.file = file;
 
@@ -548,9 +550,9 @@ internal static class Watchdog {
                 Directory.CreateDirectory(Data.DIR_WATCHDOG);
             }
 
-            File.WriteAllBytes($"{Data.DIR_WATCHDOG}{Data.DELIMITER}{file}", content);
+            File.WriteAllBytes(path, content);
 
-            DirectoryInfo dirInfo = new DirectoryInfo($"{Data.DIR_WATCHDOG}{Data.DELIMITER}{file}_");
+            DirectoryInfo dirInfo = new DirectoryInfo($"{path}_");
             if (!dirInfo.Exists) {
                 dirInfo.Create();
             }
@@ -585,8 +587,10 @@ internal static class Watchdog {
             }
 
             lock (watcher.mutex) {
-                Directory.Delete($"{Data.DIR_WATCHDOG}{Data.DELIMITER}{file}_", true);
-                File.Delete($"{Data.DIR_WATCHDOG}{Data.DELIMITER}{file}");
+                string path = Path.Combine(Data.DIR_WATCHDOG, file);
+
+                Directory.Delete($"path_", true);
+                File.Delete(path);
             }
 
             if (task?.status == TaskWrapper.TaskStatus.Running) {

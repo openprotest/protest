@@ -115,7 +115,7 @@ internal sealed class Database {
     }
 
     private bool Write(Entry entry) {
-        string filename = $"{location}{Data.DELIMITER}{entry.filename}";
+        string filename = Path.Combine(location, entry.filename);
 
         byte[] plain = JsonSerializer.SerializeToUtf8Bytes(entry.attributes, attributesSerializerOptionsWithPassword);
         byte[] cipher = Cryptography.Encrypt(plain, Configuration.DB_KEY, Configuration.DB_KEY_IV);
@@ -143,7 +143,7 @@ internal sealed class Database {
         }
 
         try {
-            File.Delete($"{location}{Data.DELIMITER}{file}");
+            File.Delete(Path.Combine(location, file));
         }
         catch (Exception ex) {
             Logger.Error(ex);
@@ -199,14 +199,14 @@ internal sealed class Database {
 
             if (lastModTimestamp > 0) { //create timeline
                 try {
-                    DirectoryInfo timelineDir = new DirectoryInfo($"{location}{Data.DELIMITER}{file}_");
+                    DirectoryInfo timelineDir = new DirectoryInfo(Path.Combine(location, $"{file}_"));
                     if (!timelineDir.Exists) {
                         timelineDir.Create();
                     }
 
                     byte[] plain = JsonSerializer.SerializeToUtf8Bytes(oldEntry.attributes, attributesSerializerOptions); //remove password from timeline
                     byte[] cipher = Cryptography.Encrypt(plain, Configuration.DB_KEY, Configuration.DB_KEY_IV);
-                    File.WriteAllBytes($"{timelineDir.FullName}{Data.DELIMITER}{lastModTimestamp}", cipher);
+                    File.WriteAllBytes(Path.Combine(timelineDir.FullName, $"{lastModTimestamp}"), cipher);
                 }
                 catch (Exception ex) {
                     Logger.Error($"Failed to create timeline object for {file}.\n{ex.Message}");
@@ -408,7 +408,7 @@ internal sealed class Database {
             return Data.CODE_INVALID_ARGUMENT.Array;
         }
 
-        string fullname = $"{location}{Data.DELIMITER}{file}";
+        string fullname = Path.Combine(location, file);
         StringBuilder builder = new StringBuilder();
 
         try {

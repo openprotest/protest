@@ -260,11 +260,14 @@ internal static class ReverseProxy {
                 return "{\"error\":\"Unable to modify this proxy while it's running.\"}"u8.ToArray();
             }
 
+            string path = Path.Combine(Data.DIR_REVERSE_PROXY, entry.guid.ToString());
+
             if (entry.guid == Guid.Empty) {
                 entry.guid = Guid.NewGuid();
+                path = Path.Combine(Data.DIR_REVERSE_PROXY, entry.guid.ToString());
             }
-            else if (String.IsNullOrEmpty(entry.password) && File.Exists($"{Data.DIR_REVERSE_PROXY}{Data.DELIMITER}{entry.guid}")) {
-                byte[] oldCipher = File.ReadAllBytes($"{Data.DIR_REVERSE_PROXY}{Data.DELIMITER}{entry.guid}");
+            else if (String.IsNullOrEmpty(entry.password) && File.Exists(path)) {
+                byte[] oldCipher = File.ReadAllBytes(path);
                 byte[] oldPlain = Cryptography.Decrypt(oldCipher, Configuration.DB_KEY, Configuration.DB_KEY_IV);
 
                 ReverseProxyObject oldEntry = JsonSerializer.Deserialize<ReverseProxyObject>(oldPlain, serializerOptionsWithPassword);
@@ -276,7 +279,7 @@ internal static class ReverseProxy {
             byte[] plain = JsonSerializer.SerializeToUtf8Bytes(entry, serializerOptionsWithPassword);
             byte[] cipher = Cryptography.Encrypt(plain, Configuration.DB_KEY, Configuration.DB_KEY_IV);
 
-            File.WriteAllBytes($"{Data.DIR_REVERSE_PROXY}{Data.DELIMITER}{entry.guid}", cipher);
+            File.WriteAllBytes(path, cipher);
 
             Logger.Action(origin, "Reverse-proxy", $"Create reverse proxy server: {entry.name}");
 
@@ -297,7 +300,8 @@ internal static class ReverseProxy {
         }
 
         try {
-            File.Delete($"{Data.DIR_REVERSE_PROXY}{Data.DELIMITER}{guid}");
+            string path = Path.Combine(Data.DIR_REVERSE_PROXY, guid);
+            File.Delete(path);
             Logger.Action(origin, "Reverse-proxy", $"Delete reverse proxy server: {guid}");
             return Data.CODE_OK.ToArray();
         }
@@ -322,7 +326,8 @@ internal static class ReverseProxy {
 
         ReverseProxyObject obj;
         try {
-            byte[] cipher = File.ReadAllBytes($"{Data.DIR_REVERSE_PROXY}{Data.DELIMITER}{guid}");
+            string path = Path.Combine(Data.DIR_REVERSE_PROXY, guid);
+            byte[] cipher = File.ReadAllBytes(path);
             byte[] plain = Cryptography.Decrypt(cipher, Configuration.DB_KEY, Configuration.DB_KEY_IV);
 
             obj = JsonSerializer.Deserialize<ReverseProxyObject>(plain, serializerOptionsWithPassword);
@@ -355,7 +360,8 @@ internal static class ReverseProxy {
             else if (obj.protocol == ProxyProtocol.HTTP || obj.protocol == ProxyProtocol.HTTPS) {
                 string certificateFilename = null;
                 if (obj.certificate is not null) {
-                    certificateFilename = $"{Data.DIR_CERTIFICATES}{Data.DELIMITER}{obj.certificate}";
+                    string path = Path.Combine(Data.DIR_CERTIFICATES, obj.certificate);
+                    certificateFilename = path;
                 }
 
                 if (!proxy.Start(localEndpoint, $"{obj.destaddr}", certificateFilename, obj.password, origin)) {

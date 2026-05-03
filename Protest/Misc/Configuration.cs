@@ -16,7 +16,7 @@ internal static class Configuration {
     internal static HashSet<IPAddress> trustedProxies = new HashSet<IPAddress>();
     internal static bool backdoor = true;
 
-    internal static string frontPath = $"{Data.DIR_BASE}{Data.DELIMITER}front";
+    internal static string frontPath = Path.Combine(Data.DIR_BASE, "front");
     internal static string[] httpPrefixes = new string[] { "http://127.0.0.1:8080/" };
 
     internal static bool Load() {
@@ -81,13 +81,13 @@ internal static class Configuration {
         int upCount = 5;
         while (!frontDirectory.Exists && upCount-- > 0) {
             string path = frontDirectory.FullName;
-            if (path.EndsWith($"{Data.DELIMITER}front")) {
+            if (path.EndsWith($"{Path.DirectorySeparatorChar}front")) {
                 path = path[..^6];
             }
 
-            int separatorIndex = path.LastIndexOf(Data.DELIMITER);
+            int separatorIndex = path.LastIndexOf(Path.DirectorySeparatorChar);
             if (separatorIndex > 0) {
-                frontDirectory = new DirectoryInfo($"{path[..separatorIndex]}{Data.DELIMITER}front");
+                frontDirectory = new DirectoryInfo(Path.Combine(path[..separatorIndex], "front"));
             }
         }
 

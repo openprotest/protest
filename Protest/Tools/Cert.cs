@@ -145,7 +145,7 @@ internal static class Cert {
 
                     int counter = 2;
                     string newName = $"{name}.pfx";
-                    while (File.Exists($"{Data.DIR_CERTIFICATES}{Data.DELIMITER}{newName}")) {
+                    while (File.Exists(Path.Combine(Data.DIR_CERTIFICATES, newName))) {
                         newName = $"{name} {counter++}.pfx";
                     }
 
@@ -153,7 +153,7 @@ internal static class Cert {
 
                     byte[] fileContent = encoding.GetBytes(part[startIndex..].TrimEnd('\r', '\n', '-'));
 
-                    File.WriteAllBytes($"{Data.DIR_CERTIFICATES}{Data.DELIMITER}{newName}", fileContent);
+                    File.WriteAllBytes(Path.Combine(Data.DIR_CERTIFICATES, newName), fileContent);
 
                     Logger.Action(origin, "Certificate", $"Upload certificate: {newName}");
                     break;
@@ -193,7 +193,7 @@ internal static class Cert {
         if (String.IsNullOrEmpty(name)) { return Data.CODE_INVALID_ARGUMENT.Array; }
 
         try {
-            string filename = $"{Data.DIR_CERTIFICATES}{Data.DELIMITER}{name}";
+            string filename = Path.Combine(Data.DIR_CERTIFICATES, name);
             if (File.Exists(filename)) {
                 File.Delete(filename);
                 Logger.Action(origin, "Certificate", $"Delete certificate: {name}");
@@ -215,7 +215,7 @@ internal static class Cert {
         parameters.TryGetValue("name", out string name);
         if (String.IsNullOrEmpty(name)) { return Data.CODE_INVALID_ARGUMENT.Array; }
 
-        string filename = $"{Data.DIR_CERTIFICATES}{Data.DELIMITER}{name}";
+        string filename = Path.Combine(Data.DIR_CERTIFICATES, name);
 
         if (!File.Exists(filename)) {
             return Data.CODE_FILE_NOT_FOUND.Array;
@@ -304,6 +304,6 @@ internal static class Cert {
 
     private static void ExportToPfx(X509Certificate2 certificate, string password, string filename) {
         byte[] bytes = certificate.Export(X509ContentType.Pfx, password);
-        File.WriteAllBytes($"{Data.DIR_CERTIFICATES}{Data.DELIMITER}{filename}", bytes);
+        File.WriteAllBytes(Path.Combine(Data.DIR_CERTIFICATES, filename), bytes);
     }
 }
