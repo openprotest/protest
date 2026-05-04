@@ -1,4 +1,4 @@
-class Telnet extends Terminal {
+class Telnet extends PtyHost {
 	constructor(args) {
 		super(args);
 

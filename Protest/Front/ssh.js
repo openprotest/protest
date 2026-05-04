@@ -1,4 +1,4 @@
-class Ssh extends Terminal {
+class Ssh extends PtyHost {
 	constructor(args) {
 		super(args);
 

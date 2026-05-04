@@ -1,4 +1,4 @@
-.terminal-content {
+.pty-content {
 	font-family: consolas, monospace;
 	position: absolute;
 	margin: 20px;
@@ -9,21 +9,21 @@
 	-webkit-user-select: text; user-select: text;
 }
 
-.terminal-content::-webkit-scrollbar {
+.pty-content::-webkit-scrollbar {
 	width: 0;
 	height: 8px;
 }
 
-.terminal-content::-webkit-scrollbar-track {
+.pty-content::-webkit-scrollbar-track {
 	background: transparent;
 }
 
-.terminal-content::-webkit-scrollbar-thumb {
+.pty-content::-webkit-scrollbar-thumb {
 	background: rgba(255,255,255,0.2);
 	border-radius: 4px;
 }
 
-.terminal-minimap {
+.pty-minimap {
 	position: absolute;
 	top: var(--content-top, 76px);
 	right: 4px;
@@ -37,14 +37,14 @@
 	-webkit-user-select: none; user-select: none;
 }
 
-.terminal-minimap-canvas {
+.pty-minimap-canvas {
 	position: absolute;
 	top: 0;
 	left: 0;
 	display: block;
 }
 
-.terminal-minimap-viewport {
+.pty-minimap-viewport {
 	position: absolute;
 	left: 0;
 	right: 0;
@@ -55,7 +55,7 @@
 	mix-blend-mode: plus-lighter;
 }
 
-.terminal-line {
+.pty-line {
 	position: absolute;
 	left: 0;
 	right: 0;
@@ -64,14 +64,14 @@
 	contain-intrinsic-size: auto 18px;
 }
 
-.terminal-line > span {
+.pty-line > span {
 	position: absolute;
 	top: 0;
 	width: 8px;
 	height: 18px;
 }
 
-.terminal-status-box {
+.pty-status-box {
 	display: none;
 	position: sticky;
 	top: 20px;
@@ -95,7 +95,7 @@
 	pointer-events: none;
 }
 
-.terminal-cursor {
+.pty-cursor {
 	position: absolute;
 	z-index: 1;
 	width: 3px;
@@ -106,31 +106,31 @@
 	display: none;
 
 	transition-timing-function: ease-out;
-	animation: terminal-blinking 1.2s infinite;
+	animation: pty-blinking 1.2s infinite;
 }
 
-.terminal-content:focus > .terminal-cursor {
+.pty-content:focus > .pty-cursor {
 	display: initial;
 }
 
 @container (max-width: 400px) {
-	.terminal-content {
+	.pty-content {
 		margin-right: 20px;
 		scrollbar-width: inherit;
 	}
 
-	.terminal-minimap {
+	.pty-minimap {
 		display: none;
 	}
 }
 
-@keyframes terminal-blinking {
+@keyframes pty-blinking {
 	20%{opacity:1}
 	50%{opacity:.1}
 	80%{opacity:1}
 }
 
-@keyframes terminal-shake {
+@keyframes pty-shake {
 	15%, 85% {opacity:1; transform:rotate(-5deg)}
 	30%, 70% {opacity:1; transform:rotate(10deg)}
 	40%, 60% {opacity:1; transform:rotate(-18deg)}

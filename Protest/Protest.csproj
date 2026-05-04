@@ -60,7 +60,7 @@
     <PackageReference Include="SSH.NET" Version="2025.1.0" />
     <PackageReference Include="Lextm.SharpSnmpLib" Version="12.5.7" />
     <PackageReference Include="Otp.NET" Version="1.4.1" />
-    <PackageReference Include="Quick.PtyNet" Version="1.0.4" />
+    <PackageReference Include="Porta.Pty" Version="1.0.7" />
   </ItemGroup>
 
 </Project>

@@ -92,7 +92,7 @@ const LOADER = {
 		"view.js",
 		"grid.js",
 		"console.js",
-		"terminal.js",
+		"ptyhost.js",
 		"ipbox.js"
 	],
 
@@ -125,9 +125,9 @@ const LOADER = {
 		"maclookup.js",
 		"dhcpdiscover.js",
 		"ntpclient.js",
+		"terminal.js",
 		"telnet.js",
 		"ssh.js",
-		"shell.js",
 		"wmi.js",
 		"snmp.js",
 		"websitecheck.js",
@@ -352,7 +352,7 @@ const LOADER = {
 		case "Telnet"       : return new Telnet(command.args);
 		case "Ssh"          : return new Ssh(command.args);
 		case "Wmi"          : return new Wmi(command.args);
-		case "Shell"        : return new Shell(command.args);
+		case "Terminal"     : return new Terminal(command.args);
 		case "Snmp"         : return new Snmp(command.args);
 
 		case "PassGen"        : return new PassGen();
