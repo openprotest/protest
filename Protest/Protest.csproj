@@ -22,6 +22,7 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 
     <NoWarn>IDE0028, IDE0037, IDE0090, IDE0300, IDE0301, IDE0302, IDE0305</NoWarn>
+    <MSBuildWarningsAsMessages>MSB3246</MSBuildWarningsAsMessages>
     <WarningLevel>9999</WarningLevel>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 
@@ -59,6 +60,7 @@
     <PackageReference Include="SSH.NET" Version="2025.1.0" />
     <PackageReference Include="Lextm.SharpSnmpLib" Version="12.5.7" />
     <PackageReference Include="Otp.NET" Version="1.4.1" />
+    <PackageReference Include="Quick.PtyNet" Version="1.0.4" />
   </ItemGroup>
 
 </Project>
