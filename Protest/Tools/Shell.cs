@@ -1,21 +1,13 @@
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Net.WebSockets;
-using System.Runtime.InteropServices;
-using System.Runtime.Versioning;
 using System.Threading;
 using System.Threading.Tasks;
 using Protest.Http;
 
-using Microsoft.Win32.SafeHandles;
-using Pty.Net;
-
 namespace Protest.Tools;
 
-internal static class Shell
-{
+internal static partial class Shell {
     private const int DEFAULT_COLS = 120;
     private const int DEFAULT_ROWS = 30;
 
@@ -64,183 +56,15 @@ internal static class Shell
         }
     }
 
-    [SupportedOSPlatform("linux")]
-    [SupportedOSPlatform("macos")]
-    private static async Task RunPosixAsync(HttpListenerContext ctx, WebSocket ws, string origin) {
-        PtyOptions options = BuildPtyOptions();
-
-        IPtyConnection pty;
-        try {
-            pty = await PtyProvider.SpawnAsync(options, CancellationToken.None);
-        }
-        catch (Exception ex) {
-            await WebSocketHelper.WsWriteText(ws, $"{{\"error\":\"{ex.Message}\"}}");
-            await CloseWebSocket(ws);
-            return;
-        }
-
-        Logger.Action(origin, "Remote-access", $"Open local shell ({options.App})");
-        await WebSocketHelper.WsWriteText(ws, "{\"connected\":true}"u8.ToArray());
-
-        _ = Task.Run(() => PumpStreamToWebSocket(ctx, ws, pty.ReaderStream));
-        await PumpWebSocketToStream(ctx, ws, pty.WriterStream);
-
-        try {
-            pty.Kill();
-        }
-        catch { }
-
-        pty.Dispose();
-
-        await CloseWebSocket(ws);
-    }
-
-    [SupportedOSPlatform("windows")]
-    private static async Task RunWindowsAsync(HttpListenerContext ctx, WebSocket ws, string origin) {
-        CreatePipe(out nint hInRead, out nint hInWrite);
-        CreatePipe(out nint hOutRead, out nint hOutWrite);
-
-        COORD size = new COORD { X = DEFAULT_COLS, Y = DEFAULT_ROWS };
-
-        int hr = CreatePseudoConsole(size, hInRead, hOutWrite, 0, out IntPtr hPC);
-        if (hr != 0) {
-            await WebSocketHelper.WsWriteText(ws, "{\"error\":\"ConPTY failed\"}");
-            await CloseWebSocket(ws);
-            return;
-        }
-
-        Process process = StartProcessWithPseudoConsole(hPC);
-
-        Logger.Action(origin, "Remote-access", "Open local shell (ConPTY)");
-        await WebSocketHelper.WsWriteText(ws, "{\"connected\":true}"u8.ToArray());
-
-        using FileStream reader = new FileStream(new SafeFileHandle(hOutRead, true), FileAccess.Read);
-        using FileStream writer = new FileStream(new SafeFileHandle(hInWrite, true), FileAccess.Write);
-
-        _ = Task.Run(() => PumpStreamToWebSocket(ctx, ws, reader));
-        await PumpWebSocketToStream(ctx, ws, writer);
-
-        try {
-            process.Kill(true);
-        }
-        catch (Exception ex) {
-            Logger.Debug(ex);
-        }
-
-        ClosePseudoConsole(hPC);
-
-        await CloseWebSocket(ws);
-    }
-
-    [SupportedOSPlatform("windows")]
-    private static void CreatePipe(out IntPtr read, out IntPtr write) {
-        SECURITY_ATTRIBUTES sa = new SECURITY_ATTRIBUTES {
-            nLength = Marshal.SizeOf<SECURITY_ATTRIBUTES>(),
-            bInheritHandle = true,
-            lpSecurityDescriptor = IntPtr.Zero
-        };
-
-        if (!CreatePipe(out read, out write, ref sa, 0))
-        {
-            throw new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error());
-        }
-    }
-
-    private static async Task PumpWebSocketToStream(HttpListenerContext ctx, WebSocket ws, Stream stream) {
-        byte[] buffer = new byte[2048];
-
-        while (ws.State == WebSocketState.Open) {
-            WebSocketReceiveResult result = await ws.ReceiveAsync(buffer, CancellationToken.None);
-
-            if (result.MessageType == WebSocketMessageType.Close) break;
-            if (!Auth.IsAuthenticatedAndAuthorized(ctx, "/ws/shell")) break;
-
-            await stream.WriteAsync(buffer.AsMemory(0, result.Count));
-            await stream.FlushAsync();
-        }
-    }
-
-    private static async Task PumpStreamToWebSocket(HttpListenerContext ctx, WebSocket ws, Stream stream) {
+    private static async Task PumpStreamToWebSocket(HttpListenerContext ctx, WebSocket ws, Stream stream, CancellationToken token) {
         byte[] buffer = new byte[4096];
 
-        while (ws.State == WebSocketState.Open) {
-            int count = await stream.ReadAsync(buffer);
+        while (!token.IsCancellationRequested && ws.State == WebSocketState.Open) {
+            int count = await stream.ReadAsync(buffer, token);
             if (count == 0) break;
 
-            await ws.SendAsync(new ArraySegment<byte>(buffer, 0, count), WebSocketMessageType.Text, true, CancellationToken.None);
+            await ws.SendAsync(new ArraySegment<byte>(buffer, 0, count), WebSocketMessageType.Binary, true, token);
         }
-    }
-
-    private static PtyOptions BuildPtyOptions() {
-        Dictionary<string, string> env = new Dictionary<string, string>();
-        string app;
-        string[] args;
-
-        if (OperatingSystem.IsWindows()) {
-            app = Environment.GetEnvironmentVariable("ComSpec") ?? "cmd.exe";
-            args = Array.Empty<string>();
-        }
-        else {
-            app = File.Exists("/bin/bash") ? "/bin/bash" : "/bin/sh";
-            args = new[] { "-l" };
-            env["TERM"] = "xterm-256color";
-            env["LANG"] = Environment.GetEnvironmentVariable("LANG") ?? "en_US.UTF-8";
-        }
-
-        return new PtyOptions {
-            App = app,
-            CommandLine = args,
-            Cwd = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
-            Cols = DEFAULT_COLS,
-            Rows = DEFAULT_ROWS,
-            Environment = env,
-            Name = "xterm-256color"
-        };
-    }
-
-    [SupportedOSPlatform("windows")]
-    [DllImport("kernel32.dll", SetLastError = true)]
-    private static extern int CreatePseudoConsole(
-        COORD size,
-        IntPtr hInput,
-        IntPtr hOutput,
-        uint flags,
-        out IntPtr hPC);
-
-    [SupportedOSPlatform("windows")]
-    [DllImport("kernel32.dll")]
-    private static extern void ClosePseudoConsole(IntPtr hPC);
-
-    [SupportedOSPlatform("windows")]
-    [DllImport("kernel32.dll", SetLastError = true)]
-    private static extern bool CreatePipe(
-        out IntPtr hReadPipe,
-        out IntPtr hWritePipe,
-        ref SECURITY_ATTRIBUTES lpPipeAttributes,
-        int nSize);
-
-    [SupportedOSPlatform("windows")]
-    [StructLayout(LayoutKind.Sequential)]
-    private struct SECURITY_ATTRIBUTES {
-        public int nLength;
-        public IntPtr lpSecurityDescriptor;
-        public bool bInheritHandle;
-    }
-
-    [SupportedOSPlatform("windows")]
-    private static Process StartProcessWithPseudoConsole(IntPtr hPC) {
-        ProcessStartInfo psi = new ProcessStartInfo {
-            FileName = Environment.GetEnvironmentVariable("ComSpec") ?? "cmd.exe",
-            UseShellExecute = false
-        };
-
-        return Process.Start(psi);
-    }
-
-    [StructLayout(LayoutKind.Sequential)]
-    private struct COORD {
-        public short X;
-        public short Y;
     }
 
     private static async Task CloseWebSocket(WebSocket ws) {

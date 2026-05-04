@@ -129,22 +129,22 @@ class Terminal extends Window {
 	};
 
 	static KEYPAD_KEYS = {
-		"Numpad0": "\x1BOp",
-		"Numpad1": "\x1BOq",
-		"Numpad2": "\x1BOr",
-		"Numpad3": "\x1BOs",
-		"Numpad4": "\x1BOt",
-		"Numpad5": "\x1BOu",
-		"Numpad6": "\x1BOv",
-		"Numpad7": "\x1BOw",
-		"Numpad8": "\x1BOx",
-		"Numpad9": "\x1BOy",
-		"NumpadDecimal" : "\x1BOn",
-		"NumpadAdd"     : "\x1BOk",
-		"NumpadSubtract": "\x1BOm",
-		"NumpadMultiply": "\x1BOj",
-		"NumpadDivide"  : "\x1BOo",
-		"NumpadEnter"   : "\x1BOM"
+		"Numpad0": "\x1B[Op",
+		"Numpad1": "\x1B[Oq",
+		"Numpad2": "\x1B[Or",
+		"Numpad3": "\x1B[Os",
+		"Numpad4": "\x1B[Ot",
+		"Numpad5": "\x1B[Ou",
+		"Numpad6": "\x1B[Ov",
+		"Numpad7": "\x1B[Ow",
+		"Numpad8": "\x1B[Ox",
+		"Numpad9": "\x1B[Oy",
+		"NumpadDecimal" : "\x1B[On",
+		"NumpadAdd"     : "\x1B[Ok",
+		"NumpadSubtract": "\x1B[Om",
+		"NumpadMultiply": "\x1B[Oj",
+		"NumpadDivide"  : "\x1B[Oo",
+		"NumpadEnter"   : "\x1B[OM"
 	};
 
 	constructor(args) {
