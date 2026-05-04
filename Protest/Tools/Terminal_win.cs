@@ -16,7 +16,7 @@ internal static partial class Terminal {
 
     [SupportedOSPlatform("windows")]
     private static PtyOptions BuildWindowsPtyOptions() {
-        string app = Environment.GetEnvironmentVariable("ComSpec") ?? Path.Combine(Environment.SystemDirectory, "cmd.exe");
+        string app = Environment.GetEnvironmentVariable("ComSpec") ?? Path.Join(Environment.SystemDirectory, "cmd.exe");
 
         return new PtyOptions {
             App = app,

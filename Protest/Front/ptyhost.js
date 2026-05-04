@@ -7,17 +7,17 @@ class PtyHost extends Window {
 		"Enter"      : "\r",
 		"NumpadEnter": "\r",
 		"Tab"        : "\t",
-		"Backspace"  : "\x08",
+		"Backspace"  : "\x7F", //xterm convention: bare backspace = DEL (0x7F); Ctrl+Backspace = BS (0x08)
 		"ArrowUp"    : "\x1b[A",
 		"ArrowDown"  : "\x1b[B",
 		"ArrowRight" : "\x1b[C",
 		"ArrowLeft"  : "\x1b[D",
 		"Home"       : "\x1b[H",
 		"End"        : "\x1b[F",
-		"F1"  : "\x1b[OP",
-		"F2"  : "\x1b[OQ",
-		"F3"  : "\x1b[OR",
-		"F4"  : "\x1b[OS",
+		"F1"  : "\x1bOP",
+		"F2"  : "\x1bOQ",
+		"F3"  : "\x1bOR",
+		"F4"  : "\x1bOS",
 		"F5"  : "\x1b[15~",
 		"F6"  : "\x1b[17~",
 		"F7"  : "\x1b[18~",
@@ -96,7 +96,7 @@ class PtyHost extends Window {
 		"F10" :"\x1B[21;5~",
 		"F11" :"\x1B[23;5~",
 		"F12" :"\x1B[24;5~",
-		"Backspace" : "\x7F",
+		"Backspace" : "\x08", //Ctrl+Backspace = BS (0x08), counterpart to bare Backspace = DEL (0x7F)
 		"ArrowUp"   : "\x1B[1;5A",
 		"ArrowDown" : "\x1B[1;5B",
 		"ArrowRight": "\x1B[1;5C",
@@ -128,23 +128,34 @@ class PtyHost extends Window {
 		"ArrowLeft" : "\x1B[1;3D",
 	};
 
+	//Sent for arrow / Home / End when DECCKM (?1h) is set; vim, less, top etc. expect these.
+	static APP_CURSOR_KEYS = {
+		"ArrowUp"   : "\x1bOA",
+		"ArrowDown" : "\x1bOB",
+		"ArrowRight": "\x1bOC",
+		"ArrowLeft" : "\x1bOD",
+		"Home"      : "\x1bOH",
+		"End"       : "\x1bOF"
+	};
+
+	//DECKPAM (ESC =) — VT100/VT220 Application Keypad sequences are SS3 (ESC O), not CSI.
 	static KEYPAD_KEYS = {
-		"Numpad0": "\x1B[Op",
-		"Numpad1": "\x1B[Oq",
-		"Numpad2": "\x1B[Or",
-		"Numpad3": "\x1B[Os",
-		"Numpad4": "\x1B[Ot",
-		"Numpad5": "\x1B[Ou",
-		"Numpad6": "\x1B[Ov",
-		"Numpad7": "\x1B[Ow",
-		"Numpad8": "\x1B[Ox",
-		"Numpad9": "\x1B[Oy",
-		"NumpadDecimal" : "\x1B[On",
-		"NumpadAdd"     : "\x1B[Ok",
-		"NumpadSubtract": "\x1B[Om",
-		"NumpadMultiply": "\x1B[Oj",
-		"NumpadDivide"  : "\x1B[Oo",
-		"NumpadEnter"   : "\x1B[OM"
+		"Numpad0": "\x1BOp",
+		"Numpad1": "\x1BOq",
+		"Numpad2": "\x1BOr",
+		"Numpad3": "\x1BOs",
+		"Numpad4": "\x1BOt",
+		"Numpad5": "\x1BOu",
+		"Numpad6": "\x1BOv",
+		"Numpad7": "\x1BOw",
+		"Numpad8": "\x1BOx",
+		"Numpad9": "\x1BOy",
+		"NumpadDecimal" : "\x1BOn",
+		"NumpadAdd"     : "\x1BOk",
+		"NumpadSubtract": "\x1BOm",
+		"NumpadMultiply": "\x1BOj",
+		"NumpadDivide"  : "\x1BOo",
+		"NumpadEnter"   : "\x1BOM"
 	};
 
 	constructor(args) {
@@ -557,6 +568,9 @@ class PtyHost extends Window {
 		else if (event.altKey && PtyHost.ALT_KEYS[event.code]) {
 			this.ws.send(PtyHost.ALT_KEYS[event.code]);
 		}
+		else if (this.appCursorKeys && PtyHost.APP_CURSOR_KEYS[event.code]) {
+			this.ws.send(PtyHost.APP_CURSOR_KEYS[event.code]);
+		}
 		else if (event.key.length === 1) {
 			this.ws.send(event.key);
 		}
@@ -721,14 +735,19 @@ class PtyHost extends Window {
 			this.lastCharacter = data[i];
 		}
 
-		if (this.scrollRegionTop !== null && this.cursor.y < this.scrollRegionTop) {
-			this.cursor.y = this.scrollRegionTop;
+		if (this.scrollRegionTop !== null && this.cursor.y < this.GetScrollRegionTop()) {
+			this.cursor.y = this.GetScrollRegionTop();
 		}
-		if (this.scrollRegionBottom !== null && this.cursor.y >= this.scrollRegionBottom) {
-			while (this.cursor.y >= this.scrollRegionBottom) {
+		if (this.scrollRegionBottom !== null && this.cursor.y >= this.GetScrollRegionBottom()) {
+			while (this.cursor.y >= this.GetScrollRegionBottom()) {
 				this.ScrollUp(1);
 				this.cursor.y--;
 			}
+		}
+
+		//Keep viewport in step with cursor when LF / IND advanced past the last written line.
+		if (this.cursor.y > this.maxLineY) {
+			this.maxLineY = this.cursor.y;
 		}
 
 		this.TrimHistory();
@@ -826,40 +845,40 @@ class PtyHost extends Window {
 		switch (command) {
 		case "@": this.InsertBlankCharacters(params[0] || 1); break;
 
-		case "A": //cursor up
-			this.cursor.y = Math.max(0, this.cursor.y - (params[0] || 1));
+		case "A": //CUU - cursor up, clamp at viewport top
+			this.cursor.y = this.ClampCursorY(this.cursor.y - (params[0] || 1));
 			break;
 
-		case "B": //cursor down
-			this.cursor.y += params[0] || 1;
+		case "B": //CUD - cursor down, clamp at viewport bottom
+			this.cursor.y = this.ClampCursorY(this.cursor.y + (params[0] || 1));
 			break;
 
-		case "C": //cursor right
-			this.cursor.x += params[0] || 1;
+		case "C": //CUF - cursor right, clamp at right margin
+			this.cursor.x = this.ClampCursorX(this.cursor.x + (params[0] || 1));
 			break;
 
-		case "D": //cursor left
-			this.cursor.x = Math.max(0, this.cursor.x - (params[0] || 1));
+		case "D": //CUB - cursor left, clamp at left margin
+			this.cursor.x = this.ClampCursorX(this.cursor.x - (params[0] || 1));
 			break;
 
-		case "E": //cursor to beginning of next line, n lines down
+		case "E": //CNL - cursor to beginning of next line, clamped
 			this.cursor.x = 0;
-			this.cursor.y += params[0] || 1;
+			this.cursor.y = this.ClampCursorY(this.cursor.y + (params[0] || 1));
 			break;
 
-		case "F": //cursor to beginning of previous line, n lines up
+		case "F": //CPL - cursor to beginning of previous line, clamped
 			this.cursor.x = 0;
-			this.cursor.y = Math.max(0, this.cursor.y - (params[0] || 1));
+			this.cursor.y = this.ClampCursorY(this.cursor.y - (params[0] || 1));
 			break;
 
-		case "G": //cursor to column n
-			this.cursor.x = Math.max(0, (params[0] || 1) - 1);
+		case "G": //CHA - cursor to column n, clamped
+			this.cursor.x = this.ClampCursorX((params[0] || 1) - 1);
 			break;
 
 		case "f":
-		case "H": //move the cursor to row n, column m
-			this.cursor.y = Math.max(0, (params[0] || 1) - 1);
-			this.cursor.x = Math.max(0, (params[1] || 1) - 1);
+		case "H": //CUP - viewport-relative cursor positioning, clamped
+			this.cursor.y = this.ClampCursorY(this.ViewportTopY() + Math.max(0, (params[0] || 1) - 1));
+			this.cursor.x = this.ClampCursorX(Math.max(0, (params[1] || 1) - 1));
 			break;
 
 		case "J":
@@ -892,8 +911,8 @@ class PtyHost extends Window {
 		case "T": this.ScrollDown(params[0] || 1); break;
 		case "X": this.EraseCharacters(params[0] || 1); break;
 
-		case "d": //move cursor to the specified line
-			this.cursor.y = Math.max(0, (params[0] || 1) - 1);
+		case "d": //VPA - move cursor to viewport row n, clamped
+			this.cursor.y = this.ClampCursorY(this.ViewportTopY() + Math.max(0, (params[0] || 1) - 1));
 			break;
 
 		case "h": //enable mode
@@ -982,6 +1001,9 @@ class PtyHost extends Window {
 
 		case "11": //set background color
 			this.content.style.backgroundColor = this.MapColorId(params[0]);
+			break;
+
+		case "9001": //ConPTY/Windows Terminal Win32 input mode notifications
 			break;
 
 		default:
@@ -1233,17 +1255,31 @@ class PtyHost extends Window {
 		}
 	}
 
-	EraseFromCursorToEndOfScreen() { //0J
-		if (this.cursor.x === 0 && this.cursor.y === 0) {
-			this.ClearScreen();
-			return;
-		}
+	ViewportTopY() {
+		const screenHeight = Math.max(1, this.GetScreenHeight());
+		return Math.max(0, this.maxLineY - screenHeight + 1);
+	}
 
+	ViewportBottomY() {
+		return this.ViewportTopY() + Math.max(1, this.GetScreenHeight()) - 1;
+	}
+
+	ClampCursorY(y) {
+		return Math.min(this.ViewportBottomY(), Math.max(this.ViewportTopY(), y));
+	}
+
+	ClampCursorX(x) {
 		const w = this.GetScreenWidth();
-		const h = this.GetScreenHeight();
+		return Math.min(Math.max(0, w - 1), Math.max(0, x));
+	}
+
+	EraseFromCursorToEndOfScreen() { //0J
+		const w = this.GetScreenWidth();
+		const top = this.ViewportTopY();
+		const bottom = top + Math.max(1, this.GetScreenHeight());
 		const c = w * this.cursor.y + this.cursor.x;
 
-		for (let y=0; y<h; y++) {
+		for (let y=top; y<bottom; y++) {
 			for (let x=0; x<w; x++) {
 				if (w*y + x < c) continue;
 				this.RemoveCell(x, y);
@@ -1253,10 +1289,11 @@ class PtyHost extends Window {
 
 	EraseFromCursorToBeginningOfScreen() { //1J
 		const w = this.GetScreenWidth();
-		const h = this.GetScreenHeight();
+		const top = this.ViewportTopY();
+		const bottom = top + Math.max(1, this.GetScreenHeight());
 		const c = w * this.cursor.y + this.cursor.x;
 
-		for (let y=0; y<h; y++) {
+		for (let y=top; y<bottom; y++) {
 			for (let x=0; x<w; x++) {
 				if (w*y + x > c) continue;
 				this.RemoveCell(x, y);
@@ -1264,19 +1301,33 @@ class PtyHost extends Window {
 		}
 	}
 
-	ClearScreen() { //2J
-		this.screen = {};
-		this.lines = {};
-		this.maxLineY = 0;
-		this.content.textContent = "";
-		this.content.appendChild(this.cursorElement);
+	ClearScreen() { //2J - erase visible viewport only; scrollback (and cursor) preserved
+		const top = this.ViewportTopY();
+		const bottom = top + Math.max(1, this.GetScreenHeight());
+		const w = this.GetScreenWidth();
+
+		for (let y=top; y<bottom; y++) {
+			for (let x=0; x<w; x++) {
+				this.RemoveCell(x, y);
+			}
+		}
+
 		this.UpdateMinimap();
 	}
 
-	ClearScreenAndBuffer() { //3J
-		this.ClearScreen();
+	ClearScreenAndBuffer() { //3J - erase viewport AND scrollback
+		this.screen = {};
+		for (const y in this.lines) {
+			const lineDiv = this.lines[y];
+			if (lineDiv && lineDiv.parentNode === this.content) {
+				this.content.removeChild(lineDiv);
+			}
+		}
 		this.lines = {};
 		this.maxLineY = 0;
+		this.cursor.y = 0;
+		this.content.appendChild(this.cursorElement);
+		this.UpdateMinimap();
 	}
 
 	EraseLineFromCursorToEnd() { //0K
@@ -1421,6 +1472,10 @@ class PtyHost extends Window {
 				this.bracketedMode = enabled;
 				break;
 
+			case 1004: //focus event tracking - we don't emit them, accept silently
+			case 9001: //Win32 input mode (ConPTY/Windows Terminal extension)
+				break;
+
 			default:
 				console.warn(`Unhandled ${enabled ? "enable" : "disable"} mode: ${prefix}${mode}${enabled ? "h" : "l"}`);
 				break;
@@ -1428,16 +1483,13 @@ class PtyHost extends Window {
 		}
 	}
 
+	//Stored as viewport-relative offsets in [0, screenHeight); resolved against ViewportTopY at use.
 	SetScrollRegion(top, bottom) {
 		const screenHeight = this.GetScreenHeight();
 		const newTop = Math.max(0, (top || 1) - 1);
 		const newBottom = Math.min(screenHeight, bottom || screenHeight);
 
-		if (newTop >= newBottom) {
-			this.scrollRegionTop = null;
-			this.scrollRegionBottom = null;
-		}
-		else if (newTop === 0 && newBottom === screenHeight) {
+		if (newTop >= newBottom || (newTop === 0 && newBottom === screenHeight)) {
 			this.scrollRegionTop = null;
 			this.scrollRegionBottom = null;
 		}
@@ -1446,8 +1498,9 @@ class PtyHost extends Window {
 			this.scrollRegionBottom = newBottom;
 		}
 
+		//DECSTBM resets cursor to viewport home (row 1, col 1)
 		this.cursor.x = 0;
-		this.cursor.y = 0;
+		this.cursor.y = this.ViewportTopY();
 	}
 
 	GetScrollbackLimit() {
@@ -1460,11 +1513,11 @@ class PtyHost extends Window {
 	}
 
 	GetScrollRegionTop() {
-		return this.scrollRegionTop ?? 0;
+		return this.ViewportTopY() + (this.scrollRegionTop ?? 0);
 	}
 
 	GetScrollRegionBottom() {
-		return this.scrollRegionBottom ?? this.GetScreenHeight();
+		return this.ViewportTopY() + (this.scrollRegionBottom ?? this.GetScreenHeight());
 	}
 
 	GetBufferBottom() {
