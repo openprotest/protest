@@ -61,8 +61,7 @@ internal static class Telnet {
 
             await WebSocketHelper.WsWriteText(ws, "{\"connected\":true}"u8.ToArray());
 
-            Thread fork = new Thread(() => HandleDownstream(ctx, ws, telnet, stream).GetAwaiter().GetResult());
-            fork.Start();
+            _ = Task.Run(() => HandleDownstream(ctx, ws, telnet, stream));
 
             byte[] buff = new byte[2048];
             while (ws.State == WebSocketState.Open && telnet.Connected) { //handle upstream

@@ -56,12 +56,16 @@ internal static class Shell
         if (OperatingSystem.IsWindows()) {
             await RunWindowsAsync(ctx, ws, origin);
         }
-        else {
+        else if (OperatingSystem.IsLinux()) {
+            await RunPosixAsync(ctx, ws, origin);
+        }
+        else if (OperatingSystem.IsMacOS()) {
             await RunPosixAsync(ctx, ws, origin);
         }
     }
 
-    [UnsupportedOSPlatform("windows")]
+    [SupportedOSPlatform("linux")]
+    [SupportedOSPlatform("macos")]
     private static async Task RunPosixAsync(HttpListenerContext ctx, WebSocket ws, string origin) {
         PtyOptions options = BuildPtyOptions();
 
@@ -81,7 +85,11 @@ internal static class Shell
         _ = Task.Run(() => PumpStreamToWebSocket(ctx, ws, pty.ReaderStream));
         await PumpWebSocketToStream(ctx, ws, pty.WriterStream);
 
-        try { pty.Kill(); } catch { }
+        try {
+            pty.Kill();
+        }
+        catch { }
+
         pty.Dispose();
 
         await CloseWebSocket(ws);
@@ -94,8 +102,7 @@ internal static class Shell
 
         COORD size = new COORD { X = DEFAULT_COLS, Y = DEFAULT_ROWS };
 
-        IntPtr hPC;
-        int hr = CreatePseudoConsole(size, hInRead, hOutWrite, 0, out hPC);
+        int hr = CreatePseudoConsole(size, hInRead, hOutWrite, 0, out IntPtr hPC);
         if (hr != 0) {
             await WebSocketHelper.WsWriteText(ws, "{\"error\":\"ConPTY failed\"}");
             await CloseWebSocket(ws);
@@ -107,23 +114,27 @@ internal static class Shell
         Logger.Action(origin, "Remote-access", "Open local shell (ConPTY)");
         await WebSocketHelper.WsWriteText(ws, "{\"connected\":true}"u8.ToArray());
 
-        FileStream reader = new FileStream(new SafeFileHandle(hOutRead, true), FileAccess.Read);
-        FileStream writer = new FileStream(new SafeFileHandle(hInWrite, true), FileAccess.Write);
+        using FileStream reader = new FileStream(new SafeFileHandle(hOutRead, true), FileAccess.Read);
+        using FileStream writer = new FileStream(new SafeFileHandle(hInWrite, true), FileAccess.Write);
 
         _ = Task.Run(() => PumpStreamToWebSocket(ctx, ws, reader));
         await PumpWebSocketToStream(ctx, ws, writer);
 
-        try { process.Kill(true); } catch { }
+        try {
+            process.Kill(true);
+        }
+        catch (Exception ex) {
+            Logger.Debug(ex);
+        }
+
         ClosePseudoConsole(hPC);
 
         await CloseWebSocket(ws);
     }
 
     [SupportedOSPlatform("windows")]
-    private static void CreatePipe(out IntPtr read, out IntPtr write)
-    {
-        var sa = new SECURITY_ATTRIBUTES
-        {
+    private static void CreatePipe(out IntPtr read, out IntPtr write) {
+        SECURITY_ATTRIBUTES sa = new SECURITY_ATTRIBUTES {
             nLength = Marshal.SizeOf<SECURITY_ATTRIBUTES>(),
             bInheritHandle = true,
             lpSecurityDescriptor = IntPtr.Zero
@@ -217,8 +228,7 @@ internal static class Shell
     }
 
     [SupportedOSPlatform("windows")]
-    private static Process StartProcessWithPseudoConsole(IntPtr hPC)
-    {
+    private static Process StartProcessWithPseudoConsole(IntPtr hPC) {
         ProcessStartInfo psi = new ProcessStartInfo {
             FileName = Environment.GetEnvironmentVariable("ComSpec") ?? "cmd.exe",
             UseShellExecute = false

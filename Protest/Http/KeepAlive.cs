@@ -230,7 +230,7 @@ internal static class KeepAlive {
             if (!Auth.IsAuthorized(entry.ctx, accessPath)) continue;
 
             if (entry.ws.State == WebSocketState.Open) {
-                Task.Run(async () => {
+                _ = Task.Run(async () => {
                     try {
                         await entry.semaphore.WaitAsync();
                         await entry.ws.SendAsync(new ArraySegment<byte>(message), WebSocketMessageType.Text, true, CancellationToken.None);
@@ -255,7 +255,7 @@ internal static class KeepAlive {
             if (!Auth.IsAuthorized(entry.ctx, accessPath)) continue;
 
             if (entry.ws.State == WebSocketState.Open) {
-                Task.Run(async ()=> {
+                _ = Task.Run(async ()=> {
                     try {
                         await entry.semaphore.WaitAsync();
                         await entry.ws.SendAsync(new ArraySegment<byte>(message), WebSocketMessageType.Text, true, CancellationToken.None);
