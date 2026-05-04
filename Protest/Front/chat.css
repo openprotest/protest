@@ -173,7 +173,6 @@
 	position: relative;
 	width: 100%;
 	min-height: 80px;
-	background-color: var(--clr-dark);
 	border-radius: 4px;
 	margin-bottom: 8px;
 	overflow: hidden;
@@ -222,9 +221,10 @@
 
 .remote-stream-label {
 	position: absolute;
+	z-index: 2;
 	left: 50%;
 	transform: translateX(-50%);
-	bottom: 12px;
+	bottom: 16px;
 	max-width: calc(100% - 16px);
 	padding: 2px 8px;
 	font-size: 12px;

@@ -171,7 +171,7 @@ class Terminal extends Window {
 
 	AfterResize() { //overrides
 		super.AfterResize();
-		this.ResizeMinimap();
+		setTimeout(()=>this.ResizeMinimap(), WIN.ANIME_DURATION);
 	}
 
 	InitializeTerminalState() {

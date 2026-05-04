@@ -150,6 +150,15 @@ class Chat extends Window {
 		this.camButton.onclick = ()=> this.Webcam_onclick();
 		this.displayButton.onclick = ()=> this.Display_onclick();
 
+		this.remoteStreamsBox.ondblclick = ()=> {
+			 if (document.fullscreenElement) {
+				document.exitFullscreen?.();
+			 }
+			 else {
+				 this.remoteStreamsBox.requestFullscreen();
+			 }
+		};
+
 		await this.GetHistory();
 
 		this.SendChatJoin();
@@ -180,7 +189,11 @@ class Chat extends Window {
 		this.peers = {};
 
 		if (this.userStream) {
-			try { this.userStream.stream.getTracks().forEach(t=>t.stop()); } catch {}
+			try {
+				this.userStream.stream.getTracks().forEach(t=>t.stop());
+			}
+			catch {}
+
 			if (this.userStream.element && this.userStream.element.container.parentElement) {
 				this.localStreamsBox.removeChild(this.userStream.element.container);
 			}
@@ -188,7 +201,11 @@ class Chat extends Window {
 		}
 
 		for (const ds of this.displayStreams) {
-			try { ds.stream.getTracks().forEach(t=>t.stop()); } catch {}
+			try {
+				ds.stream.getTracks().forEach(t=>t.stop());
+			}
+			catch {}
+
 			if (ds.element && ds.element.container.parentElement) {
 				this.localStreamsBox.removeChild(ds.element.container);
 			}
@@ -228,7 +245,7 @@ class Chat extends Window {
 			return;
 		}
 
-		if (this.userStream && (haveAudio || haveVideo) && !(wantAudio && !haveAudio) && !(wantVideo && !haveVideo)) {
+		if (this.userStream && (haveAudio || haveVideo) && !(wantAudio && !haveAudio) && haveVideo === wantVideo) {
 			const audioTrack = this.userStream.stream.getAudioTracks()[0];
 			const videoTrack = this.userStream.stream.getVideoTracks()[0];
 			if (audioTrack) audioTrack.enabled = wantAudio;
@@ -308,19 +325,29 @@ class Chat extends Window {
 		if (!AudioCtx) return null;
 
 		let audioCtx;
-		try { audioCtx = new AudioCtx(); }
-		catch { return null; }
+		try {
+			audioCtx = new AudioCtx();
+		}
+		catch {
+			return null;
+		}
 
 		let source;
-		try { source = audioCtx.createMediaStreamSource(stream); }
+		try {
+			source = audioCtx.createMediaStreamSource(stream);
+		}
 		catch {
-			try { audioCtx.close(); } catch {}
+			try {
+				audioCtx.close();
+			}
+			catch {}
+
 			return null;
 		}
 
 		const analyser = audioCtx.createAnalyser();
-		analyser.fftSize = 512;
-		analyser.smoothingTimeConstant = 0.65;
+		analyser.fftSize = 256;
+		analyser.smoothingTimeConstant = 1;
 		source.connect(analyser);
 
 		const canvas = document.createElement("canvas");
@@ -347,8 +374,17 @@ class Chat extends Window {
 				if (handle.stopped) return;
 				handle.stopped = true;
 				if (handle.raf) cancelAnimationFrame(handle.raf);
-				try { source.disconnect(); } catch {}
-				try { audioCtx.close(); } catch {}
+
+				try {
+					source.disconnect();
+				}
+				catch {}
+
+				try {
+					audioCtx.close();
+				}
+				catch {}
+
 				if (canvas.parentElement) canvas.parentElement.removeChild(canvas);
 				if (container._visualizer === handle) container._visualizer = null;
 			}
@@ -368,26 +404,45 @@ class Chat extends Window {
 			if (canvas.width !== targetW) canvas.width = targetW;
 			if (canvas.height !== targetH) canvas.height = targetH;
 
-			analyser.getByteTimeDomainData(data);
-			let sum = 0;
-			for (let i=0; i<data.length; i++) {
-				const v = (data[i] - 128) / 128;
-				sum += v * v;
-			}
-			const rms = Math.sqrt(sum / data.length);
-			const amplitude = Math.min(1, rms * 4);
-
 			const ctx = canvas.getContext("2d");
 			ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 			ctx.clearRect(0, 0, w, h);
+			ctx.fillStyle = handle.color;
+			ctx.strokeStyle = handle.color;
+			ctx.lineWidth  = Math.max(2, Math.min(w, h) * 0.0075);
 
 			const cx = w / 2;
 			const cy = h / 2;
 			const baseR = Math.min(w, h) * 0.18;
-			const r = baseR * (1 + amplitude * 0.5);
 
-			ctx.fillStyle = handle.color;
+			analyser.getByteTimeDomainData(data);
+			
+			const span = data.length / 4;
 
+			for (let j=1; j<4; j++) {
+				const from = span * j;
+				const to   = span * (j + 1);
+
+				let sum = 0;
+				for (let i=from; i<to; i++) {
+					const v = (data[i] - 128) / 128;
+					sum += v*v;
+				}
+
+				const rms = Math.sqrt(sum / span);
+				const amplitude = Math.min(1, rms * 4);
+
+				const r = baseR * (1 + amplitude * 0.5);
+
+				ctx.beginPath();
+				ctx.arc(cx, cy, Math.min(w, h)/16 + r * j / 2 + amplitude * j, 0, Math.PI * 2);				
+				ctx.globalAlpha = 1;
+				ctx.stroke();
+				ctx.globalAlpha = .4;
+				ctx.fill();
+			}
+
+/*
 			ctx.globalAlpha = 0.15;
 			ctx.beginPath();
 			ctx.arc(cx, cy, r * 1.85 + amplitude * 18, 0, Math.PI * 2);
@@ -402,6 +457,7 @@ class Chat extends Window {
 			ctx.beginPath();
 			ctx.arc(cx, cy, r, 0, Math.PI * 2);
 			ctx.fill();
+*/
 
 			handle.raf = requestAnimationFrame(draw);
 		};
@@ -442,7 +498,7 @@ class Chat extends Window {
 		const audioTracks = stream.getAudioTracks();
 		const videoTracks = stream.getVideoTracks();
 
-		const hasAudio = audioTracks.some(t=> t.readyState === "live");
+		const hasAudio = audioTracks.some(t=> t.readyState === "live" && !t.muted);
 		const hasLiveVideo = videoTracks.some(t=> t.readyState === "live" && !t.muted);
 
 		if (hasAudio && !hasLiveVideo) {
@@ -456,9 +512,29 @@ class Chat extends Window {
 	WireRemoteTrackForVisualizer(remote, track) {
 		if (!track) return;
 		const update = ()=> this.UpdateRemoteAudioVisualizer(remote);
+		const onMute = ()=> {
+			update();
+			if (!remote._muteTimer) {
+				remote._muteTimer = setTimeout(() => {
+					remote._muteTimer = null;
+					const peer = this.peers[remote.peerId];
+					if (!peer || !peer.remoteStreams[remote.streamId]) return;
+					const tracks = remote.stream.getTracks();
+					const allInactive = tracks.length > 0 && tracks.every(t=> t.muted || t.readyState !== "live");
+					if (allInactive && remote._cleanup) remote._cleanup();
+				}, 2000);
+			}
+		};
+		const onUnmute = ()=> {
+			if (remote._muteTimer) {
+				clearTimeout(remote._muteTimer);
+				remote._muteTimer = null;
+			}
+			update();
+		};
 		try {
-			track.addEventListener("mute", update);
-			track.addEventListener("unmute", update);
+			track.addEventListener("mute", onMute);
+			track.addEventListener("unmute", onUnmute);
 			track.addEventListener("ended", update);
 		}
 		catch {}
@@ -472,7 +548,10 @@ class Chat extends Window {
 		const stream = this.userStream.stream;
 		this.RemoveStreamFromAllPeers(stream);
 
-		try { stream.getTracks().forEach(t=>t.stop()); } catch {}
+		try {
+			stream.getTracks().forEach(t=>t.stop());
+		}
+		catch {}
 
 		this.RemoveAudioVisualizer(this.userStream.element.container);
 
@@ -494,7 +573,10 @@ class Chat extends Window {
 
 		this.RemoveStreamFromAllPeers(displayStream.stream);
 
-		try { displayStream.stream.getTracks().forEach(t=>t.stop()); } catch {}
+		try {
+			displayStream.stream.getTracks().forEach(t=>t.stop());
+		}
+		catch {}
 
 		if (displayStream.element.container.parentElement) {
 			this.localStreamsBox.removeChild(displayStream.element.container);
@@ -537,7 +619,10 @@ class Chat extends Window {
 			const peer = this.peers[peerId];
 			for (const sender of peer.pc.getSenders()) {
 				if (sender.track && trackIds.has(sender.track.id)) {
-					try { peer.pc.removeTrack(sender); } catch {}
+					try {
+						peer.pc.removeTrack(sender);
+					}
+					catch {}
 				}
 			}
 		}
@@ -617,7 +702,10 @@ class Chat extends Window {
 
 		pc.oniceconnectionstatechange = ()=> {
 			if (pc.iceConnectionState === "failed") {
-				try { pc.restartIce(); } catch {}
+				try {
+					pc.restartIce();
+				}
+				catch {}
 			}
 		};
 
@@ -638,7 +726,10 @@ class Chat extends Window {
 		const peer = this.peers[peerId];
 		if (!peer) return;
 
-		try { peer.pc.close(); } catch {}
+		try {
+			peer.pc.close();
+		}
+		catch {}
 
 		for (const id in peer.remoteStreams) {
 			const remote = peer.remoteStreams[id];
@@ -666,6 +757,17 @@ class Chat extends Window {
 		let remote = peer.remoteStreams[stream.id];
 
 		if (!remote) {
+			const staleIds = Object.keys(peer.remoteStreams).filter(sid => {
+				const s = peer.remoteStreams[sid];
+				if (!s || !s.stream) return false;
+				const tracks = s.stream.getTracks();
+				return tracks.length > 0 && tracks.every(t=> t.muted || t.readyState !== "live");
+			});
+			for (const sid of staleIds) {
+				const stale = peer.remoteStreams[sid];
+				if (stale && stale._cleanup) stale._cleanup();
+			}
+
 			const element = this.CreateRemoteStreamElement(peer.info);
 			this.remoteStreamsBox.appendChild(element.container);
 			element.video.srcObject = stream;
@@ -730,7 +832,11 @@ class Chat extends Window {
 		}
 
 		track.onended = ()=> {
-			try { stream.removeTrack(track); } catch {}
+			try {
+				stream.removeTrack(track);
+			}
+			catch {}
+
 			if (stream.getTracks().length === 0 && remote._cleanup) {
 				remote._cleanup();
 			}
@@ -767,7 +873,7 @@ class Chat extends Window {
 		primary.container.style.top    = "0%";
 		primary.container.style.left   = "0%";
 		primary.container.style.width  = "100%";
-		primary.container.style.height = hasSecondaries ? "75%" : "100%";
+		primary.container.style.height = hasSecondaries ? "80%" : "100%";
 		primary.container.classList.add("primary");
 		primary.container.style.zIndex = "2";
 
@@ -777,10 +883,10 @@ class Chat extends Window {
 		const w = 100 / n;
 		for (let i=0; i<n; i++) {
 			const s = secondaries[i];
-			s.container.style.top    = "75%";
+			s.container.style.top    = "80%";
 			s.container.style.left   = `${i * w}%`;
 			s.container.style.width  = `${w}%`;
-			s.container.style.height = "25%";
+			s.container.style.height = "20%";
 			s.container.style.zIndex = "1";
 			s.container.classList.remove("primary");
 		}
@@ -982,6 +1088,7 @@ class Chat extends Window {
 			placeholder.style.padding = "40px 8px";
 			placeholder.style.textAlign = "center";
 			placeholder.style.color = "var(--clr-contrast)";
+			placeholder.style.opacity = ".8";
 			placeholder.textContent = "Messages are self-destruct after 24 hours.";
 			this.chatBox.append(placeholder);
 
