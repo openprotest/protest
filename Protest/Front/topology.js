@@ -3895,7 +3895,7 @@ class Topology extends Window {
 				container.appendChild(lldpBox);
 
 				const lldpValue = document.createElement("div");
-				lldpValue.style.fontFamily = "consolas";
+				lldpValue.style.fontFamily = "monospace";
 				lldpBox.appendChild(lldpValue);
 
 				const entries = device.lldp.remoteChassisId[portIndex];
@@ -3976,7 +3976,7 @@ class Topology extends Window {
 				container.appendChild(macBox);
 
 				const macValue = document.createElement("div");
-				macValue.style.fontFamily = "consolas";
+				macValue.style.fontFamily = "monospace";
 				macBox.appendChild(macValue);
 
 				const table = device.dot1tp.table[portIndex];

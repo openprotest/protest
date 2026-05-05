@@ -3,9 +3,9 @@ class Terminal extends PtyHost {
 		super(args);
 
 		this.SetTitle("Terminal");
-		this.SetIcon("mono/console.svg");
+		this.SetIcon("mono/terminal.svg");
 
-		this.connectButton.style.display = "none";
+		this.connectButton.disabled = true;
 
 		this.Connect();
 	}

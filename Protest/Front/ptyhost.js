@@ -14,22 +14,22 @@ class PtyHost extends Window {
 		"ArrowLeft"  : "\x1b[D",
 		"Home"       : "\x1b[H",
 		"End"        : "\x1b[F",
-		"F1"  : "\x1bOP",
-		"F2"  : "\x1bOQ",
-		"F3"  : "\x1bOR",
-		"F4"  : "\x1bOS",
-		"F5"  : "\x1b[15~",
-		"F6"  : "\x1b[17~",
-		"F7"  : "\x1b[18~",
-		"F8"  : "\x1b[19~",
-		"F9"  : "\x1b[20~",
-		"F10" : "\x1b[21~",
-		"F11" : "\x1b[23~",
-		"F12" : "\x1b[24~",
-		"Insert"   : "\x1b[2~",
-		"Delete"   : "\x1b[3~",
-		"PageUp"   : "\x1b[5~",
-		"PageDown" : "\x1b[6~"
+		"F1"         : "\x1bOP",
+		"F2"         : "\x1bOQ",
+		"F3"         : "\x1bOR",
+		"F4"         : "\x1bOS",
+		"F5"         : "\x1b[15~",
+		"F6"         : "\x1b[17~",
+		"F7"         : "\x1b[18~",
+		"F8"         : "\x1b[19~",
+		"F9"         : "\x1b[20~",
+		"F10"        : "\x1b[21~",
+		"F11"        : "\x1b[23~",
+		"F12"        : "\x1b[24~",
+		"Insert"     : "\x1b[2~",
+		"Delete"     : "\x1b[3~",
+		"PageUp"     : "\x1b[5~",
+		"PageDown"   : "\x1b[6~"
 	};
 
 	static SHIFT_KEYS = {
@@ -211,12 +211,21 @@ class PtyHost extends Window {
 	InitializeComponents() {
 		this.SetupToolbar();
 		this.connectButton = this.AddToolbarButton("Connect", "mono/connect.svg?light");
+		this.AddToolbarSeparator();
+
+		this.darkModeButton = this.AddToolbarButton("Dark mode", "mono/darkmode.svg?light");
+		this.bellSoundButton = this.AddToolbarButton("Bell sound", "mono/notifications.svg?light");
+		this.autoscrollButton = this.AddToolbarButton("Auto-scroll", "mono/autoscroll.svg?light");
 		this.optionsButton = this.AddToolbarButton("Options", "mono/wrench.svg?light");
 		this.AddToolbarSeparator();
 		this.sendKeyButton = this.AddToolbarButton("Send key", "mono/keyboard.svg?light");
 		this.pasteButton = this.AddToolbarButton("Paste", "mono/clipboard.svg?light");
 		//this.saveText = this.AddToolbarButton("Save text", "mono/floppy.svg?light");
 
+		this.darkModeButton.style.borderBottom = this.args.darkMode ? "3px solid rgb(192,192,192)" : "none";
+		this.bellSoundButton.style.borderBottom = this.args.bell ? "3px solid rgb(192,192,192)" : "none";
+		this.autoscrollButton.style.borderBottom = this.args.autoScroll ? "3px solid rgb(192,192,192)" : "none";
+		
 		this.defaultElement = this.content;
 		
 		this.win.style.containerType = "inline-size";
@@ -238,10 +247,13 @@ class PtyHost extends Window {
 		this.content.onfocus = ()=> this.BringToFront();
 		this.content.onkeydown = event=> this.Pty_onkeydown(event);
 
-		this.connectButton.onclick = ()=> this.ConnectDialog(this.args.host);
-		this.optionsButton.onclick = ()=> this.OptionsDialog();
-		this.sendKeyButton.onclick = ()=> this.CustomKeyDialog();
-		this.pasteButton.onclick = ()=> this.TextFromClipboard();
+		this.connectButton.onclick    = ()=> this.ConnectDialog(this.args.host);
+		this.darkModeButton.onclick   = ()=> this.ToggleDarkMode();
+		this.bellSoundButton.onclick  = ()=> this.ToggleBell();
+		this.autoscrollButton.onclick = ()=> this.ToggleAutoscroll();
+		this.optionsButton.onclick    = ()=> this.OptionsDialog();
+		this.sendKeyButton.onclick    = ()=> this.CustomKeyDialog();
+		this.pasteButton.onclick      = ()=> this.TextFromClipboard();
 
 		this.minimap = document.createElement("div");
 		this.minimap.className = "pty-minimap";
@@ -256,9 +268,8 @@ class PtyHost extends Window {
 		this.minimap.appendChild(this.minimapViewport);
 		this.win.appendChild(this.minimap);
 
-		const syncContentTop = ()=> {
-			this.win.style.setProperty("--content-top", this.content.style.top || "76px");
-		};
+		const syncContentTop = ()=> this.win.style.setProperty("--content-top", this.content.style.top || "76px");
+		
 		syncContentTop();
 		new MutationObserver(syncContentTop).observe(this.content, { attributes: true, attributeFilter: ["style"] });
 
@@ -352,6 +363,22 @@ class PtyHost extends Window {
 
 	ConnectDialog(target="", isNew=false) {} //overridable
 
+	ToggleDarkMode() {
+		this.args.darkMode = !this.args.darkMode;
+		this.darkModeButton.style.borderBottom = this.args.darkMode ? "3px solid rgb(192,192,192)" : "none";
+		this.win.style.colorScheme = this.args.darkMode ? "dark" : "inherit";
+	}
+
+	ToggleBell() {
+		this.args.bell = !this.args.bell;
+		this.bellSoundButton.style.borderBottom = this.args.bell ? "3px solid rgb(192,192,192)" : "none";
+	}
+
+	ToggleAutoscroll() {
+		this.args.autoScroll = !this.args.autoScroll;
+		this.autoscrollButton.style.borderBottom = this.args.autoScroll ? "3px solid rgb(192,192,192)" : "none";
+	}
+
 	OptionsDialog() {
 		const dialog = this.DialogBox("340px");
 		if (dialog === null) return;
@@ -366,20 +393,19 @@ class PtyHost extends Window {
 		innerBox.appendChild(document.createElement("br"));
 		innerBox.appendChild(document.createElement("br"));
 
-		const ansiToggle = this.CreateToggle("Escape ANSI codes", this.args.ansi, innerBox);
-		innerBox.appendChild(document.createElement("br"));
-		innerBox.appendChild(document.createElement("br"));
-
-		const autoScrollToggle = this.CreateToggle("Auto-scroll", this.args.autoScroll, innerBox);
-		innerBox.appendChild(document.createElement("br"));
-		innerBox.appendChild(document.createElement("br"));
-
 		const bellToggle = this.CreateToggle("Play bell sound", this.args.bell, innerBox);
 		innerBox.appendChild(document.createElement("br"));
 		innerBox.appendChild(document.createElement("br"));
 
 		const smoothCursorToggle = this.CreateToggle("Smooth cursor", this.args.smoothCursor, innerBox);
+		innerBox.appendChild(document.createElement("br"));
+		innerBox.appendChild(document.createElement("br"));
 
+		const ansiToggle = this.CreateToggle("Escape ANSI codes", this.args.ansi, innerBox);
+		innerBox.appendChild(document.createElement("br"));
+		innerBox.appendChild(document.createElement("br"));
+
+		const autoScrollToggle = this.CreateToggle("Auto-scroll", this.args.autoScroll, innerBox);
 		innerBox.appendChild(document.createElement("br"));
 		innerBox.appendChild(document.createElement("br"));
 
@@ -420,6 +446,10 @@ class PtyHost extends Window {
 			this.cursorElement.style.transition = this.args.smoothCursor ? ".1s" : "0s";
 			this.cursorElement.style.left = PtyHost.CHAR_WIDTH * this.cursor.x + "px";
 			this.cursorElement.style.top = PtyHost.CHAR_HEIGHT * this.cursor.y + "px";
+
+			this.darkModeButton.style.borderBottom = this.args.darkMode ? "3px solid rgb(192,192,192)" : "none";
+			this.bellSoundButton.style.borderBottom = this.args.bell ? "3px solid rgb(192,192,192)" : "none";
+			this.autoscrollButton.style.borderBottom = this.args.autoScroll ? "3px solid rgb(192,192,192)" : "none";
 		};
 
 		setTimeout(()=>darkModeToggle.label.focus(), 200);
@@ -609,23 +639,27 @@ class PtyHost extends Window {
 
 			case "\n": //lf 0x0a
 				this.cursor.y++;
+				if (this.cursor.y > this.maxLineY) this.maxLineY = this.cursor.y;
 				break;
 
 			case "\x0b": //vertical tab
 			case "\x0c": //form feed
 				this.cursor.y++;
+				if (this.cursor.y > this.maxLineY) this.maxLineY = this.cursor.y;
 				break;
 
 			case "\r": //cr 0x0d
 				if (i+2 < data.length && data[i+1]==="\r" && data[i+2]==="\n") {
 					this.cursor.x = 0;
 					this.cursor.y++;
+					if (this.cursor.y > this.maxLineY) this.maxLineY = this.cursor.y;
 					i+=2;
 					break;
 				}
 				else if (i+1 < data.length && data[i+1]==="\n") {
 					this.cursor.x = 0;
 					this.cursor.y++;
+					if (this.cursor.y > this.maxLineY) this.maxLineY = this.cursor.y;
 					i++;
 					break;
 				}
@@ -720,6 +754,7 @@ class PtyHost extends Window {
 				if (this.bold)          char.style.fontWeight = "bold";
 				if (this.faint)         char.style.opacity = "0.6";
 				if (this.italic)        char.style.fontStyle = "italic";
+
 				const textDecoration = [];
 				if (this.underline) textDecoration.push("underline");
 				if (this.strikethrough) textDecoration.push("line-through");
@@ -982,9 +1017,7 @@ class PtyHost extends Window {
 		let end = Math.min(oscEnd !== -1 ? oscEnd : data.length, stEnd !== -1 ? stEnd : data.length);
 		const terminatorLength = end === stEnd ? 2 : 1;
 
-		if (end === data.length) {
-			return null;
-		}
+		if (end === data.length) return null;
 
 		const sequence = data.slice(index + 2, end);
 		const [command, ...params] = sequence.split(";");
@@ -992,7 +1025,12 @@ class PtyHost extends Window {
 		switch (command) {
 		case "0":
 		case "2": //set title
-			this.SetTitle(`Secure shell - ${this.args.host} - ${params.join(";")}`);
+			if (this.args.host && this.args.host.length > 0) {
+				this.SetTitle(`${this.args.host} - ${params.join(";")}`);
+			}
+			else {
+				this.SetTitle(params.join(";"));
+			}
 			break;
 
 		case "10": //set foreground color
@@ -1074,6 +1112,11 @@ class PtyHost extends Window {
 	}
 
 	ParseGraphicsModes(params) {
+		if (params.length === 0) {
+			this.ResetTextAttributes();
+			return;
+		}
+
 		for (let i=0; i<params.length; i++) {
 			switch (params[i]) {
 			case 0:
@@ -1081,24 +1124,24 @@ class PtyHost extends Window {
 				break;
 
 			//set graphics modes
-			case 1: this.bold = true; break;
-			case 2: this.faint = true; break;
-			case 3: this.italic = true; break;
-			case 4: this.underline = true; break;
-			case 5: this.blinking = true; break;
-			case 6: this.fastBlinking = true; break;
-			case 7: this.inverse = true; break;
-			case 8: this.hidden = true; break;
+			case 1: this.bold          = true; break;
+			case 2: this.faint         = true; break;
+			case 3: this.italic        = true; break;
+			case 4: this.underline     = true; break;
+			case 5: this.blinking      = true; break;
+			case 6: this.fastBlinking  = true; break;
+			case 7: this.inverse       = true; break;
+			case 8: this.hidden        = true; break;
 			case 9: this.strikethrough = true; break;
 
 			//reset graphics modes
 			case 22: this.bold = this.faint = false; break;
-			case 23: this.italic = false; break;
-			case 24: this.underline = false; break;
-			case 25: this.blinking = false; break;
-			case 26: this.fastBlinking = false; break;
-			case 27: this.inverse = false; break;
-			case 28: this.hidden = false; break;
+			case 23: this.italic        = false; break;
+			case 24: this.underline     = false; break;
+			case 25: this.blinking      = false; break;
+			case 26: this.fastBlinking  = false; break;
+			case 27: this.inverse       = false; break;
+			case 28: this.hidden        = false; break;
 			case 29: this.strikethrough = false; break;
 
 			//set foreground color

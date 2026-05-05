@@ -353,7 +353,7 @@ class MicTester extends Window {
 				ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
 				ctx.fillStyle = "#c0c0c0";
-				ctx.font = "14px Consolas";
+				ctx.font = "14px monospace";
 				ctx.textAlign = "right";
 				ctx.textBaseline = "middle";
 

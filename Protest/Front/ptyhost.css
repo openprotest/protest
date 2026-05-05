@@ -1,5 +1,5 @@
 .pty-content {
-	font-family: consolas, monospace;
+	font-family: monospace;
 	position: absolute;
 	margin: 20px;
 	margin-right: 88px;
@@ -32,9 +32,9 @@
 	background-color: rgb(28,28,28);
 	border-left: 1px solid rgba(255,255,255,0.07);
 	border-radius: 0 0 4px 0;
-	cursor: ns-resize;
 	overflow: hidden;
 	-webkit-user-select: none; user-select: none;
+	transition: .2s;
 }
 
 .pty-minimap-canvas {
@@ -113,14 +113,15 @@
 	display: initial;
 }
 
-@container (max-width: 400px) {
+@container (max-width: 480px) {
 	.pty-content {
 		margin-right: 20px;
 		scrollbar-width: inherit;
 	}
 
 	.pty-minimap {
-		display: none;
+		opacity: 0;
+		visibility: hidden;
 	}
 }
 
