@@ -89,9 +89,6 @@ internal static class Ssh {
 
             ShellStream shellStream = ssh.CreateShellStream("xterm", 80, 24, 800, 600, 1024);
 
-            Thread fork = new Thread(() => HandleDownstream(ctx, ws, ssh, shellStream).GetAwaiter().GetResult());
-            fork.Start();
-
             _ = Task.Run(()=> HandleDownstream(ctx, ws, ssh, shellStream));
 
             byte[] buff = new byte[2048];
