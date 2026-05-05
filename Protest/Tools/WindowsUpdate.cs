@@ -108,6 +108,7 @@ internal static class WindowsUpdate {
                 file       = file,
                 isUser     = false
             };
+
             return true;
         }
 
@@ -249,7 +250,7 @@ file sealed class UpdatesJsonConverter : JsonConverter<WindowsUpdate.UpdatesResu
             if (reader.TokenType == JsonTokenType.EndObject) break;
             if (reader.TokenType != JsonTokenType.PropertyName) continue;
 
-            string propertyName = reader.GetString();
+            string propertyName = reader.GetString() ?? String.Empty;
             reader.Read();
 
             switch (propertyName) {
@@ -282,7 +283,7 @@ file sealed class UpdatesJsonConverter : JsonConverter<WindowsUpdate.UpdatesResu
                         if (reader.TokenType == JsonTokenType.EndObject) break;
                         if (reader.TokenType != JsonTokenType.PropertyName) continue;
 
-                        string updatePropertyName = reader.GetString();
+                        string updatePropertyName = reader.GetString() ?? String.Empty;
                         reader.Read();
 
                         switch (updatePropertyName) {
