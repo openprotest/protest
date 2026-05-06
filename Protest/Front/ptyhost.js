@@ -218,6 +218,7 @@ class PtyHost extends Window {
 		this.autoscrollButton = this.AddToolbarButton("Auto-scroll", "mono/autoscroll.svg?light");
 		this.optionsButton = this.AddToolbarButton("Options", "mono/wrench.svg?light");
 		this.AddToolbarSeparator();
+
 		this.sendKeyButton = this.AddToolbarButton("Send key", "mono/keyboard.svg?light");
 		this.pasteButton = this.AddToolbarButton("Paste", "mono/clipboard.svg?light");
 		//this.saveText = this.AddToolbarButton("Save text", "mono/floppy.svg?light");
@@ -225,7 +226,11 @@ class PtyHost extends Window {
 		this.darkModeButton.style.borderBottom = this.args.darkMode ? "3px solid rgb(192,192,192)" : "none";
 		this.bellSoundButton.style.borderBottom = this.args.bell ? "3px solid rgb(192,192,192)" : "none";
 		this.autoscrollButton.style.borderBottom = this.args.autoScroll ? "3px solid rgb(192,192,192)" : "none";
-		
+
+		this.darkModeButton.style.display = "none";
+		this.bellSoundButton.style.display = "none";
+		this.autoscrollButton.style.display = "none";
+
 		this.defaultElement = this.content;
 		
 		this.win.style.containerType = "inline-size";

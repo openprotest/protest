@@ -1088,7 +1088,7 @@ class Watchdog extends Window {
 
 		if (total > 0) {
 			const graphBox = document.createElement("div");
-			graphBox.style.backgroundColor = "transparent";
+			graphBox.style.backgroundColor = "light-dark(var(--clr-pane), transparent)";
 			graphBox.style.boxShadow = "var(--clr-light) 0 0 0 2px inset";
 			this.stats.appendChild(graphBox);
 
@@ -1472,7 +1472,7 @@ class Watchdog extends Window {
 
 		const gradientL = document.createElement("div");
 		gradientL.style.position = "absolute";
-		gradientL.style.background = "linear-gradient(to right,rgb(64,64,64),transparent)";
+		gradientL.style.background = "linear-gradient(to right, light-dark(rgb(128,128,128), rgb(64,64,64)) ,transparent)";
 		gradientL.style.left = gradientL.style.top = "0";
 		gradientL.style.width = "20px";
 		gradientL.style.height = "40px";
@@ -1480,7 +1480,7 @@ class Watchdog extends Window {
 
 		const gradientR = document.createElement("div");
 		gradientR.style.position = "absolute";
-		gradientR.style.background = "linear-gradient(to right,transparent,rgb(64,64,64))";
+		gradientR.style.background = "linear-gradient(to right,transparent, light-dark(rgb(128,128,128), rgb(64,64,64)) )";
 		gradientR.style.right = gradientR.style.top = "0";
 		gradientR.style.width = "20px";
 		gradientR.style.height = "40px";

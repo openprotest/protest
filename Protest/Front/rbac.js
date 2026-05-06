@@ -446,12 +446,13 @@ class AccessControl extends Tabs {
 		this.permissionsList.push(this.AddPermissionObject("Debit notes",   "url(mono/notes.svg)",         this.documentationGroup, true, true, true));
 		this.permissionsList.push(this.AddPermissionObject("Chat",          "url(mono/chat.svg)",          this.documentationGroup, true, true, true));
 
-		this.toolsGroup = this.AddPermissionGroup("Tools and utilities",       "url(mono/hammer.svg)");
+		this.toolsGroup = this.AddPermissionGroup("Tools and utilities", "url(mono/hammer.svg)");
 		this.permissionsList.push(this.AddPermissionObject("Watchdog",          "url(mono/watchdog.svg)",     this.toolsGroup, false, true, false));
 		this.permissionsList.push(this.AddPermissionObject("Reverse proxy",     "url(mono/reverseproxy.svg)", this.toolsGroup, false, true, false));
 		this.permissionsList.push(this.AddPermissionObject("Issues",            "url(mono/issues.svg)",       this.toolsGroup, false, true, false));
 		//this.permissionsList.push(this.AddPermissionObject("Scripts",           "url(mono/scripts.svg)",      this.toolsGroup, false, true, false));
 		this.permissionsList.push(this.AddPermissionObject("Network utilities", "url(mono/portscan.svg)",     this.toolsGroup, false, true, false));
+		this.permissionsList.push(this.AddPermissionObject("Terminal",          "url(mono/terminal.svg)",     this.toolsGroup, false, true, false));
 		this.permissionsList.push(this.AddPermissionObject("Telnet",            "url(mono/telnet.svg)",       this.toolsGroup, false, true, false));
 		this.permissionsList.push(this.AddPermissionObject("Secure shell",      "url(mono/ssh.svg)",          this.toolsGroup, false, true, false));
 		this.permissionsList.push(this.AddPermissionObject("WMI",               "url(mono/wmi.svg)",          this.toolsGroup, false, true, false));
