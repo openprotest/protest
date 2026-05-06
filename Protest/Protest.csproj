@@ -22,7 +22,6 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 
     <NoWarn>IDE0028, IDE0037, IDE0090, IDE0300, IDE0301, IDE0302, IDE0305</NoWarn>
-    <MSBuildWarningsAsMessages>MSB3246</MSBuildWarningsAsMessages>
     <WarningLevel>9999</WarningLevel>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 

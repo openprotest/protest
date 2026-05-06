@@ -556,6 +556,10 @@ internal static class Auth {
                 //path.Add("/tools/upstream");
                 break;
 
+            case "terminal:write":
+                path.Add("/ws/terminal");
+                break;
+
             case "telnet:write":
                 path.Add("/ws/telnet");
                 break;

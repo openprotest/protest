@@ -122,7 +122,7 @@ internal static partial class Terminal {
             WebSocketReceiveResult result = await ws.ReceiveAsync(buffer, token);
 
             if (result.MessageType == WebSocketMessageType.Close) break;
-            if (!Auth.IsAuthenticatedAndAuthorized(ctx, "/ws/shell")) break;
+            if (!Auth.IsAuthenticatedAndAuthorized(ctx, "/ws/terminal")) break;
             if (TryResizePty(buffer, result.Count, pty)) continue;
 
             await pty.WriterStream.WriteAsync(buffer.AsMemory(0, result.Count), token);

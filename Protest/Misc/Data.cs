@@ -26,6 +26,8 @@ internal static class Data {
     public static readonly ArraySegment<byte> CODE_OK  = new ArraySegment<byte>("{\"status\":\"ok\"}"u8.ToArray());
     public static readonly ArraySegment<byte> CODE_ACK = new ArraySegment<byte>("{\"status\":\"acknowledge\"}"u8.ToArray());
 
+    private static readonly byte[] DEBIT_TEMPLATE = "The aforementioned items are company property and must be returned in pristine condition at the conclusion of the contract. Any loss, damage, or failure to return these items will result in their value being deducted from the employee's salary."u8.ToArray();
+
     public static readonly ArraySegment<byte> CODE_FAILED                 = new ArraySegment<byte>("{\"error\":\"failed\"}"u8.ToArray());
     public static readonly ArraySegment<byte> CODE_UNAUTHORIZED           = new ArraySegment<byte>("{\"error\":\"unauthorized\"}"u8.ToArray());
     public static readonly ArraySegment<byte> CODE_INVALID_ARGUMENT       = new ArraySegment<byte>("{\"error\":\"invalid argument\"}"u8.ToArray());
@@ -62,16 +64,14 @@ internal static class Data {
     public static readonly string DIR_DEBIT_RETURNED = Path.Join(DIR_DEBIT, "returned");
     public static readonly string DIR_DEBIT_TEMPLATE = Path.Join(DIR_DEBIT, "templates");
 
-    public static readonly string FILE_API_LINKS     = Path.Join("api.json");
-    public static readonly string FILE_ZONES         = Path.Join("zones.json");
-    public static readonly string FILE_DHCP_RANGE    = Path.Join("dhcprange.json");
-    public static readonly string FILE_SMTP_PROFILES = Path.Join("smtpprofiles.json");
-    public static readonly string FILE_SNMP_PROFILES = Path.Join("snmpprofiles.json");
-    public static readonly string FILE_NOTIFICATIONS = Path.Join("notifications.json");
+    public static readonly string FILE_API_LINKS     = Path.Join(DIR_DATA, "api.json");
+    public static readonly string FILE_ZONES         = Path.Join(DIR_DATA, "zones.json");
+    public static readonly string FILE_DHCP_RANGE    = Path.Join(DIR_DATA, "dhcprange.json");
+    public static readonly string FILE_SMTP_PROFILES = Path.Join(DIR_DATA, "smtpprofiles.json");
+    public static readonly string FILE_SNMP_PROFILES = Path.Join(DIR_DATA, "snmpprofiles.json");
+    public static readonly string FILE_NOTIFICATIONS = Path.Join(DIR_DATA, "notifications.json");
 
     public static readonly string FILE_CONFIG        = Path.Join(DIR_BASE, "protest.cfg");
-
-    private static readonly byte[] DEBIT_TEMPLATE = "The aforementioned items are company property and must be returned in pristine condition at the conclusion of the contract. Any loss, damage, or failure to return these items will result in their value being deducted from the employee's salary."u8.ToArray();
 
     public static void InitializeDirectories() {
         DirectoryInfo[] dirs = new DirectoryInfo[] {
