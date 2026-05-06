@@ -106,7 +106,19 @@ internal static class Topology {
                     IList<Variable> lldpLocal = Polling.SnmpQuery(ipAddress, snmpProfile, [Oid.LLDP_LOCAL_SYS_DATA], Polling.SnmpOperation.Walk);
                     IList<Variable> lldpRemote = Polling.SnmpQuery(ipAddress, snmpProfile, [Oid.LLDP_REMOTE_SYS_DATA], Polling.SnmpOperation.Walk);
 
-                    if (lldpLocal is null || lldpRemote is null) {
+                    bool snmpResponded = lldpLocal is not null || lldpRemote is not null;
+
+                    if (lldpLocal is not null && lldpRemote is not null) {
+                        byte[] response = ComputeLldpResponse(candidate.filename, lldpLocal, lldpRemote);
+                        try  {
+                            await writeSemaphore.WaitAsync();
+                            await WebSocketHelper.WsWriteText(ws, response);
+                        }
+                        finally {
+                            writeSemaphore.Release();
+                        }
+                    }
+                    else {
                         try {
                             await writeSemaphore.WaitAsync();
                             await WebSocketHelper.WsWriteText(ws, $"{{\"nolldp\":\"{candidate.filename}\"}}");
@@ -117,20 +129,12 @@ internal static class Topology {
                         }
                         return;
                     }
-                    else {
-                        byte[] response = ComputeLldpResponse(candidate.filename, lldpLocal, lldpRemote);
-                        try  {
-                            await writeSemaphore.WaitAsync();
-                            await WebSocketHelper.WsWriteText(ws, response);
-                        }
-                        finally {
-                            writeSemaphore.Release();
-                        }
-                    }
 
                     if (options.Contains("mac")) {
                         IList<Variable> dot1TpFdb = Polling.SnmpQuery(ipAddress, snmpProfile, [Oid.DOT_1D_TP_FDB], Polling.SnmpOperation.Walk);
                         if (dot1TpFdb is not null && dot1TpFdb.Count > 0) {
+                            snmpResponded = true;
+
                             byte[] response = ComputeDot1TpFdbResponse(candidate.filename, dot1TpFdb);
                             try {
                                 await writeSemaphore.WaitAsync();
@@ -145,6 +149,8 @@ internal static class Topology {
                     if (options.Contains("vlan")) {
                         IList<Variable> dot1q = Polling.SnmpQuery(ipAddress, snmpProfile, Oid.TOPOLOGY_DOT1Q, Polling.SnmpOperation.Walk);
                         if (dot1q is not null && dot1q.Count > 0) {
+                            snmpResponded = true;
+
                             byte[] response = ComputeDot1QResponse(candidate.filename, dot1q);
                             try {
                                 await writeSemaphore.WaitAsync();
@@ -159,6 +165,8 @@ internal static class Topology {
                     if (options.Contains("traffic")) {
                         IList<Variable> traffic = Polling.SnmpQuery(ipAddress, snmpProfile, Oid.TOPOLOGY_TRAFFIC, Polling.SnmpOperation.Walk);
                         if (traffic is not null && traffic.Count > 0) {
+                            snmpResponded = true;
+
                             byte[] response = ComputeTrafficResponse(candidate.filename, traffic);
                             try {
                                 await writeSemaphore.WaitAsync();
@@ -173,6 +181,8 @@ internal static class Topology {
                     if (options.Contains("error")) {
                         IList<Variable> error = Polling.SnmpQuery(ipAddress, snmpProfile, Oid.TOPOLOGY_ERROR, Polling.SnmpOperation.Walk);
                         if (error is not null && error.Count > 0) {
+                            snmpResponded = true;
+
                             byte[] response = ComputeErrorResponse(candidate.filename, error);
                             try {
                                 await writeSemaphore.WaitAsync();
@@ -187,6 +197,8 @@ internal static class Topology {
                     if (options.Contains("speed")) {
                         IList<Variable> speed = Polling.SnmpQuery(ipAddress, snmpProfile, [Oid.IF_HC_SPEED], Polling.SnmpOperation.Walk);
                         if (speed is not null && speed.Count > 0) {
+                            snmpResponded = true;
+
                             byte[] response = ComputeSpeedResponse(candidate.filename, speed);
                             try {
                                 await writeSemaphore.WaitAsync();
@@ -196,6 +208,10 @@ internal static class Topology {
                                 writeSemaphore.Release();
                             }
                         }
+                    }
+
+                    if (!snmpResponded) {
+                        await WebSocketHelper.WsWriteText(ws, $"{{\"nosnmp\":\"{candidate.filename}\"}}");
                     }
 
                     try {
