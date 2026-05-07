@@ -68,7 +68,7 @@ internal sealed class Cache {
 
         {"js",   "application/javascript; charset=utf-8"},
         {"json", "application/json; charset=utf-8"},
-        {"zip",  "application/application/zip"},
+        {"zip",  "application/zip"},
         //{"7z",  "application/x-7z-compressed"},
         //{"rar",  "application/x-rar-compressed"}
     }.ToFrozenDictionary();
@@ -210,7 +210,7 @@ internal sealed class Cache {
                 headers = new KeyValuePair<string, string>[] { new KeyValuePair<string, string>("Content-Encoding", "gzip") },
             };
 
-            cahce.Remove(name);
+            cache.Remove(name);
             cache.Add(name, entry);
         }
 #endif
