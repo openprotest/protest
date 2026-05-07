@@ -35,7 +35,7 @@ internal static class Telnet {
         try {
             byte[] connectionBuffer = new byte[512];
             WebSocketReceiveResult targetResult = await ws.ReceiveAsync(connectionBuffer, CancellationToken.None);
-            string target = Encoding.Default.GetString(connectionBuffer, 0, targetResult.Count);
+            string target = Encoding.UTF8.GetString(connectionBuffer, 0, targetResult.Count);
 
             string[] split = target.Split(':');
             string host = split[0];

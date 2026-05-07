@@ -197,7 +197,7 @@ internal static class PortScan {
                     break;
                 }
 
-                string[] message = Encoding.Default.GetString(buff, 0, receiveResult.Count).Trim().Split(';');
+                string[] message = Encoding.UTF8.GetString(buff, 0, receiveResult.Count).Trim().Split(';');
 
                 string host = message[0].Trim();
 

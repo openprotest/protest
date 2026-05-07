@@ -114,7 +114,7 @@ internal static class IpDiscovery {
         try {
             byte[] buff = new byte[256];
             WebSocketReceiveResult receiveResult = await ws.ReceiveAsync(new ArraySegment<byte>(buff), CancellationToken.None);
-            string id = Encoding.Default.GetString(buff, 0, receiveResult.Count);
+            string id = Encoding.UTF8.GetString(buff, 0, receiveResult.Count);
             nic = GetNic(id);
         }
         catch (Exception ex) {

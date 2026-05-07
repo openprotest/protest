@@ -47,7 +47,7 @@ internal static class LiveStats {
         try {
             byte[] buff = new byte[512];
             WebSocketReceiveResult receiveResult = await ws.ReceiveAsync(new ArraySegment<byte>(buff), CancellationToken.None);
-            string file = Encoding.Default.GetString(buff, 0, receiveResult.Count);
+            string file = Encoding.UTF8.GetString(buff, 0, receiveResult.Count);
 
             if (!DatabaseInstances.users.dictionary.TryGetValue(file, out Database.Entry entry)) {
                 await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
@@ -116,7 +116,7 @@ internal static class LiveStats {
         try {
             byte[] buff = new byte[512];
             WebSocketReceiveResult receiveResult = await ws.ReceiveAsync(new ArraySegment<byte>(buff), CancellationToken.None);
-            string file = Encoding.Default.GetString(buff, 0, receiveResult.Count);
+            string file = Encoding.UTF8.GetString(buff, 0, receiveResult.Count);
 
             if (!DatabaseInstances.devices.dictionary.TryGetValue(file, out Database.Entry entry)) {
                 await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);

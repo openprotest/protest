@@ -105,7 +105,7 @@ public class Generator : IIncrementalGenerator {
         return ms.ToArray();
     }
     public static byte[] Minify(byte[] bytes, bool softMinify) {
-        string text = Encoding.Default.GetString(bytes);
+        string text = Encoding.UTF8.GetString(bytes);
         StringBuilder result = new StringBuilder();
 
         string[] lines = text.Split('\n');

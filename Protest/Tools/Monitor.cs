@@ -85,7 +85,7 @@ internal static class Monitor {
 
         try {
             WebSocketReceiveResult receiveResult = await ws.ReceiveAsync(new ArraySegment<byte>(buff), CancellationToken.None);
-            string file = Encoding.Default.GetString(buff, 0, receiveResult.Count);
+            string file = Encoding.UTF8.GetString(buff, 0, receiveResult.Count);
 
             if (!DatabaseInstances.devices.dictionary.TryGetValue(file, out Database.Entry entry) ||
                 !entry.attributes.TryGetValue("ip", out Database.Attribute ipAttribute) ||
@@ -230,7 +230,7 @@ internal static class Monitor {
                     break;
                 }
 
-                string msg = Encoding.Default.GetString(buff, 0, receiveResult.Count);
+                string msg = Encoding.UTF8.GetString(buff, 0, receiveResult.Count);
                 Query query = JsonSerializer.Deserialize<Query>(msg, actionSerializerOptions);
 
                 switch (query.action) {

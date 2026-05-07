@@ -44,7 +44,7 @@ internal static class Dhcp {
         byte[] options = null;
         bool accept = false;
 
-        string[] attributes = Encoding.Default.GetString(buff, 0, receiveResult.Count).Trim().Split('&');
+        string[] attributes = Encoding.UTF8.GetString(buff, 0, receiveResult.Count).Trim().Split('&');
         for (int i = 0; i < attributes.Length; i++) {
             if (attributes[i].StartsWith("timeout=")) {
                 timeout = int.Parse(Uri.UnescapeDataString(attributes[i][8..].ToString()));

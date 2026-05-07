@@ -135,7 +135,7 @@ internal static class ReverseProxy {
                     break;
                 }
 
-                string message = Encoding.Default.GetString(buff, 0, receiveResult.Count);
+                string message = Encoding.UTF8.GetString(buff, 0, receiveResult.Count);
                 string[] split = message.Split('=');
 
                 if (split.Length < 2) { continue; }

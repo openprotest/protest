@@ -107,7 +107,7 @@ internal static class Icmp {
                     break;
                 }
 
-                string[] msg = Encoding.Default.GetString(buff, 0, receiveResult.Count).Split('=');
+                string[] msg = Encoding.UTF8.GetString(buff, 0, receiveResult.Count).Split('=');
                 if (msg.Length < 2) continue;
 
                 switch (msg[0]) {

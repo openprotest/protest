@@ -12,7 +12,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Text;
-using System.Threading;
+using System.Threading.Tasks;
 
 namespace Protest.Http;
 
@@ -107,13 +107,11 @@ internal sealed class Cache {
     private void OnFileChanged(object source, FileSystemEventArgs e) {
         Console.WriteLine($"Reloading: {e.FullPath}");
 
-        new Thread(() => {
-            Thread.Sleep(250);
+        _ = Task.Run(async () => {
+            await Task.Delay(250);
 
             FileInfo file = new FileInfo(e.FullPath);
-            if (!file.Exists) {
-                return;
-            }
+            if (!file.Exists) return;
 
             try {
                 using FileStream fs = new FileStream(file.FullName, FileMode.Open, FileAccess.Read);
@@ -133,7 +131,7 @@ internal sealed class Cache {
             birthdate = DateTime.UtcNow.ToString(Data.DATETIME_FORMAT);
 
             KeepAlive.Broadcast(KeepAlive.MSG_FORCE_RELOAD.ToArray(), "/");
-        }).Start();
+        });
     }
 
 #if !DEBUG
@@ -210,8 +208,7 @@ internal sealed class Cache {
                 headers = new KeyValuePair<string, string>[] { new KeyValuePair<string, string>("Content-Encoding", "gzip") },
             };
 
-            cache.Remove(name);
-            cache.Add(name, entry);
+            cache.AddOrUpdate(name, entry, (key, existingValue) => entry);
         }
 #endif
 
@@ -316,7 +313,7 @@ internal sealed class Cache {
     }
 
     public static byte[] Minify(byte[] bytes, bool softMinify) {
-        string text = Encoding.Default.GetString(bytes);
+        string text = Encoding.UTF8.GetString(bytes);
         StringBuilder result = new StringBuilder();
 
         string[] lines = text.Split('\n');

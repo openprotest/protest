@@ -38,7 +38,7 @@ internal static class Ssh {
         try {
             byte[] connectionBuffer = new byte[2048];
             WebSocketReceiveResult targetResult = await ws.ReceiveAsync(new ArraySegment<byte>(connectionBuffer), CancellationToken.None);
-            string connectionString = Encoding.Default.GetString(connectionBuffer, 0, targetResult.Count);
+            string connectionString = Encoding.UTF8.GetString(connectionBuffer, 0, targetResult.Count);
 
             string[] lines = connectionString.Split("\n");
             string target = String.Empty;
