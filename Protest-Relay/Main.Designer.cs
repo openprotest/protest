@@ -150,6 +150,7 @@ namespace ProtestRelay {
             // 
             // txtPassword
             // 
+            this.txtPassword.Cursor = System.Windows.Forms.Cursors.IBeam;
             this.txtPassword.Location = new System.Drawing.Point(349, 194);
             this.txtPassword.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.txtPassword.Name = "txtPassword";
@@ -159,6 +160,7 @@ namespace ProtestRelay {
             // 
             // txtUsername
             // 
+            this.txtUsername.Cursor = System.Windows.Forms.Cursors.IBeam;
             this.txtUsername.Location = new System.Drawing.Point(349, 152);
             this.txtUsername.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.txtUsername.Name = "txtUsername";
@@ -168,6 +170,7 @@ namespace ProtestRelay {
             // 
             // txtArgs
             // 
+            this.txtArgs.Cursor = System.Windows.Forms.Cursors.IBeam;
             this.txtArgs.Location = new System.Drawing.Point(349, 107);
             this.txtArgs.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.txtArgs.Name = "txtArgs";
@@ -177,6 +180,7 @@ namespace ProtestRelay {
             // 
             // txtExecutable
             // 
+            this.txtExecutable.Cursor = System.Windows.Forms.Cursors.IBeam;
             this.txtExecutable.Location = new System.Drawing.Point(349, 66);
             this.txtExecutable.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.txtExecutable.Name = "txtExecutable";
@@ -405,6 +409,7 @@ namespace ProtestRelay {
             // 
             // txtKey
             // 
+            this.txtKey.Cursor = System.Windows.Forms.Cursors.IBeam;
             this.txtKey.Location = new System.Drawing.Point(184, 23);
             this.txtKey.Margin = new System.Windows.Forms.Padding(5, 6, 5, 6);
             this.txtKey.Name = "txtKey";
