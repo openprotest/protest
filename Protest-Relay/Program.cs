@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading;
 using System.Windows.Forms;
 
-namespace ProtestAgent {
+namespace ProtestRelay {
     internal static class Program {
 
         //[System.Runtime.InteropServices.DllImport("kernel32.dll")]

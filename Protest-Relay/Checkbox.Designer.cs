@@ -1,4 +1,4 @@
-﻿namespace ProtestAgent {
+﻿namespace ProtestRelay {
     partial class Checkbox {
         /// <summary> 
         /// Required designer variable.

@@ -5,7 +5,7 @@ using System.IO;
 using System.Text;
 using System.Windows.Forms;
 
-namespace ProtestAgent {
+namespace ProtestRelay {
     public partial class Main : Form {
         private static readonly Brush backgroundBrush = new SolidBrush(Color.FromArgb(128, 128, 128));
         private static readonly Brush foregroundBrush = new SolidBrush(Color.FromArgb(32, 32, 32));
@@ -154,7 +154,7 @@ namespace ProtestAgent {
 
             using (SaveFileDialog frmSave = new SaveFileDialog()) {
                 frmSave.Filter = "Executable (*.exe)|*.exe|All files (*.*)|*.*";
-                frmSave.FileName = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) + "\\.protest\\Protest-Agent.exe";
+                frmSave.FileName = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) + "\\.protest\\Protest-Relay.exe";
 
                 if (frmSave.ShowDialog() == DialogResult.OK) {
                     try {
@@ -168,9 +168,9 @@ namespace ProtestAgent {
         }
 
         private void BtnRegister_Press(object sender, EventArgs e) {
-            FileInfo agentFile = new FileInfo(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) + "\\.protest\\Protest-Agent.exe");
-            if (!agentFile.Exists) {
-                MessageBox.Show("Agent file not found.\nPlease go to step 1.", "Agent file not found", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            FileInfo relayFile = new FileInfo(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) + "\\.protest\\Protest-Relay.exe");
+            if (!relayFile.Exists) {
+                MessageBox.Show("Relay file not found.\nPlease go to step 1.", "Relay file not found", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
@@ -181,7 +181,7 @@ namespace ProtestAgent {
                     using (RegistryKey shellKey = key.CreateSubKey("shell")) {
                         using (RegistryKey openKey = shellKey.CreateSubKey("open")) {
                             using (RegistryKey commandKey = openKey.CreateSubKey("command")) {
-                                commandKey.SetValue("", $"\"{agentFile.FullName}\" \"%1\"");
+                                commandKey.SetValue("", $"\"{relayFile.FullName}\" \"%1\"");
                             }
                         }
                     }
@@ -200,7 +200,7 @@ namespace ProtestAgent {
 
                 if (frmSave.ShowDialog() == DialogResult.OK) {
                     try {
-                        FileInfo agentFile = new FileInfo(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) + "\\.protest\\Protest-Agent.exe");
+                        FileInfo relayFile = new FileInfo(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) + "\\.protest\\Protest-Relay.exe");
 
                         StringBuilder builder = new StringBuilder("Windows Registry Editor Version 5.00");
                         builder.AppendLine();
@@ -217,7 +217,7 @@ namespace ProtestAgent {
                         builder.AppendLine();
 
                         builder.AppendLine("[HKEY_CLASSES_ROOT\\protest\\shell\\open\\command]");
-                        builder.AppendLine($"@=\"\\\"{agentFile.FullName.Replace("\\", "\\\\")}\" \\\"%1\\\"\"");
+                        builder.AppendLine($"@=\"\\\"{relayFile.FullName.Replace("\\", "\\\\")}\" \\\"%1\\\"\"");
                         builder.AppendLine();
 
                         File.WriteAllText(frmSave.FileName, builder.ToString());

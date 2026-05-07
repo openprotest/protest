@@ -1,4 +1,4 @@
-﻿namespace ProtestAgent {
+﻿namespace ProtestRelay {
     partial class Button {
         /// <summary> 
         /// Required designer variable.

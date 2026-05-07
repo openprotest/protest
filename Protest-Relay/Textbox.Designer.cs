@@ -1,4 +1,4 @@
-﻿namespace ProtestAgent {
+﻿namespace ProtestRelay {
     partial class Textbox {
         /// <summary> 
         /// Required designer variable.

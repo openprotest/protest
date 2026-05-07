@@ -1,6 +1,6 @@
 ﻿using System.Drawing;
 
-namespace ProtestAgent {
+namespace ProtestRelay {
     partial class Main {
         /// <summary>
         /// Required designer variable.
@@ -27,17 +27,17 @@ namespace ProtestAgent {
         private void InitializeComponent() {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Main));
             this.pnlTabs = new System.Windows.Forms.Panel();
-            this.tabSetup = new ProtestAgent.TabsControl();
-            this.tabServices = new ProtestAgent.TabsControl();
+            this.tabSetup = new ProtestRelay.TabsControl();
+            this.tabServices = new ProtestRelay.TabsControl();
             this.pnlServices = new System.Windows.Forms.Panel();
-            this.chkEnabled = new ProtestAgent.Checkbox();
-            this.btnApply = new ProtestAgent.Button();
-            this.btnRevert = new ProtestAgent.Button();
-            this.txtPassword = new ProtestAgent.Textbox();
-            this.txtUsername = new ProtestAgent.Textbox();
-            this.txtArgs = new ProtestAgent.Textbox();
-            this.txtExecutable = new ProtestAgent.Textbox();
-            this.btnBrowseExecutable = new ProtestAgent.Button();
+            this.chkEnabled = new ProtestRelay.Checkbox();
+            this.btnApply = new ProtestRelay.Button();
+            this.btnRevert = new ProtestRelay.Button();
+            this.txtPassword = new ProtestRelay.Textbox();
+            this.txtUsername = new ProtestRelay.Textbox();
+            this.txtArgs = new ProtestRelay.Textbox();
+            this.txtExecutable = new ProtestRelay.Textbox();
+            this.btnBrowseExecutable = new ProtestRelay.Button();
             this.lblPassword = new System.Windows.Forms.Label();
             this.lblUsername = new System.Windows.Forms.Label();
             this.lblArguments = new System.Windows.Forms.Label();
@@ -53,12 +53,12 @@ namespace ProtestAgent {
             this.lblStep1 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
             this.label1 = new System.Windows.Forms.Label();
-            this.btnExport = new ProtestAgent.Button();
-            this.btnRegister = new ProtestAgent.Button();
-            this.btnSave = new ProtestAgent.Button();
-            this.btnCopyKey = new ProtestAgent.Button();
-            this.btnGenerateKey = new ProtestAgent.Button();
-            this.txtKey = new ProtestAgent.Textbox();
+            this.btnExport = new ProtestRelay.Button();
+            this.btnRegister = new ProtestRelay.Button();
+            this.btnSave = new ProtestRelay.Button();
+            this.btnCopyKey = new ProtestRelay.Button();
+            this.btnGenerateKey = new ProtestRelay.Button();
+            this.txtKey = new ProtestRelay.Textbox();
             this.pnlTabs.SuspendLayout();
             this.pnlServices.SuspendLayout();
             this.pnlSetup.SuspendLayout();
@@ -77,7 +77,7 @@ namespace ProtestAgent {
             // 
             // tabSetup
             // 
-            this.tabSetup.Icon = global::ProtestAgent.Properties.Resources.wrench;
+            this.tabSetup.Icon = global::ProtestRelay.Properties.Resources.wrench;
             this.tabSetup.Label = "Setup";
             this.tabSetup.Location = new System.Drawing.Point(0, 57);
             this.tabSetup.Margin = new System.Windows.Forms.Padding(4);
@@ -87,7 +87,7 @@ namespace ProtestAgent {
             // 
             // tabServices
             // 
-            this.tabServices.Icon = global::ProtestAgent.Properties.Resources.service;
+            this.tabServices.Icon = global::ProtestRelay.Properties.Resources.service;
             this.tabServices.Label = "Services";
             this.tabServices.Location = new System.Drawing.Point(0, 9);
             this.tabServices.Margin = new System.Windows.Forms.Padding(4);
@@ -150,7 +150,6 @@ namespace ProtestAgent {
             // 
             // txtPassword
             // 
-            this.txtPassword.Cursor = System.Windows.Forms.Cursors.IBeam;
             this.txtPassword.Location = new System.Drawing.Point(349, 194);
             this.txtPassword.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.txtPassword.Name = "txtPassword";
@@ -160,7 +159,6 @@ namespace ProtestAgent {
             // 
             // txtUsername
             // 
-            this.txtUsername.Cursor = System.Windows.Forms.Cursors.IBeam;
             this.txtUsername.Location = new System.Drawing.Point(349, 152);
             this.txtUsername.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.txtUsername.Name = "txtUsername";
@@ -170,7 +168,6 @@ namespace ProtestAgent {
             // 
             // txtArgs
             // 
-            this.txtArgs.Cursor = System.Windows.Forms.Cursors.IBeam;
             this.txtArgs.Location = new System.Drawing.Point(349, 107);
             this.txtArgs.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.txtArgs.Name = "txtArgs";
@@ -180,7 +177,6 @@ namespace ProtestAgent {
             // 
             // txtExecutable
             // 
-            this.txtExecutable.Cursor = System.Windows.Forms.Cursors.IBeam;
             this.txtExecutable.Location = new System.Drawing.Point(349, 66);
             this.txtExecutable.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.txtExecutable.Name = "txtExecutable";
@@ -409,7 +405,6 @@ namespace ProtestAgent {
             // 
             // txtKey
             // 
-            this.txtKey.Cursor = System.Windows.Forms.Cursors.IBeam;
             this.txtKey.Location = new System.Drawing.Point(184, 23);
             this.txtKey.Margin = new System.Windows.Forms.Padding(5, 6, 5, 6);
             this.txtKey.Name = "txtKey";
@@ -434,7 +429,7 @@ namespace ProtestAgent {
             this.MaximizeBox = false;
             this.Name = "Main";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "Protest - Agent";
+            this.Text = "Protest - Relay";
             this.pnlTabs.ResumeLayout(false);
             this.pnlServices.ResumeLayout(false);
             this.pnlServices.PerformLayout();

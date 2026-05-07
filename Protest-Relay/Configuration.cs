@@ -4,7 +4,7 @@ using System.Text;
 using System.Security.Cryptography;
 using System.Windows.Forms;
 
-namespace ProtestAgent {
+namespace ProtestRelay {
     internal class Configuration {
         private const string SALT = "3pVDs55EbUDHL48qMm4oY13uUw69RQoH";
 
@@ -84,7 +84,7 @@ namespace ProtestAgent {
         }
 
         public static void Load() {
-            FileInfo configFile = new FileInfo(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) + "\\.protest\\protest-agent.cfg");
+            FileInfo configFile = new FileInfo(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) + "\\.protest\\protest-relay.cfg");
             if (!configFile.Exists) {
                 stamp.enabled    = true;
                 smb.enabled      = true;
@@ -152,20 +152,20 @@ namespace ProtestAgent {
                     case "uvnc_args"    : uvnc.arguments = value; break;
                     case "uvnc_password": uvnc.password  = DecryptB64(value, key, iv); break;
 
-                    case "anydesk_enable": anydesk.enabled = value == "True"; break;
-                    case "anydesk_path"  : anydesk.path = value; break;
+                    case "anydesk_enable": anydesk.enabled   = value == "True"; break;
+                    case "anydesk_path"  : anydesk.path      = value; break;
                     case "anydesk_args"  : anydesk.arguments = value; break;
 
                     case "winbox_enable"  : winbox.enabled   = value == "True"; break;
                     case "winbox_path"    : winbox.path      = value; break;
                     case "winbox_args"    : winbox.arguments = value; break;
                     case "winbox_username": winbox.username  = value; break;
-                    case "winbox_password": winbox.password = DecryptB64(value, key, iv); break;
+                    case "winbox_password": winbox.password  = DecryptB64(value, key, iv); break;
                     }
                 }
             }
             catch (Exception ex) {
-                Logger.WriteLine(ex);
+                Console.WriteLine(ex);
             }
             finally {
                 fileReader.Close();
@@ -177,10 +177,10 @@ namespace ProtestAgent {
             byte[] iv = KeyToBytes(presharedKey, 16); //128-bits
 
             try {
-            FileInfo configFile = new FileInfo(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) + "\\.protest\\protest-agent.cfg");
+            FileInfo configFile = new FileInfo(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) + "\\.protest\\protest-relay.cfg");
 
                 StringBuilder builder = new StringBuilder();
-                builder.AppendLine("# Pro-test Agent 5.0");
+                builder.AppendLine("# Pro-test Relay 5.0");
                 builder.AppendLine();
 
                 builder.AppendLine($"key = {presharedKey}");

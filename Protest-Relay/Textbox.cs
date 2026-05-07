@@ -2,7 +2,7 @@
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 
-namespace ProtestAgent {
+namespace ProtestRelay {
     public partial class Textbox : UserControl {
         private static readonly Pen selectPen = new Pen(Color.FromArgb(255, 102, 0), 2);
         private static readonly Pen outlinePen = new Pen(Color.FromArgb(128, 128, 128), 2);

@@ -4,7 +4,7 @@ using System.Drawing.Drawing2D;
 
 using System.Windows.Forms;
 
-namespace ProtestAgent {
+namespace ProtestRelay {
     public partial class Checkbox : UserControl {
         private static readonly Pen selectPen = new Pen(Color.FromArgb(255, 102, 0), 6);
         private static readonly SolidBrush backgroundBrush = new SolidBrush(Color.FromArgb(96, 96, 96));

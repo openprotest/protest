@@ -1,4 +1,4 @@
-﻿namespace ProtestAgent {
+﻿namespace ProtestRelay {
     partial class TabsControl {
         /// <summary> 
         /// Required designer variable.
