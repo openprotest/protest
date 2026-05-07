@@ -1536,7 +1536,7 @@ class Environment extends Tabs {
 
 		authPasswordStampButton.onclick = ()=> {
 			if (authPasswordInput.value.length < 1) return;
-			UI.PromptAgent(this, "stamp", authPasswordInput.value);
+			UI.PromptRelay(this, "stamp", authPasswordInput.value);
 
 			if (authPasswordStampButton.style.animation === "") {
 				authPasswordStampButton.style.animation = "bg-stamp .6s linear";
@@ -1551,7 +1551,7 @@ class Environment extends Tabs {
 
 		privacyPasswordStampButton.onclick = ()=> {
 			if (privacyPasswordInput.value.length < 1) return;
-			UI.PromptAgent(this, "stamp", privacyPasswordInput.value);
+			UI.PromptRelay(this, "stamp", privacyPasswordInput.value);
 
 			if (privacyPasswordStampButton.style.animation === "") {
 				privacyPasswordStampButton.style.animation = "bg-stamp .6s linear";

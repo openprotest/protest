@@ -282,7 +282,7 @@ class PassGen extends Window {
 
 		stampButton.onclick = ()=> {
 			if (this.passwordInput.value.length < 1) return;
-			UI.PromptAgent(this, "stamp", this.passwordInput.value);
+			UI.PromptRelay(this, "stamp", this.passwordInput.value);
 
 			if (stampButton.style.animation === "") {
 				stampButton.style.animation = "bg-stamp .6s linear";

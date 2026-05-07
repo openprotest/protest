@@ -491,14 +491,14 @@ class DeviceView extends View {
 				monitorButton.onclick = ()=> new Monitor({file: this.args.file});
 
 				const computerMngButton = this.CreateSideButton("mono/computermanage.svg", "Management");
-				computerMngButton.onclick = ()=> UI.PromptAgent(this, "management", host);
+				computerMngButton.onclick = ()=> UI.PromptRelay(this, "management", host);
 
 				const psRemoteButton = this.CreateSideButton("mono/remote.svg", "PS remote"); //psexec
-				psRemoteButton.onclick = ()=> UI.PromptAgent(this, "psremote", host);
+				psRemoteButton.onclick = ()=> UI.PromptRelay(this, "psremote", host);
 
 				if (ports.includes(445)) { //smb
 					const smbButton = this.CreateSideButton("mono/shared.svg", "SMB");
-					smbButton.onclick = ()=> UI.PromptAgent(this, "smb", `\\\\${host}\\`);
+					smbButton.onclick = ()=> UI.PromptRelay(this, "smb", `\\\\${host}\\`);
 				}
 			}
 
@@ -630,7 +630,7 @@ class DeviceView extends View {
 						this.DownloadRdp(host, overwriteProtocol.rdp);
 					}
 					else {
-						UI.PromptAgent(this, "rdp", `${host}:${overwriteProtocol.rdp}`);
+						UI.PromptRelay(this, "rdp", `${host}:${overwriteProtocol.rdp}`);
 					}
 				};
 			}
@@ -641,7 +641,7 @@ class DeviceView extends View {
 						this.DownloadRdp(host, 3389);
 					}
 					else {
-						UI.PromptAgent(this, "rdp", host);
+						UI.PromptRelay(this, "rdp", host);
 					}
 				};
 			}
@@ -660,7 +660,7 @@ class DeviceView extends View {
 							uvncPassword = await response.text();
 							if (uvncPassword.length === 0) uvncPassword = null;
 						}
-						UI.PromptAgent(this, "uvnc", `${host}:${overwriteProtocol.uvnc}`, uvncPassword);
+						UI.PromptRelay(this, "uvnc", `${host}:${overwriteProtocol.uvnc}`, uvncPassword);
 					}
 				};
 			}
@@ -678,18 +678,18 @@ class DeviceView extends View {
 							uvncPassword = await response.text();
 							if (uvncPassword.length === 0) uvncPassword = null;
 						}
-						UI.PromptAgent(this, "uvnc", host, uvncPassword);
+						UI.PromptRelay(this, "uvnc", host, uvncPassword);
 					}
 				};
 			}
 
 			if (overwriteProtocol.winbox) { //winbox
 				const actionButton = this.CreateSideButton("mono/mikrotik.svg", "Winbox");
-				actionButton.onclick = ()=> UI.PromptAgent(this, "winbox", `${host}:${overwriteProtocol.winbox}`);
+				actionButton.onclick = ()=> UI.PromptRelay(this, "winbox", `${host}:${overwriteProtocol.winbox}`);
 			}
 			else if (ports.includes(8291)) {
 				const actionButton = this.CreateSideButton("mono/mikrotik.svg", "Winbox");
-				actionButton.onclick = ()=> UI.PromptAgent(this, "winbox", host);
+				actionButton.onclick = ()=> UI.PromptRelay(this, "winbox", host);
 			}
 
 			if (ports.includes(9100)) { //print test
@@ -710,7 +710,7 @@ class DeviceView extends View {
 
 		if ("anydesk id" in this.link && this.link["anydesk id"].v.length > 0) { //anydesk
 			const actionButton = this.CreateSideButton("mono/anydesk.svg", "AnyDesk");
-			actionButton.onclick = ()=> UI.PromptAgent(this, "anydesk", this.link["anydesk id"].v);
+			actionButton.onclick = ()=> UI.PromptRelay(this, "anydesk", this.link["anydesk id"].v);
 		}
 
 		if (this.link.type) {
@@ -1559,7 +1559,7 @@ class DeviceView extends View {
 					driveButton.secondary.style.boxShadow = `var(--clr-dark) ${json.used * 64 / json.total}px 0 0 inset`;
 				}, WIN.ANIME_DURATION);
 
-				driveButton.button.onclick = ()=> UI.PromptAgent(this, "smb", json.path);
+				driveButton.button.onclick = ()=> UI.PromptRelay(this, "smb", json.path);
 			}
 			else if (json.activeUser) {
 				const userButton = this.CreateInfoButton(json.activeUser, "/mono/user.svg");

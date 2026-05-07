@@ -82,13 +82,13 @@ const UI = {
 		}
 	},
 
-	PromptAgent: (parent, command, value, password)=>{
-		let key = localStorage.getItem("agent_key");
+	PromptRelay: (parent, command, value, password)=>{
+		let key = localStorage.getItem("relay_key");
 
 		if (!key) {
-			const okButton = parent.ConfirmBox("Agent is not configured", false, "mono/agent.svg");
+			const okButton = parent.ConfirmBox("Relay is not configured", false, "mono/relay.svg");
 			okButton.value = "Configure";
-			okButton.addEventListener("click", ()=>{new Personalize("agent")});
+			okButton.addEventListener("click", ()=>{new Personalize("relay")});
 			return;
 		}
 
@@ -406,7 +406,7 @@ const MENU = {
 		{ t:"Appearance",      i:"mono/tv.svg?light",          g:"manage", h:true,  f:()=> new Personalize("appearance") },
 		{ t:"Regional format", i:"mono/earth.svg?light",       g:"manage", h:true,  f:()=> new Personalize("region") },
 		{ t:"Session",         i:"mono/hourglass.svg?light",   g:"manage", h:true,  f:()=> new Personalize("session") },
-		{ t:"Agent",           i:"mono/agent.svg?light",       g:"manage", h:true,  f:()=> new Personalize("agent") },
+		{ t:"Relay",           i:"mono/relay.svg?light",       g:"manage", h:true,  f:()=> new Personalize("relay") },
 
 		{ t:"RBAC",           i:"mono/rbac.svg?light",        g:"manage", h:false, f:()=> new AccessControl("rbac"), k:"rbac acl role based users access control list permissions" },
 		{ t:"Open sessions",  i:"mono/hourglass.svg?light",   g:"manage", h:true,  f:()=> new AccessControl("sessions"), k:"alive connections" },

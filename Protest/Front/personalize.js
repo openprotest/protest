@@ -14,13 +14,13 @@ class Personalize extends Tabs {
 		this.regionTab = this.AddTab("Regional format", "mono/earth.svg" );
 		this.sessionTab = this.AddTab("Session", "mono/hourglass.svg");
 		this.chatTab = this.AddTab("Chat", "mono/chat.svg");
-		this.agentTab = this.AddTab("Agent", "mono/agent.svg");
+		this.relayTab = this.AddTab("Relay", "mono/relay.svg");
 
 		this.guiTab.onclick = ()=> this.ShowGui();
 		this.regionTab.onclick = ()=> this.ShowRegion();
 		this.sessionTab.onclick = ()=> this.ShowSession();
 		this.chatTab.onclick = ()=> this.ShowChat();
-		this.agentTab.onclick = ()=> this.ShowAgent();
+		this.relayTab.onclick = ()=> this.ShowRelay();
 
 		switch (this.args) {
 		case "region":
@@ -38,9 +38,9 @@ class Personalize extends Tabs {
 			this.ShowChat();
 			break;
 
-		case "agent":
-			this.agentTab.className = "v-tab-selected";
-			this.ShowAgent();
+		case "relay":
+			this.relayTab.className = "v-tab-selected";
+			this.ShowRelay();
 			break;
 
 		default:
@@ -802,8 +802,8 @@ class Personalize extends Tabs {
 		Apply();
 	}
 
-	ShowAgent() {
-		this.args = "agent";
+	ShowRelay() {
+		this.args = "relay";
 		this.tabsPanel.textContent = "";
 
 		const keyLabel = document.createElement("div");
@@ -814,7 +814,7 @@ class Personalize extends Tabs {
 
 		this.presharedKeyInput = document.createElement("input");
 		this.presharedKeyInput.type = "text";
-		this.presharedKeyInput.value = localStorage.getItem("agent_key");
+		this.presharedKeyInput.value = localStorage.getItem("relay_key");
 		this.presharedKeyInput.style.width = "200px";
 
 		this.tabsPanel.append(keyLabel, this.presharedKeyInput);
@@ -824,7 +824,7 @@ class Personalize extends Tabs {
 
 		const settingsButton = document.createElement("input");
 		settingsButton.type = "button";
-		settingsButton.value = "Prompt agent settings";
+		settingsButton.value = "Prompt relay settings";
 		settingsButton.style.padding = "8px 16px";
 		settingsButton.style.height = "36px";
 		this.tabsPanel.appendChild(settingsButton);
@@ -844,7 +844,7 @@ class Personalize extends Tabs {
 		link.style.background = "url(mono/download.svg) 4px center / 24px 24px no-repeat";
 		link.target = "_blank";
 		link.href = "https://github.com/openprotest/protest/releases/latest";
-		link.textContent = "Download agent";
+		link.textContent = "Download relay";
 		this.tabsPanel.appendChild(link);
 
 		this.tabsPanel.appendChild(document.createElement("br"));
@@ -871,12 +871,12 @@ class Personalize extends Tabs {
 		this.preferVncFileCheckbox.checked = localStorage.getItem("prefer_cnv_file") === "true";
 
 		const Apply = ()=> {
-			localStorage.setItem("agent_key", this.presharedKeyInput.value);
+			localStorage.setItem("relay_key", this.presharedKeyInput.value);
 			localStorage.setItem("prefer_rdp_file", this.preferRdpFileCheckbox.checked);
 			localStorage.setItem("prefer_cnv_file", this.preferVncFileCheckbox.checked);
 
 			for (let i = 0; i < WIN.array.length; i++) { //update other setting windows
-				if (WIN.array[i] instanceof Personalize && WIN.array[i].args === "agent" && WIN.array[i] !== this) {
+				if (WIN.array[i] instanceof Personalize && WIN.array[i].args === "relay" && WIN.array[i] !== this) {
 					WIN.array[i].presharedKeyInput.value = this.presharedKeyInput.value;
 					WIN.array[i].preferRdpFileCheckbox.checked = this.preferRdpFileCheckbox.checked;
 					WIN.array[i].preferVncFileCheckbox.checked = this.preferVncFileCheckbox.checked;
@@ -894,10 +894,10 @@ class Personalize extends Tabs {
 
 		settingsButton.onclick = ()=> {
 			if (this.presharedKeyInput.value === "") {
-				this.ConfirmBox("Agent is not configured. Please set a preshared key.", true, "mono/agent.svg");
+				this.ConfirmBox("Relay is not configured. Please set a pre-shared key.", true, "mono/relay.svg");
 			}
 			else {
-				UI.PromptAgent(this, "settings", "--");
+				UI.PromptRelay(this, "settings", "--");
 			}
 		};
 	}

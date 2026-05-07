@@ -341,7 +341,7 @@ class View extends Window {
 					const response = await fetch(`/db/${this.dbTarget}/attribute?file=${this.args.file}&attribute=${name}`);
 					if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
 					const password = await response.text();
-					UI.PromptAgent(this, "stamp", password);
+					UI.PromptRelay(this, "stamp", password);
 
 					if (stampButton.style.animation === "") {
 						stampButton.style.animation = "bg-stamp .6s linear";
