@@ -1,3 +1,4 @@
+"use strict";
 class ScreenCapture extends Window {
 	constructor(args) {
 		super();

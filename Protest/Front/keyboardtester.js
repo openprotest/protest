@@ -1,3 +1,4 @@
+"use strict";
 class KeyboardTester extends Window {
 	constructor(args) {
 		super();

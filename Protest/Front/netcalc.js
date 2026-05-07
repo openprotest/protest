@@ -1,3 +1,4 @@
+"use strict";
 class NetCalc extends Window {
 	constructor() {
 		super();

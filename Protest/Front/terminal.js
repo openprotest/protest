@@ -1,3 +1,4 @@
+"use strict";
 class Terminal extends PtyHost {
 	constructor(args) {
 		super(args);

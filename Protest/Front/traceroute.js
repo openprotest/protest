@@ -1,3 +1,4 @@
+"use strict";
 class TraceRoute extends Console {
 	constructor(args) {
 		super();

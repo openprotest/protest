@@ -1,3 +1,4 @@
+"use strict";
 class MacLookup extends Console {
 	constructor(args) {
 		super();

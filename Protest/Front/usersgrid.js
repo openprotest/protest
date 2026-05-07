@@ -1,3 +1,4 @@
+"use strict";
 class UsersGrid extends Grid {
 	constructor() {
 		super(LOADER.users.data);

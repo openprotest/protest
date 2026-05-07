@@ -1,3 +1,4 @@
+"use strict";
 class WebsiteCheck extends Window {
 	constructor(args) {
 		super();

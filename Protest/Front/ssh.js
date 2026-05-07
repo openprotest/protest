@@ -1,3 +1,4 @@
+"use strict";
 class Ssh extends PtyHost {
 	constructor(args) {
 		super(args);

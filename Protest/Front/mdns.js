@@ -1,3 +1,4 @@
+"use strict";
 class Mdns extends Console {
 	static RECORD_TYPES = [
 		["A",     "IPv4 Address",       "hsl(20,85%,50%)",  1],

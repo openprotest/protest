@@ -1,3 +1,4 @@
+"use strict";
 class ReverseProxy extends List {
 	static CANVAS_W = 800;
 	static CANVAS_H = 200;

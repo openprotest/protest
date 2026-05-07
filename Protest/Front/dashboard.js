@@ -1,3 +1,4 @@
+"use strict";
 class Dashboard extends Window {
 	constructor(args) {
 		super(args);

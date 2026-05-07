@@ -1,3 +1,5 @@
+"use strict";
+
 const KEEP = {
 	isSecure: window.location.href.toLowerCase().startsWith("https://"),
 	socket: null,

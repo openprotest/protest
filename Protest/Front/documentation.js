@@ -1,3 +1,4 @@
+"use strict";
 class Documentation extends Window {
 	constructor(args) {
 		super();

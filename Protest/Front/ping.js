@@ -1,3 +1,4 @@
+"use strict";
 class Ping extends Console {
 	static HISTORY_LIMIT = 32;
 	static MAP_SIZE = 192;

@@ -1,3 +1,4 @@
+"use strict";
 class CameraTester extends Window {
 	constructor(args) {
 		super();

@@ -1,3 +1,4 @@
+"use strict";
 class HexViewer extends Window {
 	static DNS_RECORD_TYPES = {
 		1: "A",

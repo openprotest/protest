@@ -1,3 +1,4 @@
+"use strict";
 class Watchdog extends Window {
 	static HOUR_TICKS = 3_600_000;
 	static DAY_TICKS = 3_600_000 * 24;

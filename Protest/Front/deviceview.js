@@ -1,3 +1,4 @@
+"use strict";
 class DeviceView extends View {
 	static DAY_TICKS = 3_600_000 * 24;
 

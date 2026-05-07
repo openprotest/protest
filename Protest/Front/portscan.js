@@ -1,3 +1,4 @@
+"use strict";
 class PortScan extends Console {
 	static PROTOCOL = {
 		1: "TCPMUX	TCP Port Service Multiplexer",

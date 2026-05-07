@@ -1,3 +1,4 @@
+"use strict";
 class UserView extends View {
 	static USERS_GROUP_SCHEMA = [
 		"type", "title", "department", "division", "company",

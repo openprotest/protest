@@ -1,3 +1,4 @@
+"use strict";
 class Tabs extends Window {
 	constructor() {
 		super();

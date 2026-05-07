@@ -1,3 +1,4 @@
+"use strict";
 class Certificates extends List {
 	constructor(args) {
 		super(args);

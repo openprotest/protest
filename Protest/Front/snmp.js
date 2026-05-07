@@ -1,3 +1,4 @@
+"use strict";
 class Snmp extends Window {
 
 	static OID_CACHE = {};

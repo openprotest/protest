@@ -1,5 +1,4 @@
 "use strict";
-
 class Chat extends Window {
 	static EMOJIS = [
 		"mono/handthumbsup.svg",

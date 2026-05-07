@@ -1,3 +1,4 @@
+"use strict";
 class Automation extends List {
 	constructor(args) {
 		super(args);

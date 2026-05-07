@@ -1,3 +1,4 @@
+"use strict";
 class PtyHost extends Window {
 	static CHAR_WIDTH = 8;
 	static CHAR_HEIGHT = 18;

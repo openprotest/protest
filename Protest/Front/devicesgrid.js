@@ -1,3 +1,4 @@
+"use strict";
 class DevicesGrid extends Grid {
 	constructor() {
 		super(LOADER.devices.data);

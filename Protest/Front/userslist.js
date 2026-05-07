@@ -1,3 +1,4 @@
+"use strict";
 class UsersList extends List {
 	constructor(args) {
 		super(args);

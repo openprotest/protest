@@ -1,3 +1,4 @@
+"use strict";
 class DevicesList extends List {
 	constructor(args) {
 		super(args);

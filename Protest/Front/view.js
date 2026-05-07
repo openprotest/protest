@@ -1,3 +1,4 @@
+"use strict";
 class View extends Window {
 	constructor(args) {
 		super();

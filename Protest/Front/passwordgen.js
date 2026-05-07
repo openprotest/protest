@@ -1,3 +1,4 @@
+"use strict";
 class PassGen extends Window {
 	constructor() {
 		super();

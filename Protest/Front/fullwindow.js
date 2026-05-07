@@ -1,3 +1,5 @@
+"use strict";
+
 const WIN = {
 	ANIME_DURATION: 200,
 	x0: 0,

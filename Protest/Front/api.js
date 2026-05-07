@@ -1,3 +1,4 @@
+"use strict";
 class Api extends List {
 	constructor(args) {
 		super();

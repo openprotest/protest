@@ -1,3 +1,4 @@
+"use strict";
 class About extends Tabs {
 	constructor(args) {
 		super();

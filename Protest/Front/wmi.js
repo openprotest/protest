@@ -1,3 +1,4 @@
+"use strict";
 class Wmi extends Window {
 	constructor(args) {
 		super();

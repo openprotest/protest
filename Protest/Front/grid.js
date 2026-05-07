@@ -1,3 +1,4 @@
+"use strict";
 class Grid extends Window {
 	constructor(data) {
 		super();

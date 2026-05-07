@@ -1,3 +1,4 @@
+"use strict";
 class IpDiscovery extends List {
 
 	static PROTOCOL_TO_ICON = {

@@ -1,3 +1,4 @@
+"use strict";
 class IpBox {
 	constructor() {
 		this.enterElement = null;

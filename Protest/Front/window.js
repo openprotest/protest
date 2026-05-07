@@ -15,6 +15,9 @@
  Released into the public domain under the GPL v3
  For more information, visit https://github.com/openprotest/protest
 */
+
+"use strict";
+
 var onMobile = /Android|webOS|iPhone|iPad|iPod|Opera Mini/i.test(navigator.userAgent);
 
 const WIN = {

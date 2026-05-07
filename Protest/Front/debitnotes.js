@@ -1,3 +1,4 @@
+"use strict";
 class DebitNotes extends Window {
 	static TEMPLATES = [];
 	static BANNERS = [];

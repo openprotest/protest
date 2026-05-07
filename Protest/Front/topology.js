@@ -1,3 +1,4 @@
+"use strict";
 class Topology extends Window {
 	static DEVICE_ICON = {
 		"firewall"    : "mono/firewall.svg",

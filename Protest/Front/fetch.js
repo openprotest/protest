@@ -1,3 +1,4 @@
+"use strict";
 class Fetch extends Tabs {
 	constructor(args) {
 		super();

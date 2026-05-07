@@ -1,3 +1,4 @@
+"use strict";
 class Monitor extends Window {
 	constructor(args) {
 		super();

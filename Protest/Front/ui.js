@@ -1,3 +1,5 @@
+"use strict";
+
 const UNIX_BASE_TICKS = 62135596800000; //divided by 10000
 
 const UI = {

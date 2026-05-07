@@ -1,3 +1,4 @@
+"use strict";
 class Environment extends Tabs {
 	constructor(args) {
 		super();

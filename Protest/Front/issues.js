@@ -1,3 +1,4 @@
+"use strict";
 class Issues extends List {
 	static SEVERITY_TEXT = {
 		1 : "Info",

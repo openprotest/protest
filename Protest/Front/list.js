@@ -1,3 +1,4 @@
+"use strict";
 class List extends Window {
 	static MIN_CELL_SIZE = 40;
 
