@@ -415,7 +415,7 @@ class Chat extends Window {
 			const baseR = Math.min(w, h) * 0.18;
 
 			analyser.getByteTimeDomainData(data);
-			
+
 			const span = data.length / 4;
 
 			for (let j=1; j<4; j++) {
@@ -434,7 +434,7 @@ class Chat extends Window {
 				const r = baseR * (1 + amplitude * 0.5);
 
 				ctx.beginPath();
-				ctx.arc(cx, cy, Math.min(w, h)/16 + r * j / 2 + amplitude * j, 0, Math.PI * 2);				
+				ctx.arc(cx, cy, Math.min(w, h)/16 + r * j / 2 + amplitude * j, 0, Math.PI * 2);
 				ctx.globalAlpha = 1;
 				ctx.stroke();
 				ctx.globalAlpha = .4;

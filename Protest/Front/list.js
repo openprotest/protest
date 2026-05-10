@@ -564,7 +564,7 @@ class List extends Window {
 		this.columnsElements = this.columnsElements.sort((a, b)=> a.offsetLeft - b.offsetLeft);
 
 		this.listTitle.replaceChildren(...this.columnsElements);
-		
+
 		for (let i = 0; i < this.columnsElements.length; i++) {
 			this.columnsElements[i].style.transition = ".2s";
 			this.columnsElements[i].style.opacity = "1";

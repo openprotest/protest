@@ -137,7 +137,7 @@ internal static class Wmi {
                     string[] split = v.Split(';');
                     for (int i = 0; i < split.Length; i++) {
                         split[i] = split[i].Trim();
-                        
+
                         if (format != null) {
                             split[i] = format.Invoke(split[i]);
                         }

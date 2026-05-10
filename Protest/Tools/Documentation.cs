@@ -165,7 +165,7 @@ internal static class Documentation {
                 int tagStop = payload[1].IndexOf('>', idx);
                 if (tagStop == -1) break;
                 idx = tagStop + 1;
-                
+
                 continue;
             }
 

@@ -406,7 +406,7 @@ internal static class Watchdog {
 
         for (int i = 0; i < retries; i++) {
             X509Certificate2 cert2 = null;
-    
+
             try {
                 using TcpClient tcp = new TcpClient {
                     ReceiveTimeout = timeout,

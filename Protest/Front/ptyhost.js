@@ -233,7 +233,7 @@ class PtyHost extends Window {
 		this.autoscrollButton.style.display = "none";
 
 		this.defaultElement = this.content;
-		
+
 		this.win.style.containerType = "inline-size";
 
 		this.content.tabIndex = 1;
@@ -275,7 +275,7 @@ class PtyHost extends Window {
 		this.win.appendChild(this.minimap);
 
 		const syncContentTop = ()=> this.win.style.setProperty("--content-top", this.content.style.top || "76px");
-		
+
 		syncContentTop();
 		new MutationObserver(syncContentTop).observe(this.content, { attributes: true, attributeFilter: ["style"] });
 

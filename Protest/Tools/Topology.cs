@@ -668,7 +668,7 @@ internal static class Topology {
                 if (MatchDatabaseAttribute(device.Value, "mac address", portId)) return device.Key;
             }
             break;
-        
+
         case 4: //ip address
             foreach (KeyValuePair<string, Database.Entry> device in DatabaseInstances.devices.dictionary) {
                 if (MatchDatabaseAttribute(device.Value, "ip", portId)) return device.Key;

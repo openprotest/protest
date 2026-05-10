@@ -416,7 +416,7 @@ internal static class Fetch {
 
             if (!data.ContainsKey("mac address")) {
                 IList<Variable> macAddressResult = Protocols.Snmp.Polling.SnmpQuery(ipAddress, profile, [Protocols.Snmp.Oid.LLDP_LOCAL_SYS_DATA], Polling.SnmpOperation.Walk);
-            
+
                 if (macAddressResult is not null) {
                     Dictionary<string, byte[]> parsed = Protocols.Snmp.Polling.ParseResponseBytes(macAddressResult);
                     if (parsed is not null && parsed.TryGetValue(Protocols.Snmp.Oid.LLDP_LOCAL_CHASSIS_ID_TYPE, out byte[] chassisIdType)

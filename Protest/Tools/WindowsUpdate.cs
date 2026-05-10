@@ -193,7 +193,6 @@ internal static class WindowsUpdate {
     }
 
     internal static bool EvaluateResults() {
-        
         return false;
     }
 

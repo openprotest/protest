@@ -3322,7 +3322,7 @@ class DeviceView extends View {
 		}
 
 		frame.style.fontSize = columns > 24 ? "7px" : "8px";
-		
+
 		const size = columns > 24 ? (columns >= 28 ? 26 : 28) : 32;
 		frame.style.maxWidth = `${columns * size + 22}px`;
 		frame.style.gridTemplateColumns = `repeat(${columns}, ${size}px)`;

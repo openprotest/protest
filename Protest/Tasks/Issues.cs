@@ -789,7 +789,7 @@ internal static class Issues {
                     isUser     = true,
                 });
             }
-            
+
             if (result is not null) {
                 bool isDisabled = false;
                 if (severityThreshold <= SeverityLevel.info

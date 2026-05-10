@@ -342,7 +342,7 @@ internal static class Monitor {
     private static async Task HandleWmiQuery(WebSocket ws, ManagementScope scope, Query query) {
         using ManagementObjectSearcher searcher = new ManagementObjectSearcher(scope, new SelectQuery(query.value));
         using ManagementObjectCollection moc = searcher.Get();
-        
+
         Dictionary<string, List<string>> data = new Dictionary<string, List<string>>();
 
         foreach (ManagementObject o in moc.Cast<ManagementObject>()) {
