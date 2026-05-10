@@ -13,6 +13,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Protest.Tasks;
 
@@ -78,7 +79,7 @@ internal static class Watchdog {
     private static readonly JsonSerializerOptions watcherSerializerOptions = new();
     private static readonly JsonSerializerOptions notificationSerializerOptions = new();
 
-    private static readonly HttpClient sharedHttpClient = new HttpClient();
+    private static readonly HttpClient sharedHttpClient = new HttpClient{ Timeout = TimeSpan.FromSeconds(15) };
 
     public static void Initialize() {
         watcherSerializerOptions.Converters.Add(new WatcherJsonConverter());
@@ -155,7 +156,7 @@ internal static class Watchdog {
 
                 long ticksElapsed = DateTime.UtcNow.Ticks - watcher.lastCheck;
                 if (watcher.interval * MINUTE_IN_TICKS - ticksElapsed < 10_000_000) { // < 1s
-                    new Thread(() => Watch(watcher, smtpProfiles)).Start();
+                    new Thread(async () => await Watch(watcher, smtpProfiles)).Start();
                 }
                 else {
                     int millisRemain = (int)((watcher.interval * MINUTE_IN_TICKS - ticksElapsed) / 10_000);
@@ -179,15 +180,15 @@ internal static class Watchdog {
         }
     }
 
-    private static void Watch(Watcher watcher, SmtpProfiles.Profile[] smtpProfiles) {
+    private static async Task Watch(Watcher watcher, SmtpProfiles.Profile[] smtpProfiles) {
         watcher.lastCheck = DateTime.UtcNow.Ticks;
 
         short status = watcher.type switch {
             WatcherType.icmp        => CheckIcmp(watcher),
             WatcherType.tcp         => CheckTcp(watcher),
             WatcherType.dns         => CheckDns(watcher),
-            WatcherType.http        => CheckHttp(watcher),
-            WatcherType.httpKeyword => CheckHttpKeyword(watcher),
+            WatcherType.http        => await CheckHttp(watcher),
+            WatcherType.httpKeyword => await CheckHttpKeyword(watcher),
             WatcherType.tls         => CheckTls(watcher),
             _ => -9
         };
@@ -289,23 +290,23 @@ internal static class Watchdog {
         return result;
     }
 
-    private static short CheckHttp(Watcher watcher) {
+    private static async Task<short> CheckHttp(Watcher watcher) {
         short result = -1;
         for (int i = 0; i < watcher.retries; i++) {
             try {
                 HttpResponseMessage response = watcher.method switch {
-                    "GET"    => sharedHttpClient.GetAsync(watcher.target).GetAwaiter().GetResult(),
-                    "POST"   => sharedHttpClient.PostAsync(watcher.target, null).GetAwaiter().GetResult(),
-                    "PUT"    => sharedHttpClient.PutAsync(watcher.target, null).GetAwaiter().GetResult(),
-                    "PATCH"  => sharedHttpClient.PatchAsync(watcher.target, null).GetAwaiter().GetResult(),
-                    "DELETE" => sharedHttpClient.DeleteAsync(watcher.target).GetAwaiter().GetResult(),
-                    _        => sharedHttpClient.GetAsync(watcher.target).GetAwaiter().GetResult(),
+                    "GET"    => await sharedHttpClient.GetAsync(watcher.target),
+                    "POST"   => await sharedHttpClient.PostAsync(watcher.target, null),
+                    "PUT"    => await sharedHttpClient.PutAsync(watcher.target, null),
+                    "PATCH"  => await sharedHttpClient.PatchAsync(watcher.target, null),
+                    "DELETE" => await sharedHttpClient.DeleteAsync(watcher.target),
+                    _        => await sharedHttpClient.GetAsync(watcher.target),
                 };
 
                 int statusCode = (int)response.StatusCode;
                 int category = statusCode / 100 - 1;
 
-                if (watcher.httpstatus.Length < category) continue;
+                if (watcher.httpstatus.Length <= category) continue;
 
                 if (watcher.httpstatus[category]) {
                     result = 0;
@@ -324,24 +325,24 @@ internal static class Watchdog {
         return result;
     }
 
-    private static short CheckHttpKeyword(Watcher watcher) {
+    private static async Task<short> CheckHttpKeyword(Watcher watcher) {
         short result = -1;
 
         for (int i = 0; i < watcher.retries; i++) {
             try {
                 HttpResponseMessage response = watcher.method switch {
-                    "GET"    => sharedHttpClient.GetAsync(watcher.target).GetAwaiter().GetResult(),
-                    "POST"   => sharedHttpClient.PostAsync(watcher.target, null).GetAwaiter().GetResult(),
-                    "PUT"    => sharedHttpClient.PutAsync(watcher.target, null).GetAwaiter().GetResult(),
-                    "PATCH"  => sharedHttpClient.PatchAsync(watcher.target, null).GetAwaiter().GetResult(),
-                    "DELETE" => sharedHttpClient.DeleteAsync(watcher.target).GetAwaiter().GetResult(),
-                    _        => sharedHttpClient.GetAsync(watcher.target).GetAwaiter().GetResult(),
+                    "GET"    => await sharedHttpClient.GetAsync(watcher.target),
+                    "POST"   => await sharedHttpClient.PostAsync(watcher.target, null),
+                    "PUT"    => await sharedHttpClient.PutAsync(watcher.target, null),
+                    "PATCH"  => await sharedHttpClient.PatchAsync(watcher.target, null),
+                    "DELETE" => await sharedHttpClient.DeleteAsync(watcher.target),
+                    _        => await sharedHttpClient.GetAsync(watcher.target),
                 };
 
                 int statusCode = (int)response.StatusCode;
                 int category = statusCode / 100 - 1;
 
-                if (watcher.httpstatus.Length < category) continue;
+                if (category < 0 || watcher.httpstatus.Length <= category) continue;
                 //if (!watcher.httpstatus[category]) continue;
 
                 if (watcher.httpstatus[category]) {
