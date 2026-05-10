@@ -156,7 +156,7 @@ internal static class Watchdog {
 
                 long ticksElapsed = DateTime.UtcNow.Ticks - watcher.lastCheck;
                 if (watcher.interval * MINUTE_IN_TICKS - ticksElapsed < 10_000_000) { // < 1s
-                    new Thread(async () => await Watch(watcher, smtpProfiles)).Start();
+                    _ = Task.Run(async () => await Watch(watcher, smtpProfiles));
                 }
                 else {
                     int millisRemain = (int)((watcher.interval * MINUTE_IN_TICKS - ticksElapsed) / 10_000);
@@ -346,7 +346,7 @@ internal static class Watchdog {
                 //if (!watcher.httpstatus[category]) continue;
 
                 if (watcher.httpstatus[category]) {
-                    byte[] buffer = response.Content.ReadAsByteArrayAsync().GetAwaiter().GetResult();
+                    byte[] buffer = await response.Content.ReadAsByteArrayAsync();
                     string content = Encoding.UTF8.GetString(buffer);
                     if (content.IndexOf(watcher.keyword, System.StringComparison.OrdinalIgnoreCase) < 0) continue;
                     result = 0;
