@@ -51,6 +51,7 @@ internal static class Data {
     public static readonly string DIR_DEVICES        = Path.Join(DIR_DATA, "devices");
     public static readonly string DIR_USERS          = Path.Join(DIR_DATA, "users");
 
+    public static readonly string DIR_CONFIG         = Path.Join(DIR_DATA, "configuration");
     public static readonly string DIR_DOCUMENTATION  = Path.Join(DIR_DATA, "documentation");
     public static readonly string DIR_LASTSEEN       = Path.Join(DIR_DATA, "lastseen");
     public static readonly string DIR_WUA_CACHE      = Path.Join(DIR_DATA, "wuacache");

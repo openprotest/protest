@@ -11,7 +11,6 @@ using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using Protest.Http;
-using Protest.Protocols.Snmp;
 using Protest.Tools;
 using Lextm.SharpSnmpLib;
 
@@ -387,7 +386,7 @@ internal static class Fetch {
                 profile = null;
             }
             else if (snmpProfiles.Length == 1) {
-                snmpResult = Protocols.Snmp.Polling.SnmpQuery(ipAddress, snmpProfiles[0], Protocols.Snmp.Oid.GENERIC_OID, Polling.SnmpOperation.Get);
+                snmpResult = Protocols.Snmp.Polling.SnmpQuery(ipAddress, snmpProfiles[0], Protocols.Snmp.Oid.GENERIC_OID, Protocols.Snmp.Polling.SnmpOperation.Get);
                 profile = snmpProfiles[0];
             }
             else {
@@ -415,7 +414,7 @@ internal static class Fetch {
             if (token.IsCancellationRequested) return null;
 
             if (!data.ContainsKey("mac address")) {
-                IList<Variable> macAddressResult = Protocols.Snmp.Polling.SnmpQuery(ipAddress, profile, [Protocols.Snmp.Oid.LLDP_LOCAL_SYS_DATA], Polling.SnmpOperation.Walk);
+                IList<Variable> macAddressResult = Protocols.Snmp.Polling.SnmpQuery(ipAddress, profile, [Protocols.Snmp.Oid.LLDP_LOCAL_SYS_DATA], Protocols.Snmp.Polling.SnmpOperation.Walk);
 
                 if (macAddressResult is not null) {
                     Dictionary<string, byte[]> parsed = Protocols.Snmp.Polling.ParseResponseBytes(macAddressResult);
@@ -433,7 +432,7 @@ internal static class Fetch {
 
             if (!data.ContainsKey("type")) {
                 if (token.IsCancellationRequested) return null;
-                IList<Variable> dot1dBaseBridgeAddress = Protocols.Snmp.Polling.SnmpQuery(ipAddress, profile, ["1.3.6.1.2.1.17.1.1.0"], Polling.SnmpOperation.Get);
+                IList<Variable> dot1dBaseBridgeAddress = Protocols.Snmp.Polling.SnmpQuery(ipAddress, profile, ["1.3.6.1.2.1.17.1.1.0"], Protocols.Snmp.Polling.SnmpOperation.Get);
                 if (dot1dBaseBridgeAddress?.Count > 0) {
                     data.TryAdd("type", new string[] { "Switch", "SNMP", String.Empty });
                 }
@@ -447,7 +446,7 @@ internal static class Fetch {
                 case "multiprinter":
                 case "ticket printer":
                 case "printer":
-                    IList<Variable> printerResult = Protocols.Snmp.Polling.SnmpQuery(ipAddress, profile, Protocols.Snmp.Oid.PRINTERS_OID, Polling.SnmpOperation.Get);
+                    IList<Variable> printerResult = Protocols.Snmp.Polling.SnmpQuery(ipAddress, profile, Protocols.Snmp.Oid.PRINTERS_OID, Protocols.Snmp.Polling.SnmpOperation.Get);
                     Dictionary<string, string> printerFormatted = Protocols.Snmp.Polling.ParseResponse(printerResult);
                     if (printerFormatted is not null && printerFormatted.TryGetValue(Protocols.Snmp.Oid.PRINTER_MODEL, out string snmpModel)) {
                         data.TryAdd("model", new string[] { snmpModel, "SNMP", String.Empty });
