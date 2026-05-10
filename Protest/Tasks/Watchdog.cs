@@ -588,8 +588,7 @@ internal static class Watchdog {
 
             lock (watcher.mutex) {
                 string path = Path.Join(Data.DIR_WATCHDOG, file);
-
-                Directory.Delete($"path_", true);
+                Directory.Delete($"{path}_", true);
                 File.Delete(path);
             }
 
@@ -644,11 +643,11 @@ internal static class Watchdog {
     }
 
     public static void SendSmtpNotification(Watcher watcher, Notification notification, SmtpProfiles.Profile profile, short status) {
-        const string redDot = "&#128308;"; //🔴
-        const string orangeDot = "&#128992;"; //🟠
+        const string greenDot  = "&#128994;"; //🟢
+        const string blueDot   = "&#128309;"; //🔵
         const string yellowDot = "&#128993;"; //🟡
-        const string greenDot = "&#128994;"; //🟢
-        const string blueDot = "&#128309;"; //🔵
+        const string orangeDot = "&#128992;"; //🟠
+        const string redDot    = "&#128308;"; //🔴
 
         /*string dotEmoji = status switch {
              0 => "🟢",
@@ -656,7 +655,7 @@ internal static class Watchdog {
             -3 => "🟡",
             -2 => "🟠",
             -1 => "🔴",
-            _ => "🟢",
+            _  => "🟢",
         };*/
 
         StringBuilder body = new StringBuilder();
