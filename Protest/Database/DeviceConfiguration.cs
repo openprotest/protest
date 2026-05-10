@@ -135,7 +135,7 @@ internal static partial class DeviceConfiguration {
         }
 
         try {
-            SshClient ssh = new SshClient(port == 22 ? host : $"{host}:{port}", username, password);
+            using SshClient ssh = new SshClient(port == 22 ? host : $"{host}:{port}", username, password);
             ssh.Connect();
 
             string payload, firstLine;
