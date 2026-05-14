@@ -82,6 +82,7 @@ internal static class Logger {
         Console.ForegroundColor = ConsoleColor.Yellow;
         Console.WriteLine(text);
         Console.WriteLine(ex.StackTrace);
+        Console.WriteLine();
         Console.ResetColor();
 #endif
     }

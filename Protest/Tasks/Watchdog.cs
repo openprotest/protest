@@ -415,9 +415,8 @@ internal static class Watchdog {
                 };
 
                 IAsyncResult ar = tcp.BeginConnect(host, port, null, null);
-                if (!ar.AsyncWaitHandle.WaitOne(timeout)) {
-                    return -5;
-                }
+
+                if (!ar.AsyncWaitHandle.WaitOne(timeout)) return -5;
 
                 tcp.EndConnect(ar);
 
@@ -675,28 +674,27 @@ internal static class Watchdog {
 
         switch (status) {
         case 0 : body.Append(greenDot);  break; //ok
-        case -4: body.Append(blueDot);   break; //tls not yet valid
-        case -3: body.Append(yellowDot); break; //expiration warning
-        case -2: body.Append(orangeDot); break; //expired
         case -1: body.Append(redDot);    break; //unreachable
+        case -2: body.Append(orangeDot); break; //expired
+        case -3: body.Append(yellowDot); break; //expiration warning
+        case -4: body.Append(blueDot);   break; //tls not yet valid
         default: body.Append(greenDot);  break;
         }
 
         string stringStatus = watcher.type switch {
-            WatcherType.icmp => status < 0 ? "Host is unreachable" : "Host is reachable",
-            WatcherType.tcp => status < 0 ? "Connection failed" : "Connection succeeded",
-            WatcherType.dns => status < 0 ? "Domain is not resolved" : "Domain is resolved",
-            WatcherType.http => status < 0 ? "Response not valid" : "Response is valid",
+            WatcherType.icmp        => status < 0 ? "Host is unreachable" : "Host is reachable",
+            WatcherType.tcp         => status < 0 ? "Connection failed" : "Connection succeeded",
+            WatcherType.dns         => status < 0 ? "Domain is not resolved" : "Domain is resolved",
+            WatcherType.http        => status < 0 ? "Response not valid" : "Response is valid",
             WatcherType.httpKeyword => status < 0 ? "Keyword not found" : "Keyword is found",
 
-            WatcherType.tls => status switch
-            {
-                0  => "Certificate is valid",
+            WatcherType.tls => status switch {
+                 0 => "Certificate is valid",
                 -1 => "Host is unreachable",
                 -2 => "Certificate expired",
                 -3 => "Expiration warning",
                 -4 => "Certificate is not yet valid",
-                _  => "Certificate is valid",
+                _  => $"Unknown status: {status}",
             },
 
             _ => String.Empty
@@ -769,12 +767,12 @@ internal static class Watchdog {
 
         case WatcherType.tls:
             switch (status) {
-            case 0 : body.Append($"Certificate for <b>{watcher.target}</b> is now valid."); break;
+            case  0: body.Append($"Certificate for <b>{watcher.target}</b> is now valid."); break;
             case -1: body.Append($"Host for <b>{watcher.target}</b> is unreachable."); break;
             case -2: body.Append($"Certificate for <b>{watcher.target}</b> is expired."); break;
             case -3: body.Append($"Certificate for <b>{watcher.target}</b> is close to its expiration date."); break;
             case -4: body.Append($"Activation date of the certificate of <b>{watcher.target}</b> hasn't been reached."); break;
-            //default: body.Append($""); break;
+            default: body.Append($"Unknown status code: {status} for {watcher.target}."); break;
             }
             break;
         }
@@ -817,8 +815,8 @@ internal static class Watchdog {
             }
 
             using SmtpClient smtp = new SmtpClient(profile.server) {
-                Port = profile.port,
-                EnableSsl = profile.ssl,
+                Port        = profile.port,
+                EnableSsl   = profile.ssl,
                 Credentials = new NetworkCredential(profile.username, profile.password)
             };
             smtp.Send(mail);
@@ -927,25 +925,25 @@ file sealed class WatcherJsonConverter : JsonConverter<Watchdog.Watcher> {
         writer.WriteString("query"u8, value.query);
 
         writer.WriteString("type"u8, value.type switch {
-            Watchdog.WatcherType.icmp => "ICMP",
-            Watchdog.WatcherType.tcp => "TCP",
-            Watchdog.WatcherType.dns => "DNS",
-            Watchdog.WatcherType.http => "HTTP",
+            Watchdog.WatcherType.icmp        => "ICMP",
+            Watchdog.WatcherType.tcp         => "TCP",
+            Watchdog.WatcherType.dns         => "DNS",
+            Watchdog.WatcherType.http        => "HTTP",
             Watchdog.WatcherType.httpKeyword => "HTTP keyword",
-            Watchdog.WatcherType.tls => "TLS",
-            _ => "ICMP"
+            Watchdog.WatcherType.tls         => "TLS",
+            _                                => "ICMP"
         });
 
         writer.WriteString("rrtype"u8, value.rrtype switch {
-            Protocols.Dns.RecordType.A => "A",
-            Protocols.Dns.RecordType.NS => "NS",
+            Protocols.Dns.RecordType.A     => "A",
+            Protocols.Dns.RecordType.NS    => "NS",
             Protocols.Dns.RecordType.CNAME => "CNAME",
-            Protocols.Dns.RecordType.SOA => "SOA",
-            Protocols.Dns.RecordType.PTR => "PTR",
-            Protocols.Dns.RecordType.MX => "MX",
-            Protocols.Dns.RecordType.TXT => "TXT",
-            Protocols.Dns.RecordType.AAAA => "AAAA",
-            Protocols.Dns.RecordType.SRV => "SRV",
+            Protocols.Dns.RecordType.SOA   => "SOA",
+            Protocols.Dns.RecordType.PTR   => "PTR",
+            Protocols.Dns.RecordType.MX    => "MX",
+            Protocols.Dns.RecordType.TXT   => "TXT",
+            Protocols.Dns.RecordType.AAAA  => "AAAA",
+            Protocols.Dns.RecordType.SRV   => "SRV",
             _ => "A"
         });
 

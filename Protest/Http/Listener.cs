@@ -200,7 +200,7 @@ internal sealed class Listener {
                 _ = Task.Run(() => ListenerCallback(ctx));
             }
             catch (HttpListenerException) when (!listener.IsListening) {
-                break; // normal shutdown
+                break; //normal shutdown
             }
         }
     }

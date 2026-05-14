@@ -121,13 +121,13 @@ internal static class Issues {
                     return;
                 }
 
-                IEnumerable<Issue> filtered = issues?.Where(o => o.timestamp > lastTimestamp);
+                List<Issue> filtered = issues?.Where(o => o.timestamp > lastTimestamp).ToList();
 
                 if (filtered is null) {
                     break;
                 }
 
-                if (filtered.Any()) {
+                if (filtered.Count > 0) {
                     byte[] bytes = JsonSerializer.SerializeToUtf8Bytes(filtered.Select(o => new {
                         timestamp  = o.timestamp / 10000 - UNIX_BASE_TICKS,
                         severity   = o.severity,
@@ -170,13 +170,21 @@ internal static class Issues {
     private static void Scan() {
         task.status = TaskWrapper.TaskStatus.Running;
 
-        ScanUsers();
-        ScanDevices();
-        task = null;
+        try {
+            ScanUsers();
+            ScanDevices();
+        }
+        catch (OperationCanceledException) { }
+        finally {
+            TaskWrapper t = task;
+            task = null;
+            t?.Dispose();
+        }
     }
 
     private static void ScanUsers() {
         foreach (KeyValuePair<string, Database.Entry> user in DatabaseInstances.users.dictionary) {
+            if (task?.cancellationToken.IsCancellationRequested == true) break;
             ScanUser(user.Value);
         }
     }
@@ -214,20 +222,13 @@ internal static class Issues {
 
         ipAddresses.Clear();
 
-/*#if DEBUG
-        foreach (KeyValuePair<string, Database.Entry> device in DatabaseInstances.devices.dictionary) {
-            ScanDevice(device.Value);
-        }
-#else*/
         Parallel.ForEach(
             DatabaseInstances.devices.dictionary.Values,
-            new ParallelOptions { MaxDegreeOfParallelism = 64 },
+            new ParallelOptions { MaxDegreeOfParallelism = 64, CancellationToken = task.cancellationToken },
             device => {
                 ScanDevice(device);
             }
         );
-/*#endif*/
-
     }
 
     public static void ScanDevice(Database.Entry device) {

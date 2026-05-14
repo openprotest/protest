@@ -244,6 +244,8 @@ internal static class Ldap {
 
         try {
             using DirectorySearcher searcher = new DirectorySearcher(directoryEntry);
+            searcher.ClientTimeout  = TimeSpan.FromSeconds(10);
+            searcher.ServerTimeLimit = TimeSpan.FromSeconds(10);
             searcher.Filter = $"(&(objectClass=user)(objectCategory=person)(userPrincipalName={EscapeLdapValue(username)}))";
             result = searcher.FindOne();
         }
@@ -255,6 +257,8 @@ internal static class Ldap {
             try {
                 if (username.IndexOf("@") > -1) username = username.Split('@')[0];
                 using DirectorySearcher searcher = new DirectorySearcher(directoryEntry);
+                searcher.ClientTimeout   = TimeSpan.FromSeconds(10);
+                searcher.ServerTimeLimit = TimeSpan.FromSeconds(10);
                 //searcher.Filter = "(&(objectClass=user)(objectCategory=person))";
                 searcher.Filter = $"(&(objectClass=user)(objectCategory=person)(cn={EscapeLdapValue(username)}))";
                 result = searcher.FindOne();
@@ -267,6 +271,8 @@ internal static class Ldap {
             username = username.ToLower();
 
             using DirectorySearcher searcher = new DirectorySearcher(directoryEntry);
+            searcher.ClientTimeout   = TimeSpan.FromSeconds(10);
+            searcher.ServerTimeLimit = TimeSpan.FromSeconds(10);
             searcher.Filter = "(&(objectClass=user)(objectCategory=person))";
 
             try {

@@ -650,7 +650,7 @@ class DeviceView extends View {
 			if (overwriteProtocol.uvnc) { //uvnc
 				const actionButton = this.CreateSideButton("mono/uvnc.svg", "uVNC");
 				actionButton.onclick = async ()=> {
-					if (localStorage.getItem("prefer_rdp_file") === "true") {
+					if (localStorage.getItem("prefer_vnc_file") === "true") {
 						this.DownloadVnc(host, overwriteProtocol.uvnc);
 					}
 					else {
@@ -668,7 +668,7 @@ class DeviceView extends View {
 			else if (ports.includes(5900)) {
 				const actionButton = this.CreateSideButton("mono/uvnc.svg", "uVNC");
 				actionButton.onclick = async ()=> {
-					if (localStorage.getItem("prefer_rdp_file") === "true") {
+					if (localStorage.getItem("prefer_vnc_file") === "true") {
 						this.DownloadVnc(host, 5900);
 					}
 					else {

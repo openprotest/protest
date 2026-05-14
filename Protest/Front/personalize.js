@@ -845,7 +845,7 @@ class Personalize extends Tabs {
 		link.style.background = "url(mono/download.svg) 4px center / 24px 24px no-repeat";
 		link.target = "_blank";
 		link.href = "https://github.com/openprotest/protest/releases/latest";
-		link.textContent = "Download relay";
+		link.textContent = "Download Pro-test relay";
 		this.tabsPanel.appendChild(link);
 
 		this.tabsPanel.appendChild(document.createElement("br"));
@@ -869,12 +869,12 @@ class Personalize extends Tabs {
 		this.tabsPanel.appendChild(document.createElement("br"));
 
 		this.preferRdpFileCheckbox.checked = localStorage.getItem("prefer_rdp_file") === "true";
-		this.preferVncFileCheckbox.checked = localStorage.getItem("prefer_cnv_file") === "true";
+		this.preferVncFileCheckbox.checked = localStorage.getItem("prefer_vnc_file") === "true";
 
 		const Apply = ()=> {
 			localStorage.setItem("relay_key", this.presharedKeyInput.value);
 			localStorage.setItem("prefer_rdp_file", this.preferRdpFileCheckbox.checked);
-			localStorage.setItem("prefer_cnv_file", this.preferVncFileCheckbox.checked);
+			localStorage.setItem("prefer_vnc_file", this.preferVncFileCheckbox.checked);
 
 			for (let i = 0; i < WIN.array.length; i++) { //update other setting windows
 				if (WIN.array[i] instanceof Personalize && WIN.array[i].args === "relay" && WIN.array[i] !== this) {

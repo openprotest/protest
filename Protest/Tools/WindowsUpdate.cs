@@ -3,6 +3,7 @@ using System.IO;
 using System.Runtime.Versioning;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Threading.Tasks;
 using Protest.Tasks;
 
 namespace Protest.Tools;
@@ -118,6 +119,22 @@ internal static class WindowsUpdate {
 
     [SupportedOSPlatform("windows")]
     private static UpdatesResult GetUpdates(string host, string file) {
+        try {
+            Task<UpdatesResult> t = Task.Run(() => FetchUpdatesCore(host, file));
+            return t.Wait(30_000) ? t.Result : default;
+        }
+        catch  (UnauthorizedAccessException ex) {
+            Logger.Debug(ex);
+            return default;
+        }
+        catch (Exception ex) {
+            Logger.Debug(ex);
+            return default;
+        }
+    }
+
+    [SupportedOSPlatform("windows")]
+    private static UpdatesResult FetchUpdatesCore(string host, string file) {
         Type sessionType = Type.GetTypeFromProgID("Microsoft.Update.Session", host, true);
 
         dynamic session = Activator.CreateInstance(sessionType)!;
