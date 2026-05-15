@@ -157,9 +157,6 @@ class Backup extends List {
 
 	InflateElement(element, entry) { //overrides
 		element.style.backgroundImage = "url(mono/backup.svg)";
-		element.style.backgroundSize = "24px 24px";
-		element.style.backgroundPosition = "4px 4px";
-		element.style.backgroundRepeat = "no-repeat";
 
 		for (let i = 0; i < this.columnsElements.length; i++) {
 			if (!(this.columnsElements[i].textContent in entry)) continue;

@@ -95,6 +95,7 @@ const LOADER = {
 		"grid.js",
 		"console.js",
 		"ptyhost.js",
+		"listbox.js",
 		"ipbox.js"
 	],
 

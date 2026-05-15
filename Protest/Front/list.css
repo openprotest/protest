@@ -12,7 +12,6 @@
 	overflow-y: scroll;
 }
 
-
 .list-title-outer {
 	position: absolute;
 	left: 0;
@@ -109,6 +108,10 @@
 	height: 32px;
 	content-visibility: auto;
 	contain-intrinsic-size: 33px;
+
+	background-size: 24px 24px;
+	background-position: 4px 4px;
+	background-repeat: no-repeat;
 }
 
 .list-element:not(:last-child) {
@@ -125,7 +128,7 @@
 
 .list-element-icon {
 	left: 2px;
-	top: 2px;
+	top: 2px !important;
 	width: 28px;
 	height: 28px;
 	background-size: contain;
@@ -141,7 +144,7 @@
 	transform: rotate(-45deg) translate(-12px, -10px);
 }
 
-.list-element > div:not(:first-child) {
+.list-element > div {
 	top: 5px;
 	overflow: hidden;
 	text-overflow: ellipsis;

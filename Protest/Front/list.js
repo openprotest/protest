@@ -1,7 +1,5 @@
 "use strict";
 class List extends Window {
-	static MIN_CELL_SIZE = 40;
-
 	constructor(args) {
 		super();
 
@@ -10,40 +8,23 @@ class List extends Window {
 
 		this.link = null;
 
-		this.defaultColumns = [];
-		this.columnsElements = [];
-		this.sortDescend = false;
-		this.resizingColumnElement = null;
-		this.movingColumnElement = null;
-		this.mouseX0 = 0;
-		this.width0 = 0;
-		this.left0 = 0;
-		this.columnsWidth0 = [];
+		this.listBox = new ListBox({
+			titleBar: true,
+			columnsOptionsEnable: true,
+			counter: true,
+			defaultColumns: [],
+			resolveEntry:   id => this.link?.data ? this.link.data[id] : null,
+			resolveType:    (id, entry) => entry?.type?.v?.toLowerCase() || null,
+			computeCounter: n => this.link ? (n === this.link.length ? this.link.length : `${n} / ${this.link.length}`) : "0",
+			onSelect:       id => { if (id) this.args.select = id; },
+			onColumnsOptions: () => this.CustomizeColumns(),
+			onSort:         text => { this.args.sort = text; this.RefreshList(); },
+			getSort:        () => this.args.sort,
+		});
+		this.listBox.inflate = (element, entry, type) => this.InflateElement(element, entry, type);
+		this.listBox.Attach(this.content);
 
-		this.list = document.createElement("div");
-		this.list.className = "list-listbox no-results";
-		this.list.onscroll = ()=> this.UpdateViewport();
-		this.content.appendChild(this.list);
-
-		this.listTitleOuter = document.createElement("div");
-		this.listTitleOuter.className = "list-title-outer";
-		this.content.appendChild(this.listTitleOuter);
-
-		this.listTitle = document.createElement("div");
-		this.listTitle.className = "list-title";
-		this.listTitleOuter.appendChild(this.listTitle);
-
-		this.columnsOptions = document.createElement("div");
-		this.columnsOptions.className = "list-columns-options";
-		this.columnsOptions.onclick = ()=> this.CustomizeColumns();
-		this.listTitleOuter.appendChild(this.columnsOptions);
-
-		this.counter = document.createElement("div");
-		this.counter.className = "list-counter";
-		this.content.appendChild(this.counter);
-
-		this.list.tabIndex = 0;
-		this.defaultElement = this.list;
+		this.defaultElement = this.listBox.list;
 
 		this.content.addEventListener("keydown", event=> this.List_keydown(event));
 		this.win.addEventListener("mouseup", event=> this.List_mouseup(event));
@@ -55,248 +36,46 @@ class List extends Window {
 		});
 	}
 
+	get list()           { return this.listBox.list; }
+	get listTitle()      { return this.listBox.listTitle; }
+	get listTitleOuter() { return this.listBox.listTitleOuter; }
+	get columnsOptions() { return this.listBox.columnsOptions; }
+	get counter()        { return this.listBox.counter; }
+
+	get selected()  { return this.listBox.selected; }
+	set selected(v) { this.listBox.selected = v; }
+
+	get columnsElements()  { return this.listBox.columnsElements; }
+	set columnsElements(v) { this.listBox.columnsElements = v; }
+
+	get defaultColumns()  { return this.listBox.defaultColumns; }
+	set defaultColumns(v) { this.listBox.defaultColumns = v; }
+
+	get sortDescend()  { return this.listBox.sortDescend; }
+	set sortDescend(v) { this.listBox.sortDescend = v; }
+
 	List_keydown(event) {
 		if (event.code === "KeyF" && event.ctrlKey) {
 			if (this.findInput) {
 				event.preventDefault();
 				this.findInput.focus();
 			}
-		}
-		else if (event.code === "ArrowUp" && this.selected) {
-			const previousElement = this.selected.previousElementSibling;
-			if (previousElement) {
-				event.preventDefault();
-				const selectedIcon = this.selected.querySelector(".list-element-icon");
-				if (selectedIcon) {
-					selectedIcon.style.backgroundColor = "";
-				}
-
-				this.selected.style.backgroundColor = "";
-				this.selected = previousElement;
-				this.selected.style.backgroundColor = "var(--clr-select)";
-				this.selected.scrollIntoView({block:"nearest"});
-
-				const id = this.selected.getAttribute("id");
-				if (id) this.args.select = id;
-			}
-		}
-		else if (event.code === "ArrowDown") {
-			const nextElement = this.selected
-				? this.selected.nextElementSibling
-				: this.list.firstChild;
-
-			if (nextElement) {
-				event.preventDefault();
-				if (this.selected) {
-					const selectedIcon = this.selected.querySelector(".list-element-icon");
-					if (selectedIcon) {
-						selectedIcon.style.backgroundColor = "";
-					}
-					this.selected.style.backgroundColor = "";
-				}
-
-				this.selected = nextElement;
-				this.selected.style.backgroundColor = "var(--clr-select)";
-				this.selected.scrollIntoView({block:"nearest"});
-
-				const id = this.selected.getAttribute("id");
-				if (id) this.args.select = id;
-			}
-		}
-		else if (event.code === "PageUp" && this.selected) {
-			const elements = Array.from(this.list.childNodes);
-			if (elements.length === 0) return;
-
-			const index    = elements.indexOf(this.selected);
-			const jump     = Math.floor(this.list.clientHeight / this.selected.clientHeight);
-			const previous = Math.max(index - jump + 1, 0);
-
-			event.preventDefault();
-			this.selected.style.backgroundColor = "";
-			this.selected = elements[previous];
-			this.selected.style.backgroundColor = "var(--clr-select)";
-			this.selected.scrollIntoView({block:"nearest"});
-		}
-		else if (event.code === "PageDown" && this.selected) {
-			const elements = Array.from(this.list.childNodes);
-			if (elements.length === 0) return;
-
-			const index    = elements.indexOf(this.selected);
-			const jump     = Math.floor(this.list.clientHeight / this.selected.clientHeight);
-			const next     = Math.min(index + jump - 1, elements.length - 1);
-
-			event.preventDefault();
-			this.selected.style.backgroundColor = "";
-			this.selected = elements[next];
-			this.selected.style.backgroundColor = "var(--clr-select)";
-			this.selected.scrollIntoView({block:"nearest"});
-		}
-
-		else if (event.code === "Home" && this.selected) {
-			event.preventDefault();
-			const element = Array.from(this.list.childNodes)[0];
-
-			this.selected.style.backgroundColor = "";
-			this.selected = element;
-			this.selected.style.backgroundColor = "var(--clr-select)";
-			this.selected.scrollIntoView({block:"nearest"});
-		}
-		else if (event.code === "End" && this.selected) {
-			event.preventDefault();
-			const elements = Array.from(this.list.childNodes);
-
-			this.selected.style.backgroundColor = "";
-			this.selected = elements[elements.length - 1];
-			this.selected.style.backgroundColor = "var(--clr-select)";
-			this.selected.scrollIntoView({block:"nearest"});
-		}
-		else if (event.code === "Enter" || event.code === "NumpadEnter" && this.selected) {
-			this.selected?.ondblclick(event);
-		}
-	}
-
-	List_mouseup(event) {
-		if (this.resizingColumnElement || this.movingColumnElement) this.FinalizeColumns();
-	}
-
-	List_mousemove(event) {
-		if (event.buttons !== 1) {
-			if (this.resizingColumnElement || this.movingColumnElement) this.FinalizeColumns();
 			return;
 		}
 
-		if (this.resizingColumnElement) {
-			const index = this.columnsElements.indexOf(this.resizingColumnElement);
-			const totalWidth = this.columnsWidth0.slice(index + 1).reduce((accu, current)=> accu + current);
+		this.listBox.Keydown(event);
+	}
 
-			let targetWidth = Math.max(this.width0 + event.x - this.mouseX0, List.MIN_CELL_SIZE);
+	List_mouseup(event) {
+		this.listBox.HandleMouseUp(event);
+	}
 
-			const availableWidth = this.listTitle.offsetWidth - (this.resizingColumnElement.offsetLeft + targetWidth);
-
-			let minWidth = 2160;
-			for (let i = index + 1; i < this.columnsElements.length; i++) {
-				let w = availableWidth * this.columnsWidth0[i] / totalWidth;
-				if (w < minWidth) minWidth = w;
-			}
-
-			if (minWidth < List.MIN_CELL_SIZE) return;
-
-			this.resizingColumnElement.style.width = `${100 * targetWidth / this.listTitle.offsetWidth}%`;
-
-			for (let i = index + 1; i < this.columnsElements.length; i++) {
-				let l = this.columnsElements[i - 1].offsetLeft + this.columnsElements[i - 1].offsetWidth;
-				let w = availableWidth * this.columnsWidth0[i] / totalWidth;
-				this.columnsElements[i].style.left = `${100 * l / this.listTitle.offsetWidth}%`;
-				this.columnsElements[i].style.width = `${100 * w / this.listTitle.offsetWidth}%`;
-			}
-		}
-
-		if (this.movingColumnElement) {
-			let targetX = this.left0 + event.x - this.mouseX0;
-			this.movingColumnElement.style.left = `${100 * targetX / this.listTitle.offsetWidth}%`;
-
-			this.columnsElements = this.columnsElements.sort((a, b)=> a.offsetLeft - b.offsetLeft);
-
-			for (let i = 0; i < this.columnsElements.length; i++) {
-				if (this.columnsElements[i] === this.movingColumnElement) continue;
-
-				let x = 0;
-				for (let j = 0; j < i; j++) {
-					x += this.columnsElements[j].offsetWidth;
-				}
-				this.columnsElements[i].style.left = `${100 * x / this.listTitle.offsetWidth}%`;
-			}
-		}
+	List_mousemove(event) {
+		this.listBox.HandleMouseMove(event);
 	}
 
 	SetupColumns(columns) {
-		this.columnsElements = [];
-		while (this.listTitle.firstChild) this.listTitle.removeChild(this.listTitle.firstChild);
-
-		let isLastMouseActionMeaningful = false;
-
-		const Column_onmousedown = event=> {
-			let index = this.columnsElements.indexOf(event.target);
-			this.mouseX0 = event.x;
-
-			isLastMouseActionMeaningful = false;
-
-			if (event.layerX > event.target.offsetWidth - 8) {
-				if (index >= this.columnsElements.length - 1) return;
-				this.columnsElements.forEach(o=> o.style.transition = "0s");
-				this.width0 = event.target.offsetWidth;
-				this.columnsWidth0 = this.columnsElements.map(o=> o.offsetWidth);
-				this.resizingColumnElement = event.target;
-			}
-			else {
-				event.target.style.zIndex = "1";
-				event.target.style.opacity = ".8";
-				event.target.style.transition = "0s";
-				this.left0 = event.target.offsetLeft;
-				this.movingColumnElement = event.target;
-			}
-		};
-
-		const Column_onmousemove = event=> {
-			let index = this.columnsElements.indexOf(event.target);
-
-			if (index < this.columnsElements.length - 1) {
-				event.target.style.cursor = event.layerX > event.target.offsetWidth - 8 ? "ew-resize" : "inherit";
-			}
-
-			if (index >= this.columnsElements.length) return;
-
-			if (event.buttons !== 1) return;
-			let delta = this.mouseX0 - event.x;
-
-			if (Math.abs(delta) !== 0) {
-				isLastMouseActionMeaningful = true;
-			}
-		};
-
-		const Column_onmouseup = event=> {
-			if (isLastMouseActionMeaningful) return;
-			if (event.button !== 0) return;
-
-			const isAscend = event.target.className === "list-sort-ascend";
-
-			this.columnsElements.forEach(o=> o.className = "");
-			if (isAscend) {
-				event.target.className = "list-sort-descend";
-				this.sortDescend = true;
-			}
-			else {
-				event.target.className = "list-sort-ascend";
-				this.sortDescend = false;
-			}
-
-			this.args.sort = event.target.textContent;
-			this.RefreshList();
-		};
-
-		for (let i = 0; i < columns.length; i++) {
-			const newColumn = document.createElement("div");
-			newColumn.style.left = `${100 * i / columns.length}%`;
-			newColumn.style.width = `${100 / columns.length}%`;
-
-			if (this.args.sort === columns[i]) {
-				newColumn.className = "list-sort-ascend";
-			}
-
-			newColumn.onmousedown = event=> Column_onmousedown(event);
-			newColumn.onmousemove = event=> Column_onmousemove(event);
-			newColumn.onmouseup = event=> Column_onmouseup(event);
-
-			newColumn.textContent = columns[i];
-			this.columnsElements.push(newColumn);
-			this.listTitle.appendChild(newColumn);
-		}
-
-		this.listTitleOuter.appendChild(this.columnsOptions);
-
-		setTimeout(()=> this.FinalizeColumns(), 400);
-
-		this.UpdateViewport();
+		this.listBox.SetupColumns(columns);
 	}
 
 	SetupFilter() {
@@ -555,41 +334,7 @@ class List extends Window {
 	}
 
 	FinalizeColumns() {
-		this.resizingColumnElement = null;
-		this.movingColumnElement = null;
-
-		const scrollBarWidth = this.list.offsetWidth - this.list.clientWidth;
-		this.listTitle.style.right = `${scrollBarWidth}px`;
-
-		this.columnsElements = this.columnsElements.sort((a, b)=> a.offsetLeft - b.offsetLeft);
-
-		this.listTitle.replaceChildren(...this.columnsElements);
-
-		for (let i = 0; i < this.columnsElements.length; i++) {
-			this.columnsElements[i].style.transition = ".2s";
-			this.columnsElements[i].style.opacity = "1";
-			this.columnsElements[i].style.zIndex = "0";
-			this.columnsElements[i].style.cursor = "inherit";
-
-			let x = 0;
-			for (let j = 0; j < i; j++) {
-				x += this.columnsElements[j].offsetWidth;
-			}
-
-			this.columnsElements[i].style.left = `${100 * x / this.listTitle.offsetWidth}%`;
-			this.columnsElements[i].style.width = `${100 * this.columnsElements[i].offsetWidth / this.listTitle.offsetWidth}%`;
-		}
-
-		requestAnimationFrame(()=> {
-			for (let i = 0; i < this.columnsElements.length; i++) {
-				const text = this.columnsElements[i].textContent.trim();
-				this.columnsElements[i].style.textTransform = LOADER.alwaysUppercase.includes(text)
-					? "uppercase"
-					: "capitalize";
-			}
-		});
-
-		this.UpdateViewport(true);
+		this.listBox.FinalizeColumns();
 	}
 
 	MatchFilters(entry) {
@@ -725,60 +470,11 @@ class List extends Window {
 	}
 
 	UpdateViewport(force = false) {
-		const childNodes = this.list.childNodes;
-
-		for (let i=0; i<childNodes.length; i++) {
-			const node = childNodes[i];
-			if (force) node.textContent = "";
-
-			const nodeOffsetTop = node.offsetTop - this.list.scrollTop;
-			if (nodeOffsetTop < -32 || nodeOffsetTop > this.list.clientHeight) {
-				node.textContent = "";
-			}
-			else if (node.childNodes.length === 0) {
-				const key = node.getAttribute("id");
-				const type = this.link.data[key].type?.v?.toLowerCase() || null;
-				this.InflateElement(node, this.link.data[key], type);
-			}
-		}
-
-		if (this.link) {
-			this.counter.textContent = childNodes.length === this.link.length
-				? this.link.length
-				: `${childNodes.length} / ${this.link.length}`;
-		}
-		else {
-			this.counter.textContent = "0";
-		}
+		this.listBox.UpdateViewport(force);
 	}
 
 	InflateElement(element, entry, c_type) { //overridable
-		for (let i=0; i<this.columnsElements.length; i++) {
-			if (!(this.columnsElements[i].textContent in entry)) continue;
-
-			const value = entry[this.columnsElements[i].textContent].v;
-			if (value.length === 0) continue;
-
-			const newAttr = document.createElement("div");
-			newAttr.textContent = value;
-			element.appendChild(newAttr);
-
-			if (i === 0) {
-				newAttr.style.left = "36px";
-				newAttr.style.width = `calc(${this.columnsElements[0].style.width} - 36px)`;
-			}
-			else {
-				newAttr.style.left = this.columnsElements[i].style.left;
-				newAttr.style.width = this.columnsElements[i].style.width;
-			}
-		}
-
-		element.onclick = ()=> {
-			if (this.selected) this.selected.style.backgroundColor = "";
-			this.args.select = element.getAttribute("id");
-			this.selected = element;
-			element.style.backgroundColor = "var(--clr-select)";
-		};
+		ListBox.prototype.InflateElement.call(this.listBox, element, entry, c_type);
 	}
 
 	CustomizeColumns() {

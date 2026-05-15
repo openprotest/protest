@@ -35,6 +35,10 @@ class Environment extends Tabs {
 		//TODO:
 		this.graphTab.style.display = "none";
 
+		this.activeColumnsListBox = null;
+		this.win.addEventListener("mouseup", event=> this.activeColumnsListBox?.HandleMouseUp(event));
+		this.win.addEventListener("mousemove", event=> this.activeColumnsListBox?.HandleMouseMove(event));
+
 		switch (this.args) {
 		case "dhcp":
 			this.dhcpTab.className = "v-tab-selected";
@@ -90,6 +94,8 @@ class Environment extends Tabs {
 				}
 			}
 		}
+
+		this.activeColumnsListBox?.FinalizeColumns();
 	}
 
 	ShowZones() {
@@ -120,60 +126,48 @@ class Environment extends Tabs {
 
 		this.options.append(this.zonesNewButton, this.zonesRemoveButton);
 
-		const titleBar = document.createElement("div");
-		titleBar.style.position = "absolute";
-		titleBar.style.left = "20px";
-		titleBar.style.right = "20px";
-		titleBar.style.top = "56px";
-		titleBar.style.height = "25px";
-		titleBar.style.borderRadius = "4px 4px 0 0";
-		titleBar.style.background = "var(--grd-toolbar)";
-		titleBar.style.color = "var(--clr-light)";
-		this.tabsPanel.appendChild(titleBar);
+		this.zonesListBox = new ListBox({
+			titleBar: true,
+			counter: false,
+			columnsOptionsEnable: false,
+			builtInSort: true,
+			firstColumnOffset: "4px",
+			onSelect: (id, element)=> { this.selectedZone = element._data; },
+			onDoubleClick: data=> this.ZoneDialog(data)
+		});
+		this.activeColumnsListBox = this.zonesListBox;
 
-		let labels = [];
+		this.zonesListBox.listTitleOuter.style.left = "20px";
+		this.zonesListBox.listTitleOuter.style.right = "20px";
+		this.zonesListBox.listTitleOuter.style.top = "50px";
+		this.tabsPanel.appendChild(this.zonesListBox.listTitleOuter);
 
-		const nameLabel = document.createElement("div");
-		nameLabel.textContent = "Name";
-		labels.push(nameLabel);
-
-		const networkLabel = document.createElement("div");
-		networkLabel.textContent = "Network zone";
-		labels.push(networkLabel);
-
-		const vlanLabel = document.createElement("div");
-		vlanLabel.textContent = "VLAN ID";
-		labels.push(vlanLabel);
-
-		const colorLabel = document.createElement("div");
-		colorLabel.textContent = "Color";
-		labels.push(colorLabel);
-
-		for (let i = 0; i < labels.length; i++) {
-			labels[i].style.display = "inline-block";
-			labels[i].style.textAlign = "left";
-			labels[i].style.width = "25%";
-			labels[i].style.lineHeight = "24px";
-			labels[i].style.whiteSpace = "nowrap";
-			labels[i].style.overflow = "hidden";
-			labels[i].style.textOverflow = "ellipsis";
-			labels[i].style.boxSizing = "border-box";
-			labels[i].style.paddingLeft = "4px";
-			labels[i].style.paddingTop = "1px";
-		}
-
-		titleBar.append(nameLabel, networkLabel, vlanLabel, colorLabel);
-
-		this.zonesList = document.createElement("div");
-		this.zonesList.className = "no-results";
-		this.zonesList.style.position = "absolute";
+		this.zonesList = this.zonesListBox.list;
 		this.zonesList.style.overflowY = "auto";
 		this.zonesList.style.left = "20px";
 		this.zonesList.style.right = "20px";
 		this.zonesList.style.top = "80px";
 		this.zonesList.style.bottom = "20px";
 		this.zonesList.style.border = "rgb(82,82,82) solid 2px";
+		this.zonesList.addEventListener("keydown", event=> this.zonesListBox.Keydown(event));
 		this.tabsPanel.appendChild(this.zonesList);
+
+		this.zonesListBox.SetupColumns([
+			{label:"Name", value:d=> d.name},
+			{label:"Network zone", value:d=> d.network},
+			{label:"VLAN ID", value:d=> d.vlan},
+			{label:"Color", sortValue:d=> d.color, render:d=> {
+				const box = document.createElement("div");
+				box.style.top = "4px";
+				box.style.width = "32px";
+				box.style.height = "24px";
+				box.style.marginLeft = "8px";
+				box.style.borderRadius = "2px";
+				box.style.backgroundColor = d.color;
+				box.style.boxShadow = "var(--clr-dark) 0 0 0 1px inset";
+				return box;
+			}}
+		]);
 
 		this.zonesNewButton.onclick = ()=> this.ZoneDialog(null);
 
@@ -186,7 +180,8 @@ class Environment extends Tabs {
 			this.ConfirmBox("Are you sure you want to remove this zone?", false, "mono/delete.svg").addEventListener("click", ()=>{
 				this.zones.splice(index, 1);
 				this.SaveZones();
-				this.zonesList.removeChild(this.zonesList.childNodes[index]);
+				this.selectedZone = null;
+				this.zonesListBox.SetItems(this.zones);
 			});
 		};
 
@@ -222,52 +217,36 @@ class Environment extends Tabs {
 
 		this.options.append(this.dhcpNewButton, this.dhcpRemoveButton);
 
-		const titleBar = document.createElement("div");
-		titleBar.style.position = "absolute";
-		titleBar.style.left = "20px";
-		titleBar.style.right = "20px";
-		titleBar.style.top = "56px";
-		titleBar.style.height = "25px";
-		titleBar.style.borderRadius = "4px 4px 0 0";
-		titleBar.style.background = "var(--grd-toolbar)";
-		titleBar.style.color = "var(--clr-light)";
-		this.tabsPanel.appendChild(titleBar);
+		this.dhcpListBox = new ListBox({
+			titleBar: true,
+			counter: false,
+			columnsOptionsEnable: false,
+			builtInSort: true,
+			firstColumnOffset: "4px",
+			onSelect: (id, element)=> { this.selectedZone = element._data; },
+			onDoubleClick: data=> this.DhcpDialog(data)
+		});
+		this.activeColumnsListBox = this.dhcpListBox;
 
-		let labels = [];
+		this.dhcpListBox.listTitleOuter.style.left = "20px";
+		this.dhcpListBox.listTitleOuter.style.right = "20px";
+		this.dhcpListBox.listTitleOuter.style.top = "50px";
+		this.tabsPanel.appendChild(this.dhcpListBox.listTitleOuter);
 
-		const nameLabel = document.createElement("div");
-		nameLabel.textContent = "Name";
-		labels.push(nameLabel);
-
-		const networkLabel = document.createElement("div");
-		networkLabel.textContent = "IP range";
-		labels.push(networkLabel);
-
-		for (let i = 0; i < labels.length; i++) {
-			labels[i].style.display = "inline-block";
-			labels[i].style.textAlign = "left";
-			labels[i].style.width = "50%";
-			labels[i].style.lineHeight = "24px";
-			labels[i].style.whiteSpace = "nowrap";
-			labels[i].style.overflow = "hidden";
-			labels[i].style.textOverflow = "ellipsis";
-			labels[i].style.boxSizing = "border-box";
-			labels[i].style.paddingLeft = "4px";
-			labels[i].style.paddingTop = "1px";
-		}
-
-		titleBar.append(nameLabel, networkLabel);
-
-		this.dhcpList = document.createElement("div");
-		this.dhcpList.className = "no-results";
-		this.dhcpList.style.position = "absolute";
+		this.dhcpList = this.dhcpListBox.list;
 		this.dhcpList.style.overflowY = "auto";
 		this.dhcpList.style.left = "20px";
 		this.dhcpList.style.right = "20px";
 		this.dhcpList.style.top = "80px";
 		this.dhcpList.style.bottom = "20px";
 		this.dhcpList.style.border = "rgb(82,82,82) solid 2px";
+		this.dhcpList.addEventListener("keydown", event=> this.dhcpListBox.Keydown(event));
 		this.tabsPanel.appendChild(this.dhcpList);
+
+		this.dhcpListBox.SetupColumns([
+			{label:"Name", value:d=> d.name},
+			{label:"IP range", value:d=> d.network}
+		]);
 
 		this.dhcpNewButton.onclick = ()=> this.DhcpDialog(null);
 
@@ -280,7 +259,8 @@ class Environment extends Tabs {
 			this.ConfirmBox("Are you sure you want to remove this ip range?", false, "mono/delete.svg").addEventListener("click", ()=>{
 				this.dhcpRange.splice(index, 1);
 				this.SaveDhcpRange();
-				this.dhcpList.removeChild(this.dhcpList.childNodes[index]);
+				this.selectedZone = null;
+				this.dhcpListBox.SetItems(this.dhcpRange);
 			});
 		};
 
@@ -370,56 +350,40 @@ class Environment extends Tabs {
 
 		this.options.append(this.profilesNewButton, this.profilesRemoveButton, this.profilesTestButton);
 
-		const titleBar = document.createElement("div");
-		titleBar.style.position = "absolute";
-		titleBar.style.left = "20px";
-		titleBar.style.right = "20px";
-		titleBar.style.top = "56px";
-		titleBar.style.height = "25px";
-		titleBar.style.borderRadius = "4px 4px 0 0";
-		titleBar.style.background = "var(--grd-toolbar)";
-		titleBar.style.color = "var(--clr-light)";
-		this.tabsPanel.appendChild(titleBar);
+		this.smtpProfilesListBox = new ListBox({
+			titleBar: true,
+			counter: false,
+			columnsOptionsEnable: false,
+			builtInSort: true,
+			firstColumnOffset: "4px",
+			onSelect: (id, element)=> {
+				this.selectedSmtpProfile = element._data;
+				this.profilesTestButton.disabled = false;
+			},
+			onDoubleClick: data=> this.SmtpProfileDialog(data)
+		});
+		this.activeColumnsListBox = this.smtpProfilesListBox;
 
-		let labels = [];
+		this.smtpProfilesListBox.listTitleOuter.style.left = "20px";
+		this.smtpProfilesListBox.listTitleOuter.style.right = "20px";
+		this.smtpProfilesListBox.listTitleOuter.style.top = "50px";
+		this.tabsPanel.appendChild(this.smtpProfilesListBox.listTitleOuter);
 
-		const serverLabel = document.createElement("div");
-		serverLabel.textContent = "SMTP server";
-		labels.push(serverLabel);
+		this.smtpProfilesList = this.smtpProfilesListBox.list;
+		this.smtpProfilesList.style.overflowY = "auto";
+		this.smtpProfilesList.style.left = "20px";
+		this.smtpProfilesList.style.right = "20px";
+		this.smtpProfilesList.style.top = "80px";
+		this.smtpProfilesList.style.bottom = "20px";
+		this.smtpProfilesList.style.border = "rgb(82,82,82) solid 2px";
+		this.smtpProfilesList.addEventListener("keydown", event=> this.smtpProfilesListBox.Keydown(event));
+		this.tabsPanel.appendChild(this.smtpProfilesList);
 
-		const portLabel = document.createElement("div");
-		portLabel.textContent = "Port";
-		labels.push(portLabel);
-
-		const usernameLabel = document.createElement("Sender");
-		usernameLabel.textContent = "Username";
-		labels.push(usernameLabel);
-
-		for (let i = 0; i < labels.length; i++) {
-			labels[i].style.display = "inline-block";
-			labels[i].style.textAlign = "left";
-			labels[i].style.width = "33%";
-			labels[i].style.lineHeight = "24px";
-			labels[i].style.whiteSpace = "nowrap";
-			labels[i].style.overflow = "hidden";
-			labels[i].style.textOverflow = "ellipsis";
-			labels[i].style.boxSizing = "border-box";
-			labels[i].style.paddingLeft = "4px";
-			labels[i].style.paddingTop = "1px";
-		}
-
-		titleBar.append(serverLabel, portLabel, usernameLabel);
-
-		this.profilesList = document.createElement("div");
-		this.profilesList.className = "no-results";
-		this.profilesList.style.position = "absolute";
-		this.profilesList.style.overflowY = "auto";
-		this.profilesList.style.left = "20px";
-		this.profilesList.style.right = "20px";
-		this.profilesList.style.top = "80px";
-		this.profilesList.style.bottom = "20px";
-		this.profilesList.style.border = "rgb(82,82,82) solid 2px";
-		this.tabsPanel.appendChild(this.profilesList);
+		this.smtpProfilesListBox.SetupColumns([
+			{label:"SMTP server", value:d=> d.server},
+			{label:"Port", value:d=> d.port},
+			{label:"Username", value:d=> d.username}
+		]);
 
 		this.profilesNewButton.onclick = ()=>{
 			this.SmtpProfileDialog(null);
@@ -434,9 +398,9 @@ class Environment extends Tabs {
 			this.ConfirmBox("Are you sure you want to remove this SMTP profile?", false, "mono/delete.svg").addEventListener("click", ()=>{
 				this.smtpProfiles.splice(index, 1);
 				this.SaveSmtpProfiles();
-
-				this.profilesList.removeChild(this.profilesList.childNodes[index]);
+				this.selectedSmtpProfile = null;
 				this.profilesTestButton.disabled = true;
+				this.smtpProfilesListBox.SetItems(this.smtpProfiles);
 			});
 		};
 
@@ -530,45 +494,52 @@ class Environment extends Tabs {
 
 		this.options.append(this.profilesNewButton, this.profilesRemoveButton);
 
-		const titleBar = document.createElement("div");
-		titleBar.style.position = "absolute";
-		titleBar.style.left = "20px";
-		titleBar.style.right = "20px";
-		titleBar.style.top = "56px";
-		titleBar.style.height = "25px";
-		titleBar.style.borderRadius = "4px 4px 0 0";
-		titleBar.style.background = "var(--grd-toolbar)";
-		titleBar.style.color = "var(--clr-light)";
-		this.tabsPanel.appendChild(titleBar);
+		this.snmpProfilesListBox = new ListBox({
+			titleBar: true,
+			counter: false,
+			columnsOptionsEnable: false,
+			builtInSort: true,
+			firstColumnOffset: "4px",
+			onSelect: (id, element)=> { this.selectedSnmpProfile = element._data; },
+			onDoubleClick: data=> this.SnmpProfileDialog(data)
+		});
+		this.activeColumnsListBox = this.snmpProfilesListBox;
 
-		let labels = ["Name", "Priority", "Community", "Username"];
-		for (let i = 0; i < labels.length; i++) {
-			const newLabel = document.createElement("div");
-			newLabel.style.display = "inline-block";
-			newLabel.style.textAlign = "left";
-			newLabel.style.width = `${100/labels.length}%`;
-			newLabel.style.lineHeight = "24px";
-			newLabel.style.whiteSpace = "nowrap";
-			newLabel.style.overflow = "hidden";
-			newLabel.style.textOverflow = "ellipsis";
-			newLabel.style.boxSizing = "border-box";
-			newLabel.style.paddingLeft = "4px";
-			newLabel.style.paddingLeft = i==0 ? "32px" : "4px";
-			newLabel.style.paddingTop = "1px";
-			newLabel.textContent = labels[i];
-			titleBar.appendChild(newLabel);
-		}
+		this.snmpProfilesListBox.listTitleOuter.style.left = "20px";
+		this.snmpProfilesListBox.listTitleOuter.style.right = "20px";
+		this.snmpProfilesListBox.listTitleOuter.style.top = "50px";
+		this.tabsPanel.appendChild(this.snmpProfilesListBox.listTitleOuter);
 
-		this.profilesList = document.createElement("div");
-		this.profilesList.className = "no-results";
-		this.profilesList.style.position = "absolute";
-		this.profilesList.style.overflowY = "auto";
-		this.profilesList.style.left = "20px";
-		this.profilesList.style.right = "20px";
-		this.profilesList.style.top = "80px";
-		this.profilesList.style.bottom = "20px";
-		this.profilesList.style.border = "rgb(82,82,82) solid 2px";
-		this.tabsPanel.appendChild(this.profilesList);
+		this.snmpProfilesList = this.snmpProfilesListBox.list;
+		this.snmpProfilesList.style.overflowY = "auto";
+		this.snmpProfilesList.style.left = "20px";
+		this.snmpProfilesList.style.right = "20px";
+		this.snmpProfilesList.style.top = "80px";
+		this.snmpProfilesList.style.bottom = "20px";
+		this.snmpProfilesList.style.border = "rgb(82,82,82) solid 2px";
+		this.snmpProfilesList.addEventListener("keydown", event=> this.snmpProfilesListBox.Keydown(event));
+		this.tabsPanel.appendChild(this.snmpProfilesList);
+
+		this.snmpProfilesListBox.SetupColumns([
+			{label:"Name", sortValue:d=> d.name, render:d=> {
+				const wrap = document.createElement("div");
+
+				const badge = document.createElement("span");
+				badge.textContent = `V${d.version}`;
+				badge.style.color = "var(--clr-light)";
+				badge.style.backgroundColor = "var(--clr-dark)";
+				badge.style.fontSize = "smaller";
+				badge.style.padding = "0 4px";
+				badge.style.marginRight = "6px";
+				badge.style.borderRadius = "2px";
+
+				wrap.append(badge, document.createTextNode(d.name));
+				return wrap;
+			}},
+			{label:"Priority", value:d=> d.priority},
+			{label:"Community", value:d=> d.version !== 3 ? d.community : ""},
+			{label:"Username", value:d=> d.username}
+		]);
 
 		this.profilesNewButton.onclick = ()=>{
 			this.SnmpProfileDialog(null);
@@ -583,7 +554,8 @@ class Environment extends Tabs {
 			this.ConfirmBox("Are you sure you want to remove this SNMP profile?", false, "mono/delete.svg").addEventListener("click", ()=>{
 				this.snmpProfiles.splice(index, 1);
 				this.SaveSnmpProfiles();
-				this.profilesList.removeChild(this.profilesList.childNodes[index]);
+				this.selectedSnmpProfile = null;
+				this.snmpProfilesListBox.SetItems(this.snmpProfiles);
 			});
 		};
 
@@ -606,68 +578,7 @@ class Environment extends Tabs {
 			if (json.error) throw(json.error);
 
 			this.zones = json;
-			this.zonesList.textContent = "";
-
-			for (let i = 0; i < json.length; i++) {
-				const element = document.createElement("div");
-				element.className = "list-element";
-				this.zonesList.appendChild(element);
-
-				const nameLabel = document.createElement("div");
-				nameLabel.style.display = "inline-block";
-				nameLabel.style.top = "0";
-				nameLabel.style.left = "0";
-				nameLabel.style.width = "25%";
-				nameLabel.style.whiteSpace = "nowrap";
-				nameLabel.style.overflow = "hidden";
-				nameLabel.style.textOverflow = "ellipsis";
-				nameLabel.style.lineHeight = "32px";
-				nameLabel.style.paddingLeft = "4px";
-				nameLabel.textContent = json[i].name;
-
-				const networkLabel = document.createElement("div");
-				networkLabel.style.display = "inline-block";
-				networkLabel.style.top = "0";
-				networkLabel.style.left = "25%";
-				networkLabel.style.width = "25%";
-				networkLabel.style.whiteSpace = "nowrap";
-				networkLabel.style.overflow = "hidden";
-				networkLabel.style.lineHeight = "32px";
-				networkLabel.textContent = json[i].network;
-
-				const vlanLabel = document.createElement("div");
-				vlanLabel.style.display = "inline-block";
-				vlanLabel.style.top = "0";
-				vlanLabel.style.left = "50%";
-				vlanLabel.style.width = "25%";
-				vlanLabel.style.whiteSpace = "nowrap";
-				vlanLabel.style.overflow = "hidden";
-				vlanLabel.style.lineHeight = "32px";
-				vlanLabel.textContent = json[i].vlan;
-
-				const colorBox = document.createElement("div");
-				colorBox.style.display = "inline-block";
-				colorBox.style.top = "4px";
-				colorBox.style.left = "75%";
-				colorBox.style.width = "32px";
-				colorBox.style.height = "24px";
-				colorBox.style.marginLeft = "8px";
-				colorBox.style.borderRadius = "2px";
-				colorBox.style.backgroundColor = json[i].color;
-				colorBox.style.boxShadow = "var(--clr-dark) 0 0 0 1px inset";
-
-				element.append(nameLabel, networkLabel, vlanLabel, colorBox);
-
-				element.onclick = ()=>{
-					for (let i=0; i<this.zonesList.childNodes.length; i++) {
-						this.zonesList.childNodes[i].style.backgroundColor = "";
-					}
-					element.style.backgroundColor = "var(--clr-select)";
-					this.selectedZone = json[i];
-				};
-
-				element.ondblclick = ()=> this.ZoneDialog(json[i]);
-			}
+			this.zonesListBox.SetItems(this.zones);
 		}
 		catch (ex) {
 			this.ConfirmBox(ex, true, "mono/error.svg");
@@ -684,47 +595,7 @@ class Environment extends Tabs {
 			if (json.error) throw(json.error);
 
 			this.dhcpRange = json;
-			this.dhcpList.textContent = "";
-
-			for (let i = 0; i < json.length; i++) {
-				const element = document.createElement("div");
-				element.className = "list-element";
-				this.dhcpList.appendChild(element);
-
-				const nameLabel = document.createElement("div");
-				nameLabel.style.display = "inline-block";
-				nameLabel.style.top = "0";
-				nameLabel.style.left = "0";
-				nameLabel.style.width = "50%";
-				nameLabel.style.whiteSpace = "nowrap";
-				nameLabel.style.overflow = "hidden";
-				nameLabel.style.textOverflow = "ellipsis";
-				nameLabel.style.lineHeight = "32px";
-				nameLabel.style.paddingLeft = "4px";
-				nameLabel.textContent = json[i].name;
-
-				const networkLabel = document.createElement("div");
-				networkLabel.style.display = "inline-block";
-				networkLabel.style.top = "0";
-				networkLabel.style.left = "50%";
-				networkLabel.style.width = "50%";
-				networkLabel.style.whiteSpace = "nowrap";
-				networkLabel.style.overflow = "hidden";
-				networkLabel.style.lineHeight = "32px";
-				networkLabel.textContent = json[i].network;
-
-				element.append(nameLabel, networkLabel);
-
-				element.onclick = ()=>{
-					for (let i=0; i<this.dhcpList.childNodes.length; i++) {
-						this.dhcpList.childNodes[i].style.backgroundColor = "";
-					}
-					element.style.backgroundColor = "var(--clr-select)";
-					this.selectedZone = json[i];
-				};
-
-				element.ondblclick = ()=> this.DhcpDialog(json[i]);
-			}
+			this.dhcpListBox.SetItems(this.dhcpRange);
 		}
 		catch (ex) {
 			this.ConfirmBox(ex, true, "mono/error.svg");
@@ -741,53 +612,7 @@ class Environment extends Tabs {
 			if (json.error) throw(json.error);
 
 			this.smtpProfiles = json;
-			this.profilesList.textContent = "";
-
-			for (let i = 0; i < json.length; i++) {
-				const element = document.createElement("div");
-				element.className = "list-element";
-				this.profilesList.appendChild(element);
-
-				let labels = [];
-
-				const serverLabel = document.createElement("div");
-				serverLabel.textContent = json[i].server;
-				labels.push(serverLabel);
-
-				const portLabel = document.createElement("div");
-				portLabel.textContent = json[i].port;
-				labels.push(portLabel);
-
-				const usernameLabel = document.createElement("Sender");
-				usernameLabel.textContent = json[i].username;
-				labels.push(usernameLabel);
-
-				for (let j = 0; j < labels.length; j++) {
-					labels[j].style.display = "inline-block";
-					labels[j].style.top = "0";
-					labels[j].style.left = `${j*100/labels.length}%`;
-					labels[j].style.width = "25%";
-					labels[j].style.lineHeight = "32px";
-					labels[j].style.whiteSpace = "nowrap";
-					labels[j].style.overflow = "hidden";
-					labels[j].style.textOverflow = "ellipsis";
-					labels[j].style.boxSizing = "border-box";
-					labels[j].style.paddingLeft = "4px";
-				}
-
-				element.append(...labels);
-
-				element.onclick = ()=> {
-					this.profilesTestButton.disabled = false;
-					for (let i=0; i<this.profilesList.childNodes.length; i++) {
-						this.profilesList.childNodes[i].style.backgroundColor = "";
-					}
-					element.style.backgroundColor = "var(--clr-select)";
-					this.selectedSmtpProfile = json[i];
-				};
-
-				element.ondblclick = ()=> this.SmtpProfileDialog(json[i]);
-			}
+			this.smtpProfilesListBox.SetItems(this.smtpProfiles);
 		}
 		catch (ex) {
 			this.ConfirmBox(ex, true, "mono/error.svg");
@@ -806,66 +631,7 @@ class Environment extends Tabs {
 			json.sort((a, b)=> a.priority - b.priority);
 
 			this.snmpProfiles = json;
-			this.profilesList.textContent = "";
-
-			for (let i = 0; i < json.length; i++) {
-				const element = document.createElement("div");
-				element.className = "list-element";
-				this.profilesList.appendChild(element);
-
-				let labels = [];
-
-				const nameLabel = document.createElement("div");
-				nameLabel.textContent = json[i].name;
-				labels.push(nameLabel);
-
-				const priorityLabel = document.createElement("div");
-				priorityLabel.textContent = json[i].priority;
-				labels.push(priorityLabel);
-
-				const contextLabel = document.createElement("div");
-				contextLabel.textContent = json[i].version !== 3 ? json[i].community : "";
-				labels.push(contextLabel);
-
-				const usernameLabel = document.createElement("div");
-				usernameLabel.textContent = json[i].username;
-				labels.push(usernameLabel);
-
-				for (let j=0; j<labels.length; j++) {
-					labels[j].style.display = "inline-block";
-					labels[j].style.top = "0";
-					labels[j].style.left = `${j*100/labels.length}%`;
-					labels[j].style.width = "25%";
-					labels[j].style.lineHeight = "32px";
-					labels[j].style.whiteSpace = "nowrap";
-					labels[j].style.overflow = "hidden";
-					labels[j].style.textOverflow = "ellipsis";
-					labels[j].style.boxSizing = "border-box";
-					labels[j].style.paddingLeft = j==0 ? "32px" : "4px";
-				}
-
-				const versionLabel = document.createElement("div");
-				versionLabel.style.color = "var(--clr-light)";
-				versionLabel.style.backgroundColor = "var(--clr-dark)";
-				versionLabel.style.fontSize = "smaller";
-				versionLabel.style.margin = "6px 4px";
-				versionLabel.style.padding = "2px 4px";
-				versionLabel.style.borderRadius = "2px";
-				versionLabel.textContent = `v${json[i].version}`;
-				element.appendChild(versionLabel);
-
-				element.append(...labels);
-
-				element.onclick = ()=> {
-					for (let i=0; i<this.profilesList.childNodes.length; i++) {
-						this.profilesList.childNodes[i].style.backgroundColor = "";
-					}
-					element.style.backgroundColor = "var(--clr-select)";
-					this.selectedSnmpProfile = json[i];
-				};
-
-				element.ondblclick = ()=> this.SnmpProfileDialog(json[i]);
-			}
+			this.snmpProfilesListBox.SetItems(this.snmpProfiles);
 		}
 		catch (ex) {
 			this.ConfirmBox(ex, true, "mono/error.svg");
