@@ -150,12 +150,14 @@ class Chat extends Window {
 		this.displayButton.onclick = ()=> this.Display_onclick();
 
 		this.remoteStreamsBox.ondblclick = ()=> {
-			 if (document.fullscreenElement) {
+			if (document.fullscreenElement) {
 				document.exitFullscreen?.();
-			 }
-			 else {
-				 this.remoteStreamsBox.requestFullscreen();
-			 }
+				this.remoteStreamsBox.style.background = "none";
+			}
+			else {
+				this.remoteStreamsBox.requestFullscreen();
+				this.remoteStreamsBox.style.background = "var(--bg)";
+			}
 		};
 
 		await this.GetHistory();
