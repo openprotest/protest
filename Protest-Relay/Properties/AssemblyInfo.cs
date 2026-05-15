@@ -10,7 +10,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("veniware")]
 [assembly: AssemblyProduct("Pro-test Relay")]
-[assembly: AssemblyCopyright("2024 veniware. Released into the public domain.")]
+[assembly: AssemblyCopyright("2026 veniware. Released into the public domain.")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

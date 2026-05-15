@@ -482,6 +482,9 @@ $RECYCLE.BIN/
 # Vim temporary swap files
 *.swp
 
+#
+*.Iscache
+
 # Protest temporary files
 
 /Protest/Data/oui.txt

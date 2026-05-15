@@ -11,7 +11,7 @@
  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
  Pro-test
- Developed by Andreas Venizelou, 2024
+ Developed by Andreas Venizelou, 2026
  Released into the public domain under the GPL v3
  For more information, visit https://github.com/openprotest/protest
 */
@@ -20,6 +20,7 @@ global using System;
 global using System.Linq;
 
 namespace Protest;
+
 internal class Program {
     static void Main(string[] args) {
         Console.Title = "Pro-test";
