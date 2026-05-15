@@ -10,7 +10,7 @@
  You should have received a copy of the GNU General Public License
  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
- windows.js is a vanilla javascript library, designed for Pro-test 5.0
+ window.js is a vanilla javascript library, designed for Pro-test 5.0
  Developed by Andreas Venizelou, 2026
  Released into the public domain under the GPL v3
  For more information, visit https://github.com/openprotest/protest
