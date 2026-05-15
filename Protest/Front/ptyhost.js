@@ -644,6 +644,7 @@ class PtyHost extends Window {
 				break;
 
 			case "\n": //lf 0x0a
+				this.cursor.x = 0;
 				this.cursor.y++;
 				if (this.cursor.y > this.maxLineY) this.maxLineY = this.cursor.y;
 				break;
@@ -705,14 +706,9 @@ class PtyHost extends Window {
 				const width = this.GetScreenWidth();
 				if (width <= 0) break;
 
-				if (this.cursor.x >= width) {
-					if (this.lineWrappingMode) {
-						this.cursor.x = 0;
-						this.cursor.y++;
-					}
-					else {
-						this.cursor.x = width - 1;
-					}
+				if (this.cursor.x >= width && this.lineWrappingMode) {
+					this.cursor.x = 0;
+					this.cursor.y++;
 				}
 
 				if (this.insertMode) {
@@ -727,14 +723,14 @@ class PtyHost extends Window {
 					this.screen[`${this.cursor.x},${this.cursor.y}`] = char;
 				}
 				else {
-					if (char.style.color) char.style.color = "unset";
+					if (char.style.color)           char.style.color = "unset";
 					if (char.style.backgroundColor) char.style.backgroundColor = "unset";
-					if (char.style.fontWeight) char.style.fontWeight = "normal";
-					if (char.style.fontStyle) char.style.fontStyle = "normal";
-					if (char.style.opacity) char.style.opacity = "1";
-					if (char.style.textDecoration) char.style.textDecoration = "none";
-					if (char.style.animation) char.style.animation = "none";
-					if (char.style.visibility) char.style.visibility = "visible";
+					if (char.style.fontWeight)      char.style.fontWeight = "normal";
+					if (char.style.fontStyle)       char.style.fontStyle = "normal";
+					if (char.style.opacity)         char.style.opacity = "1";
+					if (char.style.textDecoration)  char.style.textDecoration = "none";
+					if (char.style.animation)       char.style.animation = "none";
+					if (char.style.visibility)      char.style.visibility = "visible";
 				}
 
 				if (data[i] === " ") {
@@ -754,20 +750,20 @@ class PtyHost extends Window {
 					backColor = this.backColor;
 				}
 
-				if (foreColor) char.style.color = foreColor;
-				if (backColor) char.style.backgroundColor = backColor;
+				if (foreColor)   char.style.color = foreColor;
+				if (backColor)   char.style.backgroundColor = backColor;
 
-				if (this.bold)          char.style.fontWeight = "bold";
-				if (this.faint)         char.style.opacity = "0.6";
-				if (this.italic)        char.style.fontStyle = "italic";
+				if (this.bold)   char.style.fontWeight = "bold";
+				if (this.faint)  char.style.opacity = "0.6";
+				if (this.italic) char.style.fontStyle = "italic";
 
 				const textDecoration = [];
-				if (this.underline) textDecoration.push("underline");
-				if (this.strikethrough) textDecoration.push("line-through");
+				if (this.underline)            textDecoration.push("underline");
+				if (this.strikethrough)        textDecoration.push("line-through");
 				if (textDecoration.length > 0) char.style.textDecoration = textDecoration.join(" ");
-				if (this.blinking)      char.style.animation = "pty-blinking 1s infinite";
-				if (this.fastBlinking)  char.style.animation = "pty-fast-blinking .2s infinite";
-				if (this.hidden)        char.style.visibility = "hidden";
+				if (this.blinking)             char.style.animation = "pty-blinking 1s infinite";
+				if (this.fastBlinking)         char.style.animation = "pty-fast-blinking .2s infinite";
+				if (this.hidden)               char.style.visibility = "hidden";
 
 				this.cursor.x++;
 				break;

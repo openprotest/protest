@@ -482,8 +482,8 @@ $RECYCLE.BIN/
 # Vim temporary swap files
 *.swp
 
-#
-*.Iscache
+# C# Dev Kit language service data
+*.lscache
 
 # Protest temporary files
 
