@@ -261,7 +261,7 @@
 	background-color: #80808030;
 	box-shadow: #484848 0 0 0 1px inset;
 
-	animation: rise-in 1 .4s;
+	animation: rise-in .4s;
 	transition: .15s;
 }
 
@@ -372,7 +372,7 @@
 	background-color: var(--clr-pane);
 	border-radius: 4px;
 	box-shadow: var(--clr-dark) 0 0 4px;
-	animation: rise-in 1 .2s;
+	animation: rise-in .2s;
 }
 
 #contextmenu > div {
@@ -576,7 +576,7 @@
 	#menulist {
 		top: 80px;
 		bottom: 16px;
-		transition-duration:.2s;
+		transition-duration: .2s;
 	}
 
 	#usernameLabel, #personalizeButton, #logoutButton {

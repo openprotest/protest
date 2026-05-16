@@ -1,5 +1,4 @@
 "use strict";
-
 class ListBox {
 	static MIN_CELL_SIZE = 40;
 
