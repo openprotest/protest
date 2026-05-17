@@ -469,8 +469,8 @@ internal static class Topology {
         for (int i = 0; i < stp.Count; i++) {
             string oid = stp[i].Id.ToString();
 
-            if (oid.StartsWith(Protocols.Snmp.Oid.DOT_1D_STP_PRIORITY) && stp[i].Data is Integer32 priorotyValue) {
-                priority = priorotyValue.ToInt32();
+            if (oid.StartsWith(Protocols.Snmp.Oid.DOT_1D_STP_PRIORITY) && stp[i].Data is Integer32 priorityValue) {
+                priority = priorityValue.ToInt32();
             }
             else if (oid.StartsWith(Protocols.Snmp.Oid.DOT_1D_STP_TOPOLOGY_CHANGES) && stp[i].Data is Counter32 changesValue) {
                 topologyChanges = changesValue.ToUInt32();
@@ -491,10 +491,8 @@ internal static class Topology {
                 rootPort = rootPortValue.ToInt32();
             }
             else if (oid.StartsWith(Protocols.Snmp.Oid.DOT_1D_STP_PORT_STATE) && stp[i].Data is Integer32 portStateValue) {
-                if (portStateValue.ToInt32() == 2) { //blocking
-                    if (int.TryParse(oid.Split('.')[^2], out int portIndex)) {
-                        blockedPorts.Add(portIndex);
-                    }
+                if (portStateValue.ToInt32() == 2 && int.TryParse(oid.Split('.')[^2], out int portIndex)) { //blocking
+                    blockedPorts.Add(portIndex);
                 }
             }
         }
