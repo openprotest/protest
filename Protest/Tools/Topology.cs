@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Protest.Http;
 using Protest.Protocols.Snmp;
 using Lextm.SharpSnmpLib;
+using Vanara.Extensions.Reflection;
 
 namespace Protest.Tools;
 
@@ -136,6 +137,22 @@ internal static class Topology {
                             snmpResponded = true;
 
                             byte[] response = ComputeDot1TpFdbResponse(candidate.filename, dot1TpFdb);
+                            try {
+                                await writeSemaphore.WaitAsync();
+                                await WebSocketHelper.WsWriteText(ws, response);
+                            }
+                            finally {
+                                writeSemaphore.Release();
+                            }
+                        }
+                    }
+
+                    if (options.Contains("stp")) {
+                        IList<Variable> stp = Polling.SnmpQuery(ipAddress, snmpProfile, Oid.TOPOLOGY_STP, Polling.SnmpOperation.Walk);
+                        if (stp is not null && stp.Count > 0) {
+                            snmpResponded = true;
+
+                            byte[] response = ComputeStpResponse(candidate.filename, stp);
                             try {
                                 await writeSemaphore.WaitAsync();
                                 await WebSocketHelper.WsWriteText(ws, response);
@@ -439,6 +456,65 @@ internal static class Topology {
         return (char)(value < 10 ? '0' + value : 'a' + (value - 10));
     }
 
+    private static byte[] ComputeStpResponse(string file, IList<Variable> stp) {
+        int priority = -1;
+        uint topologyChanges = 0;
+        string lastTopologyChange = String.Empty;
+        string designatedRoot     = String.Empty;
+        int rootCost = -1;
+        int rootPort = -1;
+
+        List<int> blockedPorts = new List<int>();
+
+        for (int i = 0; i < stp.Count; i++) {
+            string oid = stp[i].Id.ToString();
+
+            if (oid.StartsWith(Protocols.Snmp.Oid.DOT_1D_STP_PRIORITY) && stp[i].Data is Integer32 priorotyValue) {
+                priority = priorotyValue.ToInt32();
+            }
+            else if (oid.StartsWith(Protocols.Snmp.Oid.DOT_1D_STP_TOPOLOGY_CHANGES) && stp[i].Data is Counter32 changesValue) {
+                topologyChanges = changesValue.ToUInt32();
+            }
+            else if (oid.StartsWith(Protocols.Snmp.Oid.DOT_1D_STP_LAST_TOPOLOGY_CHANGE)) {
+                lastTopologyChange = stp[i].Data.ToString();
+            }
+            else if (oid.StartsWith(Protocols.Snmp.Oid.DOT_1D_STP_DESIGNATED_ROOT) && stp[i].Data is OctetString rootValue) {
+                byte[] bytes = rootValue.ToBytes();
+                if (bytes.Length > 2) {
+                    designatedRoot = BytesToHex(bytes, bytes.Length - 6);
+                }
+            }
+            else if (oid.StartsWith(Protocols.Snmp.Oid.DOT_1D_STP_ROOT_COST) && stp[i].Data is Integer32 rootCostValue) {
+                rootCost = rootCostValue.ToInt32();
+            }
+            else if (oid.StartsWith(Protocols.Snmp.Oid.DOT_1D_STP_ROOT_PORT) && stp[i].Data is Integer32 rootPortValue) {
+                rootPort = rootPortValue.ToInt32();
+            }
+            else if (oid.StartsWith(Protocols.Snmp.Oid.DOT_1D_STP_PORT_STATE) && stp[i].Data is Integer32 portStateValue) {
+                if (portStateValue.ToInt32() == 2) { //blocking
+                    if (int.TryParse(oid.Split('.')[^2], out int portIndex)) {
+                        blockedPorts.Add(portIndex);
+                    }
+                }
+            }
+        }
+
+        byte[] payload = JsonSerializer.SerializeToUtf8Bytes(new {
+            stp = new {
+                file               = file,
+                topologyChanges    = topologyChanges,
+                lastTopologyChange = lastTopologyChange,
+                designatedRoot     = designatedRoot,
+                priority           = priority,
+                rootCost           = rootCost,
+                rootPort           = rootPort,
+                blockedPorts       = blockedPorts,
+            }
+        });
+
+        return payload;
+    }
+
     private static byte[] ComputeDot1QResponse(string file, IList<Variable> dot1q) {
         Dictionary<int, string> names = new Dictionary<int, string>();
         Dictionary<int, string> egress = new Dictionary<int, string>();
@@ -720,7 +796,20 @@ internal static class Topology {
         return raw.Length - startIndex;
     }
 
-    internal static string PortsToHex(byte[] raw, int startIndex, int maxIndex) {
+    private static string BytesToHex(byte[] raw, int startIndex) {
+        int size = raw.Length - startIndex;
+        Span<char> hex = stackalloc char[size * 2];
+
+        for (int i = 0; i < size; i++) {
+            string a = raw[i + startIndex].ToString("x2");
+            hex[i * 2] = a[0];
+            hex[i * 2 + 1] = a[1];
+        }
+
+        return new String(hex);
+    }
+
+    private static string PortsToHex(byte[] raw, int startIndex, int maxIndex) {
         int size = maxIndex - startIndex;
         Span<char> hex = stackalloc char[size * 2];
 

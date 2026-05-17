@@ -175,14 +175,17 @@
 	background-color: rgb(52,169,228);
 }
 
+.topology-stp-list,
 .topology-vlan-list,
 .topology-interface-list {
 	outline: 0;
 	border: 2px solid var(--clr-control);
 	padding: 4px;
+	margin-top: 16px;
 	border-radius: 4px;
 }
 
+.topology-stp-list > summary,
 .topology-vlan-list > summary,
 .topology-interface-list > summary {
 	outline: 0;
@@ -192,6 +195,7 @@
 	margin: -4px;
 }
 
+.topology-stp-list > summary:focus-visible,
 .topology-vlan-list > summary:focus-visible,
 .topology-interface-list > summary:focus-visible {
 	text-decoration: underline;
@@ -199,15 +203,18 @@
 	text-decoration-color: var(--clr-select);
 }
 
+.topology-stp-list[open] > summary,
 .topology-vlan-list[open] > summary,
 .topology-interface-list[open] > summary {
 	margin-bottom: 8px;
 }
 
+.topology-stp-list > summary::marker,
 .topology-vlan-list > summary::marker,
 .topology-interface-list > summary::marker {
 	content: "";
 }
+.topology-stp-list > summary::before,
 .topology-vlan-list > summary::before,
 .topology-interface-list > summary::before {
 	content: "";
@@ -223,6 +230,7 @@
 	transition: .2s;
 }
 
+.topology-stp-list[open] > summary::before,
 .topology-vlan-list[open] > summary::before,
 .topology-interface-list[open] > summary::before {
 	transform: rotate(0deg) !important;
@@ -261,10 +269,6 @@
 
 .topology-vlan-list > div:hover > div{
 	background-color: var(--clr-select);
-}
-
-.topology-interface-list {
-	margin-top: 16px;
 }
 
 .topology-interface-list > div > div {

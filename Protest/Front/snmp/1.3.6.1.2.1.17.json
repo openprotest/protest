@@ -34,7 +34,7 @@
 ".2.15.1":["dot1dStpPortEntry"],
 ".2.15.1.1":["dot1dStpPort, dot1dStpPortIfIndex"],
 ".2.15.1.2":["dot1dStpPortPriority, dot1dStpPortNumber"],
-".2.15.1.3":["dot1dStpPortState"],
+".2.15.1.3":["dot1dStpPortState", {"1":"disabled", "2":"blocking", "3":"listening", "4":"learning", "5":"forwarding", "6":"broken"}],
 ".2.15.1.4":["dot1dStpPortEnable", {"1":"enabled", "2":"disabled"}],
 ".2.15.1.5":["dot1dStpPortPathCost"],
 ".2.15.1.6":["dot1dStpPortDesignatedRoot"],

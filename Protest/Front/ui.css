@@ -64,7 +64,7 @@
 
 	background:
 		url(mono/logo.svg),
-		radial-gradient(circle, transparent 54%, var(--clr-dark) 55%, var(--clr-dark) 64%, transparent 65%);
+		radial-gradient(circle, transparent 54%, var(--clr-dark) 56%, var(--clr-dark) 64%, transparent 66%);
 
 	background-size: 46% 46%, 100% 100%;
 	background-position: center, center;

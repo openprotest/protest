@@ -64,6 +64,10 @@ internal static class Oid {
         IF_OUT_ERROR,
     };
 
+    public static readonly string[] TOPOLOGY_STP = new string[] {
+        DOT_1D_STP
+    };
+
     public static readonly string[] TOPOLOGY_DOT1Q = new string[] {
         DOT_1Q_VLAN_STATIC_NAME,
         DOT_1Q_VLAN_EGRESS,
@@ -136,6 +140,15 @@ internal static class Oid {
     public const string IP_ROUTING_TABLE      = "1.3.6.1.2.1.4.21";
     public const string IP_NET_TO_MEDIA_TABLE = "1.3.6.1.2.1.4.22";
 
+    public const string DOT_1D_STP                      = "1.3.6.1.2.1.17.2";
+    public const string DOT_1D_STP_PRIORITY             = "1.3.6.1.2.1.17.2.2.0";
+    public const string DOT_1D_STP_LAST_TOPOLOGY_CHANGE = "1.3.6.1.2.1.17.2.3.0";
+    public const string DOT_1D_STP_TOPOLOGY_CHANGES     = "1.3.6.1.2.1.17.2.4.0";
+    public const string DOT_1D_STP_DESIGNATED_ROOT      = "1.3.6.1.2.1.17.2.5.0";
+    public const string DOT_1D_STP_ROOT_COST            = "1.3.6.1.2.1.17.2.6.0";
+    public const string DOT_1D_STP_ROOT_PORT            = "1.3.6.1.2.1.17.2.7.0";
+    public const string DOT_1D_STP_PORT_STATE           = "1.3.6.1.2.1.17.2.15.1.3";
+    
     public const string DISK_TOTAL              = "1.3.6.1.2.1.25.2.3.1.5";
     public const string DISK_USED               = "1.3.6.1.2.1.25.2.3.1.6";
     public const string DISK_FREE               = "1.3.6.1.2.1.25.2.3.1.7";

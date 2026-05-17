@@ -407,7 +407,7 @@ class Topology extends Window {
 	}
 
 	StartDialog() {
-		const dialog = this.DialogBox("280px");
+		const dialog = this.DialogBox("320px");
 		if (dialog === null) return;
 
 		const {okButton, innerBox} = dialog;
@@ -464,13 +464,13 @@ class Topology extends Window {
 		lldpInput.checked = true;
 		lldpInput.disabled = true;
 
-		const [macLabel, macInput] = AddParameter("MAC table", "input", "toggle");
-		macLabel.style.lineHeight = "24px";
-		macLabel.style.paddingLeft = "28px";
-		macLabel.style.backgroundImage = "url(mono/physicaladdress.svg)";
-		macLabel.style.backgroundSize = "24px";
-		macLabel.style.backgroundRepeat = "no-repeat";
-		macInput.checked = this.args.options ? this.args.options.mac : false;
+		const [stpLabel, stpInput] = AddParameter("Spanning tree", "input", "toggle");
+		stpLabel.style.lineHeight = "24px";
+		stpLabel.style.paddingLeft = "28px";
+		stpLabel.style.backgroundImage = "url(mono/tree.svg)";
+		stpLabel.style.backgroundSize = "24px";
+		stpLabel.style.backgroundRepeat = "no-repeat";
+		stpInput.checked = this.args.options ? this.args.options.stp : true;
 
 		const [dot1qLabel, dot1qInput] = AddParameter("VLAN (802.1Q)", "input", "toggle");
 		dot1qLabel.style.lineHeight = "24px";
@@ -479,6 +479,14 @@ class Topology extends Window {
 		dot1qLabel.style.backgroundSize = "24px";
 		dot1qLabel.style.backgroundRepeat = "no-repeat";
 		dot1qInput.checked =  this.args.options ? this.args.options.dot1q : true;
+
+		const [macLabel, macInput] = AddParameter("MAC table", "input", "toggle");
+		macLabel.style.lineHeight = "24px";
+		macLabel.style.paddingLeft = "28px";
+		macLabel.style.backgroundImage = "url(mono/physicaladdress.svg)";
+		macLabel.style.backgroundSize = "24px";
+		macLabel.style.backgroundRepeat = "no-repeat";
+		macInput.checked = this.args.options ? this.args.options.mac : false;
 
 		const [speedLabel, speedInput] = AddParameter("Connection speed", "input", "toggle");
 		speedLabel.style.lineHeight = "24px";
@@ -513,16 +521,18 @@ class Topology extends Window {
 			dialog.Close();
 
 			const devices = [];
-			if (macInput.checked) devices.push("mac");
+			if (stpInput.checked) devices.push("stp");
 			if (dot1qInput.checked) devices.push("vlan");
+			if (macInput.checked) devices.push("mac");
 			if (speedInput.checked) devices.push("speed");
 			if (trafficInput.checked) devices.push("traffic");
 			if (errorInput.checked) devices.push("error");
 			this.Connect(devices);
 
 			this.args.options = {
-				mac    : macInput.checked,
 				dot1q  : dot1qInput.checked,
+				stp    : stpInput.checked,
+				mac    : macInput.checked,
 				speed  : speedInput.checked,
 				traffic: trafficInput.checked,
 				error  : errorInput.checked
@@ -641,6 +651,24 @@ class Topology extends Window {
 
 				if (this.selected && this.selected.initial.file === json.dot1q.file) {
 					this.SelectDevice(json.dot1q.file);
+				}
+			}
+			else if (json.stp && !forbiddenKeys.includes(json.stp.file)) {
+				const device = this.devices[json.stp.file];
+				device.stp = json.stp;
+
+				if (json.stp.blockedPorts.length > 0) {
+					const image = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+					image.setAttribute("x", 8);
+					image.setAttribute("y", 8);
+					image.setAttribute("width", 24);
+					image.setAttribute("height", 24);
+					image.style.fill = "var(--clr-error)";
+					image.style.maskImage = "url(mono/disable.svg)";
+					image.style.maskSize = "contain";
+					image.style.maskRepeat = "no-repeat";
+					image.style.maskMode = "alpha";
+					device.element.root.appendChild(image);
 				}
 			}
 			else if (json.dot1tp && !forbiddenKeys.includes(json.dot1tp.file)) {
@@ -1161,7 +1189,9 @@ class Topology extends Window {
 			}
 			item.style.backgroundColor = "var(--clr-select)";
 
-			this.SelectDevice(device.initial.file, portIndex.toString());
+			if (portIndex) {
+				this.SelectDevice(device.initial.file, portIndex.toString());
+			}
 
 			device.element.root.scrollIntoView({behavior: "smooth", block: "center", inline: "center"});
 		};
@@ -3142,6 +3172,82 @@ class Topology extends Window {
 			inferredLabel.textContent = "Inferred";
 			inferredLabel.setAttribute("inferred", true);
 			this.sidePane.appendChild(inferredLabel);
+		}
+
+		if (device.stp) {
+			const stpList = document.createElement("details");
+			stpList.className = "topology-stp-list";
+			this.sidePane.appendChild(stpList);
+
+			if (this.stpToggle) {
+				stpList.setAttribute("open", true);
+			}
+
+			const stpTitle = document.createElement("summary");
+			stpTitle.textContent = "Spanning tree";
+			stpList.appendChild(stpTitle);
+
+			stpList.ontoggle = ()=> {
+				this.stpToggle = stpList.open;
+			};
+
+			stpList.onclick = ()=> {
+				this.infoBox.style.opacity = "0";
+				this.infoBox.style.visibility = "hidden";
+				this.infoBox.textContent = "";
+			};
+
+			const MakeBox = (labelText, valueText) => {
+				const box = document.createElement("div");
+				box.style.padding = "4px 0";
+				stpList.appendChild(box);
+
+				const label = document.createElement("div");
+				label.textContent = `${labelText}:`;
+				label.style.display = "inline-block";
+				label.style.fontWeight = "600";
+				label.style.width = "140px";
+				box.appendChild(label);
+
+				const value = document.createElement("div");
+				value.textContent = valueText;
+				value.style.display = "inline-block";
+				value.style.width = "calc(100% - 140px)";
+				value.style.userSelect = "text";
+				box.appendChild(value);
+
+				return box;
+			};
+
+			if (device.stp.priority > -1) {
+				MakeBox("Priority", device.stp.priority);
+			}
+
+			if (device.stp.rootCost === 0) {
+				MakeBox("Root cost", "0 (Root)");
+			}
+			else {
+				MakeBox("Root cost", device.stp.rootCost);
+				MakeBox("Root port", device.stp.rootPort);
+			}
+
+			if (device.stp.designatedRoot && device.stp.designatedRoot.length > 0) {
+				MakeBox("Designated root", device.stp.designatedRoot);
+			}
+
+			MakeBox("Topology changes", device.stp.topologyChanges);
+
+			if (device.stp.lastTopologyChange && device.stp.lastTopologyChange.length > 0) {
+				MakeBox("Last change", device.stp.lastTopologyChange);
+			}
+
+			if (device.stp.blockedPorts && device.stp.blockedPorts.length > 0) {
+				let count = device.stp.blockedPorts.length;
+				const blockedPortsBox = MakeBox("Blocked ports", count);
+				blockedPortsBox.style.fontWeight = "800";
+				blockedPortsBox.style.color = "var(--clr-error)";
+			}
+
 		}
 
 		if (device.dot1q) {
