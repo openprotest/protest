@@ -228,7 +228,13 @@ internal static class Topology {
                     }
 
                     if (!snmpResponded) {
-                        await WebSocketHelper.WsWriteText(ws, $"{{\"nosnmp\":\"{candidate.filename}\"}}");
+                        try {
+                            await writeSemaphore.WaitAsync();
+                            await WebSocketHelper.WsWriteText(ws, $"{{\"nosnmp\":\"{candidate.filename}\"}}");
+                        }
+                        finally {
+                            writeSemaphore.Release();
+                        }
                     }
 
                     try {
