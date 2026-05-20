@@ -148,7 +148,7 @@ internal static class Oid {
     public const string DOT_1D_STP_ROOT_COST            = "1.3.6.1.2.1.17.2.6.0";
     public const string DOT_1D_STP_ROOT_PORT            = "1.3.6.1.2.1.17.2.7.0";
     public const string DOT_1D_STP_PORT_STATE           = "1.3.6.1.2.1.17.2.15.1.3";
-    
+
     public const string DISK_TOTAL              = "1.3.6.1.2.1.25.2.3.1.5";
     public const string DISK_USED               = "1.3.6.1.2.1.25.2.3.1.6";
     public const string DISK_FREE               = "1.3.6.1.2.1.25.2.3.1.7";
