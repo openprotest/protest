@@ -159,7 +159,8 @@ class Environment extends Tabs {
 			{label:"Color", sortValue:d=> d.color, render:d=> {
 				const box = document.createElement("div");
 				box.style.top = "4px";
-				box.style.width = "32px";
+				box.style.width = "40px";
+				box.style.maxWidth = "40px";
 				box.style.height = "24px";
 				box.style.marginLeft = "8px";
 				box.style.borderRadius = "2px";

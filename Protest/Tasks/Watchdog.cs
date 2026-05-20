@@ -206,7 +206,7 @@ internal static class Watchdog {
                     continue;
                 }
 
-                if (profile is null) { continue; }
+                if (profile is null) continue;
 
                 if (watcher.lastStatus < 0 && status >= 0 && (gist[i].notify == NotifyWhen.rise || gist[i].notify == NotifyWhen.both)) { //rise
                     SendSmtpNotification(watcher, gist[i], profile, status);
@@ -416,7 +416,7 @@ internal static class Watchdog {
 
                 IAsyncResult ar = tcp.BeginConnect(host, port, null, null);
 
-                if (!ar.AsyncWaitHandle.WaitOne(timeout)) return -5;
+                if (!ar.AsyncWaitHandle.WaitOne(timeout)) continue;
 
                 tcp.EndConnect(ar);
 
@@ -427,11 +427,12 @@ internal static class Watchdog {
                         if (certificate != null) {
                             cert2 = certificate as X509Certificate2 ?? new X509Certificate2(certificate);
                         }
+
                         return true;
                     }
                 );
 
-                ssl.ReadTimeout = timeout;
+                ssl.ReadTimeout  = timeout;
                 ssl.WriteTimeout = timeout;
 
                 ssl.AuthenticateAsClient(host);

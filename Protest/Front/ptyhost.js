@@ -1698,8 +1698,9 @@ class PtyHost extends Window {
 			for (let x=0; x<cw; x+=2) {
 				const cell = this.screen[`${x},${y}`];
 				if (!cell) continue;
+
 				const text = cell.textContent;
-				if (!text || text === " ") continue;
+				if (!text) continue;
 
 				const [r, g, b] = PtyHost.ParseMinimapColor(cell.style.color);
 				for (let dy = 0; dy < CH; dy++) {
@@ -1710,7 +1711,7 @@ class PtyHost extends Window {
 					data[idx+1] = data[idx+5] = g;
 					data[idx+2] = data[idx+6] = b;
 					data[idx+3] = 255;
-					data[idx+7] = 127;
+					data[idx+7] = 168;
 				}
 			}
 		}
