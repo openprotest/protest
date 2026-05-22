@@ -139,6 +139,7 @@ internal static class Watchdog {
 
     private static void WatchLoop() {
         int nextSleep = FIVE_MINUTE_IN_MILLI;
+
         //align time to the next 5-min interval
         long gap = (FIVE_MINUTE_IN_TICKS - DateTime.UtcNow.Ticks % FIVE_MINUTE_IN_TICKS) / 10_000;
         task?.status = TaskWrapper.TaskStatus.Idle;

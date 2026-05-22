@@ -176,9 +176,8 @@ internal static class Issues {
         }
         catch (OperationCanceledException) { }
         finally {
-            TaskWrapper t = task;
+            task?.Dispose();
             task = null;
-            t?.Dispose();
         }
     }
 
@@ -224,10 +223,8 @@ internal static class Issues {
 
         Parallel.ForEach(
             DatabaseInstances.devices.dictionary.Values,
-            new ParallelOptions { MaxDegreeOfParallelism = 64, CancellationToken = task.cancellationToken },
-            device => {
-                ScanDevice(device);
-            }
+            new ParallelOptions { MaxDegreeOfParallelism = 32, CancellationToken = task.cancellationToken },
+            device => ScanDevice(device)
         );
     }
 
