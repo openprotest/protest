@@ -136,8 +136,7 @@ const UI = {
 	},
 
 	SetBackground: (hsl)=> {
-		let bg2 = "light-dark(rgb(68,148,211), rgb(62,81,97))";
-		
+		let bg2;
 		switch(hsl[0]) {
 		case 3: //red
 			bg2 = "light-dark(rgb(68,211,204), rgb(62,81,97))";

@@ -168,9 +168,7 @@ internal static class Issues {
     }
 
     private static void Scan() {
-        if (task is null) return;
-
-        task.status = TaskWrapper.TaskStatus.Running;
+        task?.status = TaskWrapper.TaskStatus.Running;
 
         try {
             ScanUsers();
