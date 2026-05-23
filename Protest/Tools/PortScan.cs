@@ -266,7 +266,7 @@ internal static class PortScan {
                         string result = host + (char)127 + ports;
                         try {
                             await writeSemaphore.WaitAsync(tokenSource.Token);
-                            await ws.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(result), 0, result.Length), WebSocketMessageType.Text, true, tokenSource.Token);
+                            await ws.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(result)), WebSocketMessageType.Text, true, tokenSource.Token);
                         }
                         finally {
                             writeSemaphore.Release();

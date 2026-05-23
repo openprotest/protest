@@ -136,9 +136,7 @@ const UI = {
 	},
 
 	SetBackground: (hsl)=> {
-		let bg1 = "light-dark(rgb(45,129,153), rgb(51,81,89))";
 		let bg2 = "light-dark(rgb(68,148,211), rgb(62,81,97))";
-		let bg3 = "light-dark(rgb(68,157,203), rgb(63,113,138))";
 		
 		switch(hsl[0]) {
 		case 3: //red
@@ -163,9 +161,9 @@ const UI = {
 		}
 
 		const root = document.documentElement;
-		root.style.setProperty("--clr-bg1", bg1);
+		root.style.setProperty("--clr-bg1", "light-dark(rgb(45,129,153), rgb(51,81,89))");
 		root.style.setProperty("--clr-bg2", bg2);
-		root.style.setProperty("--clr-bg3", bg3);
+		root.style.setProperty("--clr-bg3", "light-dark(rgb(68,157,203), rgb(63,113,138))");
 	},
 
 	SetTaskbarPosition: position=> {
