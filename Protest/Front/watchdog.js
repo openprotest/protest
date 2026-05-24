@@ -745,6 +745,7 @@ class Watchdog extends Window {
 			label.textContent = name.length===0 ? "unnamed" : name;
 			label.style.color = name.length===0 ? "rgb(96,96,96)" : "var(--clr-dark)";
 			label.style.fontStyle = name.length===0 ? "oblique" : "normal";
+			label.style.top = "0";
 			label.style.lineHeight = "32px";
 			label.style.paddingLeft = "4px";
 			label.style.width = "calc(100% - 32px)";
