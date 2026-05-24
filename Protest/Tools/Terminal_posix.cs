@@ -13,12 +13,6 @@ internal static partial class Terminal {
     [SupportedOSPlatform("linux")]
     [SupportedOSPlatform("macos")]
     private static Task RunPosixAsync(HttpListenerContext ctx, WebSocket ws, string origin) {
-        return RunPtyAsync(ctx, ws, origin, BuildPosixPtyOptions());
-    }
-
-    [SupportedOSPlatform("linux")]
-    [SupportedOSPlatform("macos")]
-    private static PtyOptions BuildPosixPtyOptions() {
         Dictionary<string, string> env = new Dictionary<string, string> {
             ["TERM"] = "xterm-256color",
             ["LANG"] = Environment.GetEnvironmentVariable("LANG") ?? "en_US.UTF-8"
@@ -40,7 +34,7 @@ internal static partial class Terminal {
             }
         }
 
-        return new PtyOptions {
+        PtyOptions options =  new PtyOptions {
             App = app,
             CommandLine = new[] { "-l" },
             Cwd = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
@@ -48,5 +42,8 @@ internal static partial class Terminal {
             Rows = DEFAULT_ROWS,
             Environment = env
         };
+
+        return RunPtyAsync(ctx, ws, origin, options);
     }
+
 }
