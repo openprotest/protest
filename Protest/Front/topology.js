@@ -657,9 +657,26 @@ class Topology extends Window {
 				const device = this.devices[json.stp.file];
 				device.stp = json.stp;
 
-				if (json.stp.blockedPorts.length > 0) {
+				let iconOffset = 0;
+				if (json.stp.rootCost === 0) {
 					const image = document.createElementNS("http://www.w3.org/2000/svg", "rect");
 					image.setAttribute("x", 8);
+					image.setAttribute("y", 8);
+					image.setAttribute("width", 24);
+					image.setAttribute("height", 24);
+					image.style.fill = "rgb(48,136,96)";
+					image.style.maskImage = "url(mono/root.svg)";
+					image.style.maskSize = "contain";
+					image.style.maskRepeat = "no-repeat";
+					image.style.maskMode = "alpha";
+					device.element.root.appendChild(image);
+
+					iconOffset += 32
+				}
+
+				if (json.stp.blockedPorts.length > 0) {
+					const image = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+					image.setAttribute("x", iconOffset + 8);
 					image.setAttribute("y", 8);
 					image.setAttribute("width", 24);
 					image.setAttribute("height", 24);
@@ -891,15 +908,22 @@ class Topology extends Window {
 	}
 
 	SortUnreachable() {
-		let count = 0;
+		let total = 0;
+		for (const file in this.devices) {
+			if (this.devices[file].nosnmp || this.devices[file].nolldp || this.devices[file].links && Object.keys(this.devices[file].links).length === 0) {
+				total++;
+			}
+		}
 
+		let index = 0;
+		let columns = total < 16 ? 2 : 4;
 		for (const file in this.devices) {
 			if (this.devices[file].nosnmp || this.devices[file].nolldp || this.devices[file].links && Object.keys(this.devices[file].links).length === 0) {
 				const element = this.devices[file].element;
-				let x = Topology.MAX_WIDTH + (count % 2) * 150;
-				let y = 50 + Math.floor(count / 2) * 150;
+				let x = Topology.MAX_WIDTH + (index % columns + 1) * 150;
+				let y = 50 + Math.floor(index / columns) * 150;
 				this.MoveDeviceElement(element, x, y);
-				count++;
+				index++;
 			}
 		}
 
@@ -3150,6 +3174,21 @@ class Topology extends Window {
 					new Ssh({ host: sshHost, username: username, file: device.initial.file });
 				};
 			}
+
+			if (!device.nosnmp && "snmp profile" in dbEntry) {
+				const snmpButton = document.createElement("button");
+				snmpButton.style.minWidth = "unset";
+				snmpButton.style.width = "36px";
+				snmpButton.style.height = "36px";
+				snmpButton.style.backgroundColor = "var(--clr-control)";
+				snmpButton.style.backgroundSize = "28px 28px";
+				snmpButton.style.backgroundPosition = "center";
+				snmpButton.style.backgroundRepeat = "no-repeat";
+				snmpButton.style.backgroundImage = "url(mono/snmp.svg)";
+				optionsBox.appendChild(snmpButton);
+
+				snmpButton.onclick = () => new Snmp({target:host, community:"", profile:dbEntry["snmp profile"].v});
+			}
 		}
 
 		if (device.nosnmp) {
@@ -3199,7 +3238,8 @@ class Topology extends Window {
 
 			const MakeBox = (labelText, valueText) => {
 				const box = document.createElement("div");
-				box.style.padding = "4px 0";
+				box.style.padding = "4px";
+				box.style.borderRadius = "4px";
 				stpList.appendChild(box);
 
 				const label = document.createElement("div");
@@ -3224,7 +3264,9 @@ class Topology extends Window {
 			}
 
 			if (device.stp.rootCost === 0) {
-				MakeBox("Root cost", "0 (Root)");
+				const rootBox = MakeBox("Root cost", "0 (Root)");
+				rootBox.style.backgroundColor = "rgba(48,136,96,.4)";
+				rootBox.style.boxShadow = "rgb(48,136,96) 0 0 0 2px inset";
 			}
 			else {
 				MakeBox("Root cost", device.stp.rootCost);
@@ -3241,11 +3283,12 @@ class Topology extends Window {
 				MakeBox("Last change", device.stp.lastTopologyChange);
 			}
 
-			if (device.stp.blockedPorts && device.stp.blockedPorts.length > 0) {
+			if (device.stp.blockedPorts && device.stp.blockedPorts.length > 0) {``
 				let count = device.stp.blockedPorts.length;
-				const blockedPortsBox = MakeBox("Blocked ports", count);
-				blockedPortsBox.style.fontWeight = "800";
-				blockedPortsBox.style.color = "var(--clr-error)";
+				const ports = device.stp.blockedPorts.join(", ");
+				const blockedPortsBox = MakeBox(count === 1 ? "Blocked port" : "Blocked ports", ports);
+				blockedPortsBox.style.backgroundColor = "color-mix(in srgb, var(--clr-error) 40%, transparent)";
+				blockedPortsBox.style.boxShadow = "var(--clr-error) 0 0 0 2px inset";
 			}
 
 		}
