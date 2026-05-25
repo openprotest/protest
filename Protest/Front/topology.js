@@ -3283,7 +3283,7 @@ class Topology extends Window {
 				MakeBox("Last change", device.stp.lastTopologyChange);
 			}
 
-			if (device.stp.blockedPorts && device.stp.blockedPorts.length > 0) {``
+			if (device.stp.blockedPorts && device.stp.blockedPorts.length > 0) {
 				let count = device.stp.blockedPorts.length;
 				const ports = device.stp.blockedPorts.join(", ");
 				const blockedPortsBox = MakeBox(count === 1 ? "Blocked port" : "Blocked ports", ports);
