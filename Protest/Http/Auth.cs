@@ -752,12 +752,12 @@ internal static class Auth {
         parameters.TryGetValue("color", out string color);
         parameters.TryGetValue("isdomain", out string isDomainString);
 
-        username = Uri.UnescapeDataString(username).ToLower();
-        email    = Uri.UnescapeDataString(email);
-        password = Uri.UnescapeDataString(password);
-        alias    = Uri.UnescapeDataString(alias);
-        color    = Uri.UnescapeDataString(color);
-        bool isDomainUser = Uri.UnescapeDataString(isDomainString) == "true";
+        username = Uri.UnescapeDataString(username ?? String.Empty).ToLower();
+        email    = Uri.UnescapeDataString(email ?? String.Empty);
+        password = Uri.UnescapeDataString(password ?? String.Empty);
+        alias    = Uri.UnescapeDataString(alias ?? String.Empty);
+        color    = Uri.UnescapeDataString(color ?? String.Empty);
+        bool isDomainUser = Uri.UnescapeDataString(isDomainString ?? String.Empty) == "true";
 
         if (username is null) return Data.CODE_INVALID_ARGUMENT.Array;
         if (username == "loopback") return Data.CODE_INVALID_ARGUMENT.Array;
@@ -988,8 +988,8 @@ file sealed class AccessControlJsonConverter : JsonConverter<Auth.AccessControl>
         writer.WriteString(_domain, value.domain);
         writer.WriteString(_alias, value.alias);
         writer.WriteString(_color, value.color);
-        writer.WriteString(_hash, Convert.ToHexString(value.passwordHash));
-        writer.WriteString(_totp, value.totpSecret is null ? null: Convert.ToHexString(value.totpSecret));
+        writer.WriteString(_hash, value.passwordHash is null ? null : Convert.ToHexString(value.passwordHash));
+        writer.WriteString(_totp, value.totpSecret is null ? null : Convert.ToHexString(value.totpSecret));
         writer.WriteBoolean(_isDomainUser, value.isDomainUser);
 
         writer.WritePropertyName(_authorization);

@@ -3195,7 +3195,7 @@ class Topology extends Window {
 			const snmpLabel = document.createElement("div");
 			snmpLabel.className = "topology-error-message";
 			snmpLabel.textContent = "SNMP agent is unreachable";
-			snmpLabel.setAttribute("nonsmp", true);
+			snmpLabel.setAttribute("nosnmp", true);
 			this.sidePane.appendChild(snmpLabel);
 		}
 		if (device.nolldp) {
@@ -3997,7 +3997,7 @@ class Topology extends Window {
 			taggedBox.appendChild(taggedValue);
 
 			if (taggedArray.length === 1) {
-				taggedValue.style.backgroundImage = `radial-gradient(circle, ${this.GetVlanColor(taggedArray[0]) || "trasparent"} 75%, #0000 75%), radial-gradient(circle,var(--clr-dark) 75%, transparent 75%)`;
+				taggedValue.style.backgroundImage = `radial-gradient(circle, ${this.GetVlanColor(taggedArray[0]) || "transparent"} 75%, #0000 75%), radial-gradient(circle,var(--clr-dark) 75%, transparent 75%)`;
 			}
 		}
 
@@ -4009,7 +4009,7 @@ class Topology extends Window {
 
 			const speedValue = document.createElement("div");
 			speedValue.textContent = UI.MBitsPerSecToString(device.speed.value[portIndex]);
-			speedValue.style.backgroundImage = `radial-gradient(circle, ${Topology.SPEED_COLOR_MAP[device.speed.value[portIndex]] || "trasparent"} 75%, #0000 75%), radial-gradient(circle,var(--clr-dark) 75%, transparent 75%)`;
+			speedValue.style.backgroundImage = `radial-gradient(circle, ${Topology.SPEED_COLOR_MAP[device.speed.value[portIndex]] || "transparent"} 75%, #0000 75%), radial-gradient(circle,var(--clr-dark) 75%, transparent 75%)`;
 			speedBox.appendChild(speedValue);
 		}
 
