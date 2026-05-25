@@ -6,7 +6,6 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using System.Threading;
 using OtpNet;
 
 namespace Protest.Http;
@@ -159,15 +158,14 @@ internal static class Auth {
             return false;
         }
 
-        int.TryParse(array[0], out int status);
+        if (!int.TryParse(array[0], out int status)) return false;
 
-        switch (status) {
-        case -1: return TotpEnrollment(ctx, array);
-        case  1: return PrimaryFactorAuthentication(ctx, array);
-        case  2: return TotpAuthentication(ctx, array);
-        }
-
-        return false;
+        return status switch {
+            -1 => TotpEnrollment(ctx, array),
+            1 => PrimaryFactorAuthentication(ctx, array),
+            2 => TotpAuthentication(ctx, array),
+            _ => false,
+        };
     }
 
     private static bool PrimaryFactorAuthentication(HttpListenerContext ctx, string[] array) {
@@ -761,6 +759,7 @@ internal static class Auth {
         bool isDomainUser = Uri.UnescapeDataString(isDomainString) == "true";
 
         if (username is null) return Data.CODE_INVALID_ARGUMENT.Array;
+        if (username == "loopback") return Data.CODE_INVALID_ARGUMENT.Array;
 
         AccessControl access;
         if (rbac.TryRemove(username, out AccessControl exists)) {

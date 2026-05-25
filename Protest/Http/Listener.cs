@@ -294,6 +294,10 @@ internal sealed class Listener {
                 return;
             }
 
+            ctx.Response.AddHeader("X-Frame-Options", "DENY");
+            ctx.Response.AddHeader("X-Content-Type-Options", "nosniff");
+            ctx.Response.AddHeader("Content-Security-Policy", "default-src 'self'; img-src 'self' data:");
+
             if (await CacheHandler(ctx, path)) return;
 
             if (!Auth.IsAuthenticated(ctx)) {
@@ -308,7 +312,7 @@ internal sealed class Listener {
                 return;
             }
 
-            if (await WebSocketHandler(ctx)) { return; }
+            if (await WebSocketHandler(ctx)) return;
 
             Dictionary<string, string> parameters = null;
             string query = ctx.Request.Url.Query;
@@ -453,6 +457,25 @@ internal sealed class Listener {
     private static async Task<bool> WebSocketHandler(HttpListenerContext ctx) {
         if (!ctx.Request.IsWebSocketRequest) {
             return false;
+        }
+
+        string origin = ctx.Request.Headers.Get("Origin");
+
+        if (String.IsNullOrEmpty(origin) || !Uri.TryCreate(origin, UriKind.Absolute, out Uri originUri)) {
+            ctx.Response.StatusCode = 403;
+            ctx.Response.Close();
+            return true;
+        }
+
+        string userHostName = ctx.Request.UserHostName;
+        bool isSameHost = String.Equals(originUri.Host, userHostName, StringComparison.Ordinal)
+            || String.Equals($"{originUri.Host}:{originUri.Port}", userHostName, StringComparison.Ordinal);
+
+        if (!isSameHost) {
+            Logger.Action("Unauthenticated", "AAA", $"Rejected WebSocket from cross-origin {origin} (host {userHostName})");
+            ctx.Response.StatusCode = 403;
+            ctx.Response.Close();
+            return true;
         }
 
         switch (ctx.Request.Url.AbsolutePath) {

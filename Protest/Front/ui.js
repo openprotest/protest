@@ -1389,6 +1389,14 @@ contextmenu.onblur = ()=> {
 	contextmenu.style.display = "none";
 };
 
+const filterIcons = ["mono/required.svg?light", "mono/recent.svg?light", "mono/database.svg?light", "mono/documentation.svg?light", "mono/hammer.svg?light"];
+const filters = document.getElementsByClassName("menufilter-option");
+for (let i=0; i<filters.length; i++) {
+	filters[i].style.left = `${i*40}px`;
+	filters[i].style.backgroundImage = `url(${filterIcons[i]})`;
+	filters[i].onclick = ()=>{ MENU.Filter(i) };
+}
+
 (function minuteLoop() {
 	//check session
 	const timeMapping = { 1: 15, 2: 30, 3: 60, 4: 2 * 60, 5: 4 * 60, 6: 8 * 60, 7: 24 * 60, 8: Infinity };
