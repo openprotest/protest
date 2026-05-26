@@ -90,7 +90,7 @@ internal sealed class Listener {
         ["/lifeline/diskio/view"]      = (ctx, parameters, username) => Tasks.Lifeline.ViewFile(parameters, "diskio"),
         ["/lifeline/printcount/view"]  = (ctx, parameters, username) => Tasks.Lifeline.ViewFile(parameters, "printcount"),
         ["/lifeline/switchcount/view"] = (ctx, parameters, username) => Tasks.Lifeline.ViewFile(parameters, "switchcount"),
-        ["/lifeline/switchstpchanges/view"] = (ctx, parameters, username) => Tasks.Lifeline.ViewFile(parameters, "switchstptopology"),
+        ["/lifeline/switchstpchanges/view"] = (ctx, parameters, username) => Tasks.Lifeline.ViewFile(parameters, "switchstpchanges"),
 
         ["/tools/bulkping"]            = (ctx, parameters, username) => Protocols.Icmp.BulkPing(parameters),
         ["/tools/dnslookup"]           = (ctx, parameters, username) => Protocols.Dns.Resolve(parameters),

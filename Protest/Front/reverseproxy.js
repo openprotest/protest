@@ -342,7 +342,7 @@ class ReverseProxy extends List {
 						name.style.width = "33%";
 						name.style.paddingLeft = "8px";
 						name.style.overflow = "hidden";
-						name.style.textOverflow = "ellipses";
+						name.style.textOverflow = "ellipsis";
 						name.style.whiteSpace = "nowrap";
 						element.appendChild(name);
 
@@ -355,7 +355,7 @@ class ReverseProxy extends List {
 						received.style.width = "33%";
 						received.style.textAlign = "right";
 						received.style.overflow = "hidden";
-						received.style.textOverflow = "ellipses";
+						received.style.textOverflow = "ellipsis";
 						received.style.whiteSpace = "nowrap";
 						element.appendChild(received);
 
@@ -368,7 +368,7 @@ class ReverseProxy extends List {
 						transmitted.style.width = "33%";
 						transmitted.style.textAlign = "right";
 						transmitted.style.overflow = "hidden";
-						transmitted.style.textOverflow = "ellipses";
+						transmitted.style.textOverflow = "ellipsis";
 						transmitted.style.whiteSpace = "nowrap";
 						element.appendChild(transmitted);
 

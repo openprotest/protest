@@ -671,7 +671,7 @@ class Topology extends Window {
 					image.style.maskMode = "alpha";
 					device.element.root.appendChild(image);
 
-					iconOffset += 32
+					iconOffset += 32;
 				}
 
 				if (json.stp.blockedPorts.length > 0) {
@@ -1343,7 +1343,7 @@ class Topology extends Window {
 				color.style.border = "1px solid var(--clr-dark)";
 				color.style.borderRadius = "2px";
 				color.style.overflow = "hidden";
-				color.style.textOverflow = "ellipses";
+				color.style.textOverflow = "ellipsis";
 				color.style.whiteSpace = "nowrap";
 				color.style.backgroundColor = this.GetVlanColor(vlan);
 
@@ -1494,7 +1494,7 @@ class Topology extends Window {
 			color.style.border = "1px solid var(--clr-dark)";
 			color.style.borderRadius = "2px";
 			color.style.overflow = "hidden";
-			color.style.textOverflow = "ellipses";
+			color.style.textOverflow = "ellipsis";
 			color.style.whiteSpace = "nowrap";
 			color.style.backgroundColor = Topology.SPEED_MAP[i].color;
 

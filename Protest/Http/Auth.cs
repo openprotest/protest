@@ -176,8 +176,13 @@ internal static class Auth {
             return false;
         }
 
-        string username = array[1].ToLower();
+        string username = array[1]?.ToLower() ?? null;
         string password = array[2];
+
+        if (username is null) {
+            ctx.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
+            return false;
+        }
 
         if (username.Contains("..")) {
             ctx.Response.StatusCode = (int)HttpStatusCode.Unauthorized;

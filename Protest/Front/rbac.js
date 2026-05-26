@@ -378,7 +378,7 @@ class AccessControl extends Tabs {
 					const response = await fetch(`rbac/reregistermfa?username=${this.username.value}`);
 					if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
 					const json = await response.json();
-					if (json.status !== "ok") throw ("Failded to reset MFA registration.");
+					if (json.status !== "ok") throw ("Failed to reset MFA registration.");
 				}
 				catch (ex) {
 					this.ConfirmBox(ex, true, "mono/error.svg");

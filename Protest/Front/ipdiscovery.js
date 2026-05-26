@@ -141,7 +141,7 @@ class IpDiscovery extends List {
 				name.style.width = "calc(50% - 28px)";
 				name.style.overflow = "hidden";
 				name.style.whiteSpace = "nowrap";
-				name.style.textOverflow = "ellipses";
+				name.style.textOverflow = "ellipsis";
 				name.textContent = json[i].name;
 
 				const ip = document.createElement("div");
@@ -149,7 +149,7 @@ class IpDiscovery extends List {
 				ip.style.width = "50%";
 				ip.style.overflow = "hidden";
 				ip.style.whiteSpace = "nowrap";
-				ip.style.textOverflow = "ellipses";
+				ip.style.textOverflow = "ellipsis";
 				ip.textContent = `${json[i].ip}/${json[i].cidr}`;
 
 				newNic.append(icon, name, ip);

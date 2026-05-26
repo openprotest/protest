@@ -1409,7 +1409,7 @@ class DeviceView extends View {
 		textBox.style.width = "108px";
 		textBox.style.lineHeight = "16px";
 		textBox.style.overflow = "hidden";
-		textBox.style.textOverflow = "ellipses";
+		textBox.style.textOverflow = "ellipsis";
 		textBox.textContent = text;
 		element.appendChild(textBox);
 
