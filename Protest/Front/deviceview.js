@@ -1673,7 +1673,7 @@ class DeviceView extends View {
 			host = this.link.hostname.v.split(";")[0];
 		}
 
-		let [pingArray, cpuArray, memoryArray, diskSpaceArray, diskIoArray, printCounterArray, switchCounterArray] = await Promise.all([
+		let [pingArray, cpuArray, memoryArray, diskSpaceArray, diskIoArray, printCounterArray, switchCounterArray, switchStpArray] = await Promise.all([
 			(async ()=> {
 				const response = await fetch(`lifeline/ping/view?host=${host}`);
 				const buffer = await response.arrayBuffer();
@@ -1724,8 +1724,18 @@ class DeviceView extends View {
 				else {
 					return new Uint8Array([]);
 				}
-			})()
+			})(),
 
+			(async ()=> {
+				if (this.link.type && DeviceView.SWITCH_TYPES.includes(this.link.type.v.toLowerCase())) {
+					const response = await fetch(`lifeline/switchstpchanges/view?file=${this.args.file}`);
+					const buffer = await response.arrayBuffer();
+					return new Uint8Array(buffer);
+				}
+				else {
+					return new Uint8Array([]);
+				}
+			})()
 
 		]);
 
@@ -1746,7 +1756,7 @@ class DeviceView extends View {
 
 			oMonth = (oMonth+1).toString().padStart(2,0);
 
-			const [oldPingArray, oldCpuArray, oldMemoryArray, oldDiskSpaceArray, oldDiskIoArray, oldPrintCounterArray, oldSwitchCounterArray] = await Promise.all([
+			const [oldPingArray, oldCpuArray, oldMemoryArray, oldDiskSpaceArray, oldDiskIoArray, oldPrintCounterArray, oldSwitchCounterArray, oldSwitchStpArray] = await Promise.all([
 				(async ()=> {
 					const response = await fetch(`lifeline/ping/view?host=${host}&date=${oYear}${oMonth}`);
 					const buffer = await response.arrayBuffer();
@@ -1797,6 +1807,17 @@ class DeviceView extends View {
 					else {
 						return new Uint8Array([]);
 					}
+				})(),
+
+				(async ()=> {
+					if (this.link.type && DeviceView.SWITCH_TYPES.includes(this.link.type.v.toLowerCase())) {
+						const response = await fetch(`lifeline/switchstpchanges/view?file=${this.args.file}&date=${oYear}${oMonth}`);
+						const buffer = await response.arrayBuffer();
+						return new Uint8Array(buffer);
+					}
+					else {
+						return new Uint8Array([]);
+					}
 				})()
 			]);
 
@@ -1807,6 +1828,7 @@ class DeviceView extends View {
 			if (oldDiskIoArray.length > 0) diskIoArray = [...oldDiskIoArray, ...diskIoArray];
 			if (oldPrintCounterArray.length > 0) printCounterArray = [...oldPrintCounterArray, ...printCounterArray];
 			if (oldSwitchCounterArray.length > 0) switchCounterArray = [...oldSwitchCounterArray, ...switchCounterArray];
+			if (oldSwitchStpArray.length > 0) switchStpArray = [...oldSwitchStpArray, ...switchStpArray];
 		}
 
 		const DAY_WIDTH = 64;
@@ -2330,6 +2352,20 @@ class DeviceView extends View {
 
 			GenerateGraph(trafficData, "Traffic", "traffic", "mono/traffic.svg");
 			GenerateGraph(errorData, "Errors", "errors", "mono/error.svg");
+		}
+
+		if (switchStpArray.length > 0) {
+			let data = [];
+			for (let i=0; i<switchStpArray.length-11; i+=12) {
+				const dateBuffer = new Uint8Array(switchStpArray.slice(i, i+8)).buffer;
+				const date = Number(new DataView(dateBuffer).getBigInt64(0, true));
+
+				const counterBuffer = new Uint8Array(switchStpArray.slice(i+8, i+12)).buffer;
+				const counter = Number(new DataView(counterBuffer).getUint32(0, true));
+				data.push({d:date, v:counter});
+			}
+
+			GenerateGraph(data, "Topology changes", "delta", "mono/tree.svg");
 		}
 
 	}

@@ -495,61 +495,83 @@ internal static partial class Lifeline {
             return;
         }
 
-        Dictionary<string, string> switchCounters = Protocols.Snmp.Polling.ParseResponse(Protocols.Snmp.Polling.SnmpQuery(ipAddress, profile, Protocols.Snmp.Oid.LIFELINE_SWITCH_OID, Protocols.Snmp.Polling.SnmpOperation.Walk));
-        if (switchCounters is null || switchCounters.Count == 0) {
-            return;
-        }
-
         Lock mutex = snmpMutexes.GetOrAdd(ipAddress.ToString(), new Lock());
 
+        Dictionary<string, string> switchCounters = Protocols.Snmp.Polling.ParseResponse(Protocols.Snmp.Polling.SnmpQuery(ipAddress, profile, Protocols.Snmp.Oid.LIFELINE_SWITCH_OID, Protocols.Snmp.Polling.SnmpOperation.Walk));
+
+        DateTime now = DateTime.UtcNow;
+
         lock (mutex) {
-            string dirPrintCounter = Path.Join(Data.DIR_LIFELINE, "switchcount", file);
-            if (!Directory.Exists(dirPrintCounter)) {
-                Directory.CreateDirectory(dirPrintCounter);
-            }
+            if (switchCounters is not null && switchCounters.Count > 0) {
+                string dirSwitchCounter = Path.Join(Data.DIR_LIFELINE, "switchcount", file);
+                if (!Directory.Exists(dirSwitchCounter)) {
+                    Directory.CreateDirectory(dirSwitchCounter);
+                }
 
-            DateTime now = DateTime.UtcNow;
+                Dictionary<int, int> typeMap = new Dictionary<int, int>();
+                foreach (KeyValuePair<string, string> pair in switchCounters) {
+                    if (!int.TryParse(pair.Key.Split('.')[^1], out int index)) continue;
 
-            Dictionary<int, int> typeMap = new Dictionary<int, int>();
-            foreach (KeyValuePair<string, string> pair in switchCounters) {
-                if (!int.TryParse(pair.Key.Split('.')[^1], out int index)) continue;
+                    if (pair.Key.StartsWith(Protocols.Snmp.Oid.IF_TYPE)) {
+                        int type = int.TryParse(pair.Value, out int v) ? v : -1;
+                        typeMap.Add(index, type);
+                    }
+                }
 
-                if (pair.Key.StartsWith(Protocols.Snmp.Oid.IF_TYPE)) {
-                    int type = int.TryParse(pair.Value, out int v) ? v : -1;
-                    typeMap.Add(index, type);
+                long traffic = 0, errors = 0;
+                foreach (KeyValuePair<string, string> pair in switchCounters) {
+                    if (!int.TryParse(pair.Key.Split('.')[^1], out int index)) continue;
+                    if (!typeMap.TryGetValue(index, out int type) || type != 6) continue; //skip non-physical interfaces
+
+                    if (pair.Key.StartsWith(Protocols.Snmp.Oid.IF_HC_IN_OCTETS)) {
+                        traffic += long.TryParse(pair.Value, out long v) ? v : 0;
+                    }
+                    else if (pair.Key.StartsWith(Protocols.Snmp.Oid.IF_HC_OUT_OCTETS)) {
+                        traffic += long.TryParse(pair.Value, out long v) ? v : 0;
+                    }
+                    else if (pair.Key.StartsWith(Protocols.Snmp.Oid.IF_IN_ERROR)) {
+                        errors += int.TryParse(pair.Value, out int v) ? v : 0;
+                    }
+                    else if (pair.Key.StartsWith(Protocols.Snmp.Oid.IF_OUT_ERROR)) {
+                        errors += int.TryParse(pair.Value, out int v) ? v : 0;
+                    }
+                }
+
+                try {
+                    using FileStream stream = new FileStream(Path.Join(dirSwitchCounter, $"{now:yyyyMM}"), FileMode.Append);
+                    using BinaryWriter writer = new BinaryWriter(stream, Encoding.UTF8, false);
+                    writer.Write(((DateTimeOffset)now).ToUnixTimeMilliseconds()); //8 bytes
+                    writer.Write(traffic); //8 bytes
+                    writer.Write(errors); //8 bytes
+                }
+                catch (Exception ex) {
+                    Logger.Debug(ex);
                 }
             }
 
-            long traffic = 0, errors = 0;
-            foreach (KeyValuePair<string, string> pair in switchCounters) {
-                if (!int.TryParse(pair.Key.Split('.')[^1], out int index)) continue;
-                if (!typeMap.TryGetValue(index, out int type) || type != 6) continue; //skip non-physical interfaces
 
-                if (pair.Key.StartsWith(Protocols.Snmp.Oid.IF_HC_IN_OCTETS)) {
-                    traffic += long.TryParse(pair.Value, out long v) ? v : 0;
-                }
-                else if (pair.Key.StartsWith(Protocols.Snmp.Oid.IF_HC_OUT_OCTETS)) {
-                    traffic += long.TryParse(pair.Value, out long v) ? v : 0;
-                }
-                else if (pair.Key.StartsWith(Protocols.Snmp.Oid.IF_IN_ERROR)) {
-                    errors += int.TryParse(pair.Value, out int v) ? v : 0;
-                }
-                else if (pair.Key.StartsWith(Protocols.Snmp.Oid.IF_OUT_ERROR)) {
-                    errors += int.TryParse(pair.Value, out int v) ? v : 0;
-                }
-            }
+            Dictionary<string, string> stpCounters = Protocols.Snmp.Polling.ParseResponse(Protocols.Snmp.Polling.SnmpQuery(ipAddress, profile, [Protocols.Snmp.Oid.DOT_1D_STP_TOPOLOGY_CHANGES], Protocols.Snmp.Polling.SnmpOperation.Get));
 
-            try {
-                using FileStream stream = new FileStream(Path.Join(dirPrintCounter, $"{now:yyyyMM}"), FileMode.Append);
-                using BinaryWriter writer = new BinaryWriter(stream, Encoding.UTF8, false);
-                writer.Write(((DateTimeOffset)now).ToUnixTimeMilliseconds()); //8 bytes
-                writer.Write(traffic); //8 bytes
-                writer.Write(errors); //8 bytes
-            }
-            catch (Exception ex) {
-                Logger.Debug(ex);
+            if (stpCounters is not null && stpCounters.TryGetValue(Protocols.Snmp.Oid.DOT_1D_STP_TOPOLOGY_CHANGES, out string stpChanges)) {
+                string dirSwitchStpChanges = Path.Join(Data.DIR_LIFELINE, "switchstpchanges", file);
+                if (!Directory.Exists(dirSwitchStpChanges)) {
+                    Directory.CreateDirectory(dirSwitchStpChanges);
+                }
+
+                int stpChangeCount = int.TryParse(stpChanges, out int v) ? v : 0;
+
+                try {
+                    using FileStream stream = new FileStream(Path.Join(dirSwitchStpChanges, $"{now:yyyyMM}"), FileMode.Append);
+                    using BinaryWriter writer = new BinaryWriter(stream, Encoding.UTF8, false);
+                    writer.Write(((DateTimeOffset)now).ToUnixTimeMilliseconds()); //8 bytes
+                    writer.Write(stpChangeCount); //4 bytes
+                }
+                catch (Exception ex) {
+                    Logger.Debug(ex);
+                }
             }
         }
+
     }
 
     public static byte[] ViewFile(Dictionary<string, string> parameters, string type) {

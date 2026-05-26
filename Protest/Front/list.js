@@ -197,7 +197,7 @@ class List extends Window {
 			}
 		};
 
-		filterButton.onclick = ()=> setTimeout(filterInput.focus(), 200);
+		filterButton.onclick = ()=> filterInput.focus();
 
 		filterButton.ondblclick = ()=> {
 			this.args.filter = "";

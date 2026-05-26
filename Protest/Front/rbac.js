@@ -130,6 +130,12 @@ class AccessControl extends Tabs {
 		this.username.style.gridColumn = "2";
 		userDetails.append(usernameLabel, this.username);
 
+		this.domainUserToggle = this.CreateToggle("Domain user", false, userDetails);
+		this.domainUserToggle.label.style.marginLeft = "8px";
+		this.domainUserToggle.label.style.whiteSpace = "nowrap";
+		this.domainUserToggle.label.style.gridRow = "1";
+		this.domainUserToggle.label.style.gridColumn = "3";
+
 		const emailLabel = document.createElement("div");
 		emailLabel.textContent = "E-mail:";
 		emailLabel.style.gridRow = "2";
@@ -139,12 +145,6 @@ class AccessControl extends Tabs {
 		this.email.style.gridRow = "2";
 		this.email.style.gridColumn = "2";
 		userDetails.append(emailLabel, this.email);
-
-		this.domainUserToggle = this.CreateToggle("Domain user", false, userDetails);
-		this.domainUserToggle.label.style.marginLeft = "8px";
-		this.domainUserToggle.label.style.whiteSpace = "nowrap";
-		this.domainUserToggle.label.style.gridRow = "1";
-		this.domainUserToggle.label.style.gridColumn = "3";
 
 		const domainLabel = document.createElement("div");
 		domainLabel.textContent = "Domain:";

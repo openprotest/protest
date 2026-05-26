@@ -17,7 +17,7 @@ internal static class Auth {
 
     private const long RATE_LIMIT_TIME_WINDOW = 6_000_000_000; //10 minutes
     private const int MAX_REQUESTS_PER_WIN_PERIOD = 10;
-    private static readonly ConcurrentDictionary<IPAddress, List<long>> rateLimLog = new ConcurrentDictionary<IPAddress, List<long>>();
+    private static readonly ConcurrentDictionary<IPAddress, ConcurrentQueue<long>> rateLimLog = new ConcurrentDictionary<IPAddress, ConcurrentQueue<long>>();
 
 #if !DEBUG
     private static readonly Random rng = new Random();
@@ -115,13 +115,11 @@ internal static class Auth {
     }
 
     private static bool IsRateLimited(IPAddress clientIP) {
-        List<long> timestamps = rateLimLog.GetOrAdd(clientIP, _ => new List<long>(5));
-
+        ConcurrentQueue<long> timestamps = rateLimLog.GetOrAdd(clientIP, _ => new ConcurrentQueue<long>());
+        
         long currentTime = DateTime.UtcNow.Ticks;
-        for (int i = timestamps.Count - 1; i >= 0; i--) {
-            if (currentTime - timestamps[i] > RATE_LIMIT_TIME_WINDOW) {
-                timestamps.RemoveAt(i);
-            }
+        while (timestamps.TryPeek(out long timestamp) && currentTime - timestamp > RATE_LIMIT_TIME_WINDOW) {
+            timestamps.TryDequeue(out _);
         }
 
         if (rateLimLog[clientIP].Count >= MAX_REQUESTS_PER_WIN_PERIOD) {
@@ -129,7 +127,7 @@ internal static class Auth {
             return true;
         }
 
-        timestamps.Add(currentTime);
+        timestamps.Enqueue(currentTime);
         return false;
     }
 
@@ -159,13 +157,16 @@ internal static class Auth {
             return false;
         }
 
-        if (!int.TryParse(array[0], out int status)) return false;
+        if (!int.TryParse(array[0], out int status)) {
+            ctx.Response.StatusCode = (int)HttpStatusCode.BadRequest;
+            return false;
+        }
 
         return status switch {
             -1 => TotpEnrollment(ctx, array),
-            1 => PrimaryFactorAuthentication(ctx, array),
-            2 => TotpAuthentication(ctx, array),
-            _ => false,
+             1 => PrimaryFactorAuthentication(ctx, array),
+             2 => TotpAuthentication(ctx, array),
+             _ => false,
         };
     }
 
@@ -177,6 +178,11 @@ internal static class Auth {
 
         string username = array[1].ToLower();
         string password = array[2];
+
+        if (username.Contains("..")) {
+            ctx.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
+            return false;
+        }
 
         if (!rbac.TryGetValue(username, out AccessControl access)) {
             ctx.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
@@ -247,11 +253,10 @@ internal static class Auth {
         string tokenId  = array[2];
         string totp     = array[3];
 
-        if (!otpTokens.TryGetValue(tokenId, out OtpToken token)) return false;
-
-        if (username != token.username) return false;
-
-        if (!token.enrolled) return false;
+        if (!otpTokens.TryGetValue(tokenId, out OtpToken token) || username != token.username || !token.enrolled) {
+            ctx.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
+            return false;
+        }
 
         bool isSuccessful = ValidateTotp(token.secret, totp);
 
@@ -281,9 +286,10 @@ internal static class Auth {
         string tokenId  = array[2];
         string totp     = array[3];
 
-        if (!otpTokens.TryGetValue(tokenId, out OtpToken token)) return false;
-        if (token.enrolled) return false;
-        if (token.username != username) return false;
+        if (!otpTokens.TryGetValue(tokenId, out OtpToken token) || token.enrolled || token.username != username) {
+            ctx.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
+            return false;
+        }
 
         bool isSuccessful = ValidateTotp(token.secret, totp);
 
@@ -485,6 +491,7 @@ internal static class Auth {
                 path.Add("/lifeline/diskio/view");
                 path.Add("/lifeline/printcount/view");
                 path.Add("/lifeline/switchcount/view");
+                path.Add("/lifeline/switchstpchanges/view");
                 path.Add("/ws/livestats/device");
                 path.Add("/ws/monitor");
                 break;
@@ -738,6 +745,10 @@ internal static class Auth {
         }
 
         if (!parameters.TryGetValue("username", out string username)) {
+            return Data.CODE_INVALID_ARGUMENT.Array;
+        }
+
+        if (username.Contains("..")) {
             return Data.CODE_INVALID_ARGUMENT.Array;
         }
 

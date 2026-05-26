@@ -464,7 +464,7 @@ internal static class Topology {
 
     private static byte[] ComputeStpResponse(string file, IList<Variable> stp) {
         int priority = -1;
-        uint topologyChanges = 0;
+        string topologyChanges = "--";
         string lastTopologyChange = String.Empty;
         string designatedRoot     = String.Empty;
         int rootCost = -1;
@@ -479,7 +479,7 @@ internal static class Topology {
                 priority = priorityValue.ToInt32();
             }
             else if (oid.StartsWith(Protocols.Snmp.Oid.DOT_1D_STP_TOPOLOGY_CHANGES) && stp[i].Data is Counter32 changesValue) {
-                topologyChanges = changesValue.ToUInt32();
+                topologyChanges = changesValue.ToString();
             }
             else if (oid.StartsWith(Protocols.Snmp.Oid.DOT_1D_STP_LAST_TOPOLOGY_CHANGE)) {
                 lastTopologyChange = stp[i].Data.ToString();

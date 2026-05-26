@@ -90,6 +90,7 @@ internal sealed class Listener {
         ["/lifeline/diskio/view"]      = (ctx, parameters, username) => Tasks.Lifeline.ViewFile(parameters, "diskio"),
         ["/lifeline/printcount/view"]  = (ctx, parameters, username) => Tasks.Lifeline.ViewFile(parameters, "printcount"),
         ["/lifeline/switchcount/view"] = (ctx, parameters, username) => Tasks.Lifeline.ViewFile(parameters, "switchcount"),
+        ["/lifeline/switchstpchanges/view"] = (ctx, parameters, username) => Tasks.Lifeline.ViewFile(parameters, "switchstptopology"),
 
         ["/tools/bulkping"]            = (ctx, parameters, username) => Protocols.Icmp.BulkPing(parameters),
         ["/tools/dnslookup"]           = (ctx, parameters, username) => Protocols.Dns.Resolve(parameters),
@@ -215,32 +216,6 @@ internal sealed class Listener {
         try
 #endif
         {
-            //Cross Site Request Forgery protection
-            if (ctx.Request?.UrlReferrer is not null) {
-                if (!Uri.IsWellFormedUriString(ctx.Request.UrlReferrer.ToString(), UriKind.Absolute)) {
-                    ctx.Response.StatusCode = 400;
-                    ctx.Response.Close();
-                    return;
-                }
-
-                string userHostName = ctx.Request.UserHostName;
-                string referrerHost = ctx.Request.UrlReferrer.Host;
-                int    referrerPort = ctx.Request.UrlReferrer.Port;
-                bool isSameHost = String.Equals(referrerHost, userHostName, StringComparison.Ordinal);
-                if (!isSameHost && !String.Equals($"{referrerHost}:{referrerPort}", userHostName, StringComparison.Ordinal)) {
-                    ctx.Response.StatusCode = 400;
-                    ctx.Response.Close();
-                    return;
-                }
-
-                UriHostNameType type = Uri.CheckHostName(referrerHost);
-                if (type != UriHostNameType.Dns && type != UriHostNameType.IPv4 && type != UriHostNameType.IPv6) {
-                    ctx.Response.StatusCode = 400;
-                    ctx.Response.Close();
-                    return;
-                }
-            }
-
             IPAddress realIp;
             string xRealIpHeader = ctx.Request?.Headers?.Get("X-Real-IP");
             if (xRealIpHeader is not null && IPAddress.TryParse(xRealIpHeader, out IPAddress xRealIp)) {
@@ -296,7 +271,6 @@ internal sealed class Listener {
 
             ctx.Response.AddHeader("X-Frame-Options", "DENY");
             ctx.Response.AddHeader("X-Content-Type-Options", "nosniff");
-            ctx.Response.AddHeader("Content-Security-Policy", "default-src 'self'; img-src 'self' data:");
 
             if (await CacheHandler(ctx, path)) return;
 
