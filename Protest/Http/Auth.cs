@@ -777,7 +777,7 @@ internal static class Auth {
         parameters.TryGetValue("color", out string color);
         parameters.TryGetValue("isdomain", out string isDomainString);
 
-        username = Uri.UnescapeDataString(username ?? String.Empty).ToLower();
+        username = Uri.UnescapeDataString(username).ToLower();
         email    = Uri.UnescapeDataString(email ?? String.Empty);
         password = Uri.UnescapeDataString(password ?? String.Empty);
         alias    = Uri.UnescapeDataString(alias ?? String.Empty);
