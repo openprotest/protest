@@ -29,11 +29,12 @@ internal static class Auth {
     internal static readonly ConcurrentDictionary<string, AccessControl> rbac = new();
     internal static readonly ConcurrentDictionary<string, Session> sessions = new();
 
-    private record OtpToken {
+    private class OtpToken {
         public string tokenId;
         public string username;
         public bool   enrolled;
         public byte[] secret;
+        public int    status;
     }
 
     internal record AccessControl {
@@ -152,22 +153,28 @@ internal static class Auth {
         string payload = streamReader.ReadToEnd();
         string[] array = payload.Split((char)127);
 
-        if (array.Length == 0) {
+        if (array.Length < 3) {
             ctx.Response.StatusCode = (int)HttpStatusCode.BadRequest;
             return false;
         }
 
-        if (!int.TryParse(array[0], out int status)) {
-            ctx.Response.StatusCode = (int)HttpStatusCode.BadRequest;
+        if (array.Length == 3) {
+            return PrimaryFactorAuthentication(ctx, array);
+        }
+
+        string tokenId = array[2];
+        if (!otpTokens.TryGetValue(tokenId, out OtpToken token)) {
+            ctx.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
             return false;
         }
 
-        return status switch {
-            -1 => TotpEnrollment(ctx, array),
-             1 => PrimaryFactorAuthentication(ctx, array),
-             2 => TotpAuthentication(ctx, array),
-             _ => false,
-        };
+        switch (token.status) {
+        case -1: return TotpEnrollment(ctx, array);
+        case  2: return TotpAuthentication(ctx, array);
+        default:
+            ctx.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
+            return false;
+        }
     }
 
     private static bool PrimaryFactorAuthentication(HttpListenerContext ctx, string[] array) {
@@ -179,7 +186,7 @@ internal static class Auth {
         string username = array[1]?.ToLower() ?? null;
         string password = array[2];
 
-        if (username is null || username.Contains("..")) {
+        if (username is null) {
             ctx.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
             return false;
         }
@@ -223,7 +230,8 @@ internal static class Auth {
                 tokenId  = tokenId,
                 username = username,
                 enrolled = isEnrolled,
-                secret   = secret
+                secret   = secret,
+                status   = isEnrolled ? 2 : -1
             };
 
             if (isEnrolled) {
@@ -261,6 +269,7 @@ internal static class Auth {
         bool isSuccessful = ValidateTotp(token.secret, totp);
 
         if (isSuccessful) {
+            token.status = 0;
             GrandAccess(ctx, token.username);
 
             Logger.Action(token.username, "AAA", $"Secondary factor authentication succeeded from {ctx.Request.RemoteEndPoint?.Address}");
@@ -294,6 +303,7 @@ internal static class Auth {
         bool isSuccessful = ValidateTotp(token.secret, totp);
 
         if (isSuccessful) {
+            token.status = 0;
             GrandAccess(ctx, token.username);
             SetUserTotpSecret(token.username, token.secret);
 
@@ -331,6 +341,10 @@ internal static class Auth {
 
         byte[] plain = JsonSerializer.SerializeToUtf8Bytes(access, serializerOptions);
         byte[] cipher = Cryptography.Encrypt(plain, Configuration.DB_KEY, Configuration.DB_KEY_IV);
+
+        if (username.Contains("..")) {
+            return false;
+        }
 
         try {
             File.WriteAllBytes(Path.Join(Data.DIR_RBAC, access.username), cipher);
@@ -847,6 +861,10 @@ internal static class Auth {
         }
 
         if (username is null) {
+            return Data.CODE_INVALID_ARGUMENT.Array;
+        }
+
+        if (username.Contains("..")) {
             return Data.CODE_INVALID_ARGUMENT.Array;
         }
 
