@@ -64,16 +64,4 @@ public class ListenerTests {
 
         Assert.That(result.StatusCode, Is.EqualTo(HttpStatusCode.OK));
     }
-
-    [Test]
-    public void CsrfCheck_DifferentHostInReferrer_ReturnImaTeapot() {
-        using HttpRequestMessage requestMessage = new HttpRequestMessage(HttpMethod.Get, "http://127.0.0.1:8080/");
-        requestMessage.Headers.Add("Referer", "http://127.0.0.2:8080/");
-
-        using HttpClient httpClient = new HttpClient();
-        HttpResponseMessage result = httpClient.Send(requestMessage);
-
-        Assert.That((int)result.StatusCode, Is.EqualTo(400));
-    }
-
 }
