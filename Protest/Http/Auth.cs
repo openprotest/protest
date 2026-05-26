@@ -179,12 +179,7 @@ internal static class Auth {
         string username = array[1]?.ToLower() ?? null;
         string password = array[2];
 
-        if (username is null) {
-            ctx.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
-            return false;
-        }
-
-        if (username.Contains("..")) {
+        if (username is null || username.Contains("..")) {
             ctx.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
             return false;
         }
@@ -749,7 +744,7 @@ internal static class Auth {
             return Data.CODE_INVALID_ARGUMENT.Array;
         }
 
-        if (!parameters.TryGetValue("username", out string username)) {
+        if (!parameters.TryGetValue("username", out string username) && username is not null) {
             return Data.CODE_INVALID_ARGUMENT.Array;
         }
 
