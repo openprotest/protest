@@ -672,7 +672,7 @@ class ReverseProxy extends List {
 		counter++; //separator
 
 		const proxyAddressInput = AddParameter("Proxy address", "input", "text", {placeholder: "127.0.0.1"});
-		const proxyPostInput = AddParameter("Proxy port", "input", "number", {"min":1, "max":65535, value:443});
+		const proxyPortInput = AddParameter("Proxy port", "input", "number", {"min":1, "max":65535, value:443});
 		counter++; //separator
 
 		const destinationAddressInput = AddParameter("Destination address", "input", "text", {placeholder: "127.0.0.1"});
@@ -704,7 +704,7 @@ class ReverseProxy extends List {
 			protocolInput.value = entry.protocol.v;
 			passwordInput.value = "";
 			proxyAddressInput.value = entry.proxyaddr.v;
-			proxyPostInput.value = entry.proxyport.v;
+			proxyPortInput.value = entry.proxyport.v;
 			destinationAddressInput.value = entry.destaddr.v;
 			destinationPortInput.value = entry.destport.v;
 			autostartToggle.checkbox.checked = entry.autostart.v;
@@ -729,7 +729,7 @@ class ReverseProxy extends List {
 			certsInput.disabled = true;
 			passwordInput.disabled = true;
 			proxyAddressInput.disabled = true;
-			proxyPostInput.disabled = true;
+			proxyPortInput.disabled = true;
 			destinationAddressInput.disabled = true;
 			destinationPortInput.disabled = true;
 			autostartToggle.checkbox.disabled = true;
@@ -745,7 +745,7 @@ class ReverseProxy extends List {
 
 		okButton.onclick = async ()=> {
 			let requiredFieldMissing = false;
-			let requiredFields = [nameInput, proxyAddressInput, proxyPostInput, destinationAddressInput, destinationPortInput];
+			let requiredFields = [nameInput, proxyAddressInput, proxyPortInput, destinationAddressInput, destinationPortInput];
 
 			for (let i=0; i<requiredFields.length; i++) {
 				if (requiredFields[i].value.length === 0) {
@@ -771,7 +771,7 @@ class ReverseProxy extends List {
 						certificate : certsInput.value === null || certsInput.value === "null" ? null : certsInput.value,
 						password    : passwordInput.value,
 						proxyaddr   : proxyAddressInput.value,
-						proxyport   : parseInt(proxyPostInput.value),
+						proxyport   : parseInt(proxyPortInput.value),
 						destaddr    : destinationAddressInput.value,
 						destport    : parseInt(destinationPortInput.value),
 						autostart   : autostartToggle.checkbox.checked

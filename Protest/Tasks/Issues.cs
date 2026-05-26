@@ -220,6 +220,8 @@ internal static class Issues {
 
         ipAddresses.Clear();
 
+        if (task is null) return;
+
         Parallel.ForEach(
             DatabaseInstances.devices.dictionary.Values,
             new ParallelOptions { MaxDegreeOfParallelism = 32, CancellationToken = task.cancellationToken },
@@ -1099,7 +1101,7 @@ internal static class Issues {
 
                 componentNameArray[i][1] = componentNameArray[i][1].TrimStart(' ', '!', '\"', '#', '$', '%', '&', '\'', '(', ')', '*', '+', ',', '-', '.', '/', ':', ';', '<', '=', '>', '?', '@', '[', '\\', ']', '^', '_', '{', '|', '}', '~');
 
-                int used = 100 * current / max;
+                int used = (int)(100.0 * current / max);
 
                 if (used < 10) {
                     list.Add(new Issue {

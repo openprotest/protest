@@ -758,7 +758,7 @@ internal static class Auth {
             return Data.CODE_INVALID_ARGUMENT.Array;
         }
 
-        if (!parameters.TryGetValue("username", out string username) && username is not null) {
+        if (!parameters.TryGetValue("username", out string username) || username is null) {
             return Data.CODE_INVALID_ARGUMENT.Array;
         }
 

@@ -609,7 +609,7 @@ class DeviceView extends View {
 				const actionButton = this.CreateSideButton("mono/shared.svg", "FTP");
 				actionButton.onclick = ()=> {
 					const link = document.createElement("a");
-					link.href = "ftps://" + host + ":" + overwriteProtocol.ftp;
+					link.href = "ftps://" + host + ":" + overwriteProtocol.ftps;
 					link.target = "_blank";
 					link.click();
 				};
