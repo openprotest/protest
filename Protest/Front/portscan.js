@@ -51,7 +51,7 @@ class PortScan extends Console {
 		179: "BGP	 Border Gateway Protocol",
 		194: "IRC	Internet Relay Chat",
 		213: "IPX	Internetwork Packet Exchange",
-		218: "MPP	Message posting protoacol",
+		218: "MPP	Message posting protocol",
 		220: "IMAP	Internet Message Access Protocol",
 		259: "ESRO	Efficient Short Remote Operations",
 		264: "BGMP	Border Gateway Multicast Protocol",
@@ -71,7 +71,7 @@ class PortScan extends Console {
 		548: "AFP	Apple Filing Protocol",
 		554: "RTSP	Real Time Streaming Protocol",
 		563: "NNTP	protocol over TLS/SSL",
-		587: "MSA	Message Aubmission Agent",
+		587: "MSA	Message Submission Agent",
 		625: "ODProxy	Open Directory Proxy",
 		631: "IPP	Internet Printing Protocol",
 		636: "LDAP over SSL/TSL",
@@ -119,7 +119,7 @@ class PortScan extends Console {
 		5901: "uVNC	Virtual Network Computer",
 		5902: "uVNC	Virtual Network Computer",
 		5903: "uVNC	Virtual Network Computer",
-		6666: "UniFi Camera Stream Listenner",
+		6666: "UniFi Camera Stream Listener",
 		6789: "UniFi Mobile Speed Test",
 		6969: "BitTorrent tracker",
 		7004: "UniFi UVC-Micro Talkback",
@@ -237,7 +237,7 @@ class PortScan extends Console {
 
 		const toLabel = document.createElement("div");
 		toLabel.textContent = "to";
-		toLabel.style.textAlign = "center"
+		toLabel.style.textAlign = "center";
 		toLabel.style.gridArea = "1 / 4";
 
 		const toInput = document.createElement("input");

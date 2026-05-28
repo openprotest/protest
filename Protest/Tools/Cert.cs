@@ -70,13 +70,11 @@ internal static class Cert {
             _          => HashAlgorithmName.SHA256
         };
 
-        DateTime validAfter;
-        if (DateTime.TryParse(validAfterString, out validAfter)) {
+        if (!DateTime.TryParse(validAfterString, out DateTime validAfter)) {
             validAfter = DateTime.Now;
         }
 
-        DateTime validBefore;
-        if (DateTime.TryParse(validBeforeString, out validBefore)) {
+        if (!DateTime.TryParse(validBeforeString, out DateTime validBefore)) {
             validBefore = DateTime.Now.AddYears(5);
         }
 

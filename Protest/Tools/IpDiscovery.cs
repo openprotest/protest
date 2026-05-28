@@ -271,11 +271,10 @@ internal static class IpDiscovery {
             }
         }
 
-        Task<bool[]> task = PingArrayAsync(hosts, 500);
-        task.Wait();
+        bool[] pingResults = await PingArrayAsync(hosts, 500);
 
-        for (int i = 0; i < task.Result.Length; i++) {
-            if (!task.Result[i]) continue;
+        for (int i = 0; i < pingResults.Length; i++) {
+            if (!pingResults[i]) continue;
 
             if (token.IsCancellationRequested) {
                 return;

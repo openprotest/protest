@@ -181,10 +181,11 @@ internal static class PortScan {
         if (ws is null) return;
 
         using SemaphoreSlim writeSemaphore = new SemaphoreSlim(1, 1);
+        using CancellationTokenSource tokenSource = new CancellationTokenSource();
 
         HashSet<Task> activeScans = new HashSet<Task>();
+
         try {
-            byte[] buff = new byte[2048];
             while (ws.State == WebSocketState.Open) {
                 string payload = await Http.WebSocketHelper.WsReadText(ws, CancellationToken.None);
                 if (payload is null) return;
@@ -218,17 +219,13 @@ internal static class PortScan {
                     }
                 }
 
-                if (message.Length > 3) {
-                    if (!int.TryParse(message[3], out timeout)) {
-                        timeout = 2000;
-                    }
+                if (message.Length > 3 && !int.TryParse(message[3], out timeout)) {
+                    timeout = 2000;
                 }
 
                 if (portFrom > portTo) {
                     (portTo, portFrom) = (portFrom, portTo);
                 }
-
-                CancellationTokenSource tokenSource = new CancellationTokenSource();
 
                 Task scanTask = Task.Run(async () => {
                     await scanLimiter.WaitAsync(tokenSource.Token);

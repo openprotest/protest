@@ -490,16 +490,16 @@ internal static class Topology {
                     designatedRoot = BytesToHex(bytes, bytes.Length - 6);
                 }
             }
+            else if (oid.StartsWith(Protocols.Snmp.Oid.DOT_1D_STP_PORT_STATE) && stp[i].Data is Integer32 portStateValue) {
+                if (portStateValue.ToInt32() == 2 && int.TryParse(oid.Split('.')[^2], out int portIndex)) { //blocking
+                    blockedPorts.Add(portIndex);
+                }
+            }
             else if (oid.StartsWith(Protocols.Snmp.Oid.DOT_1D_STP_ROOT_COST) && stp[i].Data is Integer32 rootCostValue) {
                 rootCost = rootCostValue.ToInt32();
             }
             else if (oid.StartsWith(Protocols.Snmp.Oid.DOT_1D_STP_ROOT_PORT) && stp[i].Data is Integer32 rootPortValue) {
                 rootPort = rootPortValue.ToInt32();
-            }
-            else if (oid.StartsWith(Protocols.Snmp.Oid.DOT_1D_STP_PORT_STATE) && stp[i].Data is Integer32 portStateValue) {
-                if (portStateValue.ToInt32() == 2 && int.TryParse(oid.Split('.')[^2], out int portIndex)) { //blocking
-                    blockedPorts.Add(portIndex);
-                }
             }
         }
 

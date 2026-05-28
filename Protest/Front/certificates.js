@@ -83,8 +83,6 @@ class Certificates extends List {
 		dialog.innerBox.parentElement.style.maxWidth = "400px";
 		dialog.innerBox.style.textAlign = "center";
 
-		let now = new Date();
-
 		const passwordLabel = document.createElement("div");
 		passwordLabel.textContent = "Password:";
 		passwordLabel.style.display = "inline-block";
@@ -130,7 +128,7 @@ class Certificates extends List {
 		const dialog = this.DialogBox("80%");
 		if (dialog === null) return;
 
-		const {okButton, cancelButton, innerBox} = dialog;
+		const {cancelButton, innerBox} = dialog;
 		cancelButton.style.display = "none";
 
 		innerBox.style.padding = "20px 20px 0 20px";
