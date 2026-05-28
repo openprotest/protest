@@ -264,7 +264,19 @@ class Log extends Window {
 	}
 
 	SetOpaque(opaque) {
-		if (!opaque) {
+		if (opaque) {
+			this.header.style.color = "";
+			this.win.style.backgroundColor = "";
+			this.win.style.backdropFilter = "";
+			this.content.style.backgroundColor = "";
+			this.listTitle.style.color = "var(--clr-light)";
+			this.listTitle.style.background = "var(--grd-toolbar)";
+			this.listTitle.style.boxShadow = "";
+			this.list.style.color = "var(--clr-dark)";
+			this.list.style.backgroundColor = "var(--clr-pane)";
+			this.list.style.boxShadow = "";
+		}
+		else {
 			this.header.style.transition = ".4s";
 			this.win.style.transition = ".4s";
 			this.listTitle.style.transition = ".4s";
@@ -282,18 +294,6 @@ class Log extends Window {
 			this.list.style.color = "light-dark(var(--clr-dark), var(--clr-light))";
 			this.list.style.backgroundColor = "transparent";
 			this.list.style.boxShadow = "var(--clr-contrast) 0 0 1px 1px";
-		}
-		else {
-			this.header.style.color = "";
-			this.win.style.backgroundColor = "";
-			this.win.style.backdropFilter = "";
-			this.content.style.backgroundColor = "";
-			this.listTitle.style.color = "";
-			this.listTitle.style.background = "var(--grd-toolbar)";
-			this.listTitle.style.boxShadow = "";
-			this.list.style.color = "var(--clr-dark)";
-			this.list.style.backgroundColor = "var(--clr-pane)";
-			this.list.style.boxShadow = "";
 		}
 	}
 

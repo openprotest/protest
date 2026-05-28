@@ -144,9 +144,10 @@ internal sealed class Listener {
         ["/config/snmpprofiles/save"]  = (ctx, parameters, username) => Tools.SnmpProfiles.Save(ctx, username),
 
         ["/config/cert/list"]          = (ctx, parameters, username) => Tools.Cert.List(),
-        ["/config/cert/upload"]        = (ctx, parameters, username) => Tools.Cert.Upload(ctx, username),
         ["/config/cert/create"]        = (ctx, parameters, username) => Tools.Cert.Create(ctx, username),
         ["/config/cert/delete"]        = (ctx, parameters, username) => Tools.Cert.Delete(parameters, username),
+        ["/config/cert/info"]          = (ctx, parameters, username) => Tools.Cert.GetCertInfo(ctx, parameters),
+        ["/config/cert/upload"]        = (ctx, parameters, username) => Tools.Cert.Upload(ctx, username),
         ["/config/cert/download"]      = (ctx, parameters, username) => Tools.Cert.Download(ctx, parameters, username),
 
         ["/api/list"]                  = (ctx, parameters, username) => Tools.Api.List(),

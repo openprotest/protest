@@ -663,9 +663,11 @@ internal static class Auth {
 
             case "certificates:write":
                 path.Add("/config/cert/list");
-                path.Add("/config/cert/upload");
                 path.Add("/config/cert/create");
                 path.Add("/config/cert/delete");
+                path.Add("/config/cert/info");
+                path.Add("/config/cert/upload");
+                path.Add("/config/cert/download");
                 break;
 
             case "backup:write":

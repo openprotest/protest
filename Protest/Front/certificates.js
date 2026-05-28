@@ -71,7 +71,116 @@ class Certificates extends List {
 				this.selected = element;
 				element.style.backgroundColor = "var(--clr-select)";
 			}
+
+			element.ondblclick = ()=> this.PasswordDialog(key);
 		}
+	}
+
+	PasswordDialog(name) {
+		const dialog = this.DialogBox("108px");
+		if (dialog === null) return;
+
+		dialog.innerBox.parentElement.style.maxWidth = "400px";
+		dialog.innerBox.style.textAlign = "center";
+
+		let now = new Date();
+
+		const passwordLabel = document.createElement("div");
+		passwordLabel.textContent = "Password:";
+		passwordLabel.style.display = "inline-block";
+		passwordLabel.style.height = "32px";
+		passwordLabel.style.lineHeight = "32px";
+		passwordLabel.style.paddingRight = "8px";
+
+		const passwordInput = document.createElement("input");
+		passwordInput.type = "password";
+		passwordInput.style.marginTop = "20px";
+		passwordInput.style.width = "min(calc(100% - 8px), 200px)";
+
+		dialog.innerBox.append(passwordLabel, passwordInput);
+
+		passwordInput.focus();
+
+		dialog.okButton.onclick = async ()=> {
+			dialog.cancelButton.onclick();
+			setTimeout(async()=>{
+				try {
+					await this.CertInto(name, passwordInput.value);
+				}
+				catch (ex) {
+					this.ConfirmBox(ex, true, "mono/error.svg");
+				}
+			}, WIN.ANIME_DURATION);
+		};
+
+		passwordInput.onkeydown = event=> {
+			if (event.key === "Enter") {
+				dialog.okButton.click();
+			}
+		};
+	}
+
+	async CertInto(name, password) {
+		const response = await fetch(`config/cert/info?name=${name}&password=${password}`);
+		if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
+
+		const json = await response.json();
+		if (json.error) throw(json.error);
+
+		const dialog = this.DialogBox("80%");
+		if (dialog === null) return;
+
+		const {okButton, cancelButton, innerBox} = dialog;
+		cancelButton.style.display = "none";
+
+		innerBox.style.padding = "20px 20px 0 20px";
+		innerBox.style.userSelect = "text";
+		innerBox.parentElement.style.top = "10%";
+		innerBox.parentElement.style.maxWidth = "800px";
+
+		const CreateLine = (name, value)=> {
+			const container = document.createElement("div");
+			container.style.padding = "4px 0";
+			innerBox.appendChild(container);
+
+			const nameLabel = document.createElement("div");
+			nameLabel.textContent = `${name}:`;
+			nameLabel.style.display = "inline-block";
+			nameLabel.style.width = "max(100px, 35%)";
+			nameLabel.style.overflow = "hidden";
+			nameLabel.style.textOverflow = "ellipsis";
+			nameLabel.style.whiteSpace = "nowrap";
+
+			const valueLabel = document.createElement("div");
+			valueLabel.textContent = value;
+			valueLabel.style.display = "inline-block";
+			valueLabel.style.fontWeight = "bold";
+			valueLabel.style.width = "calc(100% - max(100px, 35%))";
+			valueLabel.style.overflow = "hidden";
+			valueLabel.style.textOverflow = "ellipsis";
+
+			container.append(nameLabel, valueLabel);
+		};
+
+		CreateLine("Subject", json.subject);
+		CreateLine("Issuer", json.issuer);
+		CreateLine("Friendly name", json.friendlyName);
+		CreateLine("Thumbprint", json.thumbprint);
+		CreateLine("Serial number", json.serialNumber);
+
+		CreateLine("Issued at", json.issuedAt);
+		CreateLine("Expires at", json.expiresAt);
+
+		CreateLine("Has private key", json.hasPrivateKey);
+
+		CreateLine("Signature algorithm", json.signatureAlgorithm);
+		CreateLine("Public key algorithm", json.publicKeyAlgorithm);
+
+		CreateLine("Version", json.version);
+		CreateLine("Key size", json.keySize);
+
+		CreateLine("DNS Names", json.dnsNames);
+
 	}
 
 	CreateDialog() {

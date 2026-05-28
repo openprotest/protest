@@ -454,7 +454,7 @@ internal static class IpDiscovery {
 
             HostEntry host = pair.Value;
 
-            bool[] result = await PortScan.PortsScanAsync(host.ip, ports, 500, false, token);
+            bool[] result = await PortScan.PortsScanAsync(host.ip, ports, 500, token);
 
             if (result.Any(o => o)) {
                 StringBuilder services = new StringBuilder();

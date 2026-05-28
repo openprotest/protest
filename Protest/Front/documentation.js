@@ -198,7 +198,7 @@ class Documentation extends Window {
 				range = sel.getRangeAt(0);
 				if (range.startContainer.className != "") return;
 
-				var div = document.createElement("div");
+				let div = document.createElement("div");
 				div.className = "doc-code";
 				range.insertNode(div);
 				range.setStart(div, 0);

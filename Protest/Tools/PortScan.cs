@@ -1,10 +1,7 @@
 ﻿using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Net.WebSockets;
-using System.Runtime.Versioning;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -17,8 +14,8 @@ internal static class PortScan {
         21, 22, 23, 25, 53, 67, 80, 110, 135, 139, 170, 239, 389, 443, 445, 515, 631, 636, 853, 990, 992, 993, 995, 3389, 5900, 6789, 7442, 7550, 8080, 8443, 9100, 10001
     };
 
-/*    private static readonly ReadOnlyDictionary<int, string> protocol;
-
+ /*
+    private static readonly ReadOnlyDictionary<int, string> protocol;
     static PortScan() {
         protocol = new ReadOnlyDictionary<int, string>(new Dictionary<int, string>() {
             {1,    "TCPMUX, TCP Port Service Multiplexer"},
@@ -161,7 +158,10 @@ internal static class PortScan {
     }
 */
 
+    private static readonly SemaphoreSlim scanLimiter = new SemaphoreSlim(8);
+
     public static async Task WebSocketHandler(HttpListenerContext ctx) {
+
         if (!Auth.IsAuthenticatedAndAuthorized(ctx, ctx.Request.Url.AbsolutePath)) {
             ctx.Response.Close();
             return;
@@ -182,26 +182,17 @@ internal static class PortScan {
 
         using SemaphoreSlim writeSemaphore = new SemaphoreSlim(1, 1);
 
+        HashSet<Task> activeScans = new HashSet<Task>();
         try {
             byte[] buff = new byte[2048];
             while (ws.State == WebSocketState.Open) {
-                WebSocketReceiveResult receiveResult = await ws.ReceiveAsync(new ArraySegment<byte>(buff), CancellationToken.None);
-
-                if (!Auth.IsAuthenticatedAndAuthorized(ctx, ctx.Request.Url.AbsolutePath)) {
-                    await ws.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, null, CancellationToken.None);
-                    return;
-                }
-
-                if (receiveResult.MessageType == WebSocketMessageType.Close) {
-                    await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
-                    break;
-                }
-
-                string[] message = Encoding.UTF8.GetString(buff, 0, receiveResult.Count).Trim().Split(';');
+                string payload = await Http.WebSocketHelper.WsReadText(ws, CancellationToken.None);
+                if (payload is null) return;
+                string[] message = payload.Split(';');
 
                 string host = message[0].Trim();
 
-                if (String.IsNullOrEmpty(host)) {
+                if (String.IsNullOrWhiteSpace(host)) {
                     try {
                         await writeSemaphore.WaitAsync();
                         await ws.SendAsync(Data.CODE_INVALID_ARGUMENT, WebSocketMessageType.Text, true, CancellationToken.None);
@@ -216,7 +207,6 @@ internal static class PortScan {
                 int portFrom = 1;
                 int portTo = 1023;
                 int timeout = 2000;
-                bool useRemoteNetstat = false;
 
                 if (message.Length > 2) {
                     if (!int.TryParse(message[1], out portFrom)) {
@@ -228,12 +218,9 @@ internal static class PortScan {
                     }
                 }
 
-                if (message.Length > 4) {
+                if (message.Length > 3) {
                     if (!int.TryParse(message[3], out timeout)) {
                         timeout = 2000;
-                    }
-                    if (!bool.TryParse(message[4], out useRemoteNetstat)) {
-                        useRemoteNetstat = false;
                     }
                 }
 
@@ -241,58 +228,53 @@ internal static class PortScan {
                     (portTo, portFrom) = (portFrom, portTo);
                 }
 
-                using CancellationTokenSource tokenSource = new CancellationTokenSource();
+                CancellationTokenSource tokenSource = new CancellationTokenSource();
 
-                for (int i = portFrom; i <= portTo; i += 256) {
-                    if (ws.State != WebSocketState.Open) {
-                        tokenSource.Cancel();
-                        return;
+                Task scanTask = Task.Run(async () => {
+                    await scanLimiter.WaitAsync(tokenSource.Token);
+
+                    try {
+                        await ScanHostAsync(ws, writeSemaphore, host, portFrom, portTo, timeout, tokenSource.Token);
+                    }
+                    catch (OperationCanceledException) { } //ignore
+                    catch (Exception ex) {
+                        Logger.Error(ex);
+                    }
+                    finally {
+                        scanLimiter.Release();
                     }
 
-                    int from = i;
-                    int to = Math.Min(i + 255, portTo);
+                }, tokenSource.Token);
 
-                    bool[] scanResult = await PortsScanAsync(host, from, to, timeout, useRemoteNetstat, tokenSource.Token);
+                lock (activeScans) {
+                    activeScans.Add(scanTask);
+                }
 
-                    StringBuilder builder = new StringBuilder();
-
-                     for (int port = 0; port < scanResult.Length; port++) {
-                         if (!scanResult[port]) continue;
-                         builder.Append($"{(port + from)}{(char)127}");
-                     }
-
-                    if (builder.Length > 0) {
-                        string ports = builder.ToString();
-                        string result = host + (char)127 + ports;
-                        try {
-                            await writeSemaphore.WaitAsync(tokenSource.Token);
-                            await ws.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(result)), WebSocketMessageType.Text, true, tokenSource.Token);
-                        }
-                        finally {
-                            writeSemaphore.Release();
-                        }
+                _ = scanTask.ContinueWith(t => {
+                    lock (activeScans) {
+                        activeScans.Remove(t);
                     }
-                }
-
-                string done = $"done{((char)127)}{host}";
-                try {
-                    await writeSemaphore.WaitAsync();
-                    await ws.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(done), 0, done.Length), WebSocketMessageType.Text, true, CancellationToken.None);
-                }
-                finally {
-                    writeSemaphore.Release();
-                }
+                });
             }
         }
         catch (WebSocketException ex) when (ex.WebSocketErrorCode == WebSocketError.ConnectionClosedPrematurely) {
             return;
         }
-        catch (WebSocketException ex) when (ex.WebSocketErrorCode != WebSocketError.ConnectionClosedPrematurely) {
-            //do nothing
-        }
+        catch (WebSocketException) { } //ignore
         catch (Exception ex) {
             Logger.Error(ex);
         }
+
+        Task[] remaining;
+        lock (activeScans) {
+            remaining = new Task[activeScans.Count];
+            activeScans.CopyTo(remaining);
+        }
+
+        try {
+            await Task.WhenAll(remaining);
+        }
+        catch { }
 
         if (ws.State == WebSocketState.Open) {
             try {
@@ -304,106 +286,83 @@ internal static class PortScan {
         }
     }
 
-    public static async Task<bool[]> PortsScanAsync(string host, short[] ports, int timeout, bool useRemoteNetstat, CancellationToken token) {
-        if (useRemoteNetstat && OperatingSystem.IsWindows()) {
-            int[] q = await RemoteNetstat(host);
-            if (q is not null) {
-                bool[] p = new bool[ports.Length];
-                for (int i = 0; i < p.Length; i++) {
-                    p[i] = q.Contains(ports[i]);
+    private static async Task ScanHostAsync(WebSocket ws, SemaphoreSlim writeSemaphore, string host, int portFrom, int portTo, int timeout, CancellationToken token) {
+        for (int i = portFrom; i <= portTo; i += 256) {
+            token.ThrowIfCancellationRequested();
+
+            if (ws.State != WebSocketState.Open) return;
+
+            int from = i;
+            int to = Math.Min(i + 255, portTo);
+
+            bool[] scanResult = await PortsScanAsync(host, from, to, timeout, token);
+
+            StringBuilder builder = new StringBuilder();
+
+            for (int port = 0; port < scanResult.Length; port++) {
+                if (!scanResult[port]) continue;
+                builder.Append($"{(port + from)}{(char)127}");
+            }
+
+            if (builder.Length > 0) {
+                string result = host + (char)127 + builder;
+                byte[] bytes = Encoding.UTF8.GetBytes(result);
+
+                try {
+                    await writeSemaphore.WaitAsync(token);
+                    await ws.SendAsync(new ArraySegment<byte>(bytes), WebSocketMessageType.Text, true,token);
                 }
-                return p;
+                finally {
+                    writeSemaphore.Release();
+                }
             }
         }
 
+        string done = $"done{(char)127}{host}";
+
+        byte[] doneBytes = Encoding.UTF8.GetBytes(done);
+
+        try {
+            await writeSemaphore.WaitAsync(token);
+            await ws.SendAsync(new ArraySegment<byte>(doneBytes), WebSocketMessageType.Text, true, token);
+        }
+        finally {
+            writeSemaphore.Release();
+        }
+    }
+
+    public static async Task<bool[]> PortsScanAsync(string host, short[] ports, int timeout, CancellationToken token) {
         List<Task<bool>> tasks = new List<Task<bool>>(ports.Length);
         for (int i = 0; i < ports.Length; i++) {
             if (token.IsCancellationRequested) break;
-            tasks.Add(PortScanAsync(host, ports[i], timeout));
+            tasks.Add(PortScanAsync(host, ports[i], timeout, token));
         }
-        bool[] result = await Task.WhenAll(tasks);
-        return result;
+
+        return await Task.WhenAll(tasks);
     }
 
-    public static async Task<bool[]> PortsScanAsync(string host, int from, int to, int timeout, bool useRemoteNetstat, CancellationToken token) {
-        if (useRemoteNetstat && OperatingSystem.IsWindows()) {
-            int[] q = await RemoteNetstat(host);
-            if (q is not null) {
-                bool[] p = new bool[to - from + 1];
-                for (int i = 0; i < p.Length; i++) {
-                    p[i] = q.Contains(i + from);
-                }
-                return p;
-            }
-        }
-
+    public static async Task<bool[]> PortsScanAsync(string host, int from, int to, int timeout, CancellationToken token) {
         List<Task<bool>> tasks = new List<Task<bool>>(to - from + 1);
         for (int port = from; port <= to; port++) {
             if (token.IsCancellationRequested) break;
-            tasks.Add(PortScanAsync(host, port, timeout));
+            tasks.Add(PortScanAsync(host, port, timeout, token));
         }
-        bool[] result = await Task.WhenAll(tasks);
-        return result;
+
+        return await Task.WhenAll(tasks);
     }
 
-    public static async Task<bool> PortScanAsync(string host, int port, int timeout) {
-        using CancellationTokenSource tokenSource = new CancellationTokenSource(timeout);
+    public static async Task<bool> PortScanAsync(string host, int port, int timeout, CancellationToken externalToken) {
+        using CancellationTokenSource timeoutSource = new CancellationTokenSource(timeout);
+        using CancellationTokenSource linked = CancellationTokenSource.CreateLinkedTokenSource(timeoutSource.Token, externalToken);
 
         try {
             using TcpClient client = new TcpClient();
             client.LingerState = new LingerOption(false, 0);
-            await client.ConnectAsync(host, port, tokenSource.Token);
-            return client.Connected;
+            await client.ConnectAsync(host, port, linked.Token);
+            return true;
         }
         catch {
             return false;
-        }
-    }
-
-    [SupportedOSPlatform("windows")]
-    public static async Task<int[]> RemoteNetstat(string host) {
-        try {
-            ProcessStartInfo info = new ProcessStartInfo {
-                FileName = "psexec",
-                Arguments = $"\\\\{host} netstat -nq -p TCP",
-                UseShellExecute = false,
-                CreateNoWindow = true,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true
-            };
-
-            using Process p = new Process {
-                StartInfo = info
-            };
-            p.Start();
-
-            await Task.Delay(50);
-
-            using StreamReader output = p.StandardOutput;
-            List<int> ports = new List<int>();
-
-            string line;
-            while ((line = await output.ReadLineAsync()) != null) {
-                string[] split = line.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-
-                if (split.Length < 4) continue;
-                if (split[3] == "CLOSED" || split[3] == "CLOSE_WAIT" || split[3] == "BOUND") continue;
-                //if (split[0] != "TCP") continue; //only tcp
-
-                string[] colonSplit = split[1].Split(':');
-                if (colonSplit.Length < 2) continue;
-                if (!int.TryParse(colonSplit[^1], out int port)) continue;
-                if (port >= 49152) continue; //ephemeral/dynamic ports
-
-                if (!ports.Contains(port)) ports.Add(port);
-            }
-
-            if (ports.Count == 0) return null;
-            ports.Sort();
-            return ports.ToArray();
-        }
-        catch {
-            return null;
         }
     }
 }

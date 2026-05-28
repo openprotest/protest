@@ -146,7 +146,6 @@ class PortScan extends Console {
 			rangeFrom: 1,
 			rangeTo: 1023,
 			timeout: 2000,
-			useNetstat: false
 		};
 
 		this.AddCssDependencies("tools.css");
@@ -212,7 +211,7 @@ class PortScan extends Console {
 	}
 
 	OptionsDialog() {
-		const dialog = this.DialogBox("240px");
+		const dialog = this.DialogBox("200px");
 		if (dialog === null) return;
 
 		const {okButton, innerBox} = dialog;
@@ -220,10 +219,8 @@ class PortScan extends Console {
 		innerBox.style.padding = "20px";
 		innerBox.style.display = "grid";
 		innerBox.style.gridTemplateColumns = "auto 120px 110px 20px 110px auto";
-		innerBox.style.gridTemplateRows = "repeat(3, 44px)";
+		innerBox.style.gridTemplateRows = "repeat(2, 44px)";
 		innerBox.style.alignItems = "center";
-
-		//innerBox.style.textAlign = "center";
 
 		innerBox.parentElement.style.maxWidth = "520px";
 
@@ -239,7 +236,8 @@ class PortScan extends Console {
 		fromInput.style.gridArea = "1 / 3";
 
 		const toLabel = document.createElement("div");
-		toLabel.textContent = " to ";
+		toLabel.textContent = "to";
+		toLabel.style.textAlign = "center"
 		toLabel.style.gridArea = "1 / 4";
 
 		const toInput = document.createElement("input");
@@ -263,12 +261,6 @@ class PortScan extends Console {
 
 		innerBox.append(timeoutLabel, timeoutInput);
 
-		const remoteNetStatBox = document.createElement("div");
-		remoteNetStatBox.style.gridArea = "3 / 6 / 3 / 2";
-		innerBox.append(remoteNetStatBox);
-
-		const remoteNetStaToggle = this.CreateToggle("Use remote netstat", this.args.useNetstat, remoteNetStatBox);
-
 		fromInput.onchange = ()=> {
 			if (parseInt(fromInput.value) >= parseInt(toInput.value)) {
 				toInput.value = parseInt(fromInput.value);
@@ -285,7 +277,6 @@ class PortScan extends Console {
 			this.args.rangeFrom = parseInt(fromInput.value);
 			this.args.rangeTo = parseInt(toInput.value);
 			this.args.timeout = parseInt(timeoutInput.value);
-			this.args.useNetstat = remoteNetStaToggle.checkbox.checked;
 			dialog.Close();
 		};
 
@@ -433,7 +424,7 @@ class PortScan extends Console {
 		this.pending.push(hostname);
 
 		if (this.ws != null && this.ws.readyState === 1) { //ready
-			this.ws.send(`${hostname};${this.args.rangeFrom};${this.args.rangeTo};${this.args.timeout};${this.args.useNetstat}`);
+			this.ws.send(`${hostname};${this.args.rangeFrom};${this.args.rangeTo};${this.args.timeout}`);
 		}
 		else if (this.ws === null || (this.ws != null && this.ws.readyState != 0)) { //not connecting
 			this.Connect();
@@ -456,8 +447,9 @@ class PortScan extends Console {
 		}
 
 		const index = this.args.entries.indexOf(hostname);
-		if (index > -1)
+		if (index > -1) {
 			this.args.entries.splice(index, 1);
+		}
 
 		this.UpdateTaskSpinner();
 	}
@@ -500,7 +492,7 @@ class PortScan extends Console {
 
 		this.ws.onopen = ()=> {
 			for (let i = 0; i < this.pending.length; i++) {
-				this.ws.send(`${this.pending[i]};${this.args.rangeFrom};${this.args.rangeTo};${this.args.timeout};${this.args.useNetstat}`);
+				this.ws.send(`${this.pending[i]};${this.args.rangeFrom};${this.args.rangeTo};${this.args.timeout}`);
 			}
 
 			for (let i = 0; i < this.list.childNodes.length; i++) { //remove warnings, if any
@@ -573,10 +565,10 @@ class PortScan extends Console {
 				this.UpdateTaskSpinner();
 			}
 			else {
-				if (name in this.hashtable)
+				if (name in this.hashtable) {
 					for (let i = 1; i < split.length; i++) {
 						if (split[i].length === 0) continue;
-
+						
 						const port = document.createElement("div");
 						port.textContent = split[i];
 						this.hashtable[name].result.appendChild(port);
@@ -584,9 +576,10 @@ class PortScan extends Console {
 							port.className = "tool-after-label";
 							port.setAttribute("after-label", PortScan.PROTOCOL[parseInt(split[i])]);
 						}
-
+						
 						this.hashtable[name].list.push(split[i]);
 					}
+				}
 			}
 		};
 	}

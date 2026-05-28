@@ -10,7 +10,7 @@ using System.Text.Json;
 namespace Protest.Tools;
 
 internal static class Cert {
-    public static byte[] Create(HttpListenerContext ctx, string origin) {
+    internal static byte[] Create(HttpListenerContext ctx, string origin) {
         using StreamReader reader = new StreamReader(ctx.Request.InputStream, ctx.Request.ContentEncoding);
         string payload = reader.ReadToEnd();
 
@@ -111,63 +111,155 @@ internal static class Cert {
         }
     }
 
-    public static byte[] Upload(HttpListenerContext ctx, string origin) {
-        HttpListenerRequest request = ctx.Request;
+    internal static byte[] Upload(HttpListenerContext ctx, string origin) {
+        try {
+            HttpListenerRequest request = ctx.Request;
 
-        string boundary = request.ContentType.Split('=')[1];
-        Stream body = request.InputStream;
-        Encoding encoding = request.ContentEncoding;
-        using StreamReader reader = new StreamReader(body, encoding);
+            if (String.IsNullOrWhiteSpace(request.ContentType) ||
+                !request.ContentType.StartsWith("multipart/form-data", StringComparison.OrdinalIgnoreCase)) {
+                return Data.CODE_INVALID_ARGUMENT.Array;
+            }
 
-        string formData = reader.ReadToEnd();
+            string boundary = request.ContentType
+                .Split(';')
+                .Select(p => p.Trim())
+                .FirstOrDefault(p => p.StartsWith("boundary=", StringComparison.OrdinalIgnoreCase))
+                ?[9..];
 
-        string[] parts = formData.Split(new string[] { boundary }, StringSplitOptions.RemoveEmptyEntries);
+            if (String.IsNullOrEmpty(boundary)) {
+                return Data.CODE_INVALID_ARGUMENT.Array;
+            }
 
-        DirectoryInfo directory = new DirectoryInfo(Data.DIR_CERTIFICATES);
-        if (!directory.Exists) {
-            directory.Create();
-        }
+            boundary = "--" + boundary;
 
-        foreach (string part in parts) {
-            if (part.Contains("Content-Disposition") && part.Contains("filename")) {
-                try {
-                    Match filenameMatch = Regex.Match(part, @"filename=""([^""]*)""");
-                    if (!filenameMatch.Success) continue;
+            using MemoryStream ms = new MemoryStream();
+            request.InputStream.CopyTo(ms);
 
-                    string name = filenameMatch.Groups[1].Value;
-                    name = name.ToLower();
-                    if (name.EndsWith(".pfx")) {
-                        name = name.Substring(0, name.Length - 4);
-                    }
-                    else {
-                        continue;
-                    }
+            byte[] raw = ms.ToArray();
 
-                    int counter = 2;
-                    string newName = $"{name}.pfx";
-                    while (File.Exists(Path.Join(Data.DIR_CERTIFICATES, newName))) {
-                        newName = $"{name} {counter++}.pfx";
-                    }
+            byte[] boundaryBytes = Encoding.ASCII.GetBytes(boundary);
+            byte[] headerSeparator = Encoding.ASCII.GetBytes("\r\n\r\n");
 
-                    int startIndex = part.IndexOf("\r\n\r\n") + 4;
+            DirectoryInfo directory = new DirectoryInfo(Data.DIR_CERTIFICATES);
+            if (!directory.Exists) {
+                directory.Create();
+            }
 
-                    byte[] fileContent = encoding.GetBytes(part[startIndex..].TrimEnd('\r', '\n', '-'));
+            int position = 0;
 
-                    File.WriteAllBytes(Path.Join(Data.DIR_CERTIFICATES, newName), fileContent);
+            while (position < raw.Length) {
 
-                    Logger.Action(origin, "Certificate", $"Upload certificate: {newName}");
+                // Find boundary
+                int boundaryIndex = IndexOf(raw, boundaryBytes, position);
+                if (boundaryIndex < 0) {
                     break;
                 }
-                catch (Exception ex) {
-                    Logger.Debug(ex);
+
+                position = boundaryIndex + boundaryBytes.Length;
+
+                // End marker?
+                if (position + 1 < raw.Length &&
+                    raw[position] == '-' &&
+                    raw[position + 1] == '-') {
+                    break;
                 }
+
+                // Skip CRLF
+                if (position + 1 < raw.Length &&
+                    raw[position] == '\r' &&
+                    raw[position + 1] == '\n') {
+                    position += 2;
+                }
+
+                // Find header end
+                int headersEnd = IndexOf(raw, headerSeparator, position);
+                if (headersEnd < 0) {
+                    break;
+                }
+
+                string headers = Encoding.UTF8.GetString(raw, position, headersEnd - position);
+
+                Match filenameMatch = Regex.Match(headers, @"filename=""([^""]*)""");
+
+                position = headersEnd + headerSeparator.Length;
+
+                // Find next boundary
+                byte[] nextBoundarySearch = Encoding.ASCII.GetBytes("\r\n" + boundary);
+
+                int nextBoundary = IndexOf(raw, nextBoundarySearch, position);
+                if (nextBoundary < 0) {
+                    break;
+                }
+
+                int fileLength = nextBoundary - position;
+
+                if (!filenameMatch.Success) {
+                    position = nextBoundary;
+                    continue;
+                }
+
+                string name = filenameMatch.Groups[1].Value;
+
+                if (String.IsNullOrWhiteSpace(name)) {
+                    position = nextBoundary;
+                    continue;
+                }
+
+                name = Path.GetFileName(name).ToLowerInvariant();
+
+                if (!name.EndsWith(".pfx", StringComparison.OrdinalIgnoreCase)) {
+                    position = nextBoundary;
+                    continue;
+                }
+
+                name = name[..^4];
+
+                int counter = 2;
+                string newName = $"{name}.pfx";
+
+                while (File.Exists(Path.Join(Data.DIR_CERTIFICATES, newName))) {
+                    newName = $"{name} {counter++}.pfx";
+                }
+
+                byte[] fileContent = new byte[fileLength];
+                Buffer.BlockCopy(raw, position, fileContent, 0, fileLength);
+
+                File.WriteAllBytes(Path.Join(Data.DIR_CERTIFICATES, newName), fileContent);
+
+                Logger.Action(origin, "Certificate", $"Upload certificate: {newName}");
+
+                break;
+            }
+
+            return List();
+        }
+        catch (Exception ex) {
+            Logger.Debug(ex);
+            return Data.CODE_FAILED.Array;
+        }
+    }
+
+    private static int IndexOf(byte[] buffer, byte[] pattern, int startIndex) {
+        for (int i = startIndex; i <= buffer.Length - pattern.Length; i++) {
+
+            bool match = true;
+
+            for (int j = 0; j < pattern.Length; j++) {
+                if (buffer[i + j] != pattern[j]) {
+                    match = false;
+                    break;
+                }
+            }
+
+            if (match) {
+                return i;
             }
         }
 
-        return List();
+        return -1;
     }
 
-    public static byte[] List() {
+    internal static byte[] List() {
         DirectoryInfo directory = new DirectoryInfo(Data.DIR_CERTIFICATES);
         if (!directory.Exists) return "{\"data\":{},\"length\":0}"u8.ToArray();
 
@@ -184,6 +276,75 @@ internal static class Cert {
             ),
             length = files.Length
         });
+    }
+
+    internal static byte[] GetCertInfo(HttpListenerContext ctx, Dictionary<string, string> parameters ) {
+        parameters.TryGetValue("name", out string name);
+        parameters.TryGetValue("password", out string password);
+        return GetCertInfo(name, password);
+    }
+
+    private static byte[] GetCertInfo(string name, string password) {
+        string filename = Path.Join(Data.DIR_CERTIFICATES, name);
+
+        if (!File.Exists(filename)) {
+            throw new FileNotFoundException(filename);
+        }
+
+        byte[] pfxBytes = File.ReadAllBytes(filename);
+
+        try {
+            using X509Certificate2 cert = X509CertificateLoader.LoadPkcs12(pfxBytes, password);
+
+            String dnsNames = String.Join(", ", GetSanDnsNames(cert));
+            if (String.IsNullOrEmpty(dnsNames)) {
+                dnsNames = "--";
+            } 
+
+            return JsonSerializer.SerializeToUtf8Bytes(
+                new {
+                    subject       = cert.Subject,
+                    issuer        = cert.Issuer,
+                    friendlyName  = String.IsNullOrEmpty(cert.FriendlyName) ? "--" : cert.FriendlyName,
+                    thumbprint    = cert.Thumbprint,
+                    serialNumber  = cert.SerialNumber,
+
+                    issuedAt      = cert.NotBefore,
+                    expiresAt     = cert.NotAfter,
+
+                    hasPrivateKey = cert.HasPrivateKey,
+
+                    signatureAlgorithm = cert.SignatureAlgorithm.FriendlyName,
+                    publicKeyAlgorithm = cert.PublicKey.Oid.FriendlyName,
+
+                    version = cert.Version,
+                    keySize = cert.GetRSAPublicKey()?.KeySize,
+
+                    dnsNames = dnsNames
+                }
+            );
+        }
+        catch (Exception ex) {
+            return Encoding.UTF8.GetBytes($"{{\"error\":\"{Data.EscapeJsonText(ex.Message)}\"}}");
+        }
+    }
+
+    private static string[] GetSanDnsNames(X509Certificate2 cert) {
+        foreach (X509Extension ext in cert.Extensions) {
+            if (ext.Oid?.Value != "2.5.29.17") {
+                continue;
+            }
+
+            AsnEncodedData asn = new AsnEncodedData(ext.Oid, ext.RawData);
+
+            return asn.Format(true)
+                .Split(new[] { "\r\n", "\n" }, StringSplitOptions.RemoveEmptyEntries)
+                .Where(x => x.Contains("DNS Name="))
+                .Select(x => x.Replace("DNS Name=", "").Trim())
+                .ToArray();
+        }
+
+        return Array.Empty<string>();
     }
 
     internal static byte[] Delete(Dictionary<string, string> parameters, string origin) {

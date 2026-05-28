@@ -215,7 +215,7 @@ internal static class Fetch {
                 switch (argPortScan) {
 
                 case "wellknown": {
-                    bool[] ports = await PortScan.PortsScanAsync(target, 1, 1023, 500, true, token);
+                    bool[] ports = await PortScan.PortsScanAsync(target, 1, 1023, 500, token);
                     for (int i = 0; i < ports.Length; i++) {
                         if (!ports[i]) continue;
                         portsBuilder.Append(portsBuilder.Length == 0 ? i + 1 : $"; {i + 1}");
@@ -224,7 +224,7 @@ internal static class Fetch {
                 }
 
                 case "extended": {
-                    bool[] ports = await PortScan.PortsScanAsync(target, 1, 8191, 500, true, token);
+                    bool[] ports = await PortScan.PortsScanAsync(target, 1, 8191, 500, token);
                     for (int i = 0; i < ports.Length; i++) {
                         if (!ports[i]) continue;
                         portsBuilder.Append(portsBuilder.Length == 0 ? i + 1 : $"; {i + 1}");
@@ -234,7 +234,7 @@ internal static class Fetch {
 
                 default: {
                     short[] portsPool = PortScan.BASIC_PORTS;
-                    bool[] ports = await PortScan.PortsScanAsync(target, portsPool, 1000, true, token);
+                    bool[] ports = await PortScan.PortsScanAsync(target, portsPool, 1000, token);
                     for (int i = 0; i < ports.Length; i++) {
                         if (!ports[i]) continue;
                         portsBuilder.Append(portsBuilder.Length == 0 ? portsPool[i] : $"; {portsPool[i]}");

@@ -338,6 +338,7 @@ class ReverseProxy extends List {
 						const name = document.createElement("div");
 						name.textContent = json.hosts[i].ip;
 						name.style.position = "absolute";
+						name.style.color = "var(--clr-light)";
 						name.style.left = "0";
 						name.style.width = "33%";
 						name.style.paddingLeft = "8px";
