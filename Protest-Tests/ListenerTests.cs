@@ -1,5 +1,6 @@
 global using NUnit.Framework;
 using System.Net;
+using Protest.Http;
 
 namespace Protest.Tests;
 
@@ -19,7 +20,7 @@ public class ListenerTests {
     [SetUp]
     public void Setup() {
         Task.Run(() => {
-            Http.Listener listener = new Http.Listener("127.0.0.1", 8080, front.FullName);
+            Listener listener = new Listener("127.0.0.1", 8080, front.FullName);
             _ = Task.Run(() => listener.StartAsync());
         });
     }

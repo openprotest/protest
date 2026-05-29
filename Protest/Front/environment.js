@@ -162,7 +162,7 @@ class Environment extends Tabs {
 				box.style.width = "40px";
 				box.style.maxWidth = "40px";
 				box.style.height = "24px";
-				box.style.marginLeft = "8px";
+				box.style.marginLeft = "2px";
 				box.style.borderRadius = "2px";
 				box.style.backgroundColor = d.color;
 				box.style.boxShadow = "var(--clr-dark) 0 0 0 1px inset";

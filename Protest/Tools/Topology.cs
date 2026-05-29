@@ -98,7 +98,7 @@ internal static class Topology {
                 try {
                     try {
                         await writeSemaphore.WaitAsync();
-                        await WebSocketHelper.WsWriteText(ws, $"{{\"retrieve\":\"{candidate.filename}\"}}");
+                        await WebSocketHelper.WsWriteText(ws, $"{{\"retrieve\":\"{Data.EscapeJsonText(candidate.filename)}\"}}");
                     }
                     finally {
                         writeSemaphore.Release();
@@ -122,8 +122,8 @@ internal static class Topology {
                     else {
                         try {
                             await writeSemaphore.WaitAsync();
-                            await WebSocketHelper.WsWriteText(ws, $"{{\"nolldp\":\"{candidate.filename}\"}}");
-                            await WebSocketHelper.WsWriteText(ws, $"{{\"over\":\"{candidate.filename}\"}}");
+                            await WebSocketHelper.WsWriteText(ws, $"{{\"nolldp\":\"{Data.EscapeJsonText(candidate.filename)}\"}}");
+                            await WebSocketHelper.WsWriteText(ws, $"{{\"over\":\"{Data.EscapeJsonText(candidate.filename)}\"}}");
                         }
                         finally {
                             writeSemaphore.Release();
@@ -347,7 +347,7 @@ internal static class Topology {
         foreach (KeyValuePair<int, List<int>> pair in remoteChassisIdSubtype) {
             int index = pair.Key;
 
-            if (!remoteChassisIdSubtype.TryGetValue(index, out List<int> chassisIdSubtype)) continue;
+            List<int> chassisIdSubtype = pair.Value;
 
             if (!remoteChassisId.TryGetValue(index, out List<string> chassisId)) continue;
             if (chassisId.Count != chassisIdSubtype.Count) continue;
