@@ -998,7 +998,7 @@ class Environment extends Tabs {
 			if (requiredFieldMissing) return;
 
 			const newObject = {
-				provider : parseInt(serverInput.provider),
+				provider : parseInt(providerInput.value),
 				server   : serverInput.value,
 				port     : parseInt(portInput.value),
 				sender   : senderInput.value,

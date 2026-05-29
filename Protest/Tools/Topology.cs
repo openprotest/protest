@@ -230,7 +230,7 @@ internal static class Topology {
                     if (!snmpResponded) {
                         try {
                             await writeSemaphore.WaitAsync();
-                            await WebSocketHelper.WsWriteText(ws, $"{{\"nosnmp\":\"{candidate.filename}\"}}");
+                            await WebSocketHelper.WsWriteText(ws, $"{{\"nosnmp\":\"{Data.EscapeJsonText(candidate.filename)}\"}}");
                         }
                         finally {
                             writeSemaphore.Release();
@@ -239,7 +239,7 @@ internal static class Topology {
 
                     try {
                         await writeSemaphore.WaitAsync();
-                        await WebSocketHelper.WsWriteText(ws, $"{{\"over\":\"{candidate.filename}\"}}");
+                        await WebSocketHelper.WsWriteText(ws, $"{{\"over\":\"{Data.EscapeJsonText(candidate.filename)}\"}}");
                     }
                     finally {
                         writeSemaphore.Release();
