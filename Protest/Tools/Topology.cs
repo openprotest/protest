@@ -249,8 +249,8 @@ internal static class Topology {
                 catch (Exception ex) {
                     try {
                         await writeSemaphore.WaitAsync();
-                        await WebSocketHelper.WsWriteText(ws, $"{{\"nosnmp\":\"{candidate.filename}\"}}");
-                        await WebSocketHelper.WsWriteText(ws, $"{{\"over\":\"{candidate.filename}\"}}");
+                        await WebSocketHelper.WsWriteText(ws, $"{{\"nosnmp\":\"{Data.EscapeJsonText(candidate.filename)}\"}}");
+                        await WebSocketHelper.WsWriteText(ws, $"{{\"over\":\"{Data.EscapeJsonText(candidate.filename)}\"}}");
                     }
                     finally {
                         writeSemaphore.Release();
