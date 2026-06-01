@@ -217,33 +217,37 @@ internal sealed class Listener {
         try
 #endif
         {
-            IPAddress realIp;
-            string xRealIpHeader = ctx.Request?.Headers?.Get("X-Real-IP");
-            if (xRealIpHeader is not null && IPAddress.TryParse(xRealIpHeader, out IPAddress xRealIp)) {
+            string xForwardedForHeader = ctx.Request?.Headers?.Get("X-Forwarded-For");
+            if (!String.IsNullOrEmpty(xForwardedForHeader)) {
                 IPAddress remoteIp = ctx.Request.RemoteEndPoint.Address;
 
-                if (IPAddress.IsLoopback(xRealIp)) {
-                    Logger.Action("Unauthenticated", "AAA", $"Rejected loopback X-Real-IP from {remoteIp}");
+                if (!Configuration.trustedProxies.Contains(remoteIp)) {
+                    Logger.Action("Unauthenticated", "AAA", $"Rejected X-Forwarded-For from non-trusted peer {remoteIp}");
                     ctx.Response.StatusCode = 400;
                     ctx.Response.Close();
                     return;
                 }
 
-                bool isTrustedProxy = Configuration.trustedProxies.Contains(remoteIp);
-                if (!isTrustedProxy) {
-                    Logger.Action("Unauthenticated", "AAA", $"Rejected X-Real-IP from non-trusted peer {remoteIp}");
+                ReadOnlySpan<char> span = xForwardedForHeader.AsSpan();
+                int commaIndex = span.IndexOf(',');
+                ReadOnlySpan<char> clientSpan = (commaIndex >= 0 ? span[..commaIndex] : span).Trim();
+
+                if (!IPAddress.TryParse(clientSpan, out IPAddress xForwardedIp)) {
+                    Logger.Action("Unauthenticated", "AAA", $"Rejected malformed X-Forwarded-For from {remoteIp}");
                     ctx.Response.StatusCode = 400;
                     ctx.Response.Close();
                     return;
                 }
 
-                realIp = xRealIp;
-            }
-            else {
-                realIp = ctx.Request.RemoteEndPoint.Address;
-            }
+                if (IPAddress.IsLoopback(xForwardedIp)) {
+                    Logger.Action("Unauthenticated", "AAA", $"Rejected loopback X-Forwarded-For from {remoteIp}");
+                    ctx.Response.StatusCode = 400;
+                    ctx.Response.Close();
+                    return;
+                }
 
-            ctx.Request.RemoteEndPoint.Address = realIp;
+                ctx.Request.RemoteEndPoint.Address = xForwardedIp;
+            }
 
             string path = ctx.Request.Url.PathAndQuery;
 

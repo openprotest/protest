@@ -77,7 +77,7 @@ internal static class IpDiscovery {
             filtered.Add( new string[] { nic.Id, nic.Name, IpTools.SubnetMaskToCidr(subnetMask).ToString(), localIpV4.ToString()});
         }
 
-        return JsonSerializer.SerializeToUtf8Bytes(filtered.Select(o=>new {
+        return JsonSerializer.SerializeToUtf8Bytes(filtered.Select(o => new {
             id   = o[0],
             name = o[1],
             cidr = o[2],
@@ -495,14 +495,6 @@ internal static class IpDiscovery {
         try {
             PingReply reply = await p.SendPingAsync(host, timeout, Icmp.ICMP_PAYLOAD);
             return reply.Status == IPStatus.Success;
-
-            /*if (reply.Status == IPStatus.Success) {
-                return true;
-            }
-
-            retry:
-            reply = await p.SendPingAsync(host, timeout*2, Icmp.ICMP_PAYLOAD);
-            return reply.Status == IPStatus.Success;*/
         }
         catch (ArgumentException) {
             return false;
@@ -629,12 +621,12 @@ file sealed class HostJsonConverter : JsonConverter<IpDiscovery.HostEntry> {
     }
 
     public override void Write(Utf8JsonWriter writer, IpDiscovery.HostEntry value, JsonSerializerOptions options) {
-        ReadOnlySpan<byte> _name = "name"u8;
-        ReadOnlySpan<byte> _ip = "ip"u8;
-        ReadOnlySpan<byte> _ipv6 = "ipv6"u8;
-        ReadOnlySpan<byte> _mac = "mac"u8;
+        ReadOnlySpan<byte> _name         = "name"u8;
+        ReadOnlySpan<byte> _ip           = "ip"u8;
+        ReadOnlySpan<byte> _ipv6         = "ipv6"u8;
+        ReadOnlySpan<byte> _mac          = "mac"u8;
         ReadOnlySpan<byte> _manufacturer = "manufacturer"u8;
-        ReadOnlySpan<byte> _services = "services"u8;
+        ReadOnlySpan<byte> _services     = "services"u8;
 
         writer.WriteStartObject();
         writer.WriteString(_name,         value.name);

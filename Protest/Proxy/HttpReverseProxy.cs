@@ -10,6 +10,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
 using Yarp.ReverseProxy.Configuration;
 using Yarp.ReverseProxy.Transforms;
+using Microsoft.Extensions.Primitives;
 
 namespace Protest.Proxy;
 
@@ -25,7 +26,7 @@ internal sealed class HttpReverseProxy : ReverseProxyAbstract {
         try {
             hostBuilder = Host.CreateDefaultBuilder();
 
-            hostBuilder.ConfigureLogging(logger => this.ConfigureLogging(logger));
+            hostBuilder.ConfigureLogging(logger => ConfigureLogging(logger));
 
             ClusterConfig cluster = new ClusterConfig {
                 ClusterId    = "c1",
@@ -46,7 +47,7 @@ internal sealed class HttpReverseProxy : ReverseProxyAbstract {
                     }
                 };
 
-                webHost.ConfigureServices(services => this.ConfigureServices(services, routes, new ClusterConfig[] { cluster }));
+                webHost.ConfigureServices(services => ConfigureServices(services, routes, new ClusterConfig[] { cluster }));
             });
 
             //string destinations = cluster.Destinations.Values
@@ -104,7 +105,7 @@ internal sealed class HttpReverseProxy : ReverseProxyAbstract {
         return base.Stop(origin);
     }
 
-    private void ConfigureLogging(ILoggingBuilder logger) {
+    private static void ConfigureLogging(ILoggingBuilder logger) {
         logger.ClearProviders();
 
         //logger.AddConsole();
@@ -141,7 +142,7 @@ internal sealed class HttpReverseProxy : ReverseProxyAbstract {
         application.UseEndpoints(endpoints => endpoints.MapReverseProxy());
     }
 
-    private void ConfigureServices(IServiceCollection services, IReadOnlyList<RouteConfig> routes, IReadOnlyList<ClusterConfig> clusters) {
+    private static void ConfigureServices(IServiceCollection services, IReadOnlyList<RouteConfig> routes, IReadOnlyList<ClusterConfig> clusters) {
         services.AddSingleton<IHostLifetime, CustomHostLifetime>();
         //services.AddSingleton(bytesRx);
         //services.AddSingleton(bytesTx);
@@ -149,35 +150,25 @@ internal sealed class HttpReverseProxy : ReverseProxyAbstract {
         IReverseProxyBuilder rpBuilder = services.AddReverseProxy();
 
         rpBuilder.LoadFromMemory(routes, clusters);
+        rpBuilder.AddTransforms(builderContext => builderContext.AddRequestTransform(ForwardClientIpTransform));
+    }
 
-        rpBuilder.AddTransforms(builderContext => {
-            builderContext.AddRequestTransform(transformContext => {
+    private static ValueTask ForwardClientIpTransform(RequestTransformContext ctx) {
+        string realIp = ctx.HttpContext.Connection.RemoteIpAddress?.ToString();
+        if (realIp is not null) {
+            StringValues existingXff = ctx.HttpContext.Request.Headers["X-Forwarded-For"];
+            string newXff = StringValues.IsNullOrEmpty(existingXff) ? realIp : $"{existingXff}, {realIp}";
+            ctx.ProxyRequest.Headers.Remove("X-Forwarded-For");
+            ctx.ProxyRequest.Headers.Add("X-Forwarded-For", newXff);
+        }
 
-                /*
-                !!! DONT RELAY THE X-REAL-IP FROM OTHER PROXIES ON THE CHAIN !!!
-                Any intermediary proxy or client can modify the X-Real-IP header to spool their IP.
-                */
+        //ctx.ProxyRequest.Headers.Add("X-Forwarded-Host", ctx.HttpContext.Request.Host.Value);
+        //ctx.ProxyRequest.Headers.Add("X-Forwarded-Proto", ctx.HttpContext.Request.Scheme);
 
-                string realIp = transformContext.HttpContext.Connection.RemoteIpAddress?.ToString();
-                if (realIp is not null) {
-                    transformContext.ProxyRequest.Headers.Remove("X-Real-IP");
-                    transformContext.ProxyRequest.Headers.Add("X-Real-IP", realIp);
+        ctx.HttpContext.Request.Headers.Remove("Host");
+        //ctx.ProxyRequest.Headers.Host = ctx.HttpContext.Request.Headers.Host;
 
-                    //string existingXForwardedFor = transformContext.HttpContext.Request.Headers["X-Forwarded-For"].ToString();
-                    //string newXForwardedFor      = String.IsNullOrEmpty(existingXForwardedFor) ? realIp : $"{existingXForwardedFor}, {realIp}";
-                    //transformContext.ProxyRequest.Headers.Remove("X-Forwarded-For");
-                    //transformContext.ProxyRequest.Headers.Add("X-Forwarded-For", newXForwardedFor);
-                }
-
-                //transformContext.ProxyRequest.Headers.Add("X-Forwarded-Host", transformContext.HttpContext.Request.Host.Value);
-                //transformContext.ProxyRequest.Headers.Add("X-Forwarded-Proto", transformContext.HttpContext.Request.Scheme);
-
-                transformContext.HttpContext.Request.Headers.Remove("Host");
-                //transformContext.ProxyRequest.Headers.Host = transformContext.HttpContext.Request.Headers.Host;
-
-                return ValueTask.CompletedTask;
-            });
-        });
+        return ValueTask.CompletedTask;
     }
 }
 
