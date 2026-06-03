@@ -75,6 +75,8 @@
 	background-color: var(--clr-pane);
 	border-radius: 4px;
 	overflow: hidden;
+	border-left: 1px solid #777;
+	border-bottom: 1px solid #777;
 
 	transition: .2s;
 }

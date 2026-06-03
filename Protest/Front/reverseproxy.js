@@ -1,4 +1,4 @@
-"use strict";
+﻿"use strict";
 class ReverseProxy extends List {
 	static CANVAS_W = 800;
 	static CANVAS_H = 200;
@@ -19,6 +19,7 @@ class ReverseProxy extends List {
 
 		this.graphCount = 0;
 		this.history = {};
+		this.clientHistory = {};
 		this.maximum = 2560;
 
 		this.InitializeComponents();
@@ -313,15 +314,24 @@ class ReverseProxy extends List {
 			}
 			else if (json.hosts) {
 				for (let i=0; i<json.hosts.length; i++) {
+					const ip = json.hosts[i].ip;
 
-					if (this.clients[json.hosts[i].ip]) {
-						const element = this.clients[json.hosts[i].ip];
+					if (!this.clientHistory[ip]) {
+						this.clientHistory[ip] = [];
+					}
 
-						const received = element.children[1];
-						received.textContent = UI.SizeToString(json.hosts[i].rx);
+					this.clientHistory[ip].push({rx: json.hosts[i].rx, tx: json.hosts[i].tx});
 
-						const transmitted = element.children[2];
-						transmitted.textContent = UI.SizeToString(json.hosts[i].tx);
+					if (this.clientHistory[ip].length > 50) {
+						this.clientHistory[ip].shift();
+					}
+
+					if (this.clients[ip]) {
+						const {element, canvas, ctx} = this.clients[ip];
+
+						element.children[1].textContent = UI.SizeToString(json.hosts[i].rx);
+						element.children[2].textContent = UI.SizeToString(json.hosts[i].tx);
+						this.DrawClientMiniGraph(ip, canvas, ctx);
 					}
 					else {
 						const element = document.createElement("div");
@@ -336,7 +346,7 @@ class ReverseProxy extends List {
 						this.clientsList.appendChild(element);
 
 						const name = document.createElement("div");
-						name.textContent = json.hosts[i].ip;
+						name.textContent = ip;
 						name.style.position = "absolute";
 						name.style.color = "var(--clr-light)";
 						name.style.left = "0";
@@ -353,7 +363,7 @@ class ReverseProxy extends List {
 						received.style.fontFamily = "monospace";
 						received.style.position = "absolute";
 						received.style.left = "33%";
-						received.style.width = "33%";
+						received.style.width = "20%";
 						received.style.textAlign = "right";
 						received.style.overflow = "hidden";
 						received.style.textOverflow = "ellipsis";
@@ -365,15 +375,26 @@ class ReverseProxy extends List {
 						transmitted.style.color = "rgb(232,118,0)";
 						transmitted.style.fontFamily = "monospace";
 						transmitted.style.position = "absolute";
-						transmitted.style.left = "66%";
-						transmitted.style.width = "33%";
+						transmitted.style.left = "53%";
+						transmitted.style.width = "20%";
 						transmitted.style.textAlign = "right";
 						transmitted.style.overflow = "hidden";
 						transmitted.style.textOverflow = "ellipsis";
 						transmitted.style.whiteSpace = "nowrap";
 						element.appendChild(transmitted);
 
-						this.clients[json.hosts[i].ip] = element;
+						const miniGraph = document.createElement("canvas");
+						miniGraph.width = 100;
+						miniGraph.height = 24;
+						miniGraph.style.position = "absolute";
+						miniGraph.style.right = "4px";
+						miniGraph.style.top = "4px";
+						miniGraph.style.width = "100";
+						miniGraph.style.height = "24px";
+						element.appendChild(miniGraph);
+
+						const miniCtx = miniGraph.getContext("2d");
+						this.clients[ip] = {element, canvas: miniGraph, ctx: miniCtx};
 					}
 				}
 			}
@@ -498,6 +519,7 @@ class ReverseProxy extends List {
 
 		if (this._tempSelect !== guid) {
 			this.clients = {};
+			this.clientHistory = {};
 			this.clientsList.textContent = "";
 			this._tempSelect = guid;
 		}
@@ -509,6 +531,48 @@ class ReverseProxy extends List {
 		}
 
 		this.ws.send(`select=${guid}`);
+	}
+
+	DrawClientMiniGraph(ip, canvas, ctx) {
+		const history = this.clientHistory[ip];
+		if (!history || history.length < 2) return;
+
+		canvas.width = canvas.width;
+
+		const W = canvas.width;
+		const H = canvas.height;
+		const GAP = 2;
+
+		let maxRate = 512;
+		for (let i=1; i<history.length; i++) {
+			const rxRate = Math.max(history[i].rx - history[i-1].rx, 0) / (this.args.interval / 1000);
+			const txRate = Math.max(history[i].tx - history[i-1].tx, 0) / (this.args.interval / 1000);
+			maxRate = Math.max(maxRate, rxRate, txRate);
+		}
+
+		if (maxRate === 0) return;
+
+		ctx.lineWidth = 2;
+
+		ctx.strokeStyle = "rgb(122,212,43)";
+		ctx.beginPath();
+		for (let i=history.length-1; i>=1; i--) {
+			const rate = Math.max(history[i].rx - history[i-1].rx, 0) / (this.args.interval / 1000);
+			const x = W - (history.length - 1 - i) * GAP;
+			const y = H * (1 - rate / maxRate);
+			ctx.lineTo(x, y);
+		}
+		ctx.stroke();
+
+		ctx.strokeStyle = "rgb(232,118,0)";
+		ctx.beginPath();
+		for (let i = history.length-1; i >= 1; i--) {
+			const rate = Math.max(history[i].tx - history[i-1].tx, 0) / (this.args.interval / 1000);
+			const x = W - (history.length - 1 - i) * GAP;
+			const y = H * (1 - rate / maxRate);
+			ctx.lineTo(x, y);
+		}
+		ctx.stroke();
 	}
 
 	Close() { //overrides

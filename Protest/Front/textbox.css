@@ -104,6 +104,10 @@ select:open::picker-icon {
 	transition: .2s;
 }
 
+select:disabled::picker-icon {
+	opacity: .4;
+}
+
 @keyframes required {
 	0%   { background-position: calc(100% + 40px); }
 	100% { background-position: calc(100%); }

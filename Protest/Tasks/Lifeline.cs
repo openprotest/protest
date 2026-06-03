@@ -553,12 +553,18 @@ internal static partial class Lifeline {
             Dictionary<string, string> stpCounters = Protocols.Snmp.Polling.ParseResponse(Protocols.Snmp.Polling.SnmpQuery(ipAddress, profile, [Protocols.Snmp.Oid.DOT_1D_STP_TOPOLOGY_CHANGES], Protocols.Snmp.Polling.SnmpOperation.Get));
 
             if (stpCounters is not null && stpCounters.TryGetValue(Protocols.Snmp.Oid.DOT_1D_STP_TOPOLOGY_CHANGES, out string stpChanges)) {
+                int stpChangeCount = int.TryParse(stpChanges, out int v) ? v : 0;
+
                 string dirSwitchStpChanges = Path.Join(Data.DIR_LIFELINE, "switchstpchanges", file);
-                if (!Directory.Exists(dirSwitchStpChanges)) {
+                bool dirExists = Directory.Exists(dirSwitchStpChanges);
+
+                if (stpChangeCount == 0 && !dirExists) {
+                    return;
+                }
+                
+                if (!dirExists) {
                     Directory.CreateDirectory(dirSwitchStpChanges);
                 }
-
-                int stpChangeCount = int.TryParse(stpChanges, out int v) ? v : 0;
 
                 try {
                     using FileStream stream = new FileStream(Path.Join(dirSwitchStpChanges, $"{now:yyyyMM}"), FileMode.Append);
