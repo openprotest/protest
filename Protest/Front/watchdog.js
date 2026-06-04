@@ -1551,7 +1551,7 @@ class Watchdog extends Window {
 			m0.setAttribute("x", 0);
 			m0.setAttribute("y", 7);
 			m0.setAttribute("fill", "#C0C0C0");
-			m0.setAttribute("font-size", "10px");
+			m0.setAttribute("font-size", "8px");
 			m0.setAttribute("text-anchor", "middle");
 			svg.appendChild(m0);
 		}
@@ -1587,7 +1587,7 @@ class Watchdog extends Window {
 			m1.setAttribute("x", this.dayPixels);
 			m1.setAttribute("y", 7);
 			m1.setAttribute("fill", "#C0C0C0");
-			m1.setAttribute("font-size", "10px");
+			m1.setAttribute("font-size", "8px");
 			m1.setAttribute("text-anchor", "middle");
 			svg.appendChild(m1);
 		}

@@ -14,6 +14,7 @@ namespace Protest.Http;
 internal static class Auth {
     private const long HOUR = 36_000_000_000L;
     private const long SESSION_TIMEOUT = 120L * HOUR; //5 days
+    private const long OTP_TOKEN_TIMEOUT = HOUR / 12;  //5 minutes
 
     private const long RATE_LIMIT_TIME_WINDOW = 6_000_000_000; //10 minutes
     private const int MAX_REQUESTS_PER_WIN_PERIOD = 10;
@@ -35,27 +36,29 @@ internal static class Auth {
         public bool   enrolled;
         public byte[] secret;
         public int    status;
+        public long   createdAt;
     }
 
     internal record AccessControl {
-        public string username;
-        public string email;
-        public string domain;
-        public byte[] passwordHash;
-        public byte[] totpSecret;
-        public string alias;
-        public string color;
-        public bool isDomainUser;
-        public string[] authorization;
+        public string          username;
+        public string          email;
+        public string          domain;
+        public byte[]          passwordHash;
+        public byte[]          totpSecret;
+        public string          alias;
+        public string          color;
+        public bool            isDomainUser;
+        public string[]        authorization;
         public HashSet<string> accessPath;
     }
 
     internal record Session {
         public AccessControl access;
-        public IPAddress ip;
-        public string sessionId;
-        public long loginDate;
-        public long ttl;
+        public IPAddress     ip;
+        public string        sessionId;
+        public Guid          guid;
+        public long          loginDate;
+        public long          ttl;
     }
 
     static Auth() {
@@ -168,6 +171,12 @@ internal static class Auth {
             return false;
         }
 
+        if (DateTime.UtcNow.Ticks - token.createdAt > OTP_TOKEN_TIMEOUT) {
+            otpTokens.TryRemove(tokenId, out _);
+            ctx.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
+            return false;
+        }
+
         switch (token.status) {
         case -1: return TotpEnrollment(ctx, array);
         case  2: return TotpAuthentication(ctx, array);
@@ -226,12 +235,15 @@ internal static class Auth {
             byte[] secret       = isEnrolled ? access.totpSecret : GenerateTotpSecret(40);
             string secretString = OtpNet.Base32Encoding.ToString(secret);
 
+            EvictExpiredOtpTokens();
+
             otpTokens[tokenId] = new OtpToken() {
-                tokenId  = tokenId,
-                username = username,
-                enrolled = isEnrolled,
-                secret   = secret,
-                status   = isEnrolled ? 2 : -1
+                tokenId   = tokenId,
+                username  = username,
+                enrolled  = isEnrolled,
+                secret    = secret,
+                status    = isEnrolled ? 2 : -1,
+                createdAt = DateTime.UtcNow.Ticks
             };
 
             if (isEnrolled) {
@@ -269,7 +281,7 @@ internal static class Auth {
         bool isSuccessful = ValidateTotp(token.secret, totp);
 
         if (isSuccessful) {
-            token.status = 0;
+            otpTokens.TryRemove(tokenId, out _);
             GrandAccess(ctx, token.username);
 
             Logger.Action(token.username, "AAA", $"Secondary factor authentication succeeded from {ctx.Request.RemoteEndPoint?.Address}");
@@ -303,7 +315,7 @@ internal static class Auth {
         bool isSuccessful = ValidateTotp(token.secret, totp);
 
         if (isSuccessful) {
-            token.status = 0;
+            otpTokens.TryRemove(tokenId, out _);
             GrandAccess(ctx, token.username);
             SetUserTotpSecret(token.username, token.secret);
 
@@ -330,6 +342,15 @@ internal static class Auth {
         byte[] secret = new byte[sizeBytes];
         RandomNumberGenerator.Fill(secret);
         return secret;
+    }
+
+    private static void EvictExpiredOtpTokens() {
+        long now = DateTime.UtcNow.Ticks;
+        foreach (KeyValuePair<string, OtpToken> pair in otpTokens) {
+            if (now - pair.Value.createdAt > OTP_TOKEN_TIMEOUT) {
+                otpTokens.TryRemove(pair.Key, out _);
+            }
+        }
     }
 
     private static bool SetUserTotpSecret(string username, byte[] secret) {
@@ -398,6 +419,7 @@ internal static class Auth {
             access    = rbac.TryGetValue(username, out AccessControl value) ? value : default(AccessControl)!,
             ip        = ctx.Request.RemoteEndPoint.Address,
             sessionId = sessionId,
+            guid      = Guid.NewGuid(),
             loginDate = DateTime.UtcNow.Ticks,
             ttl       = SESSION_TIMEOUT
         };
@@ -907,7 +929,7 @@ internal static class Auth {
             builder.Append('{');
             builder.Append($"\"username\":\"{Data.EscapeJsonText(session.access.username)}\",");
             builder.Append($"\"ip\":\"{session.ip}\",");
-            builder.Append($"\"id\":\"{(session.sessionId.Length >= 8 ? session.sessionId[..8] : session.sessionId)}\",");
+            builder.Append($"\"guid\":\"{session.guid}\",");
             builder.Append($"\"logindate\":{session.loginDate},");
             builder.Append($"\"ttl\":{session.ttl}");
             builder.Append('}');
@@ -927,12 +949,13 @@ internal static class Auth {
 
         parameters.TryGetValue("username", out string username);
         parameters.TryGetValue("ip", out string ip);
-        parameters.TryGetValue("id", out string id);
+        parameters.TryGetValue("guid", out string guidString);
+        Guid.TryParse(guidString, out Guid guid);
 
         foreach (Session session in sessions.Values) {
             if (session.access.username != username) continue;
             if (session.ip.ToString() != ip) continue;
-            if (session.sessionId.Length == 0 || !session.sessionId.StartsWith(id)) continue;
+            if (session.guid != guid) continue;
 
             return RevokeAccess(session.sessionId, origin)
                 ? Data.CODE_OK.ToArray()

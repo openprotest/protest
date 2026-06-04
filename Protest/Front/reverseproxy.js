@@ -335,6 +335,7 @@ class ReverseProxy extends List {
 					}
 					else {
 						const element = document.createElement("div");
+						element.style.position = "relative";
 						element.style.height = "28px";
 						element.style.padding = "2px 0";
 						element.style.lineHeight = "28px";
@@ -389,7 +390,7 @@ class ReverseProxy extends List {
 						miniGraph.style.position = "absolute";
 						miniGraph.style.right = "4px";
 						miniGraph.style.top = "4px";
-						miniGraph.style.width = "100";
+						miniGraph.style.width = "100px";
 						miniGraph.style.height = "24px";
 						element.appendChild(miniGraph);
 

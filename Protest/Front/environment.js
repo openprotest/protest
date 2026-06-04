@@ -663,7 +663,7 @@ class Environment extends Tabs {
 
 		const networkLabel = document.createElement("div");
 		networkLabel.style.gridArea = "2 / 2";
-		networkLabel.textContent = "Network zone:";
+		networkLabel.textContent = "IP range:";
 		const networkInput = document.createElement("input");
 		networkInput.style.gridArea = "2 / 3";
 		networkInput.type = "text";
@@ -765,7 +765,7 @@ class Environment extends Tabs {
 
 		const networkLabel = document.createElement("div");
 		networkLabel.style.gridArea = "2 / 2";
-		networkLabel.textContent = "Network zone:";
+		networkLabel.textContent = "IP range:";
 		const networkInput = document.createElement("input");
 		networkInput.style.gridArea = "2 / 3";
 		networkInput.type = "text";

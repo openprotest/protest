@@ -755,7 +755,7 @@ class AccessControl extends Tabs {
 				kickButton.onclick = ()=> {
 					this.ConfirmBox(`Are you sure you want to kick ${json[i].username}?`).addEventListener("click", async ()=>{
 						try {
-							const response = await fetch(`rbac/kickuser?username=${encodeURIComponent(json[i].username)}&ip=${json[i].ip}&id=${json[i].id}`);
+							const response = await fetch(`rbac/kickuser?username=${encodeURIComponent(json[i].username)}&guid=${json[i].guid}`);
 
 							if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
 

@@ -29,7 +29,7 @@ internal static class Cryptography {
     }
 
     internal static byte[] HashUsernameAndPassword(string username, string password) {
-        int iterations = (username.Length + password.Length) * 63;
+        int iterations = 320_000 + username.Length + password.Length;
 
         byte[] hash = Rfc2898DeriveBytes.Pbkdf2(
             username + password,

@@ -276,6 +276,7 @@ internal sealed class Listener {
 
             ctx.Response.AddHeader("X-Frame-Options", "DENY");
             ctx.Response.AddHeader("X-Content-Type-Options", "nosniff");
+            //ctx.Response.AddHeader("Content-Security-Policy", "default-src 'self'; img-src 'self' data:");
 
             if (await CacheHandler(ctx, path)) return;
 
