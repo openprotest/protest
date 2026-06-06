@@ -50,5 +50,5 @@ class Tabs extends Window {
 			this.tabsList[i].className = "";
 	}
 
-	RemoveTab() { }
+	RemoveTab() {}
 }

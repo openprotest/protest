@@ -834,7 +834,7 @@ class ReverseProxy extends List {
 						guid        : entry ? entry.guid.v : null,
 						name        : nameInput.value,
 						protocol    : protocolInput.value,
-						certificate : certsInput.value === null || certsInput.value === "null" ? null : certsInput.value,
+						certificate : certsInput.value === null || certsInput.value === "none" ? null : certsInput.value,
 						password    : passwordInput.value,
 						proxyaddr   : proxyAddressInput.value,
 						proxyport   : parseInt(proxyPortInput.value),

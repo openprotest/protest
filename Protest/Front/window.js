@@ -1199,7 +1199,7 @@ class Window {
 		this.iconPath = iconPath;
 	}
 
-	AfterResize() { } //overridable
+	AfterResize() {} //overridable
 
 	UpdateAuthorization() { //overridable
 		if (this.sendChatButton) {

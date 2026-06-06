@@ -218,7 +218,7 @@ internal static class Auth {
             Logger.Action(username, "AAA", $"Primary factor authentication succeeded from {ctx.Request.RemoteEndPoint?.Address}");
             Logger.Action(username, "AAA", $"Skipping TOTP");
 
-            GrandAccess(ctx, username);
+            GrantAccess(ctx, username);
             ctx.Response.StatusCode = (int)HttpStatusCode.Accepted;
             byte[] buffer = System.Text.Encoding.UTF8.GetBytes("{\"status\":0}");
             ctx.Response.OutputStream.Write(buffer);
@@ -282,7 +282,7 @@ internal static class Auth {
 
         if (isSuccessful) {
             otpTokens.TryRemove(tokenId, out _);
-            GrandAccess(ctx, token.username);
+            GrantAccess(ctx, token.username);
 
             Logger.Action(token.username, "AAA", $"Secondary factor authentication succeeded from {ctx.Request.RemoteEndPoint?.Address}");
             ctx.Response.StatusCode = (int)HttpStatusCode.Accepted;
@@ -316,7 +316,7 @@ internal static class Auth {
 
         if (isSuccessful) {
             otpTokens.TryRemove(tokenId, out _);
-            GrandAccess(ctx, token.username);
+            GrantAccess(ctx, token.username);
             SetUserTotpSecret(token.username, token.secret);
 
             Logger.Action(token.username, "AAA", $"TOTP enrollment succeeded from {ctx.Request.RemoteEndPoint?.Address}");
@@ -404,7 +404,7 @@ internal static class Auth {
         }
     }
 
-    private static void GrandAccess(HttpListenerContext ctx, string username) {
+    private static void GrantAccess(HttpListenerContext ctx, string username) {
         string sessionId = Cryptography.RandomStringGenerator(72);
         string userHostName = ctx.Request.UserHostName.Split(':')[0];
 

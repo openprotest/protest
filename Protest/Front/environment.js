@@ -300,7 +300,7 @@ class Environment extends Tabs {
 			this.tabsPanel.appendChild(document.createElement("br"));
 
 			const warningBox = document.createElement("div");
-			warningBox.textContent = "Domain privileges are inherited by the user executing the protest.exe executable. To utilize Directory Services, run the executable with the credentials of a Domain Administrator.";
+			warningBox.textContent = "Domain privileges are inherited by the user executing the protest.exe executable. To utilize Directory Services, run the executable with a dedicated service account that has only the minimum required Directory Services permissions.";
 			warningBox.style.fontSize = "small";
 			warningBox.style.paddingLeft = "56px";
 			warningBox.style.maxWidth = "480px";
