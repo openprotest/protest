@@ -18,8 +18,8 @@ internal static class Auth {
     private const long OTP_TOKEN_TIMEOUT = HOUR / 12;  //5 minutes
 
     private const long RATE_LIMIT_TIME_WINDOW = 6_000_000_000; //10 minutes
-    private const int MAX_REQUESTS_PER_WIN_PERIOD = 10;
-    private static readonly ConcurrentDictionary<IPAddress, ConcurrentQueue<long>> rateLimLog = new ConcurrentDictionary<IPAddress, ConcurrentQueue<long>>();
+    private const int MAX_REQUESTS_PER_TIME_WINDOW = 10;
+    private static readonly ConcurrentDictionary<IPAddress, ConcurrentQueue<long>> rateLimitLog = new ConcurrentDictionary<IPAddress, ConcurrentQueue<long>>();
 
 #if !DEBUG
     private static readonly Random rng = new Random();
@@ -120,14 +120,14 @@ internal static class Auth {
     }
 
     private static bool IsRateLimited(IPAddress clientIP) {
-        ConcurrentQueue<long> timestamps = rateLimLog.GetOrAdd(clientIP, _ => new ConcurrentQueue<long>());
+        ConcurrentQueue<long> timestamps = rateLimitLog.GetOrAdd(clientIP, _ => new ConcurrentQueue<long>());
         
         long currentTime = DateTime.UtcNow.Ticks;
         while (timestamps.TryPeek(out long timestamp) && currentTime - timestamp > RATE_LIMIT_TIME_WINDOW) {
             timestamps.TryDequeue(out _);
         }
 
-        if (rateLimLog[clientIP].Count >= MAX_REQUESTS_PER_WIN_PERIOD) {
+        if (rateLimitLog[clientIP].Count >= MAX_REQUESTS_PER_TIME_WINDOW) {
             Logger.Action("System", "AAA", $"Rate limit triggered for host {clientIP}");
             return true;
         }
@@ -440,7 +440,6 @@ internal static class Auth {
 
         if (sessions.TryRemove(sessionId, out _)) {
             if (origin != null) Logger.Action(origin, "AAA", $"User actively logged out");
-            ((Func<System.Threading.Tasks.Task>)(async () => await KeepAlive.CloseConnection(sessionId)))();
 
             _ = Task.Run(async () => {
                 try {
