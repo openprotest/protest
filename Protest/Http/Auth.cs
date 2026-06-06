@@ -7,6 +7,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
+using System.Threading.Tasks;
 using OtpNet;
 
 namespace Protest.Http;
@@ -405,10 +406,11 @@ internal static class Auth {
     }
 
     private static void GrantAccess(HttpListenerContext ctx, string username) {
+        if (!rbac.TryGetValue(username, out AccessControl accessValue) || accessValue is null) return;
+
         string sessionId = Cryptography.RandomStringGenerator(72);
         string userHostName = ctx.Request.UserHostName.Split(':')[0];
 
-        //RFC6265: no port in the "Domain" attribute
 #if DEBUG
         ctx.Response.AddHeader("Set-Cookie", $"sessionid={sessionId}; Domain={userHostName}; Max-age=604800; HttpOnly; SameSite=Strict;");
 #else
@@ -416,7 +418,7 @@ internal static class Auth {
 #endif
 
         Session newSession = new Session() {
-            access    = rbac.TryGetValue(username, out AccessControl value) ? value : default(AccessControl)!,
+            access    = accessValue,
             ip        = ctx.Request.RemoteEndPoint.Address,
             sessionId = sessionId,
             guid      = Guid.NewGuid(),
@@ -439,6 +441,16 @@ internal static class Auth {
         if (sessions.TryRemove(sessionId, out _)) {
             if (origin != null) Logger.Action(origin, "AAA", $"User actively logged out");
             ((Func<System.Threading.Tasks.Task>)(async () => await KeepAlive.CloseConnection(sessionId)))();
+
+            _ = Task.Run(async () => {
+                try {
+                    await KeepAlive.CloseConnection(sessionId);
+                }
+                catch (Exception ex) {
+                    Logger.Error(ex);
+                }
+            });
+
             return true;
         }
 
