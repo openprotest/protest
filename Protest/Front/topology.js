@@ -1463,7 +1463,7 @@ class Topology extends Window {
 					const speedColor = Topology.SPEED_COLOR_MAP[device.speed.value[port]] || "#000";
 					const color = !speed || device.speed.value[port] === speed ? speedColor : `color-mix(in srgb, ${speedColor} 33%, transparent)`;
 
-					if (port in device.endpoint.dot) {
+					if (device.endpoint && port in device.endpoint.dot) {
 						device.endpoint.dot[port].setAttribute("fill", color);
 					}
 					else if (port in device.links && !this.links[device.links[port]].isEndpoint) {
@@ -1544,7 +1544,7 @@ class Topology extends Window {
 						color = Topology.SPEED_COLOR_MAP[device.speed.value[port]] || "#000";
 					}
 
-					if (port in device.endpoint.dot) {
+					if (device.endpoint && port in device.endpoint.dot) {
 						device.endpoint.dot[port].setAttribute("fill", color);
 					}
 					else if (port in device.links && !this.links[device.links[port]].isEndpoint) {
@@ -3803,20 +3803,14 @@ class Topology extends Window {
 			}
 		}
 
-		let lastColor = null;
-
 		interfaceBox.onmouseenter = ()=> {
 			if (!link) return;
 			const e = link.element;
 
 			if (e && !e.isEndpoint) {
-				lastColor = e.line.getAttribute("stroke");
-				e.line.setAttribute("stroke", "var(--clr-accent)");
 				e.line.setAttribute("stroke-width", 5);
 				e.capA.setAttribute("r", 4);
-				e.capA.setAttribute("fill", "var(--clr-accent)");
 				e.capB.setAttribute("r", 4);
-				e.capB.setAttribute("fill", "var(--clr-accent)");
 				this.linesLayer.appendChild(e.line);
 				this.linesLayer.appendChild(e.capA);
 				this.linesLayer.appendChild(e.capB);
@@ -3828,12 +3822,9 @@ class Topology extends Window {
 			const e = link.element;
 
 			if (e && !e.isEndpoint) {
-				e.line.setAttribute("stroke", lastColor ?? "light-dark(#202020, #c0c0c0)");
 				e.line.setAttribute("stroke-width", 3);
 				e.capA.setAttribute("r", 3);
-				e.capA.setAttribute("fill", lastColor ?? "light-dark(#202020, #c0c0c0)");
 				e.capB.setAttribute("r", 3);
-				e.capB.setAttribute("fill", lastColor ?? "light-dark(#202020, #c0c0c0)");
 			}
 		};
 
