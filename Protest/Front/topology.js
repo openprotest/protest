@@ -124,11 +124,11 @@ class Topology extends Window {
 		this.content.append(this.workspace, this.navPane, this.sidePane, this.infoBox);
 
 		const cover = document.createElement("div");
+		cover.tabIndex = 0;
+		cover.style.display = "none";
 		cover.style.containerType = "inline-size";
 		cover.style.position = "absolute";
 		cover.style.inset = "0";
-		cover.style.display = "none";
-		cover.style.tabIndex = 0;
 		this.content.appendChild(cover);
 
 		this.infoPopup = document.createElement("div");
