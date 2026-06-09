@@ -17,13 +17,9 @@ internal static class Auth {
     private const long SESSION_TIMEOUT = 120L * HOUR; //5 days
     private const long OTP_TOKEN_TIMEOUT = HOUR / 12;  //5 minutes
 
-    private const long RATE_LIMIT_TIME_WINDOW = 6_000_000_000; //10 minutes
+    private const long RATE_LIMIT_TIME_WINDOW = HOUR / 6; //10 minutes
     private const int MAX_REQUESTS_PER_TIME_WINDOW = 10;
     private static readonly ConcurrentDictionary<IPAddress, ConcurrentQueue<long>> rateLimitLog = new ConcurrentDictionary<IPAddress, ConcurrentQueue<long>>();
-
-#if !DEBUG
-    private static readonly Random rng = new Random();
-#endif
 
     private static readonly JsonSerializerOptions serializerOptions;
     private static readonly ConcurrentDictionary<string, OtpToken> otpTokens = new();
@@ -207,7 +203,7 @@ internal static class Auth {
         }
 
 #if !DEBUG
-        Thread.Sleep(rng.Next(250));
+        Thread.Sleep(RandomNumberGenerator.GetInt32(250));
 #endif
 
         bool isSuccessful = access.isDomainUser && OperatingSystem.IsWindows()
