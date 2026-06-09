@@ -123,7 +123,7 @@ internal static class Auth {
             timestamps.TryDequeue(out _);
         }
 
-        if (rateLimitLog[clientIP].Count >= MAX_REQUESTS_PER_TIME_WINDOW) {
+        if (timestamps.Count >= MAX_REQUESTS_PER_TIME_WINDOW) {
             Logger.Action("System", "AAA", $"Rate limit triggered for host {clientIP}");
             return true;
         }
@@ -343,10 +343,15 @@ internal static class Auth {
 
     private static void EvictExpiredOtpTokens() {
         long now = DateTime.UtcNow.Ticks;
+        List<string> expiredKeys = new List<string>();
+
         foreach (KeyValuePair<string, OtpToken> pair in otpTokens) {
-            if (now - pair.Value.createdAt > OTP_TOKEN_TIMEOUT) {
-                otpTokens.TryRemove(pair.Key, out _);
-            }
+            if (now - pair.Value.createdAt <= OTP_TOKEN_TIMEOUT) continue;
+            expiredKeys.Add(pair.Key);
+        }
+
+        foreach (string key in expiredKeys) {
+            otpTokens.TryRemove(key, out _);
         }
     }
 
@@ -355,14 +360,12 @@ internal static class Auth {
 
         if (!rbac.TryGetValue(username, out AccessControl access)) return false;
 
+        if (username.Contains("..")) return false;
+
         access.totpSecret = secret;
 
         byte[] plain = JsonSerializer.SerializeToUtf8Bytes(access, serializerOptions);
         byte[] cipher = Cryptography.Encrypt(plain, Configuration.DB_KEY, Configuration.DB_KEY_IV);
-
-        if (username.Contains("..")) {
-            return false;
-        }
 
         try {
             File.WriteAllBytes(Path.Join(Data.DIR_RBAC, access.username), cipher);

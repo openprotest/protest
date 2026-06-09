@@ -48,7 +48,7 @@ class Topology extends Window {
 
 	constructor(args) {
 		super();
-		this.args = args ?? { zoom:1 };
+		this.args = args ?? { zoom: 1 };
 
 		this.AddCssDependencies("topology.css");
 
