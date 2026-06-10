@@ -462,23 +462,23 @@ class ReverseProxy extends List {
 
 			this.maximum = Math.max(this.maximum, rxRate, txRate);
 
-			this.ctx.fillStyle = "rgb(122,212,43)";
-			this.ctx.beginPath();
-			this.ctx.arc(ReverseProxy.CANVAS_W - 56, ReverseProxy.CANVAS_H * (1 - rxRate / this.maximum), 3, 0, 2*Math.PI, false);
-			this.ctx.closePath();
-			this.ctx.fill();
-
 			this.ctx.fillStyle = "rgb(232,118,0)";
 			this.ctx.beginPath();
 			this.ctx.arc(ReverseProxy.CANVAS_W - 56, ReverseProxy.CANVAS_H * (1 - txRate / this.maximum), 3, 0, 2*Math.PI, false);
 			this.ctx.closePath();
 			this.ctx.fill();
+
+			this.ctx.fillStyle = "rgb(122,212,43)";
+			this.ctx.beginPath();
+			this.ctx.arc(ReverseProxy.CANVAS_W - 56, ReverseProxy.CANVAS_H * (1 - rxRate / this.maximum), 3, 0, 2*Math.PI, false);
+			this.ctx.closePath();
+			this.ctx.fill();
 		}
 
-		this.ctx.strokeStyle = "rgb(122,212,43)";
+		this.ctx.strokeStyle = "rgb(232,118,0)";
 		this.ctx.beginPath();
 		for (let i = history.length-1; i >= 1; i--) {
-			const delta = history[i].rx - history[i - 1].rx;
+			const delta = history[i].tx - history[i-1].tx;
 			const rate = Math.round(delta / (this.args.interval / 1000));
 			const x = ReverseProxy.CANVAS_W - 56 - (history.length - i - 1) * ReverseProxy.GAP - 2;
 			const y = ReverseProxy.CANVAS_H * (1 - rate / this.maximum);
@@ -487,10 +487,10 @@ class ReverseProxy extends List {
 		this.ctx.stroke();
 		this.ctx.closePath();
 
-		this.ctx.strokeStyle = "rgb(232,118,0)";
+		this.ctx.strokeStyle = "rgb(122,212,43)";
 		this.ctx.beginPath();
 		for (let i = history.length-1; i >= 1; i--) {
-			const delta = history[i].tx - history[i-1].tx;
+			const delta = history[i].rx - history[i-1].rx;
 			const rate = Math.round(delta / (this.args.interval / 1000));
 			const x = ReverseProxy.CANVAS_W - 56 - (history.length - i - 1) * ReverseProxy.GAP - 2;
 			const y = ReverseProxy.CANVAS_H * (1 - rate / this.maximum);
@@ -555,20 +555,20 @@ class ReverseProxy extends List {
 
 		ctx.lineWidth = 2;
 
-		ctx.strokeStyle = "rgb(122,212,43)";
+		ctx.strokeStyle = "rgb(232,118,0)";
 		ctx.beginPath();
-		for (let i=history.length-1; i>=1; i--) {
-			const rate = Math.max(history[i].rx - history[i-1].rx, 0) / (this.args.interval / 1000);
+		for (let i = history.length-1; i >= 1; i--) {
+			const rate = Math.max(history[i].tx - history[i-1].tx, 0) / (this.args.interval / 1000);
 			const x = W - (history.length - 1 - i) * GAP;
 			const y = H * (1 - rate / maxRate);
 			ctx.lineTo(x, y);
 		}
 		ctx.stroke();
 
-		ctx.strokeStyle = "rgb(232,118,0)";
+		ctx.strokeStyle = "rgb(122,212,43)";
 		ctx.beginPath();
-		for (let i = history.length-1; i >= 1; i--) {
-			const rate = Math.max(history[i].tx - history[i-1].tx, 0) / (this.args.interval / 1000);
+		for (let i=history.length-1; i>=1; i--) {
+			const rate = Math.max(history[i].rx - history[i-1].rx, 0) / (this.args.interval / 1000);
 			const x = W - (history.length - 1 - i) * GAP;
 			const y = H * (1 - rate / maxRate);
 			ctx.lineTo(x, y);
