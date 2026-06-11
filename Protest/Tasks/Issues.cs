@@ -24,7 +24,7 @@ internal static class Issues {
     private const int CPU_UTILIZATION_THRESHOLD = 60;
     private const int MEMORY_USAGE_THRESHOLD    = 80;
     private const int DISK_SPACE_THRESHOLD      = 85;
-    private const int DISK_IO_THRESHOLD         = 75;
+    private const int DISK_IO_THRESHOLD         = 60;
 
 
     public enum SeverityLevel : byte {
@@ -371,15 +371,13 @@ internal static class Issues {
         long targetDate = DateTimeOffset.UtcNow.AddDays(-7).ToUnixTimeMilliseconds();
 
         for (int i = 0; i < lifeline.Length - 9; i += 10) {
-            byte[] dateBuffer = new byte[8];
-            Array.Copy(lifeline, i, dateBuffer, 0, 8);
-            long timestamp = BitConverter.ToInt64(dateBuffer, 0);
+            long timestamp = BitConverter.ToInt64(lifeline, i);
 
             if (timestamp < targetDate) { continue; }
 
             int rtt = (lifeline[i + 9] << 8) | lifeline[i + 8];
 
-            bool isMinorVariation = i > 0 && Math.Abs(lastRtt - rtt) < 2 && timestamp - lastTimestamp < 600_000;
+            bool isMinorVariation = i > 0 && Math.Abs(lastRtt - rtt) < 2 && timestamp - lastTimestamp < 300_000;
             if (isMinorVariation) { continue; }
 
             lastTimestamp = timestamp;
@@ -436,7 +434,8 @@ internal static class Issues {
             return false;
         }
 
-        List<int> values = new List<int>(lifeline.Length / 9);
+        long sum = 0;
+        int count = 0;
 
         long lastTimestamp = 0;
         int lastValue = 0;
@@ -444,35 +443,35 @@ internal static class Issues {
         long targetDate = DateTimeOffset.UtcNow.AddDays(-3).ToUnixTimeMilliseconds();
 
         for (int i = 0; i < lifeline.Length - 8; i += 9) {
-            byte[] dateBuffer = new byte[8];
-            Array.Copy(lifeline, i, dateBuffer, 0, 8);
-            long timestamp = BitConverter.ToInt64(dateBuffer, 0);
+            long timestamp = BitConverter.ToInt64(lifeline, i);
 
             if (timestamp < targetDate) { continue; }
 
             byte value = lifeline[i + 8];
 
-            bool isMinorVariation = i > 0 && Math.Abs(lastValue - value) < 2 && timestamp - lastTimestamp < 600_000;
+            bool isMinorVariation = i > 0 && Math.Abs(lastValue - value) < 2 && timestamp - lastTimestamp < 300_000;
             if (isMinorVariation) { continue; }
 
             lastTimestamp = timestamp;
             lastValue = value;
 
-            values.Add(value);
+            sum += value;
+            count++;
         }
 
-        if (values.Count < MIN_LIFELINE_ENTRIES) {
+        if (count < MIN_LIFELINE_ENTRIES) {
             cpuIssue = null;
             return false;
         }
 
-        double mean = Math.Round(values.Average(), 1);
+        double mean = (double)sum / count;
+
         if (mean >= CPU_UTILIZATION_THRESHOLD) {
             device.attributes.TryGetValue("name", out Database.Attribute nameAttribute);
 
             cpuIssue = new Issue {
                 severity   = SeverityLevel.error,
-                message    = $"CPU utilization averaged {mean}% over the last 3 days",
+                message    = $"CPU utilization averaged {mean:F1}% over the last 3 days",
                 name       = nameAttribute?.value ?? String.Empty,
                 identifier = host,
                 category   = "CPU utilization",
@@ -495,7 +494,8 @@ internal static class Issues {
             return false;
         }
 
-        List<int> values = new List<int>(lifeline.Length / 24);
+        long sum = 0;
+        int count = 0;
 
         long lastTimestamp = 0;
         int lastValue = 0;
@@ -503,44 +503,39 @@ internal static class Issues {
         long targetDate = DateTimeOffset.UtcNow.AddDays(-3).ToUnixTimeMilliseconds();
 
         for (int i = 0; i < lifeline.Length - 23; i += 24) {
-            byte[] buffer = new byte[8];
-
-            Array.Copy(lifeline, i, buffer, 0, 8);
-            long timestamp = BitConverter.ToInt64(buffer, 0);
-
+            long timestamp = BitConverter.ToInt64(lifeline, i);
             if (timestamp < targetDate) continue;
 
-            Array.Copy(lifeline, i+8, buffer, 0, 8);
-            ulong used = BitConverter.ToUInt64(buffer, 0);
-
-            Array.Copy(lifeline, i + 16, buffer, 0, 8);
-            ulong total = BitConverter.ToUInt64(buffer, 0);
+            ulong used = BitConverter.ToUInt64(lifeline, i + 8);
+            ulong total = BitConverter.ToUInt64(lifeline, i + 16);
 
             if (total == 0) continue;
 
             int value = (int)(100 * used / total);
 
-            bool isMinorVariation = i > 0 && Math.Abs(lastValue - value) < 2 && timestamp - lastTimestamp < 600_000;
+            bool isMinorVariation = i > 0 && Math.Abs(lastValue - value) < 2 && timestamp - lastTimestamp < 300_000;
             if (isMinorVariation) continue;
 
             lastTimestamp = timestamp;
             lastValue = value;
 
-            values.Add(value);
+            sum += value;
+            count++;
         }
 
-        if (values.Count < MIN_LIFELINE_ENTRIES) {
+        if (count < MIN_LIFELINE_ENTRIES) {
             memoryIssue = null;
             return false;
         }
 
-        double mean = Math.Round(values.Average(), 1);
+        double mean = (double)sum / count;
+
         if (mean > MEMORY_USAGE_THRESHOLD) {
             device.attributes.TryGetValue("name", out Database.Attribute nameAttribute);
 
             memoryIssue = new Issue {
                 severity   = SeverityLevel.error,
-                message    = $"Memory usage averaged {mean}% over the last 3 days",
+                message    = $"Memory usage averaged {mean:F1}% over the last 3 days",
                 name       = nameAttribute?.value ?? String.Empty,
                 identifier = host,
                 category   = "Memory usage",
@@ -568,27 +563,19 @@ internal static class Issues {
             }
         }
 
-        byte[] buffer8 = new byte[8];
         Dictionary<string, List<(long timestamp, double percentUsed)>> diskData = new Dictionary<string, List<(long, double)>>();
 
         int index = 0;
         while (index < lifeline.Length) {
-            Array.Copy(lifeline, index, buffer8, 0, 8);
-            long timestamp = BitConverter.ToInt64(buffer8, 0);
-
-            Array.Copy(lifeline, index + 8, buffer8, 0, 4);
-            int count = BitConverter.ToInt32(buffer8, 0);
+            long timestamp = BitConverter.ToInt64(lifeline, index);
+            int count = BitConverter.ToInt32(lifeline, index + 8);
 
             index += 12;
 
             for (int i = 0; i < count; i++) {
                 char caption = (char)lifeline[index + i*17];
-
-                Array.Copy(lifeline, index + i*17 + 1, buffer8, 0, 8);
-                ulong used = BitConverter.ToUInt64(buffer8, 0);
-
-                Array.Copy(lifeline, index + i*17 + 9, buffer8, 0, 8);
-                ulong total = BitConverter.ToUInt64(buffer8, 0);
+                ulong used = BitConverter.ToUInt64(lifeline, index + i*17 + 1);
+                ulong total = BitConverter.ToUInt64(lifeline,  index + i*17 + 9);
                 if (total == 0) continue;
 
                 double percentUsed = (double)used / total * 100;
@@ -678,7 +665,7 @@ internal static class Issues {
             return false;
         }
 
-        List<int> values = new List<int>(lifeline.Length / 9);
+        Dictionary<DateOnly, (long sum, int count)> dailyStats = new Dictionary<DateOnly, (long sum , int count)>();
 
         long lastTimestamp = 0;
         int lastValue = 0;
@@ -686,43 +673,47 @@ internal static class Issues {
         long targetDate = DateTimeOffset.UtcNow.AddDays(-3).ToUnixTimeMilliseconds();
 
         for (int i = 0; i < lifeline.Length - 8; i += 9) {
-            byte[] dateBuffer = new byte[8];
-            Array.Copy(lifeline, i, dateBuffer, 0, 8);
-            long timestamp = BitConverter.ToInt64(dateBuffer, 0);
-
-            if (timestamp < targetDate) { continue; }
+            long timestamp = BitConverter.ToInt64(lifeline, i);
 
             byte value = lifeline[i + 8];
 
-            bool isMinorVariation = i > 0 && Math.Abs(lastValue - value) < 2 && timestamp - lastTimestamp < 600_000;
-            if (isMinorVariation) { continue; }
+            bool isMinorVariation = i > 0 && Math.Abs(lastValue - value) < 2 && timestamp - lastTimestamp < 300_000;
+            if (isMinorVariation) continue;
 
             lastTimestamp = timestamp;
             lastValue = value;
 
-            values.Add(value);
+            DateOnly day = DateOnly.FromDateTime(DateTimeOffset.FromUnixTimeMilliseconds(timestamp).UtcDateTime);
+
+            if (dailyStats.TryGetValue(day, out (long sum, int count) stats)) {
+                dailyStats[day] = (stats.sum + value, stats.count + 1);
+            }
+            else {
+                dailyStats[day] = (value, 1);
+            }
         }
 
-        if (values.Count < MIN_LIFELINE_ENTRIES) {
-            diskIssue = null;
-            return false;
-        }
+        foreach ((DateOnly day, (long Sum, int Count) stats) in dailyStats) {
+            if (stats.Count < MIN_LIFELINE_ENTRIES) continue;
 
-        double mean = Math.Round(values.Average(), 1);
-        if (mean > DISK_IO_THRESHOLD) {
-            device.attributes.TryGetValue("name", out Database.Attribute nameAttribute);
+            double mean = (double)stats.Sum / stats.Count;
 
-            diskIssue = new Issue {
-                severity   = SeverityLevel.error,
-                message    = $"Disk I/O averaged {mean}% over the last 3 days",
-                name       = nameAttribute?.value ?? String.Empty,
-                identifier = host,
-                category   = "Disk I/O",
-                source     = "Lifeline",
-                file       = device.filename,
-                isUser     = false,
-            };
-            return true;
+            if (mean > DISK_IO_THRESHOLD) {
+                device.attributes.TryGetValue("name", out Database.Attribute nameAttribute);
+
+                diskIssue = new Issue {
+                    severity   = SeverityLevel.error,
+                    message    = $"Disk I/O averaged {mean:F1}% on {day:yyyy-MM-dd}",
+                    name       = nameAttribute?.value ?? String.Empty,
+                    identifier = host,
+                    category   = "Disk I/O",
+                    source     = "Lifeline",
+                    file       = device.filename,
+                    isUser     = false,
+                };
+
+                return true;
+            }
         }
 
         diskIssue = null;
