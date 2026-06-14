@@ -49,7 +49,7 @@ class Backup extends List {
 			this.ListBackup();
 		}
 		catch (ex) {
-			this.ConfirmBox(ex, true, "mono/error.svg")
+			this.ConfirmBox(ex, true, "mono/error.svg");
 		}
 	}
 
@@ -140,7 +140,7 @@ class Backup extends List {
 				this.ListBackup();
 			}
 			catch (ex) {
-				this.ConfirmBox(ex, true, "mono/error.svg")
+				this.ConfirmBox(ex, true, "mono/error.svg");
 			}
 		});
 	}

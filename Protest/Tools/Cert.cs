@@ -276,7 +276,7 @@ internal static class Cert {
         });
     }
 
-    internal static byte[] GetCertInfo(HttpListenerContext ctx, Dictionary<string, string> parameters ) {
+    internal static byte[] GetCertInfo(HttpListenerContext ctx, Dictionary<string, string> parameters) {
         parameters.TryGetValue("name", out string name);
         parameters.TryGetValue("password", out string password);
         return GetCertInfo(name, password);

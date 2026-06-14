@@ -216,11 +216,11 @@ class ListBox {
 
 			this.columnsElements = this.columnsElements.sort((a, b)=> a.offsetLeft - b.offsetLeft);
 
-			for (let i = 0; i < this.columnsElements.length; i++) {
+			for (let i=0; i<this.columnsElements.length; i++) {
 				if (this.columnsElements[i] === this.movingColumnElement) continue;
 
 				let x = 0;
-				for (let j = 0; j < i; j++) {
+				for (let j=0; j<i; j++) {
 					x += this.columnsElements[j].offsetWidth;
 				}
 				this.columnsElements[i].style.left = `${100 * x / this.listTitle.offsetWidth}%`;
@@ -298,7 +298,7 @@ class ListBox {
 			this.onSort(event.target.textContent, this.sortDescend);
 		};
 
-		for (let i = 0; i < columns.length; i++) {
+		for (let i=0; i<columns.length; i++) {
 			const def = typeof columns[i] === "string" ? {label:columns[i]} : columns[i];
 
 			const newColumn = document.createElement("div");
@@ -339,14 +339,14 @@ class ListBox {
 
 		this.listTitle.replaceChildren(...this.columnsElements);
 
-		for (let i = 0; i < this.columnsElements.length; i++) {
+		for (let i=0; i<this.columnsElements.length; i++) {
 			this.columnsElements[i].style.transition = ".2s";
 			this.columnsElements[i].style.opacity = "1";
 			this.columnsElements[i].style.zIndex = "0";
 			this.columnsElements[i].style.cursor = "inherit";
 
 			let x = 0;
-			for (let j = 0; j < i; j++) {
+			for (let j=0; j<i; j++) {
 				x += this.columnsElements[j].offsetWidth;
 			}
 
@@ -355,7 +355,7 @@ class ListBox {
 		}
 
 		requestAnimationFrame(()=> {
-			for (let i = 0; i < this.columnsElements.length; i++) {
+			for (let i=0; i<this.columnsElements.length; i++) {
 				const text = this.columnsElements[i].textContent.trim();
 				this.columnsElements[i].style.textTransform = LOADER.alwaysUppercase.includes(text)
 					? "uppercase"

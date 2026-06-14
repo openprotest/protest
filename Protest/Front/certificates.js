@@ -52,7 +52,7 @@ class Certificates extends List {
 			this.ListCerts();
 		}
 		catch (ex) {
-			this.ConfirmBox(ex, true, "mono/error.svg")
+			this.ConfirmBox(ex, true, "mono/error.svg");
 		}
 	}
 
@@ -322,7 +322,7 @@ class Certificates extends List {
 				this.ListCerts();
 			}
 			catch (ex) {
-				this.ConfirmBox(ex, true, "mono/error.svg")
+				this.ConfirmBox(ex, true, "mono/error.svg");
 			}
 		});
 	}

@@ -145,7 +145,7 @@ internal static partial class Arp {
                 parts[i] = parts[i].PadLeft(2, '0');
             }
 
-            return String.Join(":", parts).ToLowerInvariant();;
+            return String.Join(":", parts).ToLowerInvariant();
         }
         catch (Exception ex) {
             Logger.Error(ex);

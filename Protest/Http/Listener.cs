@@ -14,9 +14,7 @@ internal sealed class Listener {
     private readonly HttpListener listener;
     private readonly Cache cache;
 
-    private static readonly Dictionary<string, Func<HttpListenerContext, Dictionary<string, string>, string, byte[]>> routing
-      = new Dictionary<string, Func<HttpListenerContext, Dictionary<string, string>, string, byte[]>> {
-
+    private static readonly Dictionary<string, Func<HttpListenerContext, Dictionary<string, string>, string, byte[]>> routing = new Dictionary<string, Func<HttpListenerContext, Dictionary<string, string>, string, byte[]>> {
         ["/logout"]                    = (ctx, parameters, username) => Auth.RevokeAccess(ctx, username) ? Data.CODE_OK.Array : Data.CODE_FAILED.Array,
         ["/version"]                   = (ctx, parameters, username) => Data.VersionToJson(),
 
@@ -142,6 +140,9 @@ internal sealed class Listener {
 
         ["/config/snmpprofiles/list"]  = (ctx, parameters, username) => Tools.SnmpProfiles.List(parameters),
         ["/config/snmpprofiles/save"]  = (ctx, parameters, username) => Tools.SnmpProfiles.Save(ctx, username),
+
+        ["/config/integration/getstatus"] = (ctx, parameters, username) => Integration.Integration.GetStatus(parameters),
+        ["/config/integration/save"]      = (ctx, parameters, username) => Integration.Integration.Save(ctx, parameters, username),
 
         ["/config/cert/list"]          = (ctx, parameters, username) => Tools.Cert.List(),
         ["/config/cert/create"]        = (ctx, parameters, username) => Tools.Cert.Create(ctx, username),

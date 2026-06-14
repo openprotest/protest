@@ -295,6 +295,8 @@ internal static class Watchdog {
         short result = -1;
         for (int i = 0; i < watcher.retries; i++) {
             try {
+                //sharedHttpClient.DefaultRequestHeaders.Add("User-Agent", "Pro-test");
+
                 HttpResponseMessage response = watcher.method switch {
                     "GET"    => await sharedHttpClient.GetAsync(watcher.target),
                     "POST"   => await sharedHttpClient.PostAsync(watcher.target, null),
@@ -331,6 +333,8 @@ internal static class Watchdog {
 
         for (int i = 0; i < watcher.retries; i++) {
             try {
+                //sharedHttpClient.DefaultRequestHeaders.Add("User-Agent", "Pro-test");
+
                 HttpResponseMessage response = watcher.method switch {
                     "GET"    => await sharedHttpClient.GetAsync(watcher.target),
                     "POST"   => await sharedHttpClient.PostAsync(watcher.target, null),

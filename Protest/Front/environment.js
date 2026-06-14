@@ -23,17 +23,14 @@ class Environment extends Tabs {
 		this.adTab = this.AddTab("Active directory", "mono/directory.svg");
 		this.smtpTab = this.AddTab("SMTP", "mono/email.svg");
 		this.snmpTab = this.AddTab("SNMP", "mono/snmp.svg");
-		this.graphTab = this.AddTab("Microsoft Graph", "mono/graph.svg");
+		this.integrationTab = this.AddTab("Integration", "mono/integration.svg");
 
 		this.zonesTab.onclick = ()=> this.ShowZones();
 		this.dhcpTab.onclick = ()=> this.ShowDhcpRange();
 		this.adTab.onclick = ()=> this.ShowActiveDirectory();
 		this.smtpTab.onclick = ()=> this.ShowSmtp();
 		this.snmpTab.onclick = ()=> this.ShowSnmp();
-		this.graphTab.onclick = ()=> this.ShowGraph();
-
-		//TODO:
-		this.graphTab.style.display = "none";
+		this.integrationTab.onclick = ()=> this.ShowIntegration();
 
 		this.activeColumnsListBox = null;
 		this.win.addEventListener("mouseup", event=> this.activeColumnsListBox?.HandleMouseUp(event));
@@ -60,12 +57,12 @@ class Environment extends Tabs {
 			this.ShowSnmp();
 			break;
 
-		case "graph":
-			this.graphTab.className = "v-tab-selected";
-			this.ShowGraph();
+		case "integration":
+			this.integrationTab.className = "v-tab-selected";
+			this.ShowIntegration();
 			break;
 
-		default:
+			default:
 			this.zonesTab.className = "v-tab-selected";
 			this.ShowZones();
 			break;
@@ -552,7 +549,7 @@ class Environment extends Tabs {
 			let index = this.snmpProfiles.indexOf(this.selectedSnmpProfile);
 			if (index === -1) return;
 
-			this.ConfirmBox("Are you sure you want to remove this SNMP profile?", false, "mono/delete.svg").addEventListener("click", ()=>{
+			this.ConfirmBox("Are you sure you want to remove this SNMP profile?", false, "mono/delete.svg").addEventListener("click", ()=> {
 				this.snmpProfiles.splice(index, 1);
 				this.SaveSnmpProfiles();
 				this.selectedSnmpProfile = null;
@@ -564,9 +561,56 @@ class Environment extends Tabs {
 		this.AfterResize();
 	}
 
-	ShowGraph() {
-		this.args = "graph";
+	ShowIntegration() {
+		this.args = "integration";
 		this.tabsPanel.textContent = "";
+
+		this.integrationListBox = new ListBox({
+			titleBar: true,
+			counter: false,
+			columnsOptionsEnable: false,
+			builtInSort: true,
+			firstColumnOffset: "4px",
+			onSelect: (id, element)=> {},
+			onDoubleClick: data=> this.IntegrationDialog(data.name)
+		});
+
+		this.integrationListBox = this.integrationListBox;
+		
+		this.integrationList = this.integrationListBox.list;
+		this.integrationList.style.overflowY = "auto";
+		this.integrationList.style.left = "20px";
+		this.integrationList.style.right = "20px";
+		this.integrationList.style.top = "20px";
+		this.integrationList.style.bottom = "20px";
+		this.integrationList.style.border = "rgb(82,82,82) solid 2px";
+		this.integrationList.addEventListener("keydown", event=> this.integrationListBox.Keydown(event));
+		this.tabsPanel.appendChild(this.integrationList);
+
+		this.integrationListBox.SetupColumns([
+			{label:"Name",
+			 sortValue:d=> d.name,
+			 render:d=> {
+				const cell = document.createElement("div");
+				cell.textContent = d.name;
+				cell.style.paddingLeft = "32px";
+				cell.style.backgroundImage = d.status ? "url(mono/play.svg)" : "url(mono/pause.svg)";
+				cell.style.backgroundSize = "20px 20px";
+				cell.style.backgroundPosition = "4px 50%";
+				cell.style.backgroundRepeat = "no-repeat";
+				return cell;
+			}},
+		]);
+
+		this.integrationListBox.SetItems([
+			{name: "EntraID", status: false},
+			{name: "ESET", status: false},
+			{name: "Unifi", status: false},
+			{name: "Sophos", status: false},
+			{name: "Checkpoint", status: false},
+		]);
+
+		this.AfterResize();
 	}
 
 	async GetZones() {
@@ -1397,6 +1441,97 @@ class Environment extends Tabs {
 		privacyAlgorithmInput.onchange();
 
 		setTimeout(()=>{ nameInput.focus() }, 200);
+	}
+
+	IntegrationDialog(name) {
+		const dialog = this.DialogBox("280px");
+		if (dialog === null) return;
+
+		const {okButton, innerBox} = dialog;
+
+		okButton.value = "Save";
+		innerBox.style.padding = "20px";
+		innerBox.parentElement.style.width = "480px";
+
+		const attributes = [];
+
+		const CreateAttribute = (name, label)=> {
+			const container = document.createElement("div");
+			container.style.padding = "4px 0";
+			innerBox.appendChild(container);
+
+			const labelBox = document.createElement("div");
+			labelBox.textContent = `${label}: `;
+			labelBox.style.display = "inline-block";
+			labelBox.style.minWidth = "200px";
+			container.appendChild(labelBox);
+
+			const valueInput = document.createElement("input");
+			valueInput.type = name === "password" ? "password" : "text";
+			container.appendChild(valueInput);
+
+			attributes.push({
+				name      : name,
+				valueInput: valueInput
+			});
+
+			return valueInput;
+		};
+
+		const enableBox = document.createElement("div");
+		enableBox.style.paddingBottom = "12px";
+		innerBox.appendChild(enableBox);
+
+		const enableToggle = this.CreateToggle(`Enable ${name}`, true, enableBox);
+		enableToggle.label.style.minWidth = "38px";
+		enableToggle.label.style.margin = "2px";
+
+		switch (name) {
+		case "ESET":
+			const urlInput      = CreateAttribute("url", "Identity endpoint");
+			const usernameInput = CreateAttribute("username", "Username");
+			const passwordInput = CreateAttribute("password", "Password");
+
+			urlInput.setAttribute("list", "ESET_URL_DATALIST");
+
+			const urlDatalist = document.createElement("datalist");
+			urlDatalist.id = "ESET_URL_DATALIST";
+			urlDatalist.style.display = "none";
+			innerBox.appendChild(urlDatalist);
+
+			const esetEndpoint = ["eu01.protect.eset.com", "eu02.protect.eset.com", "us01.protect.eset.com", "ca01.protect.eset.com"];
+			for (let i=0; i<esetEndpoint.length; i++) {
+				const option = document.createElement("option");
+				option.value = esetEndpoint[i];
+				urlDatalist.appendChild(option);
+			}
+
+			break;
+		}
+
+		okButton.onclick = async ()=> {
+			dialog.Close();
+
+			let url = `config/integration/save?category=${name.toLowerCase()}`;
+			url += `&enable=${enableToggle.checkbox.checked}`;
+
+			for (let i=0; i<attributes.length; i++) {
+				url += `&${attributes[i].name}=${encodeURIComponent(attributes[i].valueInput.value)}`;
+			}
+
+			try {
+				const response = await fetch(url);
+				if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
+
+				const json = await response.json();
+				if (json.error) throw(json.error);
+
+				
+			}
+			catch (ex) {
+				this.ConfirmBox(ex, true, "mono/error.svg");
+			}
+		};
 	}
 
 	async SaveZones() {

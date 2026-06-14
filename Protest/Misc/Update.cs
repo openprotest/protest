@@ -8,6 +8,7 @@ internal static class Update {
 
     public static byte[] CheckLatestRelease() {
         using HttpClient client = new HttpClient();
+        client.DefaultRequestHeaders.Add("User-Agent", "Pro-test");
 
         try {
             HttpResponseMessage responseMessage = client.GetAsync(RELEASE_URL).GetAwaiter().GetResult();

@@ -16,7 +16,6 @@ internal static class LastSeen {
             Lock mutex = mutexes.GetOrAdd(ip, new Lock());
             lock (mutex) {
                 File.WriteAllText(filename, DateTime.Now.ToString(Data.DATETIME_FORMAT_LONG));
-                //File.WriteAllText(filename, DateTime.UtcNow.ToString());
             }
         }
         catch (Exception ex) {

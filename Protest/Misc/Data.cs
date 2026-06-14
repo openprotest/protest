@@ -57,6 +57,7 @@ internal static class Data {
     public static readonly string DIR_LIFELINE       = Path.Join(DIR_DATA, "lifeline");
     public static readonly string DIR_WATCHDOG       = Path.Join(DIR_DATA, "watchdog");
     public static readonly string DIR_REVERSE_PROXY  = Path.Join(DIR_DATA, "reverseproxy");
+    public static readonly string DIR_INTEGRATION    = Path.Join(DIR_DATA, "integration");
     public static readonly string DIR_SCRIPTS        = Path.Join(DIR_DATA, "scripts");
     public static readonly string DIR_DEBIT          = Path.Join(DIR_DATA, "debit");
     public static readonly string DIR_DEBIT_SHORT    = Path.Join(DIR_DEBIT, "short");
@@ -91,7 +92,7 @@ internal static class Data {
                     dirs[i].Create();
                 }
             }
-               catch (IOException ex) {
+            catch (IOException ex) {
                 Logger.Error(ex);
             }
             catch (Exception ex) {
@@ -444,7 +445,6 @@ internal static class Data {
                 for (int j = 0; j < target.Length; j++) {
                     source[i + j] = replacement[j];
                 }
-                //return;
             }
         }
     }

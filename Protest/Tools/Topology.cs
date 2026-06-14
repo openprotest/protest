@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 using Protest.Http;
 using Protest.Protocols.Snmp;
 using Lextm.SharpSnmpLib;
-using Vanara.Extensions.Reflection;
 
 namespace Protest.Tools;
 

@@ -255,6 +255,8 @@ internal static class WebsiteCheck {
                 };
 
                 using HttpClient client = new HttpClient(handler);
+                client.DefaultRequestHeaders.Add("User-Agent", "Pro-test");
+
                 using HttpResponseMessage response = await client.GetAsync(uri);
                 //response.EnsureSuccessStatusCode();
 
@@ -285,6 +287,8 @@ internal static class WebsiteCheck {
             };
 
             using HttpClient client = new HttpClient(handler);
+            client.DefaultRequestHeaders.Add("User-Agent", "Pro-test");
+
             using HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, uri) {
                 Version = version,
                 VersionPolicy = HttpVersionPolicy.RequestVersionExact

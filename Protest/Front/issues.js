@@ -446,7 +446,7 @@ class Issues extends List {
 				}
 			}
 			catch (ex) {
-				this.ConfirmBox(ex, true, "mono/error.svg")
+				this.ConfirmBox(ex, true, "mono/error.svg");
 			}
 		});
 	}
