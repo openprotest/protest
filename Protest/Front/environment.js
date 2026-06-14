@@ -575,7 +575,7 @@ class Environment extends Tabs {
 			onDoubleClick: data=> this.IntegrationDialog(data.name)
 		});
 
-		this.integrationListBox = this.integrationListBox;
+		this.activeColumnsListBox = this.integrationListBox;
 		
 		this.integrationList = this.integrationListBox.list;
 		this.integrationList.style.overflowY = "auto";
@@ -594,11 +594,13 @@ class Environment extends Tabs {
 				const cell = document.createElement("div");
 				cell.textContent = d.name;
 				cell.style.paddingLeft = "32px";
-				cell.style.backgroundImage = d.status ? "url(mono/play.svg)" : "url(mono/pause.svg)";
-				cell.style.backgroundSize = "20px 20px";
-				cell.style.backgroundPosition = "4px 50%";
-				cell.style.backgroundRepeat = "no-repeat";
-				return cell;
+				if (d.status) {Z
+					cell.style.backgroundImage = d.status ? "url(mono/connect.svg)" : "url(mono/pause.svg)";
+					cell.style.backgroundSize = "20px 20px";
+					cell.style.backgroundPosition = "4px 50%";
+					cell.style.backgroundRepeat = "no-repeat";
+				}
+					return cell;
 			}},
 		]);
 

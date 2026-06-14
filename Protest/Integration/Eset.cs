@@ -1,12 +1,10 @@
-﻿using Org.BouncyCastle.Utilities;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
-using Vanara.PInvoke;
 
 namespace Protest.Integration;
 
@@ -27,7 +25,6 @@ internal static class Eset {
             string accessToken = await AuthenticateAsync(iamUrl, username, password);
 
             List<JsonElement> devices = await FetchDevicesAsync(deviceUrl, accessToken);
-            Console.WriteLine($"Total devices: {devices.Count}");
         }
         /*catch (Exception ex) {
             Logger.Error(ex);
@@ -102,7 +99,7 @@ internal static class Eset {
     private static bool IsAuthenticated(string accessToken, DateTime tokenExpiryUtc) => !String.IsNullOrWhiteSpace(accessToken) && DateTime.UtcNow < tokenExpiryUtc;
 
     private static async Task<string> AuthenticateAsync(string iamUrl, string username, string password) {
-        FormUrlEncodedContent form = new FormUrlEncodedContent([
+        using FormUrlEncodedContent form = new FormUrlEncodedContent([
             new("username", username),
             new("password", password),
             new("grant_type", "password")
@@ -111,7 +108,6 @@ internal static class Eset {
         using HttpResponseMessage response = await httpClient.PostAsync($"{iamUrl}/oauth/token", form);
 
         if (!response.IsSuccessStatusCode) {
-            string error = await response.Content.ReadAsStringAsync();
             throw new Exception($"ESET auth failed ({(int)response.StatusCode})");
         }
 
@@ -125,8 +121,8 @@ internal static class Eset {
             string refreshToken = refresh.GetString();
         }
 
-        int expiresIn = doc.RootElement.GetProperty("expires_in").GetInt32();
-        DateTime tokenExpiryUtc = DateTime.UtcNow.AddSeconds(expiresIn - 60);
+        //int expiresIn = doc.RootElement.GetProperty("expires_in").GetInt32();
+        //DateTime tokenExpiryUtc = DateTime.UtcNow.AddSeconds(expiresIn - 60);
 
         httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
 
@@ -151,6 +147,7 @@ internal static class Eset {
 
         do {
             string url = $"{deviceMgmtUrl}/v1/devices?pageSize=1000";
+
             if (!String.IsNullOrEmpty(pageToken)) {
                 url += $"&pageToken={Uri.EscapeDataString(pageToken)}";
             }

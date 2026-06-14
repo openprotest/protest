@@ -670,8 +670,6 @@ internal static class Issues {
         long lastTimestamp = 0;
         int lastValue = 0;
 
-        long targetDate = DateTimeOffset.UtcNow.AddDays(-3).ToUnixTimeMilliseconds();
-
         for (int i = 0; i < lifeline.Length - 8; i += 9) {
             long timestamp = BitConverter.ToInt64(lifeline, i);
 
