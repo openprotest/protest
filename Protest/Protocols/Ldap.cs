@@ -13,6 +13,8 @@ internal static class Ldap {
         if (String.IsNullOrWhiteSpace(domain)) return null;
 
         domain = domain.Trim();
+        if (domain.Length == 0) return null;
+
         foreach (char c in domain) {
             if (!((c >= 'a' && c <= 'z') ||
                   (c >= 'A' && c <= 'Z') ||
@@ -46,65 +48,57 @@ internal static class Ldap {
     public static string[] GetAllWorkstations(string domain) {
         if (String.IsNullOrEmpty(domain)) return null;
 
-        SearchResultCollection result = null;
-
         try {
-            string normalizeDomain = NormalizeDomain(domain);
-            if (String.IsNullOrWhiteSpace(normalizeDomain)) return null;
+            string normalizedDomain = NormalizeDomain(domain);
+            if (String.IsNullOrWhiteSpace(normalizedDomain)) return null;
 
-            using DirectoryEntry directoryEntry = new DirectoryEntry($"LDAP://{normalizeDomain}");
+            using DirectoryEntry directoryEntry = new DirectoryEntry($"LDAP://{normalizedDomain}");
             using DirectorySearcher searcher = new DirectorySearcher(directoryEntry);
             searcher.Filter = "(objectClass=computer)";
-            //result = searcher.FindAll().Cast<SearchResult>().ToArray();
-            result = searcher.FindAll();
+            using SearchResultCollection result = searcher.FindAll();
+            
+            if (result is null || result.Count == 0) return null;
 
+            string[] array = new string[result.Count];
+            for (int i = 0; i < result.Count; i++) {
+                array[i] = result[i].Properties.Contains("name") ? result[i].Properties["name"][0].ToString() : String.Empty;
+            }
+
+            return array;
         }
         catch (Exception ex) {
             Logger.Error(ex);
             return null;
         }
-
-        if (result is null || result.Count == 0) return null;
-
-        string[] array = new string[result.Count];
-        for (int i = 0; i < result.Count; i++) {
-            array[i] = result[i].Properties.Contains("name") ? result[i].Properties["name"][0].ToString() : String.Empty;
-        }
-
-        result.Dispose();
-
-        return array;
     }
 
     [SupportedOSPlatform("windows")]
     public static string[] GetAllUsers(string domain) {
-        SearchResultCollection result = null;
         try {
-            string normalizeDomain = NormalizeDomain(domain);
-            if (String.IsNullOrWhiteSpace(normalizeDomain)) return null;
+            string normalizedDomain = NormalizeDomain(domain);
+            if (String.IsNullOrWhiteSpace(normalizedDomain)) return null;
 
-            using DirectoryEntry dir = new DirectoryEntry($"LDAP://{normalizeDomain}");
+            using DirectoryEntry dir = new DirectoryEntry($"LDAP://{normalizedDomain}");
             using DirectorySearcher searcher = new DirectorySearcher(dir);
             searcher.Filter = "(&(objectClass=user)(objectCategory=person))";
-            result = searcher.FindAll();
+            
+            using SearchResultCollection result = searcher.FindAll();
+
+            if (result is null || result.Count == 0) return null;
+
+            List<string> list = new List<string>();
+            foreach (SearchResult o in result) {
+                if (o.Properties.Contains("userPrincipalName") && o.Properties["userPrincipalName"].Count > 0) {
+                    list.Add(o.Properties["userPrincipalName"][0].ToString());
+                }
+            }
+
+            return list.ToArray();
         }
         catch (Exception ex) {
             Logger.Error(ex);
             return null;
         }
-
-        if (result is null || result.Count == 0) return null;
-
-        List<string> list = new List<string>();
-        foreach (SearchResult o in result) {
-            if (o.Properties.Contains("userPrincipalName") && o.Properties["userPrincipalName"].Count > 0) {
-                list.Add(o.Properties["userPrincipalName"][0].ToString());
-            }
-        }
-
-        result.Dispose();
-
-        return list.ToArray();
     }
 
     [SupportedOSPlatform("windows")]

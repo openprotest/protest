@@ -530,7 +530,7 @@ internal static class Issues {
 
         double mean = (double)sum / count;
 
-        if (mean > MEMORY_USAGE_THRESHOLD) {
+        if (mean >= MEMORY_USAGE_THRESHOLD) {
             device.attributes.TryGetValue("name", out Database.Attribute nameAttribute);
 
             memoryIssue = new Issue {
@@ -696,7 +696,7 @@ internal static class Issues {
 
             double mean = (double)stats.Sum / stats.Count;
 
-            if (mean > DISK_IO_THRESHOLD) {
+            if (mean >= DISK_IO_THRESHOLD) {
                 device.attributes.TryGetValue("name", out Database.Attribute nameAttribute);
 
                 diskIssue = new Issue {

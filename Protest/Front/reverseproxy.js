@@ -412,7 +412,7 @@ class ReverseProxy extends List {
 	}
 
 	UpdateGraph(isSelect=false) {
-		this.canvas.width = this.canvas.width; //clear canvas
+		this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
 		if (!this.args.select || !this.history[this.args.select]) {
 			this.totalRxValue.textContent = "";

@@ -594,7 +594,7 @@ class Environment extends Tabs {
 				const cell = document.createElement("div");
 				cell.textContent = d.name;
 				cell.style.paddingLeft = "32px";
-				if (d.status) {Z
+				if (d.status) {
 					cell.style.backgroundImage = d.status ? "url(mono/connect.svg)" : "url(mono/pause.svg)";
 					cell.style.backgroundSize = "20px 20px";
 					cell.style.backgroundPosition = "4px 50%";
