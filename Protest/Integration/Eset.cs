@@ -102,7 +102,8 @@ internal static class Eset {
         password = doc.RootElement.GetProperty("password").GetString();
     }
 
-    private static bool IsAuthenticated(string accessToken, DateTime tokenExpiryUtc) => !String.IsNullOrWhiteSpace(accessToken) && DateTime.UtcNow < tokenExpiryUtc;
+    private static bool IsAuthenticated(string accessToken, DateTime tokenExpiryUtc) =>
+        !String.IsNullOrWhiteSpace(accessToken) && DateTime.UtcNow < tokenExpiryUtc;
 
     private static async Task<string> AuthenticateAsync(string iamUrl, string username, string password) {
         using FormUrlEncodedContent form = new FormUrlEncodedContent([

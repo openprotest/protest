@@ -52,7 +52,7 @@ internal static class Ldap {
             string normalizeDomain = NormalizeDomain(domain);
             if (String.IsNullOrWhiteSpace(normalizeDomain)) return null;
 
-            DirectoryEntry directoryEntry = new DirectoryEntry($"LDAP://{normalizeDomain}");
+            using DirectoryEntry directoryEntry = new DirectoryEntry($"LDAP://{normalizeDomain}");
             using DirectorySearcher searcher = new DirectorySearcher(directoryEntry);
             searcher.Filter = "(objectClass=computer)";
             //result = searcher.FindAll().Cast<SearchResult>().ToArray();
@@ -83,7 +83,7 @@ internal static class Ldap {
             string normalizeDomain = NormalizeDomain(domain);
             if (String.IsNullOrWhiteSpace(normalizeDomain)) return null;
 
-            DirectoryEntry dir = new DirectoryEntry($"LDAP://{normalizeDomain}");
+            using DirectoryEntry dir = new DirectoryEntry($"LDAP://{normalizeDomain}");
             using DirectorySearcher searcher = new DirectorySearcher(dir);
             searcher.Filter = "(&(objectClass=user)(objectCategory=person))";
             result = searcher.FindAll();
@@ -128,7 +128,7 @@ internal static class Ldap {
         }
 
         try {
-            DirectoryEntry entry = new DirectoryEntry($"LDAP://{normalizedDomain}", username, password);
+            using DirectoryEntry entry = new DirectoryEntry($"LDAP://{normalizedDomain}", username, password);
             object o = entry.NativeObject;
 
             using DirectorySearcher searcher = new DirectorySearcher(entry);
@@ -207,7 +207,7 @@ internal static class Ldap {
 
         if (name.Contains('.')) name = name.Split('.')[0];
 
-        DirectoryEntry directoryEntry = new DirectoryEntry($"LDAP://{normalizedDomain}");
+        using DirectoryEntry directoryEntry = new DirectoryEntry($"LDAP://{normalizedDomain}");
         using DirectorySearcher searcher = new DirectorySearcher(directoryEntry);
         searcher.Filter = $"(&(objectClass=computer)(cn={EscapeLdapValue(name)}))";
 
@@ -298,13 +298,13 @@ internal static class Ldap {
 
     private delegate string FormatMethodPtr(string value);
     [SupportedOSPlatform("windows")]
-    private static void ContentBuilderAddValue(SearchResult sr, string property, string label, Dictionary<string, string> date, FormatMethodPtr format = null) {
+    private static void ContentBuilderAddValue(SearchResult sr, string property, string label, Dictionary<string, string> data, FormatMethodPtr format = null) {
         for (int i = 0; i < sr.Properties[property].Count; i++) {
             string value = sr.Properties[property][i].ToString();
             if (value.Length > 0) {
                 if (format != null) value = format.Invoke(value);
                 if (String.IsNullOrEmpty(value)) continue;
-                date.Add(label, value);
+                data.Add(label, value);
                 break;
             }
         }
@@ -358,9 +358,9 @@ internal static class Ldap {
         for (int i = 0; i < mobileCollection.Count; i++) {
             mobileBuilder.Append(mobileBuilder.Length > 0 ? $"; {mobileCollection[i]}" : mobileCollection[i].ToString());
         }
-        ResultPropertyValueCollection otherMobileCollectrion = result.Properties["othermobile"];
-        for (int i = 0; i < otherMobileCollectrion.Count; i++) {
-            mobileBuilder.Append(mobileBuilder.Length > 0 ? $"; {otherMobileCollectrion[i]}" : otherMobileCollectrion[i].ToString());
+        ResultPropertyValueCollection otherMobileCollection = result.Properties["othermobile"];
+        for (int i = 0; i < otherMobileCollection.Count; i++) {
+            mobileBuilder.Append(mobileBuilder.Length > 0 ? $"; {otherMobileCollection[i]}" : otherMobileCollection[i].ToString());
         }
 
         if (telephoneBuilder.Length > 0) {
@@ -413,7 +413,7 @@ internal static class Ldap {
         SearchResult sr = GetUser(username);
         if (sr is null) return Data.CODE_NOT_FOUND.Array;
 
-        DirectoryEntry user = new DirectoryEntry(sr.Path);
+        using DirectoryEntry user = new DirectoryEntry(sr.Path);
         user.Properties["LockOutTime"].Value = 0; //unlock account
         user.CommitChanges();
         user.Close();
@@ -447,7 +447,7 @@ internal static class Ldap {
         SearchResult sr = GetUser(username);
         if (sr is null) return Data.CODE_NOT_FOUND.Array;
 
-        DirectoryEntry user = new DirectoryEntry(sr.Path);
+        using DirectoryEntry user = new DirectoryEntry(sr.Path);
         int userAccountControl = (int)user.Properties["userAccountControl"].Value;
         userAccountControl &= ~0x2;
         user.Properties["userAccountControl"].Value = userAccountControl;
@@ -484,7 +484,7 @@ internal static class Ldap {
         SearchResult sr = GetUser(username);
         if (sr is null) return Data.CODE_NOT_FOUND.Array;
 
-        DirectoryEntry user = new DirectoryEntry(sr.Path);
+        using DirectoryEntry user = new DirectoryEntry(sr.Path);
         int userAccountControl = (int)user.Properties["userAccountControl"].Value;
         userAccountControl |= 0x2;
         user.Properties["userAccountControl"].Value = userAccountControl;
