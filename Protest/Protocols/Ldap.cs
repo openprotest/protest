@@ -32,10 +32,10 @@ internal static class Ldap {
             switch (c) {
             case '\\': escaped.Append("\\5c"); break;
             case '*' : escaped.Append("\\2a"); break;
-            case '(':  escaped.Append("\\28"); break;
-            case ')':  escaped.Append("\\29"); break;
+            case '(' : escaped.Append("\\28"); break;
+            case ')' : escaped.Append("\\29"); break;
             case '\0': escaped.Append("\\00"); break;
-            default:   escaped.Append(c);      break;
+            default  : escaped.Append(c);      break;
             }
         }
 

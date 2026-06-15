@@ -65,8 +65,6 @@ internal class Program {
 
         Console.WriteLine();
 
-        //Integration.Eset.Fetch().GetAwaiter().GetResult();
-
         try {
             StartServer(Configuration.httpPrefixes);
         }

@@ -24,7 +24,13 @@ internal static class Eset {
         /*try*/ {
             string accessToken = await AuthenticateAsync(iamUrl, username, password);
 
-            List<JsonElement> devices = await FetchDevicesAsync(deviceUrl, accessToken);
+            Task<List<JsonElement>> devicesTask    = FetchDevicesAsync(deviceUrl, accessToken);
+            Task<List<JsonElement>> detectionsTask = FetchDetectionsAsync(deviceUrl, accessToken);
+
+            await Task.WhenAll(devicesTask, detectionsTask);
+
+            List <JsonElement> devices    = devicesTask.Result;
+            List<JsonElement> detections = detectionsTask.Result;
         }
         /*catch (Exception ex) {
             Logger.Error(ex);
@@ -179,5 +185,64 @@ internal static class Eset {
         } while (!String.IsNullOrEmpty(pageToken));
 
         return devices;
+    }
+
+    private static async Task<JsonElement?> FetchDeviceAsync(string deviceMgmtUrl, string accessToken, string uuid) {
+        using HttpRequestMessage request = new(HttpMethod.Get, $"{deviceMgmtUrl}/v1/devices/{Uri.EscapeDataString(uuid)}");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+
+        using HttpResponseMessage response = await httpClient.SendAsync(request);
+
+        if (response.StatusCode == System.Net.HttpStatusCode.NotFound) {
+            return null;
+        }
+
+        if (!response.IsSuccessStatusCode) {
+            throw new Exception($"ESET device fetch failed ({(int)response.StatusCode})");
+        }
+
+        string json = await response.Content.ReadAsStringAsync();
+        using JsonDocument doc = JsonDocument.Parse(json);
+        return doc.RootElement.Clone();
+    }
+
+    private static async Task<List<JsonElement>> FetchDetectionsAsync(string deviceMgmtUrl, string accessToken) {
+        List<JsonElement> detections = new List<JsonElement>();
+        string pageToken = null;
+
+        do {
+            string url = $"{deviceMgmtUrl}/v1/detections?pageSize=1000";
+
+            if (!String.IsNullOrEmpty(pageToken)) {
+                url += $"&pageToken={Uri.EscapeDataString(pageToken)}";
+            }
+
+            using HttpRequestMessage request = new(HttpMethod.Get, url);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+
+            using HttpResponseMessage response = await httpClient.SendAsync(request);
+
+            if (!response.IsSuccessStatusCode) {
+                string error = await response.Content.ReadAsStringAsync();
+                throw new Exception($"ESET detections fetch failed ({(int)response.StatusCode}): {error}");
+            }
+
+            string json = await response.Content.ReadAsStringAsync();
+
+            using JsonDocument doc = JsonDocument.Parse(json);
+
+            if (doc.RootElement.TryGetProperty("detections", out JsonElement detectionList)) {
+                foreach (JsonElement detection in detectionList.EnumerateArray()) {
+                    detections.Add(detection.Clone());
+                }
+            }
+
+            pageToken = doc.RootElement.TryGetProperty("nextPageToken", out JsonElement nextToken)
+                ? nextToken.GetString()
+                : null;
+
+        } while (!String.IsNullOrEmpty(pageToken));
+
+        return detections;
     }
 }
