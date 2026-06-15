@@ -5,6 +5,9 @@ class PasswordStrength extends List {
 
 		this.args = args ?? {find:"", filter:"", sort:"", select:null};
 
+		this.listBox.resolveEntry = id => this.link ? this.link[id] : null;
+		this.listBox.resolveType  = (id, entry) => entry?.type || null;
+
 		this.SetTitle("Password strength");
 		this.SetIcon("mono/strength.svg");
 
@@ -226,30 +229,6 @@ class PasswordStrength extends List {
 		this.list.style.display = "block";
 
 		this.OnUiReady();
-	}
-
-	UpdateViewport(force = false) { //overrides
-		if (!this.link) return;
-
-		for (let i = 0; i < this.list.childNodes.length; i++) {
-			if (force) this.list.childNodes[i].textContent = "";
-
-			if (this.list.childNodes[i].offsetTop - this.list.scrollTop < -32 ||
-				this.list.childNodes[i].offsetTop - this.list.scrollTop > this.list.clientHeight) {
-				this.list.childNodes[i].textContent = "";
-			}
-			else {
-				if (this.list.childNodes[i].childNodes.length > 0) continue;
-				const id = this.list.childNodes[i].getAttribute("id");
-				this.InflateElement(this.list.childNodes[i], this.link[id], this.link[id].type);
-			}
-		}
-
-		if (this.link) {
-			this.counter.textContent = this.list.childNodes.length === this.link.length ?
-				this.link.length :
-				`${this.list.childNodes.length} / ${this.link.length}`;
-		}
 	}
 
 	InflateElement(element, entry, c_type) { //overrides
