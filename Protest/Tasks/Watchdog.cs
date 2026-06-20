@@ -442,7 +442,7 @@ internal static class Watchdog {
 
                 ssl.AuthenticateAsClient(host);
 
-                if (cert2 is null) return -1;
+                if (cert2 is null) continue;
 
                 long now = DateTime.UtcNow.Ticks;
 
@@ -463,7 +463,7 @@ internal static class Watchdog {
 
                 if (acknowledgeError && policyErrors != SslPolicyErrors.None) {
                     cert2.Dispose();
-                    return -1;
+                    continue;
                 }
 
                 return 0;
