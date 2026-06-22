@@ -95,10 +95,10 @@ internal static class Monitor {
             }
 
             if (ipAttribute?.value.Length > 0) {
-                target = ipAttribute?.value.Split(";")[0].Trim();
+                target = ipAttribute?.value.Split(';')[0].Trim();
             }
             else if (hostnameAttribute?.value.Length > 0) {
-                target = hostnameAttribute?.value.Split(";")[0].Trim();
+                target = hostnameAttribute?.value.Split(';')[0].Trim();
             }
             else {
                 await WebSocketHelper.WsWriteText(ws, "{\"loglevel\":\"error\",\"text\":\"No IP or hostname\"}"u8.ToArray());

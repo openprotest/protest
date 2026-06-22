@@ -13,7 +13,6 @@ internal static class Ldap {
         if (String.IsNullOrWhiteSpace(domain)) return null;
 
         domain = domain.Trim();
-        if (domain.Length == 0) return null;
 
         foreach (char c in domain) {
             if (!((c >= 'a' && c <= 'z') ||
@@ -75,6 +74,8 @@ internal static class Ldap {
     [SupportedOSPlatform("windows")]
     public static string[] GetAllUsers(string domain) {
         try {
+            if (String.IsNullOrEmpty(domain)) return null;
+
             string normalizedDomain = NormalizeDomain(domain);
             if (String.IsNullOrWhiteSpace(normalizedDomain)) return null;
 
@@ -197,6 +198,7 @@ internal static class Ldap {
         }
         catch (Exception ex) {
             Logger.Debug(ex);
+            return null;
         }
 
         if (name.Contains('.')) name = name.Split('.')[0];
@@ -224,7 +226,7 @@ internal static class Ldap {
         string normalizedDomain = null;
         try {
             string domain = IPGlobalProperties.GetIPGlobalProperties()?.DomainName;
-            if (String.IsNullOrEmpty(domain)) return null;
+            if (String.IsNullOrWhiteSpace(domain)) return null;
 
             normalizedDomain = NormalizeDomain(domain);
             if (String.IsNullOrEmpty(normalizedDomain)) return null;
@@ -249,7 +251,7 @@ internal static class Ldap {
 
         if (result is null)
             try {
-                if (username.IndexOf("@") > -1) username = username.Split('@')[0];
+                if (username.IndexOf('@') > -1) username = username.Split('@')[0];
                 using DirectorySearcher searcher = new DirectorySearcher(directoryEntry);
                 searcher.ClientTimeout   = TimeSpan.FromSeconds(10);
                 searcher.ServerTimeLimit = TimeSpan.FromSeconds(10);
@@ -277,8 +279,8 @@ internal static class Ldap {
                     if (allUsers[i].Properties["userPrincipalName"].Count == 0) continue;
                     string un = allUsers[i].Properties["userPrincipalName"][0].ToString();
 
-                    if (un.Contains('@')) un = un[..un.IndexOf("@")];
-                    if (un.ToLower() == username) return allUsers[i];
+                    if (un.Contains('@')) un = un[..un.IndexOf('@')];
+                    if (un.Equals(username, StringComparison.CurrentCultureIgnoreCase)) return allUsers[i];
                 }
             }
             catch (Exception ex) {

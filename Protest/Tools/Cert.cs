@@ -147,7 +147,7 @@ internal static class Cert {
 
             while (position < raw.Length) {
 
-                // Find boundary
+                //find boundary
                 int boundaryIndex = IndexOf(raw, boundaryBytes, position);
                 if (boundaryIndex < 0) {
                     break;
@@ -155,21 +155,21 @@ internal static class Cert {
 
                 position = boundaryIndex + boundaryBytes.Length;
 
-                // End marker?
+                //end marker?
                 if (position + 1 < raw.Length &&
                     raw[position] == '-' &&
                     raw[position + 1] == '-') {
                     break;
                 }
 
-                // Skip CRLF
+                //skip CRLF
                 if (position + 1 < raw.Length &&
                     raw[position] == '\r' &&
                     raw[position + 1] == '\n') {
                     position += 2;
                 }
 
-                // Find header end
+                //find header end
                 int headersEnd = IndexOf(raw, headerSeparator, position);
                 if (headersEnd < 0) {
                     break;
@@ -181,7 +181,7 @@ internal static class Cert {
 
                 position = headersEnd + headerSeparator.Length;
 
-                // Find next boundary
+                //find next boundary
                 byte[] nextBoundarySearch = Encoding.ASCII.GetBytes("\r\n" + boundary);
 
                 int nextBoundary = IndexOf(raw, nextBoundarySearch, position);

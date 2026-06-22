@@ -110,19 +110,19 @@ namespace ProtestRelay {
             try {
                 while (!fileReader.EndOfStream) {
                     string line = fileReader.ReadLine().Trim();
-                    if (line.StartsWith("#")) continue;
+                    if (line.StartsWith('#')) continue;
 
-                    int hashIndex = line.IndexOf("#");
+                    int hashIndex = line.IndexOf('#');
                     if (hashIndex > -1) {
-                        line = line.Substring(0, hashIndex).Trim();
+                        line = line[..hashIndex].Trim();
                     }
 
                     string name, value;
-                    int equalsIndex = line.IndexOf("=");
+                    int equalsIndex = line.IndexOf('=');
 
                     if (equalsIndex < 0) continue;
-                    name = line.Substring(0, equalsIndex).Trim();
-                    value = line.Substring(equalsIndex + 1, line.Length - equalsIndex - 1).Trim();
+                    name = line[..equalsIndex].Trim();
+                    value = line[(equalsIndex + 1)..].Trim();
 
                     switch (name) {
                     case "key":

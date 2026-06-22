@@ -186,13 +186,13 @@ internal static class IpDiscovery {
             string ipv4String = localIpV4?.ToString();
 
             string hostname = String.IsNullOrEmpty(ipv4String) ? String.Empty : NetBios.GetBiosName(ipv4String, 200);
-            string mac = String.Join(":", nic.GetPhysicalAddress().GetAddressBytes().Select(b => b.ToString("X2")));
+            string mac = String.Join(':', nic.GetPhysicalAddress().GetAddressBytes().Select(b => b.ToString("X2")));
 
             HostEntry host = new HostEntry() {
                 description  = String.Empty,
                 name         = hostname,
                 ip           = localIpV4?.ToString() ?? String.Empty,
-                ipv6         = localIpV6?.ToString().Split("%")[0] ?? String.Empty,
+                ipv6         = localIpV6?.ToString().Split('%')[0] ?? String.Empty,
                 mac          = mac,
                 manufacturer = MacLookup.LookupToString(mac),
                 services     = String.Empty,

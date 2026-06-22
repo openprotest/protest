@@ -27,7 +27,7 @@ internal static partial class MacLookup {
         if (table.Length == 0) return "not found";
         if (mac.Length < 6) return "not found";
 
-        mac = mac.Replace("-", "").Replace(":", "").Replace(" ", "").Replace(".", "");
+        mac = mac.Replace("-", String.Empty).Replace(":", String.Empty).Replace(" ", String.Empty).Replace(".", String.Empty);
         if (!byte.TryParse(mac[0..2], System.Globalization.NumberStyles.HexNumber, null, out byte a)) return "not found";
         if (!byte.TryParse(mac[2..4], System.Globalization.NumberStyles.HexNumber, null, out byte b)) return "not found";
         if (!byte.TryParse(mac[4..6], System.Globalization.NumberStyles.HexNumber, null, out byte c)) return "not found";

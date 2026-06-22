@@ -120,7 +120,7 @@ public class Generator : IIncrementalGenerator {
                 trimmedLine = trimmedLine.Substring(0, commentIndex).TrimEnd();
             }
 
-            trimmedLine = trimmedLine.Replace("\t", " ");
+            trimmedLine = trimmedLine.Replace('\t', ' ');
 
             while (trimmedLine.Contains("  ")) {
                 trimmedLine = trimmedLine.Replace("  ", " ");

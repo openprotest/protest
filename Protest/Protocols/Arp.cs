@@ -62,7 +62,7 @@ internal static partial class Arp {
 
             _ = SendARP(long_ip, 0, mac, ref len);
 
-            return BitConverter.ToString(mac, 0, len).Replace("-", ":");
+            return BitConverter.ToString(mac, 0, len).Replace('-', ':');
         }
         catch {
             return String.Empty;
@@ -90,7 +90,7 @@ internal static partial class Arp {
 
                 Match match = regex.Match(line);
                 if (match.Success && match.Groups.Count == 3) {
-                    string mac = match.Groups[2].Value.Replace("-", ":");
+                    string mac = match.Groups[2].Value.Replace('-', ':');
                     return mac;
                 }
             }
@@ -135,7 +135,7 @@ internal static partial class Arp {
                 return String.Empty;
             }
 
-            string mac = match.Groups[1].Value.Replace("-", ":");
+            string mac = match.Groups[1].Value.Replace('-', ':');
 
             string[] parts = mac.Split(':');
             if (parts.Length != 6)
@@ -145,7 +145,7 @@ internal static partial class Arp {
                 parts[i] = parts[i].PadLeft(2, '0');
             }
 
-            return String.Join(":", parts).ToLowerInvariant();
+            return String.Join(':', parts).ToLowerInvariant();
         }
         catch (Exception ex) {
             Logger.Error(ex);

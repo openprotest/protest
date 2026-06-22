@@ -83,7 +83,7 @@ internal static class Dns {
         if (dnsServer is not null) dnsServer = Uri.UnescapeDataString(dnsServer);
         dnsServer ??= GetLocalDnsAddress(true).ToString();
 
-        int.TryParse(Uri.UnescapeDataString(timeoutString), out int timeout);
+        _ = int.TryParse(Uri.UnescapeDataString(timeoutString), out int timeout);
         timeout = Math.Max(timeout, 2000);
 
         transport = transportString switch {
@@ -137,10 +137,10 @@ internal static class Dns {
         try {
             if (transport == TransportMethod.https) {
                 if (type == RecordType.PTR) {
-                    string[] split = domainNames[0].Split(".");
+                    string[] split = domainNames[0].Split('.');
                     bool isIpv4 = split.Length == 4 && split.All(o => int.TryParse(o, out int n) && n >= 0 && n <= 255);
                     if (isIpv4) {
-                        domainNames[0] = $"{String.Join(".", split.Reverse())}.in-addr.arpa";
+                        domainNames[0] = $"{String.Join('.', split.Reverse())}.in-addr.arpa";
                     }
                 }
 
