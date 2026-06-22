@@ -14,6 +14,7 @@ class Environment extends Tabs {
 		this.dhcpRange = [];
 		this.smtpProfiles = [];
 		this.snmpProfiles = [];
+		this.integrationStatus = {};
 
 		this.tabsPanel.style.padding = "24px";
 		this.tabsPanel.style.overflowY = "auto";
@@ -594,24 +595,25 @@ class Environment extends Tabs {
 				const cell = document.createElement("div");
 				cell.textContent = d.name;
 				cell.style.paddingLeft = "32px";
-				if (d.status) {Z
+				if (d.status) {
 					cell.style.backgroundImage = d.status ? "url(mono/connect.svg)" : "url(mono/pause.svg)";
 					cell.style.backgroundSize = "20px 20px";
 					cell.style.backgroundPosition = "4px 50%";
 					cell.style.backgroundRepeat = "no-repeat";
 				}
-					return cell;
+				return cell;
 			}},
 		]);
 
 		this.integrationListBox.SetItems([
-			{name: "EntraID", status: false},
-			{name: "ESET", status: false},
-			{name: "Unifi", status: false},
-			{name: "Sophos", status: false},
-			{name: "Checkpoint", status: false},
+			{name: "EntraID",    status: this.integrationStatus["entraid"] ?? false},
+			{name: "ESET",       status: this.integrationStatus["eset"] ?? false},
+			{name: "Unifi",      status: this.integrationStatus["unifi"] ?? false},
+			{name: "Sophos",     status: this.integrationStatus["sophos"] ?? false},
+			{name: "Checkpoint", status: this.integrationStatus["checkpoint"] ?? false},
 		]);
 
+		this.GetIntegrationStatus();
 		this.AfterResize();
 	}
 
@@ -679,6 +681,30 @@ class Environment extends Tabs {
 
 			this.snmpProfiles = json;
 			this.snmpProfilesListBox.SetItems(this.snmpProfiles);
+		}
+		catch (ex) {
+			this.ConfirmBox(ex, true, "mono/error.svg");
+		}
+	}
+
+	async GetIntegrationStatus() {
+		try {
+			const response = await fetch("config/integration/getstatus");
+
+			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
+
+			const json = await response.json();
+			if (json.error) throw(json.error);
+
+			this.integrationStatus = json;
+
+			this.integrationListBox.SetItems([
+				{name: "EntraID",    status: this.integrationStatus["entraid"] ?? false},
+				{name: "ESET",       status: this.integrationStatus["eset"] ?? false},
+				{name: "Unifi",      status: this.integrationStatus["unifi"] ?? false},
+				{name: "Sophos",     status: this.integrationStatus["sophos"] ?? false},
+				{name: "Checkpoint", status: this.integrationStatus["checkpoint"] ?? false},
+			]);
 		}
 		catch (ex) {
 			this.ConfirmBox(ex, true, "mono/error.svg");
@@ -1484,7 +1510,7 @@ class Environment extends Tabs {
 		enableBox.style.paddingBottom = "12px";
 		innerBox.appendChild(enableBox);
 
-		const enableToggle = this.CreateToggle(`Enable ${name}`, true, enableBox);
+		const enableToggle = this.CreateToggle(`Enable ${name}`, this.integrationStatus[name.toLowerCase()] ?? false, enableBox);
 		enableToggle.label.style.minWidth = "38px";
 		enableToggle.label.style.margin = "2px";
 
@@ -1534,6 +1560,8 @@ class Environment extends Tabs {
 				this.ConfirmBox(ex, true, "mono/error.svg");
 			}
 		};
+
+		setTimeout(enableToggle.label.focus(), WIN.ANIME_DURATION);
 	}
 
 	async SaveZones() {

@@ -36,7 +36,7 @@ class DeviceView extends View {
 		"object guid", "distinguished name", "dns hostname", "created on dc", "fqdn",
 
 		["mono/credential.svg", "credentials"],
-		"domain", "username", "password", "ssh username", "ssh password", "uvnc password", "anydesk id", "anydesk password"
+		"domain", "username", "password", "ssh username", "ssh password", "uvnc password", "anydesk id", "anydesk password", "snmp profile"
 	];
 
 	static PRINTER_TYPES = ["fax", "multiprinter", "ticket printer", "printer"];
@@ -3376,14 +3376,14 @@ class DeviceView extends View {
 			return;
 		}
 
-		const dialog = this.DialogBox("280px");
+		const dialog = this.DialogBox("300px");
 		if (dialog === null) return;
 
 		const grid = document.createElement("div");
 		grid.style.display = "grid";
 		grid.style.paddingTop = "20px";
 		grid.style.gridTemplateColumns = "auto minmax(100px, 200px) 150px auto";
-		grid.style.gridTemplateRows = "repeat(4, 34px)";
+		grid.style.gridTemplateRows = "repeat(6, 34px)";
 		grid.style.alignItems = "center";
 		dialog.innerBox.appendChild(grid);
 
@@ -3410,6 +3410,10 @@ class DeviceView extends View {
 
 		const portScanToggle = this.CreateToggle("Port Scan", true, grid);
 		portScanToggle.label.style.gridArea = "5 / 2";
+
+		const esetApiToggle = this.CreateToggle("ESET API", true, grid);
+		esetApiToggle.checkbox.checked = false;
+		esetApiToggle.label.style.gridArea = "6 / 2";
 
 		const portScanInput = document.createElement("select");
 		portScanInput.style.marginLeft = "0";
@@ -3493,6 +3497,7 @@ class DeviceView extends View {
 				if (snmpToggle.checkbox.checked)     url += `&snmp=${snmpInput.value}`;
 				if (ldapToggle.checkbox.checked)     url += `&ldap=true`;
 				if (portScanToggle.checkbox.checked) url += `&portscan=${portScanInput.value}`;
+				if (esetApiToggle.checkbox.checked)  url += `&eset=true`;
 
 				const response = await fetch(url);
 

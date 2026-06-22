@@ -8,9 +8,10 @@ using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
-using Yarp.ReverseProxy.Configuration;
-using Yarp.ReverseProxy.Transforms;
 using Microsoft.Extensions.Primitives;
+using Yarp.ReverseProxy.Configuration;
+using Yarp.ReverseProxy.Forwarder;
+using Yarp.ReverseProxy.Transforms;
 
 namespace Protest.Proxy;
 
@@ -30,9 +31,8 @@ internal sealed class HttpReverseProxy : ReverseProxyAbstract {
 
             ClusterConfig cluster = new ClusterConfig {
                 ClusterId    = "c1",
-                Destinations = new Dictionary<string, DestinationConfig> {
-                    { "d1", new DestinationConfig { Address = destination } }
-                }
+                HttpRequest  = new ForwarderRequestConfig { ActivityTimeout = Timeout.InfiniteTimeSpan },
+                Destinations = new Dictionary<string, DestinationConfig> {{ "d1", new DestinationConfig { Address = destination }}}
             };
 
             hostBuilder.ConfigureWebHostDefaults(webHost => {
@@ -117,6 +117,23 @@ internal sealed class HttpReverseProxy : ReverseProxyAbstract {
 
     private void ConfigureKestrel(KestrelServerOptions options, IPEndPoint endPoint, string certificate = null, string password = null) {
         try {
+            //Keep proxied connections alive indefinitely
+
+            //options.Limits.Http2
+            //options.Limits.Http3
+            options.Limits.KeepAliveTimeout = TimeSpan.MaxValue;
+            //options.Limits.MaxConcurrentConnections
+            //options.Limits.MaxConcurrentUpgradedConnections
+            //options.Limits.MaxRequestBodySize
+            //options.Limits.MaxRequestBufferSize
+            //options.Limits.MaxRequestHeaderCount
+            //options.Limits.MaxRequestHeadersTotalSize
+            //options.Limits.MaxRequestLineSize
+            //options.Limits.MaxResponseBufferSize
+            //options.Limits.RequestHeadersTimeout
+            options.Limits.MinRequestBodyDataRate = null;
+            options.Limits.MinResponseDataRate = null;
+
             if (String.IsNullOrEmpty(certificate)) {
                 options.Listen(endPoint);
             }

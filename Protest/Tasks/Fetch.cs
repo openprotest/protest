@@ -12,6 +12,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Protest.Http;
 using Protest.Tools;
+using Protest.Integration;
 using Lextm.SharpSnmpLib;
 
 namespace Protest.Tasks;
@@ -54,6 +55,7 @@ internal static class Fetch {
         parameters.TryGetValue("ldap", out string ldap);
         parameters.TryGetValue("snmp", out string snmpProfileGuid);
         parameters.TryGetValue("portscan", out string portScan);
+        parameters.TryGetValue("eset", out string esetApi);
 
         if (target is null) {
             return Data.CODE_INVALID_ARGUMENT.Array;
@@ -71,6 +73,7 @@ internal static class Fetch {
             ldap?.Equals("true") ?? false,
             snmpProfiles,
             portScan,
+            esetApi?.Equals("true") ?? false,
             asynchronous,
             CancellationToken.None
         );
@@ -81,7 +84,7 @@ internal static class Fetch {
 
         return JsonSerializer.SerializeToUtf8Bytes(data, fetchSerializerOptions);
     }
-    public static async Task<ConcurrentDictionary<string, string[]>> SingleDeviceAsync(string target, bool useDns, bool useWmi, bool useLdap, SnmpProfiles.Profile[] snmpProfiles, string argPortScan, bool asynchronous, CancellationToken token) {
+    public static async Task<ConcurrentDictionary<string, string[]>> SingleDeviceAsync(string target, bool useDns, bool useWmi, bool useLdap, SnmpProfiles.Profile[] snmpProfiles, string argPortScan, bool esetApi, bool asynchronous, CancellationToken token) {
         PingReply reply = null;
         try {
             using Ping ping = new Ping();
@@ -95,13 +98,13 @@ internal static class Fetch {
         }
 
         if (reply?.Status == IPStatus.Success) {
-            ConcurrentDictionary<string, string[]> data = SingleDevice(target, useDns, useWmi, useLdap, snmpProfiles, argPortScan, asynchronous, token);
+            ConcurrentDictionary<string, string[]> data = SingleDevice(target, useDns, useWmi, useLdap, snmpProfiles, argPortScan, esetApi, asynchronous, token);
             return data;
         }
 
         return null;
     }
-    public static ConcurrentDictionary<string, string[]> SingleDevice(string target, bool useDns, bool useWmi, bool useLdap, SnmpProfiles.Profile[] snmpProfiles, string argPortScan, bool asynchronous, CancellationToken token) {
+    public static ConcurrentDictionary<string, string[]> SingleDevice(string target, bool useDns, bool useWmi, bool useLdap, SnmpProfiles.Profile[] snmpProfiles, string argPortScan, bool useEsetApi, bool asynchronous, CancellationToken token) {
         if (target.Contains(';')) {
             target = target.Split(';')[0].Trim();
         }
@@ -142,7 +145,7 @@ internal static class Fetch {
 
         if (useWmi) {
             tWmi = new Task(() => {
-                if (!OperatingSystem.IsWindows()) { return; }
+                if (!OperatingSystem.IsWindows()) return;
                 wmi = Protocols.Wmi.WmiFetch(target, token);
 
                 if (wmi.TryGetValue("owner", out string owner)) {
@@ -168,11 +171,11 @@ internal static class Fetch {
 
         if (useLdap) {
             tAd = new Task(() => {
-                if (!OperatingSystem.IsWindows()) { return; }
-                if (hostname is null) { return; }
+                if (!OperatingSystem.IsWindows()) return;
+                if (hostname is null) return;
 
                 SearchResult result = Protocols.Ldap.GetWorkstation(hostname);
-                if (result is null) { return; }
+                if (result is null) return;
 
                 if (result.Properties["description"].Count > 0) {
                     string value = result.Properties["description"][0].ToString();
@@ -261,21 +264,16 @@ internal static class Fetch {
         else {
             tWmi?.Start();
             tWmi?.Wait();
-            if (token.IsCancellationRequested) {
-                return null;
-            }
+            if (token.IsCancellationRequested) return null;
 
             tAd?.Start();
             tAd?.Wait();
-            if (token.IsCancellationRequested) {
-                return null;
-            }
+            if (token.IsCancellationRequested) return null;
+
 
             tPortScan?.Start();
             tPortScan?.Wait();
-            if (token.IsCancellationRequested) {
-                return null;
-            }
+            if (token.IsCancellationRequested) return null;
         }
 
         ConcurrentDictionary<string, string[]> data = new ConcurrentDictionary<string, string[]>();
@@ -344,9 +342,7 @@ internal static class Fetch {
             }
         }
 
-        if (token.IsCancellationRequested) {
-            return null;
-        }
+        if (token.IsCancellationRequested) return null;
 
         //if no type found, try guessing from ports
         if (!data.ContainsKey("type") && !String.IsNullOrEmpty(portsString)) {
@@ -373,9 +369,7 @@ internal static class Fetch {
             data.TryAdd("type", new string[] { "Workstation", "WMI", String.Empty });
         }
 
-        if (token.IsCancellationRequested) {
-            return null;
-        }
+        if (token.IsCancellationRequested) return null;
 
         if (snmpProfiles is not null) {
             IList<Variable> snmpResult;
@@ -471,6 +465,59 @@ internal static class Fetch {
             return null;
         }
 
+        if (useEsetApi) {
+            Eset.FetchAsync().GetAwaiter().GetResult();
+
+            string key =
+                data.TryGetValue("fqdn", out string[] dataFqdn) && dataFqdn?.Length > 0 ? dataFqdn[0].ToLower() :
+                data.TryGetValue("hostname", out string[] dataHostname) && dataHostname?.Length > 0 ?dataHostname[0].ToLower() :
+                null;
+
+            if (key is not null && Eset.devicesCache.TryGetValue(key, out Eset.DeviceEntry esetEntry)) {
+                data.TryAdd("eset uuid", new[] { esetEntry.uuid, "ESET API", string.Empty });
+
+                if (!data.ContainsKey("operating system") && esetEntry.os is not null) {
+                    data.TryAdd("operating system", new[] { esetEntry.os, "ESET API", string.Empty });
+                }
+
+                if (!data.ContainsKey("os version") && esetEntry.osVer is not null) {
+                    data.TryAdd("os version", new[] { esetEntry.osVer, "ESET API", string.Empty });
+                }
+
+                if (esetEntry.ip is not null) {
+                    if (esetEntry.ip.Contains('.') && !data.ContainsKey("ip")) {
+                        data.TryAdd("ip", new[] { esetEntry.ip, "ESET API", string.Empty });
+                    }
+                    else if (esetEntry.ip.Contains(':') && !data.ContainsKey("ipv6")) {
+                        data.TryAdd("ipv6", new[] { esetEntry.ip, "ESET API", string.Empty });
+                    }
+                }
+
+                if (!data.ContainsKey("mac address") && esetEntry.mac is not null) {
+                    data.TryAdd("mac address", new[] { esetEntry.mac, "ESET API", string.Empty });
+                }
+
+                if (!data.ContainsKey("manufacturer") && esetEntry.manufacturer is not null) {
+                    data.TryAdd("manufacturer", new[] { esetEntry.manufacturer, "ESET API", string.Empty });
+                }
+
+                if (!data.ContainsKey("serial number") && esetEntry.serialNumber is not null) {
+                    data.TryAdd("serial number", new[] { esetEntry.serialNumber, "ESET API", string.Empty });
+                }
+
+                if (!data.ContainsKey("processor") && esetEntry.processors is not null) {
+                    StringBuilder cpuString = new StringBuilder();
+                    for (int i = 0; i < esetEntry.processors.Length; i++) {
+                        if (String.IsNullOrEmpty(esetEntry.processors[i])) continue;
+                        if (cpuString.Length > 0) cpuString.Append("; ");
+                        string name = Data.ProcessorString(esetEntry.processors[i]);
+                        cpuString.Append(name);
+                    }
+                    data.TryAdd("processor", new[] { cpuString.ToString(), "ESET API", string.Empty });
+                }
+            }
+        }
+
         return data;
     }
 
@@ -494,13 +541,11 @@ internal static class Fetch {
         return JsonSerializer.SerializeToUtf8Bytes(data, fetchSerializerOptions);
     }
     public static ConcurrentDictionary<string, string[]> SingleUser(string target) {
-        if (!OperatingSystem.IsWindows())
-            return null;
+        if (!OperatingSystem.IsWindows()) return null;
 
         Dictionary<string, string> fetch = Protocols.Ldap.AdFetch(target);
-        if (fetch is null) {
-            return null;
-        }
+        if (fetch is null) return null;
+        
 
         ConcurrentDictionary<string, string[]> data = new ConcurrentDictionary<string, string[]>();
 
@@ -512,9 +557,7 @@ internal static class Fetch {
     }
 
     public static byte[] DevicesTask(HttpListenerContext ctx, Dictionary<string, string> parameters, string origin) {
-        if (parameters is null) {
-            return Data.CODE_INVALID_ARGUMENT.Array;
-        }
+        if (parameters is null) return Data.CODE_INVALID_ARGUMENT.Array;
 
         parameters.TryGetValue("range", out string range);
         parameters.TryGetValue("domain", out string domain);
@@ -527,6 +570,7 @@ internal static class Fetch {
         string wmi = null;
         string ldap = null;
         string portScan = null;
+        string esetApi = null;
         string retriesStr = null;
         string intervalStr = null;
 
@@ -548,6 +592,9 @@ internal static class Fetch {
             }
             else if (payloadLines[i].StartsWith("portscan=")) {
                 portScan = payloadLines[i][9..].Trim();
+            }
+            else if (payloadLines[i].StartsWith("eset=")) {
+                esetApi = payloadLines[i][5..].Trim();
             }
             else if (payloadLines[i].StartsWith("retries=")) {
                 retriesStr = payloadLines[i][8..].Trim();
@@ -575,6 +622,7 @@ internal static class Fetch {
         snmp2       ??= "false";
         snmp3       ??= "false";
         portScan    ??= "false";
+        esetApi     ??= "false";
         retriesStr  ??= "0";
         intervalStr ??= "-1";
 
@@ -670,24 +718,30 @@ internal static class Fetch {
             ldap?.Equals("true") ?? false,
             filteredSnmpProfiles.ToArray(),
             portScan,
+            esetApi?.Equals("true") ?? false,
             retries,
             interval,
             origin
         );
     }
 
-    public static byte[] DevicesTask(string[] hosts, bool dns, bool wmi, bool ldap, SnmpProfiles.Profile[] snmpProfiles, string portScan, int retries, float interval, string origin) {
+    public static byte[] DevicesTask(string[] hosts, bool dns, bool wmi, bool ldap, SnmpProfiles.Profile[] snmpProfiles, string portScan, bool esetApi, int retries, float interval, string origin) {
         if (task is not null) return Data.CODE_OTHER_TASK_IN_PROGRESS.Array;
         if (result is not null) return Data.CODE_OTHER_TASK_IN_PROGRESS.Array;
+
+        const int WINDOW = 32;
 
         int totalFetched = 0;
         int totalRetries = 0;
 
         Thread thread = new Thread(async () => {
-            const int WINDOW = 32;
-            ConcurrentDictionary<string, ConcurrentDictionary<string, string[]>> dataset = new ConcurrentDictionary<string, ConcurrentDictionary<string, string[]>>();
-
             task?.status = TaskWrapper.TaskStatus.Running;
+
+            if (esetApi) {
+                await Eset.FetchAsync();
+            }
+
+            ConcurrentDictionary<string, ConcurrentDictionary<string, string[]>> dataset = new ConcurrentDictionary<string, ConcurrentDictionary<string, string[]>>();
 
             List<string> queue = new List<string>(hosts);
             List<string> redo = new List<string>();
@@ -699,14 +753,12 @@ internal static class Fetch {
 
                     List<Task<ConcurrentDictionary<string, string[]>>> tasks = new List<Task<ConcurrentDictionary<string, string[]>>>(size);
                     for (int i = 0; i < size; i++) {
-                        tasks.Add(SingleDeviceAsync(queue[i], dns, wmi, ldap, snmpProfiles, portScan, false, task.cancellationToken));
+                        tasks.Add(SingleDeviceAsync(queue[i], dns, wmi, ldap, snmpProfiles, portScan , esetApi, false, task.cancellationToken));
                     }
 
                     ConcurrentDictionary<string, string[]>[] result = await Task.WhenAll(tasks);
 
-                    if (task.cancellationToken.IsCancellationRequested) {
-                        break;
-                    }
+                    if (task.cancellationToken.IsCancellationRequested) break;
 
                     for (int i = 0; i < size; i++) {
                         if (result[i] is null) { //unreachable
@@ -714,9 +766,7 @@ internal static class Fetch {
                         }
                         else if (!result[i].IsEmpty) {
                             task.CompletedSteps = ++totalFetched;
-                            if (dataset.ContainsKey(queue[i])) {
-                                continue;
-                            }
+                            if (dataset.ContainsKey(queue[i])) continue;
                             dataset.TryAdd(queue[i], result[i]);
                         }
                     }
@@ -724,9 +774,7 @@ internal static class Fetch {
                     queue.RemoveRange(0, size);
                 }
 
-                if (task.cancellationToken.IsCancellationRequested) {
-                    break;
-                }
+                if (task.cancellationToken.IsCancellationRequested) break;
 
                 (redo, queue) = (queue, redo);
 
@@ -736,9 +784,7 @@ internal static class Fetch {
                     KeepAlive.Broadcast($"{{\"action\":\"update-fetch\",\"type\":\"devices\",\"task\":{Encoding.UTF8.GetString(Status())}}}", "/fetch/status");
 
                     await task.SleepAsync((int)(interval * 3_600_000), 60_000);
-                    if (task.cancellationToken.IsCancellationRequested) {
-                        break;
-                    }
+                    if (task.cancellationToken.IsCancellationRequested) break;
 
                     task.status = TaskWrapper.TaskStatus.Running;
 

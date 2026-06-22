@@ -1,4 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using Lextm.SharpSnmpLib;
+using Protest.Http;
+using Protest.Integration;
+using Protest.Protocols;
+using Protest.Protocols.Snmp;
+using Protest.Tasks;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.DirectoryServices;
 using System.Management;
@@ -11,13 +17,9 @@ using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using Protest.Http;
-using Protest.Protocols;
-using Protest.Protocols.Snmp;
-using Protest.Tasks;
-using Lextm.SharpSnmpLib;
-
 using static Protest.Protocols.Snmp.Polling;
+using static Protest.Tools.WindowsUpdate;
+using static Vanara.PInvoke.Kernel32;
 
 namespace Protest.Tools;
 
@@ -227,6 +229,43 @@ internal static class LiveStats {
                 }
             }
 
+            if (entry.attributes.TryGetValue("eset uuid", out Database.Attribute esetAttribute)
+                && !String.IsNullOrWhiteSpace(esetAttribute.value)) {
+
+                await Eset.FetchAsync();
+
+                if (Eset.devicesCache.TryGetValue(_hostname?.value?.ToLower() ?? String.Empty, out Eset.DeviceEntry deviceInfo)
+                    && deviceInfo.functionalityProblemCount > 0) {
+                    byte[] bytes = JsonSerializer.SerializeToUtf8Bytes(new Dictionary<string, object> {
+                            { "error", $"ESET functionality problem(s): {deviceInfo.functionalityProblemCount}" },
+                            { "source", "ESET API" },
+                            { "timestamp",  DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString() }
+                        });
+                    await WebSocketHelper.WsWriteText(ws, bytes);
+                }
+                else if ((entry.attributes.TryGetValue("fqdn", out Database.Attribute fqdn)
+                    && Eset.devicesCache.TryGetValue(fqdn.value.ToLower(), out Eset.DeviceEntry deviceInfo2)
+                    && deviceInfo2.functionalityProblemCount > 0)) {
+
+                    byte[] bytes = JsonSerializer.SerializeToUtf8Bytes(new Dictionary<string, object> {
+                            { "error", $"ESET functionality problems: {deviceInfo2.functionalityProblemCount}" },
+                            { "source", "ESET API" },
+                            { "timestamp",  DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString() }
+                        });
+                    await WebSocketHelper.WsWriteText(ws, bytes);
+                }
+
+                if (Eset.detectionsPerDeviceCount.TryGetValue(esetAttribute.value, out long detectionsCount)
+                    && detectionsCount > 0) {
+                    byte[] bytes = JsonSerializer.SerializeToUtf8Bytes(new Dictionary<string, object> {
+                            { "warning", $"End-point detections: {detectionsCount}" },
+                            { "source", "ESET API" },
+                            { "timestamp",  DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString() }
+                        });
+                    await WebSocketHelper.WsWriteText(ws, bytes);
+                }
+            }
+
             if (firstAlive is not null
                 && firstReply.Status == IPStatus.Success
                 && entry.attributes.TryGetValue("type", out Database.Attribute _type)
@@ -319,7 +358,7 @@ internal static class LiveStats {
                     if (String.IsNullOrEmpty(hostnames[i])) continue;
 
                     try {
-                        IPAddress[] reversed = System.Net.Dns.GetHostAddresses(hostnames[i]);
+                        IPAddress[] reversed = await System.Net.Dns.GetHostAddressesAsync(hostnames[i]);
                         for (int j = 0; j < reversed.Length; j++) {
                             if (reversed[j].AddressFamily != AddressFamily.InterNetwork) continue;
                             if (!ips.Contains(reversed[j].ToString())) {

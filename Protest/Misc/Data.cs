@@ -13,6 +13,7 @@ internal static class Data {
     public const string DATE_FORMAT              = "dd-MM-yyyy";
     public const string DATE_FORMAT_FILE         = "yyyyMMdd";
     public const string DATE_FORMAT_LONG         = "MMMM dd, yyyy";
+    public const string DATE_FORMAT_SORTABLE     = "yyyy-MM-dd";
     public const string DATETIME_FORMAT          = "ddd, dd MMM yyyy HH:mm:ss";
     public const string DATETIME_FORMAT_TIMEZONE = "ddd, dd MMM yyyy HH:mm:ss zzz";
     public const string DATETIME_FORMAT_LONG     = "dddd dd MMM yyyy HH:mm:ss";
@@ -447,6 +448,26 @@ internal static class Data {
                 }
             }
         }
+    }
+
+    public static string ProcessorString(string value) {
+        string v = value;
+
+        v = v.Replace("(R)", String.Empty);
+        v = v.Replace("(C)", String.Empty);
+        v = v.Replace("(TM)", String.Empty);
+
+        v = v.Replace("CPU", String.Empty);
+
+        if (v.Contains('@')) {
+            v = v.Split('@')[0];
+        }
+
+        while (v.Contains("  ")) {
+            v = v.Replace("  ", " ");
+        }
+
+        return v.Trim();
     }
 
     public static string CompressIPv6(string ipv6) {

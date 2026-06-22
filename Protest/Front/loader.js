@@ -15,6 +15,8 @@ const LOADER = {
 		"fqdn",
 		"guid",
 		"url",
+		"eset",
+		"eset uuid",
 
 		"fax",
 		"nas",

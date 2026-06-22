@@ -116,7 +116,7 @@ class Fetch extends Tabs {
 		this.domainInput = document.createElement("input");
 		this.domainInput.type = "text";
 		this.domainInput.disabled = true;
-		this.domainInput.style.width = "350px";
+		this.domainInput.style.width = "360px";
 		this.domainInput.style.gridArea = "3 / 3";
 		this.domainInput.style.marginLeft = "0px";
 		this.domainInput.style.marginRight = "0px";
@@ -167,6 +167,10 @@ class Fetch extends Tabs {
 		this.portScanCheckbox.type = "checkbox";
 		this.portScanCheckbox.checked = true;
 
+		this.esetApiCheckbox = document.createElement("input");
+		this.esetApiCheckbox.type = "checkbox";
+		this.esetApiCheckbox.checked = false;
+
 		this.portScanInput = document.createElement("select");
 		this.portScanInput.style.width = "180px";
 		this.portScanInput.style.gridArea = "10 / 5";
@@ -209,7 +213,7 @@ class Fetch extends Tabs {
 
 
 		this.retriesLabel = document.createElement("div");
-		this.retriesLabel.style.gridArea = "12 / 3";
+		this.retriesLabel.style.gridArea = "13 / 3";
 		this.retriesLabel.textContent = "Retries:";
 
 		this.retriesRange = document.createElement("input");
@@ -217,17 +221,17 @@ class Fetch extends Tabs {
 		this.retriesRange.min = 0;
 		this.retriesRange.max = 4;
 		this.retriesRange.value = 0;
-		this.retriesRange.style.gridArea = "12 / 5";
+		this.retriesRange.style.gridArea = "13 / 5";
 		this.retriesRange.style.width = "180px";
 
 		this.retriesCommentLabel = document.createElement("div");
-		this.retriesCommentLabel.style.gridArea = "12 / 6 / auto / 8";
+		this.retriesCommentLabel.style.gridArea = "13 / 6 / auto / 8";
 		this.retriesCommentLabel.style.fontSize = "small";
 		this.retriesCommentLabel.style.lineHeight = "14px";
 		this.retriesCommentLabel.style.minWidth = "150px";
 
 		this.intervalLabel = document.createElement("div");
-		this.intervalLabel.style.gridArea = "13 / 3";
+		this.intervalLabel.style.gridArea = "14 / 3";
 		this.intervalLabel.textContent = "Retry interval:";
 
 		this.intervalRange = document.createElement("input");
@@ -235,11 +239,11 @@ class Fetch extends Tabs {
 		this.intervalRange.min = 0;
 		this.intervalRange.max = 8;
 		this.intervalRange.value = 2;
-		this.intervalRange.style.gridArea = "13 / 5";
+		this.intervalRange.style.gridArea = "14 / 5";
 		this.intervalRange.style.width = "180px";
 
 		this.intervalCommentLabel = document.createElement("div");
-		this.intervalCommentLabel.style.gridArea = "13 / 6 / auto / 8";
+		this.intervalCommentLabel.style.gridArea = "14 / 6 / auto / 8";
 		this.intervalCommentLabel.style.fontSize = "small";
 		this.intervalCommentLabel.style.lineHeight = "14px";
 		this.intervalCommentLabel.style.minWidth = "150px";
@@ -365,6 +369,7 @@ class Fetch extends Tabs {
 				if (this.wmiCheckbox.checked)      body += "wmi=true\n";
 				if (this.ldapCheckbox.checked)     body += "ldap=true\n";
 				if (this.portScanCheckbox.checked) body += `portscan=${this.portScanInput.value}\n`;
+				if (this.esetApiCheckbox.checked)  body += `eset=${this.esetApiCheckbox.checked}\n`;
 
 				if (this.snmp2Checkbox.checked && this.snmp2Profiles) {
 					let profiles = [];
@@ -576,7 +581,7 @@ class Fetch extends Tabs {
 	ShowDevices() {
 		this.args = "devices";
 		this.tabsPanel.textContent = "";
-		this.tabsPanel.style.gridTemplateRows = "repeat(3, 40px) repeat(12, 36px)";
+		this.tabsPanel.style.gridTemplateRows = "repeat(3, 40px) repeat(13, 36px)";
 
 		this.tabsPanel.appendChild(this.updateRadio);
 		const updateOption = this.AddRadioLabel(this.tabsPanel, this.updateRadio, "Update existing records");
@@ -635,6 +640,10 @@ class Fetch extends Tabs {
 		const portScan = this.AddCheckBoxLabel(this.tabsPanel, this.portScanCheckbox, "Port scan");
 		portScan.style.gridArea = "10 / 3";
 
+		this.tabsPanel.appendChild(this.esetApiCheckbox);
+		const esetApi = this.AddCheckBoxLabel(this.tabsPanel, this.esetApiCheckbox, "ESET API");
+		esetApi.style.gridArea = "11 / 3";
+
 		this.tabsPanel.appendChild(this.portScanInput);
 		this.tabsPanel.appendChild(this.portScanCommentLabel);
 
@@ -643,7 +652,7 @@ class Fetch extends Tabs {
 		this.tabsPanel.append(this.intervalLabel, this.intervalRange, this.intervalCommentLabel);
 
 		this.tabsPanel.appendChild(this.buttonsBox);
-		this.buttonsBox.style.gridArea = "15 / 2 / auto / 7";
+		this.buttonsBox.style.gridArea = "16 / 2 / auto / 7";
 	}
 
 	ShowUsers() {
@@ -887,6 +896,7 @@ class Fetch extends Tabs {
 	async ShowFetching() {
 		this.args = "fetching";
 		this.tabsPanel.textContent = "";
+		this.tabsPanel.style.gridTemplateRows = "repeat(3, 40px) repeat(7, 36px)";
 
 		const nameLabel = document.createElement("div");
 		nameLabel.style.gridArea = "2 / 7 / auto / 2";
@@ -902,7 +912,6 @@ class Fetch extends Tabs {
 		this.tabsPanel.appendChild(statusLabel);
 		this.statusValueLabel.style.gridArea = "4 / 5";
 		this.tabsPanel.appendChild(this.statusValueLabel);
-
 
 		const dateLabel = document.createElement("div");
 		dateLabel.style.gridArea = "5 / 3";

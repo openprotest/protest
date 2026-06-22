@@ -2,13 +2,36 @@
 using System.IO;
 using System.Net;
 using System.Text;
+using System.Text.Json;
 
 namespace Protest.Integration;
 
 internal class Integration {
 
     public static byte[] GetStatus(Dictionary<string, string> parameters) {
-        return Encoding.UTF8.GetBytes("[]");
+        try {
+            if (!Directory.Exists(Data.DIR_INTEGRATION)) {
+                return Data.CODE_FAILED.ToArray();
+            }
+
+            string[] match = new string[] { "entraid.json", "eset.json", "unifi.json", "sophos.json", "checkpoint.json" };
+
+            DirectoryInfo dirInfo = new DirectoryInfo(Data.DIR_INTEGRATION);
+            FileInfo[] files = dirInfo.GetFiles();
+
+            Dictionary<string, bool> list = new Dictionary<string, bool>();
+
+            for (int i = 0; i < files.Length; i++) {
+                string filename = files[i].Name;
+                if (!match.Contains(filename)) continue;
+                list.Add(filename.Replace(".json", ""), true);
+            }
+
+            return JsonSerializer.SerializeToUtf8Bytes(list);
+        }
+        catch {
+            return Data.CODE_FAILED.ToArray();
+        }
     }
 
     public static byte[] Save(HttpListenerContext ctx, Dictionary<string, string> parameters, string origin) {

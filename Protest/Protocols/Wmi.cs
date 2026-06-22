@@ -270,7 +270,7 @@ internal static class Wmi {
             try {
                 using ManagementObjectSearcher searcher = new ManagementObjectSearcher(scope, new SelectQuery("Win32_Processor"));
                 using ManagementObjectCollection moc = searcher.Get();
-                ContentBuilderAddArray(moc, "Name", "processor", data, new FormatMethodPtr(ProcessorString));
+                ContentBuilderAddArray(moc, "Name", "processor", data, new FormatMethodPtr(Data.ProcessorString));
                 ContentBuilderAddValue(moc, "NumberOfCores", "cpu cores", data);
                 ContentBuilderAddValue(moc, "CurrentClockSpeed", "cpu frequency", data, new FormatMethodPtr(ToMHz));
                 ContentBuilderAddValue(moc, "AddressWidth", "cpu architecture", data, new FormatMethodPtr(ArchitectureString));
@@ -846,26 +846,6 @@ internal static class Wmi {
             "64" => "64-bit",
             _ => value
         };
-    }
-
-    private static string ProcessorString(string value) {
-        string v = value;
-
-        v = v.Replace("(R)", String.Empty);
-        v = v.Replace("(C)", String.Empty);
-        v = v.Replace("(TM)", String.Empty);
-
-        v = v.Replace("CPU", String.Empty);
-
-        if (v.Contains('@')) {
-            v = v.Split('@')[0];
-        }
-
-        while (v.Contains("  ")) {
-            v = v.Replace("  ", " ");
-        }
-
-        return v.Trim();
     }
 
     private static string IPv4Filter(string value) {
