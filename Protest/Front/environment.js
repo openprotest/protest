@@ -1517,10 +1517,10 @@ class Environment extends Tabs {
 		switch (name) {
 		case "ESET":
 			const urlInput      = CreateAttribute("url", "Identity endpoint");
-			const usernameInput = CreateAttribute("username", "Username");
-			const passwordInput = CreateAttribute("password", "Password");
-
 			urlInput.setAttribute("list", "ESET_URL_DATALIST");
+
+			CreateAttribute("username", "Username");
+			CreateAttribute("password", "Password");
 
 			const urlDatalist = document.createElement("datalist");
 			urlDatalist.id = "ESET_URL_DATALIST";

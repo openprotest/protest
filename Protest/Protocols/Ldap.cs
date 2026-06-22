@@ -123,7 +123,7 @@ internal static class Ldap {
 
         try {
             using DirectoryEntry entry = new DirectoryEntry($"LDAP://{normalizedDomain}", username, password);
-            object o = entry.NativeObject;
+            _ = entry.NativeObject;
 
             using DirectorySearcher searcher = new DirectorySearcher(entry);
             searcher.Filter = $"(SAMAccountName={EscapeLdapValue(username)})";
