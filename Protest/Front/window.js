@@ -457,7 +457,7 @@ class Window {
 				}
 
 				if (WIN.array.length > 1) {
-					const closeOthersItem = WIN.CreateContextMenuItem("Close others", "controls/close.svg");
+					const closeOthersItem = WIN.CreateContextMenuItem("Close all other", "controls/close.svg");
 					closeOthersItem.onclick = ()=> {
 						let copy = WIN.array.filter(()=> true);
 						for (let i = 0; i < copy.length; i++) {

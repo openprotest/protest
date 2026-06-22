@@ -26,7 +26,6 @@ internal static class Issues {
     private const int DISK_SPACE_THRESHOLD      = 85;
     private const int DISK_IO_THRESHOLD         = 60;
 
-
     public enum SeverityLevel : byte {
         info     = 1,
         warning  = 2,
@@ -807,7 +806,7 @@ internal static class Issues {
                     if (severityThreshold <= SeverityLevel.error && lastPasswordChange < oneYearAgo) {
                         list.Add(new Issue {
                             severity   = SeverityLevel.error,
-                            message    = $"Password has not been changed since {lastPasswordChange.ToString(Data.DATE_FORMAT_LONG)}",
+                            message    = $"Password has not been changed since {lastPasswordChange.ToString(Data.DATE_FORMAT_SORTABLE)}",
                             name       = titleAttribute?.value ?? String.Empty,
                             identifier = username.value,
                             category   = "Password",
@@ -819,7 +818,7 @@ internal static class Issues {
                     else if (severityThreshold <= SeverityLevel.warning && lastPasswordChange < sixMonthsAgo) {
                         list.Add(new Issue {
                             severity   = SeverityLevel.warning,
-                            message    = $"Password has not been changed since {lastPasswordChange.ToString(Data.DATE_FORMAT_LONG)}",
+                            message    = $"Password has not been changed since {lastPasswordChange.ToString(Data.DATE_FORMAT_SORTABLE)}",
                             name       = titleAttribute?.value ?? String.Empty,
                             identifier = username.value,
                             category   = "Password",
