@@ -62,11 +62,11 @@ internal static class Eset {
                 ReadCredentials(out string url, out string username, out string password);
                 iamUrl = GetIamUrl(url);
                 deviceUrl = GetDeviceManagementUrl(url);
-                await AuthenticateAsync(iamUrl, username, password);
+                await AuthenticateAsync(username, password);
             }
 
-            Task<List<JsonElement>> devicesTask    = FetchDevicesAsync(deviceUrl, Eset.accessToken);
-            Task<List<JsonElement>> detectionsTask = FetchDetectionsAsync(deviceUrl, Eset.accessToken);
+            Task<List<JsonElement>> devicesTask    = FetchDevicesAsync(deviceUrl);
+            Task<List<JsonElement>> detectionsTask = FetchDetectionsAsync(deviceUrl);
 
             await Task.WhenAll(devicesTask, detectionsTask);
 
@@ -241,7 +241,7 @@ internal static class Eset {
     private static bool IsAuthenticated() =>
         !String.IsNullOrWhiteSpace(accessToken) && DateTime.UtcNow < tokenExpiryUtc;
 
-    private static async Task AuthenticateAsync(string iamUrl, string username, string password) {
+    private static async Task AuthenticateAsync(string username, string password) {
         using FormUrlEncodedContent form = new FormUrlEncodedContent([
             new("username", username),
             new("password", password),
@@ -271,7 +271,7 @@ internal static class Eset {
 
     }
 
-    private static async Task<List<JsonElement>> FetchDevicesAsync(string deviceMgmtUrl, string accessToken) {
+    private static async Task<List<JsonElement>> FetchDevicesAsync(string deviceMgmtUrl) {
         List<JsonElement> devices = new List<JsonElement>();
         string pageToken = null;
 
@@ -311,7 +311,7 @@ internal static class Eset {
         return devices;
     }
 
-    private static async Task<List<JsonElement>> FetchDetectionsAsync(string deviceMgmtUrl, string accessToken) {
+    private static async Task<List<JsonElement>> FetchDetectionsAsync(string deviceMgmtUrl) {
         List<JsonElement> detections = new List<JsonElement>();
         string pageToken = null;
 

@@ -682,12 +682,9 @@ internal static class Issues {
 
             DateOnly day = DateOnly.FromDateTime(DateTimeOffset.FromUnixTimeMilliseconds(timestamp).UtcDateTime);
 
-            if (dailyStats.TryGetValue(day, out (long sum, int count) stats)) {
-                dailyStats[day] = (stats.sum + value, stats.count + 1);
-            }
-            else {
-                dailyStats[day] = (value, 1);
-            }
+            dailyStats[day] = dailyStats.TryGetValue(day, out (long sum, int count) stats)
+                ? (stats.sum + value, stats.count + 1)
+                : (value, 1);
         }
 
         foreach ((DateOnly day, (long Sum, int Count) stats) in dailyStats) {

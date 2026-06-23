@@ -138,8 +138,9 @@ internal static partial class Arp {
             string mac = match.Groups[1].Value.Replace('-', ':');
 
             string[] parts = mac.Split(':');
-            if (parts.Length != 6)
-            return String.Empty;
+            if (parts.Length != 6) {
+                return String.Empty;
+            }
 
             for (int i = 0; i < parts.Length; i++) {
                 parts[i] = parts[i].PadLeft(2, '0');
