@@ -98,11 +98,12 @@ const UI = {
 			? btoa(`${key}${String.fromCharCode(127)}${command}${String.fromCharCode(127)}${value}${String.fromCharCode(127)}${password}`)
 			: btoa(`${key}${String.fromCharCode(127)}${command}${String.fromCharCode(127)}${value}`);
 
-		const iframe = document.createElement("iframe");
-		iframe.src = `protest://${url}`;
-		iframe.style.border = "none";
-		parent.win.appendChild(iframe);
-		setTimeout(()=>{ parent.win.removeChild(iframe); }, 200);
+		const a = document.createElement("a");
+		a.href = `protest://${url}`;
+		a.style.display = "none";
+		document.body.appendChild(a);
+		a.click();
+		document.body.removeChild(a);
 	},
 
 	SetAccentColor: (accent, saturation)=> {

@@ -532,7 +532,7 @@ button.view-live-button:active {
 	width: 100%;
 	height: 100%;
 	background-color: var(--clr-dark);
-	mask-image: url(res/ethernetport.svgz);
+	mask-image: url(mono/ethernetport.svg);
 	mask-size: contain;
 	mask-position: center -5px;
 	mask-repeat: no-repeat;

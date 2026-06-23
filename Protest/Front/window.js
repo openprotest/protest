@@ -817,10 +817,11 @@ class Window {
 	}
 
 	BringToFront() {
-		if (this.win.style.zIndex != WIN.count && !document.getSelection().isCollapsed)
+		if (this.win.style.zIndex != WIN.count && !document.getSelection().isCollapsed) {
 			document.getSelection().removeAllRanges();
+		}
 
-		for (let i = 0; i < WIN.array.length; i++) {
+		for (let i=0; i<WIN.array.length; i++) {
 			WIN.array[i].header.style.opacity = ".5";
 			WIN.array[i].titleIcon.style.opacity = ".5";
 			WIN.array[i].closeButton.style.opacity = ".5";

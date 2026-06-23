@@ -108,15 +108,52 @@ class About extends Tabs {
 		const credits = document.createElement("div");
 		credits.style.display = "inline-block";
 		credits.style.paddingTop = "32px";
+		credits.style.paddingBottom = "16px";
 		credits.style.maxWidth = "640px";
 		credits.style.textAlign = "left";
 		credits.style.userSelect = "text";
-		credits.innerHTML = "Some of Pro-tests tools use external code and make use of the following libraries:<br>";
-		credits.innerHTML += "<b>-</b> Renci.SshNet               <a target='_blank' href='https://nuget.org/packages/SSH.NET'>by Renci</a><br>";
-		credits.innerHTML += "<b>-</b> Lextm.SharpSnmpLib         <a target='_blank' href='https://www.nuget.org/packages/Lextm.SharpSnmpLib'>by Lextm</a><br>";
-		credits.innerHTML += "<b>-</b> Open Sans typeface         <a>by Steve Matteson</a><br>";
-		credits.innerHTML += "<b>-</b> MAC addresses lookup table <a target='_blank' href='https://regauth.standards.ieee.org/standards-ra-web/pub/view.html'>by ieee</a><br>";
+		credits.textContent = "Some of Pro-tests tools use external code and make use of the following libraries:";
 		center.appendChild(credits);
+
+		center.appendChild(document.createElement("br"));
+
+		const CreateCredit = (name, linkText, linkUrl)=> {
+			const container = document.createElement("div");
+			container.style.textAlign = "left";
+			container.style.paddingBottom = "4px";
+			center.appendChild(container);
+			
+			const nameBox  = document.createElement("div");
+			nameBox.textContent = name;
+			nameBox.style.display = "inline-block";
+			nameBox.style.boxSizing = "border-box";
+			nameBox.style.textAlign = "right";
+			nameBox.style.marginRight = "8px";
+			nameBox.style.width = "50%";
+
+			const linkBox  = document.createElement("a");
+			linkBox.textContent = linkText;
+			if (linkUrl.length > 0) {
+				linkBox.href = linkUrl;
+			}
+			linkBox.target = "_blank";
+			linkBox.style.display = "inline-block";
+			linkBox.style.boxSizing = "border-box";
+			linkBox.style.textAlign = "left";
+			linkBox.style.marginLeft = "8px";
+			linkBox.style.padding = "0 2px";
+			linkBox.style.maxWidth = "50%";
+			linkBox.style.borderRadius = "2px";
+
+			container.append(nameBox, linkBox);
+		};
+
+		CreateCredit("Renci.SshNet",               "Renci",           "https://nuget.org/packages/SSH.NET");
+		CreateCredit("Lextm.SharpSnmpLib",         "Lextm",           "https://nuget.org/packages/Lextm.SharpSnmpLib");
+		CreateCredit("Otp.NET",                    "kspearrin",       "https://nuget.org/packages/Otp.NET/1.2.2");
+		CreateCredit("Porta.Pty",                  "Laird McConnell", "https://github.com/tomlm/Porta.Pty");
+		CreateCredit("MAC addresses lookup table", "ieee",            "https://regauth.standards.ieee.org/standards-ra-web/pub/view.html");
+		CreateCredit("Open Sans typeface",         "Steve Matteson",  "");
 
 		center.appendChild(document.createElement("br"));
 		center.appendChild(document.createElement("br"));

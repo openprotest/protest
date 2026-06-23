@@ -257,6 +257,7 @@ class Grid extends Window {
 
 			setTimeout(()=>{
 				this.Save();
+				this.mods = {};
 			}, 250);
 		});
 	}

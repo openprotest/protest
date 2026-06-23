@@ -745,13 +745,7 @@ class Documentation extends Window {
 		related.appendChild(removeButton);
 
 		related.onclick = event=> {
-			for (let j = 0; j < $w.array.length; j++)
-				if ($w.array[j] instanceof Equip && $w.array[j].filename === filename) {
-					$w.array[j].Minimize(); //minimize/restore
-					return;
-				}
-
-			new Equip(filename);
+			LOADER.OpenDeviceByFile(filename);
 			event.stopPropagation();
 		};
 

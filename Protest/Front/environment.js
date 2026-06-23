@@ -1554,14 +1554,13 @@ class Environment extends Tabs {
 				const json = await response.json();
 				if (json.error) throw(json.error);
 
-				
 			}
 			catch (ex) {
 				this.ConfirmBox(ex, true, "mono/error.svg");
 			}
 		};
 
-		setTimeout(enableToggle.label.focus(), WIN.ANIME_DURATION);
+		enableToggle.label.focus();
 	}
 
 	async SaveZones() {
