@@ -111,11 +111,12 @@ internal static class Ldap {
             if (String.IsNullOrEmpty(domain)) return false;
 
             normalizedDomain = NormalizeDomain(domain);
-            if (String.IsNullOrEmpty(normalizedDomain)) return false;
         }
         catch {
             return false;
         }
+
+        if (String.IsNullOrEmpty(normalizedDomain)) return false;
 
         if (username.Contains('@')) {
             string[] split = username.Split('@');
