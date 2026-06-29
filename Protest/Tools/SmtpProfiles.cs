@@ -83,7 +83,9 @@ internal static class SmtpProfiles {
                 bytes = File.ReadAllBytes(Data.FILE_SMTP_PROFILES);
             }
 
-            oldProfiles = JsonSerializer.Deserialize<Profile[]>(bytes, smtpProfileSerializerOptionsWithPasswords);
+            byte[] plain = Cryptography.Encrypt(bytes, Configuration.DB_KEY, Configuration.DB_KEY_IV);
+
+            oldProfiles = JsonSerializer.Deserialize<Profile[]>(plain);
         }
         catch {
             oldProfiles = Array.Empty<Profile>();
