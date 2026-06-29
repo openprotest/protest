@@ -195,7 +195,8 @@ internal sealed class Listener {
         while (listener.IsListening) {
             try {
                 HttpListenerContext ctx = await listener.GetContextAsync();
-                _ = Task.Run(() => ListenerCallback(ctx));
+                //_ = Task.Run(() => ListenerCallback(ctx));
+                _ = ListenerCallback(ctx);
             }
             catch (HttpListenerException) when (!listener.IsListening) {
                 break; //normal shutdown
@@ -319,10 +320,11 @@ internal sealed class Listener {
     public static Dictionary<string, string> ParseQuery(string queryString) {
         if (String.IsNullOrEmpty(queryString)) return null;
 
-        Dictionary<string, string> parameters = new Dictionary<string, string>();
-
         ReadOnlySpan<char> span = queryString.AsSpan();
         if (span.StartsWith("?")) span = span[1..];
+        if (span.IsEmpty) return null;
+
+        Dictionary<string, string> parameters = new Dictionary<string, string>();
 
         while (!span.IsEmpty) {
             int equalsIndex = span.IndexOf('=');
