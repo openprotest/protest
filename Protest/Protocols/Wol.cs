@@ -2,11 +2,14 @@
 using System.Net;
 using System.Text;
 using System.Collections.Generic;
+using Protest.Http;
 
 namespace Protest.Protocols;
 
 internal static class Wol {
-    public static byte[] Wakeup(Dictionary<string, string> parameters) {
+    public static byte[] Wakeup(HttpListenerContext ctx) {
+        Dictionary<string, string> parameters = Listener.ParseQuery(ctx);
+
         if (parameters is null) {
             return Data.CODE_INVALID_ARGUMENT.Array;
         }

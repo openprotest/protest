@@ -1,11 +1,15 @@
 using System.Collections.Generic;
+using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using Protest.Http;
 
 namespace Protest.Proprietary.Printers;
 
 internal static class Generic {
-    public static byte[] PrintTestPage(Dictionary<string, string> parameters) {
+    public static byte[] PrintTestPage(HttpListenerContext ctx) {
+        Dictionary<string, string> parameters = Listener.ParseQuery(ctx);
+
         if (parameters is null) {
             return Data.CODE_INVALID_ARGUMENT.Array;
         }

@@ -45,7 +45,9 @@ internal static class Fetch {
         fetchSerializerOptions.Converters.Add(new FetchedDataJsonConverter());
     }
 
-    public static byte[] SingleDeviceSerialize(Dictionary<string, string> parameters, bool asynchronous = false) {
+    public static byte[] SingleDeviceSerialize(HttpListenerContext ctx, bool asynchronous = false) {
+        Dictionary<string, string> parameters = Listener.ParseQuery(ctx);
+
         if (parameters is null) {
             return Data.CODE_INVALID_ARGUMENT.Array;
         }
@@ -521,7 +523,9 @@ internal static class Fetch {
         return data;
     }
 
-    public static byte[] SingleUserSerialize(Dictionary<string, string> parameters) {
+    public static byte[] SingleUserSerialize(HttpListenerContext ctx) {
+        Dictionary<string, string> parameters = Listener.ParseQuery(ctx);
+
         if (parameters is null) {
             return Data.CODE_INVALID_ARGUMENT.Array;
         }
@@ -556,7 +560,9 @@ internal static class Fetch {
         return data;
     }
 
-    public static byte[] DevicesTask(HttpListenerContext ctx, Dictionary<string, string> parameters, string origin) {
+    public static byte[] DevicesTask(HttpListenerContext ctx, string origin) {
+        Dictionary<string, string> parameters = Listener.ParseQuery(ctx);
+
         if (parameters is null) return Data.CODE_INVALID_ARGUMENT.Array;
 
         parameters.TryGetValue("range", out string range);
@@ -834,7 +840,9 @@ internal static class Fetch {
         return Data.CODE_OK.Array;
     }
 
-    public static byte[] UsersTask(Dictionary<string, string> parameters, string origin) {
+    public static byte[] UsersTask(HttpListenerContext ctx, string origin) {
+        Dictionary<string, string> parameters = Listener.ParseQuery(ctx);
+
         if (parameters is null) {
             return Data.CODE_INVALID_ARGUMENT.ToArray();
         }
@@ -976,8 +984,10 @@ internal static class Fetch {
         return Data.CODE_OK.Array;
     }
 
-    public static byte[] ApproveLastTask(Dictionary<string, string> parameters, string origin) {
+    public static byte[] ApproveLastTask(HttpListenerContext ctx, string origin) {
         if (result is null) return Data.CODE_TASK_DONT_EXIST.Array;
+
+        Dictionary<string, string> parameters = Listener.ParseQuery(ctx);
 
         if (parameters is null) {
             return Data.CODE_INVALID_ARGUMENT.Array;

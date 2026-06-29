@@ -3,12 +3,15 @@ using System.IO;
 using System.Net;
 using System.Text;
 using System.Text.Json;
+using Protest.Http;
 
 namespace Protest.Integration;
 
 internal class Integration {
 
-    public static byte[] GetStatus(Dictionary<string, string> parameters) {
+    public static byte[] GetStatus(HttpListenerContext ctx) {
+        Dictionary<string, string> parameters = Listener.ParseQuery(ctx);
+
         try {
             if (!Directory.Exists(Data.DIR_INTEGRATION)) {
                 return Data.CODE_FAILED.ToArray();
@@ -34,7 +37,9 @@ internal class Integration {
         }
     }
 
-    public static byte[] Save(HttpListenerContext ctx, Dictionary<string, string> parameters, string origin) {
+    public static byte[] Save(HttpListenerContext ctx, string origin) {
+        Dictionary<string, string> parameters = Listener.ParseQuery(ctx);
+
         if (parameters is null) {
             return Data.CODE_INVALID_ARGUMENT.Array;
         }

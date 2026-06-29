@@ -5,6 +5,7 @@ using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Runtime.Versioning;
 using System.Text;
+using Protest.Http;
 
 namespace Protest.Protocols;
 
@@ -387,7 +388,9 @@ internal static class Ldap {
     }
 
     [SupportedOSPlatform("windows")]
-    public static byte[] UnlockUser(Dictionary<string, string> parameters, string origin) {
+    public static byte[] UnlockUser(HttpListenerContext ctx, string origin) {
+        Dictionary<string, string> parameters = Listener.ParseQuery(ctx);
+
         if (parameters is null) {
             return Data.CODE_INVALID_ARGUMENT.Array;
         }
@@ -421,7 +424,9 @@ internal static class Ldap {
     }
 
     [SupportedOSPlatform("windows")]
-    public static byte[] EnableUser(Dictionary<string, string> parameters, string origin) {
+    public static byte[] EnableUser(HttpListenerContext ctx, string origin) {
+        Dictionary<string, string> parameters = Listener.ParseQuery(ctx);
+
         if (parameters is null) {
             return Data.CODE_INVALID_ARGUMENT.Array;
         }
@@ -458,7 +463,9 @@ internal static class Ldap {
     }
 
     [SupportedOSPlatform("windows")]
-    public static byte[] DisableUser(Dictionary<string, string> parameters, string origin) {
+    public static byte[] DisableUser(HttpListenerContext ctx, string origin) {
+        Dictionary<string, string> parameters = Listener.ParseQuery(ctx);
+
         if (parameters is null) {
             return Data.CODE_INVALID_ARGUMENT.Array;
         }

@@ -382,7 +382,9 @@ internal static class Auth {
         return true;
     }
 
-    internal static byte[] ResetMfaSecret(Dictionary<string, string> parameters, string origin) {
+    internal static byte[] ResetMfaSecret(HttpListenerContext ctx, string origin) {
+        Dictionary<string, string> parameters = Listener.ParseQuery(ctx);
+
         if (parameters is null) {
             return Data.CODE_INVALID_ARGUMENT.Array;
         }
@@ -787,7 +789,9 @@ internal static class Auth {
         return Encoding.UTF8.GetBytes(builder.ToString());
     }
 
-    internal static byte[] CreateUser(HttpListenerContext ctx, Dictionary<string, string> parameters, string origin) {
+    internal static byte[] CreateUser(HttpListenerContext ctx, string origin) {
+        Dictionary<string, string> parameters = Listener.ParseQuery(ctx);
+
         if (parameters is null) {
             return Data.CODE_INVALID_ARGUMENT.Array;
         }
@@ -885,7 +889,9 @@ internal static class Auth {
         return plain;
     }
 
-    internal static byte[] DeleteUser(Dictionary<string, string> parameters, string origin) {
+    internal static byte[] DeleteUser(HttpListenerContext ctx, string origin) {
+        Dictionary<string, string> parameters = Listener.ParseQuery(ctx);
+
         if (parameters is null) {
             return Data.CODE_INVALID_ARGUMENT.Array;
         }
@@ -952,7 +958,9 @@ internal static class Auth {
         return Encoding.UTF8.GetBytes(builder.ToString());
     }
 
-    internal static byte[] KickUser(Dictionary<string, string> parameters, string origin) {
+    internal static byte[] KickUser(HttpListenerContext ctx, string origin) {
+        Dictionary<string, string> parameters = Listener.ParseQuery(ctx);
+
         if (parameters is null) {
             return Data.CODE_INVALID_ARGUMENT.Array;
         }

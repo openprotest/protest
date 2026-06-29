@@ -1,6 +1,10 @@
 using System.IO;
 using System.Threading;
 using System.Collections.Generic;
+using Protest.Http;
+using System.Net;
+
+
 
 #if DEBUG
 using System.Runtime.CompilerServices;
@@ -121,7 +125,9 @@ internal static class Logger {
         }, (origin, category, action));
     }
 
-    public static byte[] List(Dictionary<string, string> parameters) {
+    public static byte[] List(HttpListenerContext ctx) {
+        Dictionary<string, string> parameters = Listener.ParseQuery(ctx);
+
         try {
             if (parameters is null || !parameters.TryGetValue("last", out string last) || last.Length < 8) {
                 return ListToday();

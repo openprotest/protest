@@ -341,7 +341,9 @@ internal sealed class Database {
         return Data.CODE_OK.Array;
     }
 
-    public byte[] SaveHandler(HttpListenerContext ctx, Dictionary<string, string> parameters, string origin) {
+    public byte[] SaveHandler(HttpListenerContext ctx, string origin) {
+        Dictionary<string, string> parameters = Listener.ParseQuery(ctx);
+
         try {
             string file;
             if (parameters is not null) {
@@ -382,7 +384,9 @@ internal sealed class Database {
         }
     }
 
-    public byte[] DeleteHandler(Dictionary<string, string> parameters, string origin) {
+    public byte[] DeleteHandler(HttpListenerContext ctx, string origin) {
+        Dictionary<string, string> parameters = Listener.ParseQuery(ctx);
+
         if (parameters is null) {
             return Data.CODE_INVALID_ARGUMENT.Array;
         }
@@ -397,7 +401,9 @@ internal sealed class Database {
             : Data.CODE_FILE_NOT_FOUND.Array;
     }
 
-    public byte[] TimelineHandler(Dictionary<string, string> parameters) {
+    public byte[] TimelineHandler(HttpListenerContext ctx) {
+        Dictionary<string, string> parameters = Listener.ParseQuery(ctx);
+
         if (parameters is null) {
             return Data.CODE_INVALID_ARGUMENT.Array;
         }
@@ -516,7 +522,9 @@ internal sealed class Database {
         return JsonSerializer.SerializeToUtf8Bytes(this, contactsSerializerOptions);
     }
 
-    public byte[] AttributeValue(Dictionary<string, string> parameters) {
+    public byte[] AttributeValue(HttpListenerContext ctx) {
+        Dictionary<string, string> parameters = Listener.ParseQuery(ctx);
+
         if (parameters is null) {
             return Data.CODE_INVALID_ARGUMENT.Array;
         }

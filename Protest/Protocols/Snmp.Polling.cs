@@ -7,7 +7,7 @@ using Lextm.SharpSnmpLib;
 using Lextm.SharpSnmpLib.Messaging;
 using Lextm.SharpSnmpLib.Security;
 using System.Threading;
-using Org.BouncyCastle.Utilities;
+using Protest.Http;
 
 namespace Protest.Protocols.Snmp;
 
@@ -17,16 +17,18 @@ internal static partial class Polling {
         Get, Set, Walk
     }
 
-    internal static byte[] GetHandler(HttpListenerContext ctx, Dictionary<string, string> parameters)
-        => SnmpHandler(ctx, parameters, SnmpOperation.Get);
+    internal static byte[] GetHandler(HttpListenerContext ctx)
+        => SnmpHandler(ctx, SnmpOperation.Get);
 
-    internal static byte[] SetHandler(HttpListenerContext ctx, Dictionary<string, string> parameters)
-        => SnmpHandler(ctx, parameters, SnmpOperation.Set);
+    internal static byte[] SetHandler(HttpListenerContext ctx)
+        => SnmpHandler(ctx, SnmpOperation.Set);
 
-    internal static byte[] WalkHandler(HttpListenerContext ctx, Dictionary<string, string> parameters)
-        => SnmpHandler(ctx, parameters, SnmpOperation.Walk);
+    internal static byte[] WalkHandler(HttpListenerContext ctx)
+        => SnmpHandler(ctx, SnmpOperation.Walk);
 
-    private static byte[] SnmpHandler(HttpListenerContext ctx, Dictionary<string, string> parameters, SnmpOperation operation) {
+    private static byte[] SnmpHandler(HttpListenerContext ctx, SnmpOperation operation) {
+        Dictionary<string, string> parameters = Listener.ParseQuery(ctx);
+
         if (parameters is null) { return Data.CODE_INVALID_ARGUMENT.Array; }
 
         parameters.TryGetValue("target",    out string target);

@@ -1,5 +1,4 @@
-﻿using Lextm.SharpSnmpLib.Messaging;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Management;
 using System.Net;
@@ -7,6 +6,8 @@ using System.Runtime.Versioning;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Protest.Http;
+using Lextm.SharpSnmpLib.Messaging;
 
 namespace Protest.Protocols;
 
@@ -421,7 +422,9 @@ internal static class Wmi {
         return data;
     }
 
-    public static byte[] Query(HttpListenerContext ctx, Dictionary<string, string> parameters) {
+    public static byte[] Query(HttpListenerContext ctx) {
+        Dictionary<string, string> parameters = Listener.ParseQuery(ctx);
+
         if (parameters is null) {
             return Data.CODE_INVALID_ARGUMENT.Array;
         }
@@ -481,7 +484,9 @@ internal static class Wmi {
         }
     }
 
-    public static byte[] WmiKillProcess(Dictionary<string, string> parameters) {
+    public static byte[] WmiKillProcess(HttpListenerContext ctx) {
+        Dictionary<string, string> parameters = Listener.ParseQuery(ctx);
+
         if (parameters is null) {
             return Data.CODE_INVALID_ARGUMENT.Array;
         }
@@ -538,7 +543,9 @@ internal static class Wmi {
     //const ForceReboot     = 6  <-
     //const PowerOff        = 8
     //const ForcePowerOff   = 12 <-
-    public static byte[] Wmi_Win32PowerHandler(Dictionary<string, string> parameters, int flags) {
+    public static byte[] Wmi_Win32PowerHandler(HttpListenerContext ctx, int flags) {
+        Dictionary<string, string> parameters = Listener.ParseQuery(ctx);
+
         if (parameters is null) {
             return Data.CODE_INVALID_ARGUMENT.Array;
         }

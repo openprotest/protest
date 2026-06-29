@@ -4,6 +4,7 @@ using System.IO.Compression;
 using System.Net;
 using System.Text;
 using System.Threading;
+using Protest.Http;
 
 namespace Protest;
 internal static class Backup {
@@ -13,7 +14,9 @@ internal static class Backup {
         mutex = new Lock();
     }
 
-    internal static byte[] Create(Dictionary<string, string> parameters, string origin) {
+    internal static byte[] Create(HttpListenerContext ctx, string origin) {
+        Dictionary<string, string> parameters = Listener.ParseQuery(ctx);
+
         if (parameters is null || !parameters.TryGetValue("name", out string name) || String.IsNullOrEmpty(name)) {
             name = $"backup-{DateTime.UtcNow.ToString(Data.DATE_FORMAT_FILE)}";
         }
@@ -84,7 +87,9 @@ internal static class Backup {
         }
     }
 
-    internal static byte[] Delete(Dictionary<string, string> parameters, string origin) {
+    internal static byte[] Delete(HttpListenerContext ctx, string origin) {
+        Dictionary<string, string> parameters = Listener.ParseQuery(ctx);
+
         if (parameters is null) { return Data.CODE_FAILED.Array; }
 
         parameters.TryGetValue("name", out string name);
@@ -107,7 +112,9 @@ internal static class Backup {
         }
     }
 
-    internal static byte[] Download(HttpListenerContext ctx, Dictionary<string, string> parameters, string origin) {
+    internal static byte[] Download(HttpListenerContext ctx, string origin) {
+        Dictionary<string, string> parameters = Listener.ParseQuery(ctx);
+
         if (parameters is null) { return Data.CODE_FAILED.Array; }
 
         parameters.TryGetValue("name", out string name);

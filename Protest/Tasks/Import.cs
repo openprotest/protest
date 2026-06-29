@@ -8,11 +8,14 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Protest.Tools;
+using Protest.Http;
 
 namespace Protest.Tasks;
 
 internal class Import {
-    public static byte[] ImportTask(Dictionary<string, string> parameters, string origin) {
+    public static byte[] ImportTask(HttpListenerContext ctx, string origin) {
+        Dictionary<string, string> parameters = Listener.ParseQuery(ctx);
+
         if (parameters is null) {
             return Data.CODE_INVALID_ARGUMENT.ToArray();
         }

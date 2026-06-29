@@ -2,6 +2,7 @@
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using Protest.Http;
 
 using static Protest.Protocols.Dns;
 
@@ -30,7 +31,9 @@ internal class Mdns {
         public byte       error;
     }
 
-    public static byte[] Resolve(Dictionary<string, string> parameters) {
+    public static byte[] Resolve(HttpListenerContext ctx) {
+        Dictionary<string, string> parameters = Listener.ParseQuery(ctx);
+
         if (parameters is null) {
             return Data.CODE_INVALID_ARGUMENT.Array;
         }

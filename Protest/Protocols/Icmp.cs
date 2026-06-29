@@ -33,7 +33,9 @@ internal static class Icmp {
         }
     }
 
-    public static byte[] BulkPing(Dictionary<string, string> parameters) {
+    public static byte[] BulkPing(HttpListenerContext ctx) {
+        Dictionary<string, string> parameters = Listener.ParseQuery(ctx);
+
         if (parameters is null) { return null; }
 
         parameters.TryGetValue("query", out string query);

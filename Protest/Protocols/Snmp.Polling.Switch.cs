@@ -2,15 +2,17 @@
 using System.Net;
 using System.Text.Json;
 using Protest.Tools;
+using Protest.Http;
 using Lextm.SharpSnmpLib;
-
 using PortDir = System.Collections.Generic.Dictionary<int, string>;
 
 namespace Protest.Protocols.Snmp;
 
 internal static partial class Polling {
 
-    internal static byte[] GetInterfaces(Dictionary<string, string> parameters) {
+    internal static byte[] GetInterfaces(HttpListenerContext ctx) {
+        Dictionary<string, string> parameters = Listener.ParseQuery(ctx);
+
         if (parameters is null) return Data.CODE_INVALID_ARGUMENT.Array;
 
         if (!parameters.TryGetValue("file", out string file)) {

@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Net;
 using System.Text;
+using Protest.Http;
 
 namespace Protest.Protocols;
 
@@ -125,12 +126,11 @@ internal static class Barcode128B {
         0b_11000111010  //106: stop
     };
 
-    public static byte[] GenerateSvgHandler(HttpListenerContext ctx, Dictionary<string, string> parameters) {
-        ctx.Response.ContentType = "image/svg+xml; charset=utf-8";
-        return GenerateSvgHandler(parameters);
-    }
+    public static byte[] GenerateSvgHandler(HttpListenerContext ctx) {
+        Dictionary<string, string> parameters = Listener.ParseQuery(ctx);
 
-    public static byte[] GenerateSvgHandler(Dictionary<string, string> parameters) {
+        ctx.Response.ContentType = "image/svg+xml; charset=utf-8";
+
         if (parameters is null) {
             return Data.CODE_INVALID_ARGUMENT.Array;
         }

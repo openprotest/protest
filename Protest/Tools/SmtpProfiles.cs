@@ -6,6 +6,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
+using Protest.Http;
 
 namespace Protest.Tools;
 internal static class SmtpProfiles {
@@ -129,7 +130,9 @@ internal static class SmtpProfiles {
         return Data.CODE_OK.Array;
     }
 
-    public static byte[] SendTest(Dictionary<string, string> parameters) {
+    public static byte[] SendTest(HttpListenerContext ctx) {
+        Dictionary<string, string> parameters = Listener.ParseQuery(ctx);
+
         if (parameters is null) {
             return Data.CODE_INVALID_ARGUMENT.Array;
         }

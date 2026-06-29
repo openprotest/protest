@@ -1,12 +1,13 @@
-﻿using System.Net;
+﻿using System.Collections.Generic;
+using System.IO;
+using System.Net;
+using System.Net.Http;
 using System.Net.NetworkInformation;
+using System.Net.Security;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
-using System.Net.Http;
-using System.Collections.Generic;
-using System.Net.Security;
-using System.IO;
+using Protest.Http;
 
 namespace Protest.Protocols;
 
@@ -52,7 +53,9 @@ internal static class Dns {
         public byte error;
     }
 
-    public static byte[] Resolve(Dictionary<string, string> parameters) {
+    public static byte[] Resolve(HttpListenerContext ctx) {
+        Dictionary<string, string> parameters = Listener.ParseQuery(ctx);
+
         if (parameters is null) {
             return Data.CODE_INVALID_ARGUMENT.Array;
         }

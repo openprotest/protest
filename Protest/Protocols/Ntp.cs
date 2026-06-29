@@ -2,11 +2,14 @@
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using Protest.Http;
 
 namespace Protest.Protocols;
 
 internal static class Ntp {
-    public static byte[] Request(Dictionary<string, string> parameters) {
+    public static byte[] Request(HttpListenerContext ctx) {
+        Dictionary<string, string> parameters = Listener.ParseQuery(ctx);
+
         if (parameters is null) {
             return Data.CODE_INVALID_ARGUMENT.Array;
         }

@@ -6,6 +6,7 @@ using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Text.Json;
+using Protest.Http;
 
 namespace Protest.Tools;
 
@@ -276,7 +277,9 @@ internal static class Cert {
         });
     }
 
-    internal static byte[] GetCertInfo(HttpListenerContext ctx, Dictionary<string, string> parameters) {
+    internal static byte[] GetCertInfo(HttpListenerContext ctx) {
+        Dictionary<string, string> parameters = Listener.ParseQuery(ctx);
+
         parameters.TryGetValue("name", out string name);
         parameters.TryGetValue("password", out string password);
         return GetCertInfo(name, password);
@@ -345,7 +348,9 @@ internal static class Cert {
         return Array.Empty<string>();
     }
 
-    internal static byte[] Delete(Dictionary<string, string> parameters, string origin) {
+    internal static byte[] Delete(HttpListenerContext ctx, string origin) {
+        Dictionary<string, string> parameters = Listener.ParseQuery(ctx);
+
         if (parameters is null) { return Data.CODE_FAILED.Array; }
 
         parameters.TryGetValue("name", out string name);
@@ -368,7 +373,9 @@ internal static class Cert {
         }
     }
 
-    internal static byte[] Download(HttpListenerContext ctx, Dictionary<string, string> parameters, string origin) {
+    internal static byte[] Download(HttpListenerContext ctx, string origin) {
+        Dictionary<string, string> parameters = Listener.ParseQuery(ctx);
+
         if (parameters is null) { return Data.CODE_FAILED.Array; }
 
         parameters.TryGetValue("name", out string name);

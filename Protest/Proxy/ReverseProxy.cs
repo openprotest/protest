@@ -239,7 +239,9 @@ internal static class ReverseProxy {
         }
     }
 
-    public static byte[] Create(HttpListenerContext ctx, Dictionary<string, string> parameters, string origin) {
+    public static byte[] Create(HttpListenerContext ctx, string origin) {
+        Dictionary<string, string> parameters = Listener.ParseQuery(ctx);
+
         try {
             DirectoryInfo directoryInfo = new DirectoryInfo(Data.DIR_REVERSE_PROXY);
             if (!directoryInfo.Exists) {
@@ -290,7 +292,9 @@ internal static class ReverseProxy {
         }
     }
 
-    public static byte[] Delete(Dictionary<string, string> parameters, string origin) {
+    public static byte[] Delete(HttpListenerContext ctx, string origin) {
+        Dictionary<string, string> parameters = Listener.ParseQuery(ctx);
+
         if (parameters is null || !parameters.TryGetValue("guid", out string guid)) {
             return Data.CODE_FAILED.ToArray();
         }
@@ -310,7 +314,9 @@ internal static class ReverseProxy {
         }
     }
 
-    public static byte[] Start(Dictionary<string, string> parameters, string origin) {
+    public static byte[] Start(HttpListenerContext ctx, string origin) {
+        Dictionary<string, string> parameters = Listener.ParseQuery(ctx);
+
         if (parameters is null || !parameters.TryGetValue("guid", out string guid)) {
             return Data.CODE_FAILED.ToArray();
         }
@@ -380,7 +386,9 @@ internal static class ReverseProxy {
         return Data.CODE_OK.ToArray();
     }
 
-    public static byte[] Stop(Dictionary<string, string> parameters, string origin) {
+    public static byte[] Stop(HttpListenerContext ctx, string origin) {
+        Dictionary<string, string> parameters = Listener.ParseQuery(ctx);
+
         if (parameters is null || !parameters.TryGetValue("guid", out string guid)) {
             return Data.CODE_FAILED.ToArray();
         }

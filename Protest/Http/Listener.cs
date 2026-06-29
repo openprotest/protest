@@ -14,147 +14,147 @@ internal sealed class Listener {
     private readonly HttpListener listener;
     private readonly Cache cache;
 
-    private static readonly Dictionary<string, Func<HttpListenerContext, Dictionary<string, string>, string, byte[]>> routing = new Dictionary<string, Func<HttpListenerContext, Dictionary<string, string>, string, byte[]>> {
-        ["/logout"]                       = (ctx, parameters, username) => Auth.RevokeAccess(ctx, username) ? Data.CODE_OK.Array : Data.CODE_FAILED.Array,
-        ["/version"]                      = (ctx, parameters, username) => Data.VersionToJson(),
+    private static readonly Dictionary<string, Func<HttpListenerContext, string, byte[]>> routing = new Dictionary<string, Func<HttpListenerContext, string, byte[]>> {
+        ["/logout"]                       = (ctx, username) => Auth.RevokeAccess(ctx, username) ? Data.CODE_OK.Array : Data.CODE_FAILED.Array,
+        ["/version"]                      = (ctx, username) => Data.VersionToJson(),
 
-        ["/barcode39"]                    = (ctx, parameters, username) => Protocols.Barcode39.GenerateSvgHandler(ctx, parameters),
-        ["/barcode128"]                   = (ctx, parameters, username) => Protocols.Barcode128B.GenerateSvgHandler(ctx, parameters),
+        ["/barcode39"]                    = (ctx, username) => Protocols.Barcode39.GenerateSvgHandler(ctx),
+        ["/barcode128"]                   = (ctx, username) => Protocols.Barcode128B.GenerateSvgHandler(ctx),
 
-        ["/db/user/list"]                 = (ctx, parameters, username) => DatabaseInstances.users.Serialize(ctx),
-        ["/db/user/timeline"]             = (ctx, parameters, username) => DatabaseInstances.users.TimelineHandler(parameters),
-        ["/db/user/save"]                 = (ctx, parameters, username) => DatabaseInstances.users.SaveHandler(ctx, parameters, username),
-        ["/db/user/delete"]               = (ctx, parameters, username) => DatabaseInstances.users.DeleteHandler(parameters, username),
-        ["/db/user/grid"]                 = (ctx, parameters, username) => DatabaseInstances.users.GridHandler(ctx, username),
-        ["/db/user/attribute"]            = (ctx, parameters, username) => DatabaseInstances.users.AttributeValue(parameters),
+        ["/db/user/list"]                 = (ctx, username) => DatabaseInstances.users.Serialize(ctx),
+        ["/db/user/timeline"]             = (ctx, username) => DatabaseInstances.users.TimelineHandler(ctx),
+        ["/db/user/save"]                 = (ctx, username) => DatabaseInstances.users.SaveHandler(ctx, username),
+        ["/db/user/delete"]               = (ctx, username) => DatabaseInstances.users.DeleteHandler(ctx, username),
+        ["/db/user/grid"]                 = (ctx, username) => DatabaseInstances.users.GridHandler(ctx, username),
+        ["/db/user/attribute"]            = (ctx, username) => DatabaseInstances.users.AttributeValue(ctx),
 
-        ["/db/device/list"]               = (ctx, parameters, username) => DatabaseInstances.devices.Serialize(ctx),
-        ["/db/device/timeline"]           = (ctx, parameters, username) => DatabaseInstances.devices.TimelineHandler(parameters),
-        ["/db/device/save"]               = (ctx, parameters, username) => DatabaseInstances.devices.SaveHandler(ctx, parameters, username),
-        ["/db/device/delete"]             = (ctx, parameters, username) => DatabaseInstances.devices.DeleteHandler(parameters, username),
-        ["/db/device/grid"]               = (ctx, parameters, username) => DatabaseInstances.devices.GridHandler(ctx, username),
-        ["/db/device/attribute"]          = (ctx, parameters, username) => DatabaseInstances.devices.AttributeValue(parameters),
+        ["/db/device/list"]               = (ctx, username) => DatabaseInstances.devices.Serialize(ctx),
+        ["/db/device/timeline"]           = (ctx, username) => DatabaseInstances.devices.TimelineHandler(ctx),
+        ["/db/device/save"]               = (ctx, username) => DatabaseInstances.devices.SaveHandler(ctx, username),
+        ["/db/device/delete"]             = (ctx, username) => DatabaseInstances.devices.DeleteHandler(ctx, username),
+        ["/db/device/grid"]               = (ctx, username) => DatabaseInstances.devices.GridHandler(ctx, username),
+        ["/db/device/attribute"]          = (ctx, username) => DatabaseInstances.devices.AttributeValue(ctx),
 
-        ["/db/getentropy"]                = (ctx, parameters, username) => Tools.PasswordStrength.GetEntropy(),
+        ["/db/getentropy"]                = (ctx, username) => Tools.PasswordStrength.GetEntropy(),
 
-        ["/fetch/networkinfo"]            = (ctx, parameters, username) => Protocols.Ldap.NetworkInfo(),
-        ["/fetch/singledevice"]           = (ctx, parameters, username) => Tasks.Fetch.SingleDeviceSerialize(parameters, true),
-        ["/fetch/singleuser"]             = (ctx, parameters, username) => Tasks.Fetch.SingleUserSerialize(parameters),
-        ["/fetch/status"]                 = (ctx, parameters, username) => Tasks.Fetch.Status(),
-        ["/fetch/devices"]                = (ctx, parameters, username) => Tasks.Fetch.DevicesTask(ctx, parameters, username),
-        ["/fetch/users"]                  = (ctx, parameters, username) => Tasks.Fetch.UsersTask(parameters, username),
-        ["/fetch/approve"]                = (ctx, parameters, username) => Tasks.Fetch.ApproveLastTask(parameters, username),
-        ["/fetch/abort"]                  = (ctx, parameters, username) => Tasks.Fetch.CancelTask(username),
-        ["/fetch/discard"]                = (ctx, parameters, username) => Tasks.Fetch.DiscardLastTask(username),
-        ["/fetch/import"]                 = (ctx, parameters, username) => Tasks.Import.ImportTask(parameters, username),
+        ["/fetch/networkinfo"]            = (ctx, username) => Protocols.Ldap.NetworkInfo(),
+        ["/fetch/singledevice"]           = (ctx, username) => Tasks.Fetch.SingleDeviceSerialize(ctx, true),
+        ["/fetch/singleuser"]             = (ctx, username) => Tasks.Fetch.SingleUserSerialize(ctx),
+        ["/fetch/status"]                 = (ctx, username) => Tasks.Fetch.Status(),
+        ["/fetch/devices"]                = (ctx, username) => Tasks.Fetch.DevicesTask(ctx, username),
+        ["/fetch/users"]                  = (ctx, username) => Tasks.Fetch.UsersTask(ctx, username),
+        ["/fetch/approve"]                = (ctx, username) => Tasks.Fetch.ApproveLastTask(ctx, username),
+        ["/fetch/abort"]                  = (ctx, username) => Tasks.Fetch.CancelTask(username),
+        ["/fetch/discard"]                = (ctx, username) => Tasks.Fetch.DiscardLastTask(username),
+        ["/fetch/import"]                 = (ctx, username) => Tasks.Import.ImportTask(ctx, username),
 
-        ["/manage/device/wol"]            = (ctx, parameters, username) => Protocols.Wol.Wakeup(parameters),
-        ["/manage/device/shutdown"]       = (ctx, parameters, username) => OperatingSystem.IsWindows() ? Protocols.Wmi.Wmi_Win32PowerHandler(parameters, 12) : null,
-        ["/manage/device/reboot"]         = (ctx, parameters, username) => OperatingSystem.IsWindows() ? Protocols.Wmi.Wmi_Win32PowerHandler(parameters, 6) : null,
-        ["/manage/device/logoff"]         = (ctx, parameters, username) => OperatingSystem.IsWindows() ? Protocols.Wmi.Wmi_Win32PowerHandler(parameters, 4) : null,
-        ["/manage/device/printtest"]      = (ctx, parameters, username) => Proprietary.Printers.Generic.PrintTestPage(parameters),
+        ["/manage/device/wol"]            = (ctx, username) => Protocols.Wol.Wakeup(ctx),
+        ["/manage/device/shutdown"]       = (ctx, username) => OperatingSystem.IsWindows() ? Protocols.Wmi.Wmi_Win32PowerHandler(ctx, 12) : null,
+        ["/manage/device/reboot"]         = (ctx, username) => OperatingSystem.IsWindows() ? Protocols.Wmi.Wmi_Win32PowerHandler(ctx, 6) : null,
+        ["/manage/device/logoff"]         = (ctx, username) => OperatingSystem.IsWindows() ? Protocols.Wmi.Wmi_Win32PowerHandler(ctx, 4) : null,
+        ["/manage/device/printtest"]      = (ctx, username) => Proprietary.Printers.Generic.PrintTestPage(ctx),
 
-        ["/manage/user/unlock"]           = (ctx, parameters, username) => OperatingSystem.IsWindows() ? Protocols.Ldap.UnlockUser(parameters, username) : null,
-        ["/manage/user/enable"]           = (ctx, parameters, username) => OperatingSystem.IsWindows() ? Protocols.Ldap.EnableUser(parameters, username) : null,
-        ["/manage/user/disable"]          = (ctx, parameters, username) => OperatingSystem.IsWindows() ? Protocols.Ldap.DisableUser(parameters, username) : null,
+        ["/manage/user/unlock"]           = (ctx, username) => OperatingSystem.IsWindows() ? Protocols.Ldap.UnlockUser(ctx, username) : null,
+        ["/manage/user/enable"]           = (ctx, username) => OperatingSystem.IsWindows() ? Protocols.Ldap.EnableUser(ctx, username) : null,
+        ["/manage/user/disable"]          = (ctx, username) => OperatingSystem.IsWindows() ? Protocols.Ldap.DisableUser(ctx, username) : null,
 
-        ["/docs/list"]                    = (ctx, parameters, username) => Tools.Documentation.List(parameters),
-        ["/docs/create"]                  = (ctx, parameters, username) => Tools.Documentation.Create(ctx, username),
-        ["/docs/delete"]                  = (ctx, parameters, username) => Tools.Documentation.Delete(parameters, username),
-        ["/docs/view"]                    = (ctx, parameters, username) => Tools.Documentation.View(ctx, parameters),
+        ["/docs/list"]                    = (ctx, username) => Tools.Documentation.List(ctx),
+        ["/docs/create"]                  = (ctx, username) => Tools.Documentation.Create(ctx, username),
+        ["/docs/delete"]                  = (ctx, username) => Tools.Documentation.Delete(ctx, username),
+        ["/docs/view"]                    = (ctx, username) => Tools.Documentation.View(ctx),
 
-        ["/chat/history"]                 = (ctx, parameters, username) => Chat.GetHistory(),
+        ["/chat/history"]                 = (ctx, username) => Chat.GetHistory(),
 
-        ["/debit/list"]                   = (ctx, parameters, username) => Tools.DebitNotes.List(parameters),
-        ["/debit/view"]                   = (ctx, parameters, username) => Tools.DebitNotes.View(parameters),
-        ["/debit/create"]                 = (ctx, parameters, username) => Tools.DebitNotes.Create(ctx, username),
-        ["/debit/delete"]                 = (ctx, parameters, username) => Tools.DebitNotes.Delete(parameters, username),
-        ["/debit/return"]                 = (ctx, parameters, username) => Tools.DebitNotes.Return(parameters, username),
-        ["/debit/templates"]              = (ctx, parameters, username) => Tools.DebitNotes.ListTemplate(),
-        ["/debit/banners"]                = (ctx, parameters, username) => Tools.DebitNotes.ListBanners(),
+        ["/debit/list"]                   = (ctx, username) => Tools.DebitNotes.List(ctx),
+        ["/debit/view"]                   = (ctx, username) => Tools.DebitNotes.View(ctx),
+        ["/debit/create"]                 = (ctx, username) => Tools.DebitNotes.Create(ctx, username),
+        ["/debit/delete"]                 = (ctx, username) => Tools.DebitNotes.Delete(ctx, username),
+        ["/debit/return"]                 = (ctx, username) => Tools.DebitNotes.Return(ctx, username),
+        ["/debit/templates"]              = (ctx, username) => Tools.DebitNotes.ListTemplate(),
+        ["/debit/banners"]                = (ctx, username) => Tools.DebitNotes.ListBanners(),
 
-        ["/watchdog/list"]                = (ctx, parameters, username) => Tasks.Watchdog.List(),
-        ["/watchdog/view"]                = (ctx, parameters, username) => Tasks.Watchdog.View(parameters),
-        ["/watchdog/create"]              = (ctx, parameters, username) => Tasks.Watchdog.Create(ctx, parameters, username),
-        ["/watchdog/delete"]              = (ctx, parameters, username) => Tasks.Watchdog.Delete(parameters, username),
+        ["/watchdog/list"]                = (ctx, username) => Tasks.Watchdog.List(),
+        ["/watchdog/view"]                = (ctx, username) => Tasks.Watchdog.View(ctx),
+        ["/watchdog/create"]              = (ctx, username) => Tasks.Watchdog.Create(ctx, username),
+        ["/watchdog/delete"]              = (ctx, username) => Tasks.Watchdog.Delete(ctx, username),
 
-        ["/notifications/list"]           = (ctx, parameters, username) => Tasks.Watchdog.ListNotifications(),
-        ["/notifications/save"]           = (ctx, parameters, username) => Tasks.Watchdog.SaveNotifications(ctx, username),
+        ["/notifications/list"]           = (ctx, username) => Tasks.Watchdog.ListNotifications(),
+        ["/notifications/save"]           = (ctx, username) => Tasks.Watchdog.SaveNotifications(ctx, username),
 
-        ["/lifeline/ping/view"]           = (ctx, parameters, username) => Tasks.Lifeline.ViewPing(parameters),
-        ["/lifeline/memory/view"]         = (ctx, parameters, username) => Tasks.Lifeline.ViewFile(parameters, "memory"),
-        ["/lifeline/cpu/view"]            = (ctx, parameters, username) => Tasks.Lifeline.ViewFile(parameters, "cpu"),
-        ["/lifeline/disk/view"]           = (ctx, parameters, username) => Tasks.Lifeline.ViewFile(parameters, "disk"),
-        ["/lifeline/diskio/view"]         = (ctx, parameters, username) => Tasks.Lifeline.ViewFile(parameters, "diskio"),
-        ["/lifeline/printcount/view"]     = (ctx, parameters, username) => Tasks.Lifeline.ViewFile(parameters, "printcount"),
-        ["/lifeline/switchcount/view"]    = (ctx, parameters, username) => Tasks.Lifeline.ViewFile(parameters, "switchcount"),
-        ["/lifeline/switchstpchanges/view"] = (ctx, parameters, username) => Tasks.Lifeline.ViewFile(parameters, "switchstpchanges"),
+        ["/lifeline/ping/view"]           = (ctx, username) => Tasks.Lifeline.ViewPing(ctx),
+        ["/lifeline/memory/view"]         = (ctx, username) => Tasks.Lifeline.ViewFile(ctx, "memory"),
+        ["/lifeline/cpu/view"]            = (ctx, username) => Tasks.Lifeline.ViewFile(ctx, "cpu"),
+        ["/lifeline/disk/view"]           = (ctx, username) => Tasks.Lifeline.ViewFile(ctx, "disk"),
+        ["/lifeline/diskio/view"]         = (ctx, username) => Tasks.Lifeline.ViewFile(ctx, "diskio"),
+        ["/lifeline/printcount/view"]     = (ctx, username) => Tasks.Lifeline.ViewFile(ctx, "printcount"),
+        ["/lifeline/switchcount/view"]    = (ctx, username) => Tasks.Lifeline.ViewFile(ctx, "switchcount"),
+        ["/lifeline/switchstpchanges/view"] = (ctx, username) => Tasks.Lifeline.ViewFile(ctx, "switchstpchanges"),
 
-        ["/tools/bulkping"]               = (ctx, parameters, username) => Protocols.Icmp.BulkPing(parameters),
-        ["/tools/dnslookup"]              = (ctx, parameters, username) => Protocols.Dns.Resolve(parameters),
-        ["/tools/mdnslookup"]             = (ctx, parameters, username) => Protocols.Mdns.Resolve(parameters),
-        ["/tools/ntp"]                    = (ctx, parameters, username) => Protocols.Ntp.Request(parameters),
-        ["/tools/maclookup"]              = (ctx, parameters, username) => Tools.MacLookup.Lookup(ctx),
-        ["/tools/nics/list"]              = (ctx, parameters, username) => Tools.IpDiscovery.ListNics(),
+        ["/tools/bulkping"]               = (ctx, username) => Protocols.Icmp.BulkPing(ctx),
+        ["/tools/dnslookup"]              = (ctx, username) => Protocols.Dns.Resolve(ctx),
+        ["/tools/mdnslookup"]             = (ctx, username) => Protocols.Mdns.Resolve(ctx),
+        ["/tools/ntp"]                    = (ctx, username) => Protocols.Ntp.Request(ctx),
+        ["/tools/maclookup"]              = (ctx, username) => Tools.MacLookup.Lookup(ctx),
+        ["/tools/nics/list"]              = (ctx, username) => Tools.IpDiscovery.ListNics(),
 
-        ["/snmp/get"]                     = (ctx, parameters, username) => Protocols.Snmp.Polling.GetHandler(ctx, parameters),
-        ["/snmp/set"]                     = (ctx, parameters, username) => Protocols.Snmp.Polling.SetHandler(ctx, parameters),
-        ["/snmp/walk"]                    = (ctx, parameters, username) => Protocols.Snmp.Polling.WalkHandler(ctx, parameters),
-        ["/snmp/switchinterface"]         = (ctx, parameters, username) => Protocols.Snmp.Polling.GetInterfaces(parameters),
+        ["/snmp/get"]                     = (ctx, username) => Protocols.Snmp.Polling.GetHandler(ctx),
+        ["/snmp/set"]                     = (ctx, username) => Protocols.Snmp.Polling.SetHandler(ctx),
+        ["/snmp/walk"]                    = (ctx, username) => Protocols.Snmp.Polling.WalkHandler(ctx),
+        ["/snmp/switchinterface"]         = (ctx, username) => Protocols.Snmp.Polling.GetInterfaces(ctx),
 
-        ["/wmi/query"]                    = (ctx, parameters, username) => OperatingSystem.IsWindows() ? Protocols.Wmi.Query(ctx, parameters) : null,
-        ["/wmi/killprocess"]              = (ctx, parameters, username) => OperatingSystem.IsWindows() ? Protocols.Wmi.WmiKillProcess(parameters) : null,
+        ["/wmi/query"]                    = (ctx, username) => OperatingSystem.IsWindows() ? Protocols.Wmi.Query(ctx) : null,
+        ["/wmi/killprocess"]              = (ctx, username) => OperatingSystem.IsWindows() ? Protocols.Wmi.WmiKillProcess(ctx) : null,
 
-        ["/rproxy/list"]                  = (ctx, parameters, username) => Proxy.ReverseProxy.List(),
-        ["/rproxy/create"]                = (ctx, parameters, username) => Proxy.ReverseProxy.Create(ctx, parameters, username),
-        ["/rproxy/delete"]                = (ctx, parameters, username) => Proxy.ReverseProxy.Delete(parameters, username),
-        ["/rproxy/start"]                 = (ctx, parameters, username) => Proxy.ReverseProxy.Start(parameters, username),
-        ["/rproxy/stop"]                  = (ctx, parameters, username) => Proxy.ReverseProxy.Stop(parameters, username),
+        ["/rproxy/list"]                  = (ctx, username) => Proxy.ReverseProxy.List(),
+        ["/rproxy/create"]                = (ctx, username) => Proxy.ReverseProxy.Create(ctx, username),
+        ["/rproxy/delete"]                = (ctx, username) => Proxy.ReverseProxy.Delete(ctx, username),
+        ["/rproxy/start"]                 = (ctx, username) => Proxy.ReverseProxy.Start(ctx, username),
+        ["/rproxy/stop"]                  = (ctx, username) => Proxy.ReverseProxy.Stop(ctx, username),
 
-        ["/issues/start"]                 = (ctx, parameters, username) => Tasks.Issues.Start(username),
+        ["/issues/start"]                 = (ctx, username) => Tasks.Issues.Start(username),
 
-        ["/rbac/list"]                    = (ctx, parameters, username) => Auth.ListUsers(),
-        ["/rbac/create"]                  = (ctx, parameters, username) => Auth.CreateUser(ctx, parameters, username),
-        ["/rbac/delete"]                  = (ctx, parameters, username) => Auth.DeleteUser(parameters, username),
-        ["/rbac/sessions"]                = (ctx, parameters, username) => Auth.ListSessions(),
-        ["/rbac/kickuser"]                = (ctx, parameters, username) => Auth.KickUser(parameters, username),
-        ["/rbac/reregistermfa"]           = (ctx, parameters, username) => Auth.ResetMfaSecret(parameters, username),
+        ["/rbac/list"]                    = (ctx, username) => Auth.ListUsers(),
+        ["/rbac/create"]                  = (ctx, username) => Auth.CreateUser(ctx, username),
+        ["/rbac/delete"]                  = (ctx, username) => Auth.DeleteUser(ctx, username),
+        ["/rbac/sessions"]                = (ctx, username) => Auth.ListSessions(),
+        ["/rbac/kickuser"]                = (ctx, username) => Auth.KickUser(ctx, username),
+        ["/rbac/reregistermfa"]           = (ctx, username) => Auth.ResetMfaSecret(ctx, username),
 
-        ["/tasks/list"]                   = (ctx, parameters, username) => Tasks.Tasks.ListTasks(),
+        ["/tasks/list"]                   = (ctx, username) => Tasks.Tasks.ListTasks(),
 
-        ["/config/checkupdate"]           = (ctx, parameters, username) => Update.CheckLatestRelease(),
+        ["/config/checkupdate"]           = (ctx, username) => Update.CheckLatestRelease(),
 
-        ["/config/backup/list"]           = (ctx, parameters, username) => Backup.List(),
-        ["/config/backup/create"]         = (ctx, parameters, username) => Backup.Create(parameters, username),
-        ["/config/backup/delete"]         = (ctx, parameters, username) => Backup.Delete(parameters, username),
-        ["/config/backup/download"]       = (ctx, parameters, username) => Backup.Download(ctx, parameters, username),
+        ["/config/backup/list"]           = (ctx, username) => Backup.List(),
+        ["/config/backup/create"]         = (ctx, username) => Backup.Create(ctx, username),
+        ["/config/backup/delete"]         = (ctx, username) => Backup.Delete(ctx, username),
+        ["/config/backup/download"]       = (ctx, username) => Backup.Download(ctx, username),
 
-        ["/config/zones/list"]            = (ctx, parameters, username) => Tools.Zones.ListZones(),
-        ["/config/zones/save"]            = (ctx, parameters, username) => Tools.Zones.SaveZones(ctx, username),
-        ["/config/dhcprange/list"]        = (ctx, parameters, username) => Tools.DhcpRange.ListRange(),
-        ["/config/dhcprange/save"]        = (ctx, parameters, username) => Tools.DhcpRange.SaveRange(ctx, username),
+        ["/config/zones/list"]            = (ctx, username) => Tools.Zones.ListZones(),
+        ["/config/zones/save"]            = (ctx, username) => Tools.Zones.SaveZones(ctx, username),
+        ["/config/dhcprange/list"]        = (ctx, username) => Tools.DhcpRange.ListRange(),
+        ["/config/dhcprange/save"]        = (ctx, username) => Tools.DhcpRange.SaveRange(ctx, username),
 
-        ["/config/smtpprofiles/list"]     = (ctx, parameters, username) => Tools.SmtpProfiles.List(),
-        ["/config/smtpprofiles/save"]     = (ctx, parameters, username) => Tools.SmtpProfiles.Save(ctx, username),
-        ["/config/smtpprofiles/test"]     = (ctx, parameters, username) => Tools.SmtpProfiles.SendTest(parameters),
+        ["/config/smtpprofiles/list"]     = (ctx, username) => Tools.SmtpProfiles.List(),
+        ["/config/smtpprofiles/save"]     = (ctx, username) => Tools.SmtpProfiles.Save(ctx, username),
+        ["/config/smtpprofiles/test"]     = (ctx, username) => Tools.SmtpProfiles.SendTest(ctx),
 
-        ["/config/snmpprofiles/list"]     = (ctx, parameters, username) => Tools.SnmpProfiles.List(parameters),
-        ["/config/snmpprofiles/save"]     = (ctx, parameters, username) => Tools.SnmpProfiles.Save(ctx, username),
+        ["/config/snmpprofiles/list"]     = (ctx, username) => Tools.SnmpProfiles.List(ctx),
+        ["/config/snmpprofiles/save"]     = (ctx, username) => Tools.SnmpProfiles.Save(ctx, username),
 
-        ["/config/integration/getstatus"] = (ctx, parameters, username) => Integration.Integration.GetStatus(parameters),
-        ["/config/integration/save"]      = (ctx, parameters, username) => Integration.Integration.Save(ctx, parameters, username),
+        ["/config/integration/getstatus"] = (ctx, username) => Integration.Integration.GetStatus(ctx),
+        ["/config/integration/save"]      = (ctx, username) => Integration.Integration.Save(ctx, username),
 
-        ["/config/cert/list"]             = (ctx, parameters, username) => Tools.Cert.List(),
-        ["/config/cert/create"]           = (ctx, parameters, username) => Tools.Cert.Create(ctx, username),
-        ["/config/cert/delete"]           = (ctx, parameters, username) => Tools.Cert.Delete(parameters, username),
-        ["/config/cert/info"]             = (ctx, parameters, username) => Tools.Cert.GetCertInfo(ctx, parameters),
-        ["/config/cert/upload"]           = (ctx, parameters, username) => Tools.Cert.Upload(ctx, username),
-        ["/config/cert/download"]         = (ctx, parameters, username) => Tools.Cert.Download(ctx, parameters, username),
+        ["/config/cert/list"]             = (ctx, username) => Tools.Cert.List(),
+        ["/config/cert/create"]           = (ctx, username) => Tools.Cert.Create(ctx, username),
+        ["/config/cert/delete"]           = (ctx, username) => Tools.Cert.Delete(ctx, username),
+        ["/config/cert/info"]             = (ctx, username) => Tools.Cert.GetCertInfo(ctx),
+        ["/config/cert/upload"]           = (ctx, username) => Tools.Cert.Upload(ctx, username),
+        ["/config/cert/download"]         = (ctx, username) => Tools.Cert.Download(ctx, username),
 
-        ["/api/list"]                     = (ctx, parameters, username) => Tools.Api.List(),
-        ["/api/save"]                     = (ctx, parameters, username) => Tools.Api.Save(ctx, username),
+        ["/api/list"]                     = (ctx, username) => Tools.Api.List(),
+        ["/api/save"]                     = (ctx, username) => Tools.Api.Save(ctx, username),
 
-        ["/log/list"]                     = (ctx, parameters, username) => Logger.List(parameters)
+        ["/log/list"]                     = (ctx, username) => Logger.List(ctx)
     };
 
     public Listener(string ip, ushort port, string path) {
@@ -299,11 +299,7 @@ internal sealed class Listener {
 
             if (await WebSocketHandler(ctx)) return;
 
-            Dictionary<string, string> parameters = null;
-            string query = ctx.Request.Url.Query;
-            if (query.Length > 0) {
-                parameters = ParseQuery(query);
-            }
+            Dictionary<string, string> parameters = ParseQuery(ctx);
 
             if (await DynamicHandler(ctx, parameters)) return;
 
@@ -317,7 +313,12 @@ internal sealed class Listener {
 #endif
     }
 
-    public static Dictionary<string, string> ParseQuery(string queryString) {
+
+    public static Dictionary<string, string> ParseQuery(HttpListenerContext ctx) {
+        return ParseQuery(ctx.Request.Url.Query);
+    }
+
+    private static Dictionary<string, string> ParseQuery(string queryString) {
         if (String.IsNullOrEmpty(queryString)) return null;
 
         ReadOnlySpan<char> span = queryString.AsSpan();
@@ -423,8 +424,8 @@ internal sealed class Listener {
         ctx.Response.AddHeader("Cache-Control", "no-cache");
 
         string path = ctx.Request.Url.AbsolutePath;
-        if (routing.TryGetValue(path, out Func<HttpListenerContext, Dictionary<string, string>, string, byte[]> handler)) {
-            byte[] buffer = handler(ctx, parameters, username);
+        if (routing.TryGetValue(path, out Func<HttpListenerContext, string, byte[]> handler)) {
+            byte[] buffer = handler(ctx, username);
             ctx.Response.StatusCode = (int)HttpStatusCode.OK;
             ctx.Response.ContentLength64 = buffer?.Length ?? 0;
 

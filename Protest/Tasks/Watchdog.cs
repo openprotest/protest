@@ -14,6 +14,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
+using Protest.Http;
 
 namespace Protest.Tasks;
 
@@ -513,7 +514,9 @@ internal static class Watchdog {
         return Encoding.UTF8.GetBytes(builder.ToString());
     }
 
-    public static byte[] View(Dictionary<string, string> parameters) {
+    public static byte[] View(HttpListenerContext ctx) {
+        Dictionary<string, string> parameters = Listener.ParseQuery(ctx);
+
         if (parameters is null) {
             return null;
         }
@@ -536,9 +539,11 @@ internal static class Watchdog {
         }
     }
 
-    public static byte[] Create(HttpListenerContext ctx, Dictionary<string, string> parameters, string origin) {
+    public static byte[] Create(HttpListenerContext ctx, string origin) {
         using StreamReader reader = new StreamReader(ctx.Request.InputStream, ctx.Request.ContentEncoding);
         string watcherString = reader.ReadToEnd();
+
+        Dictionary<string, string> parameters = Listener.ParseQuery(ctx);
 
         if (parameters is null || !parameters.TryGetValue("file", out string file) || file is null) {
             file = Database.GenerateFilename();
@@ -580,7 +585,9 @@ internal static class Watchdog {
         }
     }
 
-    public static byte[] Delete(Dictionary<string, string> parameters, string origin) {
+    public static byte[] Delete(HttpListenerContext ctx, string origin) {
+        Dictionary<string, string> parameters = Listener.ParseQuery(ctx);
+
         if (parameters is null) {
             return Data.CODE_INVALID_ARGUMENT.Array;
         }

@@ -5,6 +5,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
+using Protest.Http;
 
 namespace Protest.Tools;
 
@@ -39,7 +40,9 @@ internal static class DebitNotes {
         debitSerializerOptions.Converters.Add(new DebitJsonConverter());
     }
 
-    public static byte[] List(Dictionary<string, string> parameters) {
+    public static byte[] List(HttpListenerContext ctx) {
+        Dictionary<string, string> parameters = Listener.ParseQuery(ctx);
+
         string keywords = String.Empty;
         string strUpTo = String.Empty;
         string strShortTerm = String.Empty;
@@ -181,7 +184,9 @@ internal static class DebitNotes {
         return Encoding.UTF8.GetBytes(builder.ToString());
     }
 
-    public static byte[] View(Dictionary<string, string> parameters) {
+    public static byte[] View(HttpListenerContext ctx) {
+        Dictionary<string, string> parameters = Listener.ParseQuery(ctx);
+
         string file = null;
         string status = null;
         parameters?.TryGetValue("status", out status);
@@ -266,7 +271,9 @@ internal static class DebitNotes {
         return Encoding.UTF8.GetBytes($"{{\"file\":\"{name}\"}}");
     }
 
-    public static byte[] Delete(Dictionary<string, string> parameters, string origin) {
+    public static byte[] Delete(HttpListenerContext ctx, string origin) {
+        Dictionary<string, string> parameters = Listener.ParseQuery(ctx);
+
         string file = null;
         string status = null;
         parameters?.TryGetValue("status", out status);
@@ -291,7 +298,9 @@ internal static class DebitNotes {
         }
     }
 
-    public static byte[] Return(Dictionary<string, string> parameters, string origin) {
+    public static byte[] Return(HttpListenerContext ctx, string origin) {
+        Dictionary<string, string> parameters = Listener.ParseQuery(ctx);
+
         string file = null;
         string status = null;
         parameters?.TryGetValue("status", out status);

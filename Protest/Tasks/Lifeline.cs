@@ -10,8 +10,8 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Runtime.Versioning;
 using Lextm.SharpSnmpLib;
-
 using Protest.Tools;
+using Protest.Http;
 
 namespace Protest.Tasks;
 
@@ -580,7 +580,9 @@ internal static partial class Lifeline {
 
     }
 
-    public static byte[] ViewFile(Dictionary<string, string> parameters, string type) {
+    public static byte[] ViewFile(HttpListenerContext ctx, string type) {
+        Dictionary<string, string> parameters = Listener.ParseQuery(ctx);
+
         if (parameters is null) { return null; }
 
         parameters.TryGetValue("file", out string file);
@@ -604,7 +606,9 @@ internal static partial class Lifeline {
         }
     }
 
-    public static byte[] ViewPing(Dictionary<string, string> parameters) {
+    public static byte[] ViewPing(HttpListenerContext ctx) {
+        Dictionary<string, string> parameters = Listener.ParseQuery(ctx);
+
         if (parameters is null) { return null; }
 
         parameters.TryGetValue("host", out string host);

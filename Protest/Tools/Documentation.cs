@@ -3,13 +3,16 @@ using System.IO;
 using System.Net;
 using System.Text;
 using System.Threading;
+using Protest.Http;
 
 namespace Protest.Tools;
 
 internal static class Documentation {
     private static readonly Lock mutex = new Lock();
 
-    public static byte[] List(Dictionary<string, string> parameters) {
+    public static byte[] List(HttpListenerContext ctx) {
+        Dictionary<string, string> parameters = Listener.ParseQuery(ctx);
+
         string keywords = null;
         parameters?.TryGetValue("keywords", out keywords);
         keywords ??= String.Empty;
@@ -61,7 +64,9 @@ internal static class Documentation {
         return Encoding.UTF8.GetBytes(builder.ToString());
     }
 
-    public static byte[] View(HttpListenerContext ctx, Dictionary<string, string> parameters, bool serveGZip = false) {
+    public static byte[] View(HttpListenerContext ctx, bool serveGZip = false) {
+        Dictionary<string, string> parameters = Listener.ParseQuery(ctx);
+
         string acceptEncoding = ctx.Request.Headers.Get("Accept-Encoding")?.ToLower() ?? String.Empty;
         bool acceptGZip = acceptEncoding.Contains("gzip");
 
@@ -212,7 +217,9 @@ internal static class Documentation {
 
 
 
-    public static byte[] Delete(Dictionary<string, string> parameters, string origin) {
+    public static byte[] Delete(HttpListenerContext ctx, string origin) {
+        Dictionary<string, string> parameters = Listener.ParseQuery(ctx);
+
         if (parameters is null) {
             return Data.CODE_INVALID_ARGUMENT.Array;
         }

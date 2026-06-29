@@ -41,7 +41,7 @@ internal static class Api {
     }
 
     internal static void HandleApiCall(HttpListenerContext ctx) {
-        Dictionary<string, string> parameters = Listener.ParseQuery(ctx.Request.Url.Query);
+        Dictionary<string, string> parameters = Listener.ParseQuery(ctx);
 
         if (Api.links is null) {
             ctx.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
@@ -61,9 +61,9 @@ internal static class Api {
         byte[] buffer;
 
         switch (call) {
-        case "devices"  : buffer = HandleDevicesCall(ctx, parameters, link);  break;
-        case "users"    : buffer = HandleUsersCall(ctx, parameters, link);    break;
-        case "lifeline" : buffer = HandleLifelineCall(ctx, parameters, link); break;
+        case "devices"  : buffer = HandleDevicesCall(ctx, link);  break;
+        case "users"    : buffer = HandleUsersCall(ctx, link);    break;
+        case "lifeline" : buffer = HandleLifelineCall(ctx, link); break;
 
         default:
             ctx.Response.StatusCode = (int)HttpStatusCode.NotFound;
@@ -81,7 +81,9 @@ internal static class Api {
         }
     }
 
-    internal static byte[] HandleDevicesCall(HttpListenerContext ctx, Dictionary<string, string> parameters, Link link) {
+    internal static byte[] HandleDevicesCall(HttpListenerContext ctx, Link link) {
+        Dictionary<string, string> parameters = Listener.ParseQuery(ctx);
+
         if ((link.permissions & (byte)Permissions.Devices) == 0x00) {
             ctx.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
             return null;
@@ -105,7 +107,9 @@ internal static class Api {
         return buffer;
     }
 
-    internal static byte[] HandleUsersCall(HttpListenerContext ctx, Dictionary<string, string> parameters, Link link) {
+    internal static byte[] HandleUsersCall(HttpListenerContext ctx, Link link) {
+        Dictionary<string, string> parameters = Listener.ParseQuery(ctx);
+
         if ((link.permissions & (byte)Permissions.Users) == 0x00) {
             ctx.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
             return null;
@@ -129,7 +133,9 @@ internal static class Api {
         return buffer;
     }
 
-    internal static byte[] HandleLifelineCall(HttpListenerContext ctx, Dictionary<string, string> parameters, Link link) {
+    internal static byte[] HandleLifelineCall(HttpListenerContext ctx, Link link) {
+        Dictionary<string, string> parameters = Listener.ParseQuery(ctx);
+
         if ((link.permissions & (byte)Permissions.Lifeline) == 0x00) {
             ctx.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
             return null;
