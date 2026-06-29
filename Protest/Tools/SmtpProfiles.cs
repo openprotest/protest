@@ -15,7 +15,7 @@ internal static class SmtpProfiles {
     private static readonly JsonSerializerOptions smtpProfileSerializerOptionsWithPasswords;
 
     public enum Provider : byte {
-        SnmpServer = 0,
+        SmtpServer = 0,
         Outlook    = 1,
         Gmail      = 2,
     }
@@ -263,7 +263,7 @@ internal sealed class SmtpProfilesJsonConverter : JsonConverter<SmtpProfiles.Pro
     }
 
     public override void Write(Utf8JsonWriter writer, SmtpProfiles.Profile[] value, JsonSerializerOptions options) {
-        ReadOnlySpan<byte> _provider = "server"u8;
+        ReadOnlySpan<byte> _provider = "provider"u8;
         ReadOnlySpan<byte> _server   = "server"u8;
         ReadOnlySpan<byte> _port     = "port"u8;
         ReadOnlySpan<byte> _sender   = "sender"u8;

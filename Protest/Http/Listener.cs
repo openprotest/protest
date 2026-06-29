@@ -141,7 +141,7 @@ internal sealed class Listener {
         ["/config/snmpprofiles/list"]     = (ctx, username) => Tools.SnmpProfiles.List(ctx),
         ["/config/snmpprofiles/save"]     = (ctx, username) => Tools.SnmpProfiles.Save(ctx, username),
 
-        ["/config/integration/getstatus"] = (ctx, username) => Integration.Integration.GetStatus(ctx),
+        ["/config/integration/getstatus"] = (ctx, username) => Integration.Integration.GetStatus(),
         ["/config/integration/save"]      = (ctx, username) => Integration.Integration.Save(ctx, username),
 
         ["/config/cert/list"]             = (ctx, username) => Tools.Cert.List(),
