@@ -9,9 +9,7 @@ namespace Protest.Integration;
 
 internal class Integration {
 
-    public static byte[] GetStatus(HttpListenerContext ctx) {
-        Dictionary<string, string> parameters = Listener.ParseQuery(ctx);
-
+    public static byte[] GetStatus() {
         try {
             if (!Directory.Exists(Data.DIR_INTEGRATION)) {
                 return Data.CODE_FAILED.ToArray();

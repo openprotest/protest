@@ -134,8 +134,6 @@ internal static class Api {
     }
 
     internal static byte[] HandleLifelineCall(HttpListenerContext ctx, Link link) {
-        Dictionary<string, string> parameters = Listener.ParseQuery(ctx);
-
         if ((link.permissions & (byte)Permissions.Lifeline) == 0x00) {
             ctx.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
             return null;

@@ -15,7 +15,7 @@ internal static class SmtpProfiles {
     private static readonly JsonSerializerOptions smtpProfileSerializerOptionsWithPasswords;
 
     public enum Provider : byte {
-        SnmpServer = 0,
+        SmtpServer = 0,
         Outlook    = 1,
         Gmail      = 2,
     }
@@ -83,7 +83,9 @@ internal static class SmtpProfiles {
                 bytes = File.ReadAllBytes(Data.FILE_SMTP_PROFILES);
             }
 
-            oldProfiles = JsonSerializer.Deserialize<Profile[]>(bytes, smtpProfileSerializerOptionsWithPasswords);
+            byte[] plain = Cryptography.Decrypt(bytes, Configuration.DB_KEY, Configuration.DB_KEY_IV);
+
+            oldProfiles = JsonSerializer.Deserialize<Profile[]>(plain);
         }
         catch {
             oldProfiles = Array.Empty<Profile>();
@@ -94,7 +96,7 @@ internal static class SmtpProfiles {
 
             for (int i = 0; i < newProfiles.Length; i++) {
                 if (newProfiles[i].guid == default(Guid)) {
-                    newProfiles[i].guid = Guid.NewGuid();
+                    newProfiles[i] = newProfiles[i] with { guid = Guid.NewGuid() };
                 }
 
                 if (newProfiles[i].password?.Length > 0) continue;
@@ -108,7 +110,7 @@ internal static class SmtpProfiles {
                 }
 
                 if (old is not null) {
-                    newProfiles[i].password = old.password;
+                    newProfiles[i] = newProfiles[i] with { password = old.password };
                 }
             }
 
@@ -146,7 +148,8 @@ internal static class SmtpProfiles {
 
         try {
             Profile[] smtpProfiles = SmtpProfiles.Load();
-            Profile profile = smtpProfiles.First(o => o.guid.ToString() == guid);
+            Profile profile = smtpProfiles.FirstOrDefault(o => o.guid.ToString() == guid);
+            if (profile is null) return Data.CODE_INVALID_ARGUMENT.Array;
             return SendTest(recipient, profile);
         }
         catch (Exception ex) {
@@ -154,7 +157,11 @@ internal static class SmtpProfiles {
         }
     }
 
-    public static byte[] SendTest(string recipient, SmtpProfiles.Profile profile) {
+    public static byte[] SendTest(string recipient, Profile profile) {
+        if (String.IsNullOrWhiteSpace(recipient)) {
+            return Encoding.UTF8.GetBytes("{\"error\":\"Invalid recipient\"}");
+        }
+
         string body = """
             <html>
             <table width="100%" cellpadding="0" cellspacing="0" border="0">
@@ -166,7 +173,7 @@ internal static class SmtpProfiles {
             <tr><td style="padding:10px"></td></tr>
 
             <tr><td style="height:28px;font-size:18;text-align:center">
-            You have successfully configure this SMTP profile.
+            You have successfully configured this SMTP profile.
             </td></tr>
 
             <tr><td style="padding:10px"></td></tr>
@@ -192,9 +199,7 @@ internal static class SmtpProfiles {
             AlternateView view = AlternateView.CreateAlternateViewFromString(body, null, "text/html");
             mail.AlternateViews.Add(view);
 
-            if (!String.IsNullOrEmpty(recipient)) {
-                mail.To.Add(recipient);
-            }
+            mail.To.Add(recipient);
 
             using SmtpClient smtp = new SmtpClient(profile.server) {
                 Port = profile.port,
@@ -263,7 +268,7 @@ internal sealed class SmtpProfilesJsonConverter : JsonConverter<SmtpProfiles.Pro
     }
 
     public override void Write(Utf8JsonWriter writer, SmtpProfiles.Profile[] value, JsonSerializerOptions options) {
-        ReadOnlySpan<byte> _provider = "server"u8;
+        ReadOnlySpan<byte> _provider = "provider"u8;
         ReadOnlySpan<byte> _server   = "server"u8;
         ReadOnlySpan<byte> _port     = "port"u8;
         ReadOnlySpan<byte> _sender   = "sender"u8;

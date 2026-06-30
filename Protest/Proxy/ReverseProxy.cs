@@ -243,8 +243,6 @@ internal static class ReverseProxy {
     }
 
     public static byte[] Create(HttpListenerContext ctx, string origin) {
-        Dictionary<string, string> parameters = Listener.ParseQuery(ctx);
-
         try {
             DirectoryInfo directoryInfo = new DirectoryInfo(Data.DIR_REVERSE_PROXY);
             if (!directoryInfo.Exists) {
