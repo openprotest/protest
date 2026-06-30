@@ -313,7 +313,6 @@ internal sealed class Listener {
 #endif
     }
 
-
     public static Dictionary<string, string> ParseQuery(HttpListenerContext ctx) {
         return ParseQuery(ctx.Request.Url.Query);
     }

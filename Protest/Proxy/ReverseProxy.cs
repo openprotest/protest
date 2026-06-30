@@ -96,7 +96,7 @@ internal static class ReverseProxy {
         Guid select = Guid.Empty;
         int interval = 1000;
 
-        new Thread(async () => {
+        Thread thread = new Thread(async () => {
             await Task.Delay(500);
 
             bool clientsToggle = true;
@@ -123,7 +123,10 @@ internal static class ReverseProxy {
             catch (Exception ex) {
                 Logger.Error(ex);
             }
-        }).Start();
+        });
+
+        thread.Priority = ThreadPriority.AboveNormal;
+        thread.Start();
 
         byte[] buff = new byte[512];
         try {

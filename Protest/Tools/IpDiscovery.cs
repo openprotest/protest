@@ -515,7 +515,7 @@ internal static class IpDiscovery {
             int length = socket.ReceiveFrom(reply, ref remoteEP);
             if (length == 0) return;
 
-            new Thread(async () => {
+            Thread thread = new Thread(async () => {
                 byte[] actualReply = new byte[length];
                 Array.Copy(reply, actualReply, length);
 
@@ -606,7 +606,10 @@ internal static class IpDiscovery {
 
                 await WebSocketHelper.WsWriteText(ws, JsonSerializer.SerializeToUtf8Bytes<HostEntry>(host, hostSerializerOptions));
 
-            }).Start();
+            });
+
+            thread.Priority = ThreadPriority.BelowNormal;
+            thread.Start();
         }
         catch (Exception ex) {
             Logger.Debug(ex);

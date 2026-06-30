@@ -71,6 +71,7 @@ internal static class Issues {
             CompletedSteps = 0
         };
 
+        task.thread.Priority = ThreadPriority.BelowNormal;
         task.thread.Start();
 
         KeepAlive.Broadcast("{\"action\":\"issues\",\"scan\":\"started\"}", "/issues/start");

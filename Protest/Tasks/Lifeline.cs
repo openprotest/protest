@@ -41,6 +41,7 @@ internal static partial class Lifeline {
             CompletedSteps = 0
         };
 
+        task.thread.Priority = ThreadPriority.BelowNormal;
         task.thread.Start();
 
         return true;

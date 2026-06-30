@@ -71,6 +71,7 @@ internal sealed class HttpReverseProxy : ReverseProxyAbstract {
                 }
             });
 
+            this.thread.Priority = ThreadPriority.AboveNormal;
             this.thread.Start();
         }
         catch (Exception ex) {

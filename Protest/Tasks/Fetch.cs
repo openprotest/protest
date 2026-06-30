@@ -835,6 +835,8 @@ internal static class Fetch {
             TotalSteps = hosts.Length,
             CompletedSteps = 0
         };
+
+        task.thread.Priority = ThreadPriority.BelowNormal;
         task.thread.Start();
 
         return Data.CODE_OK.Array;
@@ -922,6 +924,8 @@ internal static class Fetch {
             TotalSteps = users.Length,
             CompletedSteps = 0
         };
+
+        task.thread.Priority = ThreadPriority.BelowNormal;
         task.thread.Start();
 
         return Data.CODE_OK.Array;

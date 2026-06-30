@@ -127,6 +127,7 @@ internal static class Watchdog {
             CompletedSteps = 0
         };
 
+        task.thread.Priority = ThreadPriority.Normal;
         task.thread.Start();
 
         return true;

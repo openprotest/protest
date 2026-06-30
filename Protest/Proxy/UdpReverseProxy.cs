@@ -29,6 +29,7 @@ internal sealed class UdpReverseProxy : ReverseProxyAbstract {
         }
 
         this.thread = new Thread(async () => await ListenForClients());
+        this.thread.Priority = ThreadPriority.AboveNormal;
         this.thread.Start();
 
         return base.Start(listener, destination, certificate, password, origin);
