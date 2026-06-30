@@ -1,10 +1,10 @@
 "use strict";
 class Topology extends Window {
-	static DEVICE_ICON = {
-		"firewall"    : "mono/firewall.svg",
-		"router"      : "mono/router.svg",
-		"switch"      : "mono/switch.svg",
-		"access point": "mono/accesspoint.svg",
+	static DEVICE_SHAPE = {
+		"firewall"    : "rectangle",
+		"router"      : "circle",
+		"switch"      : "rectangle",
+		"access point": "circle"
 	};
 
 	static SPEED_MAP = [
@@ -380,12 +380,24 @@ class Topology extends Window {
 		firewallMask.setAttribute("mask-type", "alpha");
 		this.svg.appendChild(firewallMask);
 		const firewallImage = document.createElementNS("http://www.w3.org/2000/svg", "image");
-		firewallImage.setAttribute("x", 4);
-		firewallImage.setAttribute("y", 4);
-		firewallImage.setAttribute("width", 88);
-		firewallImage.setAttribute("height", 88);
+		firewallImage.setAttribute("x", 0);
+		firewallImage.setAttribute("y", 0);
+		firewallImage.setAttribute("width", 96);
+		firewallImage.setAttribute("height", 96);
 		firewallImage.setAttribute("href", "mono/firewall.svg?light");
 		firewallMask.appendChild(firewallImage);
+
+		const otherMask = document.createElementNS("http://www.w3.org/2000/svg", "mask");
+		otherMask.setAttribute("id", "otherMask");
+		otherMask.setAttribute("mask-type", "alpha");
+		this.svg.appendChild(otherMask);
+		const otherImage = document.createElementNS("http://www.w3.org/2000/svg", "image");
+		otherImage.setAttribute("x", 4);
+		otherImage.setAttribute("y", 4);
+		otherImage.setAttribute("width", 88);
+		otherImage.setAttribute("height", 88);
+		otherImage.setAttribute("href", "mono/gear.svg?light");
+		otherMask.appendChild(otherImage);
 
 		const l2switchMask = document.createElementNS("http://www.w3.org/2000/svg", "mask");
 		l2switchMask.setAttribute("id", "l2switchMask");
@@ -2628,21 +2640,24 @@ class Topology extends Window {
 		g.setAttribute("file", options.file);
 		this.svg.appendChild(g);
 
+		const shape = Topology.DEVICE_SHAPE[options.type.toLowerCase()] ?? "circle";
+		const isCircle = shape === "circle";
+
 		const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-		rect.setAttribute("x", options.isRouter ? 0 : 2);
-		rect.setAttribute("y", options.isRouter ? 0 : 2);
-		rect.setAttribute("rx", options.isRouter ? 48 : 16);
-		rect.setAttribute("ry", options.isRouter ? 48 : 16);
-		rect.setAttribute("width", options.isRouter ? 96 : 92);
-		rect.setAttribute("height", options.isRouter ? 96 : 92);
+		rect.setAttribute("x", isCircle ? 0 : 2);
+		rect.setAttribute("y", isCircle ? 0 : 2);
+		rect.setAttribute("rx", isCircle ? 48 : 16);
+		rect.setAttribute("ry", isCircle ? 48 : 16);
+		rect.setAttribute("width", isCircle ? 96 : 92);
+		rect.setAttribute("height", isCircle ? 96 : 92);
 		rect.setAttribute("fill", "transparent");
 		g.appendChild(rect);
 
 		const fill = document.createElementNS("http://www.w3.org/2000/svg", "rect");
 		fill.setAttribute("x", 10);
 		fill.setAttribute("y", 8);
-		fill.setAttribute("rx", options.isRouter ? 38 : 8);
-		fill.setAttribute("ry", options.isRouter ? 38 : 8);
+		fill.setAttribute("rx", isCircle ? 38 : 8);
+		fill.setAttribute("ry", isCircle ? 38 : 8);
 		fill.setAttribute("width", 76);
 		fill.setAttribute("height", 80);
 		fill.setAttribute("fill", "transparent");
@@ -2658,12 +2673,14 @@ class Topology extends Window {
 		icon.style.transition = "fill .8s";
 		g.appendChild(icon);
 
-		icon.setAttribute("mask", `url(#${{
+		const idMap = {
 			"firewall"    : "firewallMask",
 			"router"      : "routerMask",
 			"switch"      : "switchMask",
 			"access point": ""
-		}[options.type.toLowerCase()]})`);
+		};
+
+		icon.setAttribute("mask", `url(#${idMap[options.type.toLowerCase()] ?? "otherMask"})`);
 
 		const spinner = document.createElementNS("http://www.w3.org/2000/svg", "circle");
 		spinner.setAttribute("cx", 74);
@@ -2792,11 +2809,11 @@ class Topology extends Window {
 		this.AdjustSvgSize();
 
 		const element = {
-			root: g,
+			root     : g,
 			highlight: circle,
-			icon: icon,
-			x: options.x,
-			y: options.y
+			icon     : icon,
+			x        : options.x,
+			y        : options.y
 		};
 
 		return element;
@@ -2993,7 +3010,7 @@ class Topology extends Window {
 
 		const icon = document.createElement("div");
 		icon.style.gridArea = "1 / 1 / 5 / 1";
-		icon.style.backgroundImage = `url(${Topology.DEVICE_ICON[initial.type.toLowerCase()]})`;
+		icon.style.backgroundImage = `url(${LOADER.deviceIcons[initial.type.toLowerCase()] ?? "mono/gear.svg"})`;
 		icon.style.backgroundSize = "64px 64px";
 		icon.style.backgroundPosition = "50% 50%";
 		icon.style.backgroundRepeat = "no-repeat";
@@ -3072,7 +3089,7 @@ class Topology extends Window {
 				host = device.initial.ip.split(";")[0].trim();
 			}
 
-			const ports = dbEntry?.ports.v.split(";").map(o=> parseInt(o.trim()));
+			const ports = dbEntry?.ports?.v.split(";").map(o=> parseInt(o.trim()));
 			if (dbEntry && ".overwriteprotocol" in dbEntry) {
 				dbEntry[".overwriteprotocol"].v.split(";").map(o=> o.trim()).forEach(o=> {
 					let split = o.split(":");
@@ -3086,7 +3103,7 @@ class Topology extends Window {
 				});
 			}
 
-			if (overwriteProtocol.http || ports.includes(80)) {
+			if (overwriteProtocol.http || ports?.includes(80)) {
 				const httpButton = document.createElement("button");
 				httpButton.style.minWidth = "unset";
 				httpButton.style.width = "36px";
@@ -3105,7 +3122,7 @@ class Topology extends Window {
 						link.target = "_blank";
 						link.click();
 					}
-					else if (ports.includes(80)) { //http
+					else if (ports?.includes(80)) { //http
 						const link = document.createElement("a");
 						link.href = "http://" + host;
 						link.target = "_blank";
@@ -3114,7 +3131,7 @@ class Topology extends Window {
 				};
 			}
 
-			if (overwriteProtocol.https || ports.includes(443)) {
+			if (overwriteProtocol.https || ports?.includes(443)) {
 				const httpButton = document.createElement("button");
 				httpButton.style.minWidth = "unset";
 				httpButton.style.width = "36px";
@@ -3133,7 +3150,7 @@ class Topology extends Window {
 						link.target = "_blank";
 						link.click();
 					}
-					else if (ports.includes(443)) { //https
+					else if (ports?.includes(443)) { //https
 						const link = document.createElement("a");
 						link.href = "https://" + host;
 						link.target = "_blank";
@@ -3142,7 +3159,7 @@ class Topology extends Window {
 				};
 			}
 
-			if (overwriteProtocol.ssh || ports.includes(22)) {
+			if (overwriteProtocol.ssh || ports?.includes(22)) {
 				const sshButton = document.createElement("button");
 				sshButton.style.minWidth = "unset";
 				sshButton.style.width = "36px";
@@ -3159,7 +3176,7 @@ class Topology extends Window {
 					if (overwriteProtocol.ssh) {
 						sshHost = `${host}:${overwriteProtocol.ssh}`;
 					}
-					else if (ports.includes(22)) {
+					else if (ports?.includes(22)) {
 						sshHost = host;
 					}
 
