@@ -2415,6 +2415,7 @@ class Topology extends Window {
 		const remotePortIdSubtype = device.lldp.remotePortIdSubtype[port][index];
 		if (remotePortIdSubtype === 5) {
 			const entry = this.CreateInferredEntry(device, port, index);
+			if (!entry) return null;
 			return entry.initial.file;
 		}
 
@@ -2445,7 +2446,11 @@ class Topology extends Window {
 		let deviceMac      = null;
 		let deviceLocation = null;
 		if (dbFile) {
-			deviceType     = LOADER.devices.data[dbFile]?.type.v.toLowerCase() ?? null;
+			deviceType = LOADER.devices.data[dbFile]?.type.v.toLowerCase() ?? null;
+			if (deviceType !== "firewall" && deviceType !== "router" && deviceType !== "switch" && deviceType !== "access point") {
+				return null;
+			}
+
 			deviceIp       = LOADER.devices.data[dbFile]?.ip.v ?? null;
 			deviceMac      = LOADER.devices.data[dbFile]["mac address"]?.v ?? null;
 			deviceLocation = LOADER.devices.data[dbFile]?.location?.v.toLowerCase() ?? null;

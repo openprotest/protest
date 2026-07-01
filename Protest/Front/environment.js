@@ -609,8 +609,8 @@ class Environment extends Tabs {
 			{name: "EntraID",    status: this.integrationStatus["entraid"] ?? false},
 			{name: "ESET",       status: this.integrationStatus["eset"] ?? false},
 			{name: "Unifi",      status: this.integrationStatus["unifi"] ?? false},
-			{name: "Sophos",     status: this.integrationStatus["sophos"] ?? false},
-			{name: "Checkpoint", status: this.integrationStatus["checkpoint"] ?? false},
+			//{name: "Sophos",     status: this.integrationStatus["sophos"] ?? false},
+			//{name: "Checkpoint", status: this.integrationStatus["checkpoint"] ?? false},
 		]);
 
 		this.GetIntegrationStatus();
@@ -702,8 +702,8 @@ class Environment extends Tabs {
 				{name: "EntraID",    status: this.integrationStatus["entraid"] ?? false},
 				{name: "ESET",       status: this.integrationStatus["eset"] ?? false},
 				{name: "Unifi",      status: this.integrationStatus["unifi"] ?? false},
-				{name: "Sophos",     status: this.integrationStatus["sophos"] ?? false},
-				{name: "Checkpoint", status: this.integrationStatus["checkpoint"] ?? false},
+				//{name: "Sophos",     status: this.integrationStatus["sophos"] ?? false},
+				//{name: "Checkpoint", status: this.integrationStatus["checkpoint"] ?? false},
 			]);
 		}
 		catch (ex) {
