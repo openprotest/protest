@@ -966,13 +966,11 @@ internal static class Auth {
         }
 
         parameters.TryGetValue("username", out string username);
-        parameters.TryGetValue("ip", out string ip);
         parameters.TryGetValue("guid", out string guidString);
         Guid.TryParse(guidString, out Guid guid);
 
         foreach (Session session in sessions.Values) {
             if (session.access.username != username) continue;
-            if (session.ip.ToString() != ip) continue;
             if (session.guid != guid) continue;
 
             return RevokeAccess(session.sessionId, origin)
