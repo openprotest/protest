@@ -1471,7 +1471,7 @@ class Environment extends Tabs {
 		setTimeout(()=>{ nameInput.focus() }, 200);
 	}
 
-	IntegrationDialog(name) {
+	async IntegrationDialog(name) {
 		const dialog = this.DialogBox("280px");
 		if (dialog === null) return;
 
@@ -1519,8 +1519,8 @@ class Environment extends Tabs {
 			const urlInput      = CreateAttribute("url", "Identity endpoint");
 			urlInput.setAttribute("list", "ESET_URL_DATALIST");
 
-			CreateAttribute("username", "Username");
-			CreateAttribute("password", "Password");
+			const usernameInput = CreateAttribute("username", "Username");
+			const passwordInput = CreateAttribute("password", "Password");
 
 			const urlDatalist = document.createElement("datalist");
 			urlDatalist.id = "ESET_URL_DATALIST";
@@ -1532,6 +1532,21 @@ class Environment extends Tabs {
 				const option = document.createElement("option");
 				option.value = esetEndpoint[i];
 				urlDatalist.appendChild(option);
+			}
+
+			try {
+				const response = await fetch("config/integration/getcred?category=eset");
+				if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
+
+				const json = await response.json();
+				if (json.error) throw(json.error);
+
+				urlInput.value = json.url;
+				usernameInput.value = json.username;
+				passwordInput.placeholder = "unchanged";
+			}
+			catch (ex) {
+				this.ConfirmBox(ex, true, "mono/error.svg");
 			}
 
 			break;

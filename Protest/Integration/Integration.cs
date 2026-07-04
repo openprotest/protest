@@ -59,4 +59,29 @@ internal class Integration {
         }
     }
 
+    public static byte[] GetCredentials(HttpListenerContext ctx) {
+        Dictionary<string, string> parameters = Listener.ParseQuery(ctx);
+
+        if (parameters is null) {
+            return Data.CODE_INVALID_ARGUMENT.Array;
+        }
+
+        if (!parameters.TryGetValue("category", out string category)) return Data.CODE_INVALID_ARGUMENT.Array;
+
+        try {
+            if (!Directory.Exists(Data.DIR_INTEGRATION)) {
+                return Encoding.UTF8.GetBytes("{\"url\":\"\",\"username\":\"\"}");
+            }
+        }
+        catch {
+            return Data.CODE_FAILED.Array;
+        }
+
+        switch (category.ToLower()) {
+        case "eset": return Eset.GetApiCredentials();
+        default:     return Data.CODE_INVALID_ARGUMENT.Array;
+        }
+
+    }
+
 }

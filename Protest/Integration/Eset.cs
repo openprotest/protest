@@ -86,6 +86,11 @@ internal static class Eset {
         }
     }
 
+    public static byte[] GetApiCredentials() {
+        ReadCredentials(out string url, out string username, out _);
+        return Encoding.UTF8.GetBytes($"{{\"url\":\"{Data.EscapeJsonText(url)}\",\"username\":\"{username}\"}}");
+    }
+
     public static byte[] SetApiCredentials(Dictionary<string, string> parameters) {
         if (parameters is null) {
             return Data.CODE_INVALID_ARGUMENT.Array;
