@@ -53,6 +53,8 @@ internal class Integration {
             return Data.CODE_FAILED.Array;
         }
 
+        Logger.Action(origin, "Integration", $"Modify entry: {category}");
+
         switch (category.ToLower()) {
         case "eset": return Eset.SetApiCredentials(parameters);
         default    : return Data.CODE_INVALID_ARGUMENT.Array;
@@ -81,7 +83,6 @@ internal class Integration {
         case "eset": return Eset.GetApiCredentials();
         default:     return Data.CODE_INVALID_ARGUMENT.Array;
         }
-
     }
 
 }

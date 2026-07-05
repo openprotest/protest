@@ -649,6 +649,12 @@ internal static class Auth {
                 path.Add("/tasks/stop");
                 break;
 
+            case "integration:write":
+                path.Add("/config/integration/getstatus");
+                path.Add("/config/integration/getcred");
+                path.Add("/config/integration/save");
+                break;
+
             case "api links:write":
                 path.Add("/api/list");
                 path.Add("/api/save");

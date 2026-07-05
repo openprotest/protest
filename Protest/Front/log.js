@@ -239,6 +239,7 @@ class Log extends Window {
 			element.style.backgroundImage = {
 				"AAA"          : "url(mono/rbac.svg)",
 				"API"          : "url(mono/carabiner.svg)",
+				"Integration"  : "url(mono/integration.svg)",
 				"Backup"       : "url(mono/backup.svg)",
 				"Certificate"  : "url(mono/certificate.svg)",
 				"Database"     : "url(mono/database.svg)",
