@@ -252,6 +252,14 @@ internal sealed class Listener {
                 ctx.Request.RemoteEndPoint.Address = xForwardedIp;
             }
 
+
+            ctx.Response.AddHeader("X-Frame-Options", "DENY");
+            ctx.Response.AddHeader("X-Content-Type-Options", "nosniff");
+
+            //relaxed policy for debit-notes printing
+            ctx.Response.AddHeader("Content-Security-Policy", "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'");
+            //ctx.Response.AddHeader("Content-Security-Policy", "default-src 'self'; img-src 'self' data:");
+
             string path = ctx.Request.Url.PathAndQuery;
 
             if (String.Equals(path, "/auth", StringComparison.Ordinal)) {
@@ -267,22 +275,21 @@ internal sealed class Listener {
             }
 
             if (String.Equals(path, "/contacts", StringComparison.Ordinal)) {
-                byte[] buffer = DatabaseInstances.users.SerializeContacts();
-                ctx.Response.StatusCode = (int)HttpStatusCode.OK;
-                ctx.Response.ContentLength64 = buffer?.Length ?? 0;
-                if (buffer is not null) {
-                    await ctx.Response.OutputStream.WriteAsync(buffer);
+                if (Configuration.addressBook || Auth.IsAuthenticated(ctx)) {
+                    byte[] buffer = DatabaseInstances.users.SerializeContacts();
+                    ctx.Response.StatusCode = (int)HttpStatusCode.OK;
+                    ctx.Response.ContentLength64 = buffer?.Length ?? 0;
+                    if (buffer is not null) {
+                        await ctx.Response.OutputStream.WriteAsync(buffer);
+                    }
                 }
+                else {
+                    ctx.Response.StatusCode = (int)HttpStatusCode.Forbidden;
+                }
+
                 ctx.Response.Close();
                 return;
             }
-
-            ctx.Response.AddHeader("X-Frame-Options", "DENY");
-            ctx.Response.AddHeader("X-Content-Type-Options", "nosniff");
-
-            //ctx.Response.AddHeader("Content-Security-Policy", "default-src 'self'; img-src 'self' data:");
-            //relaxed policy for debit-notes printing
-            ctx.Response.AddHeader("Content-Security-Policy", "default-src 'self'; img-src 'self' data:; script-src 'self'; style-src 'self' 'unsafe-inline'");
 
             if (await CacheHandler(ctx, path)) return;
 

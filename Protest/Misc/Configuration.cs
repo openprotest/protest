@@ -14,6 +14,7 @@ internal static class Configuration {
     internal static byte[] DB_KEY;
     internal static byte[] DB_KEY_IV;
 
+    internal static bool addressBook = false;
     internal static bool backdoor = true;
 
     internal static string frontPath = Path.Join(Data.DIR_BASE, "front");
@@ -61,6 +62,10 @@ internal static class Configuration {
                 if (IPAddress.TryParse(value.ToString(), out IPAddress trustedProxy)) {
                     trustedProxies.Add(trustedProxy);
                 }
+                break;
+
+            case "address_book":
+                addressBook = String.Equals(value.ToString(), "true", StringComparison.OrdinalIgnoreCase);
                 break;
 
             case "backdoor":
@@ -128,6 +133,10 @@ internal static class Configuration {
 
         builder.AppendLine($"# If using a reverse proxy, define its IP here to mark it as trusted.");
         builder.AppendLine($"#trusted_proxy = 0.0.0.0");
+        builder.AppendLine();
+
+        builder.AppendLine($"# Enables a global address book, accessible to all users without authentication");
+        builder.AppendLine($"address_book = {addressBook.ToString().ToLower()}");
         builder.AppendLine();
 
         builder.AppendLine($"# When the backdoor flag set to true, requests originating from the loopback address bypass authentication");

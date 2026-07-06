@@ -138,6 +138,10 @@ internal static class Auth {
             return false;
         }
 
+#if !DEBUG
+        Thread.Sleep(RandomNumberGenerator.GetInt32(250));
+#endif
+
         IPAddress clientIP = ctx.Request.RemoteEndPoint?.Address;
         if (clientIP is null) {
             ctx.Response.StatusCode = (int)HttpStatusCode.BadRequest;
@@ -201,10 +205,6 @@ internal static class Auth {
             ctx.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
             return false;
         }
-
-#if !DEBUG
-        Thread.Sleep(RandomNumberGenerator.GetInt32(250));
-#endif
 
         bool isSuccessful = access.isDomainUser && OperatingSystem.IsWindows()
             ? Protocols.Ldap.TryDirectoryAuthentication(username, password)
