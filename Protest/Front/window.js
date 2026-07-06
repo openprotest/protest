@@ -720,6 +720,8 @@ class Window {
 			"", "",
 			`width=${this.win.clientWidth},height=${this.win.clientHeight},left=${window.screenX + this.win.offsetLeft},top=${window.screenY + this.win.offsetTop}`);
 
+		const origin = location.origin;
+		newWin.document.write(`<meta http-equiv='Content-Security-Policy' content="default-src ${origin}; img-src ${origin} data:; script-src ${origin}; style-src ${origin} 'unsafe-inline'">`);
 		newWin.document.write(`<title>${WIN.EscapeHtml(this.header.textContent)}</title>`);
 		newWin.document.write(`<link rel='icon' href='${this.iconPath}' media='(prefers-color-scheme:light)'>`);
 		newWin.document.write(`<link rel='icon' href='${this.iconPath}?light' media='(prefers-color-scheme:dark)'>`);
@@ -730,7 +732,6 @@ class Window {
 
 		for (let i = 0; i < this.cssDependencies.length; i++)
 			newWin.document.write(`<link rel='stylesheet' href='${this.cssDependencies[i]}'>`);
-
 
 		newWin.document.close();
 

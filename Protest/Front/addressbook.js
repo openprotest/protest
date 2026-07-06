@@ -84,6 +84,15 @@ class AddressBook extends Window {
 		try {
 			const response = await fetch("contacts");
 
+			if (response.status >= 400 && response.status < 500) {
+				const okButton = this.ConfirmBox("Unauthorized access. Please contact your system administrator.", true, "mono/lock.svg");
+				okButton.style.display = "none";
+				okButton.parentElement.parentElement.style.marginTop = "20px";
+				okButton.parentElement.parentElement.style.backgroundPosition = "16px 50%";
+				okButton.parentElement.parentElement.parentElement.style.top = "0";
+				return;
+			}
+
 			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
 
 			json = await response.json();

@@ -1141,7 +1141,8 @@ class DebitNotes extends Window {
 		}
 
 		const newPrint = window.open();
-		newPrint.document.write("<html><body>" + this.preview.innerHTML + "</body></html>");
+		const csp = "<meta http-equiv=\"Content-Security-Policy\" content=\"default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'\">";
+		newPrint.document.write("<html><head>" + csp + "</head><body>" + this.preview.innerHTML + "</body></html>");
 		newPrint.document.title = "Debit note";
 		newPrint.document.body.childNodes[0].style.backgroundColor = "white";
 		newPrint.onload = ()=> newPrint.print();
