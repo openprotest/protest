@@ -310,7 +310,7 @@ class Watchdog extends Window {
 		timeoutInput.type = "number";
 		timeoutInput.min = 1;
 		timeoutInput.max = 10_000;
-		timeoutInput.value = 500;
+		timeoutInput.value = 3000;
 		timeoutInput.style.gridArea = "5 / 3";
 
 
@@ -408,6 +408,7 @@ class Watchdog extends Window {
 			nameInput.value = this.selected.name;
 			targetInput.value = this.selected.target;
 			portInput.value = this.selected.port;
+			timeoutInput.value = this.selected.timeout;
 			methodInput.value = this.selected.method;
 			keywordInput.value = this.selected.keyword;
 			queryInput.value = this.selected.query;

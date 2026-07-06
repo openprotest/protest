@@ -1,5 +1,4 @@
-﻿using Protest.Tools;
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
@@ -14,6 +13,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
+using Protest.Tools;
 using Protest.Http;
 
 namespace Protest.Tasks;
@@ -409,23 +409,15 @@ internal static class Watchdog {
         return CheckTls(host, port, watcher.timeout, watcher.retries, watcher.ackerror);
     }
 
-    private static short CheckTls(string host, int port, int timeout, int retries, bool acknowledgeError) {
-        SslPolicyErrors policyErrors = SslPolicyErrors.None;
-
-        for (int i = 0; i < retries; i++) {
+    private static short CheckTls(string host, int port, int timeout, int attempts, bool acknowledgeError) {
+        for (int i = 0; i < Math.Max(attempts, 1); i++) {
+            SslPolicyErrors policyErrors = SslPolicyErrors.None;
             X509Certificate2 cert2 = null;
 
             try {
-                using TcpClient tcp = new TcpClient {
-                    ReceiveTimeout = timeout,
-                    SendTimeout = timeout
-                };
+                using TcpClient tcp = new TcpClient();
 
-                IAsyncResult ar = tcp.BeginConnect(host, port, null, null);
-
-                if (!ar.AsyncWaitHandle.WaitOne(timeout)) continue;
-
-                tcp.EndConnect(ar);
+                if (!tcp.ConnectAsync(host, port).Wait(Math.Max(timeout, 2000))) continue;
 
                 using NetworkStream networkStream = tcp.GetStream();
                 using SslStream ssl = new SslStream(networkStream, false,
@@ -439,10 +431,11 @@ internal static class Watchdog {
                     }
                 );
 
-                ssl.ReadTimeout  = timeout;
-                ssl.WriteTimeout = timeout;
-
-                ssl.AuthenticateAsClient(host);
+                using CancellationTokenSource cts = new CancellationTokenSource(Math.Max(timeout, 2000));
+                SslClientAuthenticationOptions sslOptions = new SslClientAuthenticationOptions {
+                    TargetHost = host
+                };
+                ssl.AuthenticateAsClientAsync(sslOptions, cts.Token).GetAwaiter().GetResult();
 
                 if (cert2 is null) continue;
 
@@ -865,7 +858,7 @@ file sealed class WatcherJsonConverter : JsonConverter<Watchdog.Watcher> {
                 case "timeout": watcher.timeout = Math.Max(reader.GetInt32(), 5); break;
                 case "method" : watcher.method  = reader.GetString(); break;
                 case "keyword": watcher.keyword = reader.GetString(); break;
-                case "query" : watcher.query    = reader.GetString(); break;
+                case "query"  : watcher.query   = reader.GetString(); break;
 
                 case "type":
                     string typeString = reader.GetString().ToUpper();
