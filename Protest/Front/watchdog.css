@@ -22,7 +22,6 @@
 	top: 48px;
 	bottom: 4px;
 	border-radius: 4px;
-	color: var(--clr-dark);
 	overflow-y: auto;
 	transition: .2s;
 }

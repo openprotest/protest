@@ -1479,23 +1479,26 @@ class Environment extends Tabs {
 
 		okButton.value = "Save";
 		innerBox.style.padding = "20px";
-		innerBox.parentElement.style.width = "480px";
+		innerBox.parentElement.style.maxWidth = "560px";
 
 		const attributes = [];
 
 		const CreateAttribute = (name, label)=> {
 			const container = document.createElement("div");
 			container.style.padding = "4px 0";
+			container.style.whiteSpace = "nowrap";
 			innerBox.appendChild(container);
 
 			const labelBox = document.createElement("div");
 			labelBox.textContent = `${label}: `;
 			labelBox.style.display = "inline-block";
-			labelBox.style.minWidth = "200px";
+			labelBox.style.minWidth = "150px";
 			container.appendChild(labelBox);
 
 			const valueInput = document.createElement("input");
 			valueInput.type = name === "password" ? "password" : "text";
+			valueInput.style.width = "calc(100% - 160px)";
+			valueInput.style.minWidth = "100px";
 			container.appendChild(valueInput);
 
 			attributes.push({

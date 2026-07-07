@@ -127,7 +127,7 @@ class ReverseProxy extends List {
 		this.totalTxLabel.style.left = "8px";
 		this.totalTxLabel.style.top = "245px";
 		this.totalTxLabel.style.width = "96px";
-		this.totalTxLabel.style.color = "light-dark(var(--clr-dark), rgb(232,118,0))";
+		this.totalTxLabel.style.color = "light-dark(var(--clr-dark), rgb(255,128,0))";
 		this.totalTxLabel.style.textAlign = "right";
 		this.totalTxLabel.style.lineHeight = "20px";
 
@@ -150,7 +150,7 @@ class ReverseProxy extends List {
 		this.totalTxValue.style.left = "114px";
 		this.totalTxValue.style.top = "245px";
 		this.totalTxValue.style.width = "100px";
-		this.totalTxValue.style.color = "rgb(232,118,0)";
+		this.totalTxValue.style.color = "rgb(255,128,0)";
 		this.totalTxValue.style.backgroundColor = "color-mix(in hsl shorter hue, var(--clr-dark) 50%, transparent 50%)";
 		this.totalTxValue.style.borderRadius = "4px";
 		this.totalTxValue.style.padding = "0 4px";
@@ -177,7 +177,7 @@ class ReverseProxy extends List {
 		this.txRateLabel.style.left = "260px";
 		this.txRateLabel.style.top = "245px";
 		this.txRateLabel.style.width = "80px";
-		this.txRateLabel.style.color = "light-dark(var(--clr-dark), rgb(232,118,0))";
+		this.txRateLabel.style.color = "light-dark(var(--clr-dark), rgb(255,128,0))";
 		this.txRateLabel.style.textAlign = "right";
 		this.txRateLabel.style.lineHeight = "20px";
 
@@ -200,7 +200,7 @@ class ReverseProxy extends List {
 		this.txRateValue.style.left = "350px";
 		this.txRateValue.style.top = "245px";
 		this.txRateValue.style.width = "100px";
-		this.txRateValue.style.color = "rgb(232,118,0)";
+		this.txRateValue.style.color = "rgb(255,128,0)";
 		this.txRateValue.style.backgroundColor = "color-mix(in hsl shorter hue, var(--clr-dark) 50%, transparent 50%)";
 		this.txRateValue.style.borderRadius = "4px";
 		this.txRateValue.style.padding = "0 4px";
@@ -373,7 +373,7 @@ class ReverseProxy extends List {
 
 						const transmitted = document.createElement("div");
 						transmitted.textContent = UI.SizeToString(json.hosts[i].tx);
-						transmitted.style.color = "rgb(232,118,0)";
+						transmitted.style.color = "rgb(255,128,0)";
 						transmitted.style.fontFamily = "monospace";
 						transmitted.style.position = "absolute";
 						transmitted.style.left = "53%";
@@ -462,7 +462,7 @@ class ReverseProxy extends List {
 
 			this.maximum = Math.max(this.maximum, rxRate, txRate);
 
-			this.ctx.fillStyle = "rgb(232,118,0)";
+			this.ctx.fillStyle = "rgb(255,128,0)";
 			this.ctx.beginPath();
 			this.ctx.arc(ReverseProxy.CANVAS_W - 56, ReverseProxy.CANVAS_H * (1 - txRate / this.maximum), 3, 0, 2*Math.PI, false);
 			this.ctx.closePath();
@@ -475,7 +475,7 @@ class ReverseProxy extends List {
 			this.ctx.fill();
 		}
 
-		this.ctx.strokeStyle = "rgb(232,118,0)";
+		this.ctx.strokeStyle = "rgb(255,128,0)";
 		this.ctx.beginPath();
 		for (let i = history.length-1; i >= 1; i--) {
 			const delta = history[i].tx - history[i-1].tx;
@@ -555,7 +555,7 @@ class ReverseProxy extends List {
 
 		ctx.lineWidth = 2;
 
-		ctx.strokeStyle = "rgb(232,118,0)";
+		ctx.strokeStyle = "rgb(255,128,0)";
 		ctx.beginPath();
 		for (let i = history.length-1; i >= 1; i--) {
 			const rate = Math.max(history[i].tx - history[i-1].tx, 0) / (this.args.interval / 1000);

@@ -943,7 +943,7 @@ class Watchdog extends Window {
 		element.className = "list-element";
 
 		const nameLabel = document.createElement("div");
-		nameLabel.style.opacity = watcher.enable ? "1" : "0.5";
+		nameLabel.style.opacity = watcher.enable ? "1" : "0.6";
 		nameLabel.textContent = watcher.name;
 
 		const protocol = document.createElement("div");

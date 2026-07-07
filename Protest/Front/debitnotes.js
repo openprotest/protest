@@ -320,8 +320,15 @@ class DebitNotes extends Window {
 		this.list.appendChild(element);
 
 		const label = document.createElement("div");
-		label.textContent = debit.name;
 		element.appendChild(label);
+		
+		if (debit.name.trim().length === 0 ) {
+			label.textContent = "no name";
+			label.style.color = "rgb(80,80,80)";
+		}
+		else {
+			label.textContent = debit.name;
+		}
 
 		if (debit.status === "returned") {
 			const returnedLabel = document.createElement("div");
@@ -1141,8 +1148,7 @@ class DebitNotes extends Window {
 		}
 
 		const newPrint = window.open();
-		const csp = "<meta http-equiv=\"Content-Security-Policy\" content=\"default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'\">";
-		newPrint.document.write("<html><head>" + csp + "</head><body>" + this.preview.innerHTML + "</body></html>");
+		newPrint.document.write("<html><body>" + this.preview.innerHTML + "</body></html>");
 		newPrint.document.title = "Debit note";
 		newPrint.document.body.childNodes[0].style.backgroundColor = "white";
 		newPrint.onload = ()=> newPrint.print();
