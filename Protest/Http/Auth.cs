@@ -622,6 +622,10 @@ internal static class Auth {
                 path.Add("/ws/ssh");
                 break;
 
+            case "vnc:write":
+                path.Add("/ws/vnc");
+                break;
+
             case "wmi:write":
                 path.Add("/wmi/query");
                 path.Add("/wmi/killprocess");

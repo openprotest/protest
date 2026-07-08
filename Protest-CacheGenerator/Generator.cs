@@ -88,11 +88,17 @@ public class Generator : IIncrementalGenerator {
         using BinaryReader br = new BinaryReader(fs);
         byte[] bytes = br.ReadBytes((int)file.Length);
 
-        if ( filePath.EndsWith(".htm") ||
+        string normalized = filePath.Replace('\\', '/');
+        bool isThirdParty = normalized.Contains("/novnc/")
+             || filePath.EndsWith(".min.js")
+             || filePath.EndsWith(".min.css");
+
+        if (!isThirdParty && (
+             filePath.EndsWith(".htm") ||
              filePath.EndsWith(".html") ||
              filePath.EndsWith(".svg") ||
              filePath.EndsWith(".css") ||
-             filePath.EndsWith(".js")) {
+             filePath.EndsWith(".js"))) {
 
             bytes = Minify(bytes, false);
         }

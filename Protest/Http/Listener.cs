@@ -479,6 +479,7 @@ internal sealed class Listener {
         case "/ws/terminal":         await Tools.Terminal.WebSocketHandler(ctx);     return true;
         case "/ws/telnet":           await Protocols.Telnet.WebSocketHandler(ctx);   return true;
         case "/ws/ssh":              await Protocols.Ssh.WebSocketHandler(ctx);      return true;
+        case "/ws/vnc":              await Protocols.Vnc.WebSocketHandler(ctx);      return true;
         case "/ws/issues":           await Tasks.Issues.WebSocketHandler(ctx);       return true;
         case "/ws/reverseproxy":     await Proxy.ReverseProxy.WebSocketHandler(ctx); return true;
         case "/ws/ipdiscovery":      await Tools.IpDiscovery.WebSocketHandler(ctx);  return true;

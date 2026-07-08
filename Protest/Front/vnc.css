@@ -1,0 +1,28 @@
+.vnc-canvas-box {
+	position: absolute;
+	inset: 0;
+	cursor: crosshair !important;
+}
+
+.vnc-status-box {
+	display: none;
+	position: absolute;
+	z-index: 1;
+	left: calc(50% - 110px);
+	top: 20px;
+	padding: 20px 20px 20px 64px;
+	text-align: center;
+	border-radius: 4px;
+	box-shadow: var(--clr-dark) 0 0 4px;
+	font-family: var(--global-font-family);
+	font-weight: 800;
+	white-space: nowrap;
+	color: var(--clr-dark);
+	background-color: var(--clr-pane);
+	background-image: url(mono/connect.svg);
+	background-size: 48px 48px;
+	background-position: 8px 50%;
+	background-repeat: no-repeat;
+	-webkit-user-select: none; user-select: none;
+	pointer-events: none;
+}

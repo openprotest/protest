@@ -145,14 +145,8 @@ internal sealed class Cache {
 
         Dictionary<string, byte[]> files = new Dictionary<string, byte[]>();
 
-        foreach (FileInfo f in dir.GetFiles()) {
+        foreach (FileInfo f in dir.GetFiles("*", SearchOption.AllDirectories)) {
             LoadFile(f, files);
-        }
-
-        foreach (DirectoryInfo d in dir.GetDirectories()) {
-            foreach (FileInfo f in d.GetFiles()) {
-                LoadFile(f, files);
-            }
         }
 
         HandleFiles(files, false);
@@ -171,11 +165,17 @@ internal sealed class Cache {
         byte[] bytes = br.ReadBytes((int)f.Length);
 
 #if !DEBUG
-        if (String.Equals(f.Extension, ".htm", StringComparison.OrdinalIgnoreCase) ||
+        string normalized = f.FullName.Replace("\\", "/");
+        bool isThirdParty = normalized.Contains("/novnc/")
+            || f.Name.EndsWith(".min.js", StringComparison.OrdinalIgnoreCase)
+            || f.Name.EndsWith(".min.css", StringComparison.OrdinalIgnoreCase);
+
+        if (!isThirdParty && (
+            String.Equals(f.Extension, ".htm", StringComparison.OrdinalIgnoreCase) ||
             String.Equals(f.Extension, ".html", StringComparison.OrdinalIgnoreCase) ||
             String.Equals(f.Extension, ".svg", StringComparison.OrdinalIgnoreCase) ||
             String.Equals(f.Extension, ".css", StringComparison.OrdinalIgnoreCase) ||
-            String.Equals(f.Extension, ".js", StringComparison.OrdinalIgnoreCase)) {
+            String.Equals(f.Extension, ".js", StringComparison.OrdinalIgnoreCase))) {
             bytes = Minify(bytes, false);
         }
 #endif

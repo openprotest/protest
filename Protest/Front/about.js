@@ -121,6 +121,7 @@ class About extends Tabs {
 			const container = document.createElement("div");
 			container.style.textAlign = "left";
 			container.style.paddingBottom = "4px";
+			container.style.userSelect = "text";
 			center.appendChild(container);
 			
 			const nameBox  = document.createElement("div");
@@ -152,6 +153,8 @@ class About extends Tabs {
 		CreateCredit("Lextm.SharpSnmpLib",         "Lextm",           "https://nuget.org/packages/Lextm.SharpSnmpLib");
 		CreateCredit("Otp.NET",                    "kspearrin",       "https://nuget.org/packages/Otp.NET/1.2.2");
 		CreateCredit("Porta.Pty",                  "Laird McConnell", "https://github.com/tomlm/Porta.Pty");
+		CreateCredit("noVNC",                      "noVNC team",      "https://github.com/novnc/noVNC");
+		CreateCredit("QRCode.js",                  "Sangmin, Shim",   "https://github.com/davidshimjs/qrcodejs");
 		CreateCredit("MAC addresses lookup table", "ieee",            "https://regauth.standards.ieee.org/standards-ra-web/pub/view.html");
 		CreateCredit("Open Sans typeface",         "Steve Matteson",  "");
 

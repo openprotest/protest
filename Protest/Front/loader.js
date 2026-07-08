@@ -133,6 +133,7 @@ const LOADER = {
 		"terminal.js",
 		"telnet.js",
 		"ssh.js",
+		"vnc.js",
 		"wmi.js",
 		"snmp.js",
 		"websitecheck.js",
@@ -356,6 +357,7 @@ const LOADER = {
 		case "ReverseProxy" : return new ReverseProxy(command.args);
 		case "Telnet"       : return new Telnet(command.args);
 		case "Ssh"          : return new Ssh(command.args);
+		case "RemoteDesktop": return new RemoteDesktop(command.args);
 		case "Wmi"          : return new Wmi(command.args);
 		case "Terminal"     : return new Terminal(command.args);
 		case "Snmp"         : return new Snmp(command.args);
