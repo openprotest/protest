@@ -171,6 +171,29 @@ const WIN = {
 		contextmenu.appendChild(newItem);
 
 		return newItem;
+	},
+
+	DragWithCapture: (captor, event, onMove, onEnd)=> {
+		const pointerId = event.pointerId;
+		try { captor.setPointerCapture(pointerId); } catch {}
+
+		const move = e=> {
+			if (e.pointerId !== pointerId) return;
+			onMove(e);
+		};
+
+		const finish = e=> {
+			if (e.pointerId !== pointerId) return;
+			captor.removeEventListener("pointermove", move);
+			captor.removeEventListener("pointerup", finish);
+			captor.removeEventListener("pointercancel", finish);
+			try { captor.releasePointerCapture(pointerId); } catch {}
+			if (onEnd) onEnd(e);
+		};
+
+		captor.addEventListener("pointermove", move);
+		captor.addEventListener("pointerup", finish);
+		captor.addEventListener("pointercancel", finish);
 	}
 };
 
@@ -365,45 +388,68 @@ class Window {
 		this.win.addEventListener("focus", ()=> this.BringToFront());
 
 		let dblclickCheck = false;
-		this.win.onmousedown = event=> {
+		this.win.addEventListener("pointerdown", event=> {
 			if (!this.popOutWindow) {
 				this.BringToFront();
 			}
 
-			if (event.button === 0 && event.offsetY < 32) { //left click on title bar
-				WIN.offsetX = this.win.offsetLeft;
-				WIN.offsetY = this.win.offsetTop;
-				WIN.x0 = event.clientX;
-				WIN.y0 = event.clientY;
-				WIN.isMoving = true;
-
-				this.win.style.transition = "0s";
-
-				if (dblclickCheck && !onMobile) {
-					this.Toggle();
-					dblclickCheck = false;
-					return;
-				}
-				dblclickCheck = true;
-				setTimeout(()=> { dblclickCheck = false; }, 333);
-			}
-			WIN.active = this;
 			WIN.focused = this;
-		};
+			const onTitleBar = event.target === this.header
+				|| event.target === this.titleIcon
+				|| (event.target === this.win && event.offsetY < 32);
 
-		this.resize.onmousedown = event=> {
-			this.BringToFront();
-			if (event.button === 0) { //left click
-				this.win.style.transition = "0s";
-				WIN.offsetX = this.win.clientWidth;
-				WIN.offsetY = this.win.clientHeight;
-				WIN.x0 = event.clientX;
-				WIN.y0 = event.clientY;
-				WIN.isResizing = true;
-				WIN.active = this;
+			if (event.button !== 0 || !onTitleBar) return;
+
+			if (dblclickCheck && !onMobile) {
+				this.Toggle();
+				dblclickCheck = false;
+				return;
 			}
+			dblclickCheck = true;
+			setTimeout(()=> { dblclickCheck = false; }, 333);
+
+			const startLeft = this.win.offsetLeft;
+			const startTop = this.win.offsetTop;
+			const x0 = event.clientX;
+			const y0 = event.clientY;
+
+			this.win.style.transition = "0s";
+
+			WIN.DragWithCapture(this.win, event, e=> {
+				document.getSelection().removeAllRanges();
+
+				if (this.isMaximized && e.clientY < 64) return;
+				if (this.isMaximized) this.Toggle();
+
+				let x = (startLeft - (x0 - e.clientX)) * 100 / container.clientWidth;
+				this.win.style.left = Math.min(100 - this.win.clientWidth * 100 / container.clientWidth, Math.max(0, x)) + "%";
+
+				let y = (startTop - (y0 - e.clientY)) * 100 / container.clientHeight;
+				y = Math.min(100 - this.win.clientHeight * 100 / container.clientHeight, Math.max(0, y));
+				this.win.style.top = `${(y < 0) ? 0 : y}%`;
+			});
+		});
+
+		this.resize.addEventListener("pointerdown", event=> {
+			this.BringToFront();
 			event.stopPropagation();
-		};
+
+			if (event.button !== 0) return;
+
+			this.win.style.transition = "0s";
+			const startW = this.win.clientWidth;
+			const startH = this.win.clientHeight;
+			const x0 = event.clientX;
+			const y0 = event.clientY;
+
+			WIN.DragWithCapture(this.resize, event, e=> {
+				let w = (startW - (x0 - e.clientX)) * 100 / container.clientWidth;
+				let h = (startH - (y0 - e.clientY)) * 100 / container.clientHeight;
+				this.win.style.width = Math.min(100 - this.win.offsetLeft * 100 / container.clientWidth, w) + "%";
+				this.win.style.height = Math.min(100 - this.win.offsetTop * 100 / container.clientHeight, h) + "%";
+				this.AfterResize();
+			});
+		});
 
 		let iconX = 0;
 		let iconY = 0;
