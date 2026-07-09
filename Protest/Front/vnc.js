@@ -1,6 +1,6 @@
 "use strict";
 
-class RemoteDesktop extends Window {
+class Vnc extends Window {
 	static loadPromise = null;
 	static RFB = null;
 
@@ -20,9 +20,14 @@ class RemoteDesktop extends Window {
 
 		this.SetupToolbar();
 		this.connectButton    = this.AddToolbarButton("Connect", "mono/connect.svg?light");
+		this.viewOnlyButton   = this.AddToolbarButton("View only", "mono/lock.svg?light");
 		this.AddToolbarSeparator();
-		this.cadButton        = this.AddToolbarButton("Send Ctrl+Alt+Del", "mono/keyboard.svg?light");
-		this.fitButton        = this.AddToolbarButton("Fit to window", "mono/monitor.svg?light");
+		this.cadButton        = this.AddToolbarButton("Send ctrl+alt+del", "mono/cad.svg?light");
+		this.sendTextButton   = this.AddToolbarButton("Send key-strokes", "mono/keyboard.svg?light");
+		this.AddToolbarSeparator();
+		this.fitButton        = this.AddToolbarButton("Fit to window", "mono/fittoscreen.svg?light");
+		this.fullScreenButton = this.AddToolbarButton("Full screen", "mono/fullscreen.svg?light");
+		this.screenshotButton = this.AddToolbarButton("Save screenshot", "mono/download.svg?light");
 
 		this.canvasBox = document.createElement("div");
 		this.canvasBox.className = "vnc-canvas-box";
@@ -34,28 +39,46 @@ class RemoteDesktop extends Window {
 
 		this.connectButton.onclick = ()=> this.Connect();
 		this.cadButton.onclick     = ()=> { if (this.rfb) this.rfb.sendCtrlAltDel(); };
+		this.sendTextButton.onclick= ()=> this.SendTextDialog();
+		this.viewOnlyButton.onclick= ()=> this.ToggleViewOnly();
 		this.fitButton.onclick     = ()=> this.ToggleScaling();
+		this.screenshotButton.onclick = ()=> this.SaveScreenshot();
+
+		this.fullScreenButton.onclick = ()=> {
+			this.canvasBox.requestFullscreen();
+		};
 
 		this.scaleViewport = true;
+		this.viewOnly = false;
 		this.fitButton.style.borderBottom = "3px solid rgb(192,192,192)";
 
 		if (this.args.host) {
-			this.Connect();
+			this.SetTitle(`VNC - ${this.args.host}`);
+			if (this.args.autoconnect !== false) {
+				this.Connect();
+			}
+			else {
+				this.statusBox.style.display = "initial";
+				this.statusBox.style.backgroundImage = "url(mono/disconnect.svg)";
+				this.statusBox.textContent = "Not connected";
+				this.content.appendChild(this.statusBox);
+				this.connectButton.disabled = false;
+			}
 		}
 	}
 
 	async LoadNoVNC() {
-		if (RemoteDesktop.RFB) return RemoteDesktop.RFB;
+		if (Vnc.RFB) return Vnc.RFB;
 
-		RemoteDesktop.loadPromise ??= import("./novnc/core/rfb.js").then(
-			module=> RemoteDesktop.RFB = module.default,
+		Vnc.loadPromise ??= import("./novnc/core/rfb.js").then(
+			module=> Vnc.RFB = module.default,
 			ex=> {
-				RemoteDesktop.loadPromise = null; //allow a retry on next attempt
+				Vnc.loadPromise = null; //allow a retry on next attempt
 				throw new Error(`Failed to load the noVNC library from ./novnc/ (${ex.message})`);
 			}
 		);
 
-		return RemoteDesktop.loadPromise;
+		return Vnc.loadPromise;
 	}
 
 	async Connect() {
@@ -114,6 +137,8 @@ class RemoteDesktop extends Window {
 		//so the operator never loses the pointer.
 		this.rfb.showDotCursor = true;
 
+		this.rfb.viewOnly = this.viewOnly;
+
 		this.rfb.addEventListener("connect", ()=> {
 			this.SetTitle(`VNC - ${host}`);
 			this.statusBox.style.display = "none";
@@ -135,6 +160,13 @@ class RemoteDesktop extends Window {
 
 		this.rfb.addEventListener("credentialsrequired", ()=> {
 			this.PromptCredentials();
+		});
+
+		this.rfb.addEventListener("clipboard", e=> {
+			//Sync the remote clipboard to the local one. writeText may be rejected
+			//without a user gesture depending on the browser; ignore failures.
+			const text = e.detail?.text;
+			if (text) navigator.clipboard?.writeText(text).catch(()=> {});
 		});
 	}
 
@@ -170,10 +202,103 @@ class RemoteDesktop extends Window {
 		setTimeout(()=> passwordInput.focus(), 200);
 	}
 
+	SendTextDialog() {
+		if (!this.rfb) return;
+
+		const dialog = this.DialogBox("240px");
+		if (dialog === null) return;
+
+		const {okButton, innerBox} = dialog;
+		okButton.value = "Send";
+
+		innerBox.style.padding = "20px";
+		innerBox.style.overflow = "hidden";
+		innerBox.parentElement.style.maxWidth = "560px";
+		innerBox.parentElement.parentElement.onclick = event=> event.stopPropagation();
+
+		const textLabel = document.createElement("div");
+		textLabel.textContent = "Text to send as keystrokes (Ctrl+Enter to send):";
+		textLabel.style.paddingBottom = "8px";
+
+		const textInput = document.createElement("textarea");
+		textInput.style.width = "100%";
+		textInput.style.height = "120px";
+		textInput.style.boxSizing = "border-box";
+		textInput.style.resize = "none";
+		textInput.spellcheck = false;
+		innerBox.append(textLabel, textInput);
+
+		textInput.onkeydown = event=> {
+			if (event.key === "Enter" && (event.ctrlKey || event.metaKey)) {
+				event.preventDefault();
+				okButton.click();
+			}
+		};
+
+		okButton.onclick = ()=> {
+			const text = textInput.value;
+			dialog.Close();
+			this.SendKeystrokes(text);
+		};
+
+		setTimeout(()=> textInput.focus(), 200);
+	}
+
+	SendKeystrokes(text) {
+		if (!this.rfb || !text) return;
+
+		for (const ch of text) {
+			let keysym;
+			switch (ch) {
+			case "\n":
+			case "\r": keysym = 0xFF0D; break; //Return
+			case "\t": keysym = 0xFF09; break; //Tab
+			default:
+				const cp = ch.codePointAt(0);
+				keysym = (cp < 0x100) ? cp : 0x01000000 + cp;
+				break;
+			}
+
+			this.rfb.sendKey(keysym, null);
+		}
+	}
+
 	ToggleScaling() {
 		this.scaleViewport = !this.scaleViewport;
 		this.fitButton.style.borderBottom = this.scaleViewport ? "3px solid rgb(192,192,192)" : "none";
 		if (this.rfb) this.rfb.scaleViewport = this.scaleViewport;
+	}
+
+	ToggleViewOnly() {
+		this.viewOnly = !this.viewOnly;
+
+		this.cadButton.disabled = this.viewOnly;
+		this.sendTextButton.disabled = this.viewOnly;
+
+		if (this.rfb) this.rfb.viewOnly = this.viewOnly;
+		this.viewOnlyButton.style.borderBottom = this.viewOnly ? "3px solid rgb(192,192,192)" : "none";
+	}
+
+	SaveScreenshot() {
+		if (!this.rfb) return;
+
+		this.rfb.toBlob(blob=> {
+			if (!blob) return;
+
+			const url = URL.createObjectURL(blob);
+			const link = document.createElement("a");
+			link.href = url;
+
+			const host = this.args.host ?? "vnc";
+			const stamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
+			link.download = `${host}_${stamp}.png`;
+
+			document.body.appendChild(link);
+			link.click();
+			link.remove();
+
+			setTimeout(()=> URL.revokeObjectURL(url), 1000);
+		});
 	}
 
 	Close() { //overrides

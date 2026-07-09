@@ -1,7 +1,6 @@
 .vnc-canvas-box {
 	position: absolute;
 	inset: 0;
-	cursor: crosshair !important;
 }
 
 .vnc-status-box {

@@ -357,7 +357,7 @@ const LOADER = {
 		case "ReverseProxy" : return new ReverseProxy(command.args);
 		case "Telnet"       : return new Telnet(command.args);
 		case "Ssh"          : return new Ssh(command.args);
-		case "RemoteDesktop": return new RemoteDesktop(command.args);
+		case "Vnc"          : return new Vnc({ ...command.args, autoconnect:false });
 		case "Wmi"          : return new Wmi(command.args);
 		case "Terminal"     : return new Terminal(command.args);
 		case "Snmp"         : return new Snmp(command.args);

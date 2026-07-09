@@ -36,7 +36,7 @@ class DeviceView extends View {
 		"object guid", "distinguished name", "dns hostname", "created on dc", "fqdn",
 
 		["mono/credential.svg", "credentials"],
-		"domain", "username", "password", "ssh username", "ssh password", "uvnc password", "anydesk id", "anydesk password", "snmp profile"
+		"domain", "username", "password", "ssh username", "ssh password", "vnc password", "uvnc password", "anydesk id", "anydesk password", "snmp profile"
 	];
 
 	static PRINTER_TYPES = ["fax", "multiprinter", "ticket printer", "printer"];
@@ -647,9 +647,23 @@ class DeviceView extends View {
 				};
 			}
 
-			if (overwriteProtocol.uvnc || ports.includes(5900)) {
+			if (overwriteProtocol.vnc || ports.includes(5900)) {
+				const vncPort = overwriteProtocol.vnc || 5900;
+				const actionButton = this.CreateSideButton("mono/uvnc.svg", "VNC");
+				actionButton.onclick = async ()=> {
+					let vncPassword = null;
+					if ("vnc password" in this.link) {
+						const response = await fetch(`/db/${this.dbTarget}/attribute?file=${this.args.file}&attribute=vnc password`);
+						if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
+						vncPassword = await response.text();
+						if (vncPassword.length === 0) vncPassword = null;
+					}
+					new Vnc({ host: host, port: vncPort, password: vncPassword, file: this.args.file });
+				};
+			}
+			else if (overwriteProtocol.uvnc || ports.includes(5900)) {
 				const vncPort = overwriteProtocol.uvnc || 5900;
-				const actionButton = this.CreateSideButton("mono/uvnc.svg", "VNC (integrated)");
+				const actionButton = this.CreateSideButton("mono/uvnc.svg", "VNC");
 				actionButton.onclick = async ()=> {
 					let uvncPassword = null;
 					if ("uvnc password" in this.link) {
@@ -658,12 +672,12 @@ class DeviceView extends View {
 						uvncPassword = await response.text();
 						if (uvncPassword.length === 0) uvncPassword = null;
 					}
-					new RemoteDesktop({ host: host, port: vncPort, password: uvncPassword, file: this.args.file });
+					new Vnc({ host: host, port: vncPort, password: uvncPassword, file: this.args.file });
 				};
 			}
 
 			if (overwriteProtocol.uvnc) { //uvnc
-				const actionButton = this.CreateSideButton("mono/uvnc.svg", "uVNC");
+				const actionButton = this.CreateSideButton("mono/uvnc.svg", "uVNC (client)");
 				actionButton.onclick = async ()=> {
 					if (localStorage.getItem("prefer_vnc_file") === "true") {
 						this.DownloadVnc(host, overwriteProtocol.uvnc);
@@ -681,7 +695,7 @@ class DeviceView extends View {
 				};
 			}
 			else if (ports.includes(5900)) {
-				const actionButton = this.CreateSideButton("mono/uvnc.svg", "uVNC");
+				const actionButton = this.CreateSideButton("mono/uvnc.svg", "uVNC (client)");
 				actionButton.onclick = async ()=> {
 					if (localStorage.getItem("prefer_vnc_file") === "true") {
 						this.DownloadVnc(host, 5900);
