@@ -820,7 +820,6 @@ class Window {
 		newWin.document.body.appendChild(this.content);
 
 		if (this.toolbar) {
-			toolbar = this.toolbar;
 			this.toolbar.style.top = "4px";
 			newWin.document.body.appendChild(this.toolbar);
 			this.toolbar.appendChild(popInButton);
@@ -1048,7 +1047,6 @@ class Window {
 		if (height != undefined) {
 			dialogBox.style.maxHeight = height;
 		}
-		dim.appendChild(dialogBox);
 
 		const innerBox = document.createElement("div");
 		innerBox.style.position = "absolute";
