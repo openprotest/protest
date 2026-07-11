@@ -1,4 +1,5 @@
-﻿using System.Net.WebSockets;
+﻿using System.IO;
+using System.Net.WebSockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -42,6 +43,25 @@ internal static class WebSocketHelper {
             builder.Append(Encoding.UTF8.GetString(buffer, 0, result.Count));
 
             if (result.EndOfMessage) return builder.ToString();
+        }
+    }
+
+    internal static async Task<byte[]> WsReadBinary(WebSocket ws, CancellationToken token, int bufferSize = 8192) {
+        byte[] buffer = new byte[bufferSize];
+        WebSocketReceiveResult result = await ws.ReceiveAsync(new ArraySegment<byte>(buffer), token);
+
+        if (result.MessageType == WebSocketMessageType.Close) return null;
+
+        if (result.EndOfMessage) return buffer[..result.Count];
+
+        using MemoryStream ms = new MemoryStream();
+        ms.Write(buffer, 0, result.Count);
+
+        while (true) {
+            result = await ws.ReceiveAsync(new ArraySegment<byte>(buffer), token);
+            if (result.MessageType == WebSocketMessageType.Close) return null;
+            ms.Write(buffer, 0, result.Count);
+            if (result.EndOfMessage) return ms.ToArray();
         }
     }
 }

@@ -85,21 +85,19 @@ internal static class Vnc {
     }
 
     private static async Task PumpToTcp(HttpListenerContext ctx, WebSocket ws, NetworkStream stream, CancellationTokenSource cts) {
-        byte[] buffer = new byte[8192];
-
         try {
             while (ws.State == WebSocketState.Open && !cts.IsCancelled()) {
-                WebSocketReceiveResult result = await ws.ReceiveAsync(buffer, cts.Token);
 
-                if (result.MessageType == WebSocketMessageType.Close) {
-                    return;
+                byte[] message = await WebSocketHelper.WsReadBinary(ws, cts.Token);
+                if (message is null) {
+                    return; //close frame received
                 }
 
                 if (!Auth.IsAuthenticatedAndAuthorized(ctx, "/ws/vnc")) {
                     return;
                 }
 
-                await stream.WriteAsync(buffer.AsMemory(0, result.Count), cts.Token);
+                await stream.WriteAsync(message, cts.Token);
                 await stream.FlushAsync(cts.Token);
             }
         }
