@@ -37,7 +37,7 @@ class Vnc extends Window {
 		this.statusBox.className = "vnc-status-box";
 		this.statusBox.textContent = "Connecting...";
 
-		this.connectButton.onclick = ()=> this.Connect();
+		this.connectButton.onclick = ()=> this.ConnectDialog(this.args.host);
 		this.cadButton.onclick     = ()=> { if (this.rfb) this.rfb.sendCtrlAltDel(); };
 		this.sendTextButton.onclick= ()=> this.SendTextDialog();
 		this.viewOnlyButton.onclick= ()=> this.ToggleViewOnly();
@@ -64,6 +64,9 @@ class Vnc extends Window {
 				this.content.appendChild(this.statusBox);
 				this.connectButton.disabled = false;
 			}
+		}
+		else {
+			this.ConnectDialog("", true);
 		}
 	}
 
@@ -168,6 +171,84 @@ class Vnc extends Window {
 			const text = e.detail?.text;
 			if (text) navigator.clipboard?.writeText(text).catch(()=> {});
 		});
+	}
+
+	ConnectDialog(target="", isNew=false) {
+		const dialog = this.DialogBox("192px");
+		if (dialog === null) return;
+
+		const {okButton, cancelButton, innerBox} = dialog;
+		okButton.value = "Connect";
+
+		innerBox.parentElement.style.maxWidth = "400px";
+		innerBox.parentElement.parentElement.onclick = event=> event.stopPropagation();
+
+		innerBox.style.margin = "20px 8px 0 8px";
+
+		const hostLabel = document.createElement("div");
+		hostLabel.style.display = "inline-block";
+		hostLabel.style.minWidth = "88px";
+		hostLabel.style.paddingLeft = "8px";
+		hostLabel.textContent = "Host:";
+		const hostInput = document.createElement("input");
+		hostInput.type = "text";
+		hostInput.style.width = "calc(100% - 120px)";
+		hostInput.value = target ?? "";
+		innerBox.append(hostLabel, hostInput);
+
+		const portLabel = document.createElement("div");
+		portLabel.style.display = "inline-block";
+		portLabel.style.minWidth = "88px";
+		portLabel.style.paddingLeft = "8px";
+		portLabel.textContent = "Port:";
+		const portInput = document.createElement("input");
+		portInput.type = "number";
+		portInput.min = "1";
+		portInput.max = "65535";
+		portInput.style.width = "calc(100% - 120px)";
+		portInput.value = this.args.port || 5900;
+		innerBox.append(portLabel, portInput);
+
+		const passwordLabel = document.createElement("div");
+		passwordLabel.style.display = "inline-block";
+		passwordLabel.style.minWidth = "88px";
+		passwordLabel.style.paddingLeft = "8px";
+		passwordLabel.textContent = "Password:";
+		const passwordInput = document.createElement("input");
+		passwordInput.type = "password";
+		passwordInput.style.width = "calc(100% - 120px)";
+		passwordInput.value = this.password ?? "";
+		innerBox.append(passwordLabel, passwordInput);
+
+		okButton.onclick = ()=> {
+			this.args.host = hostInput.value.trim();
+			this.args.port = parseInt(portInput.value) || 5900;
+			this.password = passwordInput.value.length > 0 ? passwordInput.value : null;
+
+			dialog.Close();
+			this.Connect();
+		};
+
+		if (isNew) {
+			cancelButton.value = "Close";
+			cancelButton.onclick = ()=> {
+				dialog.Close();
+				this.Close();
+			};
+		}
+
+		hostInput.onkeydown = portInput.onkeydown = passwordInput.onkeydown = event=> {
+			if (okButton.disabled) return;
+			if (event.key === "Enter") okButton.click();
+		};
+
+		hostInput.onchange = hostInput.oninput = ()=> {
+			okButton.disabled = hostInput.value.trim().length === 0;
+		};
+
+		hostInput.oninput();
+
+		setTimeout(()=> hostInput.focus(), 200);
 	}
 
 	PromptCredentials() {

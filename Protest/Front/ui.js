@@ -390,6 +390,7 @@ const MENU = {
 		{ t:"Terminal",           i:"mono/terminal.svg?light",       g:"utilities", h:true,  f:()=> new Terminal({}),       k:"terminal shell console cmd bash" },
 		{ t:"Secure shell",       i:"mono/ssh.svg?light",           g:"utilities", h:true,  f:()=> new Ssh({host:""}),     k:"ssh terminal" },
 		{ t:"Telnet",             i:"mono/telnet.svg?light",        g:"utilities", h:true,  f:()=> new Telnet({host:""}),  k:"terminal" },
+		{ t:"VNC",                i:"mono/uvnc.svg?light",          g:"utilities", h:true,  f:()=> new Vnc(),              k:"vnc uvnc remote rfb" },
 		//{ t:"RS-232",             i:"mono/serialconsole.svg?light", g:"utilities", h:true,  f:()=>{}, k:"rs 232 serial terminal console" },
 		{ t:"Encoder",            i:"mono/encoder.svg?light",       g:"utilities", h:true,  f:args=> new Encoder(args),    k:"binary hex base64 url html decode" },
 		{ t:"Network calculator", i:"mono/netcalc.svg?light",       g:"utilities", h:false, f:args=> new NetCalc(),        k:"subnet" },
