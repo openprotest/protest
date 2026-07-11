@@ -2,33 +2,32 @@
 class ListBox {
 	static MIN_CELL_SIZE = 40;
 
-	constructor(options) {
-		const opt = options ?? {};
-
-		this.titleBar             = opt.titleBar             ?? true;
-		this.columnsOptionsEnable = opt.columnsOptionsEnable ?? true;
-		this.counterEnable        = opt.counter              ?? true;
-		this.virtualize           = opt.virtualize           ?? true;
-		this.builtInSort          = opt.builtInSort          ?? false;
-		this.firstColumnOffset    = opt.firstColumnOffset    ?? "36px";
-		this.defaultColumns       = opt.defaultColumns       ?? [];
-
-		this.resolveEntry     = opt.resolveEntry     ?? (()=> null);
-		this.resolveType      = opt.resolveType      ?? (()=> null);
-		this.computeCounter   = opt.computeCounter   ?? (n=> String(n));
-		this.onSelect         = opt.onSelect         ?? (()=> {});
-		this.onColumnsOptions = opt.onColumnsOptions ?? (()=> {});
-		this.onSort           = opt.onSort           ?? (()=> {});
-		this.getSort          = opt.getSort          ?? (()=> "");
-		this.onDoubleClick    = opt.onDoubleClick    ?? null;
-
-		this.inflate = (element, entry, type)=> this.InflateElement(element, entry, type);
+	constructor(args) {
+		this.args = {
+			titleBar            : true,
+			columnsOptionsEnable: true,
+			counter             : true,
+			virtualize          : true,
+			builtInSort         : false,
+			firstColumnOffset   : "36px",
+			defaultColumns      : [],
+			resolveEntry        : null,
+			resolveType         : null,
+			computeCounter      : null,
+			onSelect            : null,
+			onColumnsOptions    : null,
+			onSort              : null,
+			getSort             : null,
+			onDoubleClick       : null,
+			inflate             : null,
+			...args
+		};
 
 		this.items = [];
-		this.sortColumnElement = null;
-		this._selected = null;
-
+		this.selected = null;
+		this.defaultColumns = this.args.defaultColumns;
 		this.columnsElements = [];
+		this.sortColumnElement = null;
 		this.sortDescend = false;
 		this.resizingColumnElement = null;
 		this.movingColumnElement = null;
@@ -47,7 +46,7 @@ class ListBox {
 		this.columnsOptions = null;
 		this.counter = null;
 
-		if (this.titleBar) {
+		if (this.args.titleBar) {
 			this.listTitleOuter = document.createElement("div");
 			this.listTitleOuter.className = "list-title-outer";
 
@@ -55,22 +54,19 @@ class ListBox {
 			this.listTitle.className = "list-title";
 			this.listTitleOuter.appendChild(this.listTitle);
 
-			if (this.columnsOptionsEnable) {
+			if (this.args.columnsOptionsEnable) {
 				this.columnsOptions = document.createElement("div");
 				this.columnsOptions.className = "list-columns-options";
-				this.columnsOptions.onclick = ()=> this.onColumnsOptions();
+				this.columnsOptions.onclick = ()=> this.args.onColumnsOptions?.();
 				this.listTitleOuter.appendChild(this.columnsOptions);
 			}
 		}
 
-		if (this.counterEnable) {
+		if (this.args.counter) {
 			this.counter = document.createElement("div");
 			this.counter.className = "list-counter";
 		}
 	}
-
-	get selected() { return this._selected; }
-	set selected(value) { this._selected = value; }
 
 	Attach(container) {
 		container.appendChild(this.list);
@@ -78,99 +74,66 @@ class ListBox {
 		if (this.counter) container.appendChild(this.counter);
 	}
 
+	Select(element) {
+		if (!element) return;
+
+		if (this.selected) {
+			const selectedIcon = this.selected.querySelector(".list-element-icon");
+			if (selectedIcon) {
+				selectedIcon.style.backgroundColor = "";
+			}
+			this.selected.style.backgroundColor = "";
+		}
+
+		this.selected = element;
+		element.style.backgroundColor = "var(--clr-select)";
+		element.scrollIntoView({block:"nearest"});
+
+		this.args.onSelect?.(element.getAttribute("id"), element);
+	}
+
 	Keydown(event) {
 		if (event.code === "ArrowUp" && this.selected) {
-			const previousElement = this.selected.previousElementSibling;
-			if (previousElement) {
-				event.preventDefault();
-				const selectedIcon = this.selected.querySelector(".list-element-icon");
-				if (selectedIcon) {
-					selectedIcon.style.backgroundColor = "";
-				}
+			const previous = this.selected.previousElementSibling;
+			if (!previous) return;
 
-				this.selected.style.backgroundColor = "";
-				this.selected = previousElement;
-				this.selected.style.backgroundColor = "var(--clr-select)";
-				this.selected.scrollIntoView({block:"nearest"});
-
-				this.onSelect(this.selected.getAttribute("id"), this.selected);
-			}
+			event.preventDefault();
+			this.Select(previous);
 		}
 		else if (event.code === "ArrowDown") {
-			const nextElement = this.selected
+			const next = this.selected
 				? this.selected.nextElementSibling
 				: this.list.firstChild;
+			if (!next) return;
 
-			if (nextElement) {
-				event.preventDefault();
-				if (this.selected) {
-					const selectedIcon = this.selected.querySelector(".list-element-icon");
-					if (selectedIcon) {
-						selectedIcon.style.backgroundColor = "";
-					}
-					this.selected.style.backgroundColor = "";
-				}
-
-				this.selected = nextElement;
-				this.selected.style.backgroundColor = "var(--clr-select)";
-				this.selected.scrollIntoView({block:"nearest"});
-
-				this.onSelect(this.selected.getAttribute("id"), this.selected);
-			}
+			event.preventDefault();
+			this.Select(next);
 		}
-		else if (event.code === "PageUp" && this.selected) {
+		else if ((event.code === "PageUp" || event.code === "PageDown") && this.selected) {
 			const elements = Array.from(this.list.childNodes);
 			if (elements.length === 0) return;
 
-			const index    = elements.indexOf(this.selected);
-			const jump     = Math.floor(this.list.clientHeight / this.selected.clientHeight);
-			const previous = Math.max(index - jump + 1, 0);
+			const index = elements.indexOf(this.selected);
+			const jump  = Math.floor(this.list.clientHeight / this.selected.clientHeight);
+			const target = event.code === "PageUp"
+				? Math.max(index - jump + 1, 0)
+				: Math.min(index + jump - 1, elements.length - 1);
 
 			event.preventDefault();
-			this.selected.style.backgroundColor = "";
-			this.selected = elements[previous];
-			this.selected.style.backgroundColor = "var(--clr-select)";
-			this.selected.scrollIntoView({block:"nearest"});
-			this.onSelect(this.selected.getAttribute("id"), this.selected);
+			this.Select(elements[target]);
 		}
-		else if (event.code === "PageDown" && this.selected) {
-			const elements = Array.from(this.list.childNodes);
-			if (elements.length === 0) return;
-
-			const index    = elements.indexOf(this.selected);
-			const jump     = Math.floor(this.list.clientHeight / this.selected.clientHeight);
-			const next     = Math.min(index + jump - 1, elements.length - 1);
-
-			event.preventDefault();
-			this.selected.style.backgroundColor = "";
-			this.selected = elements[next];
-			this.selected.style.backgroundColor = "var(--clr-select)";
-			this.selected.scrollIntoView({block:"nearest"});
-			this.onSelect(this.selected.getAttribute("id"), this.selected);
-		}
-
 		else if (event.code === "Home" && this.selected) {
 			event.preventDefault();
-			const element = Array.from(this.list.childNodes)[0];
-
-			this.selected.style.backgroundColor = "";
-			this.selected = element;
-			this.selected.style.backgroundColor = "var(--clr-select)";
-			this.selected.scrollIntoView({block:"nearest"});
-			this.onSelect(this.selected.getAttribute("id"), this.selected);
+			this.Select(this.list.firstChild);
 		}
 		else if (event.code === "End" && this.selected) {
 			event.preventDefault();
-			const elements = Array.from(this.list.childNodes);
-
-			this.selected.style.backgroundColor = "";
-			this.selected = elements[elements.length - 1];
-			this.selected.style.backgroundColor = "var(--clr-select)";
-			this.selected.scrollIntoView({block:"nearest"});
-			this.onSelect(this.selected.getAttribute("id"), this.selected);
+			this.Select(this.list.lastChild);
 		}
-		else if (event.code === "Enter" || event.code === "NumpadEnter" && this.selected) {
-			this.selected?.ondblclick(event);
+		else if (event.code === "Enter" || event.code === "NumpadEnter") {
+			if (this.selected && this.selected.ondblclick) {
+				this.selected.ondblclick(event);
+			}
 		}
 	}
 
@@ -289,13 +252,13 @@ class ListBox {
 				this.sortDescend = false;
 			}
 
-			if (this.builtInSort) {
+			if (this.args.builtInSort) {
 				this.sortColumnElement = event.target;
 				this.ApplySort();
 				this.UpdateViewport(true);
 			}
 
-			this.onSort(event.target.textContent, this.sortDescend);
+			this.args.onSort?.(event.target.textContent, this.sortDescend);
 		};
 
 		for (let i=0; i<columns.length; i++) {
@@ -306,7 +269,7 @@ class ListBox {
 			newColumn.style.left = `${100 * i / columns.length}%`;
 			newColumn.style.width = `${100 / columns.length}%`;
 
-			if (this.getSort() === def.label) {
+			if (this.args.getSort?.() === def.label) {
 				newColumn.className = "list-sort-ascend";
 			}
 
@@ -367,9 +330,9 @@ class ListBox {
 	}
 
 	UpdateViewport(force = false) {
-		if (!this.virtualize) {
+		if (!this.args.virtualize) {
 			if (this.counter) {
-				this.counter.textContent = this.computeCounter(this.list.childNodes.length);
+				this.counter.textContent = this.args.computeCounter?.(this.list.childNodes.length) ?? this.list.childNodes.length;
 			}
 			return;
 		}
@@ -388,20 +351,26 @@ class ListBox {
 				let entry, type;
 				if (node._data !== undefined) {
 					entry = node._data;
-					type = this.resolveType(null, entry);
+					type = this.args.resolveType?.(null, entry) ?? null;
 				}
 				else {
 					const key = node.getAttribute("id");
-					entry = this.resolveEntry(key);
-					if (entry == null) continue;
-					type = this.resolveType(key, entry);
+					entry = this.args.resolveEntry?.(key) ?? null;
+					if (entry === null) continue;
+					type = this.args.resolveType?.(key, entry) ?? null;
 				}
-				this.inflate(node, entry, type);
+
+				if (this.args.inflate) {
+					this.args.inflate(node, entry, type);
+				}
+				else {
+					this.InflateElement(node, entry, type);
+				}
 			}
 		}
 
 		if (this.counter) {
-			this.counter.textContent = this.computeCounter(childNodes.length);
+			this.counter.textContent = this.args.computeCounter?.(childNodes.length) ?? childNodes.length;
 		}
 	}
 
@@ -432,8 +401,8 @@ class ListBox {
 			element.appendChild(cell);
 
 			if (i === 0) {
-				cell.style.left = this.firstColumnOffset;
-				cell.style.width = `calc(${column.style.width} - ${this.firstColumnOffset})`;
+				cell.style.left = this.args.firstColumnOffset;
+				cell.style.width = `calc(${column.style.width} - ${this.args.firstColumnOffset})`;
 			}
 			else {
 				cell.style.left = column.style.left;
@@ -441,22 +410,16 @@ class ListBox {
 			}
 		}
 
-		element.onclick = ()=> {
-			if (this.selected) this.selected.style.backgroundColor = "";
-			const id = element.getAttribute("id");
-			this.selected = element;
-			element.style.backgroundColor = "var(--clr-select)";
-			this.onSelect(id, element);
-		};
+		element.onclick = ()=> this.Select(element);
 
-		if (this.onDoubleClick) {
-			element.ondblclick = ()=> this.onDoubleClick(entry, element);
+		if (this.args.onDoubleClick) {
+			element.ondblclick = ()=> this.args.onDoubleClick(entry, element);
 		}
 	}
 
 	SetItems(items) {
 		this.items = items ?? [];
-		this._selected = null;
+		this.selected = null;
 		this.list.textContent = "";
 
 		for (let i=0; i<this.items.length; i++) {
@@ -471,7 +434,7 @@ class ListBox {
 	}
 
 	ApplySort() {
-		if (!this.builtInSort || !this.sortColumnElement) return;
+		if (!this.args.builtInSort || !this.sortColumnElement) return;
 
 		const def = this.sortColumnElement._def ?? {label:this.sortColumnElement.textContent};
 		const ValueOf = data=> {

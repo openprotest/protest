@@ -154,10 +154,14 @@ class DevicesList extends List {
 		this.utilitiesDropDown.button.disabled = !KEEP.authorization.includes("*") && !KEEP.authorization.includes("network utilities:write");
 	}
 
+	GetTypeIcon(type) { //overrides
+		return type in LOADER.deviceIcons ? LOADER.deviceIcons[type] : "mono/gear.svg";
+	}
+
 	InflateElement(element, entry, type) { //overrides
 		const icon = document.createElement("div");
 		icon.className = "list-element-icon";
-		icon.style.backgroundImage = `url(${type in LOADER.deviceIcons ? LOADER.deviceIcons[type] : "mono/gear.svg"})`;
+		icon.style.backgroundImage = `url(${this.GetTypeIcon(type)})`;
 		element.appendChild(icon);
 
 		super.InflateElement(element, entry, type);

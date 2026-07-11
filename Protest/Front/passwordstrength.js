@@ -5,8 +5,8 @@ class PasswordStrength extends List {
 
 		this.args = args ?? {find:"", filter:"", sort:"", select:null};
 
-		this.listBox.resolveEntry = id => this.link ? this.link[id] : null;
-		this.listBox.resolveType  = (id, entry) => entry?.type || null;
+		this.listBox.args.resolveEntry = id => this.link ? this.link[id] : null;
+		this.listBox.args.resolveType  = (id, entry) => entry?.type || null;
 
 		this.SetTitle("Password strength");
 		this.SetIcon("mono/strength.svg");

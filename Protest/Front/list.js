@@ -3,7 +3,7 @@ class List extends Window {
 	constructor(args) {
 		super();
 
-		this.args = args ?? { select: null, sort: "", filter: "", find: "" };
+		this.args = { select: null, sort: "", filter: "", find: "", ...args };
 		this.AddCssDependencies("list.css");
 
 		this.link = null;
@@ -20,8 +20,9 @@ class List extends Window {
 			onColumnsOptions: () => this.CustomizeColumns(),
 			onSort:         text => { this.args.sort = text; this.RefreshList(); },
 			getSort:        () => this.args.sort,
+			inflate:        (element, entry, type) => this.InflateElement(element, entry, type),
 		});
-		this.listBox.inflate = (element, entry, type) => this.InflateElement(element, entry, type);
+
 		this.listBox.Attach(this.content);
 
 		this.defaultElement = this.listBox.list;
@@ -94,7 +95,6 @@ class List extends Window {
 
 		const filtersList = document.createElement("div");
 		filtersList.className = "no-results-small";
-
 		filterMenu.appendChild(filtersList);
 
 		let index = -1;
@@ -102,35 +102,35 @@ class List extends Window {
 		const ClearSelection = ()=> filtersList.childNodes.forEach(o=> o.style.backgroundColor = "");
 
 		const Refresh = ()=> {
-			filterInput.value = filterInput.value.toLowerCase();
+			const keyword = filterInput.value.toLowerCase();
 
-			let types = [];
+			const types = new Set();
 			for (const key in this.link.data) {
-				if (!this.link.data[key].type) continue;
-				if (types.includes(this.link.data[key].type.v.toLowerCase())) continue;
-				if (!this.link.data[key].type.v.toLowerCase().includes(filterInput.value)) continue;
-				if (this.link.data[key].type.v.length === 0) continue;
-				types.push(this.link.data[key].type.v.toLowerCase());
+				const type = this.link.data[key].type?.v.toLowerCase();
+				if (!type) continue;
+				if (!type.includes(keyword)) continue;
+				types.add(type);
 			}
-			types = types.sort();
+			const sorted = Array.from(types).sort();
 
+			index = -1;
 			filtersList.textContent = "";
-			filterMenu.style.height = `${32 + types.length * 33}px`;
+			filterMenu.style.height = `${32 + sorted.length * 33}px`;
 
-			for (let i=0; i<types.length; i++) {
+			for (let i=0; i<sorted.length; i++) {
+				const type = sorted[i];
+
 				const newType = document.createElement("div");
-				newType.textContent = types[i];
-				newType.style.textTransform =  LOADER.alwaysUppercase.includes(types[i]) ? "uppercase" : "capitalize";
+				newType.textContent = type;
+				newType.style.textTransform = LOADER.alwaysUppercase.includes(type) ? "uppercase" : "capitalize";
 				filtersList.appendChild(newType);
 
-				if (this instanceof DevicesList) {
-					newType.style.backgroundImage = `url(${types[i] in LOADER.deviceIcons ? LOADER.deviceIcons[types[i]] : "mono/gear.svg"})`;
-				}
-				else if (this instanceof UsersList) {
-					newType.style.backgroundImage = `url(${types[i] in LOADER.userIcons ? LOADER.userIcons[types[i]] : "mono/user.svg"})`;
+				const icon = this.GetTypeIcon(type);
+				if (icon) {
+					newType.style.backgroundImage = `url(${icon})`;
 				}
 
-				if (types[i] === this.args.filter) {
+				if (type === this.args.filter) {
 					newType.style.backgroundColor = "var(--clr-select)";
 					filterButton.style.borderBottom = "#c0c0c0 solid 3px";
 				}
@@ -138,12 +138,12 @@ class List extends Window {
 				newType.onclick = ()=> {
 					ClearSelection();
 
-					if (this.args.filter === types[i]) {
+					if (this.args.filter === type) {
 						this.args.filter = "";
 						filterButton.style.borderBottom = "";
 					}
 					else {
-						this.args.filter = types[i];
+						this.args.filter = type;
 						filterButton.style.borderBottom = "#c0c0c0 solid 3px";
 						newType.style.backgroundColor = "var(--clr-select)";
 					}
@@ -151,8 +151,6 @@ class List extends Window {
 				};
 			}
 		};
-
-		filterMenu.onclick = ()=> filterInput.focus();
 
 		filterInput.onchange = filterInput.oninput = ()=> Refresh();
 
@@ -169,29 +167,19 @@ class List extends Window {
 			else if (event.key === "Enter") {
 				const types = Array.from(filtersList.childNodes);
 				if (index > -1) {
-					types[index].onclick();
+					types[index]?.onclick();
 				}
 			}
-			else if (event.key === "ArrowUp") {
+			else if (event.key === "ArrowUp" || event.key === "ArrowDown") {
 				const types = Array.from(filtersList.childNodes);
+				if (types.length === 0) return;
+
 				if (index > -1) {
 					types[index].style.backgroundColor = "";
 				}
 
-				index--;
-				index = Math.max(index, 0);
-				types[index].style.backgroundColor = "var(--clr-select)";
-				types[index].scrollIntoView({block:"nearest"});
+				index = event.key === "ArrowUp" ? Math.max(index - 1, 0) : Math.min(index + 1, types.length - 1);
 
-			}
-			else if (event.key === "ArrowDown") {
-				const types = Array.from(filtersList.childNodes);
-				if (index > -1) {
-					types[index].style.backgroundColor = "";
-				}
-
-				index++;
-				index = Math.min(index, types.length - 1);
 				types[index].style.backgroundColor = "var(--clr-select)";
 				types[index].scrollIntoView({block:"nearest"});
 			}
@@ -239,6 +227,7 @@ class List extends Window {
 		findButton.onfocus = ()=> {
 			findInput.focus();
 		};
+
 		findInput.onfocus = ()=> {
 			findButton.style.width = "200px";
 		};
@@ -286,17 +275,21 @@ class List extends Window {
 			table.style.borderCollapse = "collapse";
 			newPrint.document.body.appendChild(table);
 
+			const titleRow = document.createElement("tr");
+			table.appendChild(titleRow);
+
 			for (let i=0; i<this.columnsElements.length; i++) {
 				const th = document.createElement("th");
 				th.style.textTransform = "uppercase";
 				th.textContent = this.columnsElements[i].textContent;
-				table.appendChild(th);
+				titleRow.appendChild(th);
 			}
 
 			for (let i=0; i<this.list.childNodes.length; i++) {
 				const entry = this.link.data[this.list.childNodes[i].getAttribute("id")];
 
 				const tr = document.createElement("tr");
+				table.appendChild(tr);
 
 				for (let j=0; j<this.columnsElements.length; j++) {
 					const td = document.createElement("td");
@@ -308,13 +301,18 @@ class List extends Window {
 					}
 					tr.appendChild(td);
 				}
-				table.appendChild(tr);
 			}
 
 			newPrint.onload = ()=> newPrint.print();
 			newPrint.document.close();
 			setTimeout(()=> newPrint.close(), 99);
 		};
+
+		return printButton;
+	}
+
+	GetTypeIcon(type) { //overridable
+		return null;
 	}
 
 	PopOut() { //overrides
@@ -340,23 +338,22 @@ class List extends Window {
 	MatchFilters(entry) {
 		if (this.args.filter.length > 0) {
 			if (!entry.type) return false;
-			if (entry.type.v !== this.args.filter) return false;
+			if (entry.type.v.toLowerCase() !== this.args.filter.toLowerCase()) return false;
 		}
 
 		if (this.args.find.length > 0) {
-			const keywords = this.args.find.toLowerCase().split(" ");
+			const keywords = this.args.find.toLowerCase().split(" ").filter(o=> o.length > 0);
 
-			for (let i = 0; i < keywords.length; i++) {
-				if (keywords[i].length === 0) continue;
-
-				let flag = false;
+			for (let i=0; i<keywords.length; i++) {
+				let match = false;
 				for (const key in entry) {
-					if (typeof entry[key].v === "string" && entry[key].v.toLowerCase().includes(keywords[i])) {
-						flag = true;
+					const value = entry[key].v;
+					if (typeof value === "string" && value.toLowerCase().includes(keywords[i])) {
+						match = true;
 						break;
 					}
 				}
-				if (!flag) return false;
+				if (!match) return false;
 			}
 		}
 
@@ -365,82 +362,34 @@ class List extends Window {
 
 	RefreshList() {
 		this.list.textContent = "";
+		this.selected = null;
 
-		if (this.link === null || this.link.data === null) { return; }
+		if (this.link === null || this.link.data === null) return;
 
-		let filtered = [];
-		if (this.args.filter.length === 0) {
-			for (const key in this.link.data) {
-				filtered.push(key);
-			}
-		}
-		else {
-			for (const key in this.link.data) {
-				if (!this.link.data[key].type) continue;
-				if (this.link.data[key].type.v.toLowerCase() !== this.args.filter.toLowerCase()) continue;
-				filtered.push(key);
-			}
-		}
-
-		let found;
-		if (this.args.find.length === 0) {
-			found = filtered;
-		}
-		else {
-			found = [];
-			const keywords = this.args.find.toLowerCase().split(" ").filter(o=> o.length > 0);
-
-			for (let i=0; i<filtered.length; i++) {
-				let matched = true;
-
-				for (let j=0; j<keywords.length; j++) {
-					let wordIncluded = false;
-					for (const key in this.link.data[filtered[i]]) {
-						const value = this.link.data[filtered[i]][key].v;
-						if (typeof value === "string" && value.toLowerCase().includes(keywords[j])) {
-							wordIncluded = true;
-							break;
-						}
-					}
-
-					if (!wordIncluded) {
-						matched = false;
-						break;
-					}
-				}
-
-				if (matched) {
-					found.push(filtered[i]);
-				}
+		const found = [];
+		for (const key in this.link.data) {
+			if (this.MatchFilters(this.link.data[key])) {
+				found.push(key);
 			}
 		}
 
 		if (this.args.sort.length > 0) {
 			const attr = this.args.sort;
+			const direction = this.sortDescend ? -1 : 1;
 
-			if (this.sortDescend) {
-				found = found.sort((a, b)=> {
-					if (this.link.data[a][attr] == undefined && this.link.data[b][attr] == undefined) return 0;
-					if (this.link.data[a][attr] == undefined) return -1;
-					if (this.link.data[b][attr] == undefined) return 1;
-					if (this.link.data[a][attr].v < this.link.data[b][attr].v) return 1;
-					if (this.link.data[a][attr].v > this.link.data[b][attr].v) return -1;
-					return 0;
-				});
-			}
-			else {
-				found = found.sort((a, b)=> {
-					if (this.link.data[a][attr] == undefined && this.link.data[b][attr] == undefined) return 0;
-					if (this.link.data[a][attr] == undefined) return 1;
-					if (this.link.data[b][attr] == undefined) return -1;
-					if (this.link.data[a][attr].v < this.link.data[b][attr].v) return -1;
-					if (this.link.data[a][attr].v > this.link.data[b][attr].v) return 1;
-					return 0;
-				});
-			}
+			found.sort((a, b)=> {
+				const entryA = this.link.data[a][attr];
+				const entryB = this.link.data[b][attr];
+				if (entryA == undefined && entryB == undefined) return 0;
+				if (entryA == undefined) return direction;
+				if (entryB == undefined) return -direction;
+				if (entryA.v < entryB.v) return -direction;
+				if (entryA.v > entryB.v) return direction;
+				return 0;
+			});
 		}
 
-		for (let i = 0; i < found.length; i++) {
+		for (let i=0; i<found.length; i++) {
 			const newElement = document.createElement("div");
 			newElement.id = found[i];
 			newElement.className = "list-element";
@@ -454,7 +403,7 @@ class List extends Window {
 		if (this.selected) {
 			this.selected.style.backgroundColor = "var(--clr-select)";
 			const selected = this.selected;
-			requestAnimationFrame(() => selected.scrollIntoView({behavior:"smooth", block:"center"}));
+			requestAnimationFrame(()=>selected.scrollIntoView({behavior:"smooth", block:"center"}));
 		}
 
 		this.OnUiReady();
@@ -473,8 +422,8 @@ class List extends Window {
 		this.listBox.UpdateViewport(force);
 	}
 
-	InflateElement(element, entry, c_type) { //overridable
-		ListBox.prototype.InflateElement.call(this.listBox, element, entry, c_type);
+	InflateElement(element, entry, type) { //overridable
+		this.listBox.InflateElement(element, entry, type);
 	}
 
 	CustomizeColumns() {
@@ -540,7 +489,6 @@ class List extends Window {
 		resetButton.style.minWidth = "20px";
 		buttons.appendChild(resetButton);
 
-
 		let checkList = {};
 		const CreateListItem = (attr, value)=> {
 			const newAttr = document.createElement("div");
@@ -562,19 +510,20 @@ class List extends Window {
 		};
 
 		const Refresh = ()=> {
-			let attributes = [];
+			const attributes = [];
 			listbox.textContent = "";
-			let keyword = filterInput.value.toLowerCase();
-			for (let i = 0; i < this.columnsElements.length; i++) { //selected
-				let attr = this.columnsElements[i].textContent;
+			const keyword = filterInput.value.toLowerCase();
+
+			for (let i=0; i<this.columnsElements.length; i++) { //selected
+				const attr = this.columnsElements[i].textContent;
 				if (attributes.includes(attr)) continue;
 				if (!attr.includes(keyword)) continue;
 				CreateListItem(attr, true);
 				attributes.push(attr);
 			}
 
-			for (let i = 0; i < this.defaultColumns.length; i++) { //default
-				let attr = this.defaultColumns[i];
+			for (let i=0; i<this.defaultColumns.length; i++) { //default
+				const attr = this.defaultColumns[i];
 				if (attributes.includes(attr)) continue;
 				if (!attr.includes(keyword)) continue;
 				CreateListItem(attr, false);
@@ -592,11 +541,8 @@ class List extends Window {
 		};
 
 		const Apply = ()=> {
-			this.listTitle.textContent = "";
-			this.columnsElements = [];
-
-			let columns = [];
-			for (let key in checkList) {
+			const columns = [];
+			for (const key in checkList) {
 				if (!checkList[key]) continue;
 				columns.push(key);
 			}

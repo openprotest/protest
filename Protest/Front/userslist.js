@@ -57,10 +57,14 @@ class UsersList extends List {
 		this.deleteButton.disabled = !KEEP.authorization.includes("*") && !KEEP.authorization.includes("users:write");
 	}
 
+	GetTypeIcon(type) { //overrides
+		return type in LOADER.userIcons ? LOADER.userIcons[type] : "mono/user.svg";
+	}
+
 	InflateElement(element, entry, type) { //overrides
 		const icon = document.createElement("div");
 		icon.className = "list-element-icon";
-		icon.style.backgroundImage = `url(${type in LOADER.userIcons ? LOADER.userIcons[type] : "mono/user.svg"})`;
+		icon.style.backgroundImage = `url(${this.GetTypeIcon(type)})`;
 		element.appendChild(icon);
 
 		super.InflateElement(element, entry, type);
