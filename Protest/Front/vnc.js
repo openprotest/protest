@@ -16,7 +16,7 @@ class Vnc extends Window {
 		this.password = this.args.password ?? null;
 
 		this.SetTitle("VNC");
-		this.SetIcon("mono/uvnc.svg");
+		this.SetIcon("mono/vnc.svg");
 
 		this.SetupToolbar();
 		this.connectButton    = this.AddToolbarButton("Connect", "mono/connect.svg?light");
@@ -52,21 +52,12 @@ class Vnc extends Window {
 		this.viewOnly = false;
 		this.fitButton.style.borderBottom = "3px solid rgb(192,192,192)";
 
-		if (this.args.host) {
+		if (this.args.host && this.args.autoconnect !== false) {
 			this.SetTitle(`VNC - ${this.args.host}`);
-			if (this.args.autoconnect !== false) {
-				this.Connect();
-			}
-			else {
-				this.statusBox.style.display = "initial";
-				this.statusBox.style.backgroundImage = "url(mono/disconnect.svg)";
-				this.statusBox.textContent = "Not connected";
-				this.content.appendChild(this.statusBox);
-				this.connectButton.disabled = false;
-			}
+			this.Connect(this.args.host);
 		}
 		else {
-			this.ConnectDialog("", true);
+			this.ConnectDialog(this.args.host ?? "", true);
 		}
 	}
 
@@ -135,9 +126,6 @@ class Vnc extends Window {
 		this.rfb.clipViewport = false;
 		this.rfb.background = "transparent";
 
-		//The remote cursor shape is shown by default (Cursor pseudo-encoding);
-		//showDotCursor draws a fallback dot when the remote cursor is invisible,
-		//so the operator never loses the pointer.
 		this.rfb.showDotCursor = true;
 
 		this.rfb.viewOnly = this.viewOnly;
@@ -145,14 +133,6 @@ class Vnc extends Window {
 		this.rfb.addEventListener("connect", ()=> {
 			this.SetTitle(`VNC - ${host}`);
 			this.statusBox.style.display = "none";
-			this.connectButton.disabled = false;
-		});
-
-		this.rfb.addEventListener("disconnect", e=> {
-			this.statusBox.style.display = "initial";
-			this.statusBox.style.backgroundImage = "url(mono/disconnect.svg)";
-			this.statusBox.textContent = e.detail?.clean ? "Connection closed" : "Connection lost";
-			this.content.appendChild(this.statusBox);
 			this.connectButton.disabled = false;
 		});
 
@@ -166,8 +146,6 @@ class Vnc extends Window {
 		});
 
 		this.rfb.addEventListener("clipboard", e=> {
-			//Sync the remote clipboard to the local one. writeText may be rejected
-			//without a user gesture depending on the browser; ignore failures.
 			const text = e.detail?.text;
 			if (text) navigator.clipboard?.writeText(text).catch(()=> {});
 		});
@@ -332,8 +310,8 @@ class Vnc extends Window {
 			let keysym;
 			switch (ch) {
 			case "\n":
-			case "\r": keysym = 0xFF0D; break; //Return
-			case "\t": keysym = 0xFF09; break; //Tab
+			case "\r": keysym = 0xFF0D; break;
+			case "\t": keysym = 0xFF09; break;
 			default:
 				const cp = ch.codePointAt(0);
 				keysym = (cp < 0x100) ? cp : 0x01000000 + cp;

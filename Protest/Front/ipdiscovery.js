@@ -12,7 +12,6 @@ class IpDiscovery extends List {
 		"SFTP"     : "mono/shared.svg",
 		"RDP"      : "mono/rdp.svg",
 		"U-DISK"   : "mono/hdd.svg",
-		"uVNC"     : "mono/uvnc.svg",
 		"Alt-HTTP" : "mono/websitecheck.svg",
 		"Print service" : "mono/printer.svg",
 		"Scan service"  : "mono/scanner.svg",

@@ -649,7 +649,7 @@ class DeviceView extends View {
 
 			if (overwriteProtocol.vnc || ports.includes(5900)) {
 				const vncPort = overwriteProtocol.vnc || 5900;
-				const actionButton = this.CreateSideButton("mono/uvnc.svg", "VNC");
+				const actionButton = this.CreateSideButton("mono/vnc.svg", "VNC");
 				actionButton.onclick = async ()=> {
 					let vncPassword = null;
 					if ("vnc password" in this.link) {
@@ -663,7 +663,7 @@ class DeviceView extends View {
 			}
 			else if (overwriteProtocol.uvnc || ports.includes(5900)) {
 				const vncPort = overwriteProtocol.uvnc || 5900;
-				const actionButton = this.CreateSideButton("mono/uvnc.svg", "VNC");
+				const actionButton = this.CreateSideButton("mono/vnc.svg", "VNC");
 				actionButton.onclick = async ()=> {
 					let uvncPassword = null;
 					if ("uvnc password" in this.link) {
