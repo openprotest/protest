@@ -395,7 +395,7 @@ class Monitor extends Window {
 
 		if (!wmiClasses.classes || !snmpProfiles) {
 			okButton.onclick();
-			setTimeout(()=> this.ConfirmBox("Unable to the fetch resources.", true, "mono/resmonitor.svg"), 250);
+			setTimeout(()=> this.ConfirmBox("Unable to fetch resources.", true, "mono/resmonitor.svg"), 250);
 			return;
 		}
 
