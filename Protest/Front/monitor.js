@@ -361,7 +361,7 @@ class Monitor extends Window {
 
 	async ChartDialog() {
 		if (!this.socket) {
-			this.ConfirmBox("Web-socket is disconnected.", "mono/resmonitor.svg", true);
+			this.ConfirmBox("Web-socket is disconnected.", true, "mono/resmonitor.svg");
 			return;
 		}
 
