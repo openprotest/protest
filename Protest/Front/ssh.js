@@ -147,7 +147,7 @@ class Ssh extends PtyHost {
 			this.ws.send(connectionString);
 		};
 
-		this.ws.error = err=>{
+		this.ws.onerror = err=>{
 			console.log(err);
 		};
 

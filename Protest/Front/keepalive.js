@@ -431,7 +431,7 @@ const KEEP = {
 			break;
 
 		default:
-			console.warn("none register action: " + message.action);
+			console.warn("unrecognized action: " + message.action);
 			break;
 		}
 	},

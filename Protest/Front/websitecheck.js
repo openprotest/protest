@@ -28,7 +28,7 @@ class WebsiteCheck extends Window {
 		this.checkButton = document.createElement("input");
 		this.checkButton.type = "button";
 		this.checkButton.value = "Check";
-		this.checkButton.style.display = "block-line";
+		this.checkButton.style.display = "inline-block";
 		this.checkButton.style.width = "96px";
 		this.checkButton.style.height = "40px";
 		this.checkButton.style.margin = "16px";

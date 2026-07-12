@@ -101,9 +101,9 @@ class TraceRoute extends Console {
 			let bits = "1".repeat(cidr).padEnd(32, "0");
 			let mask = [];
 			mask.push(parseInt(bits.slice(0, 8), 2));
-			mask.push(parseInt(bits.slice(8, 8), 2));
-			mask.push(parseInt(bits.slice(16, 8), 2));
-			mask.push(parseInt(bits.slice(24, 8), 2));
+			mask.push(parseInt(bits.slice(8, 16), 2));
+			mask.push(parseInt(bits.slice(16, 24), 2));
+			mask.push(parseInt(bits.slice(24, 32), 2));
 
 			let net = [], broadcast = [];
 			for (let i = 0; i < 4; i++) {
