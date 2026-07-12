@@ -647,13 +647,19 @@ class DeviceView extends View {
 				};
 			}
 
-			if (overwriteProtocol.vnc || ports.includes(5900)) {
-				const vncPort = overwriteProtocol.vnc || 5900;
+			const hasVncPassword = "vnc password" in this.link || "uvnc password" in this.link;
+
+			if (overwriteProtocol.vnc || overwriteProtocol.uvnc || ports.includes(5900) || hasVncPassword) {
+				const vncPort = overwriteProtocol.vnc || overwriteProtocol.uvnc || 5900;
 				const actionButton = this.CreateSideButton("mono/vnc.svg", "VNC");
 				actionButton.onclick = async ()=> {
+					const attribute = "vnc password" in this.link ? "vnc password"
+						: "uvnc password" in this.link ? "uvnc password"
+						: null;
+
 					let vncPassword = null;
-					if ("vnc password" in this.link) {
-						const response = await fetch(`/db/${this.dbTarget}/attribute?file=${this.args.file}&attribute=vnc password`);
+					if (attribute) {
+						const response = await fetch(`/db/${this.dbTarget}/attribute?file=${this.args.file}&attribute=${attribute}`);
 						if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
 						vncPassword = await response.text();
 						if (vncPassword.length === 0) vncPassword = null;
@@ -661,26 +667,13 @@ class DeviceView extends View {
 					new Vnc({ host: host, port: vncPort, password: vncPassword, file: this.args.file });
 				};
 			}
-			else if (overwriteProtocol.uvnc || ports.includes(5900)) {
-				const vncPort = overwriteProtocol.uvnc || 5900;
-				const actionButton = this.CreateSideButton("mono/vnc.svg", "VNC");
-				actionButton.onclick = async ()=> {
-					let uvncPassword = null;
-					if ("uvnc password" in this.link) {
-						const response = await fetch(`/db/${this.dbTarget}/attribute?file=${this.args.file}&attribute=uvnc password`);
-						if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
-						uvncPassword = await response.text();
-						if (uvncPassword.length === 0) uvncPassword = null;
-					}
-					new Vnc({ host: host, port: vncPort, password: uvncPassword, file: this.args.file });
-				};
-			}
 
-			if (overwriteProtocol.uvnc) { //uvnc
+			if (overwriteProtocol.uvnc || ports.includes(5900) || hasVncPassword) {
+				const uvncPort = overwriteProtocol.uvnc || 5900;
 				const actionButton = this.CreateSideButton("mono/uvnc.svg", "uVNC (client)");
 				actionButton.onclick = async ()=> {
 					if (localStorage.getItem("prefer_vnc_file") === "true") {
-						this.DownloadVnc(host, overwriteProtocol.uvnc);
+						this.DownloadVnc(host, uvncPort);
 					}
 					else {
 						let uvncPassword = null;
@@ -690,25 +683,8 @@ class DeviceView extends View {
 							uvncPassword = await response.text();
 							if (uvncPassword.length === 0) uvncPassword = null;
 						}
-						UI.PromptRelay(this, "uvnc", `${host}:${overwriteProtocol.uvnc}`, uvncPassword);
-					}
-				};
-			}
-			else if (ports.includes(5900)) {
-				const actionButton = this.CreateSideButton("mono/uvnc.svg", "uVNC (client)");
-				actionButton.onclick = async ()=> {
-					if (localStorage.getItem("prefer_vnc_file") === "true") {
-						this.DownloadVnc(host, 5900);
-					}
-					else {
-						let uvncPassword = null;
-						if ("uvnc password" in this.link) {
-							const response = await fetch(`/db/${this.dbTarget}/attribute?file=${this.args.file}&attribute=uvnc password`);
-							if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
-							uvncPassword = await response.text();
-							if (uvncPassword.length === 0) uvncPassword = null;
-						}
-						UI.PromptRelay(this, "uvnc", host, uvncPassword);
+						const relayTarget = overwriteProtocol.uvnc ? `${host}:${overwriteProtocol.uvnc}` : host;
+						UI.PromptRelay(this, "uvnc", relayTarget, uvncPassword);
 					}
 				};
 			}
@@ -1450,10 +1426,7 @@ class DeviceView extends View {
 
 		if (this.liveStatsWebSockets !== null) return;
 
-		let server = window.location.href.replace("https://", "").replace("http://", "");
-		if (server.endsWith("/")) server = server.slice(0, -1);
-
-		this.liveStatsWebSockets = new WebSocket((KEEP.isSecure ? "wss://" : "ws://") + server + "/ws/livestats/device");
+		this.liveStatsWebSockets = new WebSocket(`${KEEP.isSecure ? "wss" : "ws"}://${window.location.host}/ws/livestats/device`);
 
 		let dotPingCounter = 0;
 		let liveButtons = [];

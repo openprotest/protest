@@ -355,10 +355,7 @@ class DhcpDiscover extends Window {
 		this.hexRecord = [];
 		this.result.textContent = "";
 
-		let server = window.location.href.replace("https://", "").replace("http://", "");
-		if (server.endsWith("/")) server = server.slice(0, -1);
-
-		this.ws = new WebSocket((KEEP.isSecure ? "wss://" : "ws://") + server + "/ws/dhcp");
+		this.ws = new WebSocket(`${KEEP.isSecure ? "wss" : "ws"}://${window.location.host}/ws/dhcp`);
 
 		this.ws.onopen = ()=> this.ws.send(`timeout=${this.timeoutInput.value}&mac=${mac}&hostname=${this.hostnameInput.value}&accept=${this.acceptToggle.checkbox.checked}&options=${this.args.options.join(";")}`);
 

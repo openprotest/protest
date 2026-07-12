@@ -130,9 +130,6 @@ class Ssh extends PtyHost {
 		this.statusBox.textContent = "Connecting...";
 		this.content.appendChild(this.statusBox);
 
-		let server = window.location.href.replace("https://", "").replace("http://", "");
-		if (server.endsWith("/")) server = server.slice(0, -1);
-
 		if (this.ws != null) {
 			try {
 				this.ws.close();
@@ -141,7 +138,7 @@ class Ssh extends PtyHost {
 		}
 
 		try {
-			this.ws = new WebSocket((KEEP.isSecure ? "wss://" : "ws://") + server + "/ws/ssh");
+			this.ws = new WebSocket(`${KEEP.isSecure ? "wss" : "ws"}://${window.location.host}/ws/ssh`);
 		}
 		catch {}
 

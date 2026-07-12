@@ -553,9 +553,6 @@ class Topology extends Window {
 	}
 
 	Connect(options) {
-		let server = window.location.href.replace("https://", "").replace("http://", "");
-		if (server.endsWith("/")) server = server.slice(0, -1);
-
 		if (this.ws != null) {
 			try {
 				this.ws.close();
@@ -563,7 +560,7 @@ class Topology extends Window {
 			catch {};
 		}
 
-		this.ws = new WebSocket(`${KEEP.isSecure ? "wss://" : "ws://"}${server}/ws/topology`);
+		this.ws = new WebSocket(`${KEEP.isSecure ? "wss" : "ws"}://${window.location.host}/ws/topology`);
 
 		this.ws.onopen = ()=> {
 			this.syncButton.disabled = true;

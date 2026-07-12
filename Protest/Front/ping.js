@@ -797,9 +797,6 @@ class Ping extends Console {
 	Connect() {
 		if (this.args.status !== "play") return;
 
-		let server = window.location.href.replace("https://", "").replace("http://", "");
-		if (server.endsWith("/")) server = server.slice(0, -1);
-
 		if (this.ws != null) {
 			try {
 				this.ws.close();
@@ -807,7 +804,7 @@ class Ping extends Console {
 			catch {};
 		}
 
-		this.ws = new WebSocket((KEEP.isSecure ? "wss://" : "ws://") + server + "/ws/ping");
+		this.ws = new WebSocket(`${KEEP.isSecure ? "wss" : "ws"}://${window.location.host}/ws/ping`);
 
 		this.ws.onopen = ()=> {
 			let split = this.request.split(";");

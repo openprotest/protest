@@ -14,10 +14,7 @@ const KEEP = {
 	ipv4Regex: /^(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)(?:\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)){3}$/,
 
 	Initialize: ()=> {
-		let server = window.location.href.replace("https://", "").replace("http://", "");
-		if (server.endsWith("/")) server = server.slice(0, -1);
-
-		KEEP.socket = new WebSocket((KEEP.isSecure ? "wss://" : "ws://") + server + "/ws/keepalive");
+		KEEP.socket = new WebSocket(`${KEEP.isSecure ? "wss" : "ws"}://${window.location.host}/ws/keepalive`);
 
 		KEEP.socket.onopen = ()=> {
 			KEEP.reconnectCount = 0;

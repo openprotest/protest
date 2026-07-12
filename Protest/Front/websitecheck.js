@@ -123,10 +123,7 @@ class WebsiteCheck extends Window {
 	}
 
 	Check() {
-		let server = window.location.href.replace("https://", "").replace("http://", "");
-		if (server.endsWith("/")) server = server.slice(0, -1);
-
-		this.ws = new WebSocket((KEEP.isSecure ? "wss://" : "ws://") + server + "/ws/websitecheck");
+		this.ws = new WebSocket(`${KEEP.isSecure ? "wss" : "ws"}://${window.location.host}/ws/websitecheck`);
 
 		this.ws.onopen = ()=> {
 			this.result.textContent = "";

@@ -179,9 +179,6 @@ class IpDiscovery extends List {
 	Connect(id) {
 		if (id === null) return;
 
-		let server = window.location.href.replace("https://", "").replace("http://", "");
-		if (server.endsWith("/")) server = server.slice(0, -1);
-
 		if (this.ws != null) {
 			try {
 				this.ws.close();
@@ -189,7 +186,7 @@ class IpDiscovery extends List {
 			catch {}
 		}
 
-		this.ws = new WebSocket((KEEP.isSecure ? "wss://" : "ws://") + server + "/ws/ipdiscovery");
+		this.ws = new WebSocket(`${KEEP.isSecure ? "wss" : "ws"}://${window.location.host}/ws/ipdiscovery`);
 
 		this.ws.onopen = ()=> {
 			this.ws.send(id);

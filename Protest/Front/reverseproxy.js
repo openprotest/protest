@@ -241,9 +241,6 @@ class ReverseProxy extends List {
 	}
 
 	Connect() {
-		let server = window.location.href.replace("https://", "").replace("http://", "");
-		if (server.endsWith("/")) server = server.slice(0, -1);
-
 		if (this.ws != null) {
 			try {
 				this.ws.close();
@@ -254,7 +251,7 @@ class ReverseProxy extends List {
 		this.reconnectSeparator.style.display = "none";
 		this.reconnectButton.style.display = "none";
 
-		this.ws = new WebSocket((KEEP.isSecure ? "wss://" : "ws://") + server + "/ws/reverseproxy");
+		this.ws = new WebSocket(`${KEEP.isSecure ? "wss" : "ws"}://${window.location.host}/ws/reverseproxy`);
 
 		this.ws.onopen = ()=> {
 			if (this.args.interval) {

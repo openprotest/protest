@@ -145,10 +145,7 @@ class Monitor extends Window {
 
 		if (this.socket !== null) return;
 
-		let server = window.location.href.replace("https://", "").replace("http://", "");
-		if (server.endsWith("/")) server = server.slice(0, -1);
-
-		this.socket = new WebSocket((KEEP.isSecure ? "wss://" : "ws://") + server + "/ws/monitor");
+		this.socket = new WebSocket(`${KEEP.isSecure ? "wss" : "ws"}://${window.location.host}/ws/monitor`);
 
 		this.socket.onopen = event=> {
 			this.connectRetries = 0;

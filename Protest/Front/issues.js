@@ -338,9 +338,6 @@ class Issues extends List {
 	}
 
 	Connect() {
-		let server = window.location.href.replace("https://", "").replace("http://", "");
-		if (server.endsWith("/")) server = server.slice(0, -1);
-
 		if (this.ws != null) {
 			try {
 				this.ws.close();
@@ -348,7 +345,7 @@ class Issues extends List {
 			catch {}
 		}
 
-		this.ws = new WebSocket((KEEP.isSecure ? "wss://" : "ws://") + server + "/ws/issues");
+		this.ws = new WebSocket(`${KEEP.isSecure ? "wss" : "ws"}://${window.location.host}/ws/issues`);
 
 		this.ws.onopen = ()=> {
 			this.scanButton.disabled = true;

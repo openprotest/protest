@@ -103,17 +103,13 @@ class Vnc extends Window {
 		this.statusBox.textContent = "Connecting...";
 		this.content.appendChild(this.statusBox);
 
-		let server = window.location.href.replace("https://", "").replace("http://", "");
-		if (server.endsWith("/")) server = server.slice(0, -1);
-
-		const url = (KEEP.isSecure ? "wss://" : "ws://") + server + "/ws/vnc?target=" + encodeURIComponent(target);
-
 		const options = {};
 		if (this.password) {
 			options.credentials = { password: this.password };
 		}
 
 		try {
+			const url = `${KEEP.isSecure ? "wss" : "ws"}://${window.location.host}/ws/vnc?target=${encodeURIComponent(target)}`;
 			this.rfb = new RFB(this.canvasBox, url, options);
 		}
 		catch (ex) {

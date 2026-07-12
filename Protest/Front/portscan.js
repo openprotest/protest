@@ -478,9 +478,6 @@ class PortScan extends Console {
 	}
 
 	Connect() {
-		let server = window.location.href.replace("https://", "").replace("http://", "");
-		if (server.endsWith("/")) server = server.slice(0, -1);
-
 		if (this.ws != null) {
 			try {
 				this.ws.close();
@@ -488,7 +485,7 @@ class PortScan extends Console {
 			catch {};
 		}
 
-		this.ws = new WebSocket((KEEP.isSecure ? "wss://" : "ws://") + server + "/ws/portscan");
+		this.ws = new WebSocket(`${KEEP.isSecure ? "wss" : "ws"}://${window.location.host}/ws/portscan`);
 
 		this.ws.onopen = ()=> {
 			for (let i = 0; i < this.pending.length; i++) {

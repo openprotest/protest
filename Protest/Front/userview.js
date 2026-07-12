@@ -161,10 +161,7 @@ class UserView extends View {
 	async InitializeLiveStats() {
 		if (this.liveStatsWebSockets !== null) return;
 
-		let server = window.location.href.replace("https://", "").replace("http://", "");
-		if (server.endsWith("/")) server = server.slice(0, -1);
-
-		this.liveStatsWebSockets = new WebSocket((KEEP.isSecure ? "wss://" : "ws://") + server + "/ws/livestats/user");
+		this.liveStatsWebSockets = new WebSocket(`${KEEP.isSecure ? "wss" : "ws"}://${window.location.host}/ws/livestats/user`);
 
 		this.liveStatsWebSockets.onopen = ()=> {
 			this.refreshLiveStatsButton.disabled = true;
