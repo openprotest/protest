@@ -476,35 +476,35 @@ internal static class Fetch {
                 null;
 
             if (key is not null && Eset.devicesCache.TryGetValue(key, out Eset.DeviceEntry esetEntry)) {
-                data.TryAdd("eset uuid", new[] { esetEntry.uuid, "ESET API", string.Empty });
+                data.TryAdd("eset uuid", new[] { esetEntry.uuid, "ESET", string.Empty });
 
                 if (!data.ContainsKey("operating system") && esetEntry.os is not null) {
-                    data.TryAdd("operating system", new[] { esetEntry.os, "ESET API", string.Empty });
+                    data.TryAdd("operating system", new[] { esetEntry.os, "ESET", string.Empty });
                 }
 
                 if (!data.ContainsKey("os version") && esetEntry.osVer is not null) {
-                    data.TryAdd("os version", new[] { esetEntry.osVer, "ESET API", string.Empty });
+                    data.TryAdd("os version", new[] { esetEntry.osVer, "ESET", string.Empty });
                 }
 
                 if (esetEntry.ip is not null) {
                     if (esetEntry.ip.Contains('.') && !data.ContainsKey("ip")) {
-                        data.TryAdd("ip", new[] { esetEntry.ip, "ESET API", string.Empty });
+                        data.TryAdd("ip", new[] { esetEntry.ip, "ESET", string.Empty });
                     }
                     else if (esetEntry.ip.Contains(':') && !data.ContainsKey("ipv6")) {
-                        data.TryAdd("ipv6", new[] { esetEntry.ip, "ESET API", string.Empty });
+                        data.TryAdd("ipv6", new[] { esetEntry.ip, "ESET", string.Empty });
                     }
                 }
 
                 if (!data.ContainsKey("mac address") && esetEntry.mac is not null) {
-                    data.TryAdd("mac address", new[] { esetEntry.mac, "ESET API", string.Empty });
+                    data.TryAdd("mac address", new[] { esetEntry.mac, "ESET", string.Empty });
                 }
 
                 if (!data.ContainsKey("manufacturer") && esetEntry.manufacturer is not null) {
-                    data.TryAdd("manufacturer", new[] { esetEntry.manufacturer, "ESET API", string.Empty });
+                    data.TryAdd("manufacturer", new[] { esetEntry.manufacturer, "ESET", string.Empty });
                 }
 
                 if (!data.ContainsKey("serial number") && esetEntry.serialNumber is not null) {
-                    data.TryAdd("serial number", new[] { esetEntry.serialNumber, "ESET API", string.Empty });
+                    data.TryAdd("serial number", new[] { esetEntry.serialNumber, "ESET", string.Empty });
                 }
 
                 if (!data.ContainsKey("processor") && esetEntry.processors is not null) {
@@ -515,7 +515,7 @@ internal static class Fetch {
                         string name = Data.ProcessorString(esetEntry.processors[i]);
                         cpuString.Append(name);
                     }
-                    data.TryAdd("processor", new[] { cpuString.ToString(), "ESET API", string.Empty });
+                    data.TryAdd("processor", new[] { cpuString.ToString(), "ESET", string.Empty });
                 }
             }
         }

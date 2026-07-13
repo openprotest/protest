@@ -641,7 +641,7 @@ class Fetch extends Tabs {
 		portScan.style.gridArea = "10 / 3";
 
 		this.tabsPanel.appendChild(this.esetApiCheckbox);
-		const esetApi = this.AddCheckBoxLabel(this.tabsPanel, this.esetApiCheckbox, "ESET API");
+		const esetApi = this.AddCheckBoxLabel(this.tabsPanel, this.esetApiCheckbox, "ESET");
 		esetApi.style.gridArea = "11 / 3";
 
 		this.tabsPanel.appendChild(this.portScanInput);

@@ -816,7 +816,7 @@ class Personalize extends Tabs {
 		this.presharedKeyInput = document.createElement("input");
 		this.presharedKeyInput.type = "text";
 		this.presharedKeyInput.value = localStorage.getItem("relay_key");
-		this.presharedKeyInput.style.width = "200px";
+		this.presharedKeyInput.style.width = "300px";
 
 		this.tabsPanel.append(keyLabel, this.presharedKeyInput);
 

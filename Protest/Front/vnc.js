@@ -24,6 +24,7 @@ class Vnc extends Window {
 		this.AddToolbarSeparator();
 		this.cadButton        = this.AddToolbarButton("Send ctrl+alt+del", "mono/cad.svg?light");
 		this.sendTextButton   = this.AddToolbarButton("Send key-strokes", "mono/keyboard.svg?light");
+		this.clipboardButton  = this.AddToolbarButton("Clipboard sync", "mono/clipboard.svg?light");
 		this.AddToolbarSeparator();
 		this.fitButton        = this.AddToolbarButton("Fit to window", "mono/fittoscreen.svg?light");
 		this.fullScreenButton = this.AddToolbarButton("Full screen", "mono/fullscreen.svg?light");
@@ -37,11 +38,12 @@ class Vnc extends Window {
 		this.statusBox.className = "vnc-status-box";
 		this.statusBox.textContent = "Connecting...";
 
-		this.connectButton.onclick = ()=> this.ConnectDialog(this.args.host);
-		this.cadButton.onclick     = ()=> { if (this.rfb) this.rfb.sendCtrlAltDel(); };
-		this.sendTextButton.onclick= ()=> this.SendTextDialog();
-		this.viewOnlyButton.onclick= ()=> this.ToggleViewOnly();
-		this.fitButton.onclick     = ()=> this.ToggleScaling();
+		this.connectButton.onclick    = ()=> this.ConnectDialog(this.args.host);
+		this.cadButton.onclick        = ()=> { if (this.rfb) this.rfb.sendCtrlAltDel(); };
+		this.sendTextButton.onclick   = ()=> this.SendTextDialog();
+		this.clipboardButton.onclick  = ()=> this.ToggleClipboardSync();
+		this.viewOnlyButton.onclick   = ()=> this.ToggleViewOnly();
+		this.fitButton.onclick        = ()=> this.ToggleScaling();
 		this.screenshotButton.onclick = ()=> this.SaveScreenshot();
 
 		this.fullScreenButton.onclick = ()=> {
@@ -49,8 +51,15 @@ class Vnc extends Window {
 		};
 
 		this.scaleViewport = true;
-		this.viewOnly = false;
+		this.viewOnly      = false;
+		this.clipboardSync = false;
+		
 		this.fitButton.style.borderBottom = "3px solid rgb(192,192,192)";
+
+		this._lastClipboard = null;
+		this._clipboardSyncHandler = ()=> this.SyncClipboardToRemote();
+		window.addEventListener("focus", this._clipboardSyncHandler);
+		document.addEventListener("visibilitychange", this._clipboardSyncHandler);
 
 		if (this.args.host && this.args.autoconnect !== false) {
 			this.SetTitle(`VNC - ${this.args.host}`);
@@ -126,15 +135,32 @@ class Vnc extends Window {
 
 		this.rfb.viewOnly = this.viewOnly;
 
+		this._securityFailed = false;
+
 		this.rfb.addEventListener("connect", ()=> {
 			this.SetTitle(`VNC - ${host}`);
 			this.statusBox.style.display = "none";
+			this.connectButton.disabled = true;
+		});
+
+		this.rfb.addEventListener("disconnect", e=> {
+			this.rfb = null;
 			this.connectButton.disabled = false;
+
+			if (this._securityFailed) return;
+
+			this.statusBox.style.display = "initial";
+			this.statusBox.style.backgroundImage = "url(mono/disconnect.svg)";
+			this.statusBox.textContent = e.detail?.clean ? "Connection closed" : "Connection lost";
+			this.content.appendChild(this.statusBox);
 		});
 
 		this.rfb.addEventListener("securityfailure", e=> {
+			this._securityFailed = true;
 			this.statusBox.style.display = "initial";
+			this.statusBox.style.backgroundImage = "url(mono/error.svg)";
 			this.statusBox.textContent = `Authentication failed${e.detail?.reason ? `: ${e.detail.reason}` : ""}`;
+			this.connectButton.disabled = false; //allow retry
 		});
 
 		this.rfb.addEventListener("credentialsrequired", ()=> {
@@ -142,8 +168,11 @@ class Vnc extends Window {
 		});
 
 		this.rfb.addEventListener("clipboard", e=> {
+			if (!this.clipboardSync) return;
 			const text = e.detail?.text;
-			if (text) navigator.clipboard?.writeText(text).catch(()=> {});
+			if (!text) return;
+			this._lastClipboard = text;
+			navigator.clipboard?.writeText(text).catch(()=> {});
 		});
 	}
 
@@ -334,6 +363,32 @@ class Vnc extends Window {
 		this.viewOnlyButton.style.borderBottom = this.viewOnly ? "3px solid rgb(192,192,192)" : "none";
 	}
 
+	ToggleClipboardSync() {
+		this.clipboardSync = !this.clipboardSync;
+		this.clipboardButton.style.borderBottom = this.clipboardSync ? "3px solid rgb(192,192,192)" : "none";
+	}
+
+	async SyncClipboardToRemote() {
+		if (!this.rfb || this.viewOnly) return;
+		if (!this.clipboardSync) return;
+		if (WIN.focused !== this) return;
+		if (!document.hasFocus()) return;
+		if (!navigator.clipboard?.readText) return;
+
+		let text;
+		try {
+			text = await navigator.clipboard.readText();
+		}
+		catch {
+			return;
+		}
+
+		if (text && text !== this._lastClipboard) {
+			this._lastClipboard = text;
+			this.rfb.clipboardPasteFrom(text);
+		}
+	}
+
 	SaveScreenshot() {
 		if (!this.rfb) return;
 
@@ -357,6 +412,9 @@ class Vnc extends Window {
 	}
 
 	Close() { //overrides
+		window.removeEventListener("focus", this._clipboardSyncHandler);
+		document.removeEventListener("visibilitychange", this._clipboardSyncHandler);
+
 		if (this.rfb) {
 			try { this.rfb.disconnect(); } catch {}
 			this.rfb = null;

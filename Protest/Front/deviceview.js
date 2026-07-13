@@ -3413,7 +3413,7 @@ class DeviceView extends View {
 		const portScanToggle = this.CreateToggle("Port Scan", true, grid);
 		portScanToggle.label.style.gridArea = "5 / 2";
 
-		const esetApiToggle = this.CreateToggle("ESET API", true, grid);
+		const esetApiToggle = this.CreateToggle("ESET", true, grid);
 		esetApiToggle.checkbox.checked = false;
 		esetApiToggle.label.style.gridArea = "6 / 2";
 

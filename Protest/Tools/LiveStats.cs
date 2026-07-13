@@ -238,7 +238,7 @@ internal static class LiveStats {
                     && deviceInfo.functionalityProblemCount > 0) {
                     byte[] bytes = JsonSerializer.SerializeToUtf8Bytes(new Dictionary<string, object> {
                             { "error", $"ESET functionality problem(s): {deviceInfo.functionalityProblemCount}" },
-                            { "source", "ESET API" },
+                            { "source", "ESET" },
                             { "timestamp",  DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString() }
                         });
                     await WebSocketHelper.WsWriteText(ws, bytes);
@@ -249,7 +249,7 @@ internal static class LiveStats {
 
                     byte[] bytes = JsonSerializer.SerializeToUtf8Bytes(new Dictionary<string, object> {
                             { "error", $"ESET functionality problems: {deviceInfo2.functionalityProblemCount}" },
-                            { "source", "ESET API" },
+                            { "source", "ESET" },
                             { "timestamp",  DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString() }
                         });
                     await WebSocketHelper.WsWriteText(ws, bytes);
@@ -259,7 +259,7 @@ internal static class LiveStats {
                     && detectionsCount > 0) {
                     byte[] bytes = JsonSerializer.SerializeToUtf8Bytes(new Dictionary<string, object> {
                             { "warning", $"End-point detections: {detectionsCount}" },
-                            { "source", "ESET API" },
+                            { "source", "ESET" },
                             { "timestamp",  DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString() }
                         });
                     await WebSocketHelper.WsWriteText(ws, bytes);
