@@ -159,8 +159,9 @@ class Vnc extends Window {
 			this._securityFailed = true;
 			this.statusBox.style.display = "initial";
 			this.statusBox.style.backgroundImage = "url(mono/error.svg)";
-			this.statusBox.textContent = `Authentication failed${e.detail?.reason ? `: ${e.detail.reason}` : ""}`;
-			this.connectButton.disabled = false; //allow retry
+			this.statusBox.textContent = "Security failure";
+			this.connectButton.disabled = false;
+			this.PromptPasswordRetry(e.detail?.reason);
 		});
 
 		this.rfb.addEventListener("credentialsrequired", ()=> {
@@ -284,6 +285,50 @@ class Vnc extends Window {
 		};
 
 		setTimeout(()=> passwordInput.focus(), 200);
+	}
+
+	PromptPasswordRetry(reason) {
+		const dialog = this.DialogBox("180px");
+		if (dialog === null) return;
+
+		const {okButton, cancelButton, innerBox} = dialog;
+		okButton.value = "Retry";
+
+		innerBox.style.padding = "20px";
+		innerBox.parentElement.style.maxWidth = "400px";
+		innerBox.parentElement.parentElement.onclick = event=> { event.stopPropagation(); };
+
+		const message = document.createElement("div");
+		message.textContent = `Authentication failed${reason ? `: ${reason}` : ""}. Please try again.`;
+		message.style.paddingBottom = "16px";
+		message.style.fontWeight = "600";
+
+		const passwordLabel = document.createElement("div");
+		passwordLabel.style.display = "inline-block";
+		passwordLabel.style.minWidth = "88px";
+		passwordLabel.textContent = "Password:";
+		const passwordInput = document.createElement("input");
+		passwordInput.type = "password";
+		passwordInput.style.width = "calc(100% - 120px)";
+		passwordInput.value = this.password ?? "";
+		innerBox.append(message, passwordLabel, passwordInput);
+
+		passwordInput.onkeydown = event=> {
+			if (event.key === "Enter") okButton.click();
+		};
+
+		okButton.onclick = ()=> {
+			this.password = passwordInput.value.length > 0 ? passwordInput.value : null;
+			dialog.Close();
+			this.Connect();
+		};
+
+		cancelButton.value = "Cancel";
+
+		setTimeout(()=> {
+			passwordInput.focus();
+			passwordInput.select();
+		}, 200);
 	}
 
 	SendTextDialog() {
