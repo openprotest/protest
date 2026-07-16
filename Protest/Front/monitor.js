@@ -992,15 +992,6 @@ class Monitor extends Window {
 			let lastProperties = queryInput.value.substring(selectIndex + 6, fromIndex).trim();
 			let lastPropertiesArray = lastProperties.split(",").map(o=>o.trim().toLowerCase());
 
-			valueInput.textContent = "";
-			for (let i=0; i<lastPropertiesArray.length; i++) {
-				if (lastPropertiesArray[i] === "*") continue;
-				const option = document.createElement("option");
-				option.value = lastPropertiesArray[i];
-				option.text = lastPropertiesArray[i];
-				valueInput.appendChild(option);
-			}
-
 			propertiesDatalist.textContent = "";
 			for (let i=0; i<lastPropertiesArray.length; i++) {
 				const option = document.createElement("option");

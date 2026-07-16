@@ -14,6 +14,7 @@ using Protest.Http;
 using Protest.Tools;
 using Protest.Integration;
 using Lextm.SharpSnmpLib;
+using System.Net.Sockets;
 
 namespace Protest.Tasks;
 
@@ -121,6 +122,7 @@ internal static class Fetch {
             try {
                 hostname = Dns.GetHostEntry(target).HostName;
             }
+            catch (SocketException) { }
             catch (Exception ex) {
                 Logger.Debug(ex);
             }

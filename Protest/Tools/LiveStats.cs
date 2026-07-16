@@ -64,7 +64,7 @@ internal static class LiveStats {
                 if (OperatingSystem.IsWindows()
                     && entry.attributes.TryGetValue("type", out Database.Attribute typeAttribute)
                     && typeAttribute.value.ToLower() == "domain user"
-                    && entry.attributes.TryGetValue("username", out Database.Attribute usernameAttribute)
+                    && entry.attributes.ContainsKey("username")
                     && Issues.CheckDomainUser(entry, out Issues.Issue[] issues, 0)
                     && issues is not null) {
                     for (int i = 0; i < issues.Length; i++) {
@@ -190,7 +190,7 @@ internal static class LiveStats {
                 if (firstAlive is null) {
                     for (int i = 0; i < pingArray.Length; i++) {
                         string lastSeen = LastSeen.HasBeenSeen(pingArray[i], true);
-                        await WebSocketHelper.WsWriteText(ws, $"{{\"info\":\"Last seen {pingArray[i]}: {lastSeen}\",\"source\":\"ICMP\"}}");
+                        await WebSocketHelper.WsWriteText(ws, $"{{\"info\":\"Last seen {Data.EscapeJsonText(pingArray[i])}: {Data.EscapeJsonText(lastSeen)}\",\"source\":\"ICMP\"}}");
                     }
                 }
             }
@@ -305,8 +305,10 @@ internal static class LiveStats {
 
             if (!String.IsNullOrEmpty(firstAlive)) {
                 try {
-                    dns = (await System.Net.Dns.GetHostEntryAsync(firstAlive)).HostName;
+                    System.Net.IPHostEntry reverseLookup = await System.Net.Dns.GetHostEntryAsync(firstAlive);
+                    dns = reverseLookup?.HostName;
                 }
+                catch (SocketException) {}
                 catch (Exception ex) {
                     Logger.Debug(ex);
                 }
@@ -444,7 +446,7 @@ internal static class LiveStats {
 
                     DateTime current = new DateTime(year, month, day, hour, minute, second);
                     DateTime now = DateTime.UtcNow;
-                    if (Math.Abs(current.Ticks - now.Ticks) > 600_000_000L) {
+                    if (Math.Abs(current.Ticks - now.Ticks) > 3_000_000_000L) {
                         await WebSocketHelper.WsWriteText(ws, "{\"warning\":\"System time is off by more than 5 minutes\",\"source\":\"WMI\"}"u8.ToArray());
                     }
                 }
@@ -639,14 +641,14 @@ internal static class LiveStats {
         foreach (KeyValuePair<short, List<int>> pair in taggedMap) {
             foreach (int port in pair.Value) {
                 taggedDic.TryGetValue(port, out string existing);
-                short.TryParse(pair.Key.ToString(), out short currentVlan);
+                short currentVlan = pair.Key;
                 if (untaggedDic.TryGetValue(port, out short untaggedVlanId) && untaggedVlanId == currentVlan) continue;
                 taggedDic[port] = String.IsNullOrEmpty(existing) ? currentVlan.ToString() : $"{existing},{currentVlan}";
             }
         }
 
         List<string> speedList    = new List<string>(typeDic.Count);
-        List<short> untaggedList  = new List<short>(typeDic.Count);
+        List<short>  untaggedList = new List<short>(typeDic.Count);
         List<string> taggedList   = new List<string>(typeDic.Count);
         List<short>  statusList   = new List<short>(typeDic.Count);
         List<long>   dataList     = new List<long>(typeDic.Count);

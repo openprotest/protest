@@ -36,6 +36,7 @@ internal static class NetBios {
                     : encoding.GetString(receiveBuffer, 57, 16).Trim('\0').Trim();
             }
         }
+        catch (SocketException) { }
         catch (Exception ex) {
             Logger.Debug(ex);
         }
@@ -45,7 +46,7 @@ internal static class NetBios {
 
     public static async Task<string> GetBiosNameAsync(string host, int timeout = 1000) {
         IPAddress ip = IPAddress.Parse(host);
-        if (!ip.IsPrivate()) { return String.Empty; }
+        if (!ip.IsPrivate()) return String.Empty;
 
         using UdpClient client = new UdpClient();
         try {
@@ -61,7 +62,7 @@ internal static class NetBios {
                 Encoding enc = new ASCIIEncoding();
                 string biosName = enc.GetString(buffer, 57, 16).Trim('\0').Trim();
 
-                int nameIndex = biosName.IndexOf(" ");
+                int nameIndex = biosName.IndexOf(' ');
                 if (nameIndex > -1) biosName = biosName[..nameIndex];
 
                 return biosName;
