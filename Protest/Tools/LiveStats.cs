@@ -1,11 +1,9 @@
-﻿using Lextm.SharpSnmpLib;
-using Protest.Http;
+﻿using Protest.Http;
 using Protest.Integration;
 using Protest.Protocols;
 using Protest.Protocols.Snmp;
 using Protest.Tasks;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.DirectoryServices;
 using System.Management;
 using System.Net;
@@ -17,9 +15,8 @@ using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using Lextm.SharpSnmpLib;
 using static Protest.Protocols.Snmp.Polling;
-using static Protest.Tools.WindowsUpdate;
-using static Vanara.PInvoke.Kernel32;
 
 namespace Protest.Tools;
 
@@ -63,7 +60,8 @@ internal static class LiveStats {
             try {
                 if (OperatingSystem.IsWindows()
                     && entry.attributes.TryGetValue("type", out Database.Attribute typeAttribute)
-                    && typeAttribute.value.ToLower() == "domain user"
+                    && typeAttribute is not null
+                    && typeAttribute.value.Equals("domain user", StringComparison.OrdinalIgnoreCase)
                     && entry.attributes.ContainsKey("username")
                     && Issues.CheckDomainUser(entry, out Issues.Issue[] issues, 0)
                     && issues is not null) {
@@ -174,13 +172,13 @@ internal static class LiveStats {
                                 break;
 
                             default:
-                                await WebSocketHelper.WsWriteText(ws, $"{{\"echoReply\":\"{Data.EscapeJsonText(reply.Status.ToString())}\",\"for\":\"{pingArray[index]}\",\"source\":\"ICMP\"}}");
+                                await WebSocketHelper.WsWriteText(ws, $"{{\"echoReply\":\"{reply.Status.ToString()}\",\"for\":\"{pingArray[index]}\",\"source\":\"ICMP\"}}");
                                 break;
                             }
 
                         }
                         catch {
-                            await WebSocketHelper.WsWriteText(ws, $"{{\"echoReply\":\"Error\",\"for\":\"{Data.EscapeJsonText(pingArray[index])}\",\"source\":\"ICMP\"}}");
+                            await WebSocketHelper.WsWriteText(ws, $"{{\"echoReply\":\"Error\",\"for\":\"{pingArray[index]}\",\"source\":\"ICMP\"}}");
                         }
                     }));
                 }
@@ -190,7 +188,7 @@ internal static class LiveStats {
                 if (firstAlive is null) {
                     for (int i = 0; i < pingArray.Length; i++) {
                         string lastSeen = LastSeen.HasBeenSeen(pingArray[i], true);
-                        await WebSocketHelper.WsWriteText(ws, $"{{\"info\":\"Last seen {Data.EscapeJsonText(pingArray[i])}: {Data.EscapeJsonText(lastSeen)}\",\"source\":\"ICMP\"}}");
+                        await WebSocketHelper.WsWriteText(ws, $"{{\"info\":\"Last seen {pingArray[i]}: {lastSeen}\",\"source\":\"ICMP\"}}");
                     }
                 }
             }
@@ -580,28 +578,28 @@ internal static class LiveStats {
             if (!int.TryParse(pair.Key.Split('.')[^1], out int index)) continue;
 
             if (pair.Key.StartsWith(Protocols.Snmp.Oid.IF_TYPE)) {
-                typeDic.Add(index, pair.Value);
+                typeDic[index] = pair.Value;
             }
             else if (pair.Key.StartsWith(Protocols.Snmp.Oid.IF_HC_SPEED)) {
-                speedDic.Add(index, pair.Value);
+                speedDic[index] = pair.Value;
             }
             else if (pair.Key.StartsWith(Protocols.Snmp.Oid.DOT_1Q_PVLAN)) {
-                untaggedDic.Add(index, short.TryParse(pair.Value, out short v) ? v : (short)0);
+                untaggedDic[index] = short.TryParse(pair.Value, out short v) ? v : (short)0;
             }
             else if (pair.Key.StartsWith(Protocols.Snmp.Oid.IF_STATUS)) {
-                statusDic.Add(index, byte.TryParse(pair.Value, out byte v) ? v : (byte)0);
+                statusDic[index] = byte.TryParse(pair.Value, out byte v) ? v : (byte)0;
             }
             else if (pair.Key.StartsWith(Protocols.Snmp.Oid.IF_HC_IN_OCTETS)) {
-                trafficInDic.Add(index, long.TryParse(pair.Value, out long v) ? v : 0);
+                trafficInDic[index] = long.TryParse(pair.Value, out long v) ? v : 0;
             }
             else if (pair.Key.StartsWith(Protocols.Snmp.Oid.IF_HC_OUT_OCTETS)) {
-                trafficOutDic.Add(index, long.TryParse(pair.Value, out long v) ? v : 0);
+                trafficOutDic[index] = long.TryParse(pair.Value, out long v) ? v : 0;
             }
             else if (pair.Key.StartsWith(Protocols.Snmp.Oid.IF_IN_ERROR)) {
-                errorInDic.Add(index, int.TryParse(pair.Value, out int v) ? v : 0);
+                errorInDic[index] = int.TryParse(pair.Value, out int v) ? v : 0;
             }
             else if (pair.Key.StartsWith(Protocols.Snmp.Oid.IF_OUT_ERROR)) {
-                errorOutDic.Add(index, int.TryParse(pair.Value, out int v) ? v : 0);
+                errorOutDic[index] = int.TryParse(pair.Value, out int v) ? v : 0;
             }
         }
 
