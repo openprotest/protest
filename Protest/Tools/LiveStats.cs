@@ -457,9 +457,8 @@ internal static class LiveStats {
                 string username = Wmi.WmiGet(scope, "Win32_ComputerSystem", "UserName", false, null);
                 if (username.Length > 0) {
                     await WebSocketHelper.WsWriteText(ws, $"{{\"info\":\"Logged in user: {Data.EscapeJsonText(username)}\",\"source\":\"WMI\"}}");
+                    await WebSocketHelper.WsWriteText(ws, $"{{\"activeUser\":\"{Data.EscapeJsonText(username)}\",\"source\":\"WMI\"}}");
                 }
-
-                await WebSocketHelper.WsWriteText(ws, $"{{\"activeUser\":\"{Data.EscapeJsonText(username)}\",\"source\":\"WMI\"}}");
             }
         }
         catch (Exception ex) {
@@ -603,7 +602,7 @@ internal static class LiveStats {
             }
         }
 
-        Dictionary<short, List<int>> taggedMap = new Dictionary<short, List<int>>();
+        Dictionary<short, HashSet<int>> taggedMap = new Dictionary<short, HashSet<int>>();
         for (int i = 0; i < result.Count; i++) {
             string oid = result[i].Id.ToString();
             if (!oid.StartsWith(Oid.DOT_1Q_VLAN_EGRESS)) continue;
@@ -624,19 +623,17 @@ internal static class LiveStats {
                 for (int k = 0; k < 8; k++) {
                     if ((b & (1 << (7 - k))) != 0) {
                         int portIndex = 8 * (j - startIndex) + (k + 1);
-                        if (!taggedMap.TryGetValue(vlanId, out List<int> ports)) {
-                            ports = new List<int>();
+                        if (!taggedMap.TryGetValue(vlanId, out HashSet<int> ports)) {
+                            ports = new HashSet<int>();
                             taggedMap[vlanId] = ports;
                         }
-                        if (!ports.Contains(portIndex)) {
-                            ports.Add(portIndex);
-                        }
+                        ports.Add(portIndex);
                     }
                 }
             }
         }
 
-        foreach (KeyValuePair<short, List<int>> pair in taggedMap) {
+        foreach (KeyValuePair<short, HashSet<int>> pair in taggedMap) {
             foreach (int port in pair.Value) {
                 taggedDic.TryGetValue(port, out string existing);
                 short currentVlan = pair.Key;
