@@ -232,21 +232,16 @@ internal static class LiveStats {
 
                 await Eset.FetchAsync();
 
-                if (Eset.devicesCache.TryGetValue(_hostname?.value?.ToLower() ?? String.Empty, out Eset.DeviceEntry deviceInfo)
-                    && deviceInfo.functionalityProblemCount > 0) {
+                entry.attributes.TryGetValue("fqdn", out Database.Attribute fqdn);
+
+                Eset.DeviceEntry deviceInfo = default;
+                bool esetMatch =
+                    Eset.TryResolveDevice(_hostname?.value, out deviceInfo) ||
+                    Eset.TryResolveDevice(fqdn?.value, out deviceInfo);
+
+                if (esetMatch && deviceInfo.functionalityProblemCount > 0) {
                     byte[] bytes = JsonSerializer.SerializeToUtf8Bytes(new Dictionary<string, object> {
                             { "error", $"ESET functionality problem(s): {deviceInfo.functionalityProblemCount}" },
-                            { "source", "ESET" },
-                            { "timestamp",  DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString() }
-                        });
-                    await WebSocketHelper.WsWriteText(ws, bytes);
-                }
-                else if ((entry.attributes.TryGetValue("fqdn", out Database.Attribute fqdn)
-                    && Eset.devicesCache.TryGetValue(fqdn.value.ToLower(), out Eset.DeviceEntry deviceInfo2)
-                    && deviceInfo2.functionalityProblemCount > 0)) {
-
-                    byte[] bytes = JsonSerializer.SerializeToUtf8Bytes(new Dictionary<string, object> {
-                            { "error", $"ESET functionality problems: {deviceInfo2.functionalityProblemCount}" },
                             { "source", "ESET" },
                             { "timestamp",  DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString() }
                         });

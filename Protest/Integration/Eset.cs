@@ -68,15 +68,26 @@ internal static class Eset {
             Task<List<JsonElement>> devicesTask    = FetchDevicesAsync(deviceUrl);
             Task<List<JsonElement>> detectionsTask = FetchDetectionsAsync(deviceUrl);
 
-            await Task.WhenAll(devicesTask, detectionsTask);
+            bool devicesOk = false;
 
-            List <JsonElement> devices = devicesTask.Result;
-            ParseDevice(devices);
+            try {
+                ParseDevice(await devicesTask);
+                devicesOk = true;
+            }
+            catch (Exception ex) {
+                Logger.Error(ex);
+            }
 
-            List<JsonElement> detections = detectionsTask.Result;
-            ParseDetections(detections);
+            try {
+                ParseDetections(await detectionsTask);
+            }
+            catch (Exception ex) {
+                Logger.Error(ex);
+            }
 
-            cacheDate = DateTimeOffset.UtcNow.Ticks;
+            if (devicesOk) {
+                cacheDate = DateTime.UtcNow.Ticks;
+            }
         }
         catch (Exception ex) {
             Logger.Error(ex);
@@ -193,9 +204,31 @@ internal static class Eset {
                 }
             }
 
-            devicesCache[entry.displayName.ToLower()] = entry;
+            if (String.IsNullOrWhiteSpace(entry.displayName)) continue;
+
+            string name = entry.displayName.ToLowerInvariant();
+            devicesCache[name] = entry;
+
+            int dot = name.IndexOf('.');
+            if (dot > 0) {
+                devicesCache.TryAdd(name[..dot], entry);
+            }
         }
 
+    }
+
+    public static bool TryResolveDevice(string name, out DeviceEntry entry) {
+        entry = default;
+
+        if (String.IsNullOrWhiteSpace(name)) return false;
+
+        name = name.ToLowerInvariant();
+        if (devicesCache.TryGetValue(name, out entry)) return true;
+
+        int dot = name.IndexOf('.');
+        if (dot > 0 && devicesCache.TryGetValue(name[..dot], out entry)) return true;
+
+        return false;
     }
 
     private static void ParseDetections(List<JsonElement> detections) {
@@ -253,7 +286,6 @@ internal static class Eset {
             new("grant_type", "password")
         ]);
 
-        httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", Eset.accessToken);
 
         using HttpResponseMessage response = await httpClient.PostAsync($"{iamUrl}/oauth/token", form);
 
