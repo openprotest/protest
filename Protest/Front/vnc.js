@@ -23,6 +23,7 @@ class Vnc extends Window {
 		this.viewOnlyButton   = this.AddToolbarButton("View only", "mono/lock.svg?light");
 		this.AddToolbarSeparator();
 		this.cadButton        = this.AddToolbarButton("Send ctrl+alt+del", "mono/cad.svg?light");
+		this.metaButton      = this.AddToolbarButton("Send meta", "mono/winkey.svg?light");
 		this.sendTextButton   = this.AddToolbarButton("Send key-strokes", "mono/keyboard.svg?light");
 		this.clipboardButton  = this.AddToolbarButton("Clipboard sync", "mono/clipboard.svg?light");
 		this.AddToolbarSeparator();
@@ -40,6 +41,7 @@ class Vnc extends Window {
 
 		this.connectButton.onclick    = ()=> this.ConnectDialog(this.args.host);
 		this.cadButton.onclick        = ()=> { if (this.rfb) this.rfb.sendCtrlAltDel(); };
+		this.metaButton.onclick      = ()=> this.SendMeta();
 		this.sendTextButton.onclick   = ()=> this.SendTextDialog();
 		this.clipboardButton.onclick  = ()=> this.ToggleClipboardSync();
 		this.viewOnlyButton.onclick   = ()=> this.ToggleViewOnly();
@@ -373,6 +375,11 @@ class Vnc extends Window {
 		setTimeout(()=> textInput.focus(), 200);
 	}
 
+	SendMeta() {
+		if (!this.rfb) return;
+		this.rfb.sendKey(0xFFEB, "MetaLeft");
+	}
+
 	SendKeystrokes(text) {
 		if (!this.rfb || !text) return;
 
@@ -402,6 +409,7 @@ class Vnc extends Window {
 		this.viewOnly = !this.viewOnly;
 
 		this.cadButton.disabled = this.viewOnly;
+		this.metaButton.disabled = this.viewOnly;
 		this.sendTextButton.disabled = this.viewOnly;
 
 		if (this.rfb) this.rfb.viewOnly = this.viewOnly;
