@@ -11,7 +11,7 @@ namespace Protest.Tools;
 
 internal static class PortScan {
     public static readonly short[] BASIC_PORTS = {
-        21, 22, 23, 25, 53, 67, 80, 110, 135, 139, 170, 239, 389, 443, 445, 515, 631, 636, 853, 990, 992, 993, 995, 3389, 5900, 6789, 7442, 7550, 8080, 8443, 9100, 10001
+        21, 22, 23, 25, 53, 67, 80, 110, 135, 139, 170, 239, 389, 443, 445, 515, 631, 636, 853, 990, 992, 993, 995, 3389, 5900, 5985, 5986, 6789, 7442, 7550, 8080, 8443, 9100, 10001
     };
 
  /*
@@ -137,6 +137,8 @@ internal static class PortScan {
             {5901, "uVNC, Virtual Network Computer"},
             {5902, "uVNC, Virtual Network Computer"},
             {5903, "uVNC, Virtual Network Computer"},
+            {5985, "WinRM, Windows Remote Management"},
+            {5986, "WinRM, Windows Remote Management over SSL"},
             {6666, "UniFi Camera Stream Listener"},
             {6789, "UniFi Mobile Speed Test"},
             {6969, "BitTorrent tracker"},

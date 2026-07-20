@@ -477,6 +477,7 @@ internal sealed class Listener {
         case "/ws/ping":             await Protocols.Icmp.WebSocketHandler(ctx);     return true;
         case "/ws/dhcp":             await Protocols.Dhcp.WebSocketHandler(ctx);     return true;
         case "/ws/terminal":         await Tools.Terminal.WebSocketHandler(ctx);     return true;
+        case "/ws/winrm":            await Tools.WinRM.WebSocketHandler(ctx);        return true;
         case "/ws/telnet":           await Protocols.Telnet.WebSocketHandler(ctx);   return true;
         case "/ws/ssh":              await Protocols.Ssh.WebSocketHandler(ctx);      return true;
         case "/ws/vnc":              await Protocols.Vnc.WebSocketHandler(ctx);      return true;

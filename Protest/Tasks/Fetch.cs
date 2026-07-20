@@ -472,12 +472,15 @@ internal static class Fetch {
         if (useEsetApi) {
             Eset.FetchAsync().GetAwaiter().GetResult();
 
-            string key =
-                data.TryGetValue("fqdn", out string[] dataFqdn) && dataFqdn?.Length > 0 ? dataFqdn[0].ToLower() :
-                data.TryGetValue("hostname", out string[] dataHostname) && dataHostname?.Length > 0 ?dataHostname[0].ToLower() :
-                null;
+            data.TryGetValue("fqdn", out string[] dataFqdn);
+            data.TryGetValue("hostname", out string[] dataHostname);
 
-            if (key is not null && Eset.devicesCache.TryGetValue(key, out Eset.DeviceEntry esetEntry)) {
+            Eset.DeviceEntry esetEntry = default;
+            bool esetMatch =
+                (dataFqdn?.Length > 0 && Eset.TryResolveDevice(dataFqdn[0], out esetEntry)) ||
+                (dataHostname?.Length > 0 && Eset.TryResolveDevice(dataHostname[0], out esetEntry));
+
+            if (esetMatch) {
                 data.TryAdd("eset uuid", new[] { esetEntry.uuid, "ESET", string.Empty });
 
                 if (!data.ContainsKey("operating system") && esetEntry.os is not null) {

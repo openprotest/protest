@@ -388,6 +388,7 @@ const MENU = {
 		{ t:"SNMP polling",       i:"mono/snmp.svg?light",          g:"utilities", h:false, f:args=> new Snmp(args) },
 		{ t:"WMI client",         i:"mono/wmi.svg?light",           g:"utilities", h:false, f:args=> new Wmi(args),        k:"windows management instrumentation viewer" },
 		{ t:"Terminal",           i:"mono/terminal.svg?light",       g:"utilities", h:true,  f:()=> new Terminal({}),       k:"terminal shell console cmd bash" },
+		{ t:"Remote shell",       i:"mono/remote.svg?light",        g:"utilities", h:true,  f:()=> new RemoteShell({host:""}), k:"winrm powershell psremoting windows terminal shell" },
 		{ t:"Secure shell",       i:"mono/ssh.svg?light",           g:"utilities", h:true,  f:()=> new Ssh({host:""}),     k:"ssh terminal" },
 		{ t:"Telnet",             i:"mono/telnet.svg?light",        g:"utilities", h:true,  f:()=> new Telnet({host:""}),  k:"terminal" },
 		{ t:"VNC",                i:"mono/vnc.svg?light",           g:"utilities", h:true,  f:()=> new Vnc(),              k:"vnc uvnc remote rfb" },

@@ -21,7 +21,7 @@ internal static partial class Terminal {
             Rows = DEFAULT_ROWS
         };
 
-        return RunPtyAsync(ctx, ws, origin, options);
+        return RunPtyAsync(ctx, ws, origin, options, "/ws/terminal", $"Open local shell ({Path.GetFileName(app)})");
     }
 
 }

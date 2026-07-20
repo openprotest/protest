@@ -614,6 +614,10 @@ internal static class Auth {
                 path.Add("/ws/terminal");
                 break;
 
+            case "remote shell:write":
+                path.Add("/ws/winrm");
+                break;
+
             case "telnet:write":
                 path.Add("/ws/telnet");
                 break;

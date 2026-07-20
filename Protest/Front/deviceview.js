@@ -6,7 +6,7 @@ class DeviceView extends View {
 		"type", "name",
 
 		["mono/portscan.svg", "network"],
-		"ip", "ipv6", "mask", "hostname", "mac address", "dhcp enabled", "ports", "network adapter speed", "uplink", "overwriteprotocol",
+		"ip", "ipv6", "mask", "hostname", "fqdn", "mac address", "dhcp enabled", "ports", "network adapter speed", "uplink", "overwriteprotocol",
 
 		[".", "device"],
 		"manufacturer", "model", "serial number", "chassis type", "description", "descriptor",
@@ -33,7 +33,7 @@ class DeviceView extends View {
 		"owner", "owner name", "location", "site", "contact",
 
 		["mono/directory.svg", "Domain information"],
-		"object guid", "distinguished name", "dns hostname", "created on dc", "fqdn",
+		"object guid", "distinguished name", "dns hostname", "created on dc",
 
 		["mono/credential.svg", "credentials"],
 		"domain", "username", "password", "ssh username", "ssh password", "vnc password", "uvnc password", "anydesk id", "anydesk password", "snmp profile"
@@ -494,12 +494,27 @@ class DeviceView extends View {
 				const computerMngButton = this.CreateSideButton("mono/computermanage.svg", "Management");
 				computerMngButton.onclick = ()=> UI.PromptRelay(this, "management", host);
 
-				const psRemoteButton = this.CreateSideButton("mono/remote.svg", "PS remote"); //psexec
-				psRemoteButton.onclick = ()=> UI.PromptRelay(this, "psremote", host);
-
 				if (ports.includes(445)) { //smb
 					const smbButton = this.CreateSideButton("mono/shared.svg", "SMB");
 					smbButton.onclick = ()=> UI.PromptRelay(this, "smb", `\\\\${host}\\`);
+				}
+
+				if (localStorage.getItem("enable_psexec") === "true") {
+					const psRemoteButton = this.CreateSideButton("mono/remote.svg", "PS remote"); //psexec
+					psRemoteButton.onclick = ()=> UI.PromptRelay(this, "psremote", host);
+				}
+			}
+
+			if (ports.includes(5985) || ports.includes(5986)) {
+				if (this.link.hostname && this.link.hostname.v.length > 0) {
+					const hostname = this.link.hostname.v;
+					const remoteShellButton = this.CreateSideButton("mono/remote.svg", "Remote shell");
+					remoteShellButton.onclick = ()=> new RemoteShell({host: hostname});
+				}
+				else if (this.link.fqdn && this.link.fqdn.v.length > 0) {
+					const hostname = this.link.fqdn.v;
+					const remoteShellButton = this.CreateSideButton("mono/remote.svg", "Remote shell");
+					remoteShellButton.onclick = ()=> new RemoteShell({host: hostname});
 				}
 			}
 

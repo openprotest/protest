@@ -119,6 +119,8 @@ class PortScan extends Console {
 		5901: "uVNC	Virtual Network Computer",
 		5902: "uVNC	Virtual Network Computer",
 		5903: "uVNC	Virtual Network Computer",
+		5985: "WinRM	Windows Remote Management",
+		5986: "WinRM	Windows Remote Management over SSL",
 		6666: "UniFi Camera Stream Listener",
 		6789: "UniFi Mobile Speed Test",
 		6969: "BitTorrent tracker",

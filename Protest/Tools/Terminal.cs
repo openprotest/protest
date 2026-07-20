@@ -10,8 +10,8 @@ using Porta.Pty;
 namespace Protest.Tools;
 
 internal static partial class Terminal {
-    private const int DEFAULT_COLS = 120;
-    private const int DEFAULT_ROWS = 30;
+    internal const int DEFAULT_COLS = 120;
+    internal const int DEFAULT_ROWS = 30;
 
     public static async Task WebSocketHandler(HttpListenerContext ctx) {
         if (!Auth.IsAuthenticatedAndAuthorized(ctx, ctx.Request.Url.AbsolutePath)) {
@@ -58,7 +58,7 @@ internal static partial class Terminal {
         }
     }
 
-    private static async Task PumpStreamToWebSocket(HttpListenerContext ctx, WebSocket ws, Stream stream, CancellationToken token) {
+    internal static async Task PumpStreamToWebSocket(HttpListenerContext ctx, WebSocket ws, Stream stream, CancellationToken token) {
         byte[] buffer = new byte[4096];
 
         while (!token.IsCancellationRequested && ws.State == WebSocketState.Open) {
@@ -69,7 +69,7 @@ internal static partial class Terminal {
         }
     }
 
-    private static async Task RunPtyAsync(HttpListenerContext ctx, WebSocket ws, string origin, PtyOptions options) {
+    internal static async Task RunPtyAsync(HttpListenerContext ctx, WebSocket ws, string origin, PtyOptions options, string wsPath, string logMessage) {
         using CancellationTokenSource cts = new();
 
         IPtyConnection pty;
@@ -90,11 +90,11 @@ internal static partial class Terminal {
                 catch (ObjectDisposedException) { }
             };
 
-            Logger.Action(origin, "Remote-access", $"Open local shell ({Path.GetFileName(options.App)})");
+            Logger.Action(origin, "Remote-access", logMessage);
             await WebSocketHelper.WsWriteText(ws, "{\"connected\":true}"u8.ToArray());
 
             Task readTask = PumpStreamToWebSocket(ctx, ws, pty.ReaderStream, cts.Token);
-            Task writeTask = PumpWebSocketToPty(ctx, ws, pty, cts.Token);
+            Task writeTask = PumpWebSocketToPty(ctx, ws, pty, wsPath, cts.Token);
 
             await Task.WhenAny(readTask, writeTask);
             cts.Cancel();
@@ -115,14 +115,14 @@ internal static partial class Terminal {
         await CloseWebSocket(ws);
     }
 
-    private static async Task PumpWebSocketToPty(HttpListenerContext ctx, WebSocket ws, IPtyConnection pty, CancellationToken token) {
+    private static async Task PumpWebSocketToPty(HttpListenerContext ctx, WebSocket ws, IPtyConnection pty, string wsPath, CancellationToken token) {
         byte[] buffer = new byte[4096];
 
         while (!token.IsCancellationRequested && ws.State == WebSocketState.Open) {
             WebSocketReceiveResult result = await ws.ReceiveAsync(buffer, token);
 
             if (result.MessageType == WebSocketMessageType.Close) break;
-            if (!Auth.IsAuthenticatedAndAuthorized(ctx, "/ws/terminal")) break;
+            if (!Auth.IsAuthenticatedAndAuthorized(ctx, wsPath)) break;
             if (TryResizePty(buffer, result.Count, pty)) continue;
 
             await pty.WriterStream.WriteAsync(buffer.AsMemory(0, result.Count), token);
@@ -149,7 +149,7 @@ internal static partial class Terminal {
         }
     }
 
-    private static async Task CloseWebSocket(WebSocket ws) {
+    internal static async Task CloseWebSocket(WebSocket ws) {
         if (ws.State != WebSocketState.Open) return;
 
         try {
