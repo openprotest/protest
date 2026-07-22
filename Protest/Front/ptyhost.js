@@ -1669,9 +1669,8 @@ class PtyHost extends Window {
 		const ch = canvas.height;
 		if (cw === 0 || ch === 0) return;
 
-		const CH = 2; // minimap pixels per terminal row
 		const totalLines   = this.maxLineY + 1;
-		const totalMinimapH = totalLines * CH;
+		const totalMinimapH = totalLines * 2;
 		const scrollTop    = this.content.scrollTop;
 		const scrollH      = this.content.scrollHeight;
 		const viewportH    = this.content.clientHeight;
@@ -1690,11 +1689,11 @@ class PtyHost extends Window {
 			data[i] = 28; data[i+1] = 28; data[i+2] = 28; data[i+3] = 255;
 		}
 
-		const firstLine = Math.max(0, Math.floor(minimapOffset / CH));
-		const lastLine  = Math.min(totalLines - 1, firstLine + Math.ceil(ch / CH) + 1);
+		const firstLine = Math.max(0, Math.floor(minimapOffset / 2));
+		const lastLine  = Math.min(totalLines - 1, firstLine + Math.ceil(ch / 2) + 1);
 
 		for (let y = firstLine; y <= lastLine; y++) {
-			const py = Math.round(y * CH - minimapOffset);
+			const py = Math.round(y * 2 - minimapOffset);
 			for (let x=0; x<cw; x+=2) {
 				const cell = this.screen[`${x},${y}`];
 				if (!cell) continue;
@@ -1703,7 +1702,7 @@ class PtyHost extends Window {
 				if (!text) continue;
 
 				const [r, g, b] = PtyHost.ParseMinimapColor(cell.style.color);
-				for (let dy = 0; dy < CH; dy++) {
+				for (let dy = 0; dy < 2; dy++) {
 					const row = py + dy;
 					if (row < 0 || row >= ch) continue;
 					const idx = (row * cw + x) * 4;
@@ -1718,19 +1717,30 @@ class PtyHost extends Window {
 
 		ctx.putImageData(imageData, 0, 0);
 
-		const sliderH   = Math.max(4, Math.round((viewportH / PtyHost.CHAR_HEIGHT) * CH));
+		const sliderH   = this.GetMinimapSliderHeight();
 		const sliderTop = Math.max(0, Math.min(ch - sliderH,
-			Math.round((scrollTop / PtyHost.CHAR_HEIGHT) * CH - minimapOffset)));
+			Math.round((scrollTop / PtyHost.CHAR_HEIGHT) * 2 - minimapOffset)));
 
 		this.minimapViewport.style.top    = `${sliderTop}px`;
 		this.minimapViewport.style.height = `${sliderH}px`;
 	}
 
+	GetMinimapSliderHeight() {
+		return Math.max(4, Math.round((this.content.clientHeight / PtyHost.CHAR_HEIGHT) * 2));
+	}
+
 	MinimapSeek(e) {
-		const rect  = this.minimap.getBoundingClientRect();
-		const ratio = Math.min(1, Math.max(0, (e.clientY - rect.top) / rect.height));
-		this.content.scrollTop = ratio * (this.content.scrollHeight - this.content.clientHeight);
-		this.DrawMinimap();
+		const rect      = this.minimap.getBoundingClientRect();
+		const sliderH   = this.GetMinimapSliderHeight();
+		const maxScroll = Math.max(0, this.content.scrollHeight - this.content.clientHeight);
+
+		const sliderTop = e.clientY - rect.top - sliderH / 2;
+
+		const scrollTop = (this.maxLineY + 1) * 2 <= rect.height
+			? sliderTop * PtyHost.CHAR_HEIGHT / 2
+			: sliderTop / Math.max(1, rect.height - sliderH) * maxScroll;
+
+		this.content.scrollTop = Math.min(maxScroll, Math.max(0, scrollTop));
 	}
 
 	static ParseMinimapColor(str) {
