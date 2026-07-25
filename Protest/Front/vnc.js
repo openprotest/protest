@@ -23,10 +23,11 @@ class Vnc extends Window {
 		this.viewOnlyButton   = this.AddToolbarButton("View only", "mono/lock.svg?light");
 		this.AddToolbarSeparator();
 		this.cadButton        = this.AddToolbarButton("Send ctrl+alt+del", "mono/cad.svg?light");
-		this.metaButton      = this.AddToolbarButton("Send meta", "mono/winkey.svg?light");
+		this.metaButton       = this.AddToolbarButton("Send meta", "mono/winkey.svg?light");
 		this.sendTextButton   = this.AddToolbarButton("Send key-strokes", "mono/keyboard.svg?light");
 		this.clipboardButton  = this.AddToolbarButton("Clipboard sync", "mono/clipboard.svg?light");
 		this.AddToolbarSeparator();
+		this.refreshButton    = this.AddToolbarButton("Refresh screen", "mono/update.svg?light");
 		this.fitButton        = this.AddToolbarButton("Fit to window", "mono/fittoscreen.svg?light");
 		this.fullScreenButton = this.AddToolbarButton("Full screen", "mono/fullscreen.svg?light");
 		this.screenshotButton = this.AddToolbarButton("Save screenshot", "mono/download.svg?light");
@@ -41,10 +42,11 @@ class Vnc extends Window {
 
 		this.connectButton.onclick    = ()=> this.ConnectDialog(this.args.host);
 		this.cadButton.onclick        = ()=> { if (this.rfb) this.rfb.sendCtrlAltDel(); };
-		this.metaButton.onclick      = ()=> this.SendMeta();
+		this.metaButton.onclick       = ()=> this.SendMeta();
 		this.sendTextButton.onclick   = ()=> this.SendTextDialog();
 		this.clipboardButton.onclick  = ()=> this.ToggleClipboardSync();
 		this.viewOnlyButton.onclick   = ()=> this.ToggleViewOnly();
+		this.refreshButton.onclick    = ()=> this.RefreshScreen();
 		this.fitButton.onclick        = ()=> this.ToggleScaling();
 		this.screenshotButton.onclick = ()=> this.SaveScreenshot();
 
@@ -298,7 +300,7 @@ class Vnc extends Window {
 
 		innerBox.style.padding = "20px";
 		innerBox.parentElement.style.maxWidth = "400px";
-		innerBox.parentElement.parentElement.onclick = event=> { event.stopPropagation(); };
+		innerBox.parentElement.parentElement.onclick = event=> event.stopPropagation();
 
 		const message = document.createElement("div");
 		message.textContent = `Authentication failed${reason ? `: ${reason}` : ""}. Please try again.`;
@@ -391,12 +393,21 @@ class Vnc extends Window {
 			case "\t": keysym = 0xFF09; break;
 			default:
 				const cp = ch.codePointAt(0);
-				keysym = (cp < 0x100) ? cp : 0x01000000 + cp;
+				keysym = cp < 0x100 ? cp : 0x01000000 + cp;
 				break;
 			}
 
 			this.rfb.sendKey(keysym, null);
 		}
+	}
+
+	RefreshScreen() {
+		if (!this.rfb || !Vnc.RFB) return;
+
+		try {
+			Vnc.RFB.messages.fbUpdateRequest(this.rfb._sock, false, 0, 0, this.rfb._fbWidth, this.rfb._fbHeight);
+		}
+		catch {}
 	}
 
 	ToggleScaling() {
