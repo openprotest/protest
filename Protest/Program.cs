@@ -12,17 +12,19 @@
 
  Pro-test
  Developed by Andreas Venizelou, 2026
- Released into the public domain under the GPL v3
+ Licensed under the GNU General Public License v3
  For more information, visit https://github.com/openprotest/protest
 */
 
 global using System;
 global using System.Linq;
 
+using System.Threading.Tasks;
+
 namespace Protest;
 
 internal class Program {
-    static void Main(string[] args) {
+    static async Task Main(string[] args) {
         Console.Title = "Pro-test";
 
         Console.WriteLine(@"   _____");
@@ -33,7 +35,7 @@ internal class Program {
         Console.WriteLine(@"  \_|  |_|  \___/   \__ \___||___/\__|");
 
 #if DEBUG
-        Console.WriteLine($"  Debug mode {Data.VersionToString(), 25}");
+        Console.WriteLine($"  Debug mode {Data.VersionToString(),25}");
 #else
         Console.WriteLine($"{Data.VersionToString(), 38}");
 #endif
@@ -45,39 +47,47 @@ internal class Program {
 
         Data.InitializeDirectories();
 
-        bool loadConfig = Configuration.Load();
-        Console.WriteLine(String.Format("{0, -23} {1, -10}", "Loading configuration", loadConfig ? "Done" : "Failed"));
-        if (!loadConfig) {
+        bool configurationLoaded = Configuration.Load();
+        Console.WriteLine($"{"Loading configuration",-23} {(configurationLoaded ? "Done" : "Failed"),-10}");
+        if (!configurationLoaded) {
             Console.WriteLine("Creating default configuration file");
             Configuration.CreateDefault();
         }
 
-        Console.Write("Loading database");
+        Console.Write($"{"Loading database",-24}");
         DatabaseInstances.Initialize();
-        Console.WriteLine("        Done");
+        Console.WriteLine("Done");
 
-        bool loadRbac = Http.Auth.LoadRbac();
-        Console.WriteLine(String.Format("{0, -23} {1, -10}", "Loading RBAC", loadRbac ? "Done" : "Failed"));
+        bool rbacLoaded = Http.Auth.LoadRbac();
+        Console.WriteLine($"{"Loading RBAC",-23} {(rbacLoaded ? "Done" : "Failed"),-10}");
 
-        Console.Write("Starting tasks");
+        Console.Write($"{"Starting tasks",-24}");
         Tasks.Automation.Initialize();
-        Console.WriteLine("          Done");
+        Console.WriteLine("Done");
 
         Console.WriteLine();
 
+        //Console.CancelKeyPress += (_, e) => Console.WriteLine("\nProtest shutting down...");
+
         try {
-            StartServer(Configuration.httpPrefixes);
+            await StartServer(Configuration.httpPrefixes);
         }
         catch (System.Net.HttpListenerException ex) when (ex.ErrorCode == 5) { //5: access denied
-            Console.WriteLine("Switching to fallback uri prefix");
-            StartServer(Configuration.fallbackUri);
+            Console.WriteLine(ex.Message);
+            Console.WriteLine("Switching to fallback URI prefix");
+            await StartServer(Configuration.fallbackUri);
+        }
+        catch (Exception ex) {
+            Console.Error.WriteLine(ex);
+            Environment.ExitCode = 1;
         }
     }
 
-    private static void StartServer(string[] prefixes) {
+    private static async Task StartServer(string[] prefixes) {
         Http.Listener listener = new Http.Listener(prefixes, Configuration.frontPath);
         Console.WriteLine(listener);
         Console.WriteLine();
-        _ = System.Threading.Tasks.Task.Run(() => listener.StartAsync());
+
+        await listener.StartAsync();
     }
 }

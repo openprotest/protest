@@ -17,7 +17,7 @@ internal static class Configuration {
     internal static bool addressBook = false;
     internal static bool backdoor = true;
 
-    internal static string frontPath = Path.Join(Data.DIR_BASE, "front");
+    internal static string frontPath = Path.Join(Data.DIR_BASE, "Front");
     internal static string[] httpPrefixes = new string[] { "http://127.0.0.1:8080/" };
 
     internal static bool Load() {
@@ -86,13 +86,13 @@ internal static class Configuration {
         int upCount = 5;
         while (!frontDirectory.Exists && upCount-- > 0) {
             string path = frontDirectory.FullName;
-            if (path.EndsWith($"{Path.DirectorySeparatorChar}front")) {
+            if (path.EndsWith($"{Path.DirectorySeparatorChar}Front")) {
                 path = path[..^6];
             }
 
             int separatorIndex = path.LastIndexOf(Path.DirectorySeparatorChar);
             if (separatorIndex > 0) {
-                frontDirectory = new DirectoryInfo(Path.Join(path[..separatorIndex], "front"));
+                frontDirectory = new DirectoryInfo(Path.Join(path[..separatorIndex], "Front"));
             }
         }
 
