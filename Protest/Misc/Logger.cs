@@ -50,7 +50,7 @@ internal static class Logger {
 #endif
 
     public static void Error(string ex) {
-        string time = DateTime.Now.ToString(Data.DATETIME_FORMAT_FILE);
+        string time = DateTime.UtcNow.ToString(Data.DATETIME_FORMAT_FILE);
         string text = $"{time}\t{ex}";
 
         try {
@@ -69,7 +69,7 @@ internal static class Logger {
     }
 
     public static void Debug(Exception ex) {
-        string time = DateTime.Now.ToString(Data.DATETIME_FORMAT_FILE);
+        string time = DateTime.UtcNow.ToString(Data.DATETIME_FORMAT_FILE);
         string text = $"{time}\t{ex.Message}";
 
         try {
@@ -95,7 +95,7 @@ internal static class Logger {
         ThreadPool.QueueUserWorkItem(static state => {
             var (origin, category, action) = ((string origin, string category, string action))state!;
 
-            DateTime now = DateTime.Now;
+            DateTime now = DateTime.UtcNow;
             string date = now.ToString(Data.DATETIME_FORMAT_FILE);
             string message = $"{date,-24}{category,-20}{origin,-24}{action}";
             lock (actionMutex) {

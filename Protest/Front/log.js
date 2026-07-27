@@ -157,7 +157,7 @@ class Log extends Window {
 			}
 			if (!this.last) {
 				const now = new Date();
-				this.last = `${now.getFullYear()}${(now.getMonth()+1).toString().padStart(2,"0")}${now.getDate().toString().padStart(2,"0")}`;
+				this.last = `${now.getUTCFullYear()}${(now.getUTCMonth()+1).toString().padStart(2,"0")}${now.getUTCDate().toString().padStart(2,"0")}`;
 			}
 
 			this.list.scrollTop = 2;
@@ -219,9 +219,27 @@ class Log extends Window {
 		}
 	}
 
+	LocalizeLog(log) {
+		if (log.length < 19) return log;
+
+		const head = log.substring(0, 19); //"yyyy-MM-dd HH:mm:ss" (UTC)
+		if (head[4] !== "-" || head[7] !== "-" || head[10] !== " " || head[13] !== ":" || head[16] !== ":") {
+			return log;
+		}
+
+		const utc = new Date(`${head.substring(0, 10)}T${head.substring(11, 19)}Z`);
+		if (isNaN(utc.getTime())) return log;
+
+		const local =
+			`${utc.getFullYear()}-${(utc.getMonth()+1).toString().padStart(2,"0")}-${utc.getDate().toString().padStart(2,"0")} ` +
+			`${utc.getHours().toString().padStart(2,"0")}:${utc.getMinutes().toString().padStart(2,"0")}:${utc.getSeconds().toString().padStart(2,"0")}`;
+
+		return local + log.substring(19); //same 19-char width keeps columns aligned
+	}
+
 	CreateLog(log) {
 		const element = document.createElement("div");
-		element.textContent = log;
+		element.textContent = this.LocalizeLog(log);
 		element.style.fontFamily = "monospace";
 		element.style.height = "24px";
 		element.style.lineHeight = "24px";
