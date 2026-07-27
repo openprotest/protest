@@ -136,6 +136,7 @@ const HandleResponse = json => {
 		usernameInput.setAttribute("readonly", true);
 		passwordInput.setAttribute("readonly", true);
 		otpBox.style.display = "block";
+		messageLabel.style.visibility = "hidden";
 		otpInput.focus();
 	}
 	else {

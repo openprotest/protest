@@ -129,7 +129,7 @@
 
 .address-book-list > div,
 .address-book-preview {
-	background-color: light-dark(rgba(224,232,234,.96), rgba(168,168,168,.96));
+	background-color: light-dark(rgba(208,208,208,.96), rgba(168,168,168,.96));
 }
 
 .address-book-list.card > div {
