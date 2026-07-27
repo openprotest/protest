@@ -155,6 +155,7 @@ class Log extends Window {
 					this.last = last;
 				}
 			}
+
 			if (!this.last) {
 				const now = new Date();
 				this.last = `${now.getUTCFullYear()}${(now.getUTCMonth()+1).toString().padStart(2,"0")}${now.getUTCDate().toString().padStart(2,"0")}`;

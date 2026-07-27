@@ -78,6 +78,11 @@ internal sealed class Cache {
 
     public readonly ConcurrentDictionary<string, Entry> cache = new ConcurrentDictionary<string, Entry>();
 
+#if DEBUG
+    private FileSystemWatcher watcher;
+    private readonly ConcurrentDictionary<string, byte> pendingReload = new ConcurrentDictionary<string, byte>();
+#endif
+
     public Cache(string path) {
         birthdate = DateTime.UtcNow.ToString(Data.DATETIME_FORMAT);
         this.path = path;
@@ -93,46 +98,138 @@ internal sealed class Cache {
         if (_brotli > 0)  { Console.WriteLine($"  Brotli  : {100 * _brotli / (_raw + 1),5}% {_raw,10} -> {_brotli,8}"); }
         Console.WriteLine();
 
-        if (Directory.Exists(path)) {
-            FileSystemWatcher watcher = new FileSystemWatcher(path);
-            watcher.EnableRaisingEvents = true;
-            watcher.NotifyFilter = NotifyFilters.FileName | NotifyFilters.DirectoryName | NotifyFilters.LastWrite;
-            watcher.Filter = "*";
-            watcher.IncludeSubdirectories = true;
-            watcher.Changed += OnFileChanged;
-        }
+        InitializeWatcher();
 #endif
     }
 
-    private void OnFileChanged(object source, FileSystemEventArgs e) {
-        Console.WriteLine($"Reloading: {e.FullPath}");
+#if DEBUG
+    private void InitializeWatcher() {
+        if (!Directory.Exists(path)) return;
+
+        watcher = new FileSystemWatcher(path) {
+            IncludeSubdirectories = true,
+            Filter = "*",
+            NotifyFilter =
+                NotifyFilters.FileName |
+                NotifyFilters.DirectoryName |
+                NotifyFilters.LastWrite |
+                NotifyFilters.Size |
+                NotifyFilters.CreationTime,
+            InternalBufferSize = 64 * 1024,
+        };
+
+        watcher.Created += OnFileCreatedOrChanged;
+        watcher.Changed += OnFileCreatedOrChanged;
+        watcher.Renamed += OnFileRenamed;
+        watcher.Deleted += OnFileDeleted;
+        watcher.Error   += OnWatcherError;
+
+        watcher.EnableRaisingEvents = true; //enable only after handlers are attached
+    }
+
+    private void OnFileCreatedOrChanged(object source, FileSystemEventArgs e) {
+        ScheduleReload(e.FullPath);
+    }
+
+    private void OnFileRenamed(object source, RenamedEventArgs e) {
+        RemoveFromCache(e.OldFullPath);
+        ScheduleReload(e.FullPath);
+    }
+
+    private void OnFileDeleted(object source, FileSystemEventArgs e) {
+        RemoveFromCache(e.FullPath);
+    }
+
+    private void OnWatcherError(object source, ErrorEventArgs e) {
+        Console.ForegroundColor = ConsoleColor.Red;
+        Console.WriteLine($"File watcher error: {e.GetException()?.Message}");
+        Console.ResetColor();
+
+        try {
+            if (watcher is not null) {
+                watcher.EnableRaisingEvents = false;
+                watcher.Created -= OnFileCreatedOrChanged;
+                watcher.Changed -= OnFileCreatedOrChanged;
+                watcher.Renamed -= OnFileRenamed;
+                watcher.Deleted -= OnFileDeleted;
+                watcher.Error   -= OnWatcherError;
+                watcher.Dispose();
+                watcher = null;
+            }
+        }
+        catch { }
+
+        _ = Task.Run(async () => {
+            await Task.Delay(1000);
+            LoadFiles();
+            InitializeWatcher();
+            KeepAlive.Broadcast(KeepAlive.MSG_FORCE_RELOAD.ToArray(), "/");
+        });
+    }
+
+    private void ScheduleReload(string fullPath) {
+        if (Directory.Exists(fullPath)) return;
+
+        if (!pendingReload.TryAdd(fullPath, 0)) return;
 
         _ = Task.Run(async () => {
             await Task.Delay(250);
+            pendingReload.TryRemove(fullPath, out _);
 
-            FileInfo file = new FileInfo(e.FullPath);
-            if (!file.Exists) return;
+            FileInfo file = new FileInfo(fullPath);
+            if (!file.Exists) {
+                RemoveFromCache(fullPath);
+                return;
+            }
 
+            byte[] bytes;
             try {
-                using FileStream fs = new FileStream(file.FullName, FileMode.Open, FileAccess.Read);
-                using BinaryReader br = new BinaryReader(fs);
-                byte[] bytes = br.ReadBytes((int)file.Length);
-
-                string name = file.FullName;
-                name = name.Replace(path, String.Empty);
-                name = name.Replace("\\", "/");
-
-                HandleFile(name, bytes, false);
+                using FileStream fs = new FileStream(file.FullName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+                bytes = new byte[file.Length];
+                int read = 0;
+                while (read < bytes.Length) {
+                    int n = fs.Read(bytes, read, bytes.Length - read);
+                    if (n == 0) break;
+                    read += n;
+                }
             }
             catch {
                 return;
             }
 
-            birthdate = DateTime.UtcNow.ToString(Data.DATETIME_FORMAT);
+            HandleFile(GetRelativeName(file.FullName), bytes, false);
 
+            birthdate = DateTime.UtcNow.ToString(Data.DATETIME_FORMAT);
             KeepAlive.Broadcast(KeepAlive.MSG_FORCE_RELOAD.ToArray(), "/");
+
+            Console.WriteLine($"Reloaded: {fullPath}");
         });
     }
+
+    private void RemoveFromCache(string fullPath) {
+        string name = GetCacheKey(fullPath);
+
+        bool removed = cache.TryRemove(name, out _);
+        cache.TryRemove($"{name}?light", out _);
+
+        if (removed) {
+            birthdate = DateTime.UtcNow.ToString(Data.DATETIME_FORMAT);
+            KeepAlive.Broadcast(KeepAlive.MSG_FORCE_RELOAD.ToArray(), "/");
+            Console.WriteLine($"Removed: {fullPath}");
+        }
+    }
+
+    private string GetRelativeName(string fullPath) {
+        return fullPath.Replace(path, String.Empty).Replace("\\", "/").ToLower();
+    }
+
+    private string GetCacheKey(string fullPath) {
+        string name = GetRelativeName(fullPath);
+        name = name.Replace(".html", String.Empty).Replace(".htm", String.Empty);
+        if (name == "/index") { name = "/"; }
+        return name;
+    }
+#endif
 
 #if !DEBUG
     private void LoadStatic() {
@@ -438,5 +535,4 @@ internal sealed class Cache {
         return output;
     }
 #endif
-
 }
