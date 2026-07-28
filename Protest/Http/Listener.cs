@@ -473,14 +473,14 @@ internal sealed class Listener {
 
         switch (ctx.Request.Url.AbsolutePath) {
         case "/ws/keepalive":        await KeepAlive.WebSocketHandler(ctx);          return true;
+        case "/ws/reverseproxy":     await Proxy.ReverseProxy.WebSocketHandler(ctx); return true;
         case "/ws/ping":             await Protocols.Icmp.WebSocketHandler(ctx);     return true;
         case "/ws/dhcp":             await Protocols.Dhcp.WebSocketHandler(ctx);     return true;
-        case "/ws/terminal":         await Tools.Terminal.WebSocketHandler(ctx);     return true;
         case "/ws/telnet":           await Protocols.Telnet.WebSocketHandler(ctx);   return true;
         case "/ws/ssh":              await Protocols.Ssh.WebSocketHandler(ctx);      return true;
         case "/ws/vnc":              await Protocols.Vnc.WebSocketHandler(ctx);      return true;
-        case "/ws/issues":           await Tasks.Issues.WebSocketHandler(ctx);       return true;
-        case "/ws/reverseproxy":     await Proxy.ReverseProxy.WebSocketHandler(ctx); return true;
+        case "/ws/terminal":         await Tools.Terminal.WebSocketHandler(ctx);     return true;
+        case "/ws/winrm":            await Tools.WinRM.WebSocketHandler(ctx);        return true;
         case "/ws/ipdiscovery":      await Tools.IpDiscovery.WebSocketHandler(ctx);  return true;
         case "/ws/portscan":         await Tools.PortScan.WebSocketHandler(ctx);     return true;
         case "/ws/traceroute":       await Tools.TraceRoute.WebSocketHandler(ctx);   return true;
@@ -489,6 +489,7 @@ internal sealed class Listener {
         case "/ws/topology":         await Tools.Topology.WebSocketHandler(ctx);     return true;
         case "/ws/livestats/device": await Tools.LiveStats.DeviceStats(ctx);         return true;
         case "/ws/livestats/user":   await Tools.LiveStats.UserStats(ctx);           return true;
+        case "/ws/issues":           await Tasks.Issues.WebSocketHandler(ctx);       return true;
         }
 
         return false;

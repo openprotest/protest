@@ -173,7 +173,7 @@ internal sealed class Cache {
         if (!pendingReload.TryAdd(fullPath, 0)) return;
 
         _ = Task.Run(async () => {
-            await Task.Delay(250);
+            await Task.Delay(200);
             pendingReload.TryRemove(fullPath, out _);
 
             FileInfo file = new FileInfo(fullPath);
