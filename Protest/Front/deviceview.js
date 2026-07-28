@@ -2986,7 +2986,7 @@ class DeviceView extends View {
 				frame.appendChild(closeLinkButton);
 
 				closeLinkButton.onclick = ()=> {
-					closeLinkButton.onclick = ()=> { };
+					closeLinkButton.onclick = ()=> {};
 					dim.style.filter = "opacity(0)";
 					setTimeout(()=> innerBox.parentElement.removeChild(dim), 200);
 				};

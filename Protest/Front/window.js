@@ -836,7 +836,7 @@ class Window {
 			container.appendChild(this.win);
 			this.win.appendChild(this.content);
 
-			newWin.onbeforeunload = ()=> { };
+			newWin.onbeforeunload = ()=> {};
 			newWin.close();
 			this.popOutWindow = null;
 
