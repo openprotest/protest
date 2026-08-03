@@ -101,7 +101,7 @@ class PasswordStrength extends List {
 			}
 		};
 
-		filterButton.onclick = ()=> setTimeout(filterInput.focus(), 200);
+		filterButton.onclick = () => setTimeout(() => filterInput.focus(), 200);
 
 		filterButton.ondblclick = ()=> {
 			this.args.filter = "";
