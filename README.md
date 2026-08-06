@@ -14,7 +14,7 @@ Pro-test is a robust solution for creating and managing an inventory database of
 It leverages data collection techniques by interacting with Active Directory or performing local network scans.
 The suite automatically populates the database by targeting the domain controller or specified IP ranges.
 
-**Pro-test provides complite data ownership, with all collected data remaining fully under your control.**
+**Pro-test provides complete data ownership, with all collected data remaining fully under your control.**
 
 <p align="center"><img src="https://raw.githubusercontent.com/openprotest/openprotest.github.io/refs/heads/main/screenshot.png"/></p>
 
@@ -23,7 +23,7 @@ The suite automatically populates the database by targeting the domain controlle
   - **Protest:** The front-end and back-end workings.
   - **Protest-CacheGenerator:** A source-generator that embeds the front-end UI into the backend executable.
   - **Protest-MacLookupGenerator:** A source-generator that embeds the the mac-to-vendor database into the executable.
-  - **Protest Agent:** A tool to enable the browser to communicate with the client's computer using a local communication protocol (`protest://`).
+  - **Protest Relay:** A tool to enable the browser to communicate with the client's computer using a local communication protocol (`protest://`).
 
 
 ### Continuous Integration
