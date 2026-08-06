@@ -22,6 +22,13 @@ class AddressBook extends Window {
 		this.searchBar = document.createElement("div");
 		this.searchBar.className = "address-book-search-bar";
 
+		for (let i=0; i<8; i++) {
+			const block = document.createElement("div");
+			block.className = "address-book-block";
+			block.style.top = `${i*12}px`;
+			this.searchBar.appendChild(block);
+		}
+
 		this.list = document.createElement("div");
 		this.list.className = "address-book-list card";
 
