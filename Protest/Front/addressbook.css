@@ -12,8 +12,8 @@
 
 	background: linear-gradient(
 		0deg,
-		light-dark(rgba(168,168,168,.5), rgba(48,48,48,.5)) 0%,
-		light-dark(rgba(168,168,168,1), rgba(48,48,48,1)) 100%
+		light-dark(rgba(168,168,168,.1), rgba(48,48,48,.2)) 0%,
+		light-dark(rgba(168,168,168,1), rgba(48,48,48,2)) 100%
 	);
 	box-shadow: rgba(0,0,0,.8) 0 1px 8px;
 
