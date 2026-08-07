@@ -280,17 +280,14 @@ internal sealed class Cache {
         files.Add(name, bytes);
     }
 
-    private void HandleFiles(Dictionary<string, byte[]> files, bool isGzipped) {
+    private void HandleFiles(Dictionary<string, byte[]> files, bool confirmedGZip) {
 #if SVG_TO_SVGZ //svgz
         Dictionary<string, byte[]> toSvg = new Dictionary<string, byte[]>();
 #endif
 
         foreach (KeyValuePair<string, byte[]> pair in files) {
-            if (pair.Value is null) {
-                continue;
-            }
-
-            HandleFile(pair.Key.ToLower(), pair.Value, isGzipped);
+            if (pair.Value is null) continue;
+            HandleFile(pair.Key.ToLower(), pair.Value, confirmedGZip);
         }
 
 #if SVG_TO_SVGZ //svgz
@@ -311,12 +308,22 @@ internal sealed class Cache {
 
     }
 
-    private void HandleFile(string name, byte[] bytes, bool isGzipped) {
+    private void HandleFile(string name, byte[] bytes, bool confirmedGZip) {
         name = name.Replace("\\", "/");
         name = name.Replace(".html", String.Empty).Replace(".htm", String.Empty);
-        if (name == "/index") { name = "/"; }
+        
+        if (name == "/index") {
+            name = "/";
+        }
 
-        Entry entry = ConstructEntry(name, bytes, isGzipped);
+        bool endsWithGzip = name.EndsWith(".gzip");
+        bool isGZipped = confirmedGZip || endsWithGzip;
+
+        if (endsWithGzip && name.Length > 5) {
+            name = name[..^5];
+        }
+
+        Entry entry = ConstructEntry(name, bytes, isGZipped);
         cache.AddOrUpdate(name, key => entry, (key, existingValue) => entry);
 
 #if DEBUG

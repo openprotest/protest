@@ -88,20 +88,12 @@ public class Generator : IIncrementalGenerator {
         using BinaryReader br = new BinaryReader(fs);
         byte[] bytes = br.ReadBytes((int)file.Length);
 
-        string normalized = filePath.Replace('\\', '/');
-        bool isThirdParty = normalized.Contains("/novnc/")
-             || filePath.EndsWith(".min.js")
-             || filePath.EndsWith(".min.css");
-
-        if (!isThirdParty && (
-             filePath.EndsWith(".htm") ||
-             filePath.EndsWith(".html") ||
-             filePath.EndsWith(".svg") ||
-             filePath.EndsWith(".css") ||
-             filePath.EndsWith(".js"))) {
-
-            bytes = Minify(bytes, false);
+        if (file.Extension.ToLower() == ".gzip") {
+            return bytes;
         }
+
+        string normalized = filePath.Replace('\\', '/');
+        bytes = Minify(bytes, false);
 
         MemoryStream ms = new MemoryStream();
         using (GZipStream zip = new GZipStream(ms, CompressionMode.Compress, true)) {
