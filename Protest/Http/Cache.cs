@@ -316,11 +316,11 @@ internal sealed class Cache {
             name = "/";
         }
 
-        bool endsWithGzip = name.EndsWith(".gzip");
+        bool endsWithGzip = name.EndsWith(".gz");
         bool isGZipped = confirmedGZip || endsWithGzip;
 
         if (endsWithGzip && name.Length > 5) {
-            name = name[..^5];
+            name = name[..^3];
         }
 
         Entry entry = ConstructEntry(name, bytes, isGZipped);

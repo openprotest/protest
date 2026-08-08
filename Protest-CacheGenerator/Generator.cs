@@ -88,7 +88,7 @@ public class Generator : IIncrementalGenerator {
         using BinaryReader br = new BinaryReader(fs);
         byte[] bytes = br.ReadBytes((int)file.Length);
 
-        if (file.Extension.ToLower() == ".gzip") {
+        if (file.Extension.ToLower() == ".gz") {
             return bytes;
         }
 
