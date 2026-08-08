@@ -100,7 +100,7 @@ const HandleResponse = json => {
 		enrollmentBox.appendChild(enrollButton);
 
 		const qrLib = document.createElement("script");
-		qrLib.src = "qrcode.js";
+		qrLib.src = "qrcode/qrcode.js";
 		document.body.appendChild(qrLib);
 
 		qrLib.onload = ()=> {

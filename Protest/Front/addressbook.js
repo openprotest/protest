@@ -11,7 +11,7 @@ class AddressBook extends Window {
 		this.SetIcon("mono/addressbook.svg");
 
 		const qrLib = document.createElement("script");
-		qrLib.src = "qrcode.js";
+		qrLib.src = "qrcode/qrcode.js";
 		this.win.appendChild(qrLib);
 
 		this.contacts = [];
