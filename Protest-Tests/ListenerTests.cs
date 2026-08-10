@@ -18,10 +18,12 @@ public class ListenerTests {
     }
 
     [SetUp]
-    public void Setup() {
-        Task.Run(() => {
+    public async Task Setup() {
+        await Task.Run(async () => {
             Listener listener = new Listener("127.0.0.1", 8080, front.FullName);
             _ = Task.Run(() => listener.StartAsync());
+
+            await Task.Delay(2000);
         });
     }
 
