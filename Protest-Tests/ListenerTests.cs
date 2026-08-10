@@ -17,15 +17,13 @@ public class ListenerTests {
         }
     }
 
-    private Listener listener;
+    private Listener? listener;
 
     [SetUp]
-    public void Setup() {
-        Task.Delay(200);
-        Task.Run(() => {
-            listener = new Listener("127.0.0.1", 8080, front.FullName);
-            _ = Task.Run(() => listener.StartAsync());
-        });
+    public async Task Setup() {
+        await Task.Delay(500);
+        listener = new Listener("127.0.0.1", 8080, front.FullName);
+        _ = Task.Run(() => listener.StartAsync());
     }
 
     [TearDown]
