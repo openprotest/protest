@@ -57,7 +57,7 @@ class Vnc extends Window {
 		this.scaleViewport = true;
 		this.viewOnly      = false;
 		this.clipboardSync = false;
-		
+
 		this.fitButton.style.borderBottom = "3px solid rgb(192,192,192)";
 
 		this._lastClipboard = null;

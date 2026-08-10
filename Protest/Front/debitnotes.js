@@ -321,7 +321,7 @@ class DebitNotes extends Window {
 
 		const label = document.createElement("div");
 		element.appendChild(label);
-		
+
 		if (debit.name.trim().length === 0 ) {
 			label.textContent = "no name";
 			label.style.color = "rgb(80,80,80)";

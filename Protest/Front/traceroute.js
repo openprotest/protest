@@ -224,7 +224,7 @@ class TraceRoute extends Console {
 		}
 
 		this.ws = new WebSocket(`${KEEP.isSecure ? "wss" : "ws"}://${window.location.host}/ws/traceroute`);
-		
+
 		this.ws.onopen = ()=> {
 			for (let i = 0; i < this.pending.length; i++)
 				this.ws.send(this.pending[i]);

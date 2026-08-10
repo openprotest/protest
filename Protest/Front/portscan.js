@@ -567,7 +567,7 @@ class PortScan extends Console {
 				if (name in this.hashtable) {
 					for (let i = 1; i < split.length; i++) {
 						if (split[i].length === 0) continue;
-						
+
 						const port = document.createElement("div");
 						port.textContent = split[i];
 						this.hashtable[name].result.appendChild(port);
@@ -575,7 +575,7 @@ class PortScan extends Console {
 							port.className = "tool-after-label";
 							port.setAttribute("after-label", PortScan.PROTOCOL[parseInt(split[i])]);
 						}
-						
+
 						this.hashtable[name].list.push(split[i]);
 					}
 				}

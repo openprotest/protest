@@ -577,7 +577,7 @@ class Environment extends Tabs {
 		});
 
 		this.activeColumnsListBox = this.integrationListBox;
-		
+
 		this.integrationList = this.integrationListBox.list;
 		this.integrationList.style.overflowY = "auto";
 		this.integrationList.style.left = "20px";

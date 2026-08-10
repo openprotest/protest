@@ -123,7 +123,7 @@ class About extends Tabs {
 			container.style.paddingBottom = "4px";
 			container.style.userSelect = "text";
 			center.appendChild(container);
-			
+
 			const nameBox  = document.createElement("div");
 			nameBox.textContent = name;
 			nameBox.style.display = "inline-block";
