@@ -88,12 +88,16 @@ public class Generator : IIncrementalGenerator {
         using BinaryReader br = new BinaryReader(fs);
         byte[] bytes = br.ReadBytes((int)file.Length);
 
-        if (file.Extension.ToLower() == ".gz") {
-            return bytes;
-        }
+        if (file.Extension.ToLower() == ".gz") return bytes;
 
         string normalized = filePath.Replace('\\', '/');
-        bytes = Minify(bytes, false);
+        if (String.Equals(file.Extension, ".htm", StringComparison.OrdinalIgnoreCase) ||
+            String.Equals(file.Extension, ".html", StringComparison.OrdinalIgnoreCase) ||
+            String.Equals(file.Extension, ".svg", StringComparison.OrdinalIgnoreCase) ||
+            String.Equals(file.Extension, ".css", StringComparison.OrdinalIgnoreCase) ||
+            String.Equals(file.Extension, ".js", StringComparison.OrdinalIgnoreCase)) {
+            bytes = Minify(bytes, false);
+        }
 
         MemoryStream ms = new MemoryStream();
         using (GZipStream zip = new GZipStream(ms, CompressionMode.Compress, true)) {

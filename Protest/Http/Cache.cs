@@ -254,29 +254,21 @@ internal sealed class Cache {
     private void LoadFile(FileInfo f, Dictionary<string, byte[]> files) {
         string name = f.FullName;
         name = name.Replace(path, String.Empty);
-        name = name.Replace("\\", "/");
+        name = name.Replace('\\', '/');
 
         using FileStream fs = new FileStream(f.FullName, FileMode.Open, FileAccess.Read);
         using BinaryReader br = new BinaryReader(fs);
 
         byte[] bytes = br.ReadBytes((int)f.Length);
-
 #if !DEBUG
-        string normalized = f.FullName.Replace("\\", "/");
-        bool isThirdParty = normalized.Contains("/novnc/")
-            || f.Name.EndsWith(".min.js", StringComparison.OrdinalIgnoreCase)
-            || f.Name.EndsWith(".min.css", StringComparison.OrdinalIgnoreCase);
-
-        if (!isThirdParty && (
-            String.Equals(f.Extension, ".htm", StringComparison.OrdinalIgnoreCase) ||
+        if (String.Equals(f.Extension, ".htm", StringComparison.OrdinalIgnoreCase) ||
             String.Equals(f.Extension, ".html", StringComparison.OrdinalIgnoreCase) ||
             String.Equals(f.Extension, ".svg", StringComparison.OrdinalIgnoreCase) ||
             String.Equals(f.Extension, ".css", StringComparison.OrdinalIgnoreCase) ||
-            String.Equals(f.Extension, ".js", StringComparison.OrdinalIgnoreCase))) {
-            bytes = Minify(bytes, false);
+            String.Equals(f.Extension, ".js", StringComparison.OrdinalIgnoreCase)) {
+            bytes = CacheGenerator.Generator.Minify(bytes, false);
         }
 #endif
-
         files.Add(name, bytes);
     }
 
@@ -414,57 +406,6 @@ internal sealed class Cache {
         };
 
         return entry;
-    }
-
-    public static byte[] Minify(byte[] bytes, bool softMinify) {
-        string text = Encoding.UTF8.GetString(bytes);
-        StringBuilder result = new StringBuilder();
-
-        string[] lines = text.Split('\n');
-
-        foreach (string line in lines) {
-            string trimmedLine = line.Trim();
-            if (String.IsNullOrEmpty(trimmedLine)) continue;
-            if (trimmedLine.StartsWith("//")) continue;
-
-            int commentIndex = trimmedLine.IndexOf("//");
-            if (commentIndex >= 0 && !trimmedLine.Contains("://")) {
-                trimmedLine = trimmedLine[..commentIndex].TrimEnd();
-            }
-
-            trimmedLine = trimmedLine.Replace("\t", " ");
-
-            while (trimmedLine.Contains("  ")) {
-                trimmedLine = trimmedLine.Replace("  ", " ");
-            }
-
-            trimmedLine = trimmedLine.Replace(" = ", "=")
-                                     .Replace(" == ", "==")
-                                     .Replace(" === ", "===")
-                                     .Replace(" != ", "!=")
-                                     .Replace(" !== ", "!==")
-                                     .Replace("{ {", "{{")
-                                     .Replace("} }", "}}")
-                                     .Replace(") {", "){")
-                                     .Replace("; ", ";")
-                                     //.Replace(": ", ":")
-                                     .Replace(" !important;", "!important;");
-
-            if (softMinify) {
-                result.AppendLine(trimmedLine);
-            }
-            else {
-                result.Append(trimmedLine);
-            }
-        }
-
-        int startIndex, endIndex;
-        while ((startIndex = result.ToString().IndexOf("/*")) >= 0
-            && (endIndex = result.ToString().IndexOf("*/", startIndex)) >= 0) {
-            result.Remove(startIndex, endIndex - startIndex + 2);
-        }
-
-        return Encoding.UTF8.GetBytes(result.ToString());
     }
 
     public static byte[] GZip(byte[] bytes) {
