@@ -1,6 +1,16 @@
 global using NUnit.Framework;
-using System.Net;
+using Newtonsoft.Json.Linq;
+using NUnit.Framework.Internal;
 using Protest.Http;
+using Protest.Protocols;
+using System.CodeDom.Compiler;
+using System.Net;
+using System.Reflection.PortableExecutable;
+using static Org.BouncyCastle.Crypto.Engines.SM2Engine;
+using static Protest.Tasks.Issues;
+using static System.Net.WebRequestMethods;
+using static Vanara.PInvoke.Kernel32;
+using static Vanara.PInvoke.Kernel32.FILE_REMOTE_PROTOCOL_INFO;
 
 namespace Protest.Tests;
 
@@ -20,12 +30,24 @@ public class ListenerTests {
     private Listener? listener;
 
     [SetUp]
-    public void Setup() {
-        Task.Delay(500);
-        Task.Run(() => {
-            listener = new Listener("127.0.0.1", 8080, front.FullName);
-            _ = Task.Run(() => listener.StartAsync());
-        });
+    public async Task Setup() {
+        listener = new Listener("127.0.0.1", 8080, front.FullName);
+        _ = Task.Run(() => listener.StartAsync());
+
+        await Task.Delay(1000);
+
+        for (int i = 0; i < 10; i++) {
+            try {
+                using var client = new HttpClient();
+                using var response = await client.GetAsync("http://127.0.0.1:8080/");
+                return; // Server is ready
+            }
+            catch {
+                if (i < 9) await Task.Delay(500);
+            }
+        }
+
+        Assert.Fail("Listener failed to start within timeout period");
     }
 
     [TearDown]
