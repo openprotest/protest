@@ -5,6 +5,7 @@ using Protest.Http;
 namespace Protest.Tests;
 
 public class ListenerTests {
+    private Listener? listener;
     private readonly DirectoryInfo front;
 
     public ListenerTests() {
@@ -17,12 +18,15 @@ public class ListenerTests {
         }
     }
 
-    [SetUp]
+    [OneTimeSetUp]
     public void Setup() {
-        Task.Run(() => {
-            Listener listener = new Listener("127.0.0.1", 8080, front.FullName);
-            _ = Task.Run(() => listener.StartAsync());
-        });
+        listener = new Listener("127.0.0.1", 8080, front.FullName);
+        listener?.StartAsync();
+    }
+
+    [OneTimeTearDown]
+    public void TearDown() {
+        listener?.Stop();
     }
 
     [Test]
