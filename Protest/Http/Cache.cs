@@ -266,7 +266,7 @@ internal sealed class Cache {
             String.Equals(f.Extension, ".svg", StringComparison.OrdinalIgnoreCase) ||
             String.Equals(f.Extension, ".css", StringComparison.OrdinalIgnoreCase) ||
             String.Equals(f.Extension, ".js", StringComparison.OrdinalIgnoreCase)) {
-            bytes = CacheGenerator.Generator.Minify(bytes, false);
+            bytes = Minify(bytes);
         }
 #endif
         files.Add(name, bytes);
@@ -483,4 +483,50 @@ internal sealed class Cache {
         return output;
     }
 #endif
+
+    public static byte[] Minify(byte[] bytes) {
+        string text = Encoding.UTF8.GetString(bytes);
+        StringBuilder result = new StringBuilder();
+
+        string[] lines = text.Split('\n');
+
+        foreach (string line in lines) {
+            string trimmedLine = line.Trim();
+            if (String.IsNullOrEmpty(trimmedLine)) continue;
+            if (trimmedLine.StartsWith("//")) continue;
+
+            int commentIndex = trimmedLine.IndexOf("//");
+            if (commentIndex >= 0 && !trimmedLine.Contains("://")) {
+                trimmedLine = trimmedLine.Substring(0, commentIndex).TrimEnd();
+            }
+
+            trimmedLine = trimmedLine.Replace('\t', ' ');
+
+            while (trimmedLine.Contains("  ")) {
+                trimmedLine = trimmedLine.Replace("  ", " ");
+            }
+
+            trimmedLine = trimmedLine.Replace(" = ", "=")
+                                     .Replace(" == ", "==")
+                                     .Replace(" === ", "===")
+                                     .Replace(" != ", "!=")
+                                     .Replace(" !== ", "!==")
+                                     .Replace("{ {", "{{")
+                                     .Replace("} }", "}}")
+                                     .Replace(") {", "){")
+                                     .Replace("; ", ";")
+                                     //.Replace(": ", ":")
+                                     .Replace(" !important;", "!important;");
+
+            result.Append(trimmedLine);
+        }
+
+        int startIndex, endIndex;
+        while ((startIndex = result.ToString().IndexOf("/*")) >= 0
+              && (endIndex = result.ToString().IndexOf("*/", startIndex)) >= 0) {
+            result.Remove(startIndex, endIndex - startIndex + 2);
+        }
+
+        return Encoding.UTF8.GetBytes(result.ToString());
+    }
 }

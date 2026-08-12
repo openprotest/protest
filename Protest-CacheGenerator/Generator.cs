@@ -95,7 +95,7 @@ public class Generator : IIncrementalGenerator {
             String.Equals(file.Extension, ".svg", StringComparison.OrdinalIgnoreCase) ||
             String.Equals(file.Extension, ".css", StringComparison.OrdinalIgnoreCase) ||
             String.Equals(file.Extension, ".js", StringComparison.OrdinalIgnoreCase)) {
-            bytes = Minify(bytes, false);
+            bytes = Minify(bytes);
         }
 
         MemoryStream ms = new MemoryStream();
@@ -105,7 +105,8 @@ public class Generator : IIncrementalGenerator {
 
         return ms.ToArray();
     }
-    public static byte[] Minify(byte[] bytes, bool softMinify) {
+
+    public static byte[] Minify(byte[] bytes) {
         string text = Encoding.UTF8.GetString(bytes);
         StringBuilder result = new StringBuilder();
 
@@ -139,12 +140,7 @@ public class Generator : IIncrementalGenerator {
                                      //.Replace(": ", ":")
                                      .Replace(" !important;", "!important;");
 
-            if (softMinify) {
-                result.AppendLine(trimmedLine);
-            }
-            else {
-                result.Append(trimmedLine);
-            }
+            result.Append(trimmedLine);
         }
 
         int startIndex, endIndex;
