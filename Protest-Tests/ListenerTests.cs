@@ -9,8 +9,8 @@ public class ListenerTests {
 
     public ListenerTests() {
         front = OperatingSystem.IsWindows()
-            ? new DirectoryInfo(@"..\..\..\..\..\Protest\front")
-            : new DirectoryInfo(@"../../../../../Protest/front");
+            ? new DirectoryInfo(@"..\..\..\..\..\Protest\Front")
+            : new DirectoryInfo(@"../../../../../Protest/Front");
 
         if (!front.Exists) {
             Assert.Fail($"\"front\" directory not found: {front.FullName}");
@@ -20,10 +20,12 @@ public class ListenerTests {
     private Listener? listener;
 
     [SetUp]
-    public async Task Setup() {
-        await Task.Delay(500);
-        listener = new Listener("127.0.0.1", 8080, front.FullName);
-        _ = Task.Run(() => listener.StartAsync());
+    public void Setup() {
+        Task.Delay(500);
+        Task.Run(() => {
+            listener = new Listener("127.0.0.1", 8080, front.FullName);
+            _ = Task.Run(() => listener.StartAsync());
+        });
     }
 
     [TearDown]
