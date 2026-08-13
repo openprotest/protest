@@ -1,17 +1,25 @@
-﻿using System.IO;
+﻿
+using Protest.Http;
+using Renci.SshNet;
+using Renci.SshNet.Common;
+using Renci.SshNet.Sftp;
+using System.Collections;
+using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Net;
 using System.Net.Sockets;
 using System.Net.WebSockets;
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
-using Protest.Http;
-using Renci.SshNet;
-using Renci.SshNet.Common;
+using Vanara.PInvoke;
+using static System.Net.WebRequestMethods;
 
 namespace Protest.Protocols;
 
-internal static class Ssh {
+internal class Sftp {
 
     public static async Task WebSocketHandler(HttpListenerContext ctx) {
         if (!Auth.IsAuthenticatedAndAuthorized(ctx, ctx.Request.Url.AbsolutePath)) {
@@ -80,34 +88,34 @@ internal static class Ssh {
                 return;
             }
 
-            using SshClient ssh = new SshClient(port == 22 ? host : $"{host}:{port}", username, password);
-            ssh.Connect();
+            using SftpClient sftp = new SftpClient(port == 22 ? host : $"{host}:{port}", username, password);
+            sftp.Connect();
 
-            Logger.Action(origin, "Remote-access", $"Establish SSH connection to {username}@{host}:{port}");
+            Logger.Action(origin, "Remote-access", $"Establish SFTP connection to {username}@{host}:{port}");
 
             await WebSocketHelper.WsWriteText(ws, "{\"connected\":true}"u8.ToArray());
 
-            ShellStream shellStream = ssh.CreateShellStream("xterm", 80, 24, 800, 600, 1024);
+            await HandleAction(ws, sftp, "list", ".", CancellationToken.None);
 
-            _ = Task.Run(()=> HandleDownstream(ctx, ws, ssh, shellStream));
+            while (ws.State == WebSocketState.Open && sftp.IsConnected) {
+                string message = await WebSocketHelper.WsReadText(ws, CancellationToken.None);
 
-            byte[] buff = new byte[2048];
-            while (ws.State == WebSocketState.Open && ssh.IsConnected) {
-                WebSocketReceiveResult receiveResult = await ws.ReceiveAsync(buff, CancellationToken.None);
+                if (message is null) continue;
 
-                if (receiveResult.MessageType == WebSocketMessageType.Close) {
-                    await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
-                    ssh.Disconnect();
-                    break;
+                string action, arg;
+                int delimiterIndex = message.IndexOf(':');
+                if (delimiterIndex == -1) {
+                    action = message;
+                    arg = null;
+                }
+                else {
+                    action = message.Substring(0, delimiterIndex);
+                    arg = message.Substring(delimiterIndex + 1);
                 }
 
-                if (!Auth.IsAuthenticatedAndAuthorized(ctx, "/ws/ssh")) {
-                    ctx.Response.Close();
-                    ssh.Disconnect();
-                    return;
-                }
+                Console.WriteLine($"Received action: {action} : {arg}");
 
-                shellStream.Write(Encoding.UTF8.GetString(buff, 0, receiveResult.Count));
+                await HandleAction(ws, sftp, action, arg, CancellationToken.None);
             }
         }
         catch (SshAuthenticationException ex) {
@@ -135,45 +143,32 @@ internal static class Ssh {
         }
     }
 
-    private static async Task HandleDownstream(HttpListenerContext ctx, WebSocket ws, SshClient ssh, ShellStream shellStream) {
-        byte[] data = new byte[2048];
-
-        while (ws.State == WebSocketState.Open && ssh.IsConnected) {
-            if (!Auth.IsAuthenticatedAndAuthorized(ctx, "/ws/ssh")) { //check session
-                ctx.Response.Close();
-                shellStream.Close();
-                return;
-            }
-
-            try {
-                int count = await shellStream.ReadAsync(data);
-
-                if (count == 0) { //remote host closed the connection
-                    if (ws.State == WebSocketState.Open) {
-                        try {
-                            await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
-                        }
-                        catch (Exception ex) {
-                            Logger.Debug(ex);
-                        }
-                    }
-                    return;
-                }
-
-                if (count == 1 && data[0] == 0) continue; //keep alive
-
-                for (int i = 0; i < count; i++) {
-                    if (data[i] > 127) data[i] = 46; //.
-                }
-
-                await ws.SendAsync(new ArraySegment<byte>(data, 0, count), WebSocketMessageType.Text, true, CancellationToken.None);
-            }
-            catch (IOException) {
-                return;
-            }
-            catch {
-                return;
-            }
+    private static async Task HandleAction(WebSocket ws, SftpClient sftp, string action, string arg, CancellationToken token) {
+        switch (action) {
+        case "list": await ListDirectory(ws, sftp, arg, token); break;
         }
     }
+
+    private static async Task ListDirectory(WebSocket ws, SftpClient sftp, string directory, CancellationToken token) {
+        ISftpFile[] files = sftp.ListDirectory(directory).ToArray();
+
+        byte[] bytes = JsonSerializer.SerializeToUtf8Bytes(new {
+            action           = "list",
+            workingDirectory = sftp.WorkingDirectory,
+            data             = files.Select(o => new {
+                name     = o.Name,
+                size     = o.Length,
+                isFile   = o.IsRegularFile,
+                //isDir    = o.IsDirectory,
+                isLink   = o.IsSymbolicLink,
+                modified = o.LastWriteTime.ToFileTimeUtc(),
+            })
+            .OrderBy(o => o.isFile)
+            .ThenBy(o => o.name, StringComparer.Ordinal)
+            .ToList()
+        });
+
+        await ws.SendAsync(new ArraySegment<byte>(bytes), WebSocketMessageType.Text, true, token);
+    }
+
 }

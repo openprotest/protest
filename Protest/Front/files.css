@@ -1,0 +1,98 @@
+.file-path {
+	position: absolute;
+	left: 0px;
+	right: 0px;
+	top: 0;
+	height: 32px;
+	overflow: hidden;
+}
+
+.file-path > div {
+	display: inline-block;
+	min-width: 16px;
+	border-radius: 4px;
+	padding: 4px 6px;
+	margin: 2px;
+	color: var(--clr-dark);
+	text-align: center;
+	background-color: rgb(192,192,192);
+}
+
+.file-path > div:hover {
+	background-color: var(--clr-select);
+}
+
+.file-path > div:active {
+	filter: brightness(1.15);
+	transition: .2s;
+}
+
+.file-view {
+	position: absolute;
+	left: 0px;
+	right: 0px;
+	top: 36px;
+	bottom: 32px;
+	overflow-y: auto;
+}
+
+.file-view > div {
+	display: inline-block;
+	position: relative;
+	width: 96px;
+	height: 128px;
+	padding: 4px;
+	margin: 4px;
+	border-radius: 4px;
+}
+
+.file-view > div:hover {
+	color: var(--clr-dark);
+	background-color: var(--clr-select);
+}
+
+.file-view > div:active > div.file-icon {
+	filter: brightness(1.15);
+	transition: .2s;
+}
+
+
+.file-icon {
+	width: 96px;
+	height: 96px;
+	background-color: light-dark(rgb(64,64,64), rgb(192,192,192));
+	mask-size: 96px 96px;
+	mask-position: 50% 50%;
+	mask-repeat: no-repeat;
+}
+.file-file > .file-icon {
+	mask-image: url(mono/file.svg?light);
+}
+.file-dir > .file-icon {
+	mask-image: url(mono/dir.svg?light);
+}
+
+.file-name {
+	padding-top: 4px;
+	text-align: center;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	font-size: small;
+}
+
+.file-extension {
+	position: absolute;
+	right: 12px;
+	top: 48px;
+	min-width: 28px;
+	padding: 0 4px;
+	border-radius: 4px;
+	color: black;
+	font-weight: bold;
+	text-align: center;
+	box-shadow: rgb(64,64,64) -1px 1px 1px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}

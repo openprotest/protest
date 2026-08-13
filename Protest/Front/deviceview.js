@@ -551,6 +551,47 @@ class DeviceView extends View {
 
 				const sshButton = this.CreateSideButton("mono/ssh.svg", "Secure shell");
 				sshButton.onclick = ()=> new Ssh({host:sshHost, username:username, file:file});
+
+				const sftpButton = this.CreateSideButton("mono/shared.svg", "SFTP");
+				sftpButton.onclick = ()=> new Sftp({host:sshHost, username:username, file:file});
+			}
+
+			if (overwriteProtocol.ftp) { //ftp
+				const actionButton = this.CreateSideButton("mono/shared.svg", "FTP");
+				actionButton.onclick = ()=> {
+					const link = document.createElement("a");
+					link.href = "ftp://" + host + ":" + overwriteProtocol.ftp;
+					link.target = "_blank";
+					link.click();
+				};
+			}
+			else if (ports.includes(21)) {
+				const actionButton = this.CreateSideButton("mono/shared.svg", "FTP");
+				actionButton.onclick = ()=> {
+					const link = document.createElement("a");
+					link.href = "ftp://" + host;
+					link.target = "_blank";
+					link.click();
+				};
+			}
+
+			if (overwriteProtocol.ftps) { //ftps
+				const actionButton = this.CreateSideButton("mono/shared.svg", "FTP");
+				actionButton.onclick = ()=> {
+					const link = document.createElement("a");
+					link.href = "ftps://" + host + ":" + overwriteProtocol.ftps;
+					link.target = "_blank";
+					link.click();
+				};
+			}
+			else if (ports.includes(989)) {
+				const actionButton = this.CreateSideButton("mono/shared.svg", "FTPs");
+				actionButton.onclick = ()=> {
+					const link = document.createElement("a");
+					link.href = "ftps://" + host;
+					link.target = "_blank";
+					link.click();
+				};
 			}
 
 			if (ports.includes(53)) {
@@ -596,44 +637,6 @@ class DeviceView extends View {
 				actionButton.onclick = ()=> {
 					const link = document.createElement("a");
 					link.href = "https://" + host;
-					link.target = "_blank";
-					link.click();
-				};
-			}
-
-			if (overwriteProtocol.ftp) { //ftp
-				const actionButton = this.CreateSideButton("mono/shared.svg", "FTP");
-				actionButton.onclick = ()=> {
-					const link = document.createElement("a");
-					link.href = "ftp://" + host + ":" + overwriteProtocol.ftp;
-					link.target = "_blank";
-					link.click();
-				};
-			}
-			else if (ports.includes(21)) {
-				const actionButton = this.CreateSideButton("mono/shared.svg", "FTP");
-				actionButton.onclick = ()=> {
-					const link = document.createElement("a");
-					link.href = "ftp://" + host;
-					link.target = "_blank";
-					link.click();
-				};
-			}
-
-			if (overwriteProtocol.ftps) { //ftps
-				const actionButton = this.CreateSideButton("mono/shared.svg", "FTP");
-				actionButton.onclick = ()=> {
-					const link = document.createElement("a");
-					link.href = "ftps://" + host + ":" + overwriteProtocol.ftps;
-					link.target = "_blank";
-					link.click();
-				};
-			}
-			else if (ports.includes(989)) {
-				const actionButton = this.CreateSideButton("mono/shared.svg", "FTPs");
-				actionButton.onclick = ()=> {
-					const link = document.createElement("a");
-					link.href = "ftps://" + host;
 					link.target = "_blank";
 					link.click();
 				};

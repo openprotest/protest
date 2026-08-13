@@ -134,6 +134,7 @@ const LOADER = {
 		"remoteshell.js",
 		"telnet.js",
 		"ssh.js",
+		"sftp.js",
 		"vnc.js",
 		"wmi.js",
 		"snmp.js",
@@ -359,6 +360,7 @@ const LOADER = {
 		case "RemoteShell"  : return new RemoteShell(command.args);
 		case "Telnet"       : return new Telnet(command.args);
 		case "Ssh"          : return new Ssh(command.args);
+		case "Sftp"         : return new Sftp(command.args);
 		case "Vnc"          : return new Vnc({ ...command.args, autoconnect:false });
 		case "Wmi"          : return new Wmi(command.args);
 		case "Terminal"     : return new Terminal(command.args);

@@ -1,10 +1,26 @@
 "use strict";
-class Ssh extends PtyHost {
+class Sftp extends Window {
 	constructor(args) {
 		super(args);
 
-		this.SetTitle("Secure shell");
-		this.SetIcon("mono/ssh.svg");
+		this.args = args;
+
+		this.AddCssDependencies("files.css");
+
+		this.SetTitle("SFTP");
+		this.SetIcon("mono/shared.svg");
+
+		this.SetupToolbar();
+		this.connectButton = this.AddToolbarButton("Connect", "mono/connect.svg?light");
+		//this.AddToolbarSeparator();
+
+		this.path = document.createElement("div");
+		this.path.className = "win-toolbar file-path";
+		this.content.appendChild(this.path);
+
+		this.view = document.createElement("div");
+		this.view.className = "file-view";
+		this.content.appendChild(this.view);
 
 		if (this.args.file) {
 			this.ConnectViaFile(this.args.host, this.args.file);
@@ -14,7 +30,7 @@ class Ssh extends PtyHost {
 		}
 	}
 
-	ConnectDialog(target, isNew=false) { //overrides
+	ConnectDialog(target, isNew=false) {
 		const dialog = this.DialogBox("208px");
 		if (dialog === null) return;
 
@@ -125,11 +141,6 @@ class Ssh extends PtyHost {
 	Connect(target, connectionString) {
 		this.args.host = target;
 
-		this.statusBox.style.display = "initial";
-		this.statusBox.style.backgroundImage = "url(mono/connect.svg)";
-		this.statusBox.textContent = "Connecting...";
-		this.content.appendChild(this.statusBox);
-
 		if (this.ws != null) {
 			try {
 				this.ws.close();
@@ -138,7 +149,7 @@ class Ssh extends PtyHost {
 		}
 
 		try {
-			this.ws = new WebSocket(`${KEEP.isSecure ? "wss" : "ws"}://${window.location.host}/ws/ssh`);
+			this.ws = new WebSocket(`${KEEP.isSecure ? "wss" : "ws"}://${window.location.host}/ws/sftp`);
 		}
 		catch {}
 
@@ -152,31 +163,92 @@ class Ssh extends PtyHost {
 		};
 
 		this.ws.onclose = ()=> {
-			this.statusBox.style.display = "initial";
-			this.statusBox.style.backgroundImage = "url(mono/disconnect.svg)";
-			this.statusBox.textContent = "Connection closed";
-			this.content.appendChild(this.statusBox);
-
 			this.connectButton.disabled = false;
 		};
 
 		this.ws.onmessage = e=> {
 			let json = JSON.parse(e.data);
 			if (json.connected) {
-				this.SetTitle(`Secure shell - ${target}`);
-				this.statusBox.style.display = "none";
-				this.ws.onmessage = event=> this.HandleMessage(event.data);
+				this.SetTitle(`SFTP - ${target}`);
 
-				this.content.appendChild(this.cursorElement);
 				this.content.focus();
+			}
+			else if (json.action) {
+				this.ActionMux(json.action, json);
 			}
 			else if (json.error) {
 				setTimeout(()=> {
 					this.ConfirmBox(json.error, true, "mono/error.svg").addEventListener("click", ()=> {
-						setTimeout(()=>this.ConnectDialog(this.args.host, false), 200);
+						setTimeout(()=> this.ConnectDialog(this.args.host, false), 200);
 					});
 				}, 200);
 			}
 		};
+	}
+
+	ActionMux(action, json) {
+		switch (action) {
+		case "list":
+			this.PlotPath(json.workingDirectory);
+			this.ListFiles(json.data);
+			break;
+		}
+	}
+
+	PlotPath(workingDirectory) {
+		this.path.textContent = "";
+
+		const rootBox = document.createElement("div");
+		rootBox.textContent = "/";
+		this.path.appendChild(rootBox);
+
+		const split = workingDirectory.split("/");
+		for (let i=0; i<split.length; i++) {
+			if (split[i].length === 0) continue;
+			const box = document.createElement("div");
+			box.textContent = split[i];
+			this.path.appendChild(box);
+		}
+	}
+
+	ListFiles(files) {
+		this.view.textContent = "";
+
+		for (let i=0; i<files.length; i++) {
+			const container = document.createElement("div");
+			container.className = files[i].isFile ? "file-file" : "file-dir";
+			this.view.appendChild(container);
+
+			const iconBox = document.createElement("div");
+			iconBox.classList = "file-icon";
+
+			const nameBox = document.createElement("div");
+			nameBox.textContent = files[i].name;
+			nameBox.classList = "file-name";
+
+			if (files[i].name[0] === ".") {
+				iconBox.style.opacity = ".65";
+			}
+
+			container.append(iconBox, nameBox);
+
+			const dotIndex = files[i].name.indexOf(".", 1);
+
+			if (dotIndex > 0 && files[i].isFile) {
+				const extension = files[i].name.split(".").pop();
+				const extensionBox = document.createElement("div");
+				extensionBox.classList = "file-extension";
+				extensionBox.textContent = extension.toUpperCase();
+				container.appendChild(extensionBox);
+
+				let r = (extension.charCodeAt(0) * 5) % 192 + 63;
+				let g = (extension.charCodeAt(1 % extension.length) * 5) % 192 + 63;
+				let b = (extension.charCodeAt(2 % extension.length) * 5) % 192 + 63;
+
+				if (r*.3 + g*.59 + b*.11 < 112) extensionBox.style.color = "#ddd";
+				extensionBox.style.backgroundColor = `rgb(${r},${g},${b})`;
+			}
+
+		}
 	}
 }
