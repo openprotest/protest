@@ -14,13 +14,24 @@ class Sftp extends Window {
 		this.connectButton = this.AddToolbarButton("Connect", "mono/connect.svg?light");
 		//this.AddToolbarSeparator();
 
-		this.path = document.createElement("div");
-		this.path.className = "win-toolbar file-path";
-		this.content.appendChild(this.path);
+		this.status = "idle";
+		this.gridView = true;
 
-		this.view = document.createElement("div");
-		this.view.className = "file-view";
-		this.content.appendChild(this.view);
+		this.pathBox = document.createElement("div");
+		this.pathBox.className = "win-toolbar file-path";
+
+		this.viewBox = document.createElement("div");
+		this.viewBox.className = "file-view file-grid";
+
+		this.counterBox = document.createElement("div");
+		this.counterBox.className = "file-counter";
+		this.counterBox.textContent = "0";
+
+		this.statusBox = document.createElement("div");
+		this.statusBox.className = "file-status-label";
+		this.statusBox.textContent = "Connecting...";
+
+		this.content.append(this.pathBox, this.viewBox, this.counterBox, this.statusBox);
 
 		if (this.args.file) {
 			this.ConnectViaFile(this.args.host, this.args.file);
@@ -28,6 +39,11 @@ class Sftp extends Window {
 		else {
 			this.ConnectDialog(this.args.host, true);
 		}
+	}
+
+	ToggleView() {
+		this.gridView = !this.gridView;
+		this.viewBox.className = this.gridView ? "file-view file-grid" : "file-view file-list";
 	}
 
 	ConnectDialog(target, isNew=false) {
@@ -177,78 +193,130 @@ class Sftp extends Window {
 				this.ActionMux(json.action, json);
 			}
 			else if (json.error) {
-				setTimeout(()=> {
-					this.ConfirmBox(json.error, true, "mono/error.svg").addEventListener("click", ()=> {
-						setTimeout(()=> this.ConnectDialog(this.args.host, false), 200);
-					});
-				}, 200);
+				this.ConfirmBox(json.error, true, "mono/error.svg");
 			}
+
+			this.status = "idle";
+			this.statusBox.style.visibility = "hidden";
 		};
+	}
+
+	Close() { //overrides
+		if (this.ws != null) this.ws.close();
+		super.Close();
 	}
 
 	ActionMux(action, json) {
 		switch (action) {
 		case "list":
-			this.PlotPath(json.workingDirectory);
+			this.UpdatePath(json.workingDirectory);
 			this.ListFiles(json.data);
 			break;
 		}
 	}
 
-	PlotPath(workingDirectory) {
-		this.path.textContent = "";
-
-		const rootBox = document.createElement("div");
-		rootBox.textContent = "/";
-		this.path.appendChild(rootBox);
+	UpdatePath(workingDirectory) {
+		this.pathBox.textContent = "";
 
 		const split = workingDirectory.split("/");
+		split.unshift("/");
+
 		for (let i=0; i<split.length; i++) {
 			if (split[i].length === 0) continue;
-			const box = document.createElement("div");
-			box.textContent = split[i];
-			this.path.appendChild(box);
+
+			const node = document.createElement("div");
+			node.className = "file-path-node";
+			node.textContent = split[i];
+			this.pathBox.appendChild(node);
+
+			if (i<split.length - 1) {
+				const separator = document.createElement("div");
+				separator.className = "file-separator-node";
+				this.pathBox.appendChild(separator);
+			}
+
+			node.onclick = ()=> {
+				this.status = "listing";
+				this.statusBox.textContent = "Loading...";
+				
+				let path = "";
+				for (let j=0; j<=i; j++) {
+					path += split[j] + "/";
+				}
+
+				this.ws.send(`list:${path}`);
+			};
 		}
 	}
 
 	ListFiles(files) {
-		this.view.textContent = "";
+		this.viewBox.textContent = "";
+		this.counterBox.textContent = files.length;
 
 		for (let i=0; i<files.length; i++) {
-			const container = document.createElement("div");
-			container.className = files[i].isFile ? "file-file" : "file-dir";
-			this.view.appendChild(container);
+			const element = this.CreateFile(files[i]);
+			this.viewBox.appendChild(element);
+		}
+	}
 
-			const iconBox = document.createElement("div");
-			iconBox.classList = "file-icon";
+	CreateFile(file) {
+		const container = document.createElement("div");
+		container.className = file.isDir ? "file-dir" : "file-file";
 
-			const nameBox = document.createElement("div");
-			nameBox.textContent = files[i].name;
-			nameBox.classList = "file-name";
+		const iconBox = document.createElement("div");
+		iconBox.classList = "file-icon";
 
-			if (files[i].name[0] === ".") {
-				iconBox.style.opacity = ".65";
-			}
+		const iconInnerBox = document.createElement("div");
+		iconBox.appendChild(iconInnerBox);
+ 
+		const nameBox = document.createElement("div");
+		nameBox.textContent = file.name;
+		nameBox.classList = "file-name";
 
-			container.append(iconBox, nameBox);
+		if (file.name[0] === ".") {
+			container.classList.add("file-hidden");
+		}
 
-			const dotIndex = files[i].name.indexOf(".", 1);
+		container.append(iconBox, nameBox);
 
-			if (dotIndex > 0 && files[i].isFile) {
-				const extension = files[i].name.split(".").pop();
-				const extensionBox = document.createElement("div");
-				extensionBox.classList = "file-extension";
-				extensionBox.textContent = extension.toUpperCase();
-				container.appendChild(extensionBox);
+		const dotIndex = file.name.indexOf(".", 1);
+		if (dotIndex > 0 && !file.isDir) {
+			const extension = file.name.split(".").pop();
+			const extensionBox = document.createElement("div");
+			extensionBox.classList = "file-extension";
+			extensionBox.textContent = extension.toUpperCase();
+			container.appendChild(extensionBox);
 
-				let r = (extension.charCodeAt(0) * 5) % 192 + 63;
-				let g = (extension.charCodeAt(1 % extension.length) * 5) % 192 + 63;
-				let b = (extension.charCodeAt(2 % extension.length) * 5) % 192 + 63;
+			let r = (extension.charCodeAt(0) * 5) % 192 + 63;
+			let g = (extension.charCodeAt(1 % extension.length) * 5) % 192 + 63;
+			let b = (extension.charCodeAt(2 % extension.length) * 5) % 192 + 63;
 
-				if (r*.3 + g*.59 + b*.11 < 112) extensionBox.style.color = "#ddd";
-				extensionBox.style.backgroundColor = `rgb(${r},${g},${b})`;
-			}
+			if (r*.3 + g*.59 + b*.11 < 112) extensionBox.style.color = "#ddd";
+			extensionBox.style.backgroundColor = `rgb(${r},${g},${b})`;
+		}
 
+		if (file.isLink) {
+			container.classList.add("file-link");
+		}
+
+		container.ondblclick = event => this.File_onDoubleClick(event, file);
+
+		return container;
+	}
+
+	File_onDoubleClick(event, file) {
+		if (this.ws === null) return;
+		if (this.status !== "idle") return;
+
+		this.statusBox.style.visibility = "visible";
+
+		if (file.isDir) {
+			this.status = "listing";
+			this.statusBox.textContent = "Loading...";
+			this.ws.send(`list:${file.fullname}`);
+		}
+		else {
+			//TODO:
 		}
 	}
 }

@@ -7,7 +7,7 @@
 	overflow: hidden;
 }
 
-.file-path > div {
+.file-path > .file-path-node {
 	display: inline-block;
 	min-width: 16px;
 	border-radius: 4px;
@@ -18,13 +18,24 @@
 	background-color: rgb(192,192,192);
 }
 
-.file-path > div:hover {
+.file-path > .file-path-node:hover {
 	background-color: var(--clr-select);
 }
 
-.file-path > div:active {
+.file-path > .file-path-node:active {
 	filter: brightness(1.15);
 	transition: .2s;
+}
+
+.file-path > .file-separator-node {
+	display: inline-block;
+	width: 12px;
+	height: 12px;
+	transform: rotate(-90deg);
+	background-image: url(/mono/guitarpick.svg?light);
+	background-size: 10px 10px;
+	background-position: 50% 50%;
+	background-repeat: no-repeat;
 }
 
 .file-view {
@@ -36,7 +47,7 @@
 	overflow-y: auto;
 }
 
-.file-view > div {
+.file-grid > div {
 	display: inline-block;
 	position: relative;
 	width: 96px;
@@ -46,53 +57,150 @@
 	border-radius: 4px;
 }
 
+.file-list > div {
+	display: block;
+	position: relative;
+	width: unset;
+	height: 24px;
+	padding: 4px;
+	margin: 0px;
+	border-radius: 2px;
+}
+
 .file-view > div:hover {
 	color: var(--clr-dark);
 	background-color: var(--clr-select);
 }
 
-.file-view > div:active > div.file-icon {
+.file-view > div:active > .file-icon > div {
 	filter: brightness(1.15);
 	transition: .2s;
 }
 
+.file-hidden > .file-icon {
+	mask: radial-gradient(circle, transparent 45%,  white 55%);
+	mask-size: 3px 3px;
+	mask-position: 0 0;
+	mask-repeat: repeat;
+}
 
-.file-icon {
+.file-icon > div {
+	background-color: light-dark(rgb(64,64,64), rgb(192,192,192));
+}
+
+.file-grid > div > .file-icon > div {
 	width: 96px;
 	height: 96px;
-	background-color: light-dark(rgb(64,64,64), rgb(192,192,192));
 	mask-size: 96px 96px;
-	mask-position: 50% 50%;
-	mask-repeat: no-repeat;
 }
-.file-file > .file-icon {
+
+.file-list > div > .file-icon > div {
+	width: 24px;
+	height: 24px;
+	mask-size: 24px 24px;
+}
+
+.file-file > .file-icon > div {
 	mask-image: url(mono/file.svg?light);
 }
-.file-dir > .file-icon {
+.file-dir > .file-icon > div {
 	mask-image: url(mono/dir.svg?light);
 }
 
 .file-name {
-	padding-top: 4px;
-	text-align: center;
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
+}
+.file-grid > div > .file-name {
+	padding-top: 4px;
+	text-align: center;
 	font-size: small;
+}
+.file-list > div > .file-name {
+	position: absolute;
+	top: 6px;
+	left: 36px;
+	width: calc(100% - 40px);
+	text-align: left;
 }
 
 .file-extension {
 	position: absolute;
-	right: 12px;
-	top: 48px;
-	min-width: 28px;
-	padding: 0 4px;
-	border-radius: 4px;
-	color: black;
-	font-weight: bold;
+	color: var(--clr-dark);
 	text-align: center;
 	box-shadow: rgb(64,64,64) -1px 1px 1px;
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
+}
+.file-grid > div > .file-extension {
+	font-weight: bold;
+	right: 12px;
+	top: 48px;
+	min-width: 20px;
+	padding: 0 4px;
+	border-radius: 4px;
+}
+.file-list > div > .file-extension {
+	font-size: 5px;
+	right: calc(100% - 28px);
+	top: 16px;
+	min-width: 6px;
+	padding: 0 2px;
+	border-radius: 2px;
+}
+
+.file-link:after {
+	position: absolute;
+	content: " ";
+	mask-image: url(/mono/shortcut.svg);
+	mask-size: 100% 100%;
+	background-color: light-dark(rgb(192,192,192), rgb(64,64,64));
+}
+.file-grid > .file-link:after {
+	width: 28px;
+	height: 28px;
+	left: 24px;
+	top: 64px;
+}
+.file-list > .file-link:after {
+	width: 8px;
+	height: 8px;
+	left: 8px;
+	top: 18px;
+}
+
+.file-counter {
+	position: absolute;
+	left: 2px;
+	bottom: 3px;
+	color: var(--clr-contrast);
+	font-weight: 600;
+	padding: 0 8px;
+	border: 1px solid var(--clr-contrast);
+	border-radius: 2px;
+}
+
+.file-status-label {
+	position: absolute;
+	right: 8px;
+	bottom: 4px;
+	color: var(--clr-contrast);
+	font-weight: 600;
+}
+
+.file-status-label::before {
+	content: "";
+	display: inline-block;
+	margin-right: 8px;
+	margin-bottom: -4px;
+	width: 18px;
+	height: 18px;
+	border-radius: 50%;
+	border-style: solid;
+	border-color: var(--clr-contrast) var(--clr-contrast) transparent transparent;
+	border-width: 2px 3px 3px 0;
+	box-sizing: border-box;
+	animation: spin 1s linear infinite;
 }

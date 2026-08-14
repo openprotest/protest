@@ -113,8 +113,6 @@ internal class Sftp {
                     arg = message.Substring(delimiterIndex + 1);
                 }
 
-                Console.WriteLine($"Received action: {action} : {arg}");
-
                 await HandleAction(ws, sftp, action, arg, CancellationToken.None);
             }
         }
@@ -150,25 +148,33 @@ internal class Sftp {
     }
 
     private static async Task ListDirectory(WebSocket ws, SftpClient sftp, string directory, CancellationToken token) {
-        ISftpFile[] files = sftp.ListDirectory(directory).ToArray();
+        try {
+            sftp.ChangeDirectory(directory);
+            ISftpFile[] files = sftp.ListDirectory(".").ToArray();
 
-        byte[] bytes = JsonSerializer.SerializeToUtf8Bytes(new {
-            action           = "list",
-            workingDirectory = sftp.WorkingDirectory,
-            data             = files.Select(o => new {
-                name     = o.Name,
-                size     = o.Length,
-                isFile   = o.IsRegularFile,
-                //isDir    = o.IsDirectory,
-                isLink   = o.IsSymbolicLink,
-                modified = o.LastWriteTime.ToFileTimeUtc(),
-            })
-            .OrderBy(o => o.isFile)
+            byte[] bytes = JsonSerializer.SerializeToUtf8Bytes(new {
+                action           = "list",
+                workingDirectory = sftp.WorkingDirectory,
+                data             = files.Select(o => new {
+                    name     = o.Name,
+                    fullname = o.FullName,
+                    size     = o.Length,
+                    isFile   = o.IsRegularFile,
+                    isDir    = o.IsDirectory,
+                    isLink   = o.IsSymbolicLink,
+                    modified = o.LastWriteTime.ToFileTimeUtc(),
+                })
+            .OrderBy(o => !o.isDir)
             .ThenBy(o => o.name, StringComparer.Ordinal)
             .ToList()
-        });
+            });
 
-        await ws.SendAsync(new ArraySegment<byte>(bytes), WebSocketMessageType.Text, true, token);
+            await ws.SendAsync(new ArraySegment<byte>(bytes), WebSocketMessageType.Text, true, token);
+        }
+        catch (Exception ex) {
+            await WebSocketHelper.WsWriteText(ws, $"{{\"error\":\"{ex.Message}\"}}");
+            return;
+        }
     }
 
 }
