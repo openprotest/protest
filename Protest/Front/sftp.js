@@ -315,11 +315,11 @@ class Sftp extends Window {
 
 	Select(element) {
 		if (this.selectedElement) {
-			this.selectedElement.style.backgroundColor = "";
+			this.selectedElement.classList.remove("file-selected");
 		}
 
-		element.style.backgroundColor = "var(--clr-select)";
 		this.selectedElement = element;
+		this.selectedElement.classList.add("file-selected");
 	}
 
 	NavigateUp() {
@@ -386,7 +386,7 @@ class Sftp extends Window {
 		}
 
 		const lastIndex = elements.indexOf(this.selectedElement);
-console.log(this.selectedElement.clientWidth);
+
 		let index, row;
 		switch(event.key) {
 		case "ArrowLeft":
@@ -394,16 +394,16 @@ console.log(this.selectedElement.clientWidth);
 			break;
 
 		case "ArrowRight":
-			index = Math.min(lastIndex + 1, elements.length);
+			index = Math.min(lastIndex + 1, elements.length - 1);
 			break;
 
 		case "ArrowUp":
-			row = Math.floor(this.viewBox.clientWidth / (this.selectedElement.clientWidth + 8));
-			index = Math.min(lastIndex - row, elements.length);
+			row = Math.max(Math.floor(this.viewBox.clientWidth / (this.selectedElement.clientWidth + 8)), 1);
+			index = Math.max(lastIndex - row, 0);
 			break;
 
 		case "ArrowDown":
-			row = Math.floor(this.viewBox.clientWidth / (this.selectedElement.clientWidth + 8));
+			row = Math.max(Math.floor(this.viewBox.clientWidth / (this.selectedElement.clientWidth + 8)), 1);
 			index = Math.min(lastIndex + row, elements.length - 1);
 			break;
 		}

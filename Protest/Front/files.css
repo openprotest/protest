@@ -47,6 +47,11 @@
 	overflow-y: auto;
 }
 
+.file-selected {
+	background-color: color-mix(in srgb, var(--clr-select) 75%, transparent);
+	box-shadow: color-mix(in srgb, var(--clr-select) 75%, black) 0 0 0 1px;
+}
+
 .file-grid > div {
 	display: inline-block;
 	position: relative;
@@ -65,11 +70,6 @@
 	padding: 4px;
 	margin: 0px;
 	border-radius: 2px;
-}
-
-.file-view > div:hover {
-	color: var(--clr-dark);
-	background-color: var(--clr-select);
 }
 
 .file-view > div:active > .file-icon > div {
