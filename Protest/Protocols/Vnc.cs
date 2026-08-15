@@ -8,9 +8,6 @@ using Protest.Http;
 
 namespace Protest.Protocols;
 
-//In-browser VNC (noVNC). The client speaks the RFB protocol directly against a
-//<canvas>; this handler is a pure binary TCP<->WebSocket relay (websockify-style).
-//No text framing is added to the socket, otherwise the RFB handshake breaks.
 internal static class Vnc {
 
     private const int DEFAULT_PORT = 5900;
@@ -72,6 +69,8 @@ internal static class Vnc {
             Logger.Error(ex);
         }
         finally {
+            Logger.Action(origin, "Remote-access", $"Close VNC connection to {host}:{port}");
+
             tcp.Close();
             if (ws.State == WebSocketState.Open) {
                 try {
@@ -116,7 +115,6 @@ internal static class Vnc {
             while (ws.State == WebSocketState.Open && !cts.IsCancelled()) {
                 int count = await stream.ReadAsync(buffer, cts.Token);
                 if (count == 0) return; //remote host closed the connection
-
                 await ws.SendAsync(new ArraySegment<byte>(buffer, 0, count), WebSocketMessageType.Binary, true, cts.Token);
             }
         }

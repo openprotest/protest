@@ -1,21 +1,14 @@
-﻿
-using Protest.Http;
-using Renci.SshNet;
-using Renci.SshNet.Common;
-using Renci.SshNet.Sftp;
-using System.Collections;
-using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.Net;
+﻿using System.Net;
 using System.Net.Sockets;
 using System.Net.WebSockets;
 using System.Text;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
-using Vanara.PInvoke;
-using static System.Net.WebRequestMethods;
+using Renci.SshNet;
+using Renci.SshNet.Common;
+using Renci.SshNet.Sftp;
+using Protest.Http;
 
 namespace Protest.Protocols;
 
@@ -43,6 +36,10 @@ internal class Sftp {
         string sessionId = ctx.Request.Cookies["sessionid"]?.Value;
         string origin = IPAddress.IsLoopback(ctx.Request.RemoteEndPoint.Address) ? "loopback" : Auth.GetUsername(sessionId);
 
+        string username = String.Empty;
+        string host = "0.0.0.0";
+        int port = 22;
+
         try {
             byte[] connectionBuffer = new byte[2048];
             WebSocketReceiveResult targetResult = await ws.ReceiveAsync(new ArraySegment<byte>(connectionBuffer), CancellationToken.None);
@@ -51,7 +48,6 @@ internal class Sftp {
             string[] lines = connectionString.Split('\n');
             string target = String.Empty;
             string file = null;
-            string username = String.Empty;
             string password = String.Empty;
             for (int i = 0; i < lines.Length; i++) {
                 if (lines[i].StartsWith("target=")) target   = lines[i][7..];
@@ -61,8 +57,8 @@ internal class Sftp {
             }
 
             string[] split = target.Split(':');
-            string host = split[0];
-            int port = 22;
+            host = split[0];
+            port = 22;
 
             if (!String.IsNullOrEmpty(file) && DatabaseInstances.devices.dictionary.TryGetValue(file, out Database.Entry entry)) {
                 Database.Attribute usernameAttribute;
@@ -109,8 +105,8 @@ internal class Sftp {
                     arg = null;
                 }
                 else {
-                    action = message.Substring(0, delimiterIndex);
-                    arg = message.Substring(delimiterIndex + 1);
+                    action = message[..delimiterIndex];
+                    arg = message[(delimiterIndex + 1)..];
                 }
 
                 await HandleAction(ws, sftp, action, arg, CancellationToken.None);
@@ -130,6 +126,8 @@ internal class Sftp {
             Logger.Error(ex);
         }
         finally {
+            Logger.Action(origin, "Remote-access", $"Close SFTP connection to {username}@{host}:{port}");
+
             if (ws.State == WebSocketState.Open) {
                 try {
                     await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);

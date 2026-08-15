@@ -35,6 +35,10 @@ internal static class Ssh {
         string sessionId = ctx.Request.Cookies["sessionid"]?.Value;
         string origin = IPAddress.IsLoopback(ctx.Request.RemoteEndPoint.Address) ? "loopback" : Auth.GetUsername(sessionId);
 
+        string username = String.Empty;
+        string host = "0.0.0.0";
+        int port = 22;
+
         try {
             byte[] connectionBuffer = new byte[2048];
             WebSocketReceiveResult targetResult = await ws.ReceiveAsync(new ArraySegment<byte>(connectionBuffer), CancellationToken.None);
@@ -43,7 +47,7 @@ internal static class Ssh {
             string[] lines = connectionString.Split('\n');
             string target = String.Empty;
             string file = null;
-            string username = String.Empty;
+            username = String.Empty;
             string password = String.Empty;
             for (int i = 0; i < lines.Length; i++) {
                 if (lines[i].StartsWith("target=")) target   = lines[i][7..];
@@ -53,8 +57,8 @@ internal static class Ssh {
             }
 
             string[] split = target.Split(':');
-            string host = split[0];
-            int port = 22;
+            host = split[0];
+            port = 22;
 
             if (!String.IsNullOrEmpty(file) && DatabaseInstances.devices.dictionary.TryGetValue(file, out Database.Entry entry)) {
                 Database.Attribute usernameAttribute;
@@ -124,6 +128,8 @@ internal static class Ssh {
             Logger.Error(ex);
         }
         finally {
+            Logger.Action(origin, "Remote-access", $"Close SSH connection to {username}@{host}:{port}");
+
             if (ws.State == WebSocketState.Open) {
                 try {
                     await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);

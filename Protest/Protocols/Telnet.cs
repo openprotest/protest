@@ -30,7 +30,10 @@ internal static class Telnet {
         if (ws is null) return;
 
         string sessionId = ctx.Request.Cookies["sessionid"]?.Value;
-        string username = IPAddress.IsLoopback(ctx.Request.RemoteEndPoint.Address) ? "loopback" : Auth.GetUsername(sessionId);
+        string origin = IPAddress.IsLoopback(ctx.Request.RemoteEndPoint.Address) ? "loopback" : Auth.GetUsername(sessionId);
+
+        string host = "0.0.0.0";
+        int port = 23;
 
         try {
             byte[] connectionBuffer = new byte[512];
@@ -38,8 +41,8 @@ internal static class Telnet {
             string target = Encoding.UTF8.GetString(connectionBuffer, 0, targetResult.Count);
 
             string[] split = target.Split(':');
-            string host = split[0];
-            int port = 23;
+            host = split[0];
+            port = 23;
 
             if (split.Length > 1) {
                 _ = int.TryParse(split[1], out port);
@@ -57,7 +60,7 @@ internal static class Telnet {
 
             NetworkStream stream = telnet.GetStream();
 
-            Logger.Action(username, "Remote-access", $"Establish telnet connection to {host}:{port}");
+            Logger.Action(origin, "Remote-access", $"Establish telnet connection to {host}:{port}");
 
             await WebSocketHelper.WsWriteText(ws, "{\"connected\":true}"u8.ToArray());
 
@@ -98,6 +101,8 @@ internal static class Telnet {
             Logger.Error(ex);
         }
         finally {
+            Logger.Action(origin, "Remote-access", $"Close telnet connection to {host}:{port}");
+
             if (ws.State == WebSocketState.Open) {
                 try {
                     await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
