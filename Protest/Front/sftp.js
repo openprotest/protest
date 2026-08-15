@@ -10,18 +10,34 @@ class Sftp extends Window {
 		this.SetTitle("SFTP");
 		this.SetIcon("mono/shared.svg");
 
+		this.status = "idle";
+		this.gridView = true;
+		this.selectedElement = null;
+		this.workingDirectory;
+
+		this.InitializeComponents();
+
+		this.defaultElement = this.viewBox;
+
+		if (this.args.file) {
+			this.ConnectViaFile(this.args.host, this.args.file);
+		}
+		else {
+			this.ConnectDialog(this.args.host, true);
+		}
+	}
+
+	InitializeComponents() {
 		this.SetupToolbar();
 		this.connectButton = this.AddToolbarButton("Connect", "mono/connect.svg?light");
 		//this.AddToolbarSeparator();
-
-		this.status = "idle";
-		this.gridView = true;
 
 		this.pathBox = document.createElement("div");
 		this.pathBox.className = "win-toolbar file-path";
 
 		this.viewBox = document.createElement("div");
 		this.viewBox.className = "file-view file-grid";
+		this.viewBox.tabIndex = 0;
 
 		this.counterBox = document.createElement("div");
 		this.counterBox.className = "file-counter";
@@ -33,12 +49,7 @@ class Sftp extends Window {
 
 		this.content.append(this.pathBox, this.viewBox, this.counterBox, this.statusBox);
 
-		if (this.args.file) {
-			this.ConnectViaFile(this.args.host, this.args.file);
-		}
-		else {
-			this.ConnectDialog(this.args.host, true);
-		}
+		this.viewBox.onkeydown = event => this.View_onkeydown(event);
 	}
 
 	ToggleView() {
@@ -108,11 +119,9 @@ class Sftp extends Window {
 			}
 
 			dialog.Close();
-			this.ConnectViaCredentials(
-				hostInput.value.trim(),
-				usernameInput.value.trim(),
-				passwordInput.value
-			);
+			this.ConnectViaCredentials(hostInput.value.trim(), usernameInput.value.trim(), passwordInput.value);
+
+			this.viewBox.focus();
 		};
 
 		if (isNew) {
@@ -133,10 +142,7 @@ class Sftp extends Window {
 		hostInput.onchange = hostInput.oninput =
 		usernameInput.onchange = usernameInput.oninput =
 		passwordInput.onchange = passwordInput.oninput = ()=> {
-			okButton.disabled =
-				hostInput.value.trim().length === 0 ||
-				usernameInput.value.trim().length === 0 ||
-				passwordInput.value.length === 0;
+			okButton.disabled = hostInput.value.trim().length === 0 || usernameInput.value.trim().length === 0 || passwordInput.value.length === 0;
 		};
 
 		hostInput.oninput();
@@ -209,6 +215,7 @@ class Sftp extends Window {
 	ActionMux(action, json) {
 		switch (action) {
 		case "list":
+			this.workingDirectory = json.workingDirectory;
 			this.UpdatePath(json.workingDirectory);
 			this.ListFiles(json.data);
 			break;
@@ -250,6 +257,7 @@ class Sftp extends Window {
 	}
 
 	ListFiles(files) {
+		this.selectedElement = null;
 		this.viewBox.textContent = "";
 		this.counterBox.textContent = files.length;
 
@@ -299,12 +307,38 @@ class Sftp extends Window {
 			container.classList.add("file-link");
 		}
 
-		container.ondblclick = event => this.File_onDoubleClick(event, file);
+		container.onclick = event => this.File_onclick(event, file, container);
+		container.ondblclick = event => this.File_ondblclick(event, file);
 
 		return container;
 	}
 
-	File_onDoubleClick(event, file) {
+	Select(element) {
+		if (this.selectedElement) {
+			this.selectedElement.style.backgroundColor = "";
+		}
+
+		element.style.backgroundColor = "var(--clr-select)";
+		this.selectedElement = element;
+	}
+
+	NavigateUp() {
+		if (this.ws === null) return;
+		if (this.status !== "idle") return;
+		if (this.workingDirectory === "/") return;
+
+		this.statusBox.style.visibility = "visible";
+
+		this.status = "listing";
+		this.statusBox.textContent = "Loading...";
+		this.ws.send(`list:${this.workingDirectory}/..`);
+	}
+
+	File_onclick(event, file, element) {
+		this.Select(element);
+	}
+
+	File_ondblclick(event, file) {
 		if (this.ws === null) return;
 		if (this.status !== "idle") return;
 
@@ -317,6 +351,66 @@ class Sftp extends Window {
 		}
 		else {
 			//TODO:
+		}
+	}
+
+	View_onkeydown(event) {
+		event.preventDefault();
+
+		switch(event.key) {
+		case "Backspace":
+			this.NavigateUp();
+			break;
+
+		case "Enter":
+			if (this.selectedElement === null) return;
+			this.selectedElement.ondblclick();
+			break;
+
+		case "ArrowLeft":
+		case "ArrowRight":
+		case "ArrowUp":
+		case "ArrowDown":
+			this.ViewArrowNavigation(event);
+			break;
+		}
+	}
+
+	ViewArrowNavigation(event) {
+		const elements = Array.from(this.viewBox.childNodes);
+		if (elements.length === 0) return;
+
+		if (this.selectedElement === null) {
+			elements[0].onclick();
+			return;
+		}
+
+		const lastIndex = elements.indexOf(this.selectedElement);
+console.log(this.selectedElement.clientWidth);
+		let index, row;
+		switch(event.key) {
+		case "ArrowLeft":
+			index = Math.max(lastIndex - 1, 0);
+			break;
+
+		case "ArrowRight":
+			index = Math.min(lastIndex + 1, elements.length);
+			break;
+
+		case "ArrowUp":
+			row = Math.floor(this.viewBox.clientWidth / (this.selectedElement.clientWidth + 8));
+			index = Math.min(lastIndex - row, elements.length);
+			break;
+
+		case "ArrowDown":
+			row = Math.floor(this.viewBox.clientWidth / (this.selectedElement.clientWidth + 8));
+			index = Math.min(lastIndex + row, elements.length - 1);
+			break;
+		}
+
+		if (index !== lastIndex && elements[index]) {
+			this.Select(elements[index]);
+			this.selectedElement.scrollIntoView({block: "nearest"});
 		}
 	}
 }

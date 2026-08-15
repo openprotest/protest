@@ -80,7 +80,6 @@
 .file-hidden > .file-icon {
 	mask: radial-gradient(circle, transparent 45%,  white 55%);
 	mask-size: 3px 3px;
-	mask-position: 0 0;
 	mask-repeat: repeat;
 }
 

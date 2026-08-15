@@ -101,10 +101,7 @@ class Ssh extends PtyHost {
 		hostInput.onchange = hostInput.oninput =
 		usernameInput.onchange = usernameInput.oninput =
 		passwordInput.onchange = passwordInput.oninput = ()=> {
-			okButton.disabled =
-				hostInput.value.trim().length === 0 ||
-				usernameInput.value.trim().length === 0 ||
-				passwordInput.value.length === 0;
+			okButton.disabled = hostInput.value.trim().length === 0 || usernameInput.value.trim().length === 0 || passwordInput.value.length === 0;
 		};
 
 		hostInput.oninput();
