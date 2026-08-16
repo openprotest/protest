@@ -16,7 +16,7 @@ The suite automatically populates the database by targeting the domain controlle
 
 **Pro-test provides complete data ownership, with all collected data remaining fully under your control.**
 
-<p align="center"><img src="https://raw.githubusercontent.com/openprotest/openprotest.github.io/refs/heads/main/screenshot.png"/></p>
+<p align="center"><img src="https://raw.githubusercontent.com/openprotest/openprotest.github.io/refs/heads/master/screenshot.png"/></p>
 
 
 ### Repo components:

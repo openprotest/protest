@@ -141,7 +141,9 @@ internal class Sftp {
 
     private static async Task HandleAction(WebSocket ws, SftpClient sftp, string action, string arg, CancellationToken token) {
         switch (action) {
-        case "list": await ListDirectory(ws, sftp, arg, token); break;
+        case "list"     : await ListDirectory(ws, sftp, arg, token); break;
+        case "download" : await DownloadFile(); break;
+        case "upload"   : await UploadFile(); break;
         }
     }
 
@@ -173,6 +175,14 @@ internal class Sftp {
             await WebSocketHelper.WsWriteText(ws, $"{{\"error\":\"{ex.Message}\"}}");
             return;
         }
+    }
+
+    private static async Task DownloadFile() {
+        
+    }
+
+    private static async Task UploadFile() {
+        
     }
 
 }
