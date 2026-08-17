@@ -18,7 +18,7 @@ internal static class WebSocketHelper {
         await ws.SendAsync(new ArraySegment<byte>(data), WebSocketMessageType.Text, true, CancellationToken.None);
     }
 
-    internal static async Task<string> WsReadText(WebSocket ws, CancellationToken token, int bufferSize = 2048) {
+    internal static async Task<string> WsReadText(WebSocket ws, CancellationToken token, int bufferSize = 1024) {
         byte[] buffer = new byte[bufferSize];
         WebSocketReceiveResult result = await ws.ReceiveAsync(new ArraySegment<byte>(buffer), token);
 
@@ -46,7 +46,7 @@ internal static class WebSocketHelper {
         }
     }
 
-    internal static async Task<byte[]> WsReadBinary(WebSocket ws, CancellationToken token, int bufferSize = 8192) {
+    internal static async Task<byte[]> WsReadBinary(WebSocket ws, CancellationToken token, int bufferSize = 1024) {
         byte[] buffer = new byte[bufferSize];
         WebSocketReceiveResult result = await ws.ReceiveAsync(new ArraySegment<byte>(buffer), token);
 

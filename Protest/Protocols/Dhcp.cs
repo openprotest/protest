@@ -30,13 +30,7 @@ internal static class Dhcp {
         }
 
         if (ws is null) return;
-
-        byte[] buff = new byte[1024];
-        WebSocketReceiveResult receiveResult = await ws.ReceiveAsync(new ArraySegment<byte>(buff), CancellationToken.None);
-
-        if (receiveResult.MessageType == WebSocketMessageType.Close) {
-            await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
-        }
+        string result = await WebSocketHelper.WsReadText(ws, CancellationToken.None);
 
         int timeout = 5000;
         string mac = String.Empty;
@@ -44,7 +38,7 @@ internal static class Dhcp {
         byte[] options = null;
         bool accept = false;
 
-        string[] attributes = Encoding.UTF8.GetString(buff, 0, receiveResult.Count).Trim().Split('&');
+        string[] attributes = result.Trim().Split('&');
         for (int i = 0; i < attributes.Length; i++) {
             if (attributes[i].StartsWith("timeout=")) {
                 timeout = int.Parse(Uri.UnescapeDataString(attributes[i][8..].ToString()));

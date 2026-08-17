@@ -102,6 +102,9 @@ internal sealed class Listener {
         ["/snmp/walk"]                    = (ctx, username) => Protocols.Snmp.Polling.WalkHandler(ctx),
         ["/snmp/switchinterface"]         = (ctx, username) => Protocols.Snmp.Polling.GetInterfaces(ctx),
 
+        ["/sftp/download"]                = (ctx, username) => Protocols.Sftp.DownloadFileHandler(ctx, username),
+        ["/sftp/upload"]                  = (ctx, username) => Protocols.Sftp.UploadFileHandler(ctx, username),
+
         ["/wmi/query"]                    = (ctx, username) => OperatingSystem.IsWindows() ? Protocols.Wmi.Query(ctx) : null,
         ["/wmi/killprocess"]              = (ctx, username) => OperatingSystem.IsWindows() ? Protocols.Wmi.WmiKillProcess(ctx) : null,
 

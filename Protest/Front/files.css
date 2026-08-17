@@ -47,6 +47,27 @@
 	overflow-y: auto;
 }
 
+.file-drop-area {
+	position: absolute;
+	pointer-events: none;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	font-size: larger;
+	font-weight: bold;
+	inset: 20px;
+	color: rgb(32,32,32);
+	background-color: var(--clr-transparent);
+	backdrop-filter: blur(8px) brightness(80%);
+	border: var(--clr-accent) solid 2px;
+	border-radius: 20px;
+	transition: .2s;
+
+	visibility: hidden;
+	opacity: 0;
+	transform: scale(.95);
+}
+
 .file-selected {
 	background-color: color-mix(in srgb, var(--clr-select) 75%, transparent);
 	box-shadow: color-mix(in srgb, var(--clr-select) 75%, black) 0 0 0 1px;
@@ -154,7 +175,7 @@
 
 .file-link:after {
 	position: absolute;
-	content: " ";
+	content: "";
 	mask-image: url(/mono/shortcut.svg);
 	mask-size: 100% 100%;
 	background-color: light-dark(rgb(192,192,192), rgb(64,64,64));
@@ -170,6 +191,16 @@
 	height: 8px;
 	left: 8px;
 	top: 18px;
+}
+
+.file-grid .file-loading-bar {
+	position: absolute;
+	top: 88px;
+	left: 24px;
+	width: calc(100% - 48px);
+	height: 4px;
+	border-radius: 2px;
+	background-color: light-dark(rgb(192,192,192), rgb(64,64,64));
 }
 
 .file-counter {

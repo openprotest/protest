@@ -19,9 +19,8 @@ using Protest.Http;
 namespace Protest.Tasks;
 
 internal static class Watchdog {
-    private const long WEEK_IN_TICKS        = 6_048_000_000_000L;
-    private const long FIVE_MINUTE_IN_TICKS = 3_000_000_000L;
-    private const long MINUTE_IN_TICKS      = 600_000_000L;
+    private const long WEEK_IN_TICKS        = TimeSpan.TicksPerDay * 7;
+    private const long FIVE_MINUTE_IN_TICKS = TimeSpan.TicksPerMinute * 5;
     private const int FIVE_MINUTE_IN_MILLI  = 300_000;
 
     public enum WatcherType : byte {
@@ -158,11 +157,11 @@ internal static class Watchdog {
                 if (!watcher.enable) continue;
 
                 long ticksElapsed = DateTime.UtcNow.Ticks - watcher.lastCheck;
-                if (watcher.interval * MINUTE_IN_TICKS - ticksElapsed < 10_000_000) { // < 1s
+                if (watcher.interval * TimeSpan.TicksPerMinute - ticksElapsed < 10_000_000) { // < 1s
                     _ = Task.Run(async () => await Watch(watcher, smtpProfiles));
                 }
                 else {
-                    int millisRemain = (int)((watcher.interval * MINUTE_IN_TICKS - ticksElapsed) / 10_000);
+                    int millisRemain = (int)((watcher.interval * TimeSpan.TicksPerMinute - ticksElapsed) / 10_000);
                     if (nextSleep > millisRemain) {
                         nextSleep = millisRemain;
                     }

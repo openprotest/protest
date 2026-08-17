@@ -87,7 +87,7 @@ internal static class Vnc {
         try {
             while (ws.State == WebSocketState.Open && !cts.IsCancelled()) {
 
-                byte[] message = await WebSocketHelper.WsReadBinary(ws, cts.Token);
+                byte[] message = await WebSocketHelper.WsReadBinary(ws, cts.Token, 8192);
                 if (message is null) {
                     return; //close frame received
                 }

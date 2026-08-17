@@ -1,5 +1,8 @@
 "use strict";
 class Sftp extends Window {
+
+	static UPLOAD_QUEUE = {};
+	
 	constructor(args) {
 		super(args);
 
@@ -47,9 +50,16 @@ class Sftp extends Window {
 		this.statusBox.className = "file-status-label";
 		this.statusBox.textContent = "Connecting...";
 
-		this.content.append(this.pathBox, this.viewBox, this.counterBox, this.statusBox);
+		this.dropArea = document.createElement("div");
+		this.dropArea.className = "file-drop-area";
+		this.dropArea.textContent = "Drop files here to upload...";
 
-		this.viewBox.onkeydown = event => this.View_onkeydown(event);
+		this.content.append(this.pathBox, this.viewBox, this.counterBox, this.statusBox, this.dropArea);
+
+		this.viewBox.onkeydown   = event => this.View_onkeydown(event);
+		this.viewBox.ondragover  = event => this.View_ondragover(event);
+		this.viewBox.ondragleave = event => this.View_ondragleave(event);
+		this.viewBox.ondrop      = event => this.View_ondrop(event);
 	}
 
 	ToggleView() {
@@ -196,7 +206,7 @@ class Sftp extends Window {
 				this.content.focus();
 			}
 			else if (json.action) {
-				this.ActionMux(json.action, json);
+				this.ActionMux(json);
 			}
 			else if (json.error) {
 				this.ConfirmBox(json.error, true, "mono/error.svg");
@@ -212,13 +222,25 @@ class Sftp extends Window {
 		super.Close();
 	}
 
-	ActionMux(action, json) {
-		switch (action) {
+	ActionMux(json) {
+		switch (json.action) {
 		case "list":
 			this.workingDirectory = json.workingDirectory;
 			this.UpdatePath(json.workingDirectory);
 			this.ListFiles(json.data);
 			break;
+
+		case "download":
+			const link = document.createElement("a");
+			link.download = json.name;
+			link.href = `sftp/download?token=${json.token}`;
+			link.click();
+			link.remove();
+			break;
+		
+		case "upload":
+			break;
+
 		}
 	}
 
@@ -262,12 +284,20 @@ class Sftp extends Window {
 		this.counterBox.textContent = files.length;
 
 		for (let i=0; i<files.length; i++) {
-			const element = this.CreateFile(files[i]);
+			const element = this.CreateFileElement(files[i]);
 			this.viewBox.appendChild(element);
+		}
+
+		if (this.workingDirectory in Sftp.UPLOAD_QUEUE) {
+			const queue = Sftp.UPLOAD_QUEUE[this.workingDirectory];
+			for (let i=0; i<queue.length; i++) {
+				const element = this.CreateFileElement(queue[i], true);
+				this.viewBox.appendChild(element);
+			}
 		}
 	}
 
-	CreateFile(file) {
+	CreateFileElement(file, inQueue=false) {
 		const container = document.createElement("div");
 		container.className = file.isDir ? "file-dir" : "file-file";
 
@@ -307,6 +337,14 @@ class Sftp extends Window {
 			container.classList.add("file-link");
 		}
 
+		if (inQueue) {
+			container.style.animation = "task-icon-open .4s ease-in-out";
+			
+			const loadingBox = document.createElement("div");
+			loadingBox.className = "file-loading-bar";
+			container.appendChild(loadingBox);
+		}
+
 		container.onclick = event => this.File_onclick(event, file, container);
 		container.ondblclick = event => this.File_ondblclick(event, file);
 
@@ -342,21 +380,18 @@ class Sftp extends Window {
 		if (this.ws === null) return;
 		if (this.status !== "idle") return;
 
-		this.statusBox.style.visibility = "visible";
-
 		if (file.isDir) {
+			this.statusBox.style.visibility = "visible";
 			this.status = "listing";
 			this.statusBox.textContent = "Loading...";
 			this.ws.send(`list:${file.fullname}`);
 		}
 		else {
-			//TODO:
+			this.ws.send(`download:${file.fullname}`);
 		}
 	}
 
 	View_onkeydown(event) {
-		event.preventDefault();
-
 		switch(event.key) {
 		case "Backspace":
 			this.NavigateUp();
@@ -377,6 +412,8 @@ class Sftp extends Window {
 	}
 
 	ViewArrowNavigation(event) {
+		event.preventDefault();
+
 		const elements = Array.from(this.viewBox.childNodes);
 		if (elements.length === 0) return;
 
@@ -411,6 +448,48 @@ class Sftp extends Window {
 		if (index !== lastIndex && elements[index]) {
 			this.Select(elements[index]);
 			this.selectedElement.scrollIntoView({block: "nearest"});
+		}
+	}
+
+	View_ondragover(event) {
+		this.dropArea.style.visibility = "visible";
+		this.dropArea.style.opacity = "1";
+		this.dropArea.style.transform = "none";
+		return false;
+	}
+
+	View_ondragleave(event) {
+		this.dropArea.style.visibility = "hidden";
+		this.dropArea.style.opacity = "0";
+		this.dropArea.style.transform = "scale(.96)";
+	}
+
+	async View_ondrop(event) {
+		event.preventDefault();
+
+		this.dropArea.style.visibility = "hidden";
+		this.dropArea.style.opacity = "0";
+		this.dropArea.style.transform = "scale(.96)";
+
+		const files = event.dataTransfer.files;
+		for (let i=0; i<files.length; i++) {
+			if (!(this.workingDirectory in Sftp.UPLOAD_QUEUE)) {
+				Sftp.UPLOAD_QUEUE[this.workingDirectory] = [];
+			}
+
+			Sftp.UPLOAD_QUEUE[this.workingDirectory].push(files[i]);
+
+			const element = this.CreateFileElement({
+				name     : files[i].name,
+				fullname : `${this.workingDirectory}/${files[i].name}`,
+				size     : files[i].size,
+				isFile   : true,
+				isDir    : false,
+				isLink   : false,
+				modified : files[i].lastModified
+			}, true);
+
+			this.viewBox.appendChild(element);
 		}
 	}
 }

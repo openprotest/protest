@@ -13,11 +13,10 @@ using OtpNet;
 namespace Protest.Http;
 
 internal static class Auth {
-    private const long HOUR = 36_000_000_000L;
-    private const long SESSION_TIMEOUT = 120L * HOUR; //5 days
-    private const long OTP_TOKEN_TIMEOUT = HOUR / 12;  //5 minutes
+    private const long SESSION_TIMEOUT = TimeSpan.TicksPerDay * 5;
+    private const long OTP_TOKEN_TIMEOUT = TimeSpan.TicksPerMinute * 5;
 
-    private const long RATE_LIMIT_TIME_WINDOW = HOUR / 6; //10 minutes
+    private const long RATE_LIMIT_TIME_WINDOW = TimeSpan.TicksPerMinute * 10;
     private const int MAX_REQUESTS_PER_TIME_WINDOW = 10;
     private static readonly ConcurrentDictionary<IPAddress, ConcurrentQueue<long>> rateLimitLog = new ConcurrentDictionary<IPAddress, ConcurrentQueue<long>>();
 
@@ -624,6 +623,7 @@ internal static class Auth {
 
             case "secure shell:write":
                 path.Add("/ws/ssh");
+                path.Add("/ws/sftp");
                 break;
 
             case "vnc:write":
@@ -997,7 +997,7 @@ internal static class Auth {
 
     internal static void UpdateSessionTtl(string sessionId, long ttl) {
         if (!sessions.TryGetValue(sessionId, out Session session)) return;
-        session.ttl = ttl * 24 * HOUR; //in ticks
+        session.ttl = ttl * 24 * TimeSpan.TicksPerHour; //in ticks
         sessions[sessionId] = session;
     }
 }
