@@ -18,7 +18,7 @@ class Watchdog extends Window {
 		this.deleteButton = this.AddToolbarButton("Delete", "mono/delete.svg?light");
 		this.notificationButton = this.AddToolbarButton("Notifications", "mono/notifications.svg?light");
 		this.AddToolbarSeparator();
-		this.reloadButton = this.AddToolbarButton("Reload", "mono/restart.svg?light");
+		this.reloadButton = this.AddToolbarButton("Reload", "mono/update.svg?light");
 		this.gotoButton = this.AddToolbarButton("Go to", "mono/skipback.svg?light");
 		this.zoomOutButton = this.AddToolbarButton("Zoom out", "mono/zoomout.svg?light");
 		this.zoomInButton = this.AddToolbarButton("Zoom in", "mono/zoomin.svg?light");

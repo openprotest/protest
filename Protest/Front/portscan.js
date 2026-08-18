@@ -165,7 +165,7 @@ class PortScan extends Console {
 		this.SetIcon("mono/portscan.svg");
 
 		this.SetupToolbar();
-		this.rescanButton = this.AddToolbarButton("Re-scan", "mono/restart.svg?light");
+		this.rescanButton = this.AddToolbarButton("Re-scan", "mono/update.svg?light");
 		this.clearButton = this.AddToolbarButton("Clear", "mono/wing.svg?light");
 		this.optionsButton = this.AddToolbarButton("Options", "mono/wrench.svg?light");
 		this.copyButton = this.AddToolbarButton("Copy", "mono/copy.svg?light");

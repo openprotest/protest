@@ -32,7 +32,7 @@ class Mdns extends Console {
 		this.SetIcon("mono/dns.svg");
 
 		this.SetupToolbar();
-		this.reloadButton = this.AddToolbarButton("Reload", "mono/restart.svg?light");
+		this.reloadButton = this.AddToolbarButton("Reload", "mono/update.svg?light");
 		this.clearButton = this.AddToolbarButton("Clear", "mono/wing.svg?light");
 		this.copyButton = this.AddToolbarButton("Copy", "mono/copy.svg?light");
 		this.AddToolbarSeparator();

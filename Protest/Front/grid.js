@@ -13,7 +13,7 @@ class Grid extends Window {
 		this.content.style.overflow = "hidden";
 
 		this.SetupToolbar();
-		const reloadButton = this.AddToolbarButton("Reload", "/mono/restart.svg?light");
+		const reloadButton = this.AddToolbarButton("Reload", "/mono/update.svg?light");
 		const saveButton = this.AddToolbarButton("Save modifications", "/mono/floppy.svg?light");
 		const removeFilterButton = this.AddToolbarButton("Remove all filters", "/mono/nofilter.svg?light");
 

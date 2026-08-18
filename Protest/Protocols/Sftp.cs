@@ -5,19 +5,17 @@ using System.Net.Sockets;
 using System.Net.WebSockets;
 using System.Text;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using Renci.SshNet;
 using Renci.SshNet.Common;
 using Renci.SshNet.Sftp;
 using Protest.Http;
-using System.IO;
 
 namespace Protest.Protocols;
 
 internal class Sftp {
-    const long TOKEN_LIFETIME = TimeSpan.TicksPerSecond * 30;
+    const long TOKEN_LIFETIME = TimeSpan.TicksPerHour * 2;
 
     private record SftpToken {
         public WebSocket ws;
@@ -29,8 +27,8 @@ internal class Sftp {
         public string password;
     }
 
-    private static ConcurrentDictionary<string, SftpToken> uploadTokens = new ConcurrentDictionary<string, SftpToken>();
-    private static ConcurrentDictionary<string, SftpToken>  downloadTokens = new ConcurrentDictionary<string, SftpToken>();
+    private static readonly ConcurrentDictionary<string, SftpToken> uploadTokens = new ConcurrentDictionary<string, SftpToken>();
+    private static readonly ConcurrentDictionary<string, SftpToken>  downloadTokens = new ConcurrentDictionary<string, SftpToken>();
 
     public static async Task WebSocketHandler(HttpListenerContext ctx) {
         if (!Auth.IsAuthenticatedAndAuthorized(ctx, ctx.Request.Url.AbsolutePath)) {
@@ -65,11 +63,13 @@ internal class Sftp {
             string target = String.Empty;
             string file = null;
             string password = String.Empty;
+            string workingDirectory = null;
             for (int i = 0; i < lines.Length; i++) {
-                if (lines[i].StartsWith("target=")) target   = lines[i][7..];
-                if (lines[i].StartsWith("file="))   file     = lines[i][5..];
-                if (lines[i].StartsWith("un="))     username = lines[i][3..];
-                if (lines[i].StartsWith("pw="))     password = lines[i][3..];
+                if (lines[i].StartsWith("target=")) target           = lines[i][7..];
+                if (lines[i].StartsWith("file="))   file             = lines[i][5..];
+                if (lines[i].StartsWith("un="))     username         = lines[i][3..];
+                if (lines[i].StartsWith("pw="))     password         = lines[i][3..];
+                if (lines[i].StartsWith("wd="))     workingDirectory = lines[i][3..];
             }
 
             string[] split = target.Split(':');
@@ -106,6 +106,10 @@ internal class Sftp {
             Logger.Action(origin, "Remote-access", $"Establish SFTP connection to {username}@{host}:{port}");
 
             await WebSocketHelper.WsWriteText(ws, "{\"connected\":true}"u8.ToArray());
+
+            if (!String.IsNullOrEmpty(workingDirectory)) {
+                sftp.ChangeDirectory(workingDirectory);
+            }
 
             await ListDirectory(ws, sftp, ".");
 
@@ -178,12 +182,12 @@ internal class Sftp {
         }
 
         if (DateTimeOffset.UtcNow.Ticks - token.timestamp > TOKEN_LIFETIME) {
-            return Data.CODE_INVALID_ARGUMENT.Array;
+            return Data.CODE_UNAUTHORIZED.Array;
         }
 
         string sessionId = ctx.Request.Cookies["sessionid"]?.Value;
         if (token.sessionId != sessionId) {
-            return Data.CODE_INVALID_ARGUMENT.Array;
+            return Data.CODE_UNAUTHORIZED.Array;
         }
 
         try {
@@ -196,17 +200,13 @@ internal class Sftp {
 
             sftp.DownloadFile(token.path, ctx.Response.OutputStream);
 
-            ctx.Response.OutputStream.Write(Encoding.UTF8.GetBytes("{}"));
-            ctx.Response.OutputStream.Close();
-            ctx.Response.Close();
-
             sftp.Disconnect();
         }
         catch (Exception ex) {
             Logger.Error(ex);
         }
 
-        return null;
+        return "{}"u8.ToArray();
     }
 
     public static byte[] UploadFileHandler(HttpListenerContext ctx, string origin) {
@@ -226,12 +226,12 @@ internal class Sftp {
         }
 
         if (DateTimeOffset.UtcNow.Ticks - token.timestamp > TOKEN_LIFETIME) {
-            return Data.CODE_INVALID_ARGUMENT.Array;
+            return Data.CODE_UNAUTHORIZED.Array;
         }
 
         string sessionId = ctx.Request.Cookies["sessionid"]?.Value;
         if (token.sessionId != sessionId) {
-            return Data.CODE_INVALID_ARGUMENT.Array;
+            return Data.CODE_UNAUTHORIZED.Array;
         }
 
         try {
@@ -265,10 +265,6 @@ internal class Sftp {
 
             sftp.UploadFile(fileStream, token.path);
 
-            ctx.Response.StatusCode = (int)HttpStatusCode.OK;
-            ctx.Response.OutputStream.Write(Encoding.UTF8.GetBytes("{}"));
-            ctx.Response.Close();
-
             if (token.ws.State == WebSocketState.Open) {
                 byte[] bytes = Encoding.UTF8.GetBytes($"{{\"action\":\"upload-status\",\"dir\":\"{directory}\",\"name\":\"{name}\",\"progress\":100}}");
                 token.ws.SendAsync(new ArraySegment<byte>(bytes), WebSocketMessageType.Text, true, CancellationToken.None);
@@ -281,7 +277,7 @@ internal class Sftp {
             return Encoding.UTF8.GetBytes($"{{\"error\":\"{Data.EscapeJsonText(ex.Message)}\"}}");
         }
 
-        return null;
+        return "{}"u8.ToArray();
     }
 
     private static async Task ListDirectory(WebSocket ws, SftpClient sftp, string directory) {

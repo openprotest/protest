@@ -142,7 +142,7 @@
 	position: absolute;
 	top: 6px;
 	left: 36px;
-	width: calc(100% - 40px);
+	width: calc(40% - 40px);
 	text-align: left;
 }
 
@@ -206,25 +206,37 @@
 
 .file-details {
 	pointer-events: none;
-	transition: .2s;
-	transition-delay: .4s;
 }
 
-.file-grid .file-details {
-	visibility: hidden;
+.file-grid > div > .file-details {
 	opacity: 0;
+	font-size: smaller;
+	padding: 4px;
+	border-radius: 4px;
+	text-align: center;
 
 	background-color: rgb(52,52,52);
 	color: var(--clr-light);
 }
 
-.file-details:hover > .file-details {
+.file-grid > div:hover .file-details {
 	opacity: 1;
+	transition: .2s;
+	transition-delay: .2s;
 }
 
-
 .file-list .file-details {
-	visibility: hidden;
+	position: absolute;
+	left: calc(40% + 40px);
+	top: 6px;
+	width: calc(60% - 80px);
+}
+.file-list .file-details > div {
+	display: inline-block;
+	width: 50%;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
 }
 
 .file-counter {
