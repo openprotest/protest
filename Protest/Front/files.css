@@ -57,6 +57,7 @@
 	font-weight: bold;
 	inset: 20px;
 	color: rgb(32,32,32);
+	text-shadow: rgba(255,255,255,.8) 0 0 4px;
 	background-color: var(--clr-transparent);
 	backdrop-filter: blur(8px) brightness(80%);
 	border: var(--clr-accent) solid 2px;
@@ -200,7 +201,30 @@
 	width: calc(100% - 48px);
 	height: 4px;
 	border-radius: 2px;
-	background-color: light-dark(rgb(192,192,192), rgb(64,64,64));
+	border: 1px solid var(--clr-accent);
+}
+
+.file-details {
+	pointer-events: none;
+	transition: .2s;
+	transition-delay: .4s;
+}
+
+.file-grid .file-details {
+	visibility: hidden;
+	opacity: 0;
+
+	background-color: rgb(52,52,52);
+	color: var(--clr-light);
+}
+
+.file-details:hover > .file-details {
+	opacity: 1;
+}
+
+
+.file-list .file-details {
+	visibility: hidden;
 }
 
 .file-counter {

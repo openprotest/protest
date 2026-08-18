@@ -198,15 +198,15 @@ class Sftp extends Window {
 			this.connectButton.disabled = false;
 		};
 
-		this.ws.onmessage = e=> {
-			let json = JSON.parse(e.data);
+		this.ws.onmessage = async event=> {
+			let json = JSON.parse(event.data);
 			if (json.connected) {
 				this.SetTitle(`SFTP - ${target}`);
 
 				this.content.focus();
 			}
 			else if (json.action) {
-				this.ActionMux(json);
+				await this.ActionMux(json);
 			}
 			else if (json.error) {
 				this.ConfirmBox(json.error, true, "mono/error.svg");
@@ -222,7 +222,7 @@ class Sftp extends Window {
 		super.Close();
 	}
 
-	ActionMux(json) {
+	async ActionMux(json) {
 		switch (json.action) {
 		case "list":
 			this.workingDirectory = json.workingDirectory;
@@ -230,17 +230,58 @@ class Sftp extends Window {
 			this.ListFiles(json.data);
 			break;
 
-		case "download":
+		case "download": {
 			const link = document.createElement("a");
 			link.download = json.name;
 			link.href = `sftp/download?token=${json.token}`;
 			link.click();
 			link.remove();
 			break;
+		}
 		
-		case "upload":
-			break;
+		case "upload": {
+			const entry = Sftp.UPLOAD_QUEUE[json.directory][json.name];
+			if (!entry) break;
 
+			const file = entry.file;
+			
+			const formData = new FormData();
+			formData.append("file", file);
+			
+			try {
+				const uploadResponse = await fetch(`sftp/upload?token=${json.token}`, {
+					method: "POST",
+					body: formData
+				});
+				if (uploadResponse.status !== 200) LOADER.HttpErrorHandler(uploadResponse.status);
+
+				const uploadJson = await uploadResponse.json();
+
+				if (uploadJson.error) {
+					this.viewBox.removeChild(entry.element);
+					delete Sftp.UPLOAD_QUEUE[json.directory][json.name]
+					throw(uploadJson.error);
+				}
+			}
+			catch (ex) {
+				this.ConfirmBox(ex, true, "mono/error.svg");
+			}
+			break;
+		}
+
+		case "upload-status": {
+			const entry = Sftp.UPLOAD_QUEUE[json.dir][json.name];
+			if (!entry) break;
+			
+			if (json.progress === 100) {
+				entry.element.removeChild(entry.progress);
+				delete Sftp.UPLOAD_QUEUE[json.dir][json.name]
+				break;
+			}
+			
+			entry.progress.style.background = `linear-gradient(to right, var(--clr-accent) ${json.progress}%, transparent ${json.progress}%)`
+			break;
+		}
 		}
 	}
 
@@ -290,9 +331,8 @@ class Sftp extends Window {
 
 		if (this.workingDirectory in Sftp.UPLOAD_QUEUE) {
 			const queue = Sftp.UPLOAD_QUEUE[this.workingDirectory];
-			for (let i=0; i<queue.length; i++) {
-				const element = this.CreateFileElement(queue[i], true);
-				this.viewBox.appendChild(element);
+			for (const key in queue) {
+				this.viewBox.appendChild(queue[key].element);
 			}
 		}
 	}
@@ -315,7 +355,18 @@ class Sftp extends Window {
 			container.classList.add("file-hidden");
 		}
 
-		container.append(iconBox, nameBox);
+		const detailsBox = document.createElement("div");
+		detailsBox.className = "file-details";
+
+		const size = document.createElement("div");
+		size.textContent = UI.SizeToString(file.size);
+
+		const date = document.createElement("div");
+		date.textContent = new Date(file.modified).toLocaleDateString(UI.regionalFormat);
+
+		detailsBox.append(size, date);
+
+		container.append(iconBox, nameBox, detailsBox);
 
 		const dotIndex = file.name.indexOf(".", 1);
 		if (dotIndex > 0 && !file.isDir) {
@@ -344,6 +395,8 @@ class Sftp extends Window {
 			loadingBox.className = "file-loading-bar";
 			container.appendChild(loadingBox);
 		}
+
+		
 
 		container.onclick = event => this.File_onclick(event, file, container);
 		container.ondblclick = event => this.File_ondblclick(event, file);
@@ -464,30 +517,43 @@ class Sftp extends Window {
 		this.dropArea.style.transform = "scale(.96)";
 	}
 
-	async View_ondrop(event) {
+	View_ondrop(event) {
 		event.preventDefault();
 
 		this.dropArea.style.visibility = "hidden";
 		this.dropArea.style.opacity = "0";
 		this.dropArea.style.transform = "scale(.96)";
 
-		const files = event.dataTransfer.files;
-		for (let i=0; i<files.length; i++) {
-			if (!(this.workingDirectory in Sftp.UPLOAD_QUEUE)) {
-				Sftp.UPLOAD_QUEUE[this.workingDirectory] = [];
-			}
+		if (this.ws === null) return;
+		if (this.status !== "idle") return;
 
-			Sftp.UPLOAD_QUEUE[this.workingDirectory].push(files[i]);
+		const items = event.dataTransfer.items;
+		for (let i=0; i<items.length; i++) {
+			if (items[i].webkitGetAsEntry().isDirectory) continue;
+
+			const file = items[i].getAsFile();
+
+			this.ws.send(`upload:${this.workingDirectory}/${file.name}`);
 
 			const element = this.CreateFileElement({
-				name     : files[i].name,
-				fullname : `${this.workingDirectory}/${files[i].name}`,
-				size     : files[i].size,
+				name     : file.name,
+				fullname : `${this.workingDirectory}/${file.name}`,
+				size     : file.size,
 				isFile   : true,
 				isDir    : false,
 				isLink   : false,
-				modified : files[i].lastModified
+				modified : file.lastModified,
 			}, true);
+
+			if (!(this.workingDirectory in Sftp.UPLOAD_QUEUE)) {
+				Sftp.UPLOAD_QUEUE[this.workingDirectory] = {};
+			}
+
+			Sftp.UPLOAD_QUEUE[this.workingDirectory][file.name] = {
+				file     : file,
+				element  : element,
+				progress : element.getElementsByClassName("file-loading-bar")[0]
+			};
 
 			this.viewBox.appendChild(element);
 		}

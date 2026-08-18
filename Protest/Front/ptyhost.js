@@ -1686,7 +1686,7 @@ class PtyHost extends Window {
 		const data = imageData.data;
 
 		for (let i=0; i<data.length; i+=4) {
-			data[i] = 28; data[i+1] = 28; data[i+2] = 28; data[i+3] = 255;
+			data[i] = 96; data[i+1] = 96; data[i+2] = 96; data[i+3] = 255;
 		}
 
 		const firstLine = Math.max(0, Math.floor(minimapOffset / 2));

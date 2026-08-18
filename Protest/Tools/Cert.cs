@@ -112,123 +112,30 @@ internal static class Cert {
 
     internal static byte[] Upload(HttpListenerContext ctx, string origin) {
         try {
-            HttpListenerRequest request = ctx.Request;
-
-            if (String.IsNullOrWhiteSpace(request.ContentType) ||
-                !request.ContentType.StartsWith("multipart/form-data", StringComparison.OrdinalIgnoreCase)) {
+            if (!Http.MultipartFileHelper.TryReadMultipartFile(ctx.Request, out string name, out byte[] fileContent)) {
                 return Data.CODE_INVALID_ARGUMENT.Array;
             }
 
-            string boundary = request.ContentType
-                .Split(';')
-                .Select(p => p.Trim())
-                .FirstOrDefault(p => p.StartsWith("boundary=", StringComparison.OrdinalIgnoreCase))
-                ?[9..];
+            name = name.ToLowerInvariant();
 
-            if (String.IsNullOrEmpty(boundary)) {
+            if (!name.EndsWith(".pfx", StringComparison.OrdinalIgnoreCase)) {
                 return Data.CODE_INVALID_ARGUMENT.Array;
             }
 
-            boundary = "--" + boundary;
+            name = name[..^4];
 
-            using MemoryStream ms = new MemoryStream();
-            request.InputStream.CopyTo(ms);
+            int counter = 2;
+            string newName = $"{name}.pfx";
 
-            byte[] raw = ms.ToArray();
-
-            byte[] boundaryBytes = Encoding.ASCII.GetBytes(boundary);
-            byte[] headerSeparator = Encoding.ASCII.GetBytes("\r\n\r\n");
-
-            DirectoryInfo directory = new DirectoryInfo(Data.DIR_CERTIFICATES);
-            if (!directory.Exists) {
-                directory.Create();
+            while (File.Exists(Path.Join(Data.DIR_CERTIFICATES, newName))) {
+                newName = $"{name} {counter++}.pfx";
             }
 
-            int position = 0;
+            Directory.CreateDirectory(Data.DIR_CERTIFICATES);
 
-            while (position < raw.Length) {
+            File.WriteAllBytes(Path.Join(Data.DIR_CERTIFICATES, newName), fileContent);
 
-                //find boundary
-                int boundaryIndex = IndexOf(raw, boundaryBytes, position);
-                if (boundaryIndex < 0) {
-                    break;
-                }
-
-                position = boundaryIndex + boundaryBytes.Length;
-
-                //end marker?
-                if (position + 1 < raw.Length &&
-                    raw[position] == '-' &&
-                    raw[position + 1] == '-') {
-                    break;
-                }
-
-                //skip CRLF
-                if (position + 1 < raw.Length &&
-                    raw[position] == '\r' &&
-                    raw[position + 1] == '\n') {
-                    position += 2;
-                }
-
-                //find header end
-                int headersEnd = IndexOf(raw, headerSeparator, position);
-                if (headersEnd < 0) {
-                    break;
-                }
-
-                string headers = Encoding.UTF8.GetString(raw, position, headersEnd - position);
-
-                Match filenameMatch = Regex.Match(headers, @"filename=""([^""]*)""");
-
-                position = headersEnd + headerSeparator.Length;
-
-                //find next boundary
-                byte[] nextBoundarySearch = Encoding.ASCII.GetBytes("\r\n" + boundary);
-
-                int nextBoundary = IndexOf(raw, nextBoundarySearch, position);
-                if (nextBoundary < 0) {
-                    break;
-                }
-
-                int fileLength = nextBoundary - position;
-
-                if (!filenameMatch.Success) {
-                    position = nextBoundary;
-                    continue;
-                }
-
-                string name = filenameMatch.Groups[1].Value;
-
-                if (String.IsNullOrWhiteSpace(name)) {
-                    position = nextBoundary;
-                    continue;
-                }
-
-                name = Path.GetFileName(name).ToLowerInvariant();
-
-                if (!name.EndsWith(".pfx", StringComparison.OrdinalIgnoreCase)) {
-                    position = nextBoundary;
-                    continue;
-                }
-
-                name = name[..^4];
-
-                int counter = 2;
-                string newName = $"{name}.pfx";
-
-                while (File.Exists(Path.Join(Data.DIR_CERTIFICATES, newName))) {
-                    newName = $"{name} {counter++}.pfx";
-                }
-
-                byte[] fileContent = new byte[fileLength];
-                Buffer.BlockCopy(raw, position, fileContent, 0, fileLength);
-
-                File.WriteAllBytes(Path.Join(Data.DIR_CERTIFICATES, newName), fileContent);
-
-                Logger.Action(origin, "Certificate", $"Upload certificate: {newName}");
-
-                break;
-            }
+            Logger.Action(origin, "Certificate", $"Upload certificate: {newName}");
 
             return List();
         }
