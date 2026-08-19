@@ -604,25 +604,6 @@ class DeviceView extends View {
 				snmpButton.onclick = ()=> new Snmp({target:host, community:"", profile:this.link["snmp profile"].v});
 			}
 
-			if (overwriteProtocol.http) { //http
-				const actionButton = this.CreateSideButton("mono/earth.svg", "HTTP");
-				actionButton.onclick = ()=> {
-					const link = document.createElement("a");
-					link.href = "http://" + host + ":" + overwriteProtocol.http;
-					link.target = "_blank";
-					link.click();
-				};
-			}
-			else if (ports.includes(80)) {
-				const actionButton = this.CreateSideButton("mono/earth.svg", "HTTP");
-				actionButton.onclick = ()=> {
-					const link = document.createElement("a");
-					link.href = "http://" + host;
-					link.target = "_blank";
-					link.click();
-				};
-			}
-
 			if (overwriteProtocol.https) { //https
 				const actionButton = this.CreateSideButton("mono/earth.svg", "HTTPS");
 				actionButton.onclick = ()=> {
@@ -637,6 +618,25 @@ class DeviceView extends View {
 				actionButton.onclick = ()=> {
 					const link = document.createElement("a");
 					link.href = "https://" + host;
+					link.target = "_blank";
+					link.click();
+				};
+			}
+
+			if (overwriteProtocol.http) { //http
+				const actionButton = this.CreateSideButton("mono/earth.svg", "HTTP");
+				actionButton.onclick = ()=> {
+					const link = document.createElement("a");
+					link.href = "http://" + host + ":" + overwriteProtocol.http;
+					link.target = "_blank";
+					link.click();
+				};
+			}
+			else if (ports.includes(80)) {
+				const actionButton = this.CreateSideButton("mono/earth.svg", "HTTP");
+				actionButton.onclick = ()=> {
+					const link = document.createElement("a");
+					link.href = "http://" + host;
 					link.target = "_blank";
 					link.click();
 				};

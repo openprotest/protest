@@ -1,12 +1,11 @@
 "use strict";
 class Sftp extends Window {
 
-	static UPLOAD_QUEUE = {};
-	
 	constructor(args) {
 		super(args);
 
 		this.args = args;
+		this.queue = {};
 
 		this.AddCssDependencies("files.css");
 
@@ -14,12 +13,15 @@ class Sftp extends Window {
 		this.SetIcon("mono/shared.svg");
 
 		this.status = "idle";
-		this.gridView = true;
 		this.selectedElement = null;
 
 		this.InitializeComponents();
 
 		this.defaultElement = this.viewBox;
+
+		if (this.args.listView) {
+			this.viewBox.className = "file-view file-list";
+		}
 
 		if (this.args.file) {
 			this.ConnectViaFile(this.args.host, this.args.file);
@@ -34,7 +36,8 @@ class Sftp extends Window {
 		this.connectButton = this.AddToolbarButton("Connect", "mono/connect.svg?light");
 		this.refreshButton = this.AddToolbarButton("Refresh", "mono/update.svg?light");
 		this.AddToolbarSeparator();
-		this.toogleView = this.AddToolbarButton("Toogle view", "mono/grid.svg?light");
+		this.deleteButton = this.AddToolbarButton("Delete", "mono/delete.svg?light");
+		this.toggleButton = this.AddToolbarButton("Toggle view", "mono/grid.svg?light");
 
 		this.pathBox = document.createElement("div");
 		this.pathBox.className = "win-toolbar file-path";
@@ -59,18 +62,13 @@ class Sftp extends Window {
 
 		this.connectButton.onclick = ()=> this.ConnectDialog(this.args.host, false);
 		this.refreshButton.onclick = ()=> this.Refresh();
-		this.toogleView.onclick = ()=> this.ToggleView();
+		this.toggleButton.onclick  = ()=> this.ToggleView();
+		this.deleteButton.onclick  = ()=> this.DeleteSelected();
 
 		this.viewBox.onkeydown   = event => this.View_onkeydown(event);
-		
 		this.content.ondragover  = event => this.Content_ondragover(event);
 		this.content.ondragleave = event => this.Content_ondragleave(event);
 		this.content.ondrop      = event => this.Content_ondrop(event);
-	}
-
-	ToggleView() {
-		this.gridView = !this.gridView;
-		this.viewBox.className = this.gridView ? "file-view file-grid" : "file-view file-list";
 	}
 
 	ConnectDialog(target, isNew=false) {
@@ -200,11 +198,12 @@ class Sftp extends Window {
 		};
 
 		this.ws.onerror = err=> {
-			console.log(err);
+			console.error(err);
 		};
 
 		this.ws.onclose = ()=> {
 			this.connectButton.disabled = false;
+			//this.ConnectDialog(this.args.host, false);
 		};
 
 		this.ws.onmessage = async event=> {
@@ -249,7 +248,7 @@ class Sftp extends Window {
 		}
 		
 		case "upload": {
-			const entry = Sftp.UPLOAD_QUEUE[json.directory][json.name];
+			const entry = this.queue[json.directory][json.name];
 			if (!entry) break;
 
 			const file = entry.file;
@@ -268,7 +267,7 @@ class Sftp extends Window {
 
 				if (uploadJson.error) {
 					this.viewBox.removeChild(entry.element);
-					delete Sftp.UPLOAD_QUEUE[json.directory][json.name]
+					delete this.queue[json.directory][json.name]
 					throw(uploadJson.error);
 				}
 			}
@@ -279,19 +278,55 @@ class Sftp extends Window {
 		}
 
 		case "upload-status": {
-			const entry = Sftp.UPLOAD_QUEUE[json.dir][json.name];
+			const entry = this.queue[json.dir][json.name];
 			if (!entry) break;
 			
 			if (json.progress === 100) {
 				entry.element.removeChild(entry.progress);
-				delete Sftp.UPLOAD_QUEUE[json.dir][json.name]
+				delete this.queue[json.dir][json.name]
 				break;
 			}
 			
 			entry.progress.style.background = `linear-gradient(to right, var(--clr-accent) ${json.progress}%, transparent ${json.progress}%)`
 			break;
 		}
+
+		case "rm": {
+			const name = json.path.split("/").pop();
+			const elements = Array.from(this.viewBox.childNodes);
+			const element = elements.find(o=> o.getAttribute("name") === name);
+			if (!element) break;
+			this.viewBox.removeChild(element);
+			this.selectedElement = null;
+			this.args.filename = null;
+			
+			break;
 		}
+
+		case "mkdir": {
+			const name = json.path.split("/").pop();
+			const dir = json.path.substring(0, json.path.length - name.length - 1);
+			//if (this.args.workingDirectory !== dir) break;
+
+			const element = this.CreateFileElement({
+				name     : name,
+				fullname : json.path,
+				size     : 0,
+				isFile   : false,
+				isDir    : true,
+				isLink   : false,
+				modified : new Date(),
+			}, false);
+
+			this.viewBox.appendChild(element);
+			break;
+		}
+		}
+	}
+
+	ToggleView() {
+		this.args.listView = !this.args.listView;
+		this.viewBox.className = this.args.listView ? "file-view file-list" : "file-view file-grid";
 	}
 
 	UpdatePath(workingDirectory) {
@@ -336,10 +371,15 @@ class Sftp extends Window {
 		for (let i=0; i<files.length; i++) {
 			const element = this.CreateFileElement(files[i]);
 			this.viewBox.appendChild(element);
+
+			if (this.args.filename && files[i].name === this.args.filename) {
+				this.Select(element);
+				element.scrollIntoView({block: "nearest"});
+			}
 		}
 
-		if (this.args.workingDirectory && (this.args.workingDirectory in Sftp.UPLOAD_QUEUE)) {
-			const queue = Sftp.UPLOAD_QUEUE[this.args.workingDirectory];
+		if (this.args.workingDirectory && (this.args.workingDirectory in this.queue)) {
+			const queue = this.queue[this.args.workingDirectory];
 			for (const key in queue) {
 				this.viewBox.appendChild(queue[key].element);
 			}
@@ -348,6 +388,7 @@ class Sftp extends Window {
 
 	CreateFileElement(file, inQueue=false) {
 		const container = document.createElement("div");
+		container.setAttribute("name", file.name);
 		container.className = file.isDir ? "file-dir" : "file-file";
 
 		const iconBox = document.createElement("div");
@@ -382,15 +423,15 @@ class Sftp extends Window {
 
 		const dotIndex = file.name.indexOf(".", 1);
 		if (dotIndex > 0 && !file.isDir) {
-			const extension = file.name.split(".").pop();
+			const extension = file.name.split(".").pop().toLowerCase();
 			const extensionBox = document.createElement("div");
 			extensionBox.classList = "file-extension";
-			extensionBox.textContent = extension.toUpperCase();
+			extensionBox.textContent = extension;
 			container.appendChild(extensionBox);
 
-			let r = (extension.charCodeAt(0) * 5) % 192 + 63;
-			let g = (extension.charCodeAt(1 % extension.length) * 5) % 192 + 63;
-			let b = (extension.charCodeAt(2 % extension.length) * 5) % 192 + 63;
+			let r = 63 + (extension.charCodeAt(0) * 5) % 192;
+			let g = 63 + (extension.charCodeAt(1 % extension.length) * 5) % 192;
+			let b = 63 + (extension.charCodeAt(2 % extension.length) * 5) % 192;
 
 			if (r*.3 + g*.59 + b*.11 < 112) extensionBox.style.color = "#ddd";
 			extensionBox.style.backgroundColor = `rgb(${r},${g},${b})`;
@@ -421,6 +462,8 @@ class Sftp extends Window {
 
 		this.selectedElement = element;
 		this.selectedElement.classList.add("file-selected");
+
+		this.args.filename = element.getAttribute("name");
 	}
 
 	Refresh() {
@@ -441,11 +484,82 @@ class Sftp extends Window {
 		if (this.args.workingDirectory === "/") return;
 		if (!this.args.workingDirectory) return;
 
+		this.args.filename = this.args.workingDirectory.split("/").pop();
+
 		this.statusBox.style.visibility = "visible";
 
 		this.status = "listing";
 		this.statusBox.textContent = "Loading...";
 		this.ws.send(`list:${this.args.workingDirectory}/..`);
+	}
+
+	DeleteSelected() {
+		if (!this.args.filename) return;
+
+		this.ConfirmBox(`Are you sure you want to delete "${this.args.filename}"`, false, "/mono/delete.svg").addEventListener("click", ()=> {
+			if (this.ws === null) return;
+			if (this.status !== "idle") return;
+			if (!this.args.workingDirectory) return;
+
+			this.ws.send(`rm:${this.args.workingDirectory}/${this.args.filename}`);
+
+			this.viewBox.focus();
+		});
+	}
+
+	Upload(entry, directory) {
+		if (entry.isFile) {
+			entry.file(file => this.UploadFile(file, directory));
+			return;
+		}
+
+		if (entry.isDirectory) {
+			const path = `${directory}/${entry.name}`;
+			this.ws.send(`mkdir:${path}`);
+
+			const reader = entry.createReader();
+			const readEntries = ()=> {
+				reader.readEntries(entries => {
+					if (entries.length === 0) return;
+
+					for (const child of entries) {
+						this.Upload(child, path);
+					}
+
+					readEntries();
+				});
+			};
+
+			readEntries();
+		}
+	}
+
+	UploadFile(file, directory) {
+		this.ws.send(`upload:${directory}/${file.name}`);
+
+		const element = this.CreateFileElement({
+			name: file.name,
+			fullname: `${directory}/${file.name}`,
+			size: file.size,
+			isFile: true,
+			isDir: false,
+			isLink: false,
+			modified: file.lastModified,
+		}, true);
+
+		if (!(directory in this.queue)) {
+			this.queue[directory] = {};
+		}
+
+		this.queue[directory][file.name] = {
+			file: file,
+			element: element,
+			progress: element.getElementsByClassName("file-loading-bar")[0]
+		};
+
+		if (this.args.workingDirectory === directory) {
+			this.viewBox.appendChild(element);
+		}
 	}
 
 	File_onclick(event, file, element) {
@@ -474,8 +588,12 @@ class Sftp extends Window {
 			break;
 
 		case "Enter":
-			if (this.selectedElement === null) return;
+			if (this.selectedElement === null) break;
 			this.selectedElement.ondblclick();
+			break;
+
+		case "Delete":
+			this.DeleteSelected();
 			break;
 
 		case "ArrowLeft":
@@ -528,6 +646,7 @@ class Sftp extends Window {
 	}
 
 	Content_ondragover(event) {
+		this.dropArea.style.transition = ".2s";
 		this.dropArea.style.visibility = "visible";
 		this.dropArea.style.opacity = "1";
 		this.dropArea.style.transform = "none";
@@ -552,34 +671,9 @@ class Sftp extends Window {
 
 		const items = event.dataTransfer.items;
 		for (let i=0; i<items.length; i++) {
-			if (!items[i].webkitGetAsEntry()) continue;
-			if (items[i].webkitGetAsEntry().isDirectory) continue;
-
-			const file = items[i].getAsFile();
-
-			this.ws.send(`upload:${this.args.workingDirectory}/${file.name}`);
-
-			const element = this.CreateFileElement({
-				name     : file.name,
-				fullname : `${this.args.workingDirectory}/${file.name}`,
-				size     : file.size,
-				isFile   : true,
-				isDir    : false,
-				isLink   : false,
-				modified : file.lastModified,
-			}, true);
-
-			if (!(this.args.workingDirectory in Sftp.UPLOAD_QUEUE)) {
-				Sftp.UPLOAD_QUEUE[this.args.workingDirectory] = {};
-			}
-
-			Sftp.UPLOAD_QUEUE[this.args.workingDirectory][file.name] = {
-				file     : file,
-				element  : element,
-				progress : element.getElementsByClassName("file-loading-bar")[0]
-			};
-
-			this.viewBox.appendChild(element);
+			const entry = items[i].webkitGetAsEntry();
+			if (!entry) continue;
+			this.Upload(entry, this.args.workingDirectory);
 		}
 	}
 }

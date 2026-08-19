@@ -62,7 +62,6 @@
 	backdrop-filter: blur(8px) brightness(80%);
 	border: var(--clr-accent) solid 2px;
 	border-radius: 20px;
-	transition: .2s;
 
 	visibility: hidden;
 	opacity: 0;
@@ -150,6 +149,7 @@
 	position: absolute;
 	color: var(--clr-dark);
 	text-align: center;
+	text-transform: uppercase;
 	box-shadow: rgb(64,64,64) -1px 1px 1px;
 	overflow: hidden;
 	text-overflow: ellipsis;
@@ -209,20 +209,22 @@
 }
 
 .file-grid > div > .file-details {
-	opacity: 0;
+	position: absolute;
+	z-index: 1;
 	font-size: smaller;
-	padding: 4px;
+	padding: 2px;
 	border-radius: 4px;
 	text-align: center;
-
+	border: 1px solid var(--clr-light);
 	background-color: rgb(52,52,52);
 	color: var(--clr-light);
+	opacity: 0;
 }
 
 .file-grid > div:hover .file-details {
 	opacity: 1;
 	transition: .2s;
-	transition-delay: .2s;
+	transition-delay: .4s;
 }
 
 .file-list .file-details {

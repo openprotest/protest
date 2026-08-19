@@ -15,7 +15,7 @@ using Protest.Http;
 namespace Protest.Protocols;
 
 internal class Sftp {
-    const long TOKEN_LIFETIME = TimeSpan.TicksPerHour * 2;
+    const long TOKEN_LIFETIME = TimeSpan.TicksPerMinute * 5;
 
     private record SftpToken {
         public WebSocket ws;
@@ -131,7 +131,8 @@ internal class Sftp {
 
                 switch (action) {
                 case "list"     : await ListDirectory(ws, sftp, arg); break;
-                case "remove"   : await Remove(ws, sftp, arg); break;
+                case "mkdir"    : await MakeDirectory(ws, sftp, arg); break;
+                case "rm"   : await Remove(ws, sftp, arg); break;
                 case "download" : await DownloadFilePrep(ws, sftp, sessionId, target, username, password, arg); break;
                 case "upload"   : await UploadFilePrep(ws, sftp, sessionId, target, username, password, arg); break;
                 }
@@ -140,12 +141,12 @@ internal class Sftp {
             sftp.Disconnect();
         }
         catch (SshAuthenticationException ex) {
-            await WebSocketHelper.WsWriteText(ws, $"{{\"error\":\"{ex.Message}\"}}");
+            await WebSocketHelper.WsWriteText(ws, $"{{\"error\":\"{Data.EscapeJsonText(ex.Message)}\"}}");
             await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
             return;
         }
         catch (SocketException ex) {
-            await WebSocketHelper.WsWriteText(ws, $"{{\"error\":\"{ex.Message}\"}}");
+            await WebSocketHelper.WsWriteText(ws, $"{{\"error\":\"{Data.EscapeJsonText(ex.Message)}\"}}");
             await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
             return;
         }
@@ -186,7 +187,7 @@ internal class Sftp {
         }
 
         string sessionId = ctx.Request.Cookies["sessionid"]?.Value;
-        if (token.sessionId != sessionId) {
+        if (origin != "loopback" && (String.IsNullOrEmpty(sessionId) || !String.Equals(token.sessionId, sessionId, StringComparison.Ordinal))) {
             return Data.CODE_UNAUTHORIZED.Array;
         }
 
@@ -199,7 +200,6 @@ internal class Sftp {
             ctx.Response.ContentType = "application/octet-stream";
 
             sftp.DownloadFile(token.path, ctx.Response.OutputStream);
-
             sftp.Disconnect();
         }
         catch (Exception ex) {
@@ -230,7 +230,7 @@ internal class Sftp {
         }
 
         string sessionId = ctx.Request.Cookies["sessionid"]?.Value;
-        if (token.sessionId != sessionId) {
+        if (origin != "loopback" && (String.IsNullOrEmpty(sessionId) || !String.Equals(token.sessionId, sessionId, StringComparison.Ordinal))) {
             return Data.CODE_UNAUTHORIZED.Array;
         }
 
@@ -257,7 +257,7 @@ internal class Sftp {
             using SftpClient sftp = new SftpClient(token.remoteEndpoint, token.username, token.password);
             sftp.Connect();
 
-            Action<int> callback = async value =>{
+            Action<int> callback = async value => {
                 await WebSocketHelper.WsWriteText(token.ws, $"{{\"action\":\"upload-status\",\"dir\":\"{directory}\",\"name\":\"{name}\",\"progress\":{value}}}");
             };
 
@@ -305,13 +305,34 @@ internal class Sftp {
             await ws.SendAsync(new ArraySegment<byte>(bytes), WebSocketMessageType.Text, true, CancellationToken.None);
         }
         catch (Exception ex) {
-            await WebSocketHelper.WsWriteText(ws, $"{{\"error\":\"{ex.Message}\"}}");
+            await WebSocketHelper.WsWriteText(ws, $"{{\"error\":\"{Data.EscapeJsonText(ex.Message)}\"}}");
             return;
         }
     }
 
-    private static async Task Remove(WebSocket ws, SftpClient sftp, string path) {
+    private static async Task Remove(WebSocket ws, SftpClient sftp, string args) {
+        try {
+            sftp.Delete(args);
+            await WebSocketHelper.WsWriteText(ws, $"{{\"action\":\"rm\",\"path\":\"{Data.EscapeJsonText(args)}\"}}");
+        }
+        catch (Exception ex) {
+            await WebSocketHelper.WsWriteText(ws, $"{{\"error\":\"{Data.EscapeJsonText(ex.Message)}\"}}");
+        }
+    }
 
+    private static async Task MakeDirectory(WebSocket ws, SftpClient sftp, string args) {
+        try {
+            if (sftp.Exists(args)) {
+                await WebSocketHelper.WsWriteText(ws, $"{{\"error\":\"Already exists\"}}");
+                return;
+            }
+
+            sftp.CreateDirectory(args);
+            await WebSocketHelper.WsWriteText(ws, $"{{\"action\":\"mkdir\",\"path\":\"{Data.EscapeJsonText(args)}\"}}");
+        }
+        catch (Exception ex) {
+            await WebSocketHelper.WsWriteText(ws, $"{{\"error\":\"{Data.EscapeJsonText(ex.Message)}\"}}");
+        }
     }
 
     private static void CleanupTokens() {
