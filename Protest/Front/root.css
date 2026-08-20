@@ -2,25 +2,25 @@
 	font-family: "Open Sans";
 	src: local("Open Sans"), url("fonts/opensans300.ttf") format("truetype");
 	font-weight: 300;
-	font-display: optional;
+	font-display:swap;
 }
 @font-face { /*normal*/
 	font-family: "Open Sans";
 	src: local("Open Sans"), url("fonts/opensans400.ttf") format("truetype");
 	font-weight: 400;
-	font-display: optional;
+	font-display: swap;
 }
 @font-face { /*semi-bold*/
 	font-family: "Open Sans";
 	src: local("Open Sans"), url("fonts/opensans600.ttf") format("truetype");
 	font-weight: 600;
-	font-display: optional;
+	font-display: swap;
 }
 @font-face { /*bold*/
 	font-family: "Open Sans";
 	src: local("Open Sans"), url("fonts/opensans700.ttf") format("truetype");
 	font-weight: 700;
-	font-display: optional;
+	font-display: swap;
 }
 
 @media (prefers-reduced-motion: no-preference) {

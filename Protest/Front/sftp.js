@@ -5,7 +5,7 @@ class Sftp extends Window {
 		super(args);
 
 		this.args = args;
-		this.queue = {};
+		this.queue = Object.create(null);
 
 		this.AddCssDependencies("files.css");
 
@@ -198,7 +198,7 @@ class Sftp extends Window {
 		};
 
 		this.ws.onerror = err=> {
-			console.error(err);
+			console.log(err);
 		};
 
 		this.ws.onclose = ()=> {
@@ -246,16 +246,16 @@ class Sftp extends Window {
 			link.remove();
 			break;
 		}
-		
+
 		case "upload": {
 			const entry = this.queue[json.directory][json.name];
 			if (!entry) break;
 
 			const file = entry.file;
-			
+
 			const formData = new FormData();
 			formData.append("file", file);
-			
+
 			try {
 				const uploadResponse = await fetch(`sftp/upload?token=${json.token}`, {
 					method: "POST",
@@ -280,26 +280,26 @@ class Sftp extends Window {
 		case "upload-status": {
 			const entry = this.queue[json.dir][json.name];
 			if (!entry) break;
-			
+
 			if (json.progress === 100) {
 				entry.element.removeChild(entry.progress);
 				delete this.queue[json.dir][json.name]
 				break;
 			}
-			
+
 			entry.progress.style.background = `linear-gradient(to right, var(--clr-accent) ${json.progress}%, transparent ${json.progress}%)`
 			break;
 		}
 
 		case "rm": {
 			const name = json.path.split("/").pop();
-			const elements = Array.from(this.viewBox.childNodes);
+			const elements = [...this.viewBox.childNodes];
 			const element = elements.find(o=> o.getAttribute("name") === name);
 			if (!element) break;
 			this.viewBox.removeChild(element);
 			this.selectedElement = null;
 			this.args.filename = null;
-			
+
 			break;
 		}
 
@@ -327,6 +327,10 @@ class Sftp extends Window {
 	ToggleView() {
 		this.args.listView = !this.args.listView;
 		this.viewBox.className = this.args.listView ? "file-view file-list" : "file-view file-grid";
+
+		if (this.selectedElement) {
+			this.selectedElement.scrollIntoView({block: "nearest"});
+		}
 	}
 
 	UpdatePath(workingDirectory) {
@@ -352,7 +356,7 @@ class Sftp extends Window {
 			node.onclick = ()=> {
 				this.status = "listing";
 				this.statusBox.textContent = "Loading...";
-				
+
 				let path = "";
 				for (let j=0; j<=i; j++) {
 					path += split[j] + "/";
@@ -386,7 +390,7 @@ class Sftp extends Window {
 		}
 	}
 
-	CreateFileElement(file, inQueue=false) {
+	CreateFileElement(file, isQueued=false) {
 		const container = document.createElement("div");
 		container.setAttribute("name", file.name);
 		container.className = file.isDir ? "file-dir" : "file-file";
@@ -396,7 +400,7 @@ class Sftp extends Window {
 
 		const iconInnerBox = document.createElement("div");
 		iconBox.appendChild(iconInnerBox);
- 
+
 		const nameBox = document.createElement("div");
 		nameBox.textContent = file.name;
 		nameBox.classList = "file-name";
@@ -441,9 +445,9 @@ class Sftp extends Window {
 			container.classList.add("file-link");
 		}
 
-		if (inQueue) {
+		if (isQueued) {
 			container.style.animation = "task-icon-open .4s ease-in-out";
-			
+
 			const loadingBox = document.createElement("div");
 			loadingBox.className = "file-loading-bar";
 			container.appendChild(loadingBox);
@@ -548,7 +552,7 @@ class Sftp extends Window {
 		}, true);
 
 		if (!(directory in this.queue)) {
-			this.queue[directory] = {};
+			this.queue[directory] = Object.create(null);
 		}
 
 		this.queue[directory][file.name] = {
@@ -602,13 +606,25 @@ class Sftp extends Window {
 		case "ArrowDown":
 			this.ArrowNavigation(event);
 			break;
+
+		default:
+			if (event.key.length !== 1) break;
+			const key = event.key.toLowerCase();
+			const candidates = [...this.viewBox.children].filter(o=> o.getAttribute("name")?.toLowerCase().startsWith(key));
+
+			if (candidates.length === 0) break;
+			const index = (candidates.indexOf(this.selectedElement) + 1) % candidates.length;
+			const element = candidates[index];
+			element.onclick();
+			element.scrollIntoView({block: "nearest"});
+			break;
 		}
 	}
 
 	ArrowNavigation(event) {
 		event.preventDefault();
 
-		const elements = Array.from(this.viewBox.childNodes);
+		const elements = [...this.viewBox.childNodes];
 		if (elements.length === 0) return;
 
 		if (this.selectedElement === null) {

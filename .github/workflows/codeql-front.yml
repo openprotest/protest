@@ -32,9 +32,6 @@ jobs:
       uses: github/codeql-action/init@v4
       with:
         languages: ${{ matrix.language }}
-        config: |
-          paths-ignore:
-            - Protest/Front/novnc
 
     - name: Autobuild
       uses: github/codeql-action/autobuild@v4

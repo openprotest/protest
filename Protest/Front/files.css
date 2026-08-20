@@ -210,12 +210,14 @@
 
 .file-grid > div > .file-details {
 	position: absolute;
+	left: 2px;
+	right: 2px;
 	z-index: 1;
 	font-size: smaller;
 	padding: 2px;
 	border-radius: 4px;
 	text-align: center;
-	border: 1px solid var(--clr-light);
+	box-shadow: rgba(192,192,192,.8) 0 0 1px inset;
 	background-color: rgb(52,52,52);
 	color: var(--clr-light);
 	opacity: 0;
