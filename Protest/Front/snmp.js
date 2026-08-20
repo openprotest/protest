@@ -1,7 +1,7 @@
 "use strict";
 class Snmp extends Window {
 
-	static OID_CACHE = {};
+	static OID_CACHE = Object.create(null);
 
 	static OID_MAP_1_0_8802 = [1,16,17];
 
@@ -599,7 +599,7 @@ class Snmp extends Window {
 			}
 
 			const rootOid = sortedOids[0].split(".")[0];
-			const containerMap = {};
+			const containerMap = Object.create(null);
 
 			const root = CreateOidTreeContainer(rootOid);
 			root.hLine.style.display = "none";
@@ -903,7 +903,7 @@ class Snmp extends Window {
 	}
 
 	PlotTree(array) {
-		this.containerMap = {};
+		this.containerMap = Object.create(null);
 
 		const parts = array.map(o=> o[0].split(".").map(p=> parseInt(p)));
 		const commonPrefix = this.ComputeCommonPrefix(parts);

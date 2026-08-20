@@ -28,13 +28,13 @@ class Chat extends Window {
 		this.content.classList.add("chat-window");
 
 		this.lastBubble = null;
-		this.outdoing = {};
+		this.outdoing = Object.create(null);
 
 		this.peerId = UI.GenerateUuid();
 
 		this.userStream = null;
 		this.displayStreams = [];
-		this.peers = {};
+		this.peers = Object.create(null);
 
 		this.remoteStreamOrder = [];
 		this.primaryStreamKey = null;
@@ -187,7 +187,7 @@ class Chat extends Window {
 		for (const peerId in this.peers) {
 			this.RemovePeer(peerId);
 		}
-		this.peers = {};
+		this.peers = Object.create(null);
 
 		if (this.userStream) {
 			try {

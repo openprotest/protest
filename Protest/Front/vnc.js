@@ -7,7 +7,7 @@ class Vnc extends Window {
 	constructor(args) {
 		super();
 
-		this.args = args ?? {};
+		this.args = args ?? Object.create(null);
 
 		this.AddCssDependencies("vnc.css");
 
@@ -116,7 +116,7 @@ class Vnc extends Window {
 		this.statusBox.textContent = "Connecting...";
 		this.content.appendChild(this.statusBox);
 
-		const options = {};
+		const options = Object.create(null);
 		if (this.password) {
 			options.credentials = { password: this.password };
 		}

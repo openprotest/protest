@@ -69,9 +69,9 @@ class KeyboardTester extends Window {
 		const rows = [];
 		const rows2 = [];
 		const rows3 = [];
-		this.keyText = {};
-		this.keyElements = {};
-		this.led = {};
+		this.keyText = Object.create(null);
+		this.keyElements = Object.create(null);
+		this.led = Object.create(null);
 
 		for (let i = 0; i < 6; i++) {
 			const row = document.createElement("div");

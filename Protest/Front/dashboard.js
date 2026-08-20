@@ -3,7 +3,7 @@ class Dashboard extends Window {
 	constructor(args) {
 		super(args);
 
-		this.args = args ?? {};
+		this.args = args ?? Object.create(null);
 
 		this.SetTitle("Dashboard");
 		this.SetIcon("mono/dashboard.svg");

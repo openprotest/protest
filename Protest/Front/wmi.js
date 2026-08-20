@@ -10,7 +10,7 @@ class Wmi extends Window {
 		this.SetTitle("WMI client");
 		this.SetIcon("mono/wmi.svg");
 
-		this.wmiClasses = {};
+		this.wmiClasses = Object.create(null);
 		this.GetWmiClasses();
 
 		this.content.style.overflow = "hidden";

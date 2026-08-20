@@ -383,7 +383,7 @@ class DeviceView extends View {
 			host = this.link.hostname.v.split(";")[0].trim();
 		}
 
-		const overwriteProtocol = {};
+		const overwriteProtocol = Object.create(null);
 		if (".overwriteprotocol" in this.link) {
 			this.link[".overwriteprotocol"].v.split(";").map(o=> o.trim()).forEach(o=> {
 				let split = o.split(":");
@@ -1246,7 +1246,7 @@ class DeviceView extends View {
 	BuildLegend(type, list, legend) {
 		legend.textContent = "";
 
-		let hashmap = {};
+		let hashmap = Object.create(null);
 		for (let i=0; i<list.length; i++) {
 			if (list[i] in hashmap) continue;
 			hashmap[list[i]] = true;
@@ -1334,7 +1334,7 @@ class DeviceView extends View {
 	BuildUntaggedLegend(list, legend, frameList) {
 		legend.textContent = "";
 
-		let hashmap = {};
+		let hashmap = Object.create(null);
 		for (let i=0; i<list.length; i++) {
 			if (list[i] === 0) continue;
 			hashmap[list[i]] = true;
@@ -1369,7 +1369,7 @@ class DeviceView extends View {
 	BuildTaggedLegend(list, legend, frameList) {
 		legend.textContent = "";
 
-		let hashmap = {};
+		let hashmap = Object.create(null);
 		for (let i=0; i<list.length; i++) {
 			if (list[i] === "") continue;
 			const split = list[i].split(",").map(o=>o.trim()).map(o=>parseInt(o));
@@ -2457,7 +2457,7 @@ class DeviceView extends View {
 		const saveButton = super.Edit(isNew);
 
 		saveButton.addEventListener("click", async ()=> {
-			let obj = {};
+			let obj = Object.create(null);
 			for (let i=0; i<this.attributes.childNodes.length; i++) {
 				if (this.attributes.childNodes[i].childNodes.length < 3) continue;
 				let name = this.attributes.childNodes[i].childNodes[0].value.toLowerCase();
@@ -3217,7 +3217,7 @@ class DeviceView extends View {
 				});
 			}
 
-			let obj = {};
+			let obj = Object.create(null);
 			for (let i=0; i<this.attributes.childNodes.length; i++) {
 				if (this.attributes.childNodes[i].childNodes.length < 3) continue;
 				let name = this.attributes.childNodes[i].childNodes[0].value;
@@ -3253,7 +3253,7 @@ class DeviceView extends View {
 		if (list.length === 0) return {rows:1, columns:4};
 
 		const levels = [];
-		const levelCount = {};
+		const levelCount = Object.create(null);
 		for (let i=0; i<list.length; i++) {
 			const level = list[i].number ? list[i].number.split("/").length : 0;
 			levels.push(level);

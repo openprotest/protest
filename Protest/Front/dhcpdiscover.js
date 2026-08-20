@@ -443,7 +443,7 @@ class DhcpDiscover extends Window {
 		dialog.innerBox.style.margin = "20px";
 		dialog.innerBox.style.overflowY = "auto";
 
-		const options = {};
+		const options = Object.create(null);
 		for (let i=1; i<255; i++) {
 			const element = document.createElement("div");
 			element.style.paddingBottom = "4px";

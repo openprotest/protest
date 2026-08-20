@@ -18,8 +18,8 @@ class ReverseProxy extends List {
 		this.ws = null;
 
 		this.graphCount = 0;
-		this.history = {};
-		this.clientHistory = {};
+		this.history = Object.create(null);
+		this.clientHistory = Object.create(null);
 		this.maximum = 2560;
 
 		this.InitializeComponents();
@@ -516,8 +516,8 @@ class ReverseProxy extends List {
 		}
 
 		if (this._tempSelect !== guid) {
-			this.clients = {};
-			this.clientHistory = {};
+			this.clients = Object.create(null);
+			this.clientHistory = Object.create(null);
 			this.clientsList.textContent = "";
 			this._tempSelect = guid;
 		}
@@ -590,7 +590,7 @@ class ReverseProxy extends List {
 		}
 		catch (ex) {
 			this.ConfirmBox(ex, true, "mono/error.svg");
-			return {data:{}, length:0};
+			return {data:Object.create(null), length:0};
 		}
 	}
 
@@ -603,7 +603,7 @@ class ReverseProxy extends List {
 			if (json.error) throw(json.error);
 
 			let length = 0;
-			let data = {};
+			let data = Object.create(null);
 
 			for (const key in json.data) {
 				length++;
@@ -636,7 +636,7 @@ class ReverseProxy extends List {
 		}
 		catch (ex) {
 			this.ConfirmBox(ex, true, "mono/error.svg");
-			return {data:{}, length:0};
+			return {data:Object.create(null), length:0};
 		}
 	}
 

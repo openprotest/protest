@@ -7,9 +7,9 @@ class TraceRoute extends Console {
 
 		this.AddCssDependencies("tools.css");
 
-		this.hashtable = {}; //contains all the ping elements
-		this.pending = [];   //pending request
-		this.ws = null;      //websocket
+		this.hashtable = Object.create(null); //contains all the ping elements
+		this.pending = [];                    //pending request
+		this.ws = null;                       //websocket
 
 		this.taskSpinner = document.createElement("div");
 		this.taskSpinner.className = "task-spinner";
@@ -35,7 +35,7 @@ class TraceRoute extends Console {
 			if (okButton) okButton.addEventListener("click", ()=> {
 				this.args.entries = [];
 				this.list.textContent = "";
-				this.hashtable = {};
+				this.hashtable = Object.create(null);
 				this.pending = [];
 			});
 		});
@@ -119,8 +119,6 @@ class TraceRoute extends Console {
 	}
 
 	Add(hostname) {
-		if (hostname === "__proto__") return;
-
 		if (hostname in this.hashtable) {
 			this.list.appendChild(this.hashtable[hostname].element);
 			return;
@@ -197,8 +195,6 @@ class TraceRoute extends Console {
 	}
 
 	Remove(hostname) {
-		if (hostname === "__proto__") return;
-
 		if (!(hostname in this.hashtable)) return;
 		this.list.removeChild(this.hashtable[hostname].element);
 		delete this.hashtable[hostname];

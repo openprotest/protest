@@ -38,7 +38,7 @@ class Topology extends Window {
 		800000: "hsl(300,100%,56%)",
 	};
 
-	static VENDOR_CACHE = {};
+	static VENDOR_CACHE = Object.create(null);
 
 	static VIEW_PADDING_X = 50;
 	static VIEW_PADDING_Y = 50;
@@ -65,8 +65,8 @@ class Topology extends Window {
 		this.selectedInterface = null;
 
 		this.ws = null;
-		this.devices = {};
-		this.links = {};
+		this.devices = Object.create(null);
+		this.links = Object.create(null);
 
 		this.globalX = Topology.VIEW_PADDING_X;
 		this.globalY = Topology.VIEW_PADDING_Y;
@@ -319,8 +319,8 @@ class Topology extends Window {
 	}
 
 	Clear() {
-		this.devices = {};
-		this.links = {};
+		this.devices = Object.create(null);
+		this.links = Object.create(null);
 		this.workspace.textContent = "";
 		this.sidePane.textContent = "";
 
@@ -593,16 +593,12 @@ class Topology extends Window {
 			this.SortUnreachable();
 		};
 
-		const forbiddenKeys = ["__proto__", "constructor", "prototype"];
-
 		this.ws.onmessage = event=> {
 			const payload = event.data;
 			const json = JSON.parse(payload);
 
 			if (json.initial) {
 				for (let i=0; i<json.initial.length; i++) {
-					if (forbiddenKeys.includes(json.initial[i].file)) continue;
-
 					const element = this.CreateDeviceElement({
 						file: json.initial[i].file,
 						type: json.initial[i].type,
@@ -620,28 +616,28 @@ class Topology extends Window {
 
 				this.SortByLocation();
 			}
-			else if (json.retrieve && !forbiddenKeys.includes(json.retrieve)) {
+			else if (json.retrieve) {
 				const device = this.devices[json.retrieve];
 				if (device) {
 					device.element.spinner.style.visibility = "visible";
 					device.element.spinner.style.opacity = "1";
 				}
 			}
-			else if (json.nosnmp && !forbiddenKeys.includes(json.nosnmp)) {
+			else if (json.nosnmp) {
 				const device = this.devices[json.nosnmp];
 				if (device) {
 					device.nosnmp = true;
 					device.element.fill.style.fill = "var(--clr-error)";
 				}
 			}
-			else if (json.nolldp && !forbiddenKeys.includes(json.nolldp)) {
+			else if (json.nolldp) {
 				const device = this.devices[json.nolldp];
 				if (device) {
 					device.nolldp = true;
 					device.element.fill.style.fill = "var(--clr-orange)";
 				}
 			}
-			else if (json.lldp && !forbiddenKeys.includes(json.lldp.file)) {
+			else if (json.lldp) {
 				const device = this.devices[json.lldp.file];
 				if (device && typeof json.lldp === "object") {
 					device.lldp = json.lldp;
@@ -654,7 +650,7 @@ class Topology extends Window {
 					}
 				}
 			}
-			else if (json.dot1q && !forbiddenKeys.includes(json.dot1q.file)) {
+			else if (json.dot1q) {
 				const device = this.devices[json.dot1q.file];
 				device.dot1q = json.dot1q;
 
@@ -662,7 +658,7 @@ class Topology extends Window {
 					this.SelectDevice(json.dot1q.file);
 				}
 			}
-			else if (json.stp && !forbiddenKeys.includes(json.stp.file)) {
+			else if (json.stp) {
 				const device = this.devices[json.stp.file];
 				device.stp = json.stp;
 
@@ -697,23 +693,23 @@ class Topology extends Window {
 					device.element.root.appendChild(image);
 				}
 			}
-			else if (json.dot1tp && !forbiddenKeys.includes(json.dot1tp.file)) {
+			else if (json.dot1tp) {
 				const device = this.devices[json.dot1tp.file];
 				device.dot1tp = json.dot1tp;
 			}
-			else if (json.speed && !forbiddenKeys.includes(json.speed.file)) {
+			else if (json.speed) {
 				const device = this.devices[json.speed.file];
 				device.speed = json.speed;
 			}
-			else if (json.traffic && !forbiddenKeys.includes(json.traffic.file)) {
+			else if (json.traffice) {
 				const device = this.devices[json.traffic.file];
 				device.traffic = json.traffic;
 			}
-			else if (json.error && !forbiddenKeys.includes(json.error.file)) {
+			else if (json.errore) {
 				const device = this.devices[json.error.file];
 				device.error = json.error;
 			}
-			else if (json.over && !forbiddenKeys.includes(json.over)) {
+			else if (json.over) {
 				const device = this.devices[json.over];
 				device.element.spinner.style.visibility = "hidden";
 				device.element.spinner.style.opacity = "0";
@@ -769,7 +765,7 @@ class Topology extends Window {
 	}
 
 	SortByLocation() {
-		const groups = {};
+		const groups = Object.create(null);
 
 		for (const file in this.devices) {
 			const location = this.devices[file].initial.location?.toLowerCase().trim() ?? UI.GenerateUuid();
@@ -839,7 +835,7 @@ class Topology extends Window {
 
 			this.MoveDeviceElement(device.element, x, Topology.VIEW_PADDING_Y);
 
-			const level = {};
+			const level = Object.create(null);
 			for (const port in device.links) {
 				const link = this.links[device.links[port]];
 				if (link.isEndpoint) continue;
@@ -886,7 +882,7 @@ class Topology extends Window {
 					this.MoveDeviceElement(device.element, groups[i].x + x, y);
 					x += Topology.DEVICE_WIDTH + 50;
 
-					const nextLevel = {};
+					const nextLevel = Object.create(null);
 					for (const port in device.links) {
 						const link = this.links[device.links[port]];
 						if (link.isEndpoint) continue;
@@ -1319,7 +1315,7 @@ class Topology extends Window {
 		const ListVlans = ()=> {
 			listBox.textContent = "";
 
-			const vlanIds = {};
+			const vlanIds = Object.create(null);
 
 			for (const file in this.devices) {
 				const device = this.devices[file];
@@ -1835,7 +1831,7 @@ class Topology extends Window {
 
 				if (!("traffic" in device)) continue;
 
-				device.traffic.sum = {};
+				device.traffic.sum = Object.create(null);
 				device.traffic.max = 1;
 
 				if (isBytes) {
@@ -2071,7 +2067,7 @@ class Topology extends Window {
 
 				if (!("error" in device)) continue;
 
-				device.error.sum = {};
+				device.error.sum = Object.create(null);
 				device.error.max = 1;
 
 				for (const port in device.error.in) {
@@ -2170,7 +2166,7 @@ class Topology extends Window {
 	}
 
 	ComputeLldpNeighbors(device) {
-		const unmanagedSwitches = {};
+		const unmanagedSwitches = Object.create(null);
 
 		for (const port in device.lldp.remotePortId) {
 			const remotePortInfo = device.lldp.remotePortId[port];
@@ -2212,7 +2208,7 @@ class Topology extends Window {
 	ComputeLldpMultipleEntries(device, port, unmanagedSwitches) {
 		const remotePortInfo   = device.lldp.remotePortId[port];
 		const matches          = [];
-		const ambiguousIndexes = {};
+		const ambiguousIndexes = Object.create(null);
 		let nonAmbiguousCount  = 0;
 
 		for (let i=0; i<remotePortInfo.length; i++) {
@@ -2235,7 +2231,7 @@ class Topology extends Window {
 		}
 
 		if (nonAmbiguousCount === 1 && !isSingle) {
-			if (!device.lldp.ambiguous) device.lldp.ambiguous = {};
+			if (!device.lldp.ambiguous) device.lldp.ambiguous = Object.create(null);
 			device.lldp.ambiguous[port] = ambiguousIndexes;
 			//console.info("port skipped due to ambiguity", device, port);
 			return;
@@ -2311,7 +2307,7 @@ class Topology extends Window {
 	}
 
 	ComputeRemotePort(device, port, index, remoteDevice) {
-		const remoteLldp = remoteDevice.lldp || {};
+		const remoteLldp = remoteDevice.lldp || Object.create(null);
 
 		const findPortIndex = name=> {
 			for (const i in remoteLldp.localPortName) {
@@ -2372,12 +2368,12 @@ class Topology extends Window {
 		remoteDevice.lldp.localPortId[remotePortIndex]        = device.lldp.remoteChassisId[port][portIndex];
 
 		if (!remoteDevice.lldp.remoteChassisIdSubtype) {
-			remoteDevice.lldp.remoteChassisIdSubtype = {};
-			remoteDevice.lldp.remoteChassisId        = {};
-			remoteDevice.lldp.remotePortIdSubtype    = {};
-			remoteDevice.lldp.remotePortId           = {};
-			remoteDevice.lldp.remoteSystemName       = {};
-			remoteDevice.lldp.entry                  = {};
+			remoteDevice.lldp.remoteChassisIdSubtype = Object.create(null);
+			remoteDevice.lldp.remoteChassisId        = Object.create(null);
+			remoteDevice.lldp.remotePortIdSubtype    = Object.create(null);
+			remoteDevice.lldp.remotePortId           = Object.create(null);
+			remoteDevice.lldp.remoteSystemName       = Object.create(null);
+			remoteDevice.lldp.entry                  = Object.create(null);
 		}
 
 		remoteDevice.lldp.remoteChassisIdSubtype[remotePortIndex] = [device.lldp.localChassisIdSubtype];
@@ -3083,7 +3079,7 @@ class Topology extends Window {
 				updateDbButton.onclick = ()=> this.UpdateDeviceUplinkDialog(file);
 			}
 
-			const overwriteProtocol = {};
+			const overwriteProtocol = Object.create(null);
 			const dbEntry = LOADER.devices.data[device.initial.file];
 
 			let host = null;
@@ -3510,7 +3506,7 @@ class Topology extends Window {
 		}
 
 		okButton.onclick = async ()=> {
-			const mods = {};
+			const mods = Object.create(null);
 			for (let i=0; i<list.length; i++) {
 				if (!list[i].toggle.checkbox.checked) continue;
 

@@ -530,7 +530,7 @@ class Monitor extends Window {
 		queryInput.style.resize = "none";
 		queryInput.style.gridArea = "8 / 1 / 9 / 4";
 
-		let templateOptions = {};
+		let templateOptions = Object.create(null);
 		let selectedElement = null;
 		let isCustomized = false;
 

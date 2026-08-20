@@ -627,7 +627,7 @@ const MENU = {
 			return;
 		}
 
-		const cache = {};
+		const cache = Object.create(null);
 
 		let lastGroup = null;
 		for (let i = 0; i < MENU.items.length; i++) { //menu items

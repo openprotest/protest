@@ -26,7 +26,7 @@ class Mdns extends Console {
 
 		this.AddCssDependencies("tools.css");
 
-		this.hashtable = {}; //contains all elements
+		this.hashtable = Object.create(null); //contains all elements
 
 		this.SetTitle("mDNS discovery");
 		this.SetIcon("mono/dns.svg");
@@ -58,7 +58,7 @@ class Mdns extends Console {
 
 			let entries = this.args.entries;
 			this.list.textContent = "";
-			this.hashtable = {};
+			this.hashtable = Object.create(null);
 			this.args.entries = [];
 
 			for (let i = 0; i < entries.length; i++) {
@@ -72,7 +72,7 @@ class Mdns extends Console {
 			const okButton = this.ConfirmBox("Are you sure you want to clear the list?");
 			if (okButton) okButton.addEventListener("click", ()=> {
 				this.list.textContent = "";
-				this.hashtable = {};
+				this.hashtable = Object.create(null);
 				this.args.entries = [];
 			});
 		});

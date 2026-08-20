@@ -7,7 +7,7 @@ class MacLookup extends Console {
 
 		this.AddCssDependencies("tools.css");
 
-		this.hashtable = {}; //contains all elements
+		this.hashtable = Object.create(null); //contains all elements
 
 		this.SetTitle("MAC lookup");
 		this.SetIcon("mono/maclookup.svg");
@@ -29,7 +29,7 @@ class MacLookup extends Console {
 			const okButton = this.ConfirmBox("Are you sure you want to clear the list?");
 			if (okButton) okButton.addEventListener("click", ()=> {
 				this.list.textContent = "";
-				this.hashtable = {};
+				this.hashtable = Object.create(null);
 				this.args.entries = [];
 			});
 		});

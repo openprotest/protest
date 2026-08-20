@@ -2,8 +2,8 @@
 class DebitNotes extends Window {
 	static TEMPLATES = [];
 	static BANNERS = [];
-	static MODELS = {};
-	static SERIAL_NUMBERS = {};
+	static MODELS = Object.create(null);
+	static SERIAL_NUMBERS = Object.create(null);
 
 	constructor(args) {
 		super();

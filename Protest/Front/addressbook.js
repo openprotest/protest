@@ -412,8 +412,8 @@ class AddressBook extends Window {
 		this.frequentWords.textContent = "";
 		this.list.textContent = "";
 
-		let words = this.searchBox.value.toLowerCase().split(" ").filter(o=>o.length > 0);
-		let wordsCounter = {};
+		const words = this.searchBox.value.toLowerCase().split(" ").filter(o=>o.length > 0);
+		let wordsCounter = Object.create(null);
 
 		const CountWords = string=> {
 			const split = string.split(" ").filter(o=>o.length > 0);

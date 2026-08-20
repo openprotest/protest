@@ -22,7 +22,7 @@ class Ping extends Console {
 		this.AddCssDependencies("tools.css");
 
 		this.count = 0;
-		this.hashtable = {};
+		this.hashtable = Object.create(null);
 		this.request = "";
 		this.ws = null;
 

@@ -489,7 +489,7 @@ class List extends Window {
 		resetButton.style.minWidth = "20px";
 		buttons.appendChild(resetButton);
 
-		let checkList = {};
+		let checkList = Object.create(null);
 		const CreateListItem = (attr, value)=> {
 			const newAttr = document.createElement("div");
 			const newToggle = this.CreateToggle(attr, attr in checkList ? checkList[attr] : value, newAttr);
@@ -556,12 +556,12 @@ class List extends Window {
 		filterInput.onchange = ()=> Refresh();
 
 		revertButton.onclick = ()=> {
-			checkList = {};
+			checkList = Object.create(null);
 			Refresh();
 		};
 
 		resetButton.onclick = ()=> {
-			checkList = {};
+			checkList = Object.create(null);
 			this.defaultColumns.forEach(o=> checkList[o] = true);
 			Refresh();
 		};

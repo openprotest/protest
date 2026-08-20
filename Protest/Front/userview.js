@@ -262,7 +262,7 @@ class UserView extends View {
 		const saveButton = super.Edit(isNew);
 
 		saveButton.addEventListener("click", async ()=> {
-			let obj = {};
+			let obj = Object.create(null);
 			for (let i=0; i<this.attributes.childNodes.length; i++) {
 				if (this.attributes.childNodes[i].childNodes.length < 3) continue;
 				let name = this.attributes.childNodes[i].childNodes[0].value.toLowerCase();

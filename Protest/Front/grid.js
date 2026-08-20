@@ -4,9 +4,9 @@ class Grid extends Window {
 		super();
 		this.data = data;
 		this.sort = null;
-		this.filters = {};
+		this.filters = Object.create(null);
 		this.hideNull = [];
-		this.mods = {};
+		this.mods = Object.create(null);
 
 		this.AddCssDependencies("grid.css");
 
@@ -257,7 +257,7 @@ class Grid extends Window {
 
 			setTimeout(()=>{
 				this.Save();
-				this.mods = {};
+				this.mods = Object.create(null);
 			}, 250);
 		});
 	}
@@ -329,7 +329,7 @@ class Grid extends Window {
 			return;
 		}
 
-		this.filters = {};
+		this.filters = Object.create(null);
 		this.hideNull = [];
 
 		this.UpdateHeading();
@@ -351,7 +351,7 @@ class Grid extends Window {
 
 			this.ConfirmBox(`${modsCount} ${modsCount===1?"modification has":"modifications have"} been undone`, true);
 
-			this.mods = {};
+			this.mods = Object.create(null);
 			this.UpdateTable();
 		});
 	}
@@ -511,7 +511,7 @@ class Grid extends Window {
 
 				let value = this.data[id][this.selectedColumn].v;
 
-				if (!(id in this.mods)) this.mods[id] = {};
+				if (!(id in this.mods)) this.mods[id] = Object.create(null);
 				this.mods[id][this.selectedColumn] = "";
 				this.mods[id][newName] = value;
 			}
@@ -563,7 +563,7 @@ class Grid extends Window {
 				let id = element.getAttribute("id");
 				if (!id) continue;
 
-				if (!(id in this.mods)) this.mods[id] = {};
+				if (!(id in this.mods)) this.mods[id] = Object.create(null);
 				this.mods[id][this.selectedColumn] = newValueInput.value;
 			}
 			this.UpdateTable();
@@ -585,7 +585,7 @@ class Grid extends Window {
 
 			if (!this.data[id][this.selectedColumn]) continue;
 
-			if (!(id in this.mods)) this.mods[id] = {};
+			if (!(id in this.mods)) this.mods[id] = Object.create(null);
 			this.mods[id][this.selectedColumn] = null;
 		}
 
@@ -758,7 +758,7 @@ class Grid extends Window {
 		}
 		else if (newValue !== oldValue) { //edit
 			if (!(file in this.mods)) {
-				this.mods[file] = {};
+				this.mods[file] = Object.create(null);
 			}
 			this.mods[file][attribute] = newValue;
 		}

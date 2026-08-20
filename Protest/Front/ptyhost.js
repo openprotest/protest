@@ -188,8 +188,8 @@ class PtyHost extends Window {
 
 	InitializeTerminalState() {
 		this.cursor = {x:0, y:0};
-		this.screen = {};
-		this.lines = {};
+		this.screen = Object.create(null);
+		this.lines = Object.create(null);
 		this.maxLineY = 0;
 		this.pendingSequence = "";
 
@@ -1361,14 +1361,14 @@ class PtyHost extends Window {
 	}
 
 	ClearScreenAndBuffer() { //3J - erase viewport AND scrollback
-		this.screen = {};
+		this.screen = Object.create(null);
 		for (const y in this.lines) {
 			const lineDiv = this.lines[y];
 			if (lineDiv && lineDiv.parentNode === this.content) {
 				this.content.removeChild(lineDiv);
 			}
 		}
-		this.lines = {};
+		this.lines = Object.create(null);
 		this.maxLineY = 0;
 		this.cursor.y = 0;
 		this.content.appendChild(this.cursorElement);
@@ -1597,7 +1597,7 @@ class PtyHost extends Window {
 
 		const previousScrollTop = this.content.scrollTop;
 		const removedHeight = overflow * PtyHost.CHAR_HEIGHT;
-		const newScreen = {};
+		const newScreen = Object.create(null);
 
 		for (const key in this.screen) {
 			const split = key.indexOf(",");
@@ -1610,7 +1610,7 @@ class PtyHost extends Window {
 			newScreen[`${x},${y - overflow}`] = this.screen[key];
 		}
 
-		const newLines = {};
+		const newLines = Object.create(null);
 		for (const lineY in this.lines) {
 			const y = parseInt(lineY, 10);
 			const lineDiv = this.lines[lineY];

@@ -43,8 +43,8 @@ class Watchdog extends Window {
 
 		this.content.append(this.timeline, this.list, this.stats);
 
-		this.watchers = {};
-		this.cache = {};
+		this.watchers = Object.create(null);
+		this.cache = Object.create(null);
 		this.selected = null;
 		this.selectedElement = null;
 
@@ -159,7 +159,7 @@ class Watchdog extends Window {
 		let current = new Date(this.utcToday - this.offset * Watchdog.DAY_TICKS / this.dayPixels);
 
 		for (let key in this.watchers) {
-			this.watchers[key].svgCache = {};
+			this.watchers[key].svgCache = Object.create(null);
 			this.watchers[key].element.childNodes[2].textContent = "";
 		}
 
@@ -177,7 +177,7 @@ class Watchdog extends Window {
 		let current = new Date(this.utcToday - this.offset * Watchdog.DAY_TICKS / this.dayPixels);
 
 		for (let key in this.watchers) {
-			this.watchers[key].svgCache = {};
+			this.watchers[key].svgCache = Object.create(null);
 			this.watchers[key].element.childNodes[2].textContent = "";
 		}
 
@@ -202,7 +202,7 @@ class Watchdog extends Window {
 		let now = Date.now();
 		this.utcToday = new Date(now - now % Watchdog.DAY_TICKS).getTime() + this.timezoneOffset;
 
-		this.cache = {};
+		this.cache = Object.create(null);
 
 		try {
 			const response = await fetch("watchdog/list");
@@ -220,7 +220,7 @@ class Watchdog extends Window {
 				const element = this.CreateWatcherElement(json[i]);
 				this.list.appendChild(element);
 				json[i].element = element;
-				json[i].svgCache = {};
+				json[i].svgCache = Object.create(null);
 
 				this.watchers[json[i].file] = json[i];
 			}
@@ -733,8 +733,8 @@ class Watchdog extends Window {
 
 		innerBox.append(watchersLabel, watchersList);
 
-		let notifications = {};
-		let watchersCheckboxes = {};
+		let notifications = Object.create(null);
+		let watchersCheckboxes = Object.create(null);
 		let selected = null;
 
 		const AddNotification = name=> {
@@ -937,7 +937,7 @@ class Watchdog extends Window {
 	}
 
 	CreateWatcherElement(watcher) {
-		watcher.svgCache = {};
+		watcher.svgCache = Object.create(null);
 
 		const element = document.createElement("div");
 		element.className = "list-element";
@@ -1039,7 +1039,7 @@ class Watchdog extends Window {
 			total = 0;
 			uptimeCount = 0;
 			totalRoundtrip = 0;
-			graphCounts = {};
+			graphCounts = Object.create(null);
 			graphWidth = 0;
 			barsCount = 0;
 
@@ -1185,7 +1185,7 @@ class Watchdog extends Window {
 		if (delta > 1) {
 			let today = new Date(this.utcToday);
 			let todayString = `${today.getFullYear()}${`${today.getMonth()+1}`.padStart(2,"0")}${`${today.getDate()}`.padStart(2,"0")}`;
-			if (!(today.getTime() in this.cache)) { this.cache[today.getTime()] = {}; }
+			if (!(today.getTime() in this.cache)) { this.cache[today.getTime()] = Object.create(null); }
 			for (let file in this.watchers) {
 				this.GetWatcher(today.getTime(), file, todayString);
 			}
@@ -1193,7 +1193,7 @@ class Watchdog extends Window {
 		if (delta > 2) {
 			let yesterday = new Date(this.utcToday - Watchdog.DAY_TICKS);
 			let yesterdayString = `${yesterday.getFullYear()}${`${yesterday.getMonth()+1}`.padStart(2,"0")}${`${yesterday.getDate()}`.padStart(2,"0")}`;
-			if (!(yesterday.getTime() in this.cache)) { this.cache[yesterday.getTime()] = {}; }
+			if (!(yesterday.getTime() in this.cache)) { this.cache[yesterday.getTime()] = Object.create(null); }
 			for (let file in this.watchers) {
 				this.GetWatcher(yesterday.getTime(), file, yesterdayString);
 			}
@@ -1215,7 +1215,7 @@ class Watchdog extends Window {
 			let dayString = `${day.getFullYear()}${`${day.getMonth()+1}`.padStart(2,"0")}${`${day.getDate()}`.padStart(2,"0")}`;
 
 			if (!(date in this.cache)) {
-				this.cache[date] = {};
+				this.cache[date] = Object.create(null);
 			}
 
 			for (let file in this.watchers) {
@@ -1235,7 +1235,7 @@ class Watchdog extends Window {
 		const buffer = await response.arrayBuffer();
 		const bytes = new Uint8Array(buffer);
 
-		if (this.cache[date][file] === null) { this.cache[date][file] = {}; }
+		if (this.cache[date][file] === null) { this.cache[date][file] = Object.create(null); }
 
 		for (let i=0; i<bytes.length-9; i+=10) {
 			const timeBuffer = new Uint8Array(bytes.slice(i,i+8)).buffer;
