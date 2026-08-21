@@ -306,7 +306,7 @@ class Sftp extends Window {
 		case "mkdir": {
 			const name = json.path.split("/").pop();
 			const dir = json.path.substring(0, json.path.length - name.length - 1);
-			//if (this.args.workingDirectory !== dir) break;
+			if (this.args.workingDirectory !== dir) break;
 
 			const element = this.CreateFileElement({
 				name     : name,
