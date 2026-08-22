@@ -6,21 +6,27 @@ namespace Protest.Tests;
 
 public class ListenerTests {
     private Listener? listener;
-    private readonly DirectoryInfo front;
+    private readonly DirectoryInfo? front;
 
     public ListenerTests() {
-        front = OperatingSystem.IsWindows()
-            ? new DirectoryInfo(@"..\..\..\..\..\Protest\Front")
-            : new DirectoryInfo(@"../../../../../Protest/Front");
+        DirectoryInfo baseDir = new DirectoryInfo(AppContext.BaseDirectory);
+        DirectoryInfo? repoRoot = baseDir.Parent?.Parent?.Parent?.Parent;
 
+        if (repoRoot is null) {
+            Assert.Fail("Could not determine repository root");
+            return;
+        }
+        
+        front = new DirectoryInfo(Path.Combine(repoRoot.FullName, "Protest", "Front"));
+        
         if (!front.Exists) {
-            Assert.Fail($"\"front\" directory not found: {front.FullName}");
+            Assert.Fail($"\"Front\" directory not found: {front.FullName}");
         }
     }
 
     [OneTimeSetUp]
     public void Setup() {
-        listener = new Listener("127.0.0.1", 8080, front.FullName);
+        listener = new Listener("127.0.0.1", 8080, front?.FullName);
         listener?.StartAsync();
     }
 
