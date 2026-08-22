@@ -50,6 +50,15 @@ class Sftp extends Window {
 		this.counterBox.className = "file-counter";
 		this.counterBox.textContent = "0";
 
+		this.uploadingBox = document.createElement("div");
+		this.uploadingBox.className = "file-upload";
+		this.uploadingBox.style.visibility = "hidden";
+		this.uploadingBox.textContent = "Uploading";
+
+		this.statsBox = document.createElement("div");
+		this.statsBox.className = "file-stats";
+		this.statsBox.append(this.counterBox, this.uploadingBox);
+
 		this.statusBox = document.createElement("div");
 		this.statusBox.className = "file-status-label";
 		this.statusBox.textContent = "Connecting...";
@@ -58,7 +67,7 @@ class Sftp extends Window {
 		this.dropArea.className = "file-drop-area";
 		this.dropArea.textContent = "Drop files here to upload...";
 
-		this.content.append(this.pathBox, this.viewBox, this.counterBox, this.statusBox, this.dropArea);
+		this.content.append(this.pathBox, this.viewBox, this.statsBox, this.statusBox, this.dropArea);
 
 		this.connectButton.onclick = ()=> this.ConnectDialog(this.args.host, false);
 		this.refreshButton.onclick = ()=> this.Refresh();
@@ -283,7 +292,8 @@ class Sftp extends Window {
 
 			if (json.progress === 100) {
 				entry.element.removeChild(entry.progress);
-				delete this.queue[json.dir][json.name]
+				delete this.queue[json.dir][json.name];
+				this.UpdateQueueStat();
 				break;
 			}
 
@@ -370,7 +380,6 @@ class Sftp extends Window {
 	ListFiles(files) {
 		this.selectedElement = null;
 		this.viewBox.textContent = "";
-		this.counterBox.textContent = files.length;
 
 		for (let i=0; i<files.length; i++) {
 			const element = this.CreateFileElement(files[i]);
@@ -382,12 +391,17 @@ class Sftp extends Window {
 			}
 		}
 
+		let count = files.length;
+
 		if (this.args.workingDirectory && (this.args.workingDirectory in this.queue)) {
 			const queue = this.queue[this.args.workingDirectory];
 			for (const key in queue) {
 				this.viewBox.appendChild(queue[key].element);
+				count++;
 			}
 		}
+
+		this.counterBox.textContent = count;
 	}
 
 	CreateFileElement(file, isQueued=false) {
@@ -564,6 +578,20 @@ class Sftp extends Window {
 		if (this.args.workingDirectory === directory) {
 			this.viewBox.appendChild(element);
 		}
+
+		this.UpdateQueueStat();
+	}
+
+	UpdateQueueStat() {
+		let counter = 0;
+		for (const dir in this.queue) {
+			for (const file in this.queue[dir]) {
+				counter++;
+			}
+		}
+
+		this.uploadingBox.textContent = `Uploading: ${counter}`;
+		this.uploadingBox.style.visibility = counter === 0 ? "hidden" : "visible";
 	}
 
 	File_onclick(event, file, element) {

@@ -243,15 +243,38 @@
 	white-space: nowrap;
 }
 
-.file-counter {
+.file-stats {
 	position: absolute;
 	left: 2px;
 	bottom: 3px;
 	color: var(--clr-contrast);
+}
+
+.file-counter {
+	display: inline-block;
 	font-weight: 600;
 	padding: 0 8px;
 	border: 1px solid var(--clr-contrast);
 	border-radius: 2px;
+}
+
+.file-upload::before {
+	display: inline-block;
+	content: " ";
+	mask-image: url(mono/upload.svg);
+	mask-size: 20px 20px;
+	mask-position: 0 50%;
+	mask-repeat: no-repeat;
+	background-color: var(--clr-contrast);
+	transform: translateY(6px);
+	margin: 4px;
+	width: 20px;
+	height: 20px;
+}
+
+.file-upload {
+	display: inline-block;
+	padding-left: 8px;
 }
 
 .file-status-label {
