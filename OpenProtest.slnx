@@ -4,9 +4,12 @@
     <Platform Name="x64" />
   </Configurations>
 
+  <Project Path="Protest/Protest.csproj">
+    <Platform Project="x64" />
+  </Project>
+
   <Project Path="Protest-CacheGenerator/Protest-CacheGenerator.csproj" />
   <Project Path="Protest-MacLookupGenerator/Protest-MacLookupGenerator.csproj" />
   <Project Path="Protest-Tests/Protest-Tests.csproj" />
-  <Project Path="Protest/Protest.csproj" />
 
 </Solution>

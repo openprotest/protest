@@ -131,6 +131,7 @@ const LOADER = {
 		"dhcpdiscover.js",
 		"ntpclient.js",
 		"terminal.js",
+		"rs232.js",
 		"remoteshell.js",
 		"telnet.js",
 		"ssh.js",
@@ -358,6 +359,7 @@ const LOADER = {
 		case "IpDiscovery"  : return new IpDiscovery(command.args);
 		case "ReverseProxy" : return new ReverseProxy(command.args);
 		case "RemoteShell"  : return new RemoteShell(command.args);
+		case "Rs232"        : return new Rs232(command.args);
 		case "Telnet"       : return new Telnet(command.args);
 		case "Ssh"          : return new Ssh(command.args);
 		case "Sftp"         : return new Sftp(command.args);
