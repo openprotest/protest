@@ -91,6 +91,8 @@
 	padding: 4px;
 	margin: 0px;
 	border-radius: 2px;
+	content-visibility: auto;
+	contain-intrinsic-size: 32px;
 }
 
 .file-view > div:active > .file-icon > div {
@@ -99,7 +101,7 @@
 }
 
 .file-hidden > .file-icon {
-	mask: radial-gradient(circle, transparent 45%,  white 55%);
+	mask: radial-gradient(circle, transparent 45%, white 55%);
 	mask-size: 3px 3px;
 	mask-repeat: repeat;
 }
@@ -174,20 +176,20 @@
 	border-radius: 2px;
 }
 
-.file-link:after {
+.file-link::after {
 	position: absolute;
 	content: "";
 	mask-image: url(/mono/shortcut.svg);
 	mask-size: 100% 100%;
 	background-color: light-dark(rgb(192,192,192), rgb(64,64,64));
 }
-.file-grid > .file-link:after {
+.file-grid > .file-link::after {
 	width: 28px;
 	height: 28px;
 	left: 24px;
 	top: 64px;
 }
-.file-list > .file-link:after {
+.file-list > .file-link::after {
 	width: 8px;
 	height: 8px;
 	left: 8px;
@@ -243,59 +245,39 @@
 	white-space: nowrap;
 }
 
-.file-stats {
+.file-counter {
 	position: absolute;
 	left: 2px;
 	bottom: 3px;
-	color: var(--clr-contrast);
-}
-
-.file-counter {
-	display: inline-block;
 	font-weight: 600;
 	padding: 0 8px;
+	color: var(--clr-contrast);
 	border: 1px solid var(--clr-contrast);
 	border-radius: 2px;
 }
 
-.file-upload::before {
-	display: inline-block;
+.file-upload-stats {
+	position: absolute;
+	display: flex;
+	line-height: 28px;
+	right: 2px;
+	bottom: 3px;
+	font-weight: 600;
+	padding: 0 8px;
+	margin-right: 8px;
+	color: var(--clr-contrast);
+	border-radius: 4px;
+	transition: .2s;
+}
+
+.file-upload-stats::before {
 	content: " ";
 	mask-image: url(mono/upload.svg);
 	mask-size: 20px 20px;
 	mask-position: 0 50%;
 	mask-repeat: no-repeat;
 	background-color: var(--clr-contrast);
-	transform: translateY(6px);
 	margin: 4px;
 	width: 20px;
 	height: 20px;
-}
-
-.file-upload {
-	display: inline-block;
-	padding-left: 8px;
-}
-
-.file-status-label {
-	position: absolute;
-	right: 8px;
-	bottom: 4px;
-	color: var(--clr-contrast);
-	font-weight: 600;
-}
-
-.file-status-label::before {
-	content: "";
-	display: inline-block;
-	margin-right: 8px;
-	margin-bottom: -4px;
-	width: 18px;
-	height: 18px;
-	border-radius: 50%;
-	border-style: solid;
-	border-color: var(--clr-contrast) var(--clr-contrast) transparent transparent;
-	border-width: 2px 3px 3px 0;
-	box-sizing: border-box;
-	animation: spin 1s linear infinite;
 }

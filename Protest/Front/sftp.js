@@ -50,24 +50,36 @@ class Sftp extends Window {
 		this.counterBox.className = "file-counter";
 		this.counterBox.textContent = "0";
 
-		this.uploadingBox = document.createElement("div");
-		this.uploadingBox.className = "file-upload";
-		this.uploadingBox.style.visibility = "hidden";
-		this.uploadingBox.textContent = "Uploading";
-
-		this.statsBox = document.createElement("div");
-		this.statsBox.className = "file-stats";
-		this.statsBox.append(this.counterBox, this.uploadingBox);
-
-		this.statusBox = document.createElement("div");
-		this.statusBox.className = "file-status-label";
-		this.statusBox.textContent = "Connecting...";
+		this.uploadStats = document.createElement("div");
+		this.uploadStats.className = "file-upload-stats";
+		this.uploadStats.textContent = "Uploading";
+		this.uploadStats.style.opacity = "0";
 
 		this.dropArea = document.createElement("div");
 		this.dropArea.className = "file-drop-area";
 		this.dropArea.textContent = "Drop files here to upload...";
 
-		this.content.append(this.pathBox, this.viewBox, this.statsBox, this.statusBox, this.dropArea);
+		this.content.append(this.pathBox, this.viewBox, this.counterBox, this.uploadStats, this.dropArea);
+
+		this.spinnerBox = document.createElement("div");
+		this.spinnerBox.style.height = "0";
+		this.spinnerBox.style.animation = "delayed-fade-in .66s ease-in 1";
+		this.content.appendChild(this.spinnerBox);
+
+		const spinner = document.createElement("div");
+		spinner.className = "spinner";
+		spinner.style.textAlign = "left";
+		spinner.style.marginTop = "48px";
+		spinner.style.marginBottom = "8px";
+		spinner.appendChild(document.createElement("div"));
+
+		this.statusBox = document.createElement("div");
+		this.statusBox.style.position = "relative";
+		this.statusBox.style.textAlign = "center";
+		this.statusBox.style.fontWeight = "bold";
+		this.statusBox.textContent = "Connecting...";
+
+		this.spinnerBox.append(spinner, this.statusBox );
 
 		this.connectButton.onclick = ()=> this.ConnectDialog(this.args.host, false);
 		this.refreshButton.onclick = ()=> this.Refresh();
@@ -230,7 +242,7 @@ class Sftp extends Window {
 			}
 
 			this.status = "idle";
-			this.statusBox.style.visibility = "hidden";
+			this.spinnerBox.style.display = "none";
 		};
 	}
 
@@ -270,6 +282,7 @@ class Sftp extends Window {
 					method: "POST",
 					body: formData
 				});
+
 				if (uploadResponse.status !== 200) LOADER.HttpErrorHandler(uploadResponse.status);
 
 				const uploadJson = await uploadResponse.json();
@@ -293,7 +306,7 @@ class Sftp extends Window {
 			if (json.progress === 100) {
 				entry.element.removeChild(entry.progress);
 				delete this.queue[json.dir][json.name];
-				this.UpdateQueueStat();
+				this.UpdateUploadStatus();
 				break;
 			}
 
@@ -309,7 +322,6 @@ class Sftp extends Window {
 			this.viewBox.removeChild(element);
 			this.selectedElement = null;
 			this.args.filename = null;
-
 			break;
 		}
 
@@ -377,9 +389,27 @@ class Sftp extends Window {
 		}
 	}
 
+	UpdateUploadStatus() {
+		let count = 0;
+		for (const dir in this.queue) {
+			for (const file in (this.queue[dir])) {
+				count++;
+			}
+		}
+
+		this.uploadStats.textContent = `Uploading: ${count}`
+		this.uploadStats.style.opacity = count === 0 ? "0" : "1";
+	}
+
 	ListFiles(files) {
 		this.selectedElement = null;
 		this.viewBox.textContent = "";
+		this.counterBox.textContent = files.length;
+
+		if (files.length > 2000) {
+			this.args.listView = true;
+			this.viewBox.className = "file-view file-list";
+		}
 
 		for (let i=0; i<files.length; i++) {
 			const element = this.CreateFileElement(files[i]);
@@ -391,17 +421,12 @@ class Sftp extends Window {
 			}
 		}
 
-		let count = files.length;
-
 		if (this.args.workingDirectory && (this.args.workingDirectory in this.queue)) {
 			const queue = this.queue[this.args.workingDirectory];
 			for (const key in queue) {
 				this.viewBox.appendChild(queue[key].element);
-				count++;
 			}
 		}
-
-		this.counterBox.textContent = count;
 	}
 
 	CreateFileElement(file, isQueued=false) {
@@ -489,7 +514,8 @@ class Sftp extends Window {
 		if (this.status !== "idle") return;
 		if (!this.args.workingDirectory) return;
 
-		this.statusBox.style.visibility = "visible";
+		this.viewBox.textContent = "";
+		this.spinnerBox.style.display = "initial";
 
 		this.status = "listing";
 		this.statusBox.textContent = "Loading...";
@@ -504,7 +530,8 @@ class Sftp extends Window {
 
 		this.args.filename = this.args.workingDirectory.split("/").pop();
 
-		this.statusBox.style.visibility = "visible";
+		this.viewBox.textContent = "";
+		this.spinnerBox.style.display = "initial";
 
 		this.status = "listing";
 		this.statusBox.textContent = "Loading...";
@@ -579,19 +606,7 @@ class Sftp extends Window {
 			this.viewBox.appendChild(element);
 		}
 
-		this.UpdateQueueStat();
-	}
-
-	UpdateQueueStat() {
-		let counter = 0;
-		for (const dir in this.queue) {
-			for (const file in this.queue[dir]) {
-				counter++;
-			}
-		}
-
-		this.uploadingBox.textContent = `Uploading: ${counter}`;
-		this.uploadingBox.style.visibility = counter === 0 ? "hidden" : "visible";
+		this.UpdateUploadStatus();
 	}
 
 	File_onclick(event, file, element) {
@@ -603,7 +618,9 @@ class Sftp extends Window {
 		if (this.status !== "idle") return;
 
 		if (file.isDir) {
-			this.statusBox.style.visibility = "visible";
+			this.viewBox.textContent = "";
+			this.spinnerBox.style.display = "initial";
+
 			this.status = "listing";
 			this.statusBox.textContent = "Loading...";
 			this.ws.send(`list:${file.fullname}`);
