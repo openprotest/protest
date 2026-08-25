@@ -88,7 +88,7 @@ public class Generator : IIncrementalGenerator {
         using BinaryReader br = new BinaryReader(fs);
         byte[] bytes = br.ReadBytes((int)file.Length);
 
-        if (file.Extension.ToLower() == ".gz") return bytes;
+        if (String.Equals(file.Extension, ".gz", StringComparison.OrdinalIgnoreCase)) return bytes;
 
         if (String.Equals(file.Extension, ".htm", StringComparison.OrdinalIgnoreCase) ||
             String.Equals(file.Extension, ".html", StringComparison.OrdinalIgnoreCase) ||
@@ -98,8 +98,8 @@ public class Generator : IIncrementalGenerator {
             bytes = Minify(bytes);
         }
 
-        MemoryStream ms = new MemoryStream();
-        using (GZipStream zip = new GZipStream(ms, CompressionMode.Compress, true)) {
+        using MemoryStream ms = new MemoryStream();
+        using (GZipStream zip = new GZipStream(ms, CompressionLevel.Optimal, false)) {
             zip.Write(bytes, 0, bytes.Length);
         }
 

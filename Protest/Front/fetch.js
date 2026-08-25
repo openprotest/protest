@@ -521,7 +521,7 @@ class Fetch extends Tabs {
 		title.textContent = version===3 ? "SNMP V3 profiles": "SNMP V1/2 profiles";
 		title.style.textAlign = "center";
 		title.style.lineHeight = "32px";
-		title.style.fontWeight = "800";
+		title.style.fontWeight = "700";
 		innerBox.appendChild(title);
 
 		const profilesList = document.createElement("div");

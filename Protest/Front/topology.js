@@ -2701,7 +2701,7 @@ class Topology extends Window {
 		label.setAttribute("x", 48);
 		label.setAttribute("font-size", "11");
 		label.setAttribute("fill", "light-dark(#202020, #c0c0c0)");
-		label.setAttribute("font-weight", "800");
+		label.setAttribute("font-weight", "700");
 		label.setAttribute("dominant-baseline", "middle");
 		label.setAttribute("text-anchor", "middle");
 		g.appendChild(label);

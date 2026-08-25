@@ -43,7 +43,7 @@
 	color-scheme: light dark;
 
 	--global-font-size: 15px;
-	--global-font-family: "Open Sans", sans-serif;
+	--global-font-family: "Open Sans", system-ui;
 	--sidemenu-width: 480px;
 
 	--clr-accent     : rgb(255,102,0);

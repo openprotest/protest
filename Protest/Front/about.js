@@ -67,12 +67,12 @@ class About extends Tabs {
 
 		const version = document.createElement("div");
 		version.style.gridArea = "3 / 3";
-		version.style.fontWeight = "500";
+		version.style.fontWeight = "600";
 		version.textContent = `Version ${KEEP.version}`;
 		aboutBox.appendChild(version);
 
 		const description = document.createElement("div");
-		description.style.fontWeight = "500";
+		description.style.fontWeight = "600";
 		description.style.textAlign = "center";
 		description.style.userSelect = "text";
 		description.textContent = "A management base for System Admins";
@@ -85,7 +85,6 @@ class About extends Tabs {
 		const opensource = document.createElement("div");
 		opensource.style.margin = "auto";
 		opensource.style.paddingTop = "32px";
-		opensource.style.fontWeight = "500";
 		opensource.style.textAlign = "left";
 		opensource.style.maxWidth = "640px";
 		opensource.style.userSelect = "text";
@@ -95,7 +94,6 @@ class About extends Tabs {
 		const gpl = document.createElement("div");
 		gpl.style.margin = "auto";
 		gpl.style.paddingTop = "32px";
-		gpl.style.fontWeight = "500";
 		gpl.style.textAlign = "left";
 		gpl.style.maxWidth = "640px";
 		gpl.style.userSelect = "text";

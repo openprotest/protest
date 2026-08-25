@@ -412,18 +412,17 @@ internal sealed class Cache {
         if (bytes is null) return Array.Empty<byte>();
 
         using MemoryStream ms = new MemoryStream();
-        using (GZipStream zip = new GZipStream(ms, CompressionMode.Compress, true)) {
-            zip.Write(bytes, 0, bytes.Length);
+        using (GZipStream zip = new GZipStream(ms, CompressionLevel.SmallestSize, false)) {
+            zip.Write(bytes);
         }
 
-        byte[] array = ms.ToArray();
-
-        return array;
+        return ms.ToArray();
     }
+
     public static byte[] UnGZip(byte[] bytes) {
         if (bytes is null) return Array.Empty<byte>();
 
-        using MemoryStream zipped = new MemoryStream(bytes);
+        using MemoryStream zipped = new MemoryStream(bytes, false);
         using GZipStream unzip = new GZipStream(zipped, CompressionMode.Decompress);
         using MemoryStream ms = new MemoryStream();
         unzip.CopyTo(ms);
