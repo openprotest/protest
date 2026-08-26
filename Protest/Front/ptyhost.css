@@ -25,7 +25,7 @@
 
 .pty-minimap {
 	position: absolute;
-	top: var(--content-top, 76px);
+	top: var(--pty-content-top, 76px);
 	right: 4px;
 	bottom: 4px;
 	width: 84px;

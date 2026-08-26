@@ -256,7 +256,7 @@ class Window {
 		return this.floating;
 	}
 
-	SetTitle(title = "") {
+	SetTitle(title) {
 		document.title = title;
 	}
 

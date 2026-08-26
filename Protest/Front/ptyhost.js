@@ -129,7 +129,6 @@ class PtyHost extends Window {
 		"ArrowLeft" : "\x1B[1;3D",
 	};
 
-	//Sent for arrow / Home / End when DECCKM (?1h) is set; vim, less, top etc. expect these.
 	static APP_CURSOR_KEYS = {
 		"ArrowUp"   : "\x1bOA",
 		"ArrowDown" : "\x1bOB",
@@ -139,7 +138,6 @@ class PtyHost extends Window {
 		"End"       : "\x1bOF"
 	};
 
-	//DECKPAM (ESC =) — VT100/VT220 Application Keypad sequences are SS3 (ESC O), not CSI.
 	static KEYPAD_KEYS = {
 		"Numpad0": "\x1BOp",
 		"Numpad1": "\x1BOq",
@@ -183,7 +181,22 @@ class PtyHost extends Window {
 
 	AfterResize() { //overrides
 		super.AfterResize();
-		setTimeout(()=>this.ResizeMinimap(), WIN.ANIME_DURATION);
+		setTimeout(()=> this.ResizeMinimap(), WIN.ANIME_DURATION);
+	}
+
+	PopOut() { //overrides
+		const popInButton = super.PopOut();
+		const popInButton_onclick = popInButton.onclick;
+
+		this.minimap.style.top = "48px";
+		popInButton.parentElement.parentElement.appendChild(this.minimap);
+
+		popInButton.onclick = ()=> {
+			popInButton_onclick();
+			this.minimap.style.top = "var(--pty-content-top, 76px)";
+			this.win.appendChild(this.minimap);
+			popInButton.onclick = popInButton_onclick;
+		};
 	}
 
 	InitializeTerminalState() {
@@ -274,10 +287,9 @@ class PtyHost extends Window {
 		this.minimap.appendChild(this.minimapViewport);
 		this.win.appendChild(this.minimap);
 
-		const syncContentTop = ()=> this.win.style.setProperty("--content-top", this.content.style.top || "76px");
-
+		const syncContentTop = ()=> this.win.style.setProperty("--pty-content-top", this.content.style.top || "76px");
 		syncContentTop();
-		new MutationObserver(syncContentTop).observe(this.content, { attributes: true, attributeFilter: ["style"] });
+		new MutationObserver(syncContentTop).observe(this.content, { attributes:true, attributeFilter:["style"] });
 
 		this.content.addEventListener("scroll", ()=> this.UpdateMinimap());
 
@@ -286,11 +298,17 @@ class PtyHost extends Window {
 			event.preventDefault();
 			event.stopPropagation();
 			this.MinimapSeek(event);
-			const onMove = e=> { e.preventDefault(); this.MinimapSeek(e); };
+
+			const onMove = e=> {
+				e.preventDefault();
+				this.MinimapSeek(e);
+			};
+
 			const onUp = ()=> {
 				document.removeEventListener("mousemove", onMove);
 				document.removeEventListener("mouseup", onUp);
 			};
+
 			document.addEventListener("mousemove", onMove);
 			document.addEventListener("mouseup", onUp);
 		};
@@ -1460,7 +1478,6 @@ class PtyHost extends Window {
 			this.ScrollUp(1);
 			return;
 		}
-
 		this.cursor.y++;
 	}
 
@@ -1470,7 +1487,6 @@ class PtyHost extends Window {
 			this.ScrollDown(1);
 			return;
 		}
-
 		this.cursor.y = Math.max(0, this.cursor.y - 1);
 	}
 
@@ -1528,7 +1544,6 @@ class PtyHost extends Window {
 		}
 	}
 
-	//Stored as viewport-relative offsets in [0, screenHeight); resolved against ViewportTopY at use.
 	SetScrollRegion(top, bottom) {
 		const screenHeight = this.GetScreenHeight();
 		const newTop = Math.max(0, (top || 1) - 1);
@@ -1705,12 +1720,20 @@ class PtyHost extends Window {
 				for (let dy = 0; dy < 2; dy++) {
 					const row = py + dy;
 					if (row < 0 || row >= ch) continue;
+
 					const idx = (row * cw + x) * 4;
 					data[idx+0] = data[idx+4] = r;
 					data[idx+1] = data[idx+5] = g;
 					data[idx+2] = data[idx+6] = b;
-					data[idx+3] = 255;
-					data[idx+7] = 168;
+
+					if (text.trim().length === 0) {
+						data[idx+3] = 0;
+						data[idx+7] = 0;
+					}
+					else {
+						data[idx+3] = 255;
+						data[idx+7] = 168;
+					}
 				}
 			}
 		}

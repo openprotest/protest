@@ -578,19 +578,18 @@ class Window {
 		};
 
 		this.closeButton.onmousedown =
-			this.maximizeButton.onmousedown =
-			this.minimizeButton.onmousedown =
-			this.popOutButton.onmousedown =
-			event=> {
-				WIN.controlPressed = this;
-				this.BringToFront();
-				event.stopPropagation();
-			};
+		this.maximizeButton.onmousedown =
+		this.minimizeButton.onmousedown =
+		this.popOutButton.onmousedown = event=> {
+			WIN.controlPressed = this;
+			this.BringToFront();
+			event.stopPropagation();
+		};
 
-		this.closeButton.onmouseup = event=> { if (event.button === 0 && WIN.controlPressed === this) { WIN.controlPressed = null; this.Close(); } };
+		this.closeButton.onmouseup    = event=> { if (event.button === 0 && WIN.controlPressed === this) { WIN.controlPressed = null; this.Close(); } };
 		this.maximizeButton.onmouseup = event=> { if (event.button === 0 && WIN.controlPressed === this) { WIN.controlPressed = null; this.Toggle(); } };
 		this.minimizeButton.onmouseup = event=> { if (event.button === 0 && WIN.controlPressed === this) { WIN.controlPressed = null; this.Minimize(); } };
-		this.popOutButton.onmouseup = event=> { if (event.button === 0 && WIN.controlPressed === this) { WIN.controlPressed = null; this.PopOut(); } };
+		this.popOutButton.onmouseup   = event=> { if (event.button === 0 && WIN.controlPressed === this) { WIN.controlPressed = null; this.PopOut(); } };
 
 		this.SetTitle("untitled");
 		WIN.array.push(this);
@@ -646,7 +645,7 @@ class Window {
 	Toggle() {
 		document.getSelection().removeAllRanges();
 
-		this.win.style.transition = WIN.ANIME_DURATION / 1000 + "s";
+		this.win.style.transition = `${WIN.ANIME_DURATION / 1000}s`;
 
 		if (this.isMaximized) {
 			if (this.position === null) {
@@ -1234,7 +1233,7 @@ class Window {
 		};
 	}
 
-	SetTitle(title = "") {
+	SetTitle(title) {
 		this.header.textContent = title;
 		this.task.setAttribute("tip", title);
 	}
