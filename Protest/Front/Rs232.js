@@ -7,8 +7,6 @@ class Rs232 extends PtyHost {
 		this.SetTitle("RS-232 Console");
 		this.SetIcon("mono/serialconsole.svg");
 
-		this.connectButton.disabled = true;
-
 		this.port = null;
 		this.reader = null;
 		this.writer = null;
@@ -40,21 +38,7 @@ class Rs232 extends PtyHost {
 
 	ConnectDialog() { //overrides
 		if (!("serial" in navigator)) {
-			const dialog = this.DialogBox("180px");
-			if (dialog === null) return;
-
-			const {okButton, innerBox} = dialog;
-
-			innerBox.style.padding = "20px";
-
-			const message = document.createElement("div");
-			message.textContent = "Web Serial API is not supported by this browser.";
-
-			innerBox.appendChild(message);
-
-			okButton.value = "Close";
-			okButton.onclick = () => dialog.Close();
-
+			this.ConfirmBox("Web Serial API is not supported by this browser.", true, "mono/warning.svg");
 			return;
 		}
 
@@ -62,11 +46,14 @@ class Rs232 extends PtyHost {
 		if (dialog === null) return;
 
 		const {okButton, innerBox} = dialog;
-		innerBox.style.padding = "40px";
+		innerBox.style.padding = "20px";
 		innerBox.parentElement.style.width = "400px";
 		dialog.okButton.value = "Connect";
 
 		const CreateSelect = (labelText, values, currentValue) => {
+			const container = document.createElement("div");
+			container.style.padding = "4px";
+
 			const label = document.createElement("div");
 			label.style.display = "inline-block";
 			label.style.minWidth = "120px";
@@ -94,10 +81,8 @@ class Rs232 extends PtyHost {
 				select.appendChild(option);
 			}
 
-			innerBox.appendChild(label);
-			innerBox.appendChild(select);
-			innerBox.appendChild(document.createElement("br"));
-
+			container.append(label, select);
+			innerBox.append(container);
 			return select;
 		};
 
@@ -140,9 +125,9 @@ class Rs232 extends PtyHost {
 
 		okButton.onclick = async () => {
 			const settings = {
-				baudRate: Number.parseInt(baudRate.value, 10),
-				dataBits: Number.parseInt(dataBits.value, 10),
-				stopBits: Number.parseInt(stopBits.value, 10),
+				baudRate: Number.parseInt(baudRate.value),
+				dataBits: Number.parseInt(dataBits.value),
+				stopBits: Number.parseInt(stopBits.value),
 				parity: parity.value,
 				flowControl: flowControl.value
 			};
@@ -186,7 +171,6 @@ class Rs232 extends PtyHost {
 				close: () => {this.Disconnect();}
 			};
 
-			this.connectButton.disabled = false;
 			this.statusBox.textContent = `Connected (${this.serial.baudRate}, ${this.serial.dataBits}${this.serial.parity[0].toUpperCase()}${this.serial.stopBits})`;
 			this.reading = true;
 
@@ -210,7 +194,6 @@ class Rs232 extends PtyHost {
 			}
 
 			this.port = null;
-			this.connectButton.disabled = false;
 			this.statusBox.textContent = "Disconnected";
 		}
 	}
@@ -332,6 +315,5 @@ class Rs232 extends PtyHost {
 
 	SetDisconnectedState() {
 		this.statusBox.textContent = "Disconnected";
-		this.connectButton.disabled = false;
 	}
 }
