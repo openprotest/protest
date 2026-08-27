@@ -297,7 +297,6 @@ internal sealed class Cache {
             cache.AddOrUpdate(name, entry, (key, existingValue) => entry);
         }
 #endif
-
     }
 
     private void HandleFile(string name, byte[] bytes, bool confirmedGZip) {
@@ -311,7 +310,7 @@ internal sealed class Cache {
         bool endsWithGzip = name.EndsWith(".gz");
         bool isGZipped = confirmedGZip || endsWithGzip;
 
-        if (endsWithGzip && name.Length > 5) {
+        if (endsWithGzip && name.Length > 3) {
             name = name[..^3];
         }
 
