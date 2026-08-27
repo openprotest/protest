@@ -67,7 +67,7 @@ public class Generator : IIncrementalGenerator {
 
             builder.Append($"        {{ @\"{files[i].FullName.Substring(front.Length)}\", new byte[] {{");
             for (int j = 0; j < content.Length; j++) {
-                if (j > 0) { builder.Append(","); }
+                if (j > 0) { builder.Append(','); }
                 builder.Append(content[j]);
             }
             builder.Append("} },");

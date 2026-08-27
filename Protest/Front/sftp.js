@@ -213,7 +213,7 @@ class Sftp extends Window {
 		this.ws.onopen = ()=> {
 			this.connectButton.disabled = true;
 			if (this.args.workingDirectory) {
-				connectionString += `\nwd=${this.args.workingDirectory}`
+				connectionString += `\nwd=${this.args.workingDirectory}`;
 			}
 			this.ws.send(connectionString);
 		};
@@ -289,7 +289,7 @@ class Sftp extends Window {
 
 				if (uploadJson.error) {
 					this.viewBox.removeChild(entry.element);
-					delete this.queue[json.directory][json.name]
+					delete this.queue[json.directory][json.name];
 					throw(uploadJson.error);
 				}
 			}
@@ -310,7 +310,7 @@ class Sftp extends Window {
 				break;
 			}
 
-			entry.progress.style.background = `linear-gradient(to right, var(--clr-accent) ${json.progress}%, transparent ${json.progress}%)`
+			entry.progress.style.background = `linear-gradient(to right, var(--clr-accent) ${json.progress}%, transparent ${json.progress}%)`;
 			break;
 		}
 
@@ -397,7 +397,7 @@ class Sftp extends Window {
 			}
 		}
 
-		this.uploadStats.textContent = `Uploading: ${count}`
+		this.uploadStats.textContent = `Uploading: ${count}`;
 		this.uploadStats.style.opacity = count === 0 ? "0" : "1";
 	}
 
