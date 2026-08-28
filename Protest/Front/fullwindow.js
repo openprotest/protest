@@ -264,7 +264,7 @@ class Window {
 		const favicon_light = document.createElement("link");
 		favicon_light.rel = "icon";
 		favicon_light.href = iconPath;
-		favicon_light.media = "(prefers-color-scheme:light";
+		favicon_light.media = "(prefers-color-scheme:light)";
 
 		const favicon_dark = document.createElement("link");
 		favicon_dark.rel = "icon";

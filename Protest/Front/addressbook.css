@@ -30,6 +30,7 @@
 	z-index: -1;
 	width: 100%;
 	height: 12px;
+	filter: saturate(130%);
 }
 
 .address-book-search-box:placeholder-shown {
@@ -136,6 +137,10 @@
 
 .address-book-list > div:hover {
 	background-color: color-mix(in hsl shorter hue, var(--clr-select) 80%, transparent);
+}
+
+.address-book-list > div:active {
+	filter: brightness(95%);
 }
 
 .address-book-list > div,
