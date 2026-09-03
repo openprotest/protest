@@ -8,7 +8,7 @@ class DebitNotes extends Window {
 	constructor(args) {
 		super();
 
-		this.args = args ?? { keywords:"", upto:4, short:true, long:true, returned:false, selected:null };
+		this.args = args ?? { keywords:"", short:true, long:true, returned:false, selected:null };
 		this.selectedDebit = null;
 		this.selectedElement = null;
 
@@ -28,7 +28,7 @@ class DebitNotes extends Window {
 		const listBox = document.createElement("div");
 		listBox.style.display = "grid";
 		listBox.style.gridTemplateColumns = "72px 200px auto";
-		listBox.style.gridTemplateRows = "repeat(2, 36px) 8px repeat(3, 28px) 8px auto 8px";
+		listBox.style.gridTemplateRows = "36px 8px repeat(3, 28px) 8px auto 8px";
 		listBox.className = "debit-list-pane";
 		this.content.appendChild(listBox);
 
@@ -43,49 +43,25 @@ class DebitNotes extends Window {
 		this.searchInput.value = this.args.keywords;
 		listBox.appendChild(this.searchInput);
 
-		const upToLabel = document.createElement("div");
-		upToLabel.style.gridArea = "2 / 1";
-		upToLabel.textContent = "Up to:";
-		listBox.appendChild(upToLabel);
-
-		this.upToInput = document.createElement("select");
-		this.upToInput.value = this.args.upto;
-		this.upToInput.style.gridArea = "2 / 2";
-		listBox.appendChild(this.upToInput);
-
-		for (let i = 2; i < 11; i += 2) {
-			const upToOption = document.createElement("option");
-			upToOption.value = i;
-			upToOption.text = `${i} ${i === 1 ? "year" : "years"}`;
-			this.upToInput.appendChild(upToOption);
-		}
-
-		this.upToInput.value = this.args.upto;
-
-		const allOption = document.createElement("option");
-		allOption.value = "all";
-		allOption.text = "All";
-		this.upToInput.appendChild(allOption);
-
 		const filterLabel = document.createElement("div");
-		filterLabel.style.gridArea = "4 / 1";
+		filterLabel.style.gridArea = "3 / 1";
 		filterLabel.textContent = "Filters:";
 		listBox.appendChild(filterLabel);
 
 		const shortBox = document.createElement("div");
-		shortBox.style.gridArea = "4 / 2";
+		shortBox.style.gridArea = "3 / 2";
 		shortBox.style.paddingLeft = "4px";
 		listBox.appendChild(shortBox);
 		this.shortToggle = this.CreateToggle("Short-term", this.args.short, shortBox);
 
 		const longBox = document.createElement("div");
-		longBox.style.gridArea = "5 / 2";
+		longBox.style.gridArea = "4 / 2";
 		longBox.style.paddingLeft = "4px";
 		listBox.appendChild(longBox);
 		this.longToggle = this.CreateToggle("Long-term", this.args.long, longBox);
 
 		const returnedBox = document.createElement("div");
-		returnedBox.style.gridArea = "6 / 2";
+		returnedBox.style.gridArea = "5 / 2";
 		returnedBox.style.paddingLeft = "4px";
 		listBox.appendChild(returnedBox);
 		this.returnedToggle = this.CreateToggle("Returned", this.args.returned, returnedBox);
@@ -93,7 +69,7 @@ class DebitNotes extends Window {
 		this.list = document.createElement("div");
 		this.list.className = "no-results";
 		this.list.style.backgroundColor = "var(--clr-pane)";
-		this.list.style.gridArea = "8 / 1 / 9 / 3";
+		this.list.style.gridArea = "7 / 1 / 8 / 3";
 		this.list.style.width = "100%";
 		this.list.style.height = "100%";
 		this.list.style.borderRadius = "4px";
@@ -141,7 +117,6 @@ class DebitNotes extends Window {
 		this.content.append(this.preview);
 
 		this.searchInput.onchange = ()=> this.ListDebitNotes();
-		this.upToInput.onchange = ()=> this.ListDebitNotes();
 		this.shortToggle.checkbox.onchange = ()=> this.ListDebitNotes();
 		this.longToggle.checkbox.onchange = ()=> this.ListDebitNotes();
 		this.returnedToggle.checkbox.onchange = ()=> this.ListDebitNotes();
@@ -211,15 +186,14 @@ class DebitNotes extends Window {
 
 	async ListDebitNotes() {
 		this.args.keywords = this.searchInput.value.trim().toLocaleLowerCase();
-		this.args.upto = this.upToInput.value;
 		this.args.short = this.shortToggle.checkbox.checked;
 		this.args.long = this.longToggle.checkbox.checked;
 		this.args.returned = this.returnedToggle.checkbox.checked;
 
 		try {
 			let uri = this.args.keywords.length === 0 ?
-				`debit/list?upto=${this.args.upto}&short=${this.args.short}&long=${this.args.long}&returned=${this.args.returned}` :
-				`debit/list?upto=${this.args.upto}&short=${this.args.short}&long=${this.args.long}&returned=${this.args.returned}&keywords=${encodeURIComponent(this.args.keywords)}`;
+				`debit/list?upto=all&short=${this.args.short}&long=${this.args.long}&returned=${this.args.returned}` :
+				`debit/list?upto=all&short=${this.args.short}&long=${this.args.long}&returned=${this.args.returned}&keywords=${encodeURIComponent(this.args.keywords)}`;
 
 			const response = await fetch(uri);
 
@@ -322,7 +296,7 @@ class DebitNotes extends Window {
 		const label = document.createElement("div");
 		element.appendChild(label);
 
-		if (debit.name.trim().length === 0 ) {
+		if (debit.name.trim().length === 0) {
 			label.textContent = "no name";
 			label.style.color = "rgb(80,80,80)";
 		}
