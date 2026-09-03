@@ -1483,7 +1483,7 @@ class Watchdog extends Window {
 
 		const gradientR = document.createElement("div");
 		gradientR.style.position = "absolute";
-		gradientR.style.background = "linear-gradient(to right,transparent, light-dark(rgb(128,128,128), rgb(64,64,64)) )";
+		gradientR.style.background = "linear-gradient(to right,transparent, light-dark(rgb(128,128,128), rgb(64,64,64)))";
 		gradientR.style.right = gradientR.style.top = "0";
 		gradientR.style.width = "20px";
 		gradientR.style.height = "40px";

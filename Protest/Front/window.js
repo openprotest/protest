@@ -39,7 +39,7 @@ const WIN = {
 	count: 0,
 	alwaysMaxed: false,
 
-	AlignIcon: (ignoreActive)=> {
+	AlignIcon: ignoreActive=> {
 		const max = onMobile ? 48 : 56;
 		const total = MENU.isAttached ? WIN.array.length+1 : WIN.array.length;
 
@@ -469,7 +469,7 @@ class Window {
 		};
 
 		this.task.onmouseup = event=> {
-			if (event.button === 0 && !MENU.isDragging && Math.abs(iconX - this.task.offsetLeft) < 4 && Math.abs(iconY - this.task.offsetTop) < 4 ) { //clicked but not moved
+			if (event.button === 0 && !MENU.isDragging && Math.abs(iconX - this.task.offsetLeft) < 4 && Math.abs(iconY - this.task.offsetTop) < 4) { //clicked but not moved
 				if (this.popOutWindow) {
 					this.popOutWindow.focus();
 				}
@@ -1270,11 +1270,11 @@ class Window {
 
 	AddCheckBoxLabel(parent, checkbox, label) {
 		let id = Date.now() + Math.random() * 1000;
-		checkbox.id = "id" + id;
+		checkbox.id = `id${id}`;
 
 		const newLabel = document.createElement("label");
 		newLabel.textContent = label;
-		newLabel.setAttribute("for", "id" + id);
+		newLabel.setAttribute("for", `id${id}`);
 		newLabel.setAttribute("tabindex", "0");
 		newLabel.style.maxWidth = "80%";
 		parent.appendChild(newLabel);
@@ -1293,11 +1293,11 @@ class Window {
 
 	AddRadioLabel(parent, radio, label) {
 		let id = Date.now() + Math.random() * 1000;
-		radio.id = "id" + id;
+		radio.id = `id${id}`;
 
 		const newLabel = document.createElement("label");
 		newLabel.textContent = label;
-		newLabel.setAttribute("for", "id" + id);
+		newLabel.setAttribute("for", `id${id}`);
 		newLabel.setAttribute("tabindex", "0");
 		newLabel.style.maxWidth = "80%";
 		parent.appendChild(newLabel);

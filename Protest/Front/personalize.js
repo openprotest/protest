@@ -12,7 +12,7 @@ class Personalize extends Tabs {
 		this.tabsPanel.style.overflowY = "auto";
 
 		this.guiTab = this.AddTab("Appearance", "mono/tv.svg");
-		this.regionTab = this.AddTab("Regional format", "mono/earth.svg" );
+		this.regionTab = this.AddTab("Regional format", "mono/earth.svg");
 		this.sessionTab = this.AddTab("Session", "mono/hourglass.svg");
 		this.chatTab = this.AddTab("Chat", "mono/chat.svg");
 		this.relayTab = this.AddTab("Relay", "mono/relay.svg");
