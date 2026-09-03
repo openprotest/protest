@@ -96,7 +96,7 @@ const LOADER = {
 		"view.js",
 		"grid.js",
 		"console.js",
-		"xterm.js",
+		"xterm/xterm.js",
 		"ptyhost.js",
 		"listbox.js",
 		"ipbox.js"

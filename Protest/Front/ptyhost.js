@@ -5,45 +5,129 @@ class PtyHost extends Window {
 	static DEFAULT_SCROLLBACK = 1000;
 
 	static PALETTE = {
-		black:  "#111111", red:     "#de382b", green:   "#39b54a", yellow:  "#e1c706",
-		blue:   "#3080d8", magenta: "#bc3fbc", cyan:    "#2cb5e9", white:   "#cccccc",
-		brightBlack:  "#888888", brightRed:     "#ff0000", brightGreen:   "#00ff00", brightYellow:  "#ffff00",
-		brightBlue:   "#0000ff", brightMagenta: "#ff00ff", brightCyan:    "#00ffff", brightWhite:   "#ffffff"
+		black:   "#111111",
+		red:     "#de382b",
+		green:   "#39b54a",
+		yellow:  "#e1c706",
+
+		blue:    "#3080d8",
+		magenta: "#bc3fbc",
+		cyan:    "#2cb5e9",
+		white:   "#cccccc",
+
+		brightBlack:   "#888888",
+		brightRed:     "#ff0000",
+		brightGreen:   "#00ff00",
+		brightYellow:  "#ffff00",
+
+		brightBlue:    "#0000ff",
+		brightMagenta: "#ff00ff",
+		brightCyan:    "#00ffff",
+		brightWhite:   "#ffffff"
 	};
 
 	static SPECIAL_KEYS = {
-		"Enter":"\r", "Tab":"\t", "Backspace":"\x7F", "Escape":"\x1b",
-		"ArrowUp":"\x1b[A", "ArrowDown":"\x1b[B", "ArrowRight":"\x1b[C", "ArrowLeft":"\x1b[D",
-		"Home":"\x1b[H", "End":"\x1b[F", "Insert":"\x1b[2~", "Delete":"\x1b[3~",
-		"PageUp":"\x1b[5~", "PageDown":"\x1b[6~",
-		"F1":"\x1bOP", "F2":"\x1bOQ", "F3":"\x1bOR", "F4":"\x1bOS",
-		"F5":"\x1b[15~", "F6":"\x1b[17~", "F7":"\x1b[18~", "F8":"\x1b[19~",
-		"F9":"\x1b[20~", "F10":"\x1b[21~", "F11":"\x1b[23~", "F12":"\x1b[24~"
+		"Enter":"\r",
+		"Tab":"\t",
+		"Backspace":"\x7F",
+		"Escape":"\x1b",
+		"ArrowUp":"\x1b[A",
+		"ArrowDown":"\x1b[B",
+		"ArrowRight":"\x1b[C",
+		"ArrowLeft":"\x1b[D",
+		"Home":"\x1b[H",
+		"End":"\x1b[F",
+		"Insert":"\x1b[2~",
+		"Delete":"\x1b[3~",
+		"PageUp":"\x1b[5~",
+		"PageDown":"\x1b[6~",
+		"F1":"\x1bOP",
+		"F2":"\x1bOQ",
+		"F3":"\x1bOR",
+		"F4":"\x1bOS",
+		"F5":"\x1b[15~",
+		"F6":"\x1b[17~",
+		"F7":"\x1b[18~",
+		"F8":"\x1b[19~",
+		"F9":"\x1b[20~",
+		"F10":"\x1b[21~",
+		"F11":"\x1b[23~",
+		"F12":"\x1b[24~"
 	};
 
 	static SHIFT_KEYS = {
-		"F1":"\x1B[1;2P", "F2":"\x1B[1;2Q", "F3":"\x1B[1;2R", "F4":"\x1B[1;2S",
-		"F5":"\x1B[15;2~", "F6":"\x1B[17;2~", "F7":"\x1B[18;2~", "F8":"\x1B[19;2~",
-		"F9":"\x1B[20;2~", "F10":"\x1B[21;2~", "F11":"\x1B[23;2~", "F12":"\x1B[24;2~",
-		"ArrowUp":"\x1B[1;2A", "ArrowDown":"\x1B[1;2B", "ArrowRight":"\x1B[1;2C", "ArrowLeft":"\x1B[1;2D",
-		"Home":"\x1B[1;2H", "End":"\x1B[1;2F", "Insert":"\x1B[2;2~", "Delete":"\x1B[3;2~",
-		"PageUp":"\x1B[5;2~", "PageDown":"\x1B[6;2~"
+		"F1":"\x1B[1;2P",
+		"F2":"\x1B[1;2Q",
+		"F3":"\x1B[1;2R",
+		"F4":"\x1B[1;2S",
+		"F5":"\x1B[15;2~",
+		"F6":"\x1B[17;2~",
+		"F7":"\x1B[18;2~",
+		"F8":"\x1B[19;2~",
+		"F9":"\x1B[20;2~",
+		"F10":"\x1B[21;2~",
+		"F11":"\x1B[23;2~",
+		"F12":"\x1B[24;2~",
+		"ArrowUp":"\x1B[1;2A",
+		"ArrowDown":"\x1B[1;2B",
+		"ArrowRight":"\x1B[1;2C",
+		"ArrowLeft":"\x1B[1;2D",
+		"Home":"\x1B[1;2H",
+		"End":"\x1B[1;2F",
+		"Insert":"\x1B[2;2~",
+		"Delete":"\x1B[3;2~",
+		"PageUp":"\x1B[5;2~",
+		"PageDown":"\x1B[6;2~"
 	};
 
 	static CTRL_KEYS = {
-		"KeyA":"\x01", "KeyB":"\x02", "KeyC":"\x03", "KeyD":"\x04", "KeyE":"\x05", "KeyF":"\x06",
-		"KeyG":"\x07", "KeyH":"\x08", "KeyI":"\x09", "KeyJ":"\x0A", "KeyK":"\x0B", "KeyL":"\x0C",
-		"KeyM":"\x0D", "KeyN":"\x0E", "KeyO":"\x0F", "KeyP":"\x10", "KeyQ":"\x11", "KeyR":"\x12",
-		"KeyS":"\x13", "KeyT":"\x14", "KeyU":"\x15", "KeyV":"\x16", "KeyW":"\x17", "KeyX":"\x18",
-		"KeyY":"\x19", "KeyZ":"\x1A", "Backspace":"\x08",
-		"ArrowUp":"\x1B[1;5A", "ArrowDown":"\x1B[1;5B", "ArrowRight":"\x1B[1;5C", "ArrowLeft":"\x1B[1;5D",
-		"Home":"\x1B[1;5H", "End":"\x1B[1;5F", "Delete":"\x1B[3;5~",
-		"PageUp":"\x1B[5;5~", "PageDown":"\x1B[6;5~"
+		"KeyA":"\x01",
+		"KeyB":"\x02",
+		"KeyC":"\x03",
+		"KeyD":"\x04",
+		"KeyE":"\x05",
+		"KeyF":"\x06",
+		"KeyG":"\x07",
+		"KeyH":"\x08",
+		"KeyI":"\x09",
+		"KeyJ":"\x0A",
+		"KeyK":"\x0B",
+		"KeyL":"\x0C",
+		"KeyM":"\x0D",
+		"KeyN":"\x0E",
+		"KeyO":"\x0F",
+		"KeyP":"\x10",
+		"KeyQ":"\x11",
+		"KeyR":"\x12",
+		"KeyS":"\x13",
+		"KeyT":"\x14",
+		"KeyU":"\x15",
+		"KeyV":"\x16",
+		"KeyW":"\x17",
+		"KeyX":"\x18",
+		"KeyY":"\x19",
+		"KeyZ":"\x1A",
+		"Backspace":"\x08",
+		"ArrowUp":"\x1B[1;5A",
+		"ArrowDown":"\x1B[1;5B",
+		"ArrowRight":"\x1B[1;5C",
+		"ArrowLeft":"\x1B[1;5D",
+		"Home":"\x1B[1;5H",
+		"End":"\x1B[1;5F",
+		"Delete":"\x1B[3;5~",
+		"PageUp":"\x1B[5;5~",
+		"PageDown":"\x1B[6;5~"
 	};
 
 	static ALT_KEYS = {
-		"F1":"\x1B[1;3P", "F2":"\x1B[1;3Q", "F3":"\x1B[1;3R", "F4":"\x1B[1;3S",
-		"ArrowUp":"\x1B[1;3A", "ArrowDown":"\x1B[1;3B", "ArrowRight":"\x1B[1;3C", "ArrowLeft":"\x1B[1;3D"
+		"F1":"\x1B[1;3P",
+		"F2":"\x1B[1;3Q",
+		"F3":"\x1B[1;3R",
+		"F4":"\x1B[1;3S",
+		"ArrowUp":"\x1B[1;3A",
+		"ArrowDown":"\x1B[1;3B",
+		"ArrowRight":"\x1B[1;3C",
+		"ArrowLeft":"\x1B[1;3D"
 	};
 
 	constructor(args) {
@@ -58,7 +142,7 @@ class PtyHost extends Window {
 		}, args);
 
 		this.AddCssDependencies("ptyhost.css");
-		this.AddCssDependencies("xterm.css");
+		this.AddCssDependencies("xterm/xterm.css");
 
 		this.term = null;
 		this.fitAddon = null;
