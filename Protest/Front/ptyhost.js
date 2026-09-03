@@ -4,157 +4,46 @@ class PtyHost extends Window {
 	static CHAR_HEIGHT = 18;
 	static DEFAULT_SCROLLBACK = 1000;
 
+	static PALETTE = {
+		black:  "#111111", red:     "#de382b", green:   "#39b54a", yellow:  "#e1c706",
+		blue:   "#3080d8", magenta: "#bc3fbc", cyan:    "#2cb5e9", white:   "#cccccc",
+		brightBlack:  "#888888", brightRed:     "#ff0000", brightGreen:   "#00ff00", brightYellow:  "#ffff00",
+		brightBlue:   "#0000ff", brightMagenta: "#ff00ff", brightCyan:    "#00ffff", brightWhite:   "#ffffff"
+	};
+
 	static SPECIAL_KEYS = {
-		"Enter"      : "\r",
-		"NumpadEnter": "\r",
-		"Tab"        : "\t",
-		"Backspace"  : "\x7F", //xterm convention: bare backspace = DEL (0x7F); Ctrl+Backspace = BS (0x08)
-		"ArrowUp"    : "\x1b[A",
-		"ArrowDown"  : "\x1b[B",
-		"ArrowRight" : "\x1b[C",
-		"ArrowLeft"  : "\x1b[D",
-		"Home"       : "\x1b[H",
-		"End"        : "\x1b[F",
-		"F1"         : "\x1bOP",
-		"F2"         : "\x1bOQ",
-		"F3"         : "\x1bOR",
-		"F4"         : "\x1bOS",
-		"F5"         : "\x1b[15~",
-		"F6"         : "\x1b[17~",
-		"F7"         : "\x1b[18~",
-		"F8"         : "\x1b[19~",
-		"F9"         : "\x1b[20~",
-		"F10"        : "\x1b[21~",
-		"F11"        : "\x1b[23~",
-		"F12"        : "\x1b[24~",
-		"Insert"     : "\x1b[2~",
-		"Delete"     : "\x1b[3~",
-		"PageUp"     : "\x1b[5~",
-		"PageDown"   : "\x1b[6~"
+		"Enter":"\r", "Tab":"\t", "Backspace":"\x7F", "Escape":"\x1b",
+		"ArrowUp":"\x1b[A", "ArrowDown":"\x1b[B", "ArrowRight":"\x1b[C", "ArrowLeft":"\x1b[D",
+		"Home":"\x1b[H", "End":"\x1b[F", "Insert":"\x1b[2~", "Delete":"\x1b[3~",
+		"PageUp":"\x1b[5~", "PageDown":"\x1b[6~",
+		"F1":"\x1bOP", "F2":"\x1bOQ", "F3":"\x1bOR", "F4":"\x1bOS",
+		"F5":"\x1b[15~", "F6":"\x1b[17~", "F7":"\x1b[18~", "F8":"\x1b[19~",
+		"F9":"\x1b[20~", "F10":"\x1b[21~", "F11":"\x1b[23~", "F12":"\x1b[24~"
 	};
 
 	static SHIFT_KEYS = {
-		"F1" : "\x1B[1;2P",
-		"F2" : "\x1B[1;2Q",
-		"F3" : "\x1B[1;2R",
-		"F4" : "\x1B[1;2S",
-		"F5" : "\x1B[15;2~",
-		"F6" : "\x1B[17;2~",
-		"F7" : "\x1B[18;2~",
-		"F8" : "\x1B[19;2~",
-		"F9" : "\x1B[20;2~",
-		"F10": "\x1B[21;2~",
-		"F11": "\x1B[23;2~",
-		"F12": "\x1B[24;2~",
-		"ArrowUp"   : "\x1B[1;2A",
-		"ArrowDown" : "\x1B[1;2B",
-		"ArrowRight": "\x1B[1;2C",
-		"ArrowLeft" : "\x1B[1;2D",
-		"Home"      : "\x1B[1;2H",
-		"End"       : "\x1B[1;2F",
-		"Insert"    : "\x1B[2;2~",
-		"Delete"    : "\x1B[3;2~",
-		"PageUp"    : "\x1B[5;2~",
-		"PageDown"  : "\x1B[6;2~",
+		"F1":"\x1B[1;2P", "F2":"\x1B[1;2Q", "F3":"\x1B[1;2R", "F4":"\x1B[1;2S",
+		"F5":"\x1B[15;2~", "F6":"\x1B[17;2~", "F7":"\x1B[18;2~", "F8":"\x1B[19;2~",
+		"F9":"\x1B[20;2~", "F10":"\x1B[21;2~", "F11":"\x1B[23;2~", "F12":"\x1B[24;2~",
+		"ArrowUp":"\x1B[1;2A", "ArrowDown":"\x1B[1;2B", "ArrowRight":"\x1B[1;2C", "ArrowLeft":"\x1B[1;2D",
+		"Home":"\x1B[1;2H", "End":"\x1B[1;2F", "Insert":"\x1B[2;2~", "Delete":"\x1B[3;2~",
+		"PageUp":"\x1B[5;2~", "PageDown":"\x1B[6;2~"
 	};
 
 	static CTRL_KEYS = {
-		"KeyA": "\x01",
-		"KeyB": "\x02",
-		"KeyC": "\x03",
-		"KeyD": "\x04",
-		"KeyE": "\x05",
-		"KeyF": "\x06",
-		"KeyG": "\x07",
-		"KeyH": "\x08",
-		"KeyI": "\x09",
-		"KeyJ": "\x0A",
-		"KeyK": "\x0B",
-		"KeyL": "\x0C",
-		"KeyM": "\x0D",
-		"KeyN": "\x0E",
-		"KeyO": "\x0F",
-		"KeyP": "\x10",
-		"KeyQ": "\x11",
-		"KeyR": "\x12",
-		"KeyS": "\x13",
-		"KeyT": "\x14",
-		"KeyU": "\x15",
-		"KeyV": "\x16",
-		"KeyW": "\x17",
-		"KeyX": "\x18",
-		"KeyY": "\x19",
-		"KeyZ": "\x1A",
-		"F1"  :"\x1B[1;5P",
-		"F2"  :"\x1B[1;5Q",
-		"F3"  :"\x1B[1;5R",
-		"F4"  :"\x1B[1;5S",
-		"F5"  :"\x1B[15;5~",
-		"F6"  :"\x1B[17;5~",
-		"F7"  :"\x1B[18;5~",
-		"F8"  :"\x1B[19;5~",
-		"F9"  :"\x1B[20;5~",
-		"F10" :"\x1B[21;5~",
-		"F11" :"\x1B[23;5~",
-		"F12" :"\x1B[24;5~",
-		"Backspace" : "\x08", //Ctrl+Backspace = BS (0x08), counterpart to bare Backspace = DEL (0x7F)
-		"ArrowUp"   : "\x1B[1;5A",
-		"ArrowDown" : "\x1B[1;5B",
-		"ArrowRight": "\x1B[1;5C",
-		"ArrowLeft" : "\x1B[1;5D",
-		"Home"      : "\x1B[1;5H",
-		"End"       : "\x1B[1;5F",
-		"Insert"    : "\x1B[2;5~",
-		"Delete"    : "\x1B[3;5~",
-		"PageUp"    : "\x1B[5;5~",
-		"PageDown"  : "\x1B[6;5~",
+		"KeyA":"\x01", "KeyB":"\x02", "KeyC":"\x03", "KeyD":"\x04", "KeyE":"\x05", "KeyF":"\x06",
+		"KeyG":"\x07", "KeyH":"\x08", "KeyI":"\x09", "KeyJ":"\x0A", "KeyK":"\x0B", "KeyL":"\x0C",
+		"KeyM":"\x0D", "KeyN":"\x0E", "KeyO":"\x0F", "KeyP":"\x10", "KeyQ":"\x11", "KeyR":"\x12",
+		"KeyS":"\x13", "KeyT":"\x14", "KeyU":"\x15", "KeyV":"\x16", "KeyW":"\x17", "KeyX":"\x18",
+		"KeyY":"\x19", "KeyZ":"\x1A", "Backspace":"\x08",
+		"ArrowUp":"\x1B[1;5A", "ArrowDown":"\x1B[1;5B", "ArrowRight":"\x1B[1;5C", "ArrowLeft":"\x1B[1;5D",
+		"Home":"\x1B[1;5H", "End":"\x1B[1;5F", "Delete":"\x1B[3;5~",
+		"PageUp":"\x1B[5;5~", "PageDown":"\x1B[6;5~"
 	};
 
 	static ALT_KEYS = {
-		"F1" : "\x1B[1;3P",
-		"F2" : "\x1B[1;3Q",
-		"F3" : "\x1B[1;3R",
-		"F4" : "\x1B[1;3S",
-		"F5" : "\x1B[15;3~",
-		"F6" : "\x1B[17;3~",
-		"F7" : "\x1B[18;3~",
-		"F8" : "\x1B[19;3~",
-		"F9" : "\x1B[20;3~",
-		"F10": "\x1B[21;3~",
-		"F11": "\x1B[23;3~",
-		"F12": "\x1B[24;3~",
-		"ArrowUp"   : "\x1B[1;3A",
-		"ArrowDown" : "\x1B[1;3B",
-		"ArrowRight": "\x1B[1;3C",
-		"ArrowLeft" : "\x1B[1;3D",
-	};
-
-	static APP_CURSOR_KEYS = {
-		"ArrowUp"   : "\x1bOA",
-		"ArrowDown" : "\x1bOB",
-		"ArrowRight": "\x1bOC",
-		"ArrowLeft" : "\x1bOD",
-		"Home"      : "\x1bOH",
-		"End"       : "\x1bOF"
-	};
-
-	static KEYPAD_KEYS = {
-		"Numpad0": "\x1BOp",
-		"Numpad1": "\x1BOq",
-		"Numpad2": "\x1BOr",
-		"Numpad3": "\x1BOs",
-		"Numpad4": "\x1BOt",
-		"Numpad5": "\x1BOu",
-		"Numpad6": "\x1BOv",
-		"Numpad7": "\x1BOw",
-		"Numpad8": "\x1BOx",
-		"Numpad9": "\x1BOy",
-		"NumpadDecimal" : "\x1BOn",
-		"NumpadAdd"     : "\x1BOk",
-		"NumpadSubtract": "\x1BOm",
-		"NumpadMultiply": "\x1BOj",
-		"NumpadDivide"  : "\x1BOo",
-		"NumpadEnter"   : "\x1BOM"
+		"F1":"\x1B[1;3P", "F2":"\x1B[1;3Q", "F3":"\x1B[1;3R", "F4":"\x1B[1;3S",
+		"ArrowUp":"\x1B[1;3A", "ArrowDown":"\x1B[1;3B", "ArrowRight":"\x1B[1;3C", "ArrowLeft":"\x1B[1;3D"
 	};
 
 	constructor(args) {
@@ -164,24 +53,33 @@ class PtyHost extends Window {
 			darkMode: false,
 			host: "",
 			ansi: true,
-			autoScroll: true,
 			bell: false,
-			smoothCursor: false,
 			scrollback: PtyHost.DEFAULT_SCROLLBACK
 		}, args);
 
 		this.AddCssDependencies("ptyhost.css");
+		this.AddCssDependencies("xterm.css");
+
+		this.term = null;
+		this.fitAddon = null;
+		this.minimapRafId = null;
+		this.ws = null;
+
+		this.resizeAware = false;
+		this.resizeWs = null;
+		this.lastSentCols = -1;
+		this.lastSentRows = -1;
 
 		this.InitializeComponents();
-		this.InitializeTerminalState();
-		this.ResetTextAttributes();
-
-		this.ws = null;
+		this.InitializeTerminal();
 	}
 
 	AfterResize() { //overrides
 		super.AfterResize();
-		setTimeout(()=> this.ResizeMinimap(), WIN.ANIME_DURATION);
+		setTimeout(()=> {
+			this.FitTerminal();
+			this.ResizeMinimap();
+		}, WIN.ANIME_DURATION);
 	}
 
 	PopOut() { //overrides
@@ -199,29 +97,6 @@ class PtyHost extends Window {
 		};
 	}
 
-	InitializeTerminalState() {
-		this.cursor = {x:0, y:0};
-		this.screen = Object.create(null);
-		this.lines = Object.create(null);
-		this.maxLineY = 0;
-		this.pendingSequence = "";
-
-		this.scrollRegionTop = null;
-		this.scrollRegionBottom = null;
-
-		this.savedCursorPos = null;
-		this.savedLine = null; //TODO:
-		this.savedScreen = null;
-		this.savedTitle = null;
-
-		this.lineWrappingMode = false; //TODO:
-		this.insertMode = false; //TODO:
-		this.localEchoMode = false; //TODO:
-		this.appCursorKeys = false;
-		this.keypadApplicationMode = false;
-		this.bracketedMode = false;
-	}
-
 	InitializeComponents() {
 		this.SetupToolbar();
 		this.connectButton = this.AddToolbarButton("Connect", "mono/connect.svg?light");
@@ -229,47 +104,41 @@ class PtyHost extends Window {
 
 		this.darkModeButton = this.AddToolbarButton("Dark mode", "mono/darkmode.svg?light");
 		this.bellSoundButton = this.AddToolbarButton("Bell sound", "mono/notifications.svg?light");
-		this.autoscrollButton = this.AddToolbarButton("Auto-scroll", "mono/autoscroll.svg?light");
 		this.optionsButton = this.AddToolbarButton("Options", "mono/wrench.svg?light");
 		this.AddToolbarSeparator();
 
 		this.sendKeyButton = this.AddToolbarButton("Send key", "mono/keyboard.svg?light");
 		this.pasteButton = this.AddToolbarButton("Paste", "mono/clipboard.svg?light");
-		//this.saveText = this.AddToolbarButton("Save text", "mono/floppy.svg?light");
 
 		this.darkModeButton.style.borderBottom = this.args.darkMode ? "3px solid rgb(192,192,192)" : "none";
 		this.bellSoundButton.style.borderBottom = this.args.bell ? "3px solid rgb(192,192,192)" : "none";
-		this.autoscrollButton.style.borderBottom = this.args.autoScroll ? "3px solid rgb(192,192,192)" : "none";
 
 		this.darkModeButton.style.display = "none";
 		this.bellSoundButton.style.display = "none";
-		this.autoscrollButton.style.display = "none";
 
 		this.defaultElement = this.content;
 
 		this.win.style.containerType = "inline-size";
 
-		this.content.tabIndex = 1;
 		this.content.classList.add("pty-content");
-
 		this.win.style.colorScheme = this.args.darkMode ? "dark" : "inherit";
 
+		//Kept for backwards compatibility: subclasses append this element and toggle
+		//its visibility. xterm.js renders its own cursor, so this is an inert stub.
 		this.cursorElement = document.createElement("div");
 		this.cursorElement.className = "pty-cursor";
-		this.cursorElement.style.transition = this.args.smoothCursor ? ".1s" : "0s";
+		this.cursorElement.style.display = "none";
 
 		this.statusBox = document.createElement("div");
 		this.statusBox.className = "pty-status-box";
 		this.statusBox.textContent = "Connecting...";
 
-		this.content.onclick = ()=> this.content.focus();
-		this.content.onfocus = ()=> this.BringToFront();
-		this.content.onkeydown = event=> this.Pty_onkeydown(event);
+		this.content.onclick = ()=> this.term?.focus();
+		this.content.onfocus = ()=> { this.BringToFront(); this.term?.focus(); };
 
 		this.connectButton.onclick    = ()=> this.ConnectDialog(this.args.host);
 		this.darkModeButton.onclick   = ()=> this.ToggleDarkMode();
 		this.bellSoundButton.onclick  = ()=> this.ToggleBell();
-		this.autoscrollButton.onclick = ()=> this.ToggleAutoscroll();
 		this.optionsButton.onclick    = ()=> this.OptionsDialog();
 		this.sendKeyButton.onclick    = ()=> this.CustomKeyDialog();
 		this.pasteButton.onclick      = ()=> this.TextFromClipboard();
@@ -291,8 +160,6 @@ class PtyHost extends Window {
 		syncContentTop();
 		new MutationObserver(syncContentTop).observe(this.content, { attributes:true, attributeFilter:["style"] });
 
-		this.content.addEventListener("scroll", ()=> this.UpdateMinimap());
-
 		this.minimap.onmousedown = event=> {
 			if (event.buttons !== 1) return;
 			event.preventDefault();
@@ -313,75 +180,147 @@ class PtyHost extends Window {
 			document.addEventListener("mouseup", onUp);
 		};
 
-		this.minimap.onwheel = event=> this.content.scrollBy(0, event.deltaY);
-	}
-
-	ResetTextAttributes() {
-		this.foreColor = null;
-		this.backColor = null;
-		this.bold = false;
-		this.faint = false;
-		this.italic = false;
-		this.underline = false;
-		this.blinking = false;
-		this.fastBlinking = false;
-		this.inverse = false;
-		this.hidden = false;
-		this.strikethrough = false;
-	}
-
-	CaptureTextAttributes() {
-		return {
-			foreColor: this.foreColor,
-			backColor: this.backColor,
-			bold: this.bold,
-			faint: this.faint,
-			italic: this.italic,
-			underline: this.underline,
-			blinking: this.blinking,
-			fastBlinking: this.fastBlinking,
-			inverse: this.inverse,
-			hidden: this.hidden,
-			strikethrough: this.strikethrough
+		this.minimap.onwheel = event=> {
+			if (!this.term) return;
+			this.term.scrollLines(Math.sign(event.deltaY) * 3);
 		};
 	}
 
-	RestoreTextAttributes(attributes) {
-		if (!attributes) {
-			this.ResetTextAttributes();
+	InitializeTerminal() {
+		const TerminalCtor = window.Terminal;
+		if (!TerminalCtor) {
+			console.error("xterm.js is not loaded (window.Terminal is undefined).");
 			return;
 		}
 
-		this.foreColor = attributes.foreColor;
-		this.backColor = attributes.backColor;
-		this.bold = attributes.bold;
-		this.faint = attributes.faint;
-		this.italic = attributes.italic;
-		this.underline = attributes.underline;
-		this.blinking = attributes.blinking;
-		this.fastBlinking = attributes.fastBlinking;
-		this.inverse = attributes.inverse;
-		this.hidden = attributes.hidden;
-		this.strikethrough = attributes.strikethrough;
+		this.term = new TerminalCtor({
+			fontFamily: "monospace",
+			fontSize: 15,
+			scrollback: this.GetScrollbackLimit(),
+			cursorStyle: "bar",
+			cursorBlink: true,
+			convertEol: true, //match the old parser: a bare LF also returns the carriage
+			theme: this.BuildTheme()
+		});
+
+		const FitCtor = window.FitAddon && (window.FitAddon.FitAddon || window.FitAddon);
+		if (FitCtor) {
+			this.fitAddon = new FitCtor();
+			this.term.loadAddon(this.fitAddon);
+		}
+
+		const LinksCtor = window.WebLinksAddon && (window.WebLinksAddon.WebLinksAddon || window.WebLinksAddon);
+		if (LinksCtor) {
+			this.term.loadAddon(new LinksCtor());
+		}
+
+		//Outbound: keystrokes, pastes and any device reports xterm generates.
+		this.term.onData(data => this.SendToWs(data));
+		this.term.onBinary(data => this.SendToWs(data));
+
+		this.term.onBell(() => {
+			if (this.args.bell) this.Bell();
+		});
+
+		this.term.onTitleChange(title => {
+			if (this.args.host && this.args.host.length > 0) {
+				this.SetTitle(`${this.args.host} - ${title}`);
+			}
+			else {
+				this.SetTitle(title);
+			}
+		});
+
+		this.term.onResize(() => {
+			this.UpdateMinimap();
+			this.SendResize();
+		});
+		this.term.onScroll(() => this.UpdateMinimap());
+		this.term.onRender(() => this.UpdateMinimap());
+
+		//Let the browser handle Ctrl+Shift+C / Ctrl+Shift+V (copy/paste) as before.
+		this.term.attachCustomKeyEventHandler(event => {
+			if (event.ctrlKey && event.shiftKey && (event.code === "KeyC" || event.code === "KeyV")) {
+				return false;
+			}
+			return true;
+		});
+
+		//Open once the content element has been laid out. The window may still be
+		//animating in (zero-sized), so fit again after the open animation settles.
+		requestAnimationFrame(() => {
+			if (!this.term) return;
+			this.term.open(this.content);
+			this.FitTerminal();
+			this.ResizeMinimap();
+			setTimeout(() => {
+				this.FitTerminal();
+				this.ResizeMinimap();
+			}, WIN.ANIME_DURATION + 50);
+		});
 	}
 
-	SaveCursorState() {
-		this.savedCursorPos = {
-			x: this.cursor.x,
-			y: this.cursor.y,
-			attributes: this.CaptureTextAttributes()
-		};
+	BuildTheme() {
+		const accent = getComputedStyle(document.documentElement).getPropertyValue("--clr-accent").trim() || "#33bbff";
+		const dark = this.args.darkMode;
+		return Object.assign({
+			background: dark ? "#1a1a1a" : "#ffffff",
+			foreground: dark ? "#e0e0e0" : "#202020",
+			cursor: accent,
+			cursorAccent: dark ? "#1a1a1a" : "#ffffff",
+			selectionBackground: "rgba(80,150,220,0.4)" //xterm's color parser doesn't accept color-mix()
+		}, PtyHost.PALETTE);
 	}
 
-	RestoreCursorState() {
-		if (!this.savedCursorPos) return;
-		this.cursor.x = this.savedCursorPos.x;
-		this.cursor.y = this.savedCursorPos.y;
-		this.RestoreTextAttributes(this.savedCursorPos.attributes);
+	FitTerminal() {
+		if (!this.term || !this.fitAddon) return;
+		if (this.content.clientWidth === 0 || this.content.clientHeight === 0) return;
+		try {
+			this.fitAddon.fit();
+		}
+		catch (ex) {
+			console.warn("xterm fit failed:", ex);
+		}
+		this.SendResize();
+	}
+
+	SendToWs(data) {
+		if (!this.ws || this.ws.readyState !== 1) return;
+		this.ws.send(data);
+	}
+
+	//Tells the backend the current terminal dimensions via a small JSON control
+	//frame. Deduped, and re-sent after a reconnect (new socket) even if the size
+	//is unchanged, so a freshly spawned pty/shell picks up the real geometry.
+	SendResize() {
+		if (!this.resizeAware || !this.term) return;
+		if (!this.ws || this.ws.readyState !== 1) return;
+
+		if (this.ws !== this.resizeWs) {
+			this.resizeWs = this.ws;
+			this.lastSentCols = -1;
+			this.lastSentRows = -1;
+		}
+
+		const cols = this.term.cols;
+		const rows = this.term.rows;
+		if (cols === this.lastSentCols && rows === this.lastSentRows) return;
+
+		this.lastSentCols = cols;
+		this.lastSentRows = rows;
+
+		try {
+			this.ws.send(JSON.stringify({cols, rows}));
+		}
+		catch {}
 	}
 
 	Close() { //overrides
 		if (this.ws !== null) this.ws.close();
+		if (this.term) {
+			try { this.term.dispose(); } catch {}
+			this.term = null;
+		}
 		super.Close();
 	}
 
@@ -391,6 +330,7 @@ class PtyHost extends Window {
 		this.args.darkMode = !this.args.darkMode;
 		this.darkModeButton.style.borderBottom = this.args.darkMode ? "3px solid rgb(192,192,192)" : "none";
 		this.win.style.colorScheme = this.args.darkMode ? "dark" : "inherit";
+		if (this.term) this.term.options.theme = this.BuildTheme();
 	}
 
 	ToggleBell() {
@@ -398,13 +338,8 @@ class PtyHost extends Window {
 		this.bellSoundButton.style.borderBottom = this.args.bell ? "3px solid rgb(192,192,192)" : "none";
 	}
 
-	ToggleAutoscroll() {
-		this.args.autoScroll = !this.args.autoScroll;
-		this.autoscrollButton.style.borderBottom = this.args.autoScroll ? "3px solid rgb(192,192,192)" : "none";
-	}
-
 	OptionsDialog() {
-		const dialog = this.DialogBox("340px");
+		const dialog = this.DialogBox("300px");
 		if (dialog === null) return;
 
 		const {okButton, innerBox} = dialog;
@@ -421,15 +356,11 @@ class PtyHost extends Window {
 		innerBox.appendChild(document.createElement("br"));
 		innerBox.appendChild(document.createElement("br"));
 
-		const smoothCursorToggle = this.CreateToggle("Smooth cursor", this.args.smoothCursor, innerBox);
+		const cursorBlinkToggle = this.CreateToggle("Blinking cursor", this.term ? this.term.options.cursorBlink : true, innerBox);
 		innerBox.appendChild(document.createElement("br"));
 		innerBox.appendChild(document.createElement("br"));
 
 		const ansiToggle = this.CreateToggle("Escape ANSI codes", this.args.ansi, innerBox);
-		innerBox.appendChild(document.createElement("br"));
-		innerBox.appendChild(document.createElement("br"));
-
-		const autoScrollToggle = this.CreateToggle("Auto-scroll", this.args.autoScroll, innerBox);
 		innerBox.appendChild(document.createElement("br"));
 		innerBox.appendChild(document.createElement("br"));
 
@@ -458,24 +389,22 @@ class PtyHost extends Window {
 			this.args.darkMode = darkModeToggle.checkbox.checked;
 			this.args.ansi = ansiToggle.checkbox.checked;
 			this.args.bell = bellToggle.checkbox.checked;
-			this.args.autoScroll = autoScrollToggle.checkbox.checked;
-			this.args.smoothCursor = smoothCursorToggle.checkbox.checked;
 			this.args.scrollback = Number.isNaN(scrollback) ? PtyHost.DEFAULT_SCROLLBACK : Math.max(0, scrollback);
 			dialog.Close();
 
 			this.win.style.colorScheme = this.args.darkMode ? "dark" : "inherit";
 
-			this.TrimHistory();
-
-			this.cursorElement.style.transition = this.args.smoothCursor ? ".1s" : "0s";
-			this.cursorElement.style.left = PtyHost.CHAR_WIDTH * this.cursor.x + "px";
-			this.cursorElement.style.top = PtyHost.CHAR_HEIGHT * this.cursor.y + "px";
+			if (this.term) {
+				this.term.options.scrollback = this.args.scrollback;
+				this.term.options.cursorBlink = cursorBlinkToggle.checkbox.checked;
+				this.term.options.theme = this.BuildTheme();
+			}
 
 			this.darkModeButton.style.borderBottom = this.args.darkMode ? "3px solid rgb(192,192,192)" : "none";
 			this.bellSoundButton.style.borderBottom = this.args.bell ? "3px solid rgb(192,192,192)" : "none";
-			this.autoscrollButton.style.borderBottom = this.args.autoScroll ? "3px solid rgb(192,192,192)" : "none";
 
-			this.content.focus();
+			this.UpdateMinimap();
+			this.term?.focus();
 		};
 
 		setTimeout(()=>darkModeToggle.label.focus(), 200);
@@ -571,10 +500,8 @@ class PtyHost extends Window {
 
 		okButton.onclick = ()=> {
 			dialog.Close();
-			if (this.ws && this.ws.readyState === 1) {
-				this.ws.send(keyInput.value);
-			}
-			this.content.focus();
+			this.SendToWs(keyInput.value);
+			this.term?.focus();
 		};
 
 		ListKeys();
@@ -592,1077 +519,54 @@ class PtyHost extends Window {
 		}
 
 		if (text === null || text.length === 0) return;
-		if (this.ws === null || this.ws.readyState !== 1) return;
 
-		if (this.bracketedMode) {
-			this.ws.send(`\x1b[200~${text}\x1b[201~`);
-		}
-		else {
-			this.ws.send(text);
-		}
-
-		this.content.focus();
-	}
-
-	Pty_onkeydown(event) {
-		if (event.ctrlKey && event.shiftKey) return;
-		if (!this.ws || this.ws.readyState !== 1) return;
-
-		event.preventDefault();
-
-		if (this.keypadApplicationMode) {
-			const keypadKey = PtyHost.KEYPAD_KEYS[event.code];
-			if (keypadKey) {
-				this.ws.send(keypadKey);
-				return;
-			}
-		}
-
-		if (event.shiftKey && PtyHost.SHIFT_KEYS[event.code]) {
-			this.ws.send(PtyHost.SHIFT_KEYS[event.code]);
-		}
-		else if (event.ctrlKey && PtyHost.CTRL_KEYS[event.code]) {
-			this.ws.send(PtyHost.CTRL_KEYS[event.code]);
-		}
-		else if (event.altKey && PtyHost.ALT_KEYS[event.code]) {
-			this.ws.send(PtyHost.ALT_KEYS[event.code]);
-		}
-		else if (this.appCursorKeys && PtyHost.APP_CURSOR_KEYS[event.code]) {
-			this.ws.send(PtyHost.APP_CURSOR_KEYS[event.code]);
-		}
-		else if (event.key.length === 1) {
-			this.ws.send(event.key);
-		}
-		else {
-			const key = PtyHost.SPECIAL_KEYS[event.code];
-			if (key) this.ws.send(key);
+		//term.paste routes through onData and applies bracketed-paste mode when active.
+		if (this.term) {
+			this.term.paste(text);
+			this.term.focus();
 		}
 	}
 
 	HandleMessage(data) {
-		if (data.length === 0) return;
+		if (!this.term || data.length === 0) return;
 
-		if (this.pendingSequence.length > 0) {
-			data = this.pendingSequence + data;
-			this.pendingSequence = "";
-		}
+		//First output after a (re)connect syncs the backend to our real geometry.
+		this.SendResize();
 
-		messageLoop:
-		for (let i=0; i<data.length; i++) {
-			switch (data[i]) {
-			case "\x07":
-				if (this.args.bell) this.Bell();
-				this.cursorElement.style.animation = "pty-shake .4s 1";
-				setTimeout(()=>{ this.cursorElement.style.animation = "pty-blinking 1.2s infinite"; }, 400);
-				break;
-
-			case "\x08": //backspace or move left
-				this.cursor.x = Math.max(0, this.cursor.x - 1);
-				break;
-
-			case "\x09": //horizontal tab
-				if (this.GetScreenWidth() > 0) {
-					this.cursor.x = Math.min(this.GetScreenWidth() - 1, Math.floor(this.cursor.x / 8) * 8 + 8);
-				}
-				break;
-
-			case "\n": //lf 0x0a
-				this.cursor.x = 0;
-				this.cursor.y++;
-				if (this.cursor.y > this.maxLineY) this.maxLineY = this.cursor.y;
-				break;
-
-			case "\x0b": //vertical tab
-			case "\x0c": //form feed
-				this.cursor.y++;
-				if (this.cursor.y > this.maxLineY) this.maxLineY = this.cursor.y;
-				break;
-
-			case "\r": //cr 0x0d
-				if (i+2 < data.length && data[i+1]==="\r" && data[i+2]==="\n") {
-					this.cursor.x = 0;
-					this.cursor.y++;
-					if (this.cursor.y > this.maxLineY) this.maxLineY = this.cursor.y;
-					i+=2;
-					break;
-				}
-				else if (i+1 < data.length && data[i+1]==="\n") {
-					this.cursor.x = 0;
-					this.cursor.y++;
-					if (this.cursor.y > this.maxLineY) this.maxLineY = this.cursor.y;
-					i++;
-					break;
-				}
-				else {
-					this.cursor.x = 0;
-				}
-				break;
-
-			case "\x1b": //esc
-				if (this.args.ansi) {
-					const consumed = this.HandleEscSequence(data, i);
-					if (consumed === null) {
-						this.pendingSequence = data.slice(i);
-						break messageLoop;
-					}
-
-					i += consumed - 1;
-				}
-				else {
-					const width = this.GetScreenWidth();
-					if (width <= 0) break;
-					let char = this.screen[`${this.cursor.x},${this.cursor.y}`];
-					if (!char) {
-						char = document.createElement("span");
-						char.style.left = `${this.cursor.x * PtyHost.CHAR_WIDTH}px`;
-						this.GetOrCreateLine(this.cursor.y).appendChild(char);
-						this.screen[`${this.cursor.x},${this.cursor.y}`] = char;
-					}
-					char.textContent = data[i];
-					this.cursor.x++;
-				}
-				break;
-
-			case "\x7f": break; //delete
-
-			default:
-				const width = this.GetScreenWidth();
-				if (width <= 0) break;
-
-				if (this.cursor.x >= width && this.lineWrappingMode) {
-					this.cursor.x = 0;
-					this.cursor.y++;
-				}
-
-				if (this.insertMode) {
-					this.InsertBlankCharacters(1);
-				}
-
-				let char = this.screen[`${this.cursor.x},${this.cursor.y}`];
-				if (!char) {
-					char = document.createElement("span");
-					char.style.left = `${this.cursor.x * PtyHost.CHAR_WIDTH}px`;
-					this.GetOrCreateLine(this.cursor.y).appendChild(char);
-					this.screen[`${this.cursor.x},${this.cursor.y}`] = char;
-				}
-				else {
-					if (char.style.color)           char.style.color = "unset";
-					if (char.style.backgroundColor) char.style.backgroundColor = "unset";
-					if (char.style.fontWeight)      char.style.fontWeight = "normal";
-					if (char.style.fontStyle)       char.style.fontStyle = "normal";
-					if (char.style.opacity)         char.style.opacity = "1";
-					if (char.style.textDecoration)  char.style.textDecoration = "none";
-					if (char.style.animation)       char.style.animation = "none";
-					if (char.style.visibility)      char.style.visibility = "visible";
-				}
-
-				if (data[i] === " ") {
-					char.innerHTML = "&nbsp;";
-				}
-				else {
-					char.textContent = data[i];
-				}
-
-				let foreColor, backColor;
-				if (this.inverse) {
-					foreColor = this.backColor ?? "rgb(32,32,32)";
-					backColor = this.foreColor ?? "rgb(224,224,224)";
-				}
-				else {
-					foreColor = this.foreColor;
-					backColor = this.backColor;
-				}
-
-				if (foreColor)   char.style.color = foreColor;
-				if (backColor)   char.style.backgroundColor = backColor;
-
-				if (this.bold)   char.style.fontWeight = "bold";
-				if (this.faint)  char.style.opacity = "0.6";
-				if (this.italic) char.style.fontStyle = "italic";
-
-				const textDecoration = [];
-				if (this.underline)            textDecoration.push("underline");
-				if (this.strikethrough)        textDecoration.push("line-through");
-				if (textDecoration.length > 0) char.style.textDecoration = textDecoration.join(" ");
-				if (this.blinking)             char.style.animation = "pty-blinking 1s infinite";
-				if (this.fastBlinking)         char.style.animation = "pty-fast-blinking .2s infinite";
-				if (this.hidden)               char.style.visibility = "hidden";
-
-				this.cursor.x++;
-				break;
-			}
-
-			this.lastCharacter = data[i];
-		}
-
-		if (this.scrollRegionTop !== null && this.cursor.y < this.GetScrollRegionTop()) {
-			this.cursor.y = this.GetScrollRegionTop();
-		}
-		if (this.scrollRegionBottom !== null && this.cursor.y >= this.GetScrollRegionBottom()) {
-			while (this.cursor.y >= this.GetScrollRegionBottom()) {
-				this.ScrollUp(1);
-				this.cursor.y--;
-			}
-		}
-
-		//Keep viewport in step with cursor when LF / IND advanced past the last written line.
-		if (this.cursor.y > this.maxLineY) {
-			this.maxLineY = this.cursor.y;
-		}
-
-		this.TrimHistory();
-		this.UpdateMinimap();
-
-		this.cursorElement.style.left = PtyHost.CHAR_WIDTH * this.cursor.x + "px";
-		this.cursorElement.style.top = PtyHost.CHAR_HEIGHT * this.cursor.y + "px";
-
-		if (this.args.autoScroll) {
-			if (this.args.smoothCursor) {
-				setTimeout(()=>this.cursorElement.scrollIntoView(), 200);
-			}
-			else {
-				this.cursorElement.scrollIntoView();
-			}
-		}
-	}
-
-	HandleEscSequence(data, index) {
-		if (index + 1 >= data.length) return null;
-
-		switch (data[index + 1]) {
-		case "[": return this.HandleCSI(data, index);
-		case "P": return this.HandleDCS(data, index);
-		case "]": return this.HandleOSC(data, index);
-		case "(": return this.HandleCSD(data, index);
-
-		case "=": //application keypad mode
-			this.keypadApplicationMode = true;
-			return 2;
-
-		case ">": //normal keypad mode
-			this.keypadApplicationMode = false;
-			return 2;
-
-		case "7": //save cursor position
-			this.SaveCursorState();
-			return 2;
-
-		case "8": //restore cursor position
-			this.RestoreCursorState();
-			return 2;
-
-		case "D": //index
-			this.Index();
-			return 2;
-
-		case "E": //next line
-			this.cursor.x = 0;
-			this.Index();
-			return 2;
-
-		case "M": //reverse index
-			this.ReverseIndex();
-			return 2;
-
-		case "c": //reset to initial state
-			this.ResetTerminal();
-			return 2;
-
-		default:
-			console.warn("Unknown escape sequence: " + data[index + 1]);
-			return 2;
-		}
-	}
-
-	HandleCSI(data, index) { //Control Sequence Introducer
-		if (index + 1 >= data.length) return null;
-
-		let offset = index + 2;
-		let prefix = "";
-		if (offset < data.length && data[offset] >= "<" && data[offset] <= "?") {
-			prefix = data[offset++];
-		}
-
-		const parameterStart = offset;
-		while (offset < data.length && ((data[offset] >= "0" && data[offset] <= "9") || data[offset] === ";" || data[offset] === ":")) {
-			offset++;
-		}
-
-		const intermediateStart = offset;
-		while (offset < data.length && data[offset] >= " " && data[offset] <= "/") {
-			offset++;
-		}
-
-		if (offset >= data.length) return null;
-		if (data[offset] < "@" || data[offset] > "~") return 2;
-
-		const paramsString = data.slice(parameterStart, intermediateStart);
-		const command = data[offset];
-		const params = paramsString.length === 0 ? [] : paramsString.split(";").map(param => {
-			return param === "" ? 0 : parseInt(param, 10);
-		});
-
-		switch (command) {
-		case "@": this.InsertBlankCharacters(params[0] || 1); break;
-
-		case "A": //CUU - cursor up, clamp at viewport top
-			this.cursor.y = this.ClampCursorY(this.cursor.y - (params[0] || 1));
-			break;
-
-		case "B": //CUD - cursor down, clamp at viewport bottom
-			this.cursor.y = this.ClampCursorY(this.cursor.y + (params[0] || 1));
-			break;
-
-		case "C": //CUF - cursor right, clamp at right margin
-			this.cursor.x = this.ClampCursorX(this.cursor.x + (params[0] || 1));
-			break;
-
-		case "D": //CUB - cursor left, clamp at left margin
-			this.cursor.x = this.ClampCursorX(this.cursor.x - (params[0] || 1));
-			break;
-
-		case "E": //CNL - cursor to beginning of next line, clamped
-			this.cursor.x = 0;
-			this.cursor.y = this.ClampCursorY(this.cursor.y + (params[0] || 1));
-			break;
-
-		case "F": //CPL - cursor to beginning of previous line, clamped
-			this.cursor.x = 0;
-			this.cursor.y = this.ClampCursorY(this.cursor.y - (params[0] || 1));
-			break;
-
-		case "G": //CHA - cursor to column n, clamped
-			this.cursor.x = this.ClampCursorX((params[0] || 1) - 1);
-			break;
-
-		case "f":
-		case "H": //CUP - viewport-relative cursor positioning, clamped
-			this.cursor.y = this.ClampCursorY(this.ViewportTopY() + Math.max(0, (params[0] || 1) - 1));
-			this.cursor.x = this.ClampCursorX(Math.max(0, (params[1] || 1) - 1));
-			break;
-
-		case "J":
-			switch (params.length === 0 ? 0 : params[0]) {
-			case 0: this.EraseFromCursorToEndOfScreen(); break;
-			case 1: this.EraseFromCursorToBeginningOfScreen(); break;
-			case 2: this.ClearScreen(); break;
-			case 3: this.ClearScreenAndBuffer(); break;
-			default:
-				console.warn(`Unhandled CSI command: ${params.join(";")}J`);
-				break;
-			}
-			break;
-
-		case "K":
-			switch (params.length === 0 ? 0 : params[0]) {
-			case 0: this.EraseLineFromCursorToEnd(); break;
-			case 1: this.EraseLineFromBeginningToCursor(); break;
-			case 2: this.ClearLine(); break;
-			default:
-				console.warn(`Unhandled CSI command: ${params.join(";")}K`);
-				break;
-			}
-			break;
-
-		case "L": this.InsertLines(params[0] || 1); break;
-		case "M": this.DeleteLines(params[0] || 1); break;
-		case "P": this.DeleteN(params[0] || 1); break;
-		case "S": this.ScrollUp(params[0] || 1); break;
-		case "T": this.ScrollDown(params[0] || 1); break;
-		case "X": this.EraseCharacters(params[0] || 1); break;
-
-		case "d": //VPA - move cursor to viewport row n, clamped
-			this.cursor.y = this.ClampCursorY(this.ViewportTopY() + Math.max(0, (params[0] || 1) - 1));
-			break;
-
-		case "h": //enable mode
-			this.SetMode(prefix, params, true);
-			break;
-
-		case "l": //disable mode
-			this.SetMode(prefix, params, false);
-			break;
-
-		case "m": this.ParseGraphicsModes(params); break;
-
-		case "r": //set scroll region
-			this.SetScrollRegion(params[0], params[1]);
-			break;
-
-		case "s": //save cursor position
-			this.SaveCursorState();
-			break;
-
-		case "t": //window manipulation
-			switch (params[0]) {
-			case 22: //save window title
-				this.savedTitle = this.header.textContent;
-				break;
-
-			case 23: //restore window title
-				if (this.savedTitle) {
-					this.SetTitle(this.savedTitle);
-				}
-				break;
-
-			default:
-				console.warn(`Unhandled window manipulation command: ${params.join(";")}t`);
-				break;
-			}
-			break;
-
-		case "u": //restore cursor position
-			this.RestoreCursorState();
-			break;
-
-		default:
-			console.warn(`Unhandled CSI command: ${command}`);
-			break;
-		}
-
-		return offset - index + 1;
-	}
-
-	HandleDCS(data, index) { //Device Control String
-		if (index + 1 >= data.length) return null;
-
-		const stEnd = data.indexOf("\x1b\\", index + 2);
-		if (stEnd === -1) return null;
-
-		const command = data[index + 2] || "";
-		console.warn(`Unhandled DCS: ${command}`);
-		return stEnd - index + 2;
-	}
-
-	HandleOSC(data, index) { //Operating System Command
-		if (index + 1 >= data.length) return null;
-
-		const oscEnd = data.indexOf("\x07", index + 2);
-		const stEnd = data.indexOf("\x1b\\", index + 2);
-		let end = Math.min(oscEnd !== -1 ? oscEnd : data.length, stEnd !== -1 ? stEnd : data.length);
-		const terminatorLength = end === stEnd ? 2 : 1;
-
-		if (end === data.length) return null;
-
-		const sequence = data.slice(index + 2, end);
-		const [command, ...params] = sequence.split(";");
-
-		switch (command) {
-		case "0":
-		case "2": //set title
-			if (this.args.host && this.args.host.length > 0) {
-				this.SetTitle(`${this.args.host} - ${params.join(";")}`);
-			}
-			else {
-				this.SetTitle(params.join(";"));
-			}
-			break;
-
-		case "10": //set foreground color
-			this.content.style.color = this.MapColorId(params[0]);
-			break;
-
-		case "11": //set background color
-			this.content.style.backgroundColor = this.MapColorId(params[0]);
-			break;
-
-		case "9001": //ConPTY/Windows Terminal Win32 input mode notifications
-			break;
-
-		default:
-			console.warn(`Unhandled OSC command: ${command}`);
-			break;
-		}
-
-		return end - index + terminatorLength;
-	}
-
-	HandleCSD(data, index) { //Character Set Designation
-		if (index + 2 >= data.length) return null;
-
-		const command = data[index + 2];
-		switch (command) {
-		//TODO:
-		//case "B": return 3;//ISO-8859-1
-		//case "0": return 3;
-
-		default:
-			console.warn(`Unhandled CSD command: ${command}`);
-			return 3;
-		}
-	}
-
-	MapColorId(id) {
-		if (typeof id === "string") {
-			if (/^\d+$/.test(id)) {
-				id = parseInt(id, 10);
-			}
-			else {
-				return id;
-			}
-		}
-
-		switch (id) {
-		case 0: return "#111";    //black
-		case 1: return "#de382b"; //red
-		case 2: return "#39b54a"; //green
-		case 3: return "#e1c706"; //yellow
-		case 4: return "#3080D8"; //blue
-		case 5: return "#bc3fbc"; //magenta
-		case 6: return "#2cb5e9"; //cyan
-		case 7: return "#ccc";    //white
-
-		case 8:  return "#888"; //gray
-		case 9:  return "#f00"; //bright red
-		case 10: return "#0f0"; //bright green
-		case 11: return "#ff0"; //bright yellow
-		case 12: return "#00f"; //bright blue
-		case 13: return "#f0f"; //bright magenta
-		case 14: return "#0ff"; //bright cyan
-		case 15: return "#fff"; //bright white
-		}
-
-		if (id > 231) {
-			let hex = (8 + (id - 232) * 10).toString(16).padStart(2, "0");
-			return `#${hex.repeat(3)}`;
-		}
-
-		const ramp = [0, 95, 135, 175, 215, 255];
-		let v = id - 16;
-		let r = ramp[Math.floor(v / 36)];
-		let g = ramp[Math.floor((v % 36) / 6)];
-		let b = ramp[v % 6];
-
-		return `#${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${b.toString(16).padStart(2, "0")}`;
-	}
-
-	ParseGraphicsModes(params) {
-		if (params.length === 0) {
-			this.ResetTextAttributes();
-			return;
-		}
-
-		for (let i=0; i<params.length; i++) {
-			switch (params[i]) {
-			case 0:
-				this.ResetTextAttributes();
-				break;
-
-			//set graphics modes
-			case 1: this.bold          = true; break;
-			case 2: this.faint         = true; break;
-			case 3: this.italic        = true; break;
-			case 4: this.underline     = true; break;
-			case 5: this.blinking      = true; break;
-			case 6: this.fastBlinking  = true; break;
-			case 7: this.inverse       = true; break;
-			case 8: this.hidden        = true; break;
-			case 9: this.strikethrough = true; break;
-
-			//reset graphics modes
-			case 22: this.bold = this.faint = false; break;
-			case 23: this.italic        = false; break;
-			case 24: this.underline     = false; break;
-			case 25: this.blinking      = false; break;
-			case 26: this.fastBlinking  = false; break;
-			case 27: this.inverse       = false; break;
-			case 28: this.hidden        = false; break;
-			case 29: this.strikethrough = false; break;
-
-			//set foreground color
-			case 30: case 31: case 32: case 33: case 34: case 35: case 36: case 37:
-				this.foreColor = this.MapColorId(params[i] - 30);
-				break;
-
-			case 38: //set foreground color
-				if (params[i+1] === 5 && params.length >= i+3) { //id color
-					this.foreColor = this.MapColorId(params[i+2]);
-					i += 2;
-				}
-				else if (params[i+1] === 2 && params.length >= i+5) { //rgb color
-					this.foreColor = `rgb(${params[i+2]},${params[i+3]},${params[i+4]})`;
-					i += 4;
-				}
-				else {
-					console.warn(`Unknown graphics mode: 38;${params[i+1]}`);
-				}
-				break;
-
-			case 39: //reset foreground color
-				this.foreColor = null;
-				break;
-
-			//set background color
-			case 40: case 41: case 42: case 43: case 44: case 45: case 46: case 47:
-				this.backColor = this.MapColorId(params[i] - 40);
-				break;
-
-			case 48: //set background color
-				if (params[i+1] === 5 && params.length >= i+3) { //id color
-					this.backColor = this.MapColorId(params[i+2]);
-					i += 2;
-				}
-				else if (params[i+1] === 2 && params.length >= i+5) { //rgb color
-					this.backColor = `rgb(${params[i+2]},${params[i+3]},${params[i+4]})`;
-					i += 4;
-				}
-				else {
-					console.warn(`Unknown graphics mode: 48;${params[i+1]}`);
-				}
-				break;
-
-			case 49: //reset background color
-				this.backColor = null;
-				break;
-
-			//set foreground color (bright variants)
-			case 90: case 91: case 92: case 93: case 94: case 95: case 96: case 97:
-				this.foreColor = this.MapColorId(params[i] - 82);
-				break;
-
-			//set background color (bright variants)
-			case 100: case 101: case 102: case 103: case 104: case 105: case 106: case 107:
-				this.backColor = this.MapColorId(params[i] - 92);
-				break;
-
-			default:
-				console.warn(`Unknown graphics mode: ${params[i]}`);
-				break;
-			}
-		}
-	}
-
-	ScrollUp(lines=1) {
-		const top = this.GetScrollRegionTop();
-		const bottom = this.GetScrollRegionBottom();
-		const amount = Math.min(Math.max(lines, 1), Math.max(0, bottom - top));
-		const width = this.GetScreenWidth();
-
-		for (let i=0; i<amount; i++) {
-			for (let y=top; y<bottom; y++) {
-				for (let x=0; x<width; x++) {
-					if (y === top) {
-						this.RemoveCell(x, y);
-						continue;
-					}
-
-					this.MoveCell(x, y, x, y - 1);
-				}
-			}
-
-			for (let x=0; x<width; x++) {
-				this.RemoveCell(x, bottom - 1);
-			}
-		}
-	}
-
-	ScrollDown(lines=1) {
-		const top = this.GetScrollRegionTop();
-		const bottom = this.GetScrollRegionBottom();
-		const amount = Math.min(Math.max(lines, 1), Math.max(0, bottom - top));
-		const width = this.GetScreenWidth();
-
-		for (let i=0; i<amount; i++) {
-			for (let y=bottom - 1; y>=top; y--) {
-				for (let x=0; x<width; x++) {
-					if (y === bottom - 1) {
-						this.RemoveCell(x, y);
-						continue;
-					}
-
-					this.MoveCell(x, y, x, y+1);
-				}
-			}
-
-			for (let x=0; x<width; x++) {
-				this.RemoveCell(x, top);
-			}
-		}
-	}
-
-	EnableAlternateScreen() { //?1049h
-		this.savedScreen = this.screen;
-		this.savedLines = this.lines;
-		this.savedMaxLineY = this.maxLineY;
-		this.ClearScreen();
-		this.SaveCursorState();
-	}
-
-	DisableAlternateScreen() { //?1049l
-		if (this.savedScreen) {
-			this.screen = this.savedScreen;
-			this.lines = this.savedLines;
-			this.maxLineY = this.savedMaxLineY ?? 0;
-			this.savedScreen = null;
-			this.savedLines = null;
-			this.savedMaxLineY = null;
-
-			this.content.textContent = "";
-
-			for (const y in this.lines) {
-				this.content.appendChild(this.lines[y]);
-			}
-
-			this.content.appendChild(this.cursorElement);
-
-			this.RestoreCursorState();
-			this.UpdateMinimap();
-		}
-	}
-
-	DeleteN(n) { //P
-		const width = this.GetScreenWidth();
-		for (let x=this.cursor.x; x<width; x++) {
-			const sourceX = x + n;
-			if (sourceX < width) {
-				this.MoveCell(sourceX, this.cursor.y, x, this.cursor.y);
-			}
-			else {
-				this.RemoveCell(x, this.cursor.y);
-			}
-		}
-	}
-
-	ViewportTopY() {
-		const screenHeight = Math.max(1, this.GetScreenHeight());
-		return Math.max(0, this.maxLineY - screenHeight + 1);
-	}
-
-	ViewportBottomY() {
-		return this.ViewportTopY() + Math.max(1, this.GetScreenHeight()) - 1;
-	}
-
-	ClampCursorY(y) {
-		return Math.min(this.ViewportBottomY(), Math.max(this.ViewportTopY(), y));
-	}
-
-	ClampCursorX(x) {
-		return Math.min(Math.max(0, this.GetScreenWidth() - 1), Math.max(0, x));
-	}
-
-	EraseFromCursorToEndOfScreen() { //0J
-		const w = this.GetScreenWidth();
-		const top = this.ViewportTopY();
-		const bottom = top + Math.max(1, this.GetScreenHeight());
-		const c = w * this.cursor.y + this.cursor.x;
-
-		for (let y=top; y<bottom; y++) {
-			for (let x=0; x<w; x++) {
-				if (w*y + x < c) continue;
-				this.RemoveCell(x, y);
-			}
-		}
-	}
-
-	EraseFromCursorToBeginningOfScreen() { //1J
-		const w = this.GetScreenWidth();
-		const top = this.ViewportTopY();
-		const bottom = top + Math.max(1, this.GetScreenHeight());
-		const c = w * this.cursor.y + this.cursor.x;
-
-		for (let y=top; y<bottom; y++) {
-			for (let x=0; x<w; x++) {
-				if (w*y + x > c) continue;
-				this.RemoveCell(x, y);
-			}
-		}
-	}
-
-	ClearScreen() { //2J - erase visible viewport only; scrollback (and cursor) preserved
-		const top = this.ViewportTopY();
-		const bottom = top + Math.max(1, this.GetScreenHeight());
-		const w = this.GetScreenWidth();
-
-		for (let y=top; y<bottom; y++) {
-			for (let x=0; x<w; x++) {
-				this.RemoveCell(x, y);
-			}
-		}
-
-		this.UpdateMinimap();
-	}
-
-	ClearScreenAndBuffer() { //3J - erase viewport AND scrollback
-		this.screen = Object.create(null);
-		for (const y in this.lines) {
-			const lineDiv = this.lines[y];
-			if (lineDiv && lineDiv.parentNode === this.content) {
-				this.content.removeChild(lineDiv);
-			}
-		}
-		this.lines = Object.create(null);
-		this.maxLineY = 0;
-		this.cursor.y = 0;
-		this.content.appendChild(this.cursorElement);
-		this.UpdateMinimap();
-	}
-
-	EraseLineFromCursorToEnd() { //0K
-		const w = this.GetScreenWidth();
-		for (let i=this.cursor.x; i<w; i++) {
-			this.RemoveCell(i, this.cursor.y);
-		}
-	}
-
-	EraseLineFromBeginningToCursor() { //1K
-		for (let i=0; i<=this.cursor.x; i++) {
-			this.RemoveCell(i, this.cursor.y);
-		}
-	}
-
-	ClearLine() { //2K
-		const w = this.GetScreenWidth();
-		for (let i=0; i<w; i++) {
-			this.RemoveCell(i, this.cursor.y);
-		}
-	}
-
-	InsertBlankCharacters(n) { //@
-		const width = this.GetScreenWidth();
-		const amount = Math.min(Math.max(n, 1), Math.max(0, width - this.cursor.x));
-		for (let x=width - 1; x>=this.cursor.x + amount; x--) {
-			this.MoveCell(x - amount, this.cursor.y, x, this.cursor.y);
-		}
-		for (let x=this.cursor.x; x<this.cursor.x + amount; x++) {
-			this.RemoveCell(x, this.cursor.y);
-		}
-	}
-
-	EraseCharacters(n) { //X
-		const width = this.GetScreenWidth();
-		const end = Math.min(width, this.cursor.x + Math.max(n, 1));
-		for (let x=this.cursor.x; x<end; x++) {
-			this.RemoveCell(x, this.cursor.y);
-		}
-	}
-
-	InsertLines(n) { //L
-		const top = this.cursor.y;
-		const bottom = this.GetScrollRegionBottom();
-		if (top < this.GetScrollRegionTop() || top >= bottom) return;
-
-		const amount = Math.min(Math.max(n, 1), bottom - top);
-		const width = this.GetScreenWidth();
-
-		for (let y=bottom - 1; y>=top; y--) {
-			for (let x=0; x<width; x++) {
-				if (y - amount >= top) {
-					this.MoveCell(x, y - amount, x, y);
-				}
-				else {
-					this.RemoveCell(x, y);
-				}
-			}
-		}
-	}
-
-	DeleteLines(n) { //M
-		const top = this.cursor.y;
-		const bottom = this.GetScrollRegionBottom();
-		if (top < this.GetScrollRegionTop() || top >= bottom) return;
-
-		const amount = Math.min(Math.max(n, 1), bottom - top);
-		const width = this.GetScreenWidth();
-
-		for (let y=top; y<bottom; y++) {
-			for (let x=0; x<width; x++) {
-				if (y + amount < bottom) {
-					this.MoveCell(x, y + amount, x, y);
-				}
-				else {
-					this.RemoveCell(x, y);
-				}
-			}
-		}
-	}
-
-	Index() {
-		const bottom = this.GetScrollRegionBottom();
-		if (this.cursor.y === bottom - 1) {
-			this.ScrollUp(1);
-			return;
-		}
-		this.cursor.y++;
-	}
-
-	ReverseIndex() {
-		const top = this.GetScrollRegionTop();
-		if (this.cursor.y === top) {
-			this.ScrollDown(1);
-			return;
-		}
-		this.cursor.y = Math.max(0, this.cursor.y - 1);
-	}
-
-	SetMode(prefix, params, enabled) {
-		for (const mode of params) {
-			switch (mode) {
-			case 1:
-				this.appCursorKeys = enabled;
-				break;
-
-			case 4:
-				if (prefix === "") this.insertMode = enabled;
-				else console.warn(`Unhandled ${prefix}${mode}${enabled ? "h" : "l"} mode`);
-				break;
-
-			case 7:
-				this.lineWrappingMode = enabled;
-				break;
-
-			case 12:
-				this.localEchoMode = enabled;
-				break;
-
-			case 25:
-				this.cursorElement.style.visibility = enabled ? "visible" : "hidden";
-				break;
-
-			case 1000:
-			case 1002:
-			case 1003:
-			case 1005:
-			case 1006:
-			case 1015:
-				// Mouse tracking is negotiated by the remote side; this base terminal
-				// accepts the mode change even if it does not emit mouse reports yet.
-				break;
-
-			case 1049:
-				if (enabled) this.EnableAlternateScreen();
-				else this.DisableAlternateScreen();
-				break;
-
-			case 2004:
-				this.bracketedMode = enabled;
-				break;
-
-			case 1004: //focus event tracking - we don't emit them, accept silently
-			case 9001: //Win32 input mode (ConPTY/Windows Terminal extension)
-				break;
-
-			default:
-				console.warn(`Unhandled ${enabled ? "enable" : "disable"} mode: ${prefix}${mode}${enabled ? "h" : "l"}`);
-				break;
-			}
-		}
-	}
-
-	SetScrollRegion(top, bottom) {
-		const screenHeight = this.GetScreenHeight();
-		const newTop = Math.max(0, (top || 1) - 1);
-		const newBottom = Math.min(screenHeight, bottom || screenHeight);
-
-		if (newTop >= newBottom || (newTop === 0 && newBottom === screenHeight)) {
-			this.scrollRegionTop = null;
-			this.scrollRegionBottom = null;
+		if (this.args.ansi) {
+			this.term.write(data);
 		}
 		else {
-			this.scrollRegionTop = newTop;
-			this.scrollRegionBottom = newBottom;
+			this.term.write(PtyHost.ToRawView(data));
 		}
+	}
 
-		//DECSTBM resets cursor to viewport home (row 1, col 1)
-		this.cursor.x = 0;
-		this.cursor.y = this.ViewportTopY();
+	//Renders control bytes as caret notation for the "Escape ANSI codes" (raw) mode.
+	static ToRawView(data) {
+		let out = "";
+		for (const ch of data) {
+			if (ch === "\n" || ch === "\r" || ch === "\t") {
+				out += ch;
+				continue;
+			}
+
+			const code = ch.charCodeAt(0);
+			if (code < 0x20) {
+				out += "^" + String.fromCharCode(code + 0x40);
+			}
+			else if (code === 0x7f) {
+				out += "^?";
+			}
+			else {
+				out += ch;
+			}
+		}
+		return out;
 	}
 
 	GetScrollbackLimit() {
 		const value = Number.parseInt(this.args.scrollback ?? this.args.historyLimit ?? PtyHost.DEFAULT_SCROLLBACK, 10);
 		return Number.isNaN(value) ? PtyHost.DEFAULT_SCROLLBACK : Math.max(0, value);
-	}
-
-	GetHistoryLineLimit() {
-		return this.GetScreenHeight() + this.GetScrollbackLimit();
-	}
-
-	GetScrollRegionTop() {
-		return this.ViewportTopY() + (this.scrollRegionTop ?? 0);
-	}
-
-	GetScrollRegionBottom() {
-		return this.ViewportTopY() + (this.scrollRegionBottom ?? this.GetScreenHeight());
-	}
-
-	GetBufferBottom() {
-		let bottom = this.cursor.y;
-
-		if (this.savedCursorPos) {
-			bottom = Math.max(bottom, this.savedCursorPos.y);
-		}
-
-		for (const key in this.screen) {
-			const split = key.indexOf(",");
-			const y = parseInt(key.substring(split+1), 10);
-			if (!Number.isNaN(y)) {
-				bottom = Math.max(bottom, y);
-			}
-		}
-
-		return bottom;
-	}
-
-	ShiftTrackedPosition(position, lines) {
-		if (!position) return;
-		position.y = Math.max(0, position.y - lines);
-	}
-
-	TrimHistory() {
-		const limit = this.GetHistoryLineLimit();
-		if (limit <= 0) return;
-
-		const overflow = this.GetBufferBottom()+1 - limit;
-		if (overflow <= 0) return;
-
-		const previousScrollTop = this.content.scrollTop;
-		const removedHeight = overflow * PtyHost.CHAR_HEIGHT;
-		const newScreen = Object.create(null);
-
-		for (const key in this.screen) {
-			const split = key.indexOf(",");
-			const x = key.substring(0, split);
-			const y = parseInt(key.substring(split+1), 10);
-
-			if (Number.isNaN(y)) continue;
-			if (y < overflow) continue;
-
-			newScreen[`${x},${y - overflow}`] = this.screen[key];
-		}
-
-		const newLines = Object.create(null);
-		for (const lineY in this.lines) {
-			const y = parseInt(lineY, 10);
-			const lineDiv = this.lines[lineY];
-			if (y < overflow) {
-				if (lineDiv.parentNode === this.content) {
-					this.content.removeChild(lineDiv);
-				}
-			}
-			else {
-				const newY = y - overflow;
-				newLines[newY] = lineDiv;
-				lineDiv.style.top = `${newY * PtyHost.CHAR_HEIGHT}px`;
-			}
-		}
-
-		this.screen = newScreen;
-		this.lines = newLines;
-		this.ShiftTrackedPosition(this.cursor, overflow);
-		this.ShiftTrackedPosition(this.savedCursorPos, overflow);
-		this.maxLineY = Math.max(0, this.maxLineY - overflow);
-
-		if (this.scrollRegionTop !== null) {
-			this.scrollRegionTop = Math.max(0, this.scrollRegionTop - overflow);
-		}
-		if (this.scrollRegionBottom !== null) {
-			this.scrollRegionBottom = Math.max(0, this.scrollRegionBottom - overflow);
-			if (this.scrollRegionBottom <= this.scrollRegionTop) {
-				this.scrollRegionTop = null;
-				this.scrollRegionBottom = null;
-			}
-		}
-
-		this.content.scrollTop = Math.max(0, previousScrollTop - removedHeight);
 	}
 
 	ResizeMinimap() {
@@ -1686,17 +590,18 @@ class PtyHost extends Window {
 		const canvas = this.minimapCanvas;
 		const cw = canvas.width;
 		const ch = canvas.height;
-		if (cw === 0 || ch === 0) return;
+		if (cw === 0 || ch === 0 || !this.term) return;
 
-		const totalLines   = this.maxLineY + 1;
+		const buffer = this.term.buffer.active;
+		const rows = this.term.rows;
+		const totalLines = Math.max(1, buffer.length);
 		const totalMinimapH = totalLines * 2;
-		const scrollTop    = this.content.scrollTop;
-		const scrollH      = this.content.scrollHeight;
-		const viewportH    = this.content.clientHeight;
+		const viewportTop = buffer.viewportY;
+		const maxTop = Math.max(1, totalLines - rows);
 
 		let minimapOffset = 0;
 		if (totalMinimapH > ch) {
-			const ratio = scrollTop / Math.max(1, scrollH - viewportH);
+			const ratio = viewportTop / maxTop;
 			minimapOffset = ratio * (totalMinimapH - ch);
 		}
 
@@ -1710,18 +615,27 @@ class PtyHost extends Window {
 
 		const firstLine = Math.max(0, Math.floor(minimapOffset / 2));
 		const lastLine  = Math.min(totalLines - 1, firstLine + Math.ceil(ch / 2) + 1);
+		const columns   = Math.min(this.term.cols, cw);
 
-		for (let y = firstLine; y <= lastLine; y++) {
+		for (let y=firstLine; y<=lastLine; y++) {
+			const line = buffer.getLine(y);
+			if (!line) continue;
+
+			const text = line.translateToString(false);
+			if (!text || text.trim().length === 0) continue;
+
 			const py = Math.round(y * 2 - minimapOffset);
-			for (let x=0; x<cw; x+=2) {
-				const cell = this.screen[`${x},${y}`];
+
+			for (let x=0; x<columns; x+=2) {
+				const cell = line.getCell(x);
 				if (!cell) continue;
 
-				const text = cell.textContent;
-				if (!text) continue;
+				const chars = cell.getChars();
+				const ink = chars.length > 0 && chars !== " ";
 
-				const [r, g, b] = PtyHost.ParseMinimapColor(cell.style.color);
-				for (let dy = 0; dy < 2; dy++) {
+				const [r, g, b] = ink ? [216, 216, 216] : [96, 96, 96];
+
+				for (let dy=0; dy<2; dy++) {
 					const row = py + dy;
 					if (row < 0 || row >= ch) continue;
 
@@ -1730,13 +644,13 @@ class PtyHost extends Window {
 					data[idx+1] = data[idx+5] = g;
 					data[idx+2] = data[idx+6] = b;
 
-					if (text.trim().length === 0) {
-						data[idx+3] = 0;
-						data[idx+7] = 0;
-					}
-					else {
+					if (ink) {
 						data[idx+3] = 255;
 						data[idx+7] = 168;
+					}
+					else {
+						data[idx+3] = 0;
+						data[idx+7] = 0;
 					}
 				}
 			}
@@ -1745,92 +659,40 @@ class PtyHost extends Window {
 		ctx.putImageData(imageData, 0, 0);
 
 		const sliderH   = this.GetMinimapSliderHeight();
-		const sliderTop = Math.max(0, Math.min(ch - sliderH,
-			Math.round((scrollTop / PtyHost.CHAR_HEIGHT) * 2 - minimapOffset)));
+		const sliderTop = Math.max(0, Math.min(ch - sliderH, Math.round(viewportTop * 2 - minimapOffset)));
 
 		this.minimapViewport.style.top    = `${sliderTop}px`;
 		this.minimapViewport.style.height = `${sliderH}px`;
 	}
 
 	GetMinimapSliderHeight() {
-		return Math.max(4, Math.round((this.content.clientHeight / PtyHost.CHAR_HEIGHT) * 2));
+		if (!this.term) return 4;
+		return Math.max(4, Math.round(this.term.rows * 2));
 	}
 
 	MinimapSeek(e) {
-		const rect      = this.minimap.getBoundingClientRect();
-		const sliderH   = this.GetMinimapSliderHeight();
-		const maxScroll = Math.max(0, this.content.scrollHeight - this.content.clientHeight);
+		if (!this.term) return;
+
+		const rect = this.minimap.getBoundingClientRect();
+		const sliderH = this.GetMinimapSliderHeight();
+		const buffer = this.term.buffer.active;
+		const rows = this.term.rows;
+		const totalLines = Math.max(1, buffer.length);
+		const maxTop = Math.max(0, totalLines - rows);
+		const totalMinimapH = totalLines * 2;
 
 		const sliderTop = e.clientY - rect.top - sliderH / 2;
 
-		const scrollTop = (this.maxLineY + 1) * 2 <= rect.height
-			? sliderTop * PtyHost.CHAR_HEIGHT / 2
-			: sliderTop / Math.max(1, rect.height - sliderH) * maxScroll;
-
-		this.content.scrollTop = Math.min(maxScroll, Math.max(0, scrollTop));
-	}
-
-	static ParseMinimapColor(str) {
-		if (!str) return [200, 200, 200];
-		const m = str.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
-		if (m) return [+m[1], +m[2], +m[3]];
-		if (str[0] === "#") {
-			const h = str.slice(1);
-			if (h.length === 3) return [parseInt(h[0]+h[0],16), parseInt(h[1]+h[1],16), parseInt(h[2]+h[2],16)];
-			return [parseInt(h.slice(0,2),16), parseInt(h.slice(2,4),16), parseInt(h.slice(4,6),16)];
+		let targetTop;
+		if (totalMinimapH <= rect.height) {
+			targetTop = Math.round(sliderTop / 2);
 		}
-		return [200, 200, 200];
-	}
-
-	GetOrCreateLine(y) {
-		if (this.lines[y]) return this.lines[y];
-		if (y > this.maxLineY) this.maxLineY = y;
-		const lineDiv = document.createElement("div");
-		lineDiv.className = "pty-line";
-		lineDiv.style.top = `${y * PtyHost.CHAR_HEIGHT}px`;
-		this.lines[y] = lineDiv;
-		this.content.appendChild(lineDiv);
-		return lineDiv;
-	}
-
-	RemoveCell(x, y) {
-		const key = `${x},${y}`;
-		if (!this.screen[key]) return;
-		const cell = this.screen[key];
-		if (cell.parentNode) {
-			cell.parentNode.removeChild(cell);
+		else {
+			const ratio = sliderTop / Math.max(1, rect.height - sliderH);
+			targetTop = Math.round(ratio * maxTop);
 		}
-		delete this.screen[key];
-	}
 
-	MoveCell(fromX, fromY, toX, toY) {
-		const fromKey = `${fromX},${fromY}`;
-		const cell = this.screen[fromKey];
-
-		this.RemoveCell(toX, toY);
-		if (!cell) return;
-
-		delete this.screen[fromKey];
-		this.screen[`${toX},${toY}`] = cell;
-		cell.style.left = `${toX * PtyHost.CHAR_WIDTH}px`;
-		if (fromY !== toY) {
-			if (cell.parentNode) cell.parentNode.removeChild(cell);
-			this.GetOrCreateLine(toY).appendChild(cell);
-		}
-	}
-
-	ResetTerminal() {
-		this.InitializeTerminalState();
-		this.ResetTextAttributes();
-		this.ClearScreen();
-	}
-
-	GetScreenWidth() {
-		return Math.floor(this.content.clientWidth / PtyHost.CHAR_WIDTH);
-	}
-
-	GetScreenHeight() {
-		return Math.floor(this.content.clientHeight / PtyHost.CHAR_HEIGHT);
+		this.term.scrollToLine(Math.min(maxTop, Math.max(0, targetTop)));
 	}
 
 	Bell() {

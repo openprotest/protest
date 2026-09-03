@@ -3,6 +3,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Net.WebSockets;
 using System.Text;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Protest.Http;
@@ -111,6 +112,8 @@ internal static class Ssh {
                     return;
                 }
 
+                if (TryResizeShell(buff, receiveResult.Count, shellStream)) continue;
+
                 shellStream.Write(Encoding.UTF8.GetString(buff, 0, receiveResult.Count));
             }
         }
@@ -138,6 +141,27 @@ internal static class Ssh {
                     Logger.Debug(ex);
                 }
             }
+        }
+    }
+
+    private static bool TryResizeShell(byte[] buffer, int count, ShellStream shellStream) {
+        if (count >= 100 || count == 0 || buffer[0] != '{') return false;
+
+        try {
+            using JsonDocument document = JsonDocument.Parse(Encoding.UTF8.GetString(buffer, 0, count));
+            JsonElement root = document.RootElement;
+
+            if (!root.TryGetProperty("cols", out JsonElement cols) || !root.TryGetProperty("rows", out JsonElement rows)) {
+                return false;
+            }
+
+            uint columns = (uint)Math.Max(1, cols.GetInt32());
+            uint lines   = (uint)Math.Max(1, rows.GetInt32());
+            shellStream.ChangeWindowSize(columns, lines, 0, 0);
+            return true;
+        }
+        catch {
+            return false;
         }
     }
 

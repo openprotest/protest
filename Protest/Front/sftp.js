@@ -79,7 +79,7 @@ class Sftp extends Window {
 		this.statusBox.style.fontWeight = "bold";
 		this.statusBox.textContent = "Connecting...";
 
-		this.spinnerBox.append(spinner, this.statusBox );
+		this.spinnerBox.append(spinner, this.statusBox);
 
 		this.connectButton.onclick = ()=> this.ConnectDialog(this.args.host, false);
 		this.refreshButton.onclick = ()=> this.Refresh();

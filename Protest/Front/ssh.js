@@ -6,6 +6,8 @@ class Ssh extends PtyHost {
 		this.SetTitle("Secure shell");
 		this.SetIcon("mono/ssh.svg");
 
+		this.resizeAware = true;
+
 		if (this.args.file) {
 			this.ConnectViaFile(this.args.host, this.args.file);
 		}

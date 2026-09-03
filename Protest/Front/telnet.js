@@ -6,6 +6,8 @@ class Telnet extends PtyHost {
 		this.SetTitle("Telnet");
 		this.SetIcon("mono/telnet.svg");
 
+		this.resizeAware = true;
+
 		this.ConnectDialog(this.args.host, true);
 	}
 

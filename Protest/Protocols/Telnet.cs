@@ -1,8 +1,10 @@
-﻿using System.IO;
+﻿using System.Collections.Generic;
+using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Net.WebSockets;
 using System.Text;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Protest.Http;
@@ -66,6 +68,7 @@ internal static class Telnet {
 
             _ = Task.Run(() => HandleDownstream(ctx, ws, telnet, stream));
 
+            bool nawsAnnounced = false;
             byte[] buff = new byte[2048];
             while (ws.State == WebSocketState.Open && telnet.Connected) { //handle upstream
                 WebSocketReceiveResult receiveResult = await ws.ReceiveAsync(buff, CancellationToken.None);
@@ -81,6 +84,8 @@ internal static class Telnet {
                     telnet.Close();
                     return;
                 }
+
+                if (TryResizeTelnet(buff, receiveResult.Count, stream, ref nawsAnnounced)) continue;
 
                 stream.Write(buff, 0, receiveResult.Count);
             }
@@ -111,6 +116,53 @@ internal static class Telnet {
                     Logger.Debug(ex);
                 }
             }
+        }
+    }
+
+    //Telnet Negotiate About Window Size (RFC 1073). Best-effort: the client offers
+    //WILL NAWS once, then emits an SB NAWS update per resize. Servers that never
+    //agreed to NAWS ignore it; the frame is swallowed either way so it is never
+    //written into the session as text.
+    private static bool TryResizeTelnet(byte[] buffer, int count, Stream stream, ref bool nawsAnnounced) {
+        if (count >= 100 || count == 0 || buffer[0] != '{') return false;
+
+        try {
+            using JsonDocument document = JsonDocument.Parse(Encoding.UTF8.GetString(buffer, 0, count));
+            JsonElement root = document.RootElement;
+
+            if (!root.TryGetProperty("cols", out JsonElement cols) || !root.TryGetProperty("rows", out JsonElement rows)) {
+                return false;
+            }
+
+            int width  = Math.Clamp(cols.GetInt32(), 1, 65535);
+            int height = Math.Clamp(rows.GetInt32(), 1, 65535);
+
+            const byte IAC = 255, WILL = 251, SB = 250, SE = 240, NAWS = 31;
+
+            if (!nawsAnnounced) {
+                stream.Write(new byte[] { IAC, WILL, NAWS }, 0, 3);
+                nawsAnnounced = true;
+            }
+
+            List<byte> payload = new List<byte> { IAC, SB, NAWS };
+            //Data bytes equal to IAC (255) must be doubled inside the subnegotiation.
+            void AddEscaped(byte b) {
+                payload.Add(b);
+                if (b == IAC) payload.Add(IAC);
+            }
+            AddEscaped((byte)(width >> 8));
+            AddEscaped((byte)(width & 0xFF));
+            AddEscaped((byte)(height >> 8));
+            AddEscaped((byte)(height & 0xFF));
+            payload.Add(IAC);
+            payload.Add(SE);
+
+            stream.Write(payload.ToArray(), 0, payload.Count);
+            stream.Flush();
+            return true;
+        }
+        catch {
+            return false;
         }
     }
 

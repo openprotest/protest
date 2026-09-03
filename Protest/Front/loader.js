@@ -96,6 +96,7 @@ const LOADER = {
 		"view.js",
 		"grid.js",
 		"console.js",
+		"xterm.js",
 		"ptyhost.js",
 		"listbox.js",
 		"ipbox.js"
@@ -139,6 +140,7 @@ const LOADER = {
 		"vnc.js",
 		"wmi.js",
 		"snmp.js",
+		"packages.js",
 		"websitecheck.js",
 		"ipdiscovery.js",
 		"reverseproxy.js",
@@ -333,7 +335,6 @@ const LOADER = {
 		case "DevicesGrid"      : return new DevicesGrid();
 		case "UsersGrid"        : return new UsersGrid();
 		case "PasswordStrength" : return new PasswordStrength(command.args);
-		case "Topology"         : return new Topology(command.args);
 		case "Fetch"            : return new Fetch(command.args);
 		case "Monitor"          : return new Monitor(command.args);
 
@@ -341,9 +342,12 @@ const LOADER = {
 		case "Chat"          : return new Chat();
 		case "Documentation" : return new Documentation(command.args);
 		case "DebitNotes"    : return new DebitNotes(command.args);
-		case "Watchdog"      : return new Watchdog();
 
-		case "Issues"    : return new Issues(command.args);
+		case "Watchdog"      : return new Watchdog();
+		case "Topology"      : return new Topology(command.args);
+		case "Issues"        : return new Issues(command.args);
+		case "ReverseProxy"  : return new ReverseProxy(command.args);
+		case "Packages"      : return new Packages(command.args);
 
 		case "HexViewer" : return new HexViewer(command.args);
 
@@ -357,7 +361,6 @@ const LOADER = {
 		case "NtpClient"    : return new NtpClient(command.args);
 		case "WebsiteCheck" : return new WebsiteCheck(command.args);
 		case "IpDiscovery"  : return new IpDiscovery(command.args);
-		case "ReverseProxy" : return new ReverseProxy(command.args);
 		case "RemoteShell"  : return new RemoteShell(command.args);
 		case "Rs232"        : return new Rs232(command.args);
 		case "Telnet"       : return new Telnet(command.args);

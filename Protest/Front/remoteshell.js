@@ -6,6 +6,8 @@ class RemoteShell extends PtyHost {
 		this.SetTitle("Remote shell");
 		this.SetIcon("mono/remote.svg");
 
+		this.resizeAware = true;
+
 		if (this.args.host) {
 			this.Connect(this.args.host);
 		}

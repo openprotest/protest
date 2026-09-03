@@ -1,24 +1,29 @@
 .pty-content {
-	font-family: monospace;
 	position: absolute;
 	margin: 20px;
 	margin-right: 88px;
-	overflow-x: auto;
-	overflow-y: scroll;
-	scrollbar-width: none;
-	-webkit-user-select: text; user-select: text;
+	overflow: hidden;
 }
 
-.pty-content::-webkit-scrollbar {
-	width: 0;
-	height: 8px;
+.pty-content .xterm {
+	width: 100%;
+	height: 100%;
 }
 
-.pty-content::-webkit-scrollbar-track {
+.pty-content .xterm-viewport {
+	scrollbar-width: thin;
+	scrollbar-color: rgba(255,255,255,0.2) transparent;
+}
+
+.pty-content .xterm-viewport::-webkit-scrollbar {
+	width: 8px;
+}
+
+.pty-content .xterm-viewport::-webkit-scrollbar-track {
 	background: transparent;
 }
 
-.pty-content::-webkit-scrollbar-thumb {
+.pty-content .xterm-viewport::-webkit-scrollbar-thumb {
 	background: rgba(255,255,255,0.2);
 	border-radius: 4px;
 }
@@ -55,25 +60,9 @@
 	mix-blend-mode: plus-lighter;
 }
 
-.pty-line {
-	position: absolute;
-	left: 0;
-	right: 0;
-	height: 18px;
-	content-visibility: auto;
-	contain-intrinsic-size: auto 18px;
-}
-
-.pty-line > span {
-	position: absolute;
-	top: 0;
-	width: 8px;
-	height: 18px;
-}
-
 .pty-status-box {
 	display: none;
-	position: sticky;
+	position: absolute;
 	top: 20px;
 	left: calc(50% - 110px);
 	width: 200px;
@@ -95,28 +84,14 @@
 	pointer-events: none;
 }
 
+/* Inert compatibility stub: xterm.js renders its own cursor. */
 .pty-cursor {
-	position: absolute;
-	z-index: 1;
-	width: 3px;
-	height: 20px;
-	border-radius: 1px;
-	background-color: var(--clr-accent);
-	box-shadow: var(--clr-accent) 0 0 4px;
 	display: none;
-
-	transition-timing-function: ease-out;
-	animation: pty-blinking 1.2s infinite;
-}
-
-.pty-content:focus > .pty-cursor {
-	display: initial;
 }
 
 @container (max-width: 480px) {
 	.pty-content {
 		margin-right: 20px;
-		scrollbar-width: inherit;
 	}
 
 	.pty-minimap {
