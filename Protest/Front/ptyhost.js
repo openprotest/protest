@@ -123,8 +123,6 @@ class PtyHost extends Window {
 		this.content.classList.add("pty-content");
 		this.win.style.colorScheme = this.args.darkMode ? "dark" : "inherit";
 
-		//Kept for backwards compatibility: subclasses append this element and toggle
-		//its visibility. xterm.js renders its own cursor, so this is an inert stub.
 		this.cursorElement = document.createElement("div");
 		this.cursorElement.className = "pty-cursor";
 		this.cursorElement.style.display = "none";
@@ -199,7 +197,7 @@ class PtyHost extends Window {
 			scrollback: this.GetScrollbackLimit(),
 			cursorStyle: "bar",
 			cursorBlink: true,
-			convertEol: true, //match the old parser: a bare LF also returns the carriage
+			convertEol: true,
 			theme: this.BuildTheme()
 		});
 
@@ -214,7 +212,6 @@ class PtyHost extends Window {
 			this.term.loadAddon(new LinksCtor());
 		}
 
-		//Outbound: keystrokes, pastes and any device reports xterm generates.
 		this.term.onData(data => this.SendToWs(data));
 		this.term.onBinary(data => this.SendToWs(data));
 
@@ -238,7 +235,6 @@ class PtyHost extends Window {
 		this.term.onScroll(() => this.UpdateMinimap());
 		this.term.onRender(() => this.UpdateMinimap());
 
-		//Let the browser handle Ctrl+Shift+C / Ctrl+Shift+V (copy/paste) as before.
 		this.term.attachCustomKeyEventHandler(event => {
 			if (event.ctrlKey && event.shiftKey && (event.code === "KeyC" || event.code === "KeyV")) {
 				return false;
@@ -246,8 +242,6 @@ class PtyHost extends Window {
 			return true;
 		});
 
-		//Open once the content element has been laid out. The window may still be
-		//animating in (zero-sized), so fit again after the open animation settles.
 		requestAnimationFrame(() => {
 			if (!this.term) return;
 			this.term.open(this.content);
@@ -265,10 +259,10 @@ class PtyHost extends Window {
 		const dark = this.args.darkMode;
 		return Object.assign({
 			background: dark ? "#1a1a1a" : "#ffffff",
-			foreground: dark ? "#e0e0e0" : "#202020",
+			foreground: "light-dark(#202020, #e0e0e0)",
 			cursor: accent,
 			cursorAccent: dark ? "#1a1a1a" : "#ffffff",
-			selectionBackground: "rgba(80,150,220,0.4)" //xterm's color parser doesn't accept color-mix()
+			selectionBackground: "rgb(127,127,127)"
 		}, PtyHost.PALETTE);
 	}
 
@@ -289,9 +283,6 @@ class PtyHost extends Window {
 		this.ws.send(data);
 	}
 
-	//Tells the backend the current terminal dimensions via a small JSON control
-	//frame. Deduped, and re-sent after a reconnect (new socket) even if the size
-	//is unchanged, so a freshly spawned pty/shell picks up the real geometry.
 	SendResize() {
 		if (!this.resizeAware || !this.term) return;
 		if (!this.ws || this.ws.readyState !== 1) return;
@@ -520,7 +511,6 @@ class PtyHost extends Window {
 
 		if (text === null || text.length === 0) return;
 
-		//term.paste routes through onData and applies bracketed-paste mode when active.
 		if (this.term) {
 			this.term.paste(text);
 			this.term.focus();
@@ -530,7 +520,6 @@ class PtyHost extends Window {
 	HandleMessage(data) {
 		if (!this.term || data.length === 0) return;
 
-		//First output after a (re)connect syncs the backend to our real geometry.
 		this.SendResize();
 
 		if (this.args.ansi) {
@@ -541,7 +530,6 @@ class PtyHost extends Window {
 		}
 	}
 
-	//Renders control bytes as caret notation for the "Escape ANSI codes" (raw) mode.
 	static ToRawView(data) {
 		let out = "";
 		for (const ch of data) {
