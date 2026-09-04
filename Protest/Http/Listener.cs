@@ -96,6 +96,7 @@ internal sealed class Listener {
         ["/tools/ntp"]                    = (ctx, username) => Protocols.Ntp.Request(ctx),
         ["/tools/maclookup"]              = (ctx, username) => Tools.MacLookup.Lookup(ctx),
         ["/tools/nics/list"]              = (ctx, username) => Tools.IpDiscovery.ListNics(),
+        ["/serial/ports"]                 = (ctx, username) => Protocols.SerialCom.ListPorts(),
 
         ["/snmp/get"]                     = (ctx, username) => Protocols.Snmp.Polling.GetHandler(ctx),
         ["/snmp/set"]                     = (ctx, username) => Protocols.Snmp.Polling.SetHandler(ctx),
@@ -481,6 +482,7 @@ internal sealed class Listener {
         case "/ws/dhcp":             await Protocols.Dhcp.WebSocketHandler(ctx);     return true;
         case "/ws/telnet":           await Protocols.Telnet.WebSocketHandler(ctx);   return true;
         case "/ws/ssh":              await Protocols.Ssh.WebSocketHandler(ctx);      return true;
+        case "/ws/serial":           await Protocols.SerialCom.WebSocketHandler(ctx); return true;
         case "/ws/sftp":             await Protocols.Sftp.WebSocketHandler(ctx);     return true;
         case "/ws/vnc":              await Protocols.Vnc.WebSocketHandler(ctx);      return true;
         case "/ws/terminal":         await Tools.Terminal.WebSocketHandler(ctx);     return true;

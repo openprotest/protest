@@ -613,6 +613,11 @@ internal static class Auth {
                 path.Add("/ws/terminal");
                 break;
 
+            case "serial console:write":
+                path.Add("/serial/ports");
+                path.Add("/ws/serial");
+                break;
+
             case "remote shell:write":
                 path.Add("/ws/winrm");
                 break;

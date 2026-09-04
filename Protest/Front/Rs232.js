@@ -14,12 +14,15 @@ class Rs232 extends PtyHost {
 		this.reading = false;
 		this.disconnecting = false;
 
+		this.connectionType = args?.connectionType ?? (("serial" in navigator) ? "browser" : "server");
+
 		this.serial = {
 			baudRate: 9600,
 			dataBits: 8,
 			stopBits: 1,
 			parity: "none",
-			flowControl: "none"
+			flowControl: "none",
+			port: ""
 		};
 
 		if (args && args.serial) {
@@ -37,12 +40,7 @@ class Rs232 extends PtyHost {
 	}
 
 	ConnectDialog() { //overrides
-		if (!("serial" in navigator)) {
-			this.ConfirmBox("Web Serial API is not supported by this browser.", true, "mono/warning.svg");
-			return;
-		}
-
-		const dialog = this.DialogBox("300px");
+		const dialog = this.DialogBox("380px");
 		if (dialog === null) return;
 
 		const {okButton, innerBox} = dialog;
@@ -50,7 +48,7 @@ class Rs232 extends PtyHost {
 		innerBox.parentElement.style.width = "400px";
 		dialog.okButton.value = "Connect";
 
-		const CreateSelect = (labelText, values, currentValue) => {
+		const CreateSelect = (labelText, values, currentValue)=> {
 			const container = document.createElement("div");
 			container.style.padding = "4px";
 
@@ -84,6 +82,56 @@ class Rs232 extends PtyHost {
 			container.append(label, select);
 			innerBox.append(container);
 			return select;
+		};
+
+		const connectionType = CreateSelect(
+			"Connection",
+			[
+				{value:"browser", text:"Web API (browser)"},
+				{value:"server",  text:"COM port (server)"}
+			],
+			this.connectionType
+		);
+
+		if (!("serial" in navigator)) {
+			connectionType.querySelector('option[value="browser"]').disabled = true;
+			if (connectionType.value === "browser") connectionType.value = "server";
+		}
+
+		const comPort = CreateSelect("Port", [], null);
+		comPort.disabled = connectionType.value === "browser";
+
+		const UpdateOkState = ()=> {
+			okButton.disabled = connectionType.value === "server" && !comPort.value;
+		};
+
+		const RefreshPorts = async ()=> {
+			comPort.textContent = "";
+
+			let ports = [];
+			try {
+				const response = await fetch("serial/ports");
+				ports = await response.json();
+			}
+			catch {}
+
+			if (ports.length === 0) {
+				const option = document.createElement("option");
+				option.value = "";
+				option.textContent = "No ports found";
+				comPort.appendChild(option);
+			}
+			else {
+				for (const p of ports) {
+					const option = document.createElement("option");
+					option.value = p;
+					option.textContent = p;
+					if (p === this.serial.port) option.selected = true;
+					comPort.appendChild(option);
+				}
+			}
+
+			UpdateOkState();
 		};
 
 		const baudRate = CreateSelect(
@@ -123,32 +171,102 @@ class Rs232 extends PtyHost {
 			this.serial.flowControl
 		);
 
-		okButton.onclick = async () => {
+		connectionType.onchange = ()=> {
+			if (connectionType.value === "server") {
+				comPort.disabled = false;
+				RefreshPorts();
+			}
+			else {
+				comPort.disabled = true;
+				comPort.selectedIndex = -1;
+				UpdateOkState();
+			}
+		};
+
+		comPort.onchange = UpdateOkState;
+
+		if (connectionType.value === "server") RefreshPorts();
+
+		okButton.onclick = async ()=> {
 			const settings = {
 				baudRate: Number.parseInt(baudRate.value),
 				dataBits: Number.parseInt(dataBits.value),
 				stopBits: Number.parseInt(stopBits.value),
 				parity: parity.value,
-				flowControl: flowControl.value
+				flowControl: flowControl.value,
+				port: comPort.value
 			};
 
+			this.connectionType = connectionType.value;
 			this.serial = settings;
+			this.args.connectionType = this.connectionType;
 			this.args.serial = {...settings};
 			dialog.Close();
 			await this.Connect();
 		};
 
-		setTimeout(() => baudRate.focus(), 200);
+		setTimeout(()=> connectionType.focus(), 200);
 	}
 
 	async Connect() {
+		if (this.connectionType === "server") {
+			this.ConnectViaServer();
+		}
+		else {
+			await this.ConnectViaBrowser();
+		}
+	}
+
+	ConnectViaServer() {
+		this.statusBox.style.display = "initial";
+		this.statusBox.style.backgroundImage = "url(mono/connect.svg)";
+		this.statusBox.textContent = "Connecting...";
+		this.content.appendChild(this.statusBox);
+
+		if (this.ws !== null) {
+			try {
+				this.ws.close();
+			}
+			catch {}
+		}
+
+		try {
+			this.ws = new WebSocket(`${KEEP.isSecure ? "wss" : "ws"}://${window.location.host}/ws/serial`);
+		}
+		catch {}
+
+		this.ws.onopen = ()=> {
+			this.ws.send(JSON.stringify(this.serial));
+		};
+
+		this.ws.onclose = ()=> {
+			this.statusBox.style.display = "initial";
+			this.statusBox.style.backgroundImage = "url(mono/disconnect.svg)";
+			this.statusBox.textContent = "Connection closed";
+			this.content.appendChild(this.statusBox);
+		};
+
+		this.ws.onmessage = e=> {
+			let json = JSON.parse(e.data);
+			if (json.connected) {
+				this.statusBox.style.display = "none";
+				this.ws.onmessage = event=> this.HandleMessage(event.data);
+				this.content.focus();
+			}
+			else if (json.error) {
+				setTimeout(()=> { this.ConfirmBox(json.error, true, "mono/error.svg"); }, 200);
+			}
+		};
+	}
+
+	async ConnectViaBrowser() {
 		if (!("serial" in navigator)) {
-			console.error("Web Serial API is not available.");
+			this.ConfirmBox("Web Serial API is not supported by this browser.", true, "mono/warning.svg");
 			return;
 		}
 
 		if (this.port) {
-			await this.Disconnect();
+			await this.DisconnectBrowser();
 		}
 
 		try {
@@ -167,15 +285,12 @@ class Rs232 extends PtyHost {
 
 			this.ws = {
 				readyState: 1,
-				send: data => {this.Send(data);},
-				close: () => {this.Disconnect();}
+				send: data=> {this.Send(data);},
+				close: ()=> {this.Disconnect();}
 			};
 
 			this.statusBox.textContent = `Connected (${this.serial.baudRate}, ${this.serial.dataBits}${this.serial.parity[0].toUpperCase()}${this.serial.stopBits})`;
 			this.reading = true;
-
-			this.cursorElement.style.visibility = "visible";
-			this.content.appendChild(this.cursorElement);
 
 			this.ReadLoop();
 		}
@@ -264,6 +379,22 @@ class Rs232 extends PtyHost {
 	}
 
 	async Disconnect() {
+		if (this.connectionType === "server") {
+			if (this.ws !== null) {
+				try {
+					this.ws.close();
+				}
+				catch {}
+				this.ws = null;
+			}
+			this.SetDisconnectedState();
+			return;
+		}
+
+		await this.DisconnectBrowser();
+	}
+
+	async DisconnectBrowser() {
 		if (this.disconnecting) return;
 
 		this.disconnecting = true;
