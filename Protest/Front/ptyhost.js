@@ -2,7 +2,7 @@
 class PtyHost extends Window {
 	static CHAR_WIDTH = 8;
 	static CHAR_HEIGHT = 18;
-	static DEFAULT_SCROLLBACK = 1000;
+	static DEFAULT_SCROLLBACK = 5000;
 
 	static PALETTE = {
 		black:   "#111111",
@@ -25,6 +25,54 @@ class PtyHost extends Window {
 		brightCyan:    "#00ffff",
 		brightWhite:   "#ffffff"
 	};
+
+	static ANSI_256 = PtyHost.BuildAnsi256();
+
+	static HexToRgb(hex) {
+		hex = hex.replace("#", "");
+		if (hex.length === 3) hex = hex[0]+hex[0] + hex[1]+hex[1] + hex[2]+hex[2];
+		const n = parseInt(hex, 16);
+		return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+	}
+
+	static BuildAnsi256() {
+		const table = new Array(256);
+		const ansi16 = [
+			PtyHost.PALETTE.black,
+			PtyHost.PALETTE.red,
+			PtyHost.PALETTE.green,
+			PtyHost.PALETTE.yellow,
+			
+			PtyHost.PALETTE.blue,
+			PtyHost.PALETTE.magenta,
+			PtyHost.PALETTE.cyan,
+			PtyHost.PALETTE.white,
+			
+			PtyHost.PALETTE.brightBlack,
+			PtyHost.PALETTE.brightRed,
+			PtyHost.PALETTE.brightGreen,
+			PtyHost.PALETTE.brightYellow,
+			
+			PtyHost.PALETTE.brightBlue,
+			PtyHost.PALETTE.brightMagenta,
+			PtyHost.PALETTE.brightCyan,
+			PtyHost.PALETTE.brightWhite
+		];
+		for (let i=0; i<16; i++) table[i] = PtyHost.HexToRgb(ansi16[i]);
+
+		const ramp = [0, 95, 135, 175, 215, 255];
+		for (let i=16; i<232; i++) {
+			const v = i - 16;
+			table[i] = [ramp[Math.floor(v/36)], ramp[Math.floor((v%36)/6)], ramp[v%6]];
+		}
+
+		for (let i=232; i<256; i++) {
+			const level = 8 + (i - 232) * 10;
+			table[i] = [level, level, level];
+		}
+
+		return table;
+	}
 
 	static SPECIAL_KEYS = {
 		"Enter":"\r",
@@ -207,10 +255,6 @@ class PtyHost extends Window {
 		this.content.classList.add("pty-content");
 		this.win.style.colorScheme = this.args.darkMode ? "dark" : "inherit";
 
-		this.cursorElement = document.createElement("div");
-		this.cursorElement.className = "pty-cursor";
-		this.cursorElement.style.display = "none";
-
 		this.statusBox = document.createElement("div");
 		this.statusBox.className = "pty-status-box";
 		this.statusBox.textContent = "Connecting...";
@@ -296,14 +340,15 @@ class PtyHost extends Window {
 			this.term.loadAddon(new LinksCtor());
 		}
 
-		this.term.onData(data => this.SendToWs(data));
-		this.term.onBinary(data => this.SendToWs(data));
+		this.term.onData(data=> this.SendToWs(data));
+		this.term.onBinary(data=> this.SendToWs(data));
 
-		this.term.onBell(() => {
+		this.term.onBell(()=> {
+			this.ShakeCursor();
 			if (this.args.bell) this.Bell();
 		});
 
-		this.term.onTitleChange(title => {
+		this.term.onTitleChange(title=> {
 			if (this.args.host && this.args.host.length > 0) {
 				this.SetTitle(`${this.args.host} - ${title}`);
 			}
@@ -312,42 +357,57 @@ class PtyHost extends Window {
 			}
 		});
 
-		this.term.onResize(() => {
+		this.term.onResize(()=> {
 			this.UpdateMinimap();
 			this.SendResize();
 		});
-		this.term.onScroll(() => this.UpdateMinimap());
-		this.term.onRender(() => this.UpdateMinimap());
+		this.term.onScroll(()=> this.UpdateMinimap());
+		this.term.onRender(()=> this.UpdateMinimap());
 
-		this.term.attachCustomKeyEventHandler(event => {
+		this.term.attachCustomKeyEventHandler(event=> {
 			if (event.ctrlKey && event.shiftKey && (event.code === "KeyC" || event.code === "KeyV")) {
 				return false;
 			}
 			return true;
 		});
 
-		requestAnimationFrame(() => {
+		requestAnimationFrame(()=> {
 			if (!this.term) return;
 			this.term.open(this.content);
 			this.FitTerminal();
 			this.ResizeMinimap();
-			setTimeout(() => {
+			setTimeout(()=> {
 				this.FitTerminal();
 				this.ResizeMinimap();
 			}, WIN.ANIME_DURATION + 50);
 		});
+
+		this.colorSchemeMedia = window.matchMedia("(prefers-color-scheme: dark)");
+		this.colorSchemeMediaListener = ()=> this.RefreshTheme();
+		this.colorSchemeMedia.addEventListener("change", this.colorSchemeMediaListener);
+
+		this.rootSchemeObserver = new MutationObserver(()=> this.RefreshTheme());
+		this.rootSchemeObserver.observe(document.documentElement, {attributes:true, attributeFilter:["style"]});
 	}
 
 	BuildTheme() {
-		const accent = getComputedStyle(document.documentElement).getPropertyValue("--clr-accent").trim() || "#33bbff";
-		const dark = this.args.darkMode;
+		const accent = getComputedStyle(document.documentElement).getPropertyValue("--clr-accent").trim();
 		return Object.assign({
-			background: dark ? "#1a1a1a" : "#ffffff",
-			foreground: "light-dark(#202020, #e0e0e0)",
+			background: this.ResolveColor("light-dark(#ffffff, #1a1a1a)"),
+			foreground: this.ResolveColor("light-dark(#202020, #e0e0e0)"),
 			cursor: accent,
-			cursorAccent: dark ? "#1a1a1a" : "#ffffff",
+			cursorAccent: this.ResolveColor("light-dark(#ffffff, #1a1a1a)"),
 			selectionBackground: "rgb(127,127,127)"
 		}, PtyHost.PALETTE);
+	}
+
+	ResolveColor(cssValue) {
+		const probe = this.content;
+		const previous = probe.style.color;
+		probe.style.color = cssValue;
+		const resolved = getComputedStyle(probe).color;
+		probe.style.color = previous;
+		return resolved;
 	}
 
 	FitTerminal() {
@@ -392,6 +452,14 @@ class PtyHost extends Window {
 
 	Close() { //overrides
 		if (this.ws !== null) this.ws.close();
+		if (this.colorSchemeMedia) {
+			this.colorSchemeMedia.removeEventListener("change", this.colorSchemeMediaListener);
+			this.colorSchemeMedia = null;
+		}
+		if (this.rootSchemeObserver) {
+			this.rootSchemeObserver.disconnect();
+			this.rootSchemeObserver = null;
+		}
 		if (this.term) {
 			try { this.term.dispose(); } catch {}
 			this.term = null;
@@ -405,7 +473,12 @@ class PtyHost extends Window {
 		this.args.darkMode = !this.args.darkMode;
 		this.darkModeButton.style.borderBottom = this.args.darkMode ? "3px solid rgb(192,192,192)" : "none";
 		this.win.style.colorScheme = this.args.darkMode ? "dark" : "inherit";
-		if (this.term) this.term.options.theme = this.BuildTheme();
+		this.RefreshTheme();
+	}
+
+	RefreshTheme() {
+		if (!this.term) return;
+		this.term.options.theme = this.BuildTheme();
 	}
 
 	ToggleBell() {
@@ -414,7 +487,7 @@ class PtyHost extends Window {
 	}
 
 	OptionsDialog() {
-		const dialog = this.DialogBox("300px");
+		const dialog = this.DialogBox("260px");
 		if (dialog === null) return;
 
 		const {okButton, innerBox} = dialog;
@@ -428,10 +501,6 @@ class PtyHost extends Window {
 		innerBox.appendChild(document.createElement("br"));
 
 		const bellToggle = this.CreateToggle("Play bell sound", this.args.bell, innerBox);
-		innerBox.appendChild(document.createElement("br"));
-		innerBox.appendChild(document.createElement("br"));
-
-		const cursorBlinkToggle = this.CreateToggle("Blinking cursor", this.term ? this.term.options.cursorBlink : true, innerBox);
 		innerBox.appendChild(document.createElement("br"));
 		innerBox.appendChild(document.createElement("br"));
 
@@ -471,9 +540,8 @@ class PtyHost extends Window {
 
 			if (this.term) {
 				this.term.options.scrollback = this.args.scrollback;
-				this.term.options.cursorBlink = cursorBlinkToggle.checkbox.checked;
-				this.term.options.theme = this.BuildTheme();
 			}
+			this.RefreshTheme();
 
 			this.darkModeButton.style.borderBottom = this.args.darkMode ? "3px solid rgb(192,192,192)" : "none";
 			this.bellSoundButton.style.borderBottom = this.args.bell ? "3px solid rgb(192,192,192)" : "none";
@@ -658,6 +726,26 @@ class PtyHost extends Window {
 		});
 	}
 
+	static DEFAULT_INK = [216, 216, 216];
+
+	static GetCellInkColor(cell) {
+		const useBg = cell.isInverse();
+
+		if (useBg) {
+			if (cell.isBgRGB())     return PtyHost.Rgb24ToArray(cell.getBgColor());
+			if (cell.isBgPalette()) return PtyHost.ANSI_256[cell.getBgColor()] ?? PtyHost.DEFAULT_INK;
+			return PtyHost.DEFAULT_INK;
+		}
+
+		if (cell.isFgRGB())     return PtyHost.Rgb24ToArray(cell.getFgColor());
+		if (cell.isFgPalette()) return PtyHost.ANSI_256[cell.getFgColor()] ?? PtyHost.DEFAULT_INK;
+		return PtyHost.DEFAULT_INK;
+	}
+
+	static Rgb24ToArray(n) {
+		return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+	}
+
 	DrawMinimap() {
 		const canvas = this.minimapCanvas;
 		const cw = canvas.width;
@@ -703,9 +791,9 @@ class PtyHost extends Window {
 				if (!cell) continue;
 
 				const chars = cell.getChars();
-				const ink = chars.length > 0 && chars !== " ";
+				if (!chars || chars === " " || cell.isInvisible()) continue; //no ink to draw
 
-				const [r, g, b] = ink ? [216, 216, 216] : [96, 96, 96];
+				const [r,g,b] = PtyHost.GetCellInkColor(cell);
 
 				for (let dy=0; dy<2; dy++) {
 					const row = py + dy;
@@ -715,15 +803,8 @@ class PtyHost extends Window {
 					data[idx+0] = data[idx+4] = r;
 					data[idx+1] = data[idx+5] = g;
 					data[idx+2] = data[idx+6] = b;
-
-					if (ink) {
-						data[idx+3] = 255;
-						data[idx+7] = 168;
-					}
-					else {
-						data[idx+3] = 0;
-						data[idx+7] = 0;
-					}
+					data[idx+3] = 255;
+					data[idx+7] = 168;
 				}
 			}
 		}
@@ -767,6 +848,18 @@ class PtyHost extends Window {
 		this.term.scrollToLine(Math.min(maxTop, Math.max(0, targetTop)));
 	}
 
+	ShakeCursor() {
+		const root = this.term?.element;
+		if (!root) return;
+
+		root.classList.remove("pty-bell");
+		void root.offsetWidth; //force reflow so repeated bells restart the animation
+		root.classList.add("pty-bell");
+
+		clearTimeout(this.bellShakeTimer);
+		this.bellShakeTimer = setTimeout(()=> root.classList.remove("pty-bell"), 400);
+	}
+
 	Bell() {
 		let ctx = new window.AudioContext();
 		let oscillator = ctx.createOscillator();
@@ -780,6 +873,6 @@ class PtyHost extends Window {
 		gain.connect(ctx.destination);
 
 		oscillator.start();
-		setTimeout(()=>{ oscillator.stop() }, 150);
+		setTimeout(()=>oscillator.stop(), 150);
 	}
 }

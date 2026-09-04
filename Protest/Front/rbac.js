@@ -455,9 +455,10 @@ class AccessControl extends Tabs {
 		this.permissionsList.push(this.AddPermissionObject("Network utilities", "url(mono/portscan.svg)",     this.toolsGroup, false, true, false));
 		this.permissionsList.push(this.AddPermissionObject("VNC",               "url(mono/vnc.svg)",          this.toolsGroup, false, true, false));
 		this.permissionsList.push(this.AddPermissionObject("Terminal",          "url(mono/terminal.svg)",     this.toolsGroup, false, true, false));
-		this.permissionsList.push(this.AddPermissionObject("Remote shell",      "url(mono/remote.svg)",       this.toolsGroup, false, true, false));
+		this.permissionsList.push(this.AddPermissionObject("Serial console",    "url(mono/serialconsole.svg)", this.toolsGroup, false, true, false));
 		this.permissionsList.push(this.AddPermissionObject("Telnet",            "url(mono/telnet.svg)",       this.toolsGroup, false, true, false));
 		this.permissionsList.push(this.AddPermissionObject("SSH and SFTP",      "url(mono/ssh.svg)",          this.toolsGroup, false, true, false));
+		this.permissionsList.push(this.AddPermissionObject("Remote shell",      "url(mono/terminal.svg)",       this.toolsGroup, false, true, false));
 		this.permissionsList.push(this.AddPermissionObject("WMI",               "url(mono/wmi.svg)",          this.toolsGroup, false, true, false));
 		this.permissionsList.push(this.AddPermissionObject("SNMP polling",      "url(mono/snmp.svg)",         this.toolsGroup, false, true, false));
 		//this.permissionsList.push(this.AddPermissionObject("SNMP traps",        "url(mono/trap.svg)",         this.toolsGroup, false, true, false));

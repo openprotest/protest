@@ -84,9 +84,8 @@
 	pointer-events: none;
 }
 
-/* Inert compatibility stub: xterm.js renders its own cursor. */
-.pty-cursor {
-	display: none;
+.xterm.pty-bell .xterm-cursor {
+	animation: pty-shake .4s 1 !important;
 }
 
 @container (max-width: 480px) {
@@ -98,12 +97,6 @@
 		opacity: 0;
 		visibility: hidden;
 	}
-}
-
-@keyframes pty-blinking {
-	20%{opacity:1}
-	50%{opacity:.1}
-	80%{opacity:1}
 }
 
 @keyframes pty-shake {

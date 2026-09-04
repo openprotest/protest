@@ -152,6 +152,7 @@ class About extends Tabs {
 		CreateCredit("Otp.NET",                    "kspearrin",       "https://nuget.org/packages/Otp.NET/1.2.2");
 		CreateCredit("Porta.Pty",                  "Laird McConnell", "https://github.com/tomlm/Porta.Pty");
 		CreateCredit("noVNC",                      "noVNC team",      "https://github.com/novnc/noVNC");
+		CreateCredit("xterm.js",                   "xterm.js team",      "https://github.com/xtermjs");
 		CreateCredit("QRCode.js",                  "Sangmin, Shim",   "https://github.com/davidshimjs/qrcodejs");
 		CreateCredit("MAC addresses lookup table", "ieee",            "https://regauth.standards.ieee.org/standards-ra-web/pub/view.html");
 		CreateCredit("Open Sans typeface",         "Steve Matteson",  "");

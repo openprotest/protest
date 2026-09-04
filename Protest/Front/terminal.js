@@ -52,7 +52,6 @@ class Terminal extends PtyHost {
 				this.statusBox.style.display = "none";
 				this.ws.onmessage = event=> this.HandleMessage(event.data);
 
-				this.content.appendChild(this.cursorElement);
 				this.content.focus();
 			}
 			else if (json.error) {
