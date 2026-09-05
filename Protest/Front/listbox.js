@@ -3,38 +3,30 @@ class ListBox {
 	static MIN_CELL_SIZE = 40;
 
 	constructor(args) {
-		this.args = {
-			titleBar            : true,
-			columnsOptionsEnable: true,
-			counter             : true,
-			virtualize          : true,
-			builtInSort         : false,
-			firstColumnOffset   : "36px",
-			defaultColumns      : [],
-			resolveEntry        : null,
-			resolveType         : null,
-			computeCounter      : null,
-			onSelect            : null,
-			onColumnsOptions    : null,
-			onSort              : null,
-			getSort             : null,
-			onDoubleClick       : null,
-			inflate             : null,
-			...args
-		};
+		this.resolveEntry      = null;
+		this.resolveType       = null;
+		this.onSelect          = null;
+		this.onDoubleClick     = null;
+		this.onSort            = null;
+		this.getSort           = null;
+		this.inflate           = null;
+		this.firstColumnOffset = "36px";
+		Object.assign(this, args);
 
-		this.items = [];
-		this.selected = null;
-		this.defaultColumns = this.args.defaultColumns;
-		this.columnsElements = [];
-		this.sortColumnElement = null;
-		this.sortDescend = false;
+		this.builtInSort = false;
+
+		this.items                 = [];
+		this.selected              = null;
+		this.defaultColumns        = [];
+		this.columnsElements       = [];
+		this.sortColumnElement     = null;
+		this.sortDescend           = false;
 		this.resizingColumnElement = null;
-		this.movingColumnElement = null;
-		this.mouseX0 = 0;
-		this.width0 = 0;
-		this.left0 = 0;
-		this.columnsWidth0 = [];
+		this.movingColumnElement   = null;
+		this.mouseX0               = 0;
+		this.width0                = 0;
+		this.left0                 = 0;
+		this.columnsWidth0         = [];
 
 		this.list = document.createElement("div");
 		this.list.className = "list-listbox no-results";
@@ -45,27 +37,37 @@ class ListBox {
 		this.listTitle = null;
 		this.columnsOptions = null;
 		this.counter = null;
+		this.onColumnsOptions = null;
+		this.computeCounter = null;
+	}
 
-		if (this.args.titleBar) {
-			this.listTitleOuter = document.createElement("div");
-			this.listTitleOuter.className = "list-title-outer";
+	SetupTitleBar() {
+		this.listTitleOuter = document.createElement("div");
+		this.listTitleOuter.className = "list-title-outer";
 
-			this.listTitle = document.createElement("div");
-			this.listTitle.className = "list-title";
-			this.listTitleOuter.appendChild(this.listTitle);
+		this.listTitle = document.createElement("div");
+		this.listTitle.className = "list-title";
+		this.listTitleOuter.appendChild(this.listTitle);
+	}
 
-			if (this.args.columnsOptionsEnable) {
-				this.columnsOptions = document.createElement("div");
-				this.columnsOptions.className = "list-columns-options";
-				this.columnsOptions.onclick = ()=> this.args.onColumnsOptions?.();
-				this.listTitleOuter.appendChild(this.columnsOptions);
-			}
-		}
+	SetupColumnsOptions(onColumnsOptions) {
+		this.onColumnsOptions = onColumnsOptions;
 
-		if (this.args.counter) {
-			this.counter = document.createElement("div");
-			this.counter.className = "list-counter";
-		}
+		this.columnsOptions = document.createElement("div");
+		this.columnsOptions.className = "list-columns-options";
+		this.columnsOptions.onclick = ()=> this.onColumnsOptions?.();
+		this.listTitleOuter.appendChild(this.columnsOptions);
+	}
+
+	SetupCounter(computeCounter) {
+		this.computeCounter = computeCounter;
+
+		this.counter = document.createElement("div");
+		this.counter.className = "list-counter";
+	}
+
+	SetupBuiltInSort() {
+		this.builtInSort = true;
 	}
 
 	Attach(container) {
@@ -89,7 +91,7 @@ class ListBox {
 		element.style.backgroundColor = "var(--clr-select)";
 		element.scrollIntoView({block:"nearest"});
 
-		this.args.onSelect?.(element.getAttribute("id"), element);
+		this.onSelect?.(element.getAttribute("id"), element);
 	}
 
 	Keydown(event) {
@@ -252,13 +254,13 @@ class ListBox {
 				this.sortDescend = false;
 			}
 
-			if (this.args.builtInSort) {
+			if (this.builtInSort) {
 				this.sortColumnElement = event.target;
 				this.ApplySort();
 				this.UpdateViewport(true);
 			}
 
-			this.args.onSort?.(event.target.textContent, this.sortDescend);
+			this.onSort?.(event.target.textContent, this.sortDescend);
 		};
 
 		for (let i=0; i<columns.length; i++) {
@@ -269,7 +271,7 @@ class ListBox {
 			newColumn.style.left = `${100 * i / columns.length}%`;
 			newColumn.style.width = `${100 / columns.length}%`;
 
-			if (this.args.getSort?.() === def.label) {
+			if (this.getSort?.() === def.label) {
 				newColumn.className = "list-sort-ascend";
 			}
 
@@ -330,13 +332,6 @@ class ListBox {
 	}
 
 	UpdateViewport(force = false) {
-		if (!this.args.virtualize) {
-			if (this.counter) {
-				this.counter.textContent = this.args.computeCounter?.(this.list.childNodes.length) ?? this.list.childNodes.length;
-			}
-			return;
-		}
-
 		const childNodes = this.list.childNodes;
 
 		for (let i=0; i<childNodes.length; i++) {
@@ -351,17 +346,17 @@ class ListBox {
 				let entry, type;
 				if (node._data !== undefined) {
 					entry = node._data;
-					type = this.args.resolveType?.(null, entry) ?? null;
+					type = this.resolveType?.(null, entry) ?? null;
 				}
 				else {
 					const key = node.getAttribute("id");
-					entry = this.args.resolveEntry?.(key) ?? null;
+					entry = this.resolveEntry?.(key) ?? null;
 					if (entry === null) continue;
-					type = this.args.resolveType?.(key, entry) ?? null;
+					type = this.resolveType?.(key, entry) ?? null;
 				}
 
-				if (this.args.inflate) {
-					this.args.inflate(node, entry, type);
+				if (this.inflate) {
+					this.inflate(node, entry, type);
 				}
 				else {
 					this.InflateElement(node, entry, type);
@@ -370,7 +365,7 @@ class ListBox {
 		}
 
 		if (this.counter) {
-			this.counter.textContent = this.args.computeCounter?.(childNodes.length) ?? childNodes.length;
+			this.counter.textContent = this.computeCounter?.(childNodes.length) ?? childNodes.length;
 		}
 	}
 
@@ -401,8 +396,8 @@ class ListBox {
 			element.appendChild(cell);
 
 			if (i === 0) {
-				cell.style.left = this.args.firstColumnOffset;
-				cell.style.width = `calc(${column.style.width} - ${this.args.firstColumnOffset})`;
+				cell.style.left = this.firstColumnOffset;
+				cell.style.width = `calc(${column.style.width} - ${this.firstColumnOffset})`;
 			}
 			else {
 				cell.style.left = column.style.left;
@@ -412,8 +407,8 @@ class ListBox {
 
 		element.onclick = ()=> this.Select(element);
 
-		if (this.args.onDoubleClick) {
-			element.ondblclick = ()=> this.args.onDoubleClick(entry, element);
+		if (this.onDoubleClick) {
+			element.ondblclick = ()=> this.onDoubleClick(entry, element);
 		}
 	}
 
@@ -434,7 +429,7 @@ class ListBox {
 	}
 
 	ApplySort() {
-		if (!this.args.builtInSort || !this.sortColumnElement) return;
+		if (!this.builtInSort || !this.sortColumnElement) return;
 
 		const def = this.sortColumnElement._def ?? {label:this.sortColumnElement.textContent};
 		const ValueOf = data=> {

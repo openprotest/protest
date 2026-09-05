@@ -9,19 +9,17 @@ class List extends Window {
 		this.link = null;
 
 		this.listBox = new ListBox({
-			titleBar: true,
-			columnsOptionsEnable: true,
-			counter: true,
-			defaultColumns: [],
-			resolveEntry:   id => this.link?.data ? this.link.data[id] : null,
-			resolveType:    (id, entry) => entry?.type?.v?.toLowerCase() || null,
-			computeCounter: n => this.link ? (n === this.link.length ? this.link.length : `${n} / ${this.link.length}`) : "0",
-			onSelect:       id => { if (id) this.args.select = id; },
-			onColumnsOptions: () => this.CustomizeColumns(),
-			onSort:         text => { this.args.sort = text; this.RefreshList(); },
-			getSort:        () => this.args.sort,
-			inflate:        (element, entry, type) => this.InflateElement(element, entry, type),
+			resolveEntry: id => this.link?.data ? this.link.data[id] : null,
+			resolveType:  (id, entry) => entry?.type?.v?.toLowerCase() || null,
+			onSelect:     id => { if (id) this.args.select = id; },
+			onSort:       text => { this.args.sort = text; this.RefreshList(); },
+			getSort:      () => this.args.sort,
+			inflate:      (element, entry, type) => this.InflateElement(element, entry, type),
 		});
+
+		this.listBox.SetupTitleBar();
+		this.listBox.SetupColumnsOptions(() => this.CustomizeColumns());
+		this.listBox.SetupCounter(n => this.link ? (n === this.link.length ? this.link.length : `${n} / ${this.link.length}`) : "0");
 
 		this.listBox.Attach(this.content);
 

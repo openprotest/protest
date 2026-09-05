@@ -125,14 +125,12 @@ class Environment extends Tabs {
 		this.options.append(this.zonesNewButton, this.zonesRemoveButton);
 
 		this.zonesListBox = new ListBox({
-			titleBar: true,
-			counter: false,
-			columnsOptionsEnable: false,
-			builtInSort: true,
 			firstColumnOffset: "4px",
 			onSelect: (id, element)=> { this.selectedZone = element._data; },
 			onDoubleClick: data=> this.ZoneDialog(data)
 		});
+		this.zonesListBox.SetupTitleBar();
+		this.zonesListBox.SetupBuiltInSort();
 		this.activeColumnsListBox = this.zonesListBox;
 
 		this.zonesListBox.listTitleOuter.style.left = "20px";
@@ -217,14 +215,12 @@ class Environment extends Tabs {
 		this.options.append(this.dhcpNewButton, this.dhcpRemoveButton);
 
 		this.dhcpListBox = new ListBox({
-			titleBar: true,
-			counter: false,
-			columnsOptionsEnable: false,
-			builtInSort: true,
 			firstColumnOffset: "4px",
 			onSelect: (id, element)=> { this.selectedZone = element._data; },
 			onDoubleClick: data=> this.DhcpDialog(data)
 		});
+		this.dhcpListBox.SetupTitleBar();
+		this.dhcpListBox.SetupBuiltInSort();
 		this.activeColumnsListBox = this.dhcpListBox;
 
 		this.dhcpListBox.listTitleOuter.style.left = "20px";
@@ -350,10 +346,6 @@ class Environment extends Tabs {
 		this.options.append(this.profilesNewButton, this.profilesRemoveButton, this.profilesTestButton);
 
 		this.smtpProfilesListBox = new ListBox({
-			titleBar: true,
-			counter: false,
-			columnsOptionsEnable: false,
-			builtInSort: true,
 			firstColumnOffset: "4px",
 			onSelect: (id, element)=> {
 				this.selectedSmtpProfile = element._data;
@@ -361,6 +353,8 @@ class Environment extends Tabs {
 			},
 			onDoubleClick: data=> this.SmtpProfileDialog(data)
 		});
+		this.smtpProfilesListBox.SetupTitleBar();
+		this.smtpProfilesListBox.SetupBuiltInSort();
 		this.activeColumnsListBox = this.smtpProfilesListBox;
 
 		this.smtpProfilesListBox.listTitleOuter.style.left = "20px";
@@ -494,14 +488,12 @@ class Environment extends Tabs {
 		this.options.append(this.profilesNewButton, this.profilesRemoveButton);
 
 		this.snmpProfilesListBox = new ListBox({
-			titleBar: true,
-			counter: false,
-			columnsOptionsEnable: false,
-			builtInSort: true,
 			firstColumnOffset: "4px",
 			onSelect: (id, element)=> { this.selectedSnmpProfile = element._data; },
 			onDoubleClick: data=> this.SnmpProfileDialog(data)
 		});
+		this.snmpProfilesListBox.SetupTitleBar();
+		this.snmpProfilesListBox.SetupBuiltInSort();
 		this.activeColumnsListBox = this.snmpProfilesListBox;
 
 		this.snmpProfilesListBox.listTitleOuter.style.left = "20px";
@@ -567,14 +559,12 @@ class Environment extends Tabs {
 		this.tabsPanel.textContent = "";
 
 		this.integrationListBox = new ListBox({
-			titleBar: true,
-			counter: false,
-			columnsOptionsEnable: false,
-			builtInSort: true,
 			firstColumnOffset: "4px",
 			onSelect: (id, element)=> {},
 			onDoubleClick: data=> this.IntegrationDialog(data.name)
 		});
+		this.integrationListBox.SetupTitleBar();
+		this.integrationListBox.SetupBuiltInSort();
 
 		this.activeColumnsListBox = this.integrationListBox;
 
