@@ -67,6 +67,7 @@ class Topology extends Window {
 		this.ws = null;
 		this.devices = Object.create(null);
 		this.links = Object.create(null);
+		this.stpLines = Object.create(null);
 
 		this.globalX = Topology.VIEW_PADDING_X;
 		this.globalY = Topology.VIEW_PADDING_Y;
@@ -222,11 +223,11 @@ class Topology extends Window {
 			if (y > maxY) maxY = y;
 		}
 
-		const w = maxX === this.workspace.offsetWidth ? Math.max(maxX - 20, 1) : maxX;
-		const h = maxY === this.workspace.offsetHeight ? Math.max(maxY - 20, 1) : maxY;
+		const w = maxX === this.workspace.offsetWidth ? Math.max(maxX - 20, 1) : maxX - 20;
+		const h = maxY === this.workspace.offsetHeight ? Math.max(maxY - 20, 1) : maxY - 20;
 
-		this.svg.setAttribute("width", w - 20);
-		this.svg.setAttribute("height", h - 20);
+		this.svg.setAttribute("width", w);
+		this.svg.setAttribute("height", h);
 	}
 
 	Topology_onmousedown(event) {
@@ -310,6 +311,8 @@ class Topology extends Window {
 			}
 		}
 
+		this.AdjustStpLinkElement();
+
 		this.AdjustSvgSize();
 	}
 
@@ -321,6 +324,7 @@ class Topology extends Window {
 	Clear() {
 		this.devices = Object.create(null);
 		this.links = Object.create(null);
+		this.stpLines = Object.create(null);
 		this.workspace.textContent = "";
 		this.sidePane.textContent = "";
 
@@ -416,6 +420,28 @@ class Topology extends Window {
 		this.linesLayer.setAttribute("stroke", "light-dark(#202020, #c0c0c0)");
 		this.linesLayer.setAttribute("stroke-width", 3);
 		this.svg.appendChild(this.linesLayer);
+
+		const stpArrowMarker = document.createElementNS("http://www.w3.org/2000/svg", "marker");
+		stpArrowMarker.setAttribute("id", "stpArrowMarker");
+		stpArrowMarker.setAttribute("viewBox", "0 0 10 10");
+		stpArrowMarker.setAttribute("refX", 8);
+		stpArrowMarker.setAttribute("refY", 5);
+		stpArrowMarker.setAttribute("markerWidth", 7);
+		stpArrowMarker.setAttribute("markerHeight", 7);
+		stpArrowMarker.setAttribute("orient", "auto");
+		this.svg.appendChild(stpArrowMarker);
+		const stpArrowHead = document.createElementNS("http://www.w3.org/2000/svg", "path");
+		stpArrowHead.setAttribute("d", "M 0 0 L 10 5 L 0 10 z");
+		stpArrowHead.setAttribute("fill", "rgb(48,136,96)");
+		stpArrowMarker.appendChild(stpArrowHead);
+
+		this.stpLayer = document.createElementNS("http://www.w3.org/2000/svg", "g");
+		this.stpLayer.setAttribute("fill", "none");
+		this.stpLayer.setAttribute("stroke", "rgb(48,136,96)");
+		this.stpLayer.setAttribute("stroke-width", 2);
+		this.stpLayer.setAttribute("stroke-dasharray", "2 5");
+		this.stpLayer.setAttribute("stroke-linecap", "round");
+		this.svg.appendChild(this.stpLayer);
 	}
 
 	StartDialog() {
@@ -482,7 +508,7 @@ class Topology extends Window {
 		stpLabel.style.backgroundImage = "url(mono/tree.svg)";
 		stpLabel.style.backgroundSize = "24px";
 		stpLabel.style.backgroundRepeat = "no-repeat";
-		stpInput.checked = this.args.options ? this.args.options.stp : true;
+		stpInput.checked = this.args.options ? this.args.options.stp : false;
 
 		const [dot1qLabel, dot1qInput] = AddParameter("VLAN (802.1Q)", "input", "toggle");
 		dot1qLabel.style.lineHeight = "24px";
@@ -645,6 +671,10 @@ class Topology extends Window {
 
 					this.ComputeLldpNeighbors(device);
 
+					for (const file in this.devices) {
+						if (this.devices[file].stp) this.UpdateStpLine(this.devices[file]);
+					}
+
 					if (this.selected && this.selected.initial.file === json.lldp.file) {
 						this.SelectDevice(json.lldp.file);
 					}
@@ -692,6 +722,8 @@ class Topology extends Window {
 					image.style.maskMode = "alpha";
 					device.element.root.appendChild(image);
 				}
+
+				this.UpdateStpLine(device);
 			}
 			else if (json.dot1tp) {
 				const device = this.devices[json.dot1tp.file];
@@ -909,6 +941,7 @@ class Topology extends Window {
 
 		this.PlaceUnmanagedElements();
 		this.AdjustLinkElement();
+		this.AdjustStpLinkElement();
 		this.AdjustSvgSize();
 	}
 
@@ -949,6 +982,7 @@ class Topology extends Window {
 		}
 
 		this.AdjustLinkElement();
+		this.AdjustStpLinkElement();
 		this.AdjustSvgSize();
 	}
 
@@ -1017,6 +1051,81 @@ class Topology extends Window {
 			element.capA.setAttribute("cy", linkPath.primary.y);
 			element.capB.setAttribute("cx", linkPath.secondary.x);
 			element.capB.setAttribute("cy", linkPath.secondary.y);
+		}
+	}
+
+	FindDeviceByBridgeId(bridgeId) {
+		if (!bridgeId) return null;
+
+		for (const file in this.devices) {
+			const candidate = this.devices[file];
+			if (!candidate.lldp) continue;
+			if (candidate.lldp.localChassisIdSubtype !== 4) continue; //mac address
+			if (candidate.lldp.localChassisId?.toLowerCase() === bridgeId.toLowerCase()) return candidate;
+		}
+
+		return null;
+	}
+
+	GetStpEdgeOffset(device, cos, sin) {
+		const shape = Topology.DEVICE_SHAPE[device.initial.type?.toLowerCase()] ?? "circle";
+
+		if (shape === "circle") return 50;
+
+		return 46 / Math.max(Math.abs(cos), Math.abs(sin)) + 2; //distance to the edge of an axis-aligned square, along this direction
+	}
+
+	DrawStpPath(a, b) {
+		const ac = {x: a.element.x + 48, y: a.element.y + 48};
+		const bc = {x: b.element.x + 48, y: b.element.y + 48};
+
+		const angle = Math.atan2(bc.y - ac.y, bc.x - ac.x);
+		const cos = Math.cos(angle), sin = Math.sin(angle);
+
+		const aOffset = this.GetStpEdgeOffset(a, cos, sin);
+		const bOffset = this.GetStpEdgeOffset(b, cos, sin) + 8; //extra room for the arrowhead
+
+		const ax = ac.x + aOffset * cos;
+		const ay = ac.y + aOffset * sin;
+		const bx = bc.x - bOffset * cos;
+		const by = bc.y - bOffset * sin;
+
+		return `M ${ax} ${ay} L ${bx} ${by}`;
+	}
+
+	UpdateStpLine(device) {
+		const file = device.initial.file;
+
+		if (this.stpLines[file]) {
+			this.stpLines[file].element.line.remove();
+			delete this.stpLines[file];
+		}
+
+		if (!device.stp) return;
+		if (device.stp.rootCost <= 0) return; //no root cost means this device is the root itself, or STP data is unavailable
+
+		const rootDevice = this.FindDeviceByBridgeId(device.stp.designatedRoot);
+		if (!rootDevice || rootDevice === device) return;
+
+		const line = document.createElementNS("http://www.w3.org/2000/svg", "path");
+		line.setAttribute("d", this.DrawStpPath(device, rootDevice));
+		line.setAttribute("marker-end", "url(#stpArrowMarker)");
+		this.stpLayer.appendChild(line);
+
+		this.stpLines[file] = {
+			target : rootDevice.initial.file,
+			element: {line: line},
+		};
+	}
+
+	AdjustStpLinkElement() {
+		for (const file in this.stpLines) {
+			const entry = this.stpLines[file];
+			const a = this.devices[file];
+			const b = this.devices[entry.target];
+			if (!a || !b) continue;
+
+			entry.element.line.setAttribute("d", this.DrawStpPath(a, b));
 		}
 	}
 
@@ -1176,7 +1285,6 @@ class Topology extends Window {
 				}
 			}
 		}
-
 	}
 
 	AddFindResult(listBox, device, portIndex, source) {
@@ -1223,6 +1331,11 @@ class Topology extends Window {
 			}
 
 			device.element.root.scrollIntoView({behavior: "smooth", block: "center", inline: "center"});
+		};
+
+		item.onmousedown = event=> {
+			device.element.root?.onmousedown(event);
+			this.dragging = null;
 		};
 	}
 
