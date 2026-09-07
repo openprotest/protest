@@ -6,7 +6,7 @@ class IpBox {
 
 		this.textBoxes = [];
 
-		for (let i = 0; i < 4; i++) {
+		for (let i=0; i<4; i++) {
 			this.textBoxes.push(document.createElement("input"));
 
 			this.textBoxes[i].type = "text";
@@ -26,7 +26,7 @@ class IpBox {
 				let ok = (
 					event.ctrlKey ||
 					event.key === "." || event.key === "0" ||
-					event.key === "1" || event.key === "2" || event.key == "3" ||
+					event.key === "1" || event.key === "2" || event.key === "3" ||
 					event.key === "4" || event.key === "5" || event.key === "6" ||
 					event.key === "7" || event.key === "8" || event.key === "9" ||
 					event.key === "F5" ||
@@ -77,7 +77,7 @@ class IpBox {
 			};
 
 			this.textBoxes[i].onchange = event=> {
-				let v = parseInt(event.target.value);
+				const v = parseInt(event.target.value);
 				if (isNaN(v)) v = 0;
 				if (v > 255) v = 255;
 				event.target.value = v;
@@ -94,22 +94,32 @@ class IpBox {
 		container.style.whiteSpace = "nowrap";
 		container.style.overflow = "hidden";
 
-		for (let i = 0; i < 4; i++)
+		for (let i=0; i<4; i++) {
 			container.appendChild(this.textBoxes[i]);
+		}
 	}
 
 	FocusNext(current) {
-		if (current.getAttribute("i") == 1) { this.textBoxes[1].focus(); this.textBoxes[1].select(); }
-		if (current.getAttribute("i") == 2) { this.textBoxes[2].focus(); this.textBoxes[2].select(); }
-		if (current.getAttribute("i") == 3) { this.textBoxes[3].focus(); this.textBoxes[3].select(); }
-		if (current.getAttribute("i") == 4 && this.exitElement != null) { this.exitElement.focus(); this.exitElement.select(); }
+		const i = +current.getAttribute("i");
+		if (i < 4) {
+			this.textBoxes[i].focus();
+			this.textBoxes[i].select();
+		}
+		else if (this.exitElement) {
+			this.exitElement.focus();
+			this.exitElement.select();
+		}
 	}
 
 	FocusPrevious(current) {
-		if (current.getAttribute("i") == 1 && this.enterElement != null) this.enterElement.focus();
-		if (current.getAttribute("i") == 2) { this.textBoxes[0].focus(); this.textBoxes[0].select(); }
-		if (current.getAttribute("i") == 3) { this.textBoxes[1].focus(); this.textBoxes[1].select(); }
-		if (current.getAttribute("i") == 4) { this.textBoxes[2].focus(); this.textBoxes[2].select(); }
+		const i = +current.getAttribute("i");
+		if (i === 1 && this.enterElement) {
+			this.enterElement.focus();
+		}
+		else if (i > 1) {
+			this.textBoxes[i-2].focus();
+			this.textBoxes[i-2].select();
+		}
 	}
 
 	GetIpArray() {
@@ -117,23 +127,24 @@ class IpBox {
 			parseInt(this.textBoxes[0].value),
 			parseInt(this.textBoxes[1].value),
 			parseInt(this.textBoxes[2].value),
-			parseInt(this.textBoxes[3].value)];
+			parseInt(this.textBoxes[3].value)
+		];
 	}
 
 	GetIpDecimal() {
-		let a = this.GetIpArray();
-		return ((((((+a[0]) * 256) + (+a[1])) * 256) + (+a[2])) * 256) + (+a[3]);
+		const [a, b, c, d] = this.GetIpArray();
+		return (((a * 256 + b) * 256 + c) * 256 + d);
 	}
 
 	GetIpString() {
 		return this.textBoxes[0].value + "." + this.textBoxes[1].value + "." + this.textBoxes[2].value + "." + this.textBoxes[3].value;
 	}
 
-	SetIp(b1, b2, b3, b4) {
-		this.textBoxes[0].value = parseInt(b1);
-		this.textBoxes[1].value = parseInt(b2);
-		this.textBoxes[2].value = parseInt(b3);
-		this.textBoxes[3].value = parseInt(b4);
+	SetIp(a, b, c, d) {
+		this.textBoxes[0].value = parseInt(a);
+		this.textBoxes[1].value = parseInt(b);
+		this.textBoxes[2].value = parseInt(c);
+		this.textBoxes[3].value = parseInt(d);
 	}
 
 	SetEnabled(option) {
