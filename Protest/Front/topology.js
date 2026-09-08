@@ -461,7 +461,7 @@ class Topology extends Window {
 		innerBox.style.alignItems = "center";
 
 		let counter = 0;
-		const AddParameter = (name, tag, type, properties) => {
+		const AddParameter = (name, tag, type, properties)=> {
 			counter++;
 
 			const label = document.createElement("div");
@@ -502,14 +502,6 @@ class Topology extends Window {
 		lldpInput.checked = true;
 		lldpInput.disabled = true;
 
-		const [stpLabel, stpInput] = AddParameter("Spanning tree", "input", "toggle");
-		stpLabel.style.lineHeight = "24px";
-		stpLabel.style.paddingLeft = "28px";
-		stpLabel.style.backgroundImage = "url(mono/tree.svg)";
-		stpLabel.style.backgroundSize = "24px";
-		stpLabel.style.backgroundRepeat = "no-repeat";
-		stpInput.checked = this.args.options ? this.args.options.stp : false;
-
 		const [dot1qLabel, dot1qInput] = AddParameter("VLAN (802.1Q)", "input", "toggle");
 		dot1qLabel.style.lineHeight = "24px";
 		dot1qLabel.style.paddingLeft = "28px";
@@ -549,6 +541,14 @@ class Topology extends Window {
 		errorLabel.style.backgroundSize = "24px";
 		errorLabel.style.backgroundRepeat = "no-repeat";
 		errorInput.checked =  this.args.options ? this.args.options.error : false;
+
+		const [stpLabel, stpInput] = AddParameter("Spanning tree", "input", "toggle");
+		stpLabel.style.lineHeight = "24px";
+		stpLabel.style.paddingLeft = "28px";
+		stpLabel.style.backgroundImage = "url(mono/tree.svg)";
+		stpLabel.style.backgroundSize = "24px";
+		stpLabel.style.backgroundRepeat = "no-repeat";
+		stpInput.checked = this.args.options ? this.args.options.stp : false;
 
 		setTimeout(()=>okButton.focus(), 200);
 
@@ -602,7 +602,7 @@ class Topology extends Window {
 			this.syncButton.disabled = false;
 			this.startButton.disabled = false;
 			this.startButton.setAttribute("tip-below", "Re-discover");
-			this.startButton.style.backgroundImage = "url(mono/restart.svg?light)";
+			this.startButton.style.backgroundImage = "url(mono/update.svg?light)";
 
 			this.vlanButton.disabled    = !this.args.options.dot1q;
 			this.speedButton.disabled   = !this.args.options.speed;
@@ -832,8 +832,8 @@ class Topology extends Window {
 
 	SortByConnectivity() {
 		const degrees = Object.values(this.devices)
-			.filter(d => !d.isUnmanaged)
-			.map(d => {
+			.filter(d=> !d.isUnmanaged)
+			.map(d=> {
 				let linksCount = 0;
 				for (const port in d.links) {
 					const link = this.links[d.links[port]];
@@ -857,9 +857,9 @@ class Topology extends Window {
 
 		for (let i=0; i<coreDevices.length; i++) {
 			groups.push({
-				x        : i * groupWidth,
-				y        : Topology.VIEW_PADDING_Y + Topology.ROW_HEIGHT,
-				levels   : [],
+				x     : i * groupWidth,
+				y     : Topology.VIEW_PADDING_Y + Topology.ROW_HEIGHT,
+				levels: [],
 			});
 
 			const device = coreDevices[i].device;
@@ -988,14 +988,14 @@ class Topology extends Window {
 
 	MoveDeviceElement(element, x, y) {
 		element.root.style.transition = ".4s";
-		setTimeout(() => {
+		setTimeout(()=> {
 			element.root.style.transition = "none";
 		}, 400);
 
 		element.x = x;
 		element.y = y;
 
-		requestAnimationFrame(() => {
+		requestAnimationFrame(()=> {
 			element.root.style.transform = `translate(${x}px, ${y}px)`;
 		});
 	}
@@ -1039,7 +1039,7 @@ class Topology extends Window {
 			element.capA.style.transition = ".4s";
 			element.capB.style.transition = ".4s";
 
-			setTimeout(()=>{
+			setTimeout(()=> {
 				element.line.style.transition = "none";
 				element.capA.style.transition = "none";
 				element.capB.style.transition = "none";
@@ -1069,10 +1069,8 @@ class Topology extends Window {
 
 	GetStpEdgeOffset(device, cos, sin) {
 		const shape = Topology.DEVICE_SHAPE[device.initial.type?.toLowerCase()] ?? "circle";
-
 		if (shape === "circle") return 50;
-
-		return 46 / Math.max(Math.abs(cos), Math.abs(sin)) + 2; //distance to the edge of an axis-aligned square, along this direction
+		return 46 / Math.max(Math.abs(cos), Math.abs(sin)) + 2;
 	}
 
 	DrawStpPath(a, b) {
@@ -1083,7 +1081,7 @@ class Topology extends Window {
 		const cos = Math.cos(angle), sin = Math.sin(angle);
 
 		const aOffset = this.GetStpEdgeOffset(a, cos, sin);
-		const bOffset = this.GetStpEdgeOffset(b, cos, sin) + 8; //extra room for the arrowhead
+		const bOffset = this.GetStpEdgeOffset(b, cos, sin) + 8; //arrowhead
 
 		const ax = ac.x + aOffset * cos;
 		const ay = ac.y + aOffset * sin;
@@ -1102,7 +1100,7 @@ class Topology extends Window {
 		}
 
 		if (!device.stp) return;
-		if (device.stp.rootCost <= 0) return; //no root cost means this device is the root itself, or STP data is unavailable
+		if (device.stp.rootCost <= 0) return;
 
 		const rootDevice = this.FindDeviceByBridgeId(device.stp.designatedRoot);
 		if (!rootDevice || rootDevice === device) return;
@@ -1225,14 +1223,14 @@ class Topology extends Window {
 		listBox.textContent = "";
 
 		const split = keyword.split(" ")
-			.map(o => o.trim())
-			.filter(o => o.length > 0)
-			.map(o => o.toLowerCase())
-			.map(o => this.IsMacAddress(o) ? o.replace(/[-:\s]/g, "") : o);
+			.map(o=> o.trim())
+			.filter(o=> o.length > 0)
+			.map(o=> o.toLowerCase())
+			.map(o=> this.IsMacAddress(o) ? o.replace(/[-:\s]/g, "") : o);
 
 		if (split.length === 0 || split.every(o=> o.length === 0)) return;
 
-		const includes = (word, arr) => {
+		const includes = (word, arr)=> {
 			if (!word) return false;
 			for (let i=0; i<arr.length; i++) {
 				if (word.includes(arr[i])) return true;
@@ -1397,14 +1395,14 @@ class Topology extends Window {
 				const untaggedMap = vlan in device.dot1q.untagged
 					?	device.dot1q.untagged[vlan]
 						.split("")
-						.map(h => parseInt(h, 16).toString(2).padStart(4, "0"))
+						.map(h=> parseInt(h, 16).toString(2).padStart(4, "0"))
 						.join("")
 					:	"";
 
 				const egressMap = vlan in device.dot1q.egress
 					?	device.dot1q.egress[vlan]
 						.split("")
-						.map(h => parseInt(h, 16).toString(2).padStart(4, "0"))
+						.map(h=> parseInt(h, 16).toString(2).padStart(4, "0"))
 						.join("")
 					:	"";
 
@@ -2336,8 +2334,8 @@ class Topology extends Window {
 			}
 		}
 
-		const nonNullMatches = matches.filter(o => o !== null);
-		const isSingle = nonNullMatches.length > 1 && nonNullMatches.every(o => o === matches[0]);
+		const nonNullMatches = matches.filter(o=> o !== null);
+		const isSingle = nonNullMatches.length > 1 && nonNullMatches.every(o=> o === matches[0]);
 
 		if (nonAmbiguousCount === 1) {
 			this.ComputeLldpSingleEntry(device, port, 0);
@@ -3226,14 +3224,14 @@ class Topology extends Window {
 				httpButton.style.backgroundImage = "url(mono/earth.svg)";
 				optionsBox.appendChild(httpButton);
 
-				httpButton.onclick = () => {
-					if (overwriteProtocol.http) { //http
+				httpButton.onclick = ()=> {
+					if (overwriteProtocol.http) {
 						const link = document.createElement("a");
 						link.href = "http://" + host + ":" + overwriteProtocol.http;
 						link.target = "_blank";
 						link.click();
 					}
-					else if (ports?.includes(80)) { //http
+					else if (ports?.includes(80)) {
 						const link = document.createElement("a");
 						link.href = "http://" + host;
 						link.target = "_blank";
@@ -3255,13 +3253,13 @@ class Topology extends Window {
 				optionsBox.append(httpButton);
 
 				httpButton.onclick = ()=> {
-					if (overwriteProtocol.https) { //https
+					if (overwriteProtocol.https) {
 						const link = document.createElement("a");
 						link.href = "https://" + host + ":" + overwriteProtocol.https;
 						link.target = "_blank";
 						link.click();
 					}
-					else if (ports?.includes(443)) { //https
+					else if (ports?.includes(443)) {
 						const link = document.createElement("a");
 						link.href = "https://" + host;
 						link.target = "_blank";
@@ -3282,7 +3280,7 @@ class Topology extends Window {
 				sshButton.style.backgroundImage = "url(mono/ssh.svg)";
 				optionsBox.appendChild(sshButton);
 
-				sshButton.onclick = () => {
+				sshButton.onclick = ()=> {
 					let sshHost = null;
 					if (overwriteProtocol.ssh) {
 						sshHost = `${host}:${overwriteProtocol.ssh}`;
@@ -3315,7 +3313,7 @@ class Topology extends Window {
 				snmpButton.style.backgroundImage = "url(mono/snmp.svg)";
 				optionsBox.appendChild(snmpButton);
 
-				snmpButton.onclick = () => new Snmp({target:host, community:"", profile:dbEntry["snmp profile"].v});
+				snmpButton.onclick = ()=> new Snmp({target:host, community:"", profile:dbEntry["snmp profile"].v});
 			}
 		}
 
@@ -3364,7 +3362,7 @@ class Topology extends Window {
 				this.infoBox.textContent = "";
 			};
 
-			const MakeBox = (labelText, valueText) => {
+			const MakeBox = (labelText, valueText)=> {
 				const box = document.createElement("div");
 				box.style.padding = "4px";
 				box.style.borderRadius = "4px";
@@ -3463,7 +3461,7 @@ class Topology extends Window {
 
 			if (device.isInferred) {
 				const entries = Object.entries(device.lldp.localPortName)
-					.sort(([, a], [, b]) => a.localeCompare(b));
+					.sort(([, a], [, b])=> a.localeCompare(b));
 
 				for (const [portIndex, name] of entries) {
 					const interfaceBox = this.CreateInterfaceListItem(interfacesList, device, portIndex, name);
@@ -3634,7 +3632,7 @@ class Topology extends Window {
 			}
 
 			for (const file in mods) {
-				mods[file] = { "uplink": JSON.stringify(mods[file]) };
+				mods[file] = {"uplink": JSON.stringify(mods[file])};
 			}
 
 			try {
@@ -3807,7 +3805,7 @@ class Topology extends Window {
 			for (const vlan in device.dot1q.untagged) {
 				const mask = device.dot1q.untagged[vlan]
 					.split("")
-					.map(h => parseInt(h, 16).toString(2).padStart(4, "0"))
+					.map(h=> parseInt(h, 16).toString(2).padStart(4, "0"))
 					.join("")
 				|| "";
 
@@ -4056,7 +4054,7 @@ class Topology extends Window {
 				const hexMap = device.dot1q.untagged[vlan];
 				const binMap = hexMap
 					.split("")
-					.map(h => parseInt(h, 16).toString(2).padStart(4, "0"))
+					.map(h=> parseInt(h, 16).toString(2).padStart(4, "0"))
 					.join("");
 
 				const idx = parseInt(portIndex) - 1;
@@ -4073,7 +4071,7 @@ class Topology extends Window {
 				const hexMap = device.dot1q.egress[vlan];
 				const binMap = hexMap
 					.split("")
-					.map(h => parseInt(h, 16).toString(2).padStart(4, "0"))
+					.map(h=> parseInt(h, 16).toString(2).padStart(4, "0"))
 					.join("");
 
 				const idx = parseInt(portIndex) - 1;
@@ -4217,7 +4215,7 @@ class Topology extends Window {
 					}
 
 					if (device.lldp.remoteChassisIdSubtype[portIndex][i] === 4) {
-						(async () => {
+						(async ()=> {
 							const vendor = await this.MacLookup(entries[i]);
 							if (vendor && vendor !== "not found") {
 								chassisIdBox.textContent = `${entries[i]} - ${vendor}`;
@@ -4226,7 +4224,7 @@ class Topology extends Window {
 					}
 
 					if (device.lldp.remotePortIdSubtype[portIndex][i] === 3) {
-						(async () => {
+						(async ()=> {
 							const vendor = await this.MacLookup(device.lldp.remotePortId[portIndex][i]);
 							if (vendor && vendor !== "not found") {
 								portIdBox.textContent = `${device.lldp.remotePortId[portIndex][i]} - ${vendor}`;
