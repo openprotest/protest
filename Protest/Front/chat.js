@@ -433,7 +433,7 @@ class Chat extends Window {
 				const rms = Math.sqrt(sum / span);
 				const amplitude = Math.min(1, rms * 4);
 
-				const r = baseR * (1 + amplitude * 0.5);
+				const r = baseR * (1 + amplitude * .5);
 
 				ctx.beginPath();
 				ctx.arc(cx, cy, Math.min(w, h)/16 + r * j / 2 + amplitude * j, 0, Math.PI * 2);

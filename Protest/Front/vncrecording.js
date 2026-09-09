@@ -1,25 +1,12 @@
-"use strict";
-class TerminalRecording extends PtyHost {
+class VncRecording extends Vnc {
 	static SPEED_STEPS = [.5, 1, 2, 4, 8, 16];
 
 	constructor(args) {
-		super(args ?? {});
+		super({ ...(args ?? {}), isRecording: true });
 
 		this.AddCssDependencies("recordingplayback.css");
 
-		this.AddToolbarSeparator();
-		this.AddSendToChatButton();
-
-		this.connectButton.disabled = true;
-		this.sendKeyButton.disabled = true;
-		this.pasteButton.disabled = true;
-
-		if (this.term) {
-			this.term.options.disableStdin = true;
-
-			this.term.options.cursorBlink = false;
-			this.term.options.cursorInactiveStyle = this.term.options.cursorStyle;
-		}
+		this.canvasBox.style.bottom = "72px";
 
 		this.meta = null;
 		this.durationMs = 0;
@@ -30,14 +17,15 @@ class TerminalRecording extends PtyHost {
 
 		this.controlSocket = null;
 
-		this.SetTitle("Session recording");
+		this.SetTitle("VNC recording");
 		this.SetIcon("mono/play.svg");
 
-		this.content.style.bottom = "72px";
+		this.AddToolbarSeparator();
+		this.AddSendToChatButton();
 
 		this.timelineBox = document.createElement("div");
 		this.timelineBox.className = "vr-timeline";
-		this.win.appendChild(this.timelineBox);
+		this.content.appendChild(this.timelineBox);
 
 		this.timeLabel = document.createElement("div");
 		this.timeLabel.className = "vr-time";
@@ -50,18 +38,16 @@ class TerminalRecording extends PtyHost {
 
 		this.track = document.createElement("div");
 		this.track.className = "vr-track";
-		this.track.style.cursor = "pointer";
 		this.timelineBox.appendChild(this.track);
 
 		this.progress = document.createElement("div");
 		this.progress.className = "vr-progress";
+		this.progress.style.backgroundColor = "#606060";
 		this.track.appendChild(this.progress);
 
 		this.playhead = document.createElement("div");
 		this.playhead.className = "vr-playhead";
 		this.track.appendChild(this.playhead);
-
-		this.track.addEventListener("pointerdown", event=> this.SeekFromClientX(event.clientX));
 
 		const controlsRow = document.createElement("div");
 		controlsRow.className = "vr-controls";
@@ -70,6 +56,7 @@ class TerminalRecording extends PtyHost {
 		this.playPauseButton = document.createElement("button");
 		this.playPauseButton.className = "vr-button";
 		this.playPauseButton.style.backgroundImage = "url(mono/pause.svg)";
+		this.playPauseButton.style.left = "8px";
 		this.timelineBox.appendChild(this.playPauseButton);
 
 		this.rewindButton = document.createElement("button");
@@ -103,7 +90,7 @@ class TerminalRecording extends PtyHost {
 
 		let meta;
 		try {
-			const response = await fetch(`/recordings/meta?protocol=${encodeURIComponent(this.args.protocol)}&id=${encodeURIComponent(this.args.recordingId)}`);
+			const response = await fetch(`/recordings/meta?protocol=vnc&id=${encodeURIComponent(this.args.recordingId)}`);
 			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
 			meta = await response.json();
 			if (meta.error) throw meta.error;
@@ -115,22 +102,18 @@ class TerminalRecording extends PtyHost {
 
 		this.meta = meta;
 		this.durationMs = meta.durationMs || 0;
-		this.args.host = meta.host;
 
-		this.SetTitle(`${this.ProtocolLabel(meta.protocol)} recording - ${meta.host} (${new Date(meta.start).toLocaleString()})`);
+		this.SetTitle(`VNC recording - ${meta.host} (${new Date(meta.start).toLocaleString()})`);
+
+		try {
+			this.RFB = await this.LoadNoVNC();
+		}
+		catch (ex) {
+			this.statusBox.textContent = ex.message;
+			return;
+		}
 
 		this.ConnectPlayback(0);
-	}
-
-	ProtocolLabel(protocol) {
-		switch (protocol) {
-		case "ssh":      return "SSH";
-		case "telnet":   return "Telnet";
-		case "winrm":    return "Remote shell";
-		case "serial":   return "Serial console";
-		case "terminal": return "Terminal";
-		default:         return "Session";
-		}
 	}
 
 	ConnectPlayback(startMs) {
@@ -138,31 +121,51 @@ class TerminalRecording extends PtyHost {
 
 		this.currentMs = startMs;
 		this.ended = false;
-		this.term?.reset();
 
 		this.statusBox.style.display = "initial";
 		this.statusBox.style.backgroundImage = "url(mono/connect.svg)";
 		this.statusBox.textContent = "Loading recording...";
 		this.content.appendChild(this.statusBox);
 
-		const wsUrl = `${KEEP.isSecure ? "wss" : "ws"}://${window.location.host}/ws/recordingplayback?protocol=${encodeURIComponent(this.args.protocol)}&id=${encodeURIComponent(this.args.recordingId)}&t=${Math.round(startMs)}`;
+		const wsUrl = `${KEEP.isSecure ? "wss" : "ws"}://${window.location.host}/ws/recordingplayback?protocol=vnc&id=${encodeURIComponent(this.args.recordingId)}&t=${Math.round(startMs)}`;
 		const controlSocket = new WebSocket(wsUrl);
 		controlSocket.binaryType = "arraybuffer";
 		this.controlSocket = controlSocket;
 
-		const decoder = new TextDecoder("utf-8");
-
-		controlSocket.onopen = ()=> {
-			if (this.controlSocket !== controlSocket) return;
-			this.statusBox.style.display = "none";
-
-			if (!this.playing) {
-				controlSocket.send(JSON.stringify({ cmd: "pause" }));
-			}
+		const fakeChannel = {
+			binaryType: "arraybuffer",
+			protocol: "",
+			readyState: WebSocket.CONNECTING,
+			onopen: ()=>{},
+			onmessage: ()=>{},
+			onerror: ()=>{},
+			onclose: ()=>{},
+			send: ()=>{},
+			close: ()=> { try { controlSocket.close(); } catch {} }
 		};
 
-		controlSocket.onclose = ()=> {
-			if (this.controlSocket !== controlSocket) return;
+		let rfb;
+		try {
+			rfb = new this.RFB(this.canvasBox, fakeChannel, {});
+		}
+		catch (ex) {
+			this.statusBox.textContent = ex.message;
+			return;
+		}
+		this.rfb = rfb;
+
+		rfb.viewOnly = true;
+		rfb.scaleViewport = this.scaleViewport;
+		rfb.background = "transparent";
+		rfb.showDotCursor = false;
+
+		rfb.addEventListener("connect", ()=> {
+			if (this.rfb !== rfb) return;
+			this.statusBox.style.display = "none";
+		});
+
+		rfb.addEventListener("disconnect", ()=> {
+			if (this.rfb !== rfb) return;
 
 			this.playing = false;
 			this.ended = true;
@@ -170,15 +173,29 @@ class TerminalRecording extends PtyHost {
 
 			this.currentMs = this.durationMs;
 			this.UpdateClockDisplay();
+		});
+
+		rfb.addEventListener("credentialsrequired", ()=> {
+			if (this.rfb !== rfb) return;
+			try { rfb.sendCredentials({ password: "" }); } catch {}
+		});
+
+		controlSocket.onopen = ()=> {
+			fakeChannel.readyState = WebSocket.OPEN;
+			fakeChannel.onopen();
+
+			if (!this.playing) {
+				controlSocket.send(JSON.stringify({ cmd: "pause" }));
+			}
 		};
 
-		controlSocket.onerror = ()=> {};
-
-		controlSocket.onmessage = e=> {
-			if (this.controlSocket !== controlSocket) return;
-			if (typeof e.data === "string") return;
-			this.HandleMessage(decoder.decode(e.data));
+		controlSocket.onclose = e=> {
+			fakeChannel.readyState = WebSocket.CLOSED;
+			fakeChannel.onclose(e);
 		};
+
+		controlSocket.onerror = e=> fakeChannel.onerror(e);
+		controlSocket.onmessage = e=> fakeChannel.onmessage({ data: e.data });
 	}
 
 	TeardownPlayback() {
@@ -186,6 +203,10 @@ class TerminalRecording extends PtyHost {
 			try { this.controlSocket.close(); } catch { /* already closed */ }
 			this.controlSocket = null;
 		}
+
+		this.rfb = null;
+
+		this.canvasBox.textContent = "";
 	}
 
 	SendControl(obj) {
@@ -207,7 +228,7 @@ class TerminalRecording extends PtyHost {
 	}
 
 	StepSpeed(direction) {
-		const steps = TerminalRecording.SPEED_STEPS;
+		const steps = VncRecording.SPEED_STEPS;
 		const index = steps.indexOf(this.speed);
 		const nextIndex = Math.min(steps.length - 1, Math.max(0, index + direction));
 		if (nextIndex === index) return;
@@ -218,20 +239,10 @@ class TerminalRecording extends PtyHost {
 	}
 
 	UpdateSpeedDisplay() {
-		const steps = TerminalRecording.SPEED_STEPS;
+		const steps = VncRecording.SPEED_STEPS;
 		this.speedLabel.textContent = this.speed === 1 ? "" : `${this.speed}x`;
 		this.rewindButton.disabled = this.speed <= steps[0];
 		this.fastForwardButton.disabled = this.speed >= steps[steps.length - 1];
-	}
-
-	SeekFromClientX(clientX) {
-		if (!this.durationMs) return;
-
-		const rect = this.track.getBoundingClientRect();
-		const ratio = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width));
-
-		this.ConnectPlayback(ratio * this.durationMs);
-		this.UpdateClockDisplay();
 	}
 
 	UpdateClockDisplay() {
@@ -252,11 +263,6 @@ class TerminalRecording extends PtyHost {
 		const minutes = Math.floor(totalSeconds / 60);
 		const seconds = totalSeconds % 60;
 		return `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
-	}
-
-	AfterResize() { //overrides
-		this.content.style.bottom = "72px";
-		super.AfterResize();
 	}
 
 	Close() { //overrides

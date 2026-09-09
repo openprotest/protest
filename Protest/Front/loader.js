@@ -140,6 +140,7 @@ const LOADER = {
 		"vnc.js",
 		"sessionrecordings.js",
 		"terminalrecording.js",
+		"vncrecording.js",
 		"wmi.js",
 		"snmp.js",
 		"packages.js",

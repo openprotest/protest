@@ -244,9 +244,6 @@ class PtyHost extends Window {
 		this.AddToolbarSeparator();
 		this.SetupFind();
 
-		this.AddToolbarSeparator();
-		this.AddSendToChatButton();
-
 		this.darkModeButton.style.borderBottom = this.args.darkMode ? "3px solid rgb(192,192,192)" : "none";
 		this.bellSoundButton.style.borderBottom = this.args.bell ? "3px solid rgb(192,192,192)" : "none";
 
