@@ -58,18 +58,19 @@ internal static partial class Terminal {
         }
     }
 
-    internal static async Task PumpStreamToWebSocket(HttpListenerContext ctx, WebSocket ws, Stream stream, CancellationToken token) {
+    internal static async Task PumpStreamToWebSocket(HttpListenerContext ctx, WebSocket ws, Stream stream, CancellationToken token, Protocols.SessionRecording recording = null) {
         byte[] buffer = new byte[4096];
 
         while (!token.IsCancellationRequested && ws.State == WebSocketState.Open) {
             int count = await stream.ReadAsync(buffer, token);
             if (count == 0) break;
 
+            recording?.WriteVideo(buffer, count);
             await ws.SendAsync(new ArraySegment<byte>(buffer, 0, count), WebSocketMessageType.Text, true, token);
         }
     }
 
-    internal static async Task RunPtyAsync(HttpListenerContext ctx, WebSocket ws, string origin, PtyOptions options, string wsPath, string logMessage) {
+    internal static async Task RunPtyAsync(HttpListenerContext ctx, WebSocket ws, string origin, PtyOptions options, string wsPath, string logMessage, string recordingProtocol = null, string recordingHost = null, int recordingPort = 0, string recordingDevice = null) {
         using CancellationTokenSource cts = new();
 
         IPtyConnection pty;
@@ -93,8 +94,12 @@ internal static partial class Terminal {
             Logger.Action(origin, "Remote-access", logMessage);
             await WebSocketHelper.WsWriteText(ws, "{\"connected\":true}"u8.ToArray());
 
-            Task readTask = PumpStreamToWebSocket(ctx, ws, pty.ReaderStream, cts.Token);
-            Task writeTask = PumpWebSocketToPty(ctx, ws, pty, wsPath, cts.Token);
+            Protocols.SessionRecording recording = recordingProtocol is null
+                ? null
+                : Protocols.SessionRecording.Start(recordingProtocol, recordingHost, recordingPort, recordingDevice, origin);
+
+            Task readTask = PumpStreamToWebSocket(ctx, ws, pty.ReaderStream, cts.Token, recording);
+            Task writeTask = PumpWebSocketToPty(ctx, ws, pty, wsPath, cts.Token, recording);
 
             await Task.WhenAny(readTask, writeTask);
             cts.Cancel();
@@ -106,6 +111,8 @@ internal static partial class Terminal {
             catch (WebSocketException) { }
             catch (ObjectDisposedException) { }
 
+            recording?.Stop();
+
             try {
                 pty.Kill();
             }
@@ -115,7 +122,7 @@ internal static partial class Terminal {
         await CloseWebSocket(ws);
     }
 
-    private static async Task PumpWebSocketToPty(HttpListenerContext ctx, WebSocket ws, IPtyConnection pty, string wsPath, CancellationToken token) {
+    private static async Task PumpWebSocketToPty(HttpListenerContext ctx, WebSocket ws, IPtyConnection pty, string wsPath, CancellationToken token, Protocols.SessionRecording recording = null) {
         byte[] buffer = new byte[4096];
 
         while (!token.IsCancellationRequested && ws.State == WebSocketState.Open) {

@@ -10,5 +10,6 @@ internal static class Automation {
 #if !DEBUG
         Lifeline.Initialize();
 #endif
+        Protocols.SessionRecording.Initialize();
     }
 }

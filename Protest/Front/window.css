@@ -367,6 +367,26 @@
 	background-size: cover;
 }
 
+.win-toast {
+	position: absolute;
+	bottom: 24px;
+	right: 24px;
+	align-items: center;
+	padding: 8px 16px;
+	border-radius: 8px;
+	box-shadow: var(--clr-dark) 0 0 4px;
+	background-color: var(--clr-transparent);
+	backdrop-filter: blur(8px) brightness(80%);
+	font-size: 13px;
+	font-weight: 600;
+	color: var(--clr-dark);
+	white-space: nowrap;
+	pointer-events: none;
+	-webkit-user-select: none; user-select: none;
+	z-index: 5;
+	animation: toast-in .4s ease forwards;
+}
+
 .bar-icon {
 	position: absolute;
 	top: 2px;
@@ -595,6 +615,8 @@
 	filter: brightness(300%);
 }
 
+
+
 .notification-box {
 	position: absolute;
 	width: 250px;
@@ -681,6 +703,11 @@
 
 @keyframes team-join {
 	0%   { opacity: 0; transform: translateX(-32px); }
+	100% { opacity: 1; transform: none; }
+}
+
+@keyframes toast-in {
+	0%   { opacity: 0; transform: translateX(+100px); }
 	100% { opacity: 1; transform: none; }
 }
 

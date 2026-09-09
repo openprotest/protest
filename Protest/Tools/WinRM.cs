@@ -87,6 +87,6 @@ internal static class WinRM {
             Rows = Terminal.DEFAULT_ROWS
         };
 
-        return Terminal.RunPtyAsync(ctx, ws, origin, options, "/ws/winrm", $"Open remote shell to {host}");
+        return Terminal.RunPtyAsync(ctx, ws, origin, options, "/ws/winrm", $"Open remote shell to {host}", "winrm", host, 0, null);
     }
 }

@@ -1314,6 +1314,23 @@ class Window {
 		return newLabel;
 	}
 
+	ShowToast(text) {
+		if (!KEEP.sessionRecording) return;
+
+		const toast = document.createElement("div");
+		toast.className = "win-toast";
+
+		const label = document.createElement("div");
+		label.textContent = text;
+		toast.appendChild(label);
+
+		this.win.appendChild(toast);
+
+		setTimeout(()=> {
+			if (toast.parentElement) toast.parentElement.removeChild(toast);
+		}, 5000);
+	}
+
 	AddCssDependencies(filename) {
 		if (document.head.querySelectorAll(`link[href$='${filename}']`).length === 0) {
 			const cssLink = document.createElement("link");

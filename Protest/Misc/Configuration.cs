@@ -14,6 +14,7 @@ internal static class Configuration {
     internal static byte[] DB_KEY;
     internal static byte[] DB_KEY_IV;
 
+    internal static bool sessionRecording = true;
     internal static bool addressBook = false;
     internal static bool backdoor = true;
 

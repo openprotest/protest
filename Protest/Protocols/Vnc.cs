@@ -29,6 +29,8 @@ internal static class Vnc {
         string host = split[0];
         int port = split.Length > 1 && int.TryParse(split[1], out int p) ? p : DEFAULT_PORT;
 
+        string deviceFile = ctx.Request.QueryString["file"];
+
         WebSocket ws;
         try {
             HttpListenerWebSocketContext wsc = await ctx.AcceptWebSocketAsync(null);
@@ -46,18 +48,21 @@ internal static class Vnc {
         string origin = IPAddress.IsLoopback(ctx.Request.RemoteEndPoint.Address) ? "loopback" : Auth.GetUsername(sessionId);
 
         TcpClient tcp = new TcpClient();
+        SessionRecording recording = null;
 
         try {
             await tcp.ConnectAsync(host, port);
 
             Logger.Action(origin, "Remote-access", $"Establish VNC connection to {host}:{port}");
 
+            recording = SessionRecording.Start("vnc", host, port, deviceFile, origin);
+
             NetworkStream stream = tcp.GetStream();
 
             using CancellationTokenSource cts = new CancellationTokenSource();
 
-            Task upstream   = PumpToTcp(ctx, ws, stream, cts);
-            Task downstream = PumpToWs(ws, stream, cts);
+            Task upstream   = PumpToTcp(ctx, ws, stream, cts, recording);
+            Task downstream = PumpToWs(ws, stream, cts, recording);
 
             await Task.WhenAny(upstream, downstream);
             cts.Cancel();
@@ -71,6 +76,8 @@ internal static class Vnc {
         finally {
             Logger.Action(origin, "Remote-access", $"Close VNC connection to {host}:{port}");
 
+            recording?.Stop();
+
             tcp.Close();
             if (ws.State == WebSocketState.Open) {
                 try {
@@ -83,7 +90,7 @@ internal static class Vnc {
         }
     }
 
-    private static async Task PumpToTcp(HttpListenerContext ctx, WebSocket ws, NetworkStream stream, CancellationTokenSource cts) {
+    private static async Task PumpToTcp(HttpListenerContext ctx, WebSocket ws, NetworkStream stream, CancellationTokenSource cts, SessionRecording recording) {
         try {
             while (ws.State == WebSocketState.Open && !cts.IsCancelled()) {
 
@@ -108,13 +115,14 @@ internal static class Vnc {
         }
     }
 
-    private static async Task PumpToWs(WebSocket ws, NetworkStream stream, CancellationTokenSource cts) {
+    private static async Task PumpToWs(WebSocket ws, NetworkStream stream, CancellationTokenSource cts, SessionRecording recording) {
         byte[] buffer = new byte[8192];
 
         try {
             while (ws.State == WebSocketState.Open && !cts.IsCancelled()) {
                 int count = await stream.ReadAsync(buffer, cts.Token);
                 if (count == 0) return; //remote host closed the connection
+                recording?.WriteVideo(buffer, count);
                 await ws.SendAsync(new ArraySegment<byte>(buffer, 0, count), WebSocketMessageType.Binary, true, cts.Token);
             }
         }

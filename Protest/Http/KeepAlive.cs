@@ -72,11 +72,12 @@ internal static class KeepAlive {
 
         try {
             byte[] initPayload = JsonSerializer.SerializeToUtf8Bytes(new {
-                action        = "init",
-                version       = Data.VersionToString(),
-                username      = username,
-                color         = accessControl?.color ?? "#606060",
-                authorization = accessArray
+                action           = "init",
+                version          = Data.VersionToString(),
+                username         = username,
+                color            = accessControl?.color ?? "#606060",
+                authorization    = accessArray,
+                sessionRecording = Configuration.sessionRecording
             });
             await ws.SendAsync(initPayload, WebSocketMessageType.Text, true, CancellationToken.None);
 

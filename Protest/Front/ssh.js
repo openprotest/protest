@@ -167,6 +167,7 @@ class Ssh extends PtyHost {
 				this.ws.onmessage = event=> this.HandleMessage(event.data);
 
 				this.content.focus();
+				this.ShowToast("This session is being recorded");
 			}
 			else if (json.error) {
 				setTimeout(()=> {

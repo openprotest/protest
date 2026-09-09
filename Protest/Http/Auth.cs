@@ -638,6 +638,12 @@ internal static class Auth {
                 path.Add("/ws/vnc");
                 break;
 
+            case "session recordings:read":
+                path.Add("/recordings/list");
+                path.Add("/recordings/meta");
+                path.Add("/ws/recordingplayback");
+                break;
+
             case "wmi:write":
                 path.Add("/wmi/query");
                 path.Add("/wmi/killprocess");

@@ -159,7 +159,10 @@ internal sealed class Listener {
         ["/api/list"]                     = (ctx, username) => Tools.Api.List(),
         ["/api/save"]                     = (ctx, username) => Tools.Api.Save(ctx, username),
 
-        ["/log/list"]                     = (ctx, username) => Logger.List(ctx)
+        ["/log/list"]                     = (ctx, username) => Logger.List(ctx),
+
+        ["/recordings/list"]              = (ctx, username) => Protocols.SessionRecording.ListHandler(ctx),
+        ["/recordings/meta"]              = (ctx, username) => Protocols.SessionRecording.MetaHandler(ctx)
     };
 
     public Listener(string ip, ushort port, string path) {
@@ -496,6 +499,7 @@ internal sealed class Listener {
         case "/ws/livestats/device": await Tools.LiveStats.DeviceStats(ctx);         return true;
         case "/ws/livestats/user":   await Tools.LiveStats.UserStats(ctx);           return true;
         case "/ws/issues":           await Tasks.Issues.WebSocketHandler(ctx);       return true;
+        case "/ws/recordingplayback": await Protocols.SessionRecording.PlaybackWebSocketHandler(ctx); return true;
         }
 
         return false;

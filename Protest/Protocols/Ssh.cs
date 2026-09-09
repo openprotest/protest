@@ -39,6 +39,7 @@ internal static class Ssh {
         string username = String.Empty;
         string host = "0.0.0.0";
         int port = 22;
+        SessionRecording recording = null;
 
         try {
             byte[] connectionBuffer = new byte[2048];
@@ -92,9 +93,11 @@ internal static class Ssh {
 
             await WebSocketHelper.WsWriteText(ws, "{\"connected\":true}"u8.ToArray());
 
+            recording = SessionRecording.Start("ssh", host, port, file, origin);
+
             ShellStream shellStream = ssh.CreateShellStream("xterm", 80, 24, 800, 600, 1024);
 
-            _ = Task.Run(()=> HandleDownstream(ctx, ws, ssh, shellStream));
+            _ = Task.Run(()=> HandleDownstream(ctx, ws, ssh, shellStream, recording));
 
             byte[] buff = new byte[2048];
             while (ws.State == WebSocketState.Open && ssh.IsConnected) {
@@ -133,6 +136,8 @@ internal static class Ssh {
         finally {
             Logger.Action(origin, "Remote-access", $"Close SSH connection to {username}@{host}:{port}");
 
+            recording?.Stop();
+
             if (ws.State == WebSocketState.Open) {
                 try {
                     await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
@@ -165,7 +170,7 @@ internal static class Ssh {
         }
     }
 
-    private static async Task HandleDownstream(HttpListenerContext ctx, WebSocket ws, SshClient ssh, ShellStream shellStream) {
+    private static async Task HandleDownstream(HttpListenerContext ctx, WebSocket ws, SshClient ssh, ShellStream shellStream, SessionRecording recording) {
         byte[] data = new byte[2048];
 
         while (ws.State == WebSocketState.Open && ssh.IsConnected) {
@@ -196,6 +201,7 @@ internal static class Ssh {
                     if (data[i] > 127) data[i] = 46; //.
                 }
 
+                recording?.WriteVideo(data, count);
                 await ws.SendAsync(new ArraySegment<byte>(data, 0, count), WebSocketMessageType.Text, true, CancellationToken.None);
             }
             catch (IOException) {

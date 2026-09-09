@@ -138,6 +138,8 @@ const LOADER = {
 		"ssh.js",
 		"sftp.js",
 		"vnc.js",
+		"sessionrecordings.js",
+		"terminalrecording.js",
 		"wmi.js",
 		"snmp.js",
 		"packages.js",
@@ -367,6 +369,9 @@ const LOADER = {
 		case "Ssh"          : return new Ssh(command.args);
 		case "Sftp"         : return new Sftp(command.args);
 		case "Vnc"          : return new Vnc({ ...command.args, autoconnect:false });
+		case "VncRecording" : return new VncRecording(command.args);
+		case "TerminalRecording" : return new TerminalRecording(command.args);
+		case "SessionRecordings" : return new SessionRecordings(command.args);
 		case "Wmi"          : return new Wmi(command.args);
 		case "Terminal"     : return new Terminal(command.args);
 		case "Snmp"         : return new Snmp(command.args);

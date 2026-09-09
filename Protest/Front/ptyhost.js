@@ -241,6 +241,11 @@ class PtyHost extends Window {
 
 		this.sendKeyButton = this.AddToolbarButton("Send key", "mono/keyboard.svg?light");
 		this.pasteButton = this.AddToolbarButton("Paste", "mono/clipboard.svg?light");
+		this.AddToolbarSeparator();
+		this.SetupFind();
+
+		this.AddToolbarSeparator();
+		this.AddSendToChatButton();
 
 		this.darkModeButton.style.borderBottom = this.args.darkMode ? "3px solid rgb(192,192,192)" : "none";
 		this.bellSoundButton.style.borderBottom = this.args.bell ? "3px solid rgb(192,192,192)" : "none";
@@ -262,12 +267,12 @@ class PtyHost extends Window {
 		this.content.onclick = ()=> this.term?.focus();
 		this.content.onfocus = ()=> { this.BringToFront(); this.term?.focus(); };
 
-		this.connectButton.onclick    = ()=> this.ConnectDialog(this.args.host);
-		this.darkModeButton.onclick   = ()=> this.ToggleDarkMode();
-		this.bellSoundButton.onclick  = ()=> this.ToggleBell();
-		this.optionsButton.onclick    = ()=> this.OptionsDialog();
-		this.sendKeyButton.onclick    = ()=> this.CustomKeyDialog();
-		this.pasteButton.onclick      = ()=> this.TextFromClipboard();
+		this.connectButton.onclick   = ()=> this.ConnectDialog(this.args.host);
+		this.darkModeButton.onclick  = ()=> this.ToggleDarkMode();
+		this.bellSoundButton.onclick = ()=> this.ToggleBell();
+		this.optionsButton.onclick   = ()=> this.OptionsDialog();
+		this.sendKeyButton.onclick   = ()=> this.CustomKeyDialog();
+		this.pasteButton.onclick     = ()=> this.TextFromClipboard();
 
 		this.minimap = document.createElement("div");
 		this.minimap.className = "pty-minimap";
@@ -310,6 +315,116 @@ class PtyHost extends Window {
 			if (!this.term) return;
 			this.term.scrollLines(Math.sign(event.deltaY) * 3);
 		};
+	}
+
+	SetupFind() {
+		const findButton = this.AddToolbarButton(null, "mono/search.svg?light");
+		findButton.tabIndex = "-1";
+		findButton.style.overflow = "hidden";
+		findButton.style.backgroundPosition = "2px center";
+
+		const findInput = document.createElement("input");
+		findInput.type = "text";
+		findButton.appendChild(findInput);
+
+		this.findInput = findInput;
+		this.findMatches = [];
+		this.findIndex = -1;
+
+		findButton.onfocus = ()=> findInput.focus();
+
+		findInput.onfocus = ()=> { findButton.style.width = "200px"; };
+		findInput.onblur  = ()=> { if (findInput.value.length === 0) findButton.style.width = "36px"; };
+
+		findInput.oninput = ()=> {
+			findInput.parentElement.style.borderBottom = findInput.value.length === 0 ? "none" : "#c0c0c0 solid 2px";
+			this.SearchTerminal(findInput.value);
+		};
+
+		findInput.ondblclick = event=> {
+			if (event.layerX > 36) return;
+			findInput.value = "";
+			findInput.oninput();
+		};
+
+		findInput.onkeydown = event=> {
+			if (event.key === "Escape") {
+				findInput.value = "";
+				findInput.oninput();
+				findInput.blur();
+			}
+			else if (event.code === "KeyF" && event.ctrlKey) {
+				event.preventDefault();
+			}
+			else if (event.key === "Enter") {
+				event.preventDefault();
+				this.FindNext(event.shiftKey ? -1 : 1);
+			}
+		};
+
+		return findInput;
+	}
+
+	SearchTerminal(query) {
+		this.findMatches = [];
+		this.findIndex = -1;
+		this.term?.clearSelection();
+
+		if (!this.term || !query) {
+			this.UpdateFindStatus();
+			return;
+		}
+
+		const needle = query.toLowerCase();
+		const buffer = this.term.buffer.active;
+
+		for (let y = 0; y < buffer.length; y++) {
+			const line = buffer.getLine(y);
+			if (!line) continue;
+
+			const text = line.translateToString(true).toLowerCase();
+
+			let fromIndex = 0;
+			let index;
+			while ((index = text.indexOf(needle, fromIndex)) !== -1) {
+				this.findMatches.push({ line: y, column: index, length: needle.length });
+				fromIndex = index + needle.length;
+			}
+		}
+
+		if (this.findMatches.length > 0) {
+			this.findIndex = 0;
+			this.GoToMatch();
+		}
+
+		this.UpdateFindStatus();
+	}
+
+	FindNext(direction) {
+		if (this.findMatches.length === 0) return;
+		this.findIndex = (this.findIndex + direction + this.findMatches.length) % this.findMatches.length;
+		this.GoToMatch();
+		this.UpdateFindStatus();
+	}
+
+	GoToMatch() {
+		if (!this.term || this.findIndex < 0) return;
+		const match = this.findMatches[this.findIndex];
+
+		this.term.scrollToLine(Math.max(0, match.line - Math.floor(this.term.rows / 2)));
+		this.term.select(match.column, match.line, match.length);
+	}
+
+	UpdateFindStatus() {
+		if (!this.findInput) return;
+
+		if (this.findInput.value.length === 0) {
+			this.findInput.parentElement.removeAttribute("tip-below");
+			return;
+		}
+
+		const label = this.findMatches.length === 0 ? "No results" : `${this.findIndex + 1}/${this.findMatches.length}`;
+		this.findInput.parentElement.setAttribute("tip-below", label);
 	}
 
 	InitializeTerminal() {

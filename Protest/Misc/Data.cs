@@ -60,6 +60,7 @@ internal static class Data {
     public static readonly string DIR_REVERSE_PROXY  = Path.Join(DIR_DATA, "reverseproxy");
     public static readonly string DIR_INTEGRATION    = Path.Join(DIR_DATA, "integration");
     public static readonly string DIR_SCRIPTS        = Path.Join(DIR_DATA, "scripts");
+    public static readonly string DIR_RECORDINGS     = Path.Join(DIR_DATA, "recordings");
     public static readonly string DIR_DEBIT          = Path.Join(DIR_DATA, "debit");
     public static readonly string DIR_DEBIT_SHORT    = Path.Join(DIR_DEBIT, "short");
     public static readonly string DIR_DEBIT_LONG     = Path.Join(DIR_DEBIT, "long");
@@ -84,7 +85,8 @@ internal static class Data {
             new DirectoryInfo(DIR_DEBIT),
             //new DirectoryInfo(DIR_DEBIT_TEMPLATE),
             new DirectoryInfo(DIR_DEVICES),
-            new DirectoryInfo(DIR_USERS)
+            new DirectoryInfo(DIR_USERS),
+            new DirectoryInfo(DIR_RECORDINGS)
         };
 
         for (int i = 0; i < dirs.Length; i++) {

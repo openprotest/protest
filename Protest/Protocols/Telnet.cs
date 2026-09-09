@@ -36,6 +36,7 @@ internal static class Telnet {
 
         string host = "0.0.0.0";
         int port = 23;
+        SessionRecording recording = null;
 
         try {
             byte[] connectionBuffer = new byte[512];
@@ -66,7 +67,9 @@ internal static class Telnet {
 
             await WebSocketHelper.WsWriteText(ws, "{\"connected\":true}"u8.ToArray());
 
-            _ = Task.Run(() => HandleDownstream(ctx, ws, telnet, stream));
+            recording = SessionRecording.Start("telnet", host, port, null, origin);
+
+            _ = Task.Run(() => HandleDownstream(ctx, ws, telnet, stream, recording));
 
             bool nawsAnnounced = false;
             byte[] buff = new byte[2048];
@@ -107,6 +110,8 @@ internal static class Telnet {
         }
         finally {
             Logger.Action(origin, "Remote-access", $"Close telnet connection to {host}:{port}");
+
+            recording?.Stop();
 
             if (ws.State == WebSocketState.Open) {
                 try {
@@ -166,7 +171,7 @@ internal static class Telnet {
         }
     }
 
-    private static async Task HandleDownstream(HttpListenerContext ctx, WebSocket ws, TcpClient telnet, Stream stream) {
+    private static async Task HandleDownstream(HttpListenerContext ctx, WebSocket ws, TcpClient telnet, Stream stream, SessionRecording recording) {
         byte[] data = new byte[2048];
 
         while (ws!.State == WebSocketState.Open && telnet.Connected) {
@@ -197,6 +202,7 @@ internal static class Telnet {
                     if (data[i] > 127) data[i] = 46; //.
                 }
 
+                recording?.WriteVideo(data, count);
                 await ws!.SendAsync(new ArraySegment<byte>(data, 0, count), WebSocketMessageType.Text, true, CancellationToken.None);
             }
             catch (IOException) {

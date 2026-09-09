@@ -108,11 +108,15 @@ internal static class SerialCom {
 
             using CancellationTokenSource cts = new();
 
-            Task readTask = Tools.Terminal.PumpStreamToWebSocket(ctx, ws, port.BaseStream, cts.Token);
-            Task writeTask = PumpWebSocketToSerial(ctx, ws, port, cts.Token);
+            SessionRecording recording = SessionRecording.Start("serial", portName, baudRate, null, origin);
+
+            Task readTask = Tools.Terminal.PumpStreamToWebSocket(ctx, ws, port.BaseStream, cts.Token, recording);
+            Task writeTask = PumpWebSocketToSerial(ctx, ws, port, cts.Token, recording);
 
             await Task.WhenAny(readTask, writeTask);
             cts.Cancel();
+
+            recording?.Stop();
 
             try {
                 if (port.IsOpen) port.Close();
@@ -159,7 +163,7 @@ internal static class SerialCom {
         }
     }
 
-    private static async Task PumpWebSocketToSerial(HttpListenerContext ctx, WebSocket ws, SerialPort port, CancellationToken token) {
+    private static async Task PumpWebSocketToSerial(HttpListenerContext ctx, WebSocket ws, SerialPort port, CancellationToken token, SessionRecording recording = null) {
         byte[] buffer = new byte[4096];
 
         while (!token.IsCancellationRequested && ws.State == WebSocketState.Open) {

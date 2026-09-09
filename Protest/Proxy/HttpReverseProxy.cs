@@ -123,14 +123,14 @@ internal sealed class HttpReverseProxy : ReverseProxyAbstract {
             //options.Limits.Http2
             //options.Limits.Http3
             options.Limits.KeepAliveTimeout = TimeSpan.MaxValue;
-            //options.Limits.MaxConcurrentConnections
-            //options.Limits.MaxConcurrentUpgradedConnections
-            //options.Limits.MaxRequestBodySize
-            //options.Limits.MaxRequestBufferSize
+            options.Limits.MaxConcurrentConnections = null;
+            options.Limits.MaxConcurrentUpgradedConnections = null;
+            options.Limits.MaxRequestBodySize = null;
+            options.Limits.MaxRequestBufferSize = null;
             //options.Limits.MaxRequestHeaderCount
             //options.Limits.MaxRequestHeadersTotalSize
             //options.Limits.MaxRequestLineSize
-            //options.Limits.MaxResponseBufferSize
+            options.Limits.MaxResponseBufferSize = null;
             //options.Limits.RequestHeadersTimeout
             options.Limits.MinRequestBodyDataRate = null;
             options.Limits.MinResponseDataRate = null;

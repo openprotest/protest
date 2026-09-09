@@ -75,13 +75,16 @@
 	font-weight: 700;
 	white-space: nowrap;
 	color: var(--clr-dark);
-	background-color: var(--clr-pane);
+	backdrop-filter: blur(8px) brightness(80%);
+	background-color: var(--clr-transparent);
 	background-image: url(mono/connect.svg);
 	background-size: 48px 48px;
 	background-position: 8px 50%;
 	background-repeat: no-repeat;
 	-webkit-user-select: none; user-select: none;
 	pointer-events: none;
+
+	animation: fade-in .2s ease-in;
 }
 
 .xterm.pty-bell .xterm-cursor {
