@@ -705,7 +705,7 @@ internal static class Auth {
                 path.Add("/issues/start");
                 break;
 
-            case "environment:write":
+            case "infrastructure:write":
                 path.Add("/config/zones/list");
                 path.Add("/config/zones/save");
                 path.Add("/config/dhcprange/list");
@@ -716,6 +716,16 @@ internal static class Auth {
                 path.Add("/config/snmpprofiles/list");
                 path.Add("/config/snmpprofiles/save");
                 path.Add("/config/checkupdate");
+                break;
+
+            case "data retention:write":
+                path.Add("/config/dataretention/lifeline");
+                path.Add("/config/dataretention/lastseen");
+                path.Add("/config/dataretention/watchdog");
+                path.Add("/config/dataretention/recordings");
+                path.Add("/config/dataretention/logs");
+                path.Add("/config/dataretention/devicetimeline");
+                path.Add("/config/dataretention/usertimeline");
                 break;
 
             case "log:write":

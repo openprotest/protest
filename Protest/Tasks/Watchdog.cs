@@ -612,6 +612,42 @@ internal static class Watchdog {
         return Data.CODE_OK.Array;
     }
 
+    internal static int DeleteOlderThan(int days) {
+        days = Math.Max(days, DataRetention.MIN_DAYS);
+        int deletedCount = 0;
+
+        try {
+            DirectoryInfo root = new DirectoryInfo(Data.DIR_WATCHDOG);
+            if (!root.Exists) return 0;
+
+            DateTime cutoff = DateTime.UtcNow.AddDays(-days).Date;
+
+            foreach (DirectoryInfo resultDir in root.GetDirectories("*_")) {
+                foreach (FileInfo file in resultDir.GetFiles()) {
+                    if (!DateTime.TryParseExact(file.Name, Data.DATE_FORMAT_FILE, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out DateTime fileDate)) {
+                        continue;
+                    }
+
+                    if (fileDate >= cutoff) continue;
+
+                    try {
+                        file.Delete();
+                        deletedCount++;
+                    }
+                    catch (Exception ex) {
+                        Logger.Error(ex);
+                    }
+                }
+            }
+        }
+        catch (Exception ex) {
+            Logger.Error(ex);
+        }
+
+        return deletedCount;
+    }
+
+
     public static byte[] ListNotifications() {
         try {
             byte[] json = JsonSerializer.SerializeToUtf8Bytes(notifications, notificationSerializerOptions);

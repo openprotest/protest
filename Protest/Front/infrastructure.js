@@ -109,33 +109,46 @@ class Infrastructure extends Tabs {
 
 		const intro = document.createElement("div");
 		intro.textContent = "Permanently delete historical data older than a chosen number of days. This cannot be undone.";
-		intro.style.padding = "8px";
-		intro.style.marginBottom = "8px";
+		intro.style.padding = "8px 12px";
+		intro.style.marginBottom = "16px";
 		this.tabsPanel.appendChild(intro);
 
+		const MIN_DAYS = 30;
+
 		const categories = [
-			{ label: "Session recordings", icon: "mono/screenrecord.svg", description: "Recorded VNC, SSH, telnet, remote shell, serial console, and terminal sessions.", endpoint: "config/dataretention/recordings", defaultDays: 30 },
-			{ label: "Lifeline",           icon: "mono/lifeline.svg",     description: "Historical ping, CPU, memory, disk, disk I/O, and printer/switch counters.",      endpoint: "config/dataretention/lifeline",   defaultDays: 365 },
-			{ label: "Last seen",          icon: "mono/clock.svg",        description: "The most recent time each device responded.",                                     endpoint: "config/dataretention/lastseen",   defaultDays: 365 },
-			{ label: "Watchdog",           icon: "mono/watchdog.svg",     description: "Historical uptime results recorded by watchers.",                                 endpoint: "config/dataretention/watchdog",   defaultDays: 90 },
-			{ label: "Logs",               icon: "mono/log.svg",          description: "Daily action log files. The error log is never deleted.",                         endpoint: "config/dataretention/logs",       defaultDays: 90 }
+			{ label: "Session recordings", icon: "mono/screenrecord.svg", description: "Recorded VNC, SSH, telnet, remote shell, serial console, and terminal sessions.", endpoint: "config/dataretention/recordings",     defaultDays: 30 },
+			{ label: "Lifeline",           icon: "mono/lifeline.svg",     description: "Historical ping, CPU, memory, disk, and printer/switch counters.",                endpoint: "config/dataretention/lifeline",       defaultDays: 365 },
+			{ label: "Last seen",          icon: "mono/lastseen.svg",     description: "The most recent time each device responded.",                                     endpoint: "config/dataretention/lastseen",       defaultDays: 365 },
+			{ label: "Watchdog",           icon: "mono/watchdog.svg",     description: "Historical uptime results recorded by watchers.",                                 endpoint: "config/dataretention/watchdog",       defaultDays: 90 },
+			{ label: "Logs",               icon: "mono/log.svg",          description: "Daily action log files. The error log is never deleted.",                         endpoint: "config/dataretention/logs",           defaultDays: 90 },
+			{ label: "Device timeline",    icon: "mono/timeline.svg",     description: "Historical attribute snapshots kept whenever a device changes.",                  endpoint: "config/dataretention/devicetimeline", defaultDays: 365 },
+			{ label: "User timeline",      icon: "mono/timeline.svg",     description: "Historical attribute snapshots kept whenever a user changes.",                    endpoint: "config/dataretention/usertimeline",   defaultDays: 365 }
 		];
+
+		const rows = [];
 
 		for (const category of categories) {
 			const row = document.createElement("div");
 			row.style.display = "grid";
-			row.style.gridTemplateColumns = "32px 160px 1fr auto auto";
+			row.style.gridTemplateColumns = "48px 32px 160px 1fr auto";
 			row.style.alignItems = "center";
-			row.style.columnGap = "12px";
-			row.style.padding = "12px 8px";
+			row.style.columnGap = "16px";
+			row.style.padding = "14px 12px";
 			row.style.borderBottom = "1px solid var(--clr-control)";
 			this.tabsPanel.appendChild(row);
 
+			const toggleBox = document.createElement("div");
+			toggleBox.style.transform = "translateY(-14px)";
+			row.appendChild(toggleBox);
+
+			const toggle = this.CreateToggle("", false, toggleBox);
+			const checkbox = toggle.checkbox;
+
 			const icon = document.createElement("div");
-			icon.style.width = "24px";
-			icon.style.height = "24px";
+			icon.style.width = "28px";
+			icon.style.height = "28px";
 			icon.style.backgroundImage = `url(${category.icon})`;
-			icon.style.backgroundSize = "24px 24px";
+			icon.style.backgroundSize = "28px 28px";
 			icon.style.backgroundRepeat = "no-repeat";
 			row.appendChild(icon);
 
@@ -156,46 +169,72 @@ class Infrastructure extends Tabs {
 
 			const daysInput = document.createElement("input");
 			daysInput.type = "number";
-			daysInput.min = "0";
-			daysInput.value = category.defaultDays;
+			daysInput.min = MIN_DAYS.toString();
+			daysInput.value = Math.max(category.defaultDays, MIN_DAYS);
 			daysInput.style.width = "70px";
 			daysInput.style.marginRight = "4px";
+			daysInput.disabled = true;
 			daysBox.appendChild(daysInput);
 			daysBox.append(" days");
 			row.appendChild(daysBox);
 
-			const deleteButton = document.createElement("input");
-			deleteButton.type = "button";
-			deleteButton.value = "Delete";
-			deleteButton.className = "with-icon";
-			deleteButton.style.backgroundImage = "url(mono/delete.svg?light)";
-			row.appendChild(deleteButton);
+			checkbox.onchange = ()=> { daysInput.disabled = !checkbox.checked; };
 
-			deleteButton.onclick = ()=> {
-				const days = parseInt(daysInput.value);
-				if (isNaN(days) || days < 0) return;
+			rows.push({ category, checkbox, daysInput });
+		}
 
-				this.ConfirmBox(`Are you sure you want to delete ${category.label.toLowerCase()} data older than ${days} day(s)? This cannot be undone.`, false, "mono/delete.svg").addEventListener("click", async ()=> {
-					deleteButton.disabled = true;
+		const footer = document.createElement("div");
+		footer.style.textAlign = "right";
+		footer.style.padding = "20px 12px";
+		this.tabsPanel.appendChild(footer);
+
+		const deleteButton = document.createElement("input");
+		deleteButton.type = "button";
+		deleteButton.value = "Delete selected";
+		deleteButton.className = "with-icon";
+		deleteButton.style.backgroundImage = "url(mono/delete.svg?light)";
+		footer.appendChild(deleteButton);
+
+		deleteButton.onclick = ()=> {
+			const selected = rows.filter(r=> r.checkbox.checked);
+			if (selected.length === 0) return;
+
+			for (const r of selected) {
+				const days = parseInt(r.daysInput.value);
+				if (isNaN(days) || days < MIN_DAYS) {
+					this.ConfirmBox(`The minimum retention period is ${MIN_DAYS} days.`, true, "mono/warning.svg");
+					return;
+				}
+			}
+
+			const names = selected.map(r=> r.category.label.toLowerCase()).join(", ");
+
+			this.ConfirmBox(`Are you sure you want to delete data older than the selected period for: ${names}? This cannot be undone.`, false, "mono/delete.svg").addEventListener("click", async ()=> {
+				deleteButton.disabled = true;
+
+				const results = [];
+
+				for (const r of selected) {
+					const days = parseInt(r.daysInput.value);
 
 					try {
-						const response = await fetch(`${category.endpoint}?days=${days}`);
+						const response = await fetch(`${r.category.endpoint}?days=${days}`);
 						if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
 
 						const json = await response.json();
 						if (json.error) throw json.error;
 
-						this.ConfirmBox(`Deleted ${json.deleted} item(s).`, true, "mono/checked.svg");
+						results.push(`${r.category.label}: deleted ${json.deleted} item(s)`);
 					}
 					catch (ex) {
-						this.ConfirmBox(ex, true, "mono/error.svg");
+						results.push(`${r.category.label}: failed (${ex})`);
 					}
-					finally {
-						deleteButton.disabled = false;
-					}
-				});
-			};
-		}
+				}
+
+				deleteButton.disabled = false;
+				this.ConfirmBox(results.join("\n"), true, "mono/checked.svg");
+			});
+		};
 	}
 
 	ShowZones() {

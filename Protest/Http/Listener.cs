@@ -156,6 +156,14 @@ internal sealed class Listener {
         ["/config/cert/upload"]           = (ctx, username) => Tools.Cert.Upload(ctx, username),
         ["/config/cert/download"]         = (ctx, username) => Tools.Cert.Download(ctx, username),
 
+        ["/config/dataretention/lifeline"]       = (ctx, username) => DataRetention.Handler(ctx, username, "lifeline"),
+        ["/config/dataretention/lastseen"]       = (ctx, username) => DataRetention.Handler(ctx, username, "lastseen"),
+        ["/config/dataretention/watchdog"]       = (ctx, username) => DataRetention.Handler(ctx, username, "watchdog"),
+        ["/config/dataretention/recordings"]     = (ctx, username) => DataRetention.Handler(ctx, username, "recordings"),
+        ["/config/dataretention/logs"]           = (ctx, username) => DataRetention.Handler(ctx, username, "logs"),
+        ["/config/dataretention/devicetimeline"] = (ctx, username) => DataRetention.Handler(ctx, username, "devicetimeline"),
+        ["/config/dataretention/usertimeline"]   = (ctx, username) => DataRetention.Handler(ctx, username, "usertimeline"),
+
         ["/api/list"]                     = (ctx, username) => Tools.Api.List(),
         ["/api/save"]                     = (ctx, username) => Tools.Api.Save(ctx, username),
 

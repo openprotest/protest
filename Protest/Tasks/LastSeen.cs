@@ -57,4 +57,33 @@ internal static class LastSeen {
 
         return "Never";
     }
+
+    internal static int DeleteOlderThan(int days) {
+        days = Math.Max(days, DataRetention.MIN_DAYS);
+        int deletedCount = 0;
+
+        try {
+            DirectoryInfo dir = new DirectoryInfo(Data.DIR_LASTSEEN);
+            if (!dir.Exists) return 0;
+
+            DateTime cutoff = DateTime.UtcNow.AddDays(-days);
+
+            foreach (FileInfo file in dir.GetFiles("*.txt")) {
+                if (file.LastWriteTimeUtc >= cutoff) continue;
+
+                try {
+                    file.Delete();
+                    deletedCount++;
+                }
+                catch (Exception ex) {
+                    Logger.Error(ex);
+                }
+            }
+        }
+        catch (Exception ex) {
+            Logger.Error(ex);
+        }
+
+        return deletedCount;
+    }
 }

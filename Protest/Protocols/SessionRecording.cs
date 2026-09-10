@@ -12,8 +12,6 @@ using Protest.Http;
 namespace Protest.Protocols;
 
 internal sealed class SessionRecording {
-    private static Timer purgeTimer;
-
     private readonly object writeLock = new object();
     private readonly Stopwatch clock = Stopwatch.StartNew();
 
@@ -42,10 +40,7 @@ internal sealed class SessionRecording {
         startUtc = DateTime.UtcNow;
     }
 
-    internal static void Initialize() {
-        PurgeExpired();
-        purgeTimer = new Timer(_ => PurgeExpired(), null, TimeSpan.FromHours(24), TimeSpan.FromHours(24));
-    }
+    internal static void Initialize() { }
 
     internal static SessionRecording Start(string protocol, string host, int port, string device, string username) {
         if (!Configuration.sessionRecording) return null;
@@ -206,10 +201,15 @@ internal sealed class SessionRecording {
         }
     }
 
-    internal static void PurgeExpired() {
+    internal static int DeleteOlderThan(int days) {
+        days = Math.Max(days, DataRetention.MIN_DAYS);
+        int deletedCount = 0;
+
         try {
             DirectoryInfo root = new DirectoryInfo(Data.DIR_RECORDINGS);
-            if (!root.Exists) return;
+            if (!root.Exists) return 0;
+
+            DateTime cutoff = DateTime.UtcNow.AddDays(-days);
 
             foreach (DirectoryInfo protoDir in root.GetDirectories()) {
                 foreach (DirectoryInfo recDir in protoDir.GetDirectories()) {
@@ -235,13 +235,26 @@ internal sealed class SessionRecording {
                             Logger.Debug(ex);
                         }
                     }
+
+                    if (reference >= cutoff) continue;
+
+                    try {
+                        Directory.Delete(recDir.FullName, true);
+                        deletedCount++;
+                    }
+                    catch (Exception ex) {
+                        Logger.Error(ex);
+                    }
                 }
             }
         }
         catch (Exception ex) {
             Logger.Error(ex);
         }
+
+        return deletedCount;
     }
+
 
     internal static async Task PlaybackWebSocketHandler(HttpListenerContext ctx) {
         if (!Auth.IsAuthenticatedAndAuthorized(ctx, ctx.Request.Url.AbsolutePath)) {

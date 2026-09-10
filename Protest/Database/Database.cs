@@ -522,6 +522,52 @@ internal sealed class Database {
         return JsonSerializer.SerializeToUtf8Bytes(this, contactsSerializerOptions);
     }
 
+    public int DeleteOldTimelineEntries(int days) {
+        days = Math.Max(days, DataRetention.MIN_DAYS);
+        int deletedCount = 0;
+
+        try {
+            DirectoryInfo dir = new DirectoryInfo(location);
+            if (!dir.Exists) return 0;
+
+            DateTime cutoff = DateTime.UtcNow.AddDays(-days);
+
+            foreach (DirectoryInfo timelineDir in dir.GetDirectories("*_")) {
+                string entryFilename = timelineDir.Name[..^1]; //strip trailing '_'
+
+                if (!dictionary.ContainsKey(entryFilename)) { //dead: parent entry no longer exists
+                    try {
+                        int fileCount = timelineDir.GetFiles().Length;
+                        Directory.Delete(timelineDir.FullName, true);
+                        deletedCount += fileCount;
+                    }
+                    catch (Exception ex) {
+                        Logger.Error(ex);
+                    }
+                    continue;
+                }
+
+                foreach (FileInfo file in timelineDir.GetFiles()) {
+                    if (!long.TryParse(file.Name, out long ticks)) continue;
+                    if (new DateTime(ticks, DateTimeKind.Utc) >= cutoff) continue;
+
+                    try {
+                        file.Delete();
+                        deletedCount++;
+                    }
+                    catch (Exception ex) {
+                        Logger.Error(ex);
+                    }
+                }
+            }
+        }
+        catch (Exception ex) {
+            Logger.Error(ex);
+        }
+
+        return deletedCount;
+    }
+
     public byte[] AttributeValue(HttpListenerContext ctx) {
         Dictionary<string, string> parameters = Listener.ParseQuery(ctx);
 

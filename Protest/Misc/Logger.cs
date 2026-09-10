@@ -186,6 +186,43 @@ internal static class Logger {
         }
     }
 
+    internal static int DeleteOlderThan(int days) {
+        days = Math.Max(days, DataRetention.MIN_DAYS);
+        int deletedCount = 0;
+
+        try {
+            DirectoryInfo dir = new DirectoryInfo(Data.DIR_LOG);
+            if (!dir.Exists) return 0;
+
+            DateTime cutoff = DateTime.UtcNow.AddDays(-days).Date;
+
+            foreach (FileInfo file in dir.GetFiles("*.log")) {
+                if (file.Name == "error.log") continue;
+
+                string datePart = Path.GetFileNameWithoutExtension(file.Name);
+                if (!DateTime.TryParseExact(datePart, Data.DATE_FORMAT_FILE, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out DateTime fileDate)) {
+                    continue;
+                }
+
+                if (fileDate >= cutoff) continue;
+
+                try {
+                    file.Delete();
+                    deletedCount++;
+                }
+                catch (Exception ex) {
+                    Logger.Error(ex);
+                }
+            }
+        }
+        catch (Exception ex) {
+            Logger.Error(ex);
+        }
+
+        return deletedCount;
+    }
+
+
     private static byte[] ListToday() {
         string filename = Path.Join(Data.DIR_LOG, $"{DateTime.UtcNow.ToString(Data.DATE_FORMAT_FILE)}.log");
         if (!File.Exists(filename)) {
