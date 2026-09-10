@@ -465,15 +465,16 @@ class AccessControl extends Tabs {
 		//this.permissionsList.push(this.AddPermissionObject("SNMP traps",        "url(mono/trap.svg)",         this.toolsGroup, false, true, false));
 
 		this.manageGroup = this.AddPermissionGroup("Manage", "url(mono/logo.svg)");
-		this.permissionsList.push(this.AddPermissionObject("Environment",  "url(mono/environment.svg)", this.manageGroup, false, true, false));
-		this.permissionsList.push(this.AddPermissionObject("RBAC",         "url(mono/rbac.svg)",        this.manageGroup, false, true, false));
-		this.permissionsList.push(this.AddPermissionObject("Automation",   "url(mono/automation.svg)",  this.manageGroup, false, true, false));
-		this.permissionsList.push(this.AddPermissionObject("Integration",  "url(mono/integration.svg)", this.manageGroup, false, true, false));
-		this.permissionsList.push(this.AddPermissionObject("API links",    "url(mono/carabiner.svg)",   this.manageGroup, false, true, false));
-		this.permissionsList.push(this.AddPermissionObject("Log",          "url(mono/log.svg)",         this.manageGroup, false, true, false));
-		this.permissionsList.push(this.AddPermissionObject("Certificates", "url(mono/certificate.svg)", this.manageGroup, false, true, false));
-		this.permissionsList.push(this.AddPermissionObject("Backup",       "url(mono/backup.svg)",      this.manageGroup, false, true, false));
-		this.permissionsList.push(this.AddPermissionObject("Update",       "url(mono/update.svg)",      this.manageGroup, false, true, false));
+		this.permissionsList.push(this.AddPermissionObject("Infrastructure",  "url(mono/infrastructure.svg)", this.manageGroup, false, true, false));
+		this.permissionsList.push(this.AddPermissionObject("Data retention", "url(mono/dataretention.svg)",  this.manageGroup, false, true, false));
+		this.permissionsList.push(this.AddPermissionObject("RBAC",           "url(mono/rbac.svg)",        this.manageGroup, false, true, false));
+		this.permissionsList.push(this.AddPermissionObject("Automation",     "url(mono/automation.svg)",  this.manageGroup, false, true, false));
+		this.permissionsList.push(this.AddPermissionObject("Integration",    "url(mono/integration.svg)", this.manageGroup, false, true, false));
+		this.permissionsList.push(this.AddPermissionObject("API links",      "url(mono/carabiner.svg)",   this.manageGroup, false, true, false));
+		this.permissionsList.push(this.AddPermissionObject("Log",            "url(mono/log.svg)",         this.manageGroup, false, true, false));
+		this.permissionsList.push(this.AddPermissionObject("Certificates",   "url(mono/certificate.svg)", this.manageGroup, false, true, false));
+		this.permissionsList.push(this.AddPermissionObject("Backup",         "url(mono/backup.svg)",      this.manageGroup, false, true, false));
+		this.permissionsList.push(this.AddPermissionObject("Update",         "url(mono/update.svg)",      this.manageGroup, false, true, false));
 	}
 
 	AddPermissionGroup(name, icon) {

@@ -1,5 +1,5 @@
 "use strict";
-class Environment extends Tabs {
+class Infrastructure extends Tabs {
 	constructor(args) {
 		super();
 
@@ -7,8 +7,8 @@ class Environment extends Tabs {
 
 		this.AddCssDependencies("list.css");
 
-		this.SetTitle("Environment");
-		this.SetIcon("mono/environment.svg");
+		this.SetTitle("Infrastructure");
+		this.SetIcon("mono/infrastructure.svg");
 
 		this.zones = [];
 		this.dhcpRange = [];
@@ -19,18 +19,20 @@ class Environment extends Tabs {
 		this.tabsPanel.style.padding = "24px";
 		this.tabsPanel.style.overflowY = "auto";
 
-		this.zonesTab = this.AddTab("Zones", "mono/router.svg", "Network zones");
-		this.dhcpTab = this.AddTab("DHCP range", "mono/dhcp.svg", "DHCP range");
-		this.adTab = this.AddTab("Active directory", "mono/directory.svg");
-		this.smtpTab = this.AddTab("SMTP", "mono/email.svg");
-		this.snmpTab = this.AddTab("SNMP", "mono/snmp.svg");
+		this.dataRetention  = this.AddTab("Data retention", "mono/dataretention.svg");
+		this.zonesTab       = this.AddTab("Zones", "mono/router.svg");
+		this.dhcpTab        = this.AddTab("DHCP range", "mono/dhcp.svg");
+		this.adTab          = this.AddTab("Active directory", "mono/directory.svg");
+		this.smtpTab        = this.AddTab("SMTP", "mono/email.svg");
+		this.snmpTab        = this.AddTab("SNMP", "mono/snmp.svg");
 		this.integrationTab = this.AddTab("Integration", "mono/integration.svg");
 
-		this.zonesTab.onclick = ()=> this.ShowZones();
-		this.dhcpTab.onclick = ()=> this.ShowDhcpRange();
-		this.adTab.onclick = ()=> this.ShowActiveDirectory();
-		this.smtpTab.onclick = ()=> this.ShowSmtp();
-		this.snmpTab.onclick = ()=> this.ShowSnmp();
+		this.dataRetention.onclick  = ()=> this.ShowDataRetention();
+		this.zonesTab.onclick       = ()=> this.ShowZones();
+		this.dhcpTab.onclick        = ()=> this.ShowDhcpRange();
+		this.adTab.onclick          = ()=> this.ShowActiveDirectory();
+		this.smtpTab.onclick        = ()=> this.ShowSmtp();
+		this.snmpTab.onclick        = ()=> this.ShowSnmp();
 		this.integrationTab.onclick = ()=> this.ShowIntegration();
 
 		this.activeColumnsListBox = null;
@@ -38,6 +40,11 @@ class Environment extends Tabs {
 		this.win.addEventListener("mousemove", event=> this.activeColumnsListBox?.HandleMouseMove(event));
 
 		switch (this.args) {
+		case "zones":
+			this.zonesTab.className = "v-tab-selected";
+			this.ShowZones();
+			break;
+
 		case "dhcp":
 			this.dhcpTab.className = "v-tab-selected";
 			this.ShowDhcpRange();
@@ -63,9 +70,9 @@ class Environment extends Tabs {
 			this.ShowIntegration();
 			break;
 
-			default:
-			this.zonesTab.className = "v-tab-selected";
-			this.ShowZones();
+		default:
+			this.dataRetention.className = "v-tab-selected";
+			this.ShowDataRetention();
 			break;
 		}
 
@@ -94,6 +101,101 @@ class Environment extends Tabs {
 		}
 
 		this.activeColumnsListBox?.FinalizeColumns();
+	}
+
+	ShowDataRetention() {
+		this.args = "dataretention";
+		this.tabsPanel.textContent = "";
+
+		const intro = document.createElement("div");
+		intro.textContent = "Permanently delete historical data older than a chosen number of days. This cannot be undone.";
+		intro.style.padding = "8px";
+		intro.style.marginBottom = "8px";
+		this.tabsPanel.appendChild(intro);
+
+		const categories = [
+			{ label: "Session recordings", icon: "mono/screenrecord.svg", description: "Recorded VNC, SSH, telnet, remote shell, serial console, and terminal sessions.", endpoint: "config/dataretention/recordings", defaultDays: 30 },
+			{ label: "Lifeline",           icon: "mono/lifeline.svg",     description: "Historical ping, CPU, memory, disk, disk I/O, and printer/switch counters.",      endpoint: "config/dataretention/lifeline",   defaultDays: 365 },
+			{ label: "Last seen",          icon: "mono/clock.svg",        description: "The most recent time each device responded.",                                     endpoint: "config/dataretention/lastseen",   defaultDays: 365 },
+			{ label: "Watchdog",           icon: "mono/watchdog.svg",     description: "Historical uptime results recorded by watchers.",                                 endpoint: "config/dataretention/watchdog",   defaultDays: 90 },
+			{ label: "Logs",               icon: "mono/log.svg",          description: "Daily action log files. The error log is never deleted.",                         endpoint: "config/dataretention/logs",       defaultDays: 90 }
+		];
+
+		for (const category of categories) {
+			const row = document.createElement("div");
+			row.style.display = "grid";
+			row.style.gridTemplateColumns = "32px 160px 1fr auto auto";
+			row.style.alignItems = "center";
+			row.style.columnGap = "12px";
+			row.style.padding = "12px 8px";
+			row.style.borderBottom = "1px solid var(--clr-control)";
+			this.tabsPanel.appendChild(row);
+
+			const icon = document.createElement("div");
+			icon.style.width = "24px";
+			icon.style.height = "24px";
+			icon.style.backgroundImage = `url(${category.icon})`;
+			icon.style.backgroundSize = "24px 24px";
+			icon.style.backgroundRepeat = "no-repeat";
+			row.appendChild(icon);
+
+			const label = document.createElement("div");
+			label.textContent = category.label;
+			label.style.fontWeight = "600";
+			row.appendChild(label);
+
+			const description = document.createElement("div");
+			description.textContent = category.description;
+			description.style.fontSize = "smaller";
+			description.style.opacity = "0.8";
+			row.appendChild(description);
+
+			const daysBox = document.createElement("div");
+			daysBox.style.whiteSpace = "nowrap";
+			daysBox.style.textAlign = "right";
+
+			const daysInput = document.createElement("input");
+			daysInput.type = "number";
+			daysInput.min = "0";
+			daysInput.value = category.defaultDays;
+			daysInput.style.width = "70px";
+			daysInput.style.marginRight = "4px";
+			daysBox.appendChild(daysInput);
+			daysBox.append(" days");
+			row.appendChild(daysBox);
+
+			const deleteButton = document.createElement("input");
+			deleteButton.type = "button";
+			deleteButton.value = "Delete";
+			deleteButton.className = "with-icon";
+			deleteButton.style.backgroundImage = "url(mono/delete.svg?light)";
+			row.appendChild(deleteButton);
+
+			deleteButton.onclick = ()=> {
+				const days = parseInt(daysInput.value);
+				if (isNaN(days) || days < 0) return;
+
+				this.ConfirmBox(`Are you sure you want to delete ${category.label.toLowerCase()} data older than ${days} day(s)? This cannot be undone.`, false, "mono/delete.svg").addEventListener("click", async ()=> {
+					deleteButton.disabled = true;
+
+					try {
+						const response = await fetch(`${category.endpoint}?days=${days}`);
+						if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
+
+						const json = await response.json();
+						if (json.error) throw json.error;
+
+						this.ConfirmBox(`Deleted ${json.deleted} item(s).`, true, "mono/checked.svg");
+					}
+					catch (ex) {
+						this.ConfirmBox(ex, true, "mono/error.svg");
+					}
+					finally {
+						deleteButton.disabled = false;
+					}
+				});
+			};
+		}
 	}
 
 	ShowZones() {
@@ -159,7 +261,7 @@ class Environment extends Tabs {
 				box.style.maxWidth = "40px";
 				box.style.height = "24px";
 				box.style.marginLeft = "2px";
-				box.style.borderRadius = "2px";
+				box.style.borderRadius = "4px";
 				box.style.backgroundColor = d.color;
 				box.style.boxShadow = "var(--clr-dark) 0 0 0 1px inset";
 				return box;

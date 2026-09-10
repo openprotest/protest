@@ -256,21 +256,21 @@ class Log extends Window {
 			const category = log.substring(24, 44).trim();
 
 			element.style.backgroundImage = {
-				"AAA"          : "url(mono/rbac.svg)",
-				"API"          : "url(mono/carabiner.svg)",
-				"Integration"  : "url(mono/integration.svg)",
-				"Backup"       : "url(mono/backup.svg)",
-				"Certificate"  : "url(mono/certificate.svg)",
-				"Database"     : "url(mono/database.svg)",
-				"Debit-notes"  : "url(mono/notes.svg)",
-				"Documentation": "url(mono/documentation.svg)",
-				"Environment"  : "url(mono/environment.svg)",
-				"Fetch"        : "url(mono/ball.svg)",
-				"ID-management": "url(mono/lock.svg)",
-				"Issues"       : "url(mono/issues.svg)",
-				"Remote-access": "url(mono/remote.svg)",
-				"Reverse-proxy": "url(mono/reverseproxy.svg)",
-				"Watchdog"     : "url(mono/watchdog.svg)",
+				"AAA"           : "url(mono/rbac.svg)",
+				"API"           : "url(mono/carabiner.svg)",
+				"Integration"   : "url(mono/integration.svg)",
+				"Backup"        : "url(mono/backup.svg)",
+				"Certificate"   : "url(mono/certificate.svg)",
+				"Database"      : "url(mono/database.svg)",
+				"Debit-notes"   : "url(mono/notes.svg)",
+				"Documentation" : "url(mono/documentation.svg)",
+				"Infrastructure": "url(mono/infrastructure.svg)",
+				"Fetch"         : "url(mono/ball.svg)",
+				"ID-management" : "url(mono/lock.svg)",
+				"Issues"        : "url(mono/issues.svg)",
+				"Remote-access" : "url(mono/remote.svg)",
+				"Reverse-proxy" : "url(mono/reverseproxy.svg)",
+				"Watchdog"      : "url(mono/watchdog.svg)",
 			}[category] ?? "";
 		}
 

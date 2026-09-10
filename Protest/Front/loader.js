@@ -111,7 +111,7 @@ const LOADER = {
 		"debitnotes.js",
 		"watchdog.js",
 		"personalize.js",
-		"environment.js",
+		"infrastructure.js",
 		"rbac.js",
 		"deviceslist.js",
 		"userslist.js",
@@ -139,8 +139,6 @@ const LOADER = {
 		"sftp.js",
 		"vnc.js",
 		"sessionrecordings.js",
-		"terminalrecording.js",
-		"vncrecording.js",
 		"wmi.js",
 		"snmp.js",
 		"packages.js",
@@ -385,15 +383,15 @@ const LOADER = {
 		case "CameraTester"   : return new CameraTester(command.args);
 		case "ScreenCapture"  : return new ScreenCapture(command.args);
 
-		case "About"        : return new About(command.args);
-		case "Environment"  : return new Environment(command.args);
-		case "Personalize"  : return new Personalize(command.args);
-		case "AccessControl": return new AccessControl(command.args);
-		case "Automation"   : return new Automation(command.args);
-		case "Api"          : return new Api(command.args);
-		case "Certificates" : return new Certificates(command.args);
-		case "Backup"       : return new Backup(command.args);
-		case "Log"          : return new Log(command.args);
+		case "About"          : return new About(command.args);
+		case "Infrastructure" : return new Infrastructure(command.args);
+		case "Personalize"    : return new Personalize(command.args);
+		case "AccessControl"  : return new AccessControl(command.args);
+		case "Automation"     : return new Automation(command.args);
+		case "Api"            : return new Api(command.args);
+		case "Certificates"   : return new Certificates(command.args);
+		case "Backup"         : return new Backup(command.args);
+		case "Log"            : return new Log(command.args);
 		}
 	},
 

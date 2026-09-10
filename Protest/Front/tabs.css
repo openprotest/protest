@@ -57,10 +57,10 @@
 
 .tabs-box > button > div:nth-child(1) { /*icon*/
 	position: absolute;
-	left: 4px;
-	top: calc(50% - 16px);
-	width: 32px;
-	height: 32px;
+	left: 6px;
+	top: 6px;
+	width: 28px;
+	height: 28px;
 	background-size: contain;
 }
 
