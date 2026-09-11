@@ -116,13 +116,13 @@ class Infrastructure extends Tabs {
 		const MIN_DAYS = 30;
 
 		const categories = [
-			{ label: "Session recordings", icon: "mono/screenrecord.svg", description: "Recorded VNC, SSH, telnet, remote shell, serial console, and terminal sessions.", endpoint: "config/dataretention/recordings",     defaultDays: 30 },
+			{ label: "Device timeline",    icon: "mono/timeline.svg",     description: "Historical attribute snapshots kept whenever a device changes.",                  endpoint: "config/dataretention/devicetimeline", defaultDays: 365 },
+			{ label: "User timeline",      icon: "mono/timeline.svg",     description: "Historical attribute snapshots kept whenever a user changes.",                    endpoint: "config/dataretention/usertimeline",   defaultDays: 365 },
 			{ label: "Lifeline",           icon: "mono/lifeline.svg",     description: "Historical ping, CPU, memory, disk, and printer/switch counters.",                endpoint: "config/dataretention/lifeline",       defaultDays: 365 },
 			{ label: "Last seen",          icon: "mono/lastseen.svg",     description: "The most recent time each device responded.",                                     endpoint: "config/dataretention/lastseen",       defaultDays: 365 },
 			{ label: "Watchdog",           icon: "mono/watchdog.svg",     description: "Historical uptime results recorded by watchers.",                                 endpoint: "config/dataretention/watchdog",       defaultDays: 90 },
-			{ label: "Logs",               icon: "mono/log.svg",          description: "Daily action log files. The error log is never deleted.",                         endpoint: "config/dataretention/logs",           defaultDays: 90 },
-			{ label: "Device timeline",    icon: "mono/timeline.svg",     description: "Historical attribute snapshots kept whenever a device changes.",                  endpoint: "config/dataretention/devicetimeline", defaultDays: 365 },
-			{ label: "User timeline",      icon: "mono/timeline.svg",     description: "Historical attribute snapshots kept whenever a user changes.",                    endpoint: "config/dataretention/usertimeline",   defaultDays: 365 }
+			{ label: "Session recordings", icon: "mono/screenrecord.svg", description: "Recorded VNC, SSH, telnet, remote shell, serial console, and terminal sessions.", endpoint: "config/dataretention/recordings",     defaultDays: 30 },
+			{ label: "Logs",               icon: "mono/log.svg",          description: "Action log files.",                                                               endpoint: "config/dataretention/logs",           defaultDays: 90 },
 		];
 
 		const rows = [];
