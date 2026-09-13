@@ -271,6 +271,7 @@ class Log extends Window {
 				"Remote-access" : "url(mono/remote.svg)",
 				"Reverse-proxy" : "url(mono/reverseproxy.svg)",
 				"Watchdog"      : "url(mono/watchdog.svg)",
+				"Scheduler"     : "url(mono/timeline.svg)",
 			}[category] ?? "";
 		}
 

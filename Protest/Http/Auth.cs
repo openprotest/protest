@@ -717,6 +717,10 @@ internal static class Auth {
                 path.Add("/config/checkupdate");
                 break;
 
+            case "data retention:read":
+                path.Add("/config/dataretention/settings/list");
+                break;
+
             case "data retention:write":
                 path.Add("/config/dataretention/lifeline");
                 path.Add("/config/dataretention/lastseen");
@@ -725,7 +729,6 @@ internal static class Auth {
                 path.Add("/config/dataretention/logs");
                 path.Add("/config/dataretention/devicetimeline");
                 path.Add("/config/dataretention/usertimeline");
-                path.Add("/config/dataretention/settings/list");
                 path.Add("/config/dataretention/settings/save");
                 break;
 

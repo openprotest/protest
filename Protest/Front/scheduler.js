@@ -13,7 +13,7 @@ class Scheduler extends List {
 		this.columnsOptions.style.display = "none";
 
 		this.SetTitle("Scheduler");
-		this.SetIcon("mono/clock.svg");
+		this.SetIcon("mono/timeline.svg");
 
 		this.list.style.overflowY = "auto";
 

@@ -423,7 +423,7 @@ const MENU = {
 		{ t:"Open sessions",  i:"mono/hourglass.svg?light",   g:"manage", h:true,  f:()=> new AccessControl("sessions"), k:"alive connections" },
 
 		{ t:"API links",      i:"mono/carabiner.svg?light",   g:"manage", h:false, f:()=> new Api()},
-		{ t:"Scheduler",      i:"mono/clock.svg?light",       g:"manage", h:false, f:()=> new Scheduler(), k:"tasks automation jobs cron" },
+		{ t:"Scheduler",      i:"mono/timeline.svg?light",    g:"manage", h:false, f:()=> new Scheduler(), k:"tasks automation jobs cron" },
 		{ t:"Certificates",   i:"mono/certificate.svg?light", g:"manage", h:false, f:()=> new Certificates(), k: "ssl tls" },
 		{ t:"Backup",         i:"mono/backup.svg?light",      g:"manage", h:false, f:()=> new Backup() },
 		{ t:"Log",            i:"mono/log.svg?light",         g:"manage", h:false, f:()=> new Log() },
