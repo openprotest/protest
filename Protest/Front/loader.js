@@ -154,7 +154,7 @@ const LOADER = {
 		"mictester.js",
 		"cameratester.js",
 		"screencapture.js",
-		"automation.js",
+		"scheduler.js",
 		"api.js",
 		"certificates.js",
 		"backup.js",
@@ -387,7 +387,7 @@ const LOADER = {
 		case "Infrastructure" : return new Infrastructure(command.args);
 		case "Personalize"    : return new Personalize(command.args);
 		case "AccessControl"  : return new AccessControl(command.args);
-		case "Automation"     : return new Automation(command.args);
+		case "Scheduler"      : return new Scheduler(command.args);
 		case "Api"            : return new Api(command.args);
 		case "Certificates"   : return new Certificates(command.args);
 		case "Backup"         : return new Backup(command.args);

@@ -71,6 +71,7 @@ internal static class Watchdog {
     }
 
     public static TaskWrapper task;
+    public static bool HasWatchers => !watchers.IsEmpty;
     private static readonly ConcurrentDictionary<string, Watcher> watchers = new ConcurrentDictionary<string, Watcher>();
     private static ConcurrentBag<Notification> notifications = new ConcurrentBag<Notification>();
 
@@ -81,7 +82,12 @@ internal static class Watchdog {
 
     private static readonly HttpClient sharedHttpClient = new HttpClient{ Timeout = TimeSpan.FromSeconds(15) };
 
-    public static void Initialize() {
+    public static bool loaded = false;
+
+    public static void LoadFromDisk() {
+        if (loaded) return;
+        loaded = true;
+
         watcherSerializerOptions.Converters.Add(new WatcherJsonConverter());
         notificationSerializerOptions.Converters.Add(new NotificationJsonConverter());
 
@@ -110,8 +116,6 @@ internal static class Watchdog {
                 Logger.Error(ex);
             }
         }
-
-        if (!watchers.IsEmpty) { StartTask("system"); }
     }
 
     public static bool StartTask(string origin) {

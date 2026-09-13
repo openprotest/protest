@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "protest",
+      "runtimeExecutable": "dotnet",
+      "runtimeArgs": ["run", "--no-build"],
+      "port": 8090
+    }
+  ]
+}

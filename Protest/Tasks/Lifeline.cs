@@ -16,7 +16,9 @@ using Protest.Http;
 namespace Protest.Tasks;
 
 internal static partial class Lifeline {
-    private const long TWO_HOURS_IN_TICKS = 72_000_000_000L;
+    private const long ONE_HOUR_IN_TICKS = TimeSpan.TicksPerHour;
+
+    public static int intervalHours = 8;
 
     private static readonly ConcurrentDictionary<string, Lock> pingMutexes = new ConcurrentDictionary<string, Lock>();
     private static readonly ConcurrentDictionary<string, Lock> wmiMutexes = new ConcurrentDictionary<string, Lock>();
@@ -61,6 +63,11 @@ internal static partial class Lifeline {
         HashSet<string[]> snmp = new HashSet<string[]>();
 
         long lastVersion = 0;
+
+        //align time to the next hour boundary
+        long alignGap = (ONE_HOUR_IN_TICKS - DateTime.UtcNow.Ticks % ONE_HOUR_IN_TICKS) / 10_000;
+        task?.status = TaskWrapper.TaskStatus.Idle;
+        task?.Sleep((int)alignGap);
 
         while (true) {
             task?.status = TaskWrapper.TaskStatus.Running;
@@ -204,7 +211,8 @@ internal static partial class Lifeline {
 
             if (task is not null) {
                 task.status = TaskWrapper.TaskStatus.Idle;
-                task.Sleep(Math.Max((int)((TWO_HOURS_IN_TICKS - (DateTime.UtcNow.Ticks - startTimeStamp)) / 10_000), 0));
+                long intervalTicks = intervalHours * ONE_HOUR_IN_TICKS;
+                task.Sleep(Math.Max((int)((intervalTicks - (DateTime.UtcNow.Ticks - startTimeStamp)) / 10_000), 0));
 
                 if (task.cancellationToken.IsCancellationRequested) {
                     task.status = TaskWrapper.TaskStatus.Canceling;

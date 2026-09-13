@@ -124,7 +124,8 @@ internal sealed class Listener {
         ["/rbac/kickuser"]                = (ctx, username) => Auth.KickUser(ctx, username),
         ["/rbac/reregistermfa"]           = (ctx, username) => Auth.ResetMfaSecret(ctx, username),
 
-        ["/tasks/list"]                   = (ctx, username) => Tasks.Tasks.ListTasks(),
+        ["/scheduler/list"]               = (ctx, username) => Tasks.Scheduler.List(),
+        ["/scheduler/save"]               = (ctx, username) => Tasks.Scheduler.Save(ctx, username),
 
         ["/config/checkupdate"]           = (ctx, username) => Update.CheckLatestRelease(),
 
@@ -163,6 +164,9 @@ internal sealed class Listener {
         ["/config/dataretention/logs"]           = (ctx, username) => DataRetention.Handler(ctx, username, "logs"),
         ["/config/dataretention/devicetimeline"] = (ctx, username) => DataRetention.Handler(ctx, username, "devicetimeline"),
         ["/config/dataretention/usertimeline"]   = (ctx, username) => DataRetention.Handler(ctx, username, "usertimeline"),
+
+        ["/config/dataretention/settings/list"]  = (ctx, username) => DataRetention.ListSettings(),
+        ["/config/dataretention/settings/save"]  = (ctx, username) => DataRetention.SaveSettings(ctx, username),
 
         ["/api/list"]                     = (ctx, username) => Tools.Api.List(),
         ["/api/save"]                     = (ctx, username) => Tools.Api.Save(ctx, username),

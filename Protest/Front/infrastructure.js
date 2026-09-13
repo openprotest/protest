@@ -116,13 +116,13 @@ class Infrastructure extends Tabs {
 		const MIN_DAYS = 30;
 
 		const categories = [
-			{ label: "Device timeline",    icon: "mono/timeline.svg",     description: "Historical attribute snapshots kept whenever a device changes.",                  endpoint: "config/dataretention/devicetimeline", defaultDays: 365 },
-			{ label: "User timeline",      icon: "mono/timeline.svg",     description: "Historical attribute snapshots kept whenever a user changes.",                    endpoint: "config/dataretention/usertimeline",   defaultDays: 365 },
-			{ label: "Lifeline",           icon: "mono/lifeline.svg",     description: "Historical ping, CPU, memory, disk, and printer/switch counters.",                endpoint: "config/dataretention/lifeline",       defaultDays: 365 },
-			{ label: "Last seen",          icon: "mono/lastseen.svg",     description: "The most recent time each device responded.",                                     endpoint: "config/dataretention/lastseen",       defaultDays: 365 },
-			{ label: "Watchdog",           icon: "mono/watchdog.svg",     description: "Historical uptime results recorded by watchers.",                                 endpoint: "config/dataretention/watchdog",       defaultDays: 90 },
-			{ label: "Session recordings", icon: "mono/screenrecord.svg", description: "Recorded VNC, SSH, telnet, remote shell, serial console, and terminal sessions.", endpoint: "config/dataretention/recordings",     defaultDays: 30 },
-			{ label: "Logs",               icon: "mono/log.svg",          description: "Action log files.",                                                               endpoint: "config/dataretention/logs",           defaultDays: 90 },
+			{ key: "devicetimeline", label: "Device timeline",    icon: "mono/timeline.svg",     endpoint: "config/dataretention/devicetimeline", defaultDays: 365, description: "Historical attribute snapshots kept whenever a device changes." },
+			{ key: "usertimeline",   label: "User timeline",      icon: "mono/timeline.svg",     endpoint: "config/dataretention/usertimeline",   defaultDays: 365, description: "Historical attribute snapshots kept whenever a user changes." },
+			{ key: "lifeline",       label: "Lifeline",           icon: "mono/lifeline.svg",     endpoint: "config/dataretention/lifeline",       defaultDays: 365, description: "Historical ping, CPU, memory, disk, and printer/switch counters." },
+			{ key: "lastseen",       label: "Last seen",          icon: "mono/lastseen.svg",     endpoint: "config/dataretention/lastseen",       defaultDays: 365, description: "The most recent time each device responded." },
+			{ key: "watchdog",       label: "Watchdog",           icon: "mono/watchdog.svg",     endpoint: "config/dataretention/watchdog",       defaultDays: 90,  description: "Historical uptime results recorded by watchers." },
+			{ key: "recordings",     label: "Session recordings", icon: "mono/screenrecord.svg", endpoint: "config/dataretention/recordings",     defaultDays: 30,  description: "Recorded VNC, SSH, telnet, remote shell, serial console, and terminal sessions." },
+			{ key: "logs",           label: "Logs",               icon: "mono/log.svg",          endpoint: "config/dataretention/logs",           defaultDays: 90,  description: "Action log files." },
 		];
 
 		const rows = [];

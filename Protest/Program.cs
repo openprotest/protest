@@ -62,7 +62,9 @@ internal class Program {
         Console.WriteLine($"{"Loading RBAC",-23} {(rbacLoaded ? "Done" : "Failed"),-10}");
 
         Console.Write($"{"Starting tasks",-24}");
-        Tasks.Automation.Initialize();
+        Proxy.ReverseProxy.Initialize();
+        Protocols.SessionRecording.Initialize();
+        Tasks.Scheduler.Initialize();
         Console.WriteLine("Done");
 
         Console.WriteLine();

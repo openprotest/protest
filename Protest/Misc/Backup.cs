@@ -17,7 +17,14 @@ internal static class Backup {
     internal static byte[] Create(HttpListenerContext ctx, string origin) {
         Dictionary<string, string> parameters = Listener.ParseQuery(ctx);
 
-        if (parameters is null || !parameters.TryGetValue("name", out string name) || String.IsNullOrEmpty(name)) {
+        string name = null;
+        parameters?.TryGetValue("name", out name);
+
+        return Create(origin, name);
+    }
+
+    internal static byte[] Create(string origin, string name) {
+        if (String.IsNullOrEmpty(name)) {
             name = $"backup-{DateTime.UtcNow.ToString(Data.DATE_FORMAT_FILE)}";
         }
 

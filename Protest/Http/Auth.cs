@@ -665,10 +665,9 @@ internal static class Auth {
                 path.Add("");
                 break;*/
 
-            case "automation:write":
-                path.Add("/tasks/list");
-                path.Add("/tasks/start");
-                path.Add("/tasks/stop");
+            case "scheduler:write":
+                path.Add("/scheduler/list");
+                path.Add("/scheduler/save");
                 break;
 
             case "integration:write":
@@ -726,6 +725,8 @@ internal static class Auth {
                 path.Add("/config/dataretention/logs");
                 path.Add("/config/dataretention/devicetimeline");
                 path.Add("/config/dataretention/usertimeline");
+                path.Add("/config/dataretention/settings/list");
+                path.Add("/config/dataretention/settings/save");
                 break;
 
             case "log:write":
