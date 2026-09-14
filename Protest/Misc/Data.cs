@@ -75,6 +75,7 @@ internal static class Data {
     public static readonly string FILE_NOTIFICATIONS = Path.Join(DIR_DATA, "notifications.json");
     public static readonly string FILE_SCHEDULER     = Path.Join(DIR_DATA, "scheduler.json");
     public static readonly string FILE_DATA_RETENTION = Path.Join(DIR_DATA, "dataretention.json");
+    public static readonly string FILE_SESSION_RECORDING = Path.Join(DIR_DATA, "sessionrecording.json");
 
     public static readonly string FILE_CONFIG        = Path.Join(DIR_BASE, "protest.cfg");
 

@@ -168,6 +168,9 @@ internal sealed class Listener {
         ["/config/dataretention/settings/list"]  = (ctx, username) => DataRetention.ListSettings(),
         ["/config/dataretention/settings/save"]  = (ctx, username) => DataRetention.SaveSettings(ctx, username),
 
+        ["/config/sessionrecording/get"]  = (ctx, username) => Protocols.SessionRecording.GetSettings(),
+        ["/config/sessionrecording/save"] = (ctx, username) => Protocols.SessionRecording.SaveSettings(ctx, username),
+
         ["/api/list"]                     = (ctx, username) => Tools.Api.List(),
         ["/api/save"]                     = (ctx, username) => Tools.Api.Save(ctx, username),
 

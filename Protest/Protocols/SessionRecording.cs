@@ -40,7 +40,58 @@ internal sealed class SessionRecording {
         startUtc = DateTime.UtcNow;
     }
 
-    internal static void Initialize() { }
+    private static readonly Lock settingsMutex = new Lock();
+
+    internal static void Initialize() {
+        LoadSettings();
+    }
+
+    private static void LoadSettings() {
+        try {
+            if (File.Exists(Data.FILE_SESSION_RECORDING)) {
+                string plain = File.ReadAllText(Data.FILE_SESSION_RECORDING);
+                using JsonDocument doc = JsonDocument.Parse(plain);
+                if (doc.RootElement.TryGetProperty("enable", out JsonElement enableEl)) {
+                    Configuration.sessionRecording = enableEl.GetBoolean();
+                }
+            }
+        }
+        catch (Exception ex) {
+            Logger.Error(ex);
+        }
+    }
+
+    internal static byte[] GetSettings() {
+        return Encoding.UTF8.GetBytes($"{{\"enable\":{(Configuration.sessionRecording ? "true" : "false")}}}");
+    }
+
+    internal static byte[] SaveSettings(HttpListenerContext ctx, string origin) {
+        using StreamReader reader = new StreamReader(ctx.Request.InputStream, ctx.Request.ContentEncoding);
+        string payload = reader.ReadToEnd();
+
+        if (String.IsNullOrEmpty(payload)) {
+            return Data.CODE_INVALID_ARGUMENT.Array;
+        }
+
+        try {
+            using JsonDocument doc = JsonDocument.Parse(payload);
+            bool enable = doc.RootElement.TryGetProperty("enable", out JsonElement enableEl) && enableEl.GetBoolean();
+
+            Configuration.sessionRecording = enable;
+
+            lock (settingsMutex) {
+                File.WriteAllText(Data.FILE_SESSION_RECORDING, $"{{\"enable\":{(enable ? "true" : "false")}}}");
+            }
+
+            Logger.Action(origin, "Data retention", $"Session recording {(enable ? "enabled" : "disabled")}");
+
+            return Data.CODE_OK.Array;
+        }
+        catch (Exception ex) {
+            Logger.Error(ex);
+            return Data.CODE_FAILED.Array;
+        }
+    }
 
     internal static SessionRecording Start(string protocol, string host, int port, string device, string username) {
         if (!Configuration.sessionRecording) return null;

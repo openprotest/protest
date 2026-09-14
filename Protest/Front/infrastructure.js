@@ -107,11 +107,101 @@ class Infrastructure extends Tabs {
 		this.args = "dataretention";
 		this.tabsPanel.textContent = "";
 
+		const recordingContainer = document.createElement("div");
+		recordingContainer.style.display = "grid";
+		recordingContainer.style.gridTemplateColumns = "48px 32px 200px 1fr";
+		recordingContainer.style.alignItems = "center";
+		recordingContainer.style.columnGap = "16px";
+		recordingContainer.style.padding = "20px";
+		recordingContainer.style.margin = "0 20px 40px 20px";
+		recordingContainer.style.border = "2px solid var(--clr-control)";
+		recordingContainer.style.borderRadius = "8px";
+		this.tabsPanel.appendChild(recordingContainer);
+
+		const recordingToggleBox = document.createElement("div");
+		recordingToggleBox.style.transform = "translateY(-14px)";
+		recordingContainer.appendChild(recordingToggleBox);
+
+		const recordingToggle = this.CreateToggle("", false, recordingToggleBox);
+		recordingToggle.checkbox.disabled = true;
+
+		const recordingIcon = document.createElement("div");
+		recordingIcon.style.width = "28px";
+		recordingIcon.style.height = "28px";
+		recordingIcon.style.backgroundImage = "url(mono/screenrecord.svg)";
+		recordingIcon.style.backgroundSize = "28px 28px";
+		recordingIcon.style.backgroundRepeat = "no-repeat";
+		recordingContainer.appendChild(recordingIcon);
+
+		const recordingLabel = document.createElement("div");
+		recordingLabel.textContent = "Enable Session recording";
+		recordingLabel.style.fontWeight = "600";
+		recordingContainer.appendChild(recordingLabel);
+
+		const recordingDescription = document.createElement("div");
+		recordingDescription.textContent = "Record VNC, SSH, telnet, remote shell, serial console, and terminal sessions.";
+		recordingDescription.style.fontSize = "smaller";
+		recordingDescription.style.opacity = "0.8";
+		recordingContainer.appendChild(recordingDescription);
+
+		const deleteContainer = document.createElement("div");
+		deleteContainer.style.padding = "20px";
+		deleteContainer.style.margin = "0 20px";
+		deleteContainer.style.border = "2px solid var(--clr-control)";
+		deleteContainer.style.borderRadius = "8px";
+		this.tabsPanel.appendChild(deleteContainer);
+
+		const deleteSectionTitle = document.createElement("div");
+		deleteSectionTitle.textContent = "Delete historical data";
+		deleteSectionTitle.style.fontWeight = "700";
+		deleteSectionTitle.style.fontSize = "1.05em";
+		deleteSectionTitle.style.padding = "0 12px 8px";
+		deleteContainer.appendChild(deleteSectionTitle);
+
 		const intro = document.createElement("div");
 		intro.textContent = "Permanently delete historical data older than a chosen number of days. This cannot be undone.";
-		intro.style.padding = "8px 12px";
+		intro.style.padding = "0 12px";
 		intro.style.marginBottom = "16px";
-		this.tabsPanel.appendChild(intro);
+		deleteContainer.appendChild(intro);
+
+		recordingToggle.checkbox.onchange = async ()=> {
+			recordingToggle.checkbox.disabled = true;
+
+			try {
+				const response = await fetch("config/sessionrecording/save", {
+					method: "POST",
+					body: JSON.stringify({enable: recordingToggle.checkbox.checked})
+				});
+
+				if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
+
+				const json = await response.json();
+				if (json.error) throw json.error;
+			}
+			catch (ex) {
+				recordingToggle.checkbox.checked = !recordingToggle.checkbox.checked;
+				this.ConfirmBox(ex, true, "mono/error.svg");
+			}
+			finally {
+				recordingToggle.checkbox.disabled = false;
+			}
+		};
+
+		(async ()=> {
+			try {
+				const response = await fetch("config/sessionrecording/get");
+				if (response.status !== 200) return;
+
+				const json = await response.json();
+				if (json.error) return;
+
+				recordingToggle.checkbox.checked = !!json.enable;
+			}
+			catch {}
+			finally {
+				recordingToggle.checkbox.disabled = false;
+			}
+		})();
 
 		const MIN_DAYS = 30;
 
@@ -135,7 +225,7 @@ class Infrastructure extends Tabs {
 			row.style.columnGap = "16px";
 			row.style.padding = "14px 12px";
 			row.style.borderBottom = "1px solid var(--clr-control)";
-			this.tabsPanel.appendChild(row);
+			deleteContainer.appendChild(row);
 
 			const toggleBox = document.createElement("div");
 			toggleBox.style.transform = "translateY(-14px)";
@@ -185,8 +275,8 @@ class Infrastructure extends Tabs {
 
 		const footer = document.createElement("div");
 		footer.style.textAlign = "right";
-		footer.style.padding = "20px 12px";
-		this.tabsPanel.appendChild(footer);
+		footer.style.padding = "20px 0 0 0";
+		deleteContainer.appendChild(footer);
 
 		const deleteButton = document.createElement("input");
 		deleteButton.type = "button";
