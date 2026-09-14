@@ -44,6 +44,104 @@ internal sealed class SessionRecording {
 
     internal static void Initialize() {
         LoadSettings();
+        RecoverOrphanedRecordings();
+    }
+
+    private static void RecoverOrphanedRecordings() {
+        try {
+            DirectoryInfo root = new DirectoryInfo(Data.DIR_RECORDINGS);
+            if (!root.Exists) return;
+
+            foreach (DirectoryInfo protoDir in root.GetDirectories()) {
+                foreach (DirectoryInfo recDir in protoDir.GetDirectories()) {
+                    try {
+                        RecoverRecordingIfOrphaned(protoDir, recDir);
+                    }
+                    catch (Exception ex) {
+                        Logger.Error(ex);
+                    }
+                }
+            }
+        }
+        catch (Exception ex) {
+            Logger.Error(ex);
+        }
+    }
+
+    private static void RecoverRecordingIfOrphaned(DirectoryInfo protoDir, DirectoryInfo recDir) {
+        string metaPath = Path.Join(recDir.FullName, "meta.json");
+        if (!File.Exists(metaPath)) return;
+
+        using JsonDocument doc = JsonDocument.Parse(File.ReadAllText(metaPath));
+        JsonElement root = doc.RootElement;
+
+        if (root.TryGetProperty("end", out JsonElement endEl) && endEl.ValueKind == JsonValueKind.String) {
+            return; //already finalized
+        }
+
+        if (!root.TryGetProperty("start", out JsonElement startEl) ||
+            startEl.ValueKind != JsonValueKind.String ||
+            !DateTime.TryParse(startEl.GetString(), null, System.Globalization.DateTimeStyles.AdjustToUniversal | System.Globalization.DateTimeStyles.AssumeUniversal, out DateTime start)) {
+            return;
+        }
+
+        string videoPath = Path.Join(recDir.FullName, "video.bin");
+        long lastOffsetMs = MeasureLastCompleteChunkOffset(videoPath);
+        DateTime end = start.AddMilliseconds(lastOffsetMs);
+
+        string id = root.TryGetProperty("id", out JsonElement idEl) && idEl.ValueKind == JsonValueKind.String ? idEl.GetString() : recDir.Name;
+        string protocol = root.TryGetProperty("protocol", out JsonElement protoEl) && protoEl.ValueKind == JsonValueKind.String ? protoEl.GetString() : protoDir.Name;
+        string host = root.TryGetProperty("host", out JsonElement hostEl) && hostEl.ValueKind == JsonValueKind.String ? hostEl.GetString() : "";
+        int port = root.TryGetProperty("port", out JsonElement portEl) && portEl.ValueKind == JsonValueKind.Number ? portEl.GetInt32() : 0;
+        string device = root.TryGetProperty("device", out JsonElement deviceEl) && deviceEl.ValueKind == JsonValueKind.String ? deviceEl.GetString() : null;
+        string username = root.TryGetProperty("username", out JsonElement userEl) && userEl.ValueKind == JsonValueKind.String ? userEl.GetString() : "";
+
+        StringBuilder builder = new StringBuilder();
+        builder.Append('{');
+        builder.Append($"\"id\":\"{Data.EscapeJsonText(id)}\",");
+        builder.Append($"\"protocol\":\"{Data.EscapeJsonText(protocol)}\",");
+        builder.Append($"\"host\":\"{Data.EscapeJsonText(host)}\",");
+        builder.Append($"\"port\":{port},");
+        builder.Append(device is null ? "\"device\":null," : $"\"device\":\"{Data.EscapeJsonText(device)}\",");
+        builder.Append($"\"username\":\"{Data.EscapeJsonText(username)}\",");
+        builder.Append($"\"start\":\"{start:yyyy-MM-ddTHH:mm:ssZ}\",");
+        builder.Append($"\"end\":\"{end:yyyy-MM-ddTHH:mm:ssZ}\",");
+        builder.Append($"\"durationMs\":{lastOffsetMs}");
+        builder.Append('}');
+
+        File.WriteAllText(metaPath, builder.ToString());
+        Logger.Action("system", "Session recording", $"Recovered interrupted recording {id} ({protocol}) after unclean shutdown, duration {lastOffsetMs}ms");
+    }
+
+    //returns the offset (ms) of the last fully-written chunk, stopping at the first truncated one
+    private static long MeasureLastCompleteChunkOffset(string videoPath) {
+        if (!File.Exists(videoPath)) return 0;
+
+        long lastOffsetMs = 0;
+
+        try {
+            using FileStream fs = new FileStream(videoPath, FileMode.Open, FileAccess.Read, FileShare.Read);
+            byte[] header = new byte[12];
+
+            while (fs.Position < fs.Length) {
+                long chunkStart = fs.Position;
+                int read = fs.Read(header, 0, 12);
+                if (read < 12) break; //incomplete header
+
+                long offsetMs = BitConverter.ToInt64(header, 0);
+                int length = BitConverter.ToInt32(header, 8);
+
+                if (offsetMs < 0 || length < 0 || chunkStart + 12 + length > fs.Length) break; //incomplete/corrupt trailing chunk
+
+                fs.Seek(length, SeekOrigin.Current);
+                lastOffsetMs = offsetMs;
+            }
+        }
+        catch (Exception ex) {
+            Logger.Error(ex);
+        }
+
+        return lastOffsetMs;
     }
 
     private static void LoadSettings() {
