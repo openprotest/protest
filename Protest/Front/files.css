@@ -58,9 +58,7 @@
 	inset: 20px;
 	color: rgb(32,32,32);
 	text-shadow: rgba(255,255,255,.8) 0 0 4px;
-	background-color: var(--clr-transparent);
-	backdrop-filter: blur(8px) brightness(80%);
-	border: var(--clr-accent) solid 2px;
+	background-color: var(--clr-select);
 	border-radius: 20px;
 
 	visibility: hidden;

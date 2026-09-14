@@ -629,7 +629,6 @@ internal static class Auth {
             case "secure shell:write":
                 path.Add("/ws/ssh");
                 path.Add("/ws/sftp");
-                path.Add("/ws/sftp");
                 path.Add("/sftp/download");
                 path.Add("/sftp/upload");
                 break;

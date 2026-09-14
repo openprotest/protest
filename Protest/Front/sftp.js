@@ -41,6 +41,7 @@ class Sftp extends Window {
 
 		this.pathBox = document.createElement("div");
 		this.pathBox.className = "win-toolbar file-path";
+		this.pathBox.style.visibility = "hidden";
 
 		this.viewBox = document.createElement("div");
 		this.viewBox.className = "file-view file-grid";
@@ -224,14 +225,17 @@ class Sftp extends Window {
 
 		this.ws.onclose = ()=> {
 			this.connectButton.disabled = false;
-			//this.ConnectDialog(this.args.host, false);
+			if (this.spinnerBox.style.display !== "none") {
+				this.spinnerBox.style.display = "none";
+				this.ConfirmBox("Connection closed", true, "mono/error.svg");
+			}
 		};
 
 		this.ws.onmessage = async event=> {
 			let json = JSON.parse(event.data);
 			if (json.connected) {
 				this.SetTitle(`SFTP - ${target}`);
-
+				this.pathBox.style.visibility = "visible";
 				this.content.focus();
 			}
 			else if (json.action) {

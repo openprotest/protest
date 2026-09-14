@@ -278,10 +278,10 @@ class AccessControl extends Tabs {
 
 				for (let i=0; i<this.permissionsList.length; i++) {
 					if (this.permissionsList[i].read.checked) {
-						authorization.push(`${this.permissionsList[i].name.toLowerCase()}:read`);
+						authorization.push(`${this.permissionsList[i].key}:read`);
 					}
 					if (this.permissionsList[i].write.checked) {
-						authorization.push(`${this.permissionsList[i].name.toLowerCase()}:write`);
+						authorization.push(`${this.permissionsList[i].key}:write`);
 					}
 				}
 
@@ -355,7 +355,7 @@ class AccessControl extends Tabs {
 
 			for (let i=0; i<this.authorization.length; i++) {
 				let split = this.authorization[i].split(":");
-				let permission = this.permissionsList.find(o=>o.name.toLowerCase() === split[0]);
+				let permission = this.permissionsList.find(o=>o.key === split[0]);
 				if (!permission) continue;
 
 				if (split[1] === "read") {
@@ -448,21 +448,21 @@ class AccessControl extends Tabs {
 		this.permissionsList.push(this.AddPermissionObject("Chat",          "url(mono/chat.svg)",          this.documentationGroup, true, true, true));
 
 		this.toolsGroup = this.AddPermissionGroup("Tools and utilities", "url(mono/hammer.svg)");
-		this.permissionsList.push(this.AddPermissionObject("Watchdog",          "url(mono/watchdog.svg)",     this.toolsGroup, false, true, false));
-		this.permissionsList.push(this.AddPermissionObject("Reverse proxy",     "url(mono/reverseproxy.svg)", this.toolsGroup, false, true, false));
-		this.permissionsList.push(this.AddPermissionObject("Issues",            "url(mono/issues.svg)",       this.toolsGroup, false, true, false));
-		//this.permissionsList.push(this.AddPermissionObject("Scripts",           "url(mono/scripts.svg)",      this.toolsGroup, false, true, false));
-		this.permissionsList.push(this.AddPermissionObject("Network utilities", "url(mono/portscan.svg)",     this.toolsGroup, false, true, false));
-		this.permissionsList.push(this.AddPermissionObject("VNC",               "url(mono/vnc.svg)",          this.toolsGroup, false, true, false));
-		this.permissionsList.push(this.AddPermissionObject("Session recordings", "url(mono/screenrecord.svg)", this.toolsGroup, true, false, false));
-		this.permissionsList.push(this.AddPermissionObject("Terminal",          "url(mono/terminal.svg)",     this.toolsGroup, false, true, false));
+		this.permissionsList.push(this.AddPermissionObject("Watchdog",          "url(mono/watchdog.svg)",      this.toolsGroup, false, true, false));
+		this.permissionsList.push(this.AddPermissionObject("Reverse proxy",     "url(mono/reverseproxy.svg)",  this.toolsGroup, false, true, false));
+		this.permissionsList.push(this.AddPermissionObject("Issues",            "url(mono/issues.svg)",        this.toolsGroup, false, true, false));
+		//this.permissionsList.push(this.AddPermissionObject("Scripts",           "url(mono/scripts.svg)",       this.toolsGroup, false, true, false));
+		this.permissionsList.push(this.AddPermissionObject("Network utilities", "url(mono/portscan.svg)",      this.toolsGroup, false, true, false));
+		this.permissionsList.push(this.AddPermissionObject("VNC",               "url(mono/vnc.svg)",           this.toolsGroup, false, true, false));
+		this.permissionsList.push(this.AddPermissionObject("Session recordings","url(mono/screenrecord.svg)",  this.toolsGroup, true, false, false));
+		this.permissionsList.push(this.AddPermissionObject("Terminal",          "url(mono/terminal.svg)",      this.toolsGroup, false, true, false));
 		this.permissionsList.push(this.AddPermissionObject("Serial console",    "url(mono/serialconsole.svg)", this.toolsGroup, false, true, false));
-		this.permissionsList.push(this.AddPermissionObject("Telnet",            "url(mono/telnet.svg)",       this.toolsGroup, false, true, false));
-		this.permissionsList.push(this.AddPermissionObject("SSH and SFTP",      "url(mono/ssh.svg)",          this.toolsGroup, false, true, false));
-		this.permissionsList.push(this.AddPermissionObject("Remote shell",      "url(mono/terminal.svg)",       this.toolsGroup, false, true, false));
-		this.permissionsList.push(this.AddPermissionObject("WMI",               "url(mono/wmi.svg)",          this.toolsGroup, false, true, false));
-		this.permissionsList.push(this.AddPermissionObject("SNMP polling",      "url(mono/snmp.svg)",         this.toolsGroup, false, true, false));
-		//this.permissionsList.push(this.AddPermissionObject("SNMP traps",        "url(mono/trap.svg)",         this.toolsGroup, false, true, false));
+		this.permissionsList.push(this.AddPermissionObject("Telnet",            "url(mono/telnet.svg)",        this.toolsGroup, false, true, false));
+		this.permissionsList.push(this.AddPermissionObject("SSH and SFTP",      "url(mono/ssh.svg)",           this.toolsGroup, false, true, false, "secure shell"));
+		this.permissionsList.push(this.AddPermissionObject("Remote shell",      "url(mono/terminal.svg)",      this.toolsGroup, false, true, false));
+		this.permissionsList.push(this.AddPermissionObject("WMI",               "url(mono/wmi.svg)",           this.toolsGroup, false, true, false));
+		this.permissionsList.push(this.AddPermissionObject("SNMP polling",      "url(mono/snmp.svg)",          this.toolsGroup, false, true, false));
+		//this.permissionsList.push(this.AddPermissionObject("SNMP traps",        "url(mono/trap.svg)",          this.toolsGroup, false, true, false));
 
 		this.manageGroup = this.AddPermissionGroup("Manage", "url(mono/logo.svg)");
 		this.permissionsList.push(this.AddPermissionObject("Infrastructure",  "url(mono/infrastructure.svg)", this.manageGroup, false, true, false));
@@ -505,7 +505,7 @@ class AccessControl extends Tabs {
 		return group;
 	}
 
-	AddPermissionObject(name, icon, parent, read, write, linked) {
+	AddPermissionObject(name, icon, parent, read, write, linked, key) {
 		const container = document.createElement("div");
 		parent.appendChild(container);
 
@@ -561,8 +561,9 @@ class AccessControl extends Tabs {
 		}
 
 		return {
-			name: name,
-			read: readToggle.checkbox,
+			name : name,
+			key  : key ?? name.toLowerCase(),
+			read : readToggle.checkbox,
 			write: writeToggle.checkbox,
 		};
 	}

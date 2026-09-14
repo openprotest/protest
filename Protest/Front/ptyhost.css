@@ -75,8 +75,7 @@
 	font-weight: 700;
 	white-space: nowrap;
 	color: var(--clr-dark);
-	backdrop-filter: blur(8px) brightness(80%);
-	background-color: var(--clr-transparent);
+	background-color: var(--clr-select);
 	background-image: url(mono/connect.svg);
 	background-size: 48px 48px;
 	background-position: 8px 50%;
