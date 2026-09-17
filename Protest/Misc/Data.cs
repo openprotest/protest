@@ -67,15 +67,17 @@ internal static class Data {
     public static readonly string DIR_DEBIT_RETURNED = Path.Join(DIR_DEBIT, "returned");
     public static readonly string DIR_DEBIT_TEMPLATE = Path.Join(DIR_DEBIT, "templates");
 
-    public static readonly string FILE_API_LINKS     = Path.Join(DIR_DATA, "api.json");
-    public static readonly string FILE_ZONES         = Path.Join(DIR_DATA, "zones.json");
-    public static readonly string FILE_DHCP_RANGE    = Path.Join(DIR_DATA, "dhcprange.json");
-    public static readonly string FILE_SMTP_PROFILES = Path.Join(DIR_DATA, "smtpprofiles.json");
-    public static readonly string FILE_SNMP_PROFILES = Path.Join(DIR_DATA, "snmpprofiles.json");
-    public static readonly string FILE_NOTIFICATIONS = Path.Join(DIR_DATA, "notifications.json");
-    public static readonly string FILE_SCHEDULER     = Path.Join(DIR_DATA, "scheduler.json");
-    public static readonly string FILE_DATA_RETENTION = Path.Join(DIR_DATA, "dataretention.json");
+    public static readonly string FILE_API_LINKS         = Path.Join(DIR_DATA, "api.json");
+    public static readonly string FILE_ZONES             = Path.Join(DIR_DATA, "zones.json");
+    public static readonly string FILE_DHCP_RANGE        = Path.Join(DIR_DATA, "dhcprange.json");
+    public static readonly string FILE_SMTP_PROFILES     = Path.Join(DIR_DATA, "smtpprofiles.json");
+    public static readonly string FILE_SNMP_PROFILES     = Path.Join(DIR_DATA, "snmpprofiles.json");
+    public static readonly string FILE_NOTIFICATIONS     = Path.Join(DIR_DATA, "notifications.json");
+    public static readonly string FILE_SCHEDULER         = Path.Join(DIR_DATA, "scheduler.json");
+    public static readonly string FILE_DATA_RETENTION    = Path.Join(DIR_DATA, "dataretention.json");
     public static readonly string FILE_SESSION_RECORDING = Path.Join(DIR_DATA, "sessionrecording.json");
+    public static readonly string FILE_VAULT             = Path.Join(DIR_DATA, "vault.json");
+    public static readonly string FILE_VAULT_SSHKEYS     = Path.Join(DIR_DATA, "vaultsshkeys.json");
 
     public static readonly string FILE_CONFIG        = Path.Join(DIR_BASE, "protest.cfg");
 

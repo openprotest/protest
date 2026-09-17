@@ -83,11 +83,11 @@ class Scheduler extends List {
 
 	InflateElement(element, entry) { //overrides
 		let icon = {
-			"lifeline": "mono/lifeline.svg",
-			"lastseen": "mono/lastseen.svg",
-			"watchdog": "mono/watchdog.svg",
+			"lifeline"     : "mono/lifeline.svg",
+			"lastseen"     : "mono/lastseen.svg",
+			"watchdog"     : "mono/watchdog.svg",
 			"dataretention": "mono/dataretention.svg",
-			"backup": "mono/backup.svg"
+			"backup"       : "mono/backup.svg"
 		}[element.id.toLowerCase()] ?? "mono/task.svg";
 
 		const iconBox = document.createElement("div");

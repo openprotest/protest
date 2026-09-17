@@ -49,44 +49,52 @@ internal static class Ssh {
             string[] lines = connectionString.Split('\n');
             string target = String.Empty;
             string file = null;
+            string credentialGuid = null;
             username = String.Empty;
             string password = String.Empty;
             for (int i = 0; i < lines.Length; i++) {
-                if (lines[i].StartsWith("target=")) target   = lines[i][7..];
-                if (lines[i].StartsWith("file="))   file     = lines[i][5..];
-                if (lines[i].StartsWith("un="))     username = lines[i][3..];
-                if (lines[i].StartsWith("pw="))     password = lines[i][3..];
+                if (lines[i].StartsWith("target="))     target         = lines[i][7..];
+                if (lines[i].StartsWith("file="))       file           = lines[i][5..];
+                if (lines[i].StartsWith("un="))         username       = lines[i][3..];
+                if (lines[i].StartsWith("pw="))         password       = lines[i][3..];
+                if (lines[i].StartsWith("credential=")) credentialGuid = lines[i][11..];
             }
 
             string[] split = target.Split(':');
             host = split[0];
             port = 22;
 
-            if (!String.IsNullOrEmpty(file) && DatabaseInstances.devices.dictionary.TryGetValue(file, out Database.Entry entry)) {
-                Database.Attribute usernameAttribute;
-                if (entry.attributes.TryGetValue("ssh username", out usernameAttribute)) {
-                    username = usernameAttribute.value;
-                }
-                else if (entry.attributes.TryGetValue("username", out usernameAttribute)) {
-                    username = usernameAttribute.value;
+            AuthenticationMethod[] authMethods = CredentialResolver.Resolve(credentialGuid, ref username, ref password);
+
+            if (authMethods is null) {
+                if (!String.IsNullOrEmpty(file) && DatabaseInstances.devices.dictionary.TryGetValue(file, out Database.Entry entry)) {
+                    Database.Attribute usernameAttribute;
+                    if (entry.attributes.TryGetValue("ssh username", out usernameAttribute)) {
+                        username = usernameAttribute.value;
+                    }
+                    else if (entry.attributes.TryGetValue("username", out usernameAttribute)) {
+                        username = usernameAttribute.value;
+                    }
+
+                    Database.Attribute passwordAttribute;
+                    if (entry.attributes.TryGetValue("ssh password", out passwordAttribute)) {
+                        password = passwordAttribute.value;
+                    }
+                    else if (entry.attributes.TryGetValue("password", out passwordAttribute)) {
+                        password = passwordAttribute.value;
+                    }
                 }
 
-                Database.Attribute passwordAttribute;
-                if (entry.attributes.TryGetValue("ssh password", out passwordAttribute)) {
-                    password = passwordAttribute.value;
-                }
-                else if (entry.attributes.TryGetValue("password", out passwordAttribute)) {
-                    password = passwordAttribute.value;
+                if (String.IsNullOrEmpty(username) || String.IsNullOrEmpty(password)) {
+                    await WebSocketHelper.WsWriteText(ws, "{\"error\":\"Invalid username or password\"}"u8.ToArray());
+                    await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
+                    return;
                 }
             }
 
-            if (String.IsNullOrEmpty(username) || String.IsNullOrEmpty(password)) {
-                await WebSocketHelper.WsWriteText(ws, "{\"error\":\"Invalid username or password\"}"u8.ToArray());
-                await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
-                return;
-            }
-
-            using SshClient ssh = new SshClient(port == 22 ? host : $"{host}:{port}", username, password);
+            using SshClient ssh = authMethods is not null
+                ? new SshClient(new ConnectionInfo(host, port, username, authMethods))
+                : new SshClient(port == 22 ? host : $"{host}:{port}", username, password);
             ssh.Connect();
 
             Logger.Action(origin, "Remote-access", $"Establish SSH connection to {username}@{host}:{port}");

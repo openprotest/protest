@@ -25,6 +25,7 @@ internal class Sftp {
         public string remoteEndpoint;
         public string username;
         public string password;
+        public string credentialGuid;
     }
 
     private static readonly ConcurrentDictionary<string, SftpToken> uploadTokens = new ConcurrentDictionary<string, SftpToken>();
@@ -61,47 +62,40 @@ internal class Sftp {
 
             string[] lines = connectionString.Split('\n');
             string target = String.Empty;
-            string file = null;
+            string credentialGuid = null;
             string password = String.Empty;
             string workingDirectory = null;
             for (int i = 0; i < lines.Length; i++) {
                 if (lines[i].StartsWith("target=")) target           = lines[i][7..];
-                if (lines[i].StartsWith("file="))   file             = lines[i][5..];
                 if (lines[i].StartsWith("un="))     username         = lines[i][3..];
                 if (lines[i].StartsWith("pw="))     password         = lines[i][3..];
                 if (lines[i].StartsWith("wd="))     workingDirectory = lines[i][3..];
+                if (lines[i].StartsWith("credential=")) credentialGuid = lines[i][11..];
             }
 
             string[] split = target.Split(':');
             host = split[0];
             port = 22;
 
-            if (!String.IsNullOrEmpty(file) && DatabaseInstances.devices.dictionary.TryGetValue(file, out Database.Entry entry)) {
-                Database.Attribute usernameAttribute;
-                if (entry.attributes.TryGetValue("ssh username", out usernameAttribute)) {
-                    username = usernameAttribute.value;
-                }
-                else if (entry.attributes.TryGetValue("username", out usernameAttribute)) {
-                    username = usernameAttribute.value;
-                }
+            AuthenticationMethod[] authMethods = CredentialResolver.Resolve(credentialGuid, ref username, ref password);
 
-                Database.Attribute passwordAttribute;
-                if (entry.attributes.TryGetValue("ssh password", out passwordAttribute)) {
-                    password = passwordAttribute.value;
-                }
-                else if (entry.attributes.TryGetValue("password", out passwordAttribute)) {
-                    password = passwordAttribute.value;
-                }
-            }
-
-            if (String.IsNullOrEmpty(username) || String.IsNullOrEmpty(password)) {
+            if (authMethods is null && (String.IsNullOrEmpty(username) || String.IsNullOrEmpty(password))) {
                 await WebSocketHelper.WsWriteText(ws, "{\"error\":\"Invalid username or password\"}"u8.ToArray());
                 await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
                 return;
             }
 
-            using SftpClient sftp = new SftpClient(port == 22 ? host : $"{host}:{port}", username, password);
+            using SftpClient sftp = authMethods is not null
+                ? new SftpClient(new ConnectionInfo(host, port, username, authMethods))
+                : new SftpClient(port == 22 ? host : $"{host}:{port}", username, password);
             sftp.Connect();
+
+            //the control connection is authenticated now - drop the resolved secret rather than holding it in
+            //memory for the rest of this (potentially long-lived) session; reconnects reload it from the vault
+            if (!String.IsNullOrEmpty(credentialGuid)) {
+                password = null;
+                authMethods = null;
+            }
 
             Logger.Action(origin, "Remote-access", $"Establish SFTP connection to {username}@{host}:{port}");
 
@@ -133,8 +127,8 @@ internal class Sftp {
                 case "list"     : await ListDirectory(ws, sftp, arg); break;
                 case "mkdir"    : await MakeDirectory(ws, sftp, arg); break;
                 case "rm"   : await Remove(ws, sftp, arg); break;
-                case "download" : await DownloadFilePrep(ws, sftp, sessionId, target, username, password, arg); break;
-                case "upload"   : await UploadFilePrep(ws, sftp, sessionId, target, username, password, arg); break;
+                case "download" : await DownloadFilePrep(ws, sftp, sessionId, target, username, password, credentialGuid, arg); break;
+                case "upload"   : await UploadFilePrep(ws, sftp, sessionId, target, username, password, credentialGuid, arg); break;
                 }
             }
 
@@ -192,7 +186,14 @@ internal class Sftp {
         }
 
         try {
-            using SftpClient sftp = new SftpClient(token.remoteEndpoint, token.username, token.password);
+            //re-resolve the secret now, from the vault, rather than trusting anything cached on the token
+            string reconnectUsername = token.username;
+            string reconnectPassword = token.password;
+            AuthenticationMethod[] authMethods = CredentialResolver.Resolve(token.credentialGuid, ref reconnectUsername, ref reconnectPassword);
+
+            using SftpClient sftp = authMethods is not null
+                ? new SftpClient(new ConnectionInfo(token.remoteEndpoint.Split(':')[0], 22, reconnectUsername, authMethods))
+                : new SftpClient(token.remoteEndpoint, reconnectUsername, reconnectPassword);
             sftp.Connect();
 
             SftpFileAttributes attributes = sftp.GetAttributes(token.path);
@@ -254,7 +255,14 @@ internal class Sftp {
             string directory = token.path.Substring(0, token.path.LastIndexOf('/'));
             string name = token.path.Split('/').Last();
 
-            using SftpClient sftp = new SftpClient(token.remoteEndpoint, token.username, token.password);
+            //re-resolve the secret now, from the vault, rather than trusting anything cached on the token
+            string reconnectUsername = token.username;
+            string reconnectPassword = token.password;
+            AuthenticationMethod[] authMethods = CredentialResolver.Resolve(token.credentialGuid, ref reconnectUsername, ref reconnectPassword);
+
+            using SftpClient sftp = authMethods is not null
+                ? new SftpClient(new ConnectionInfo(token.remoteEndpoint.Split(':')[0], 22, reconnectUsername, authMethods))
+                : new SftpClient(token.remoteEndpoint, reconnectUsername, reconnectPassword);
             sftp.Connect();
 
             Action<int> callback = async value => {
@@ -351,7 +359,7 @@ internal class Sftp {
         }
     }
 
-    private static async Task DownloadFilePrep(WebSocket ws, SftpClient control, string sessionId, string remoteEndpoint, string username, string password, string src) {
+    private static async Task DownloadFilePrep(WebSocket ws, SftpClient control, string sessionId, string remoteEndpoint, string username, string password, string credentialGuid, string src) {
         CleanupTokens();
 
         Guid tokenId = Guid.NewGuid();
@@ -361,7 +369,8 @@ internal class Sftp {
             sessionId      = sessionId,
             remoteEndpoint = remoteEndpoint,
             username       = username,
-            password       = password,
+            password       = String.IsNullOrEmpty(credentialGuid) ? password : null,
+            credentialGuid = credentialGuid,
             path           = src
         };
 
@@ -374,7 +383,7 @@ internal class Sftp {
         }));
     }
 
-    private static async Task UploadFilePrep(WebSocket ws, SftpClient control, string sessionId, string remoteEndpoint, string username, string password, string dest) {
+    private static async Task UploadFilePrep(WebSocket ws, SftpClient control, string sessionId, string remoteEndpoint, string username, string password, string credentialGuid, string dest) {
         CleanupTokens();
 
         Guid tokenId = Guid.NewGuid();
@@ -385,7 +394,8 @@ internal class Sftp {
             sessionId      = sessionId,
             remoteEndpoint = remoteEndpoint,
             username       = username,
-            password       = password,
+            password       = String.IsNullOrEmpty(credentialGuid) ? password : null,
+            credentialGuid = credentialGuid,
             path           = dest
         };
 

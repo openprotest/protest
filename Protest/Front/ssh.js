@@ -8,7 +8,10 @@ class Ssh extends PtyHost {
 
 		this.resizeAware = true;
 
-		if (this.args.file) {
+		if (this.args.credential) {
+			this.ConnectViaCredential(this.args.host, this.args.credential);
+		}
+		else if (this.args.file) {
 			this.ConnectViaFile(this.args.host, this.args.file);
 		}
 		else {
@@ -17,7 +20,7 @@ class Ssh extends PtyHost {
 	}
 
 	ConnectDialog(target, isNew=false) { //overrides
-		const dialog = this.DialogBox("208px");
+		const dialog = this.DialogBox("240px");
 		if (dialog === null) return;
 
 		const {okButton, cancelButton, innerBox} = dialog;
@@ -37,6 +40,16 @@ class Ssh extends PtyHost {
 		hostInput.style.width = "calc(100% - 120px)";
 		hostInput.value = target;
 		innerBox.append(hostLabel, hostInput);
+
+		const modeLabel = document.createElement("div");
+		modeLabel.style.display = "inline-block";
+		modeLabel.style.minWidth = "88px";
+		modeLabel.style.paddingLeft = "8px";
+		modeLabel.textContent = "Credentials:";
+		const modeInput = document.createElement("select");
+		modeInput.style.width = "calc(100% - 120px)";
+		modeInput.append(new Option("Type manually", "manual"), new Option("Saved credential", "credential"), new Option("Saved SSH key", "sshkey"));
+		innerBox.append(modeLabel, modeInput);
 
 		const usernameLabel = document.createElement("div");
 		usernameLabel.style.display = "inline-block";
@@ -62,12 +75,68 @@ class Ssh extends PtyHost {
 		const rememberPasswordToggle = this.CreateToggle("Remember password", false, innerBox);
 		rememberPasswordToggle.label.style.margin = "8px 0px 0px 4px";
 
+		const savedLabel = document.createElement("div");
+		savedLabel.style.display = "none";
+		savedLabel.style.minWidth = "88px";
+		savedLabel.style.paddingLeft = "8px";
+		savedLabel.textContent = "Saved:";
+		const savedSelect = document.createElement("select");
+		savedSelect.style.display = "none";
+		savedSelect.style.width = "calc(100% - 120px)";
+		innerBox.append(savedLabel, savedSelect);
+
 		if ("password" in this.args) {
 			rememberPasswordToggle.checkbox.checked = true;
 			passwordInput.value = this.args.password;
 		}
 
+		const UpdateOkState = ()=> {
+			if (modeInput.value === "manual") {
+				okButton.disabled = hostInput.value.trim().length === 0 || usernameInput.value.trim().length === 0 || passwordInput.value.length === 0;
+			}
+			else {
+				okButton.disabled = hostInput.value.trim().length === 0 || !savedSelect.value;
+			}
+		};
+
+		const UpdateMode = async ()=> {
+			const manual = modeInput.value === "manual";
+
+			usernameLabel.style.display = manual ? "inline-block" : "none";
+			usernameInput.style.display = manual ? "inline-block" : "none";
+			passwordLabel.style.display = manual ? "inline-block" : "none";
+			passwordInput.style.display = manual ? "inline-block" : "none";
+			rememberPasswordToggle.checkbox.style.display = manual ? "" : "none";
+			rememberPasswordToggle.label.style.display = manual ? "" : "none";
+
+			savedLabel.style.display = manual ? "none" : "inline-block";
+			savedSelect.style.display = manual ? "none" : "inline-block";
+
+			if (!manual) {
+				savedSelect.textContent = "";
+				try {
+					const url = modeInput.value === "credential" ? "vault/credential/list" : "vault/sshkey/list";
+					const response = await fetch(url);
+					const json = response.status === 200 ? await response.json() : [];
+					for (const item of json) {
+						savedSelect.append(new Option(item.name || item.username || item.guid, item.guid));
+					}
+				}
+				catch { /* leave the list empty */ }
+			}
+
+			UpdateOkState();
+		};
+
+		modeInput.onchange = UpdateMode;
+
 		okButton.onclick = ()=> {
+			if (modeInput.value !== "manual") {
+				dialog.Close();
+				this.ConnectViaCredential(hostInput.value.trim(), savedSelect.value);
+				return;
+			}
+
 			this.args.username = usernameInput.value.trim();
 
 			if (rememberPasswordToggle.checkbox.checked) {
@@ -102,11 +171,10 @@ class Ssh extends PtyHost {
 
 		hostInput.onchange = hostInput.oninput =
 		usernameInput.onchange = usernameInput.oninput =
-		passwordInput.onchange = passwordInput.oninput = ()=> {
-			okButton.disabled = hostInput.value.trim().length === 0 || usernameInput.value.trim().length === 0 || passwordInput.value.length === 0;
-		};
+		passwordInput.onchange = passwordInput.oninput =
+		savedSelect.onchange = UpdateOkState;
 
-		hostInput.oninput();
+		UpdateMode();
 
 		setTimeout(()=> hostInput.focus(), 200);
 	}
@@ -118,6 +186,11 @@ class Ssh extends PtyHost {
 
 	ConnectViaFile(target, file) {
 		const connectionString = `target=${target}\nfile=${file}`;
+		this.Connect(target, connectionString);
+	}
+
+	ConnectViaCredential(target, credential) {
+		const connectionString = `target=${target}\ncredential=${credential}`;
 		this.Connect(target, connectionString);
 	}
 

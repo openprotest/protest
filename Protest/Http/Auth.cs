@@ -505,10 +505,22 @@ internal static class Auth {
                 path.Add("/db/user/grid");
                 break;
 
-            case "passwords:read":
+            case "vault:read":
                 path.Add("/db/device/attribute");
                 path.Add("/db/user/attribute");
-                path.Add("/db/getentropy");
+                path.Add("/vault/credential/list");
+                path.Add("/vault/credential/get");
+                path.Add("/vault/sshkey/list");
+                path.Add("/vault/sshkey/get");
+                path.Add("/vault/orphans");
+                break;
+
+            case "vault:write":
+                path.Add("/vault/credential/save");
+                path.Add("/vault/credential/delete");
+                path.Add("/vault/sshkey/save");
+                path.Add("/vault/sshkey/delete");
+                path.Add("/vault/scan");
                 break;
 
             case "fetch:write":
@@ -777,6 +789,11 @@ internal static class Auth {
                 byte[] plain = Cryptography.Decrypt(cipher, Configuration.DB_KEY, Configuration.DB_KEY_IV);
 
                 AccessControl access = JsonSerializer.Deserialize<AccessControl>(plain, serializerOptions);
+
+                if (access.authorization is not null && access.authorization.Contains("passwords:read") && !access.authorization.Contains("vault:read")) {
+                    access.authorization = access.authorization.Append("vault:read").ToArray();
+                }
+
                 access.accessPath = PopulateAccessPath(access.authorization);
                 rbac.TryAdd(access.username, access);
             }

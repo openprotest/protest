@@ -6,8 +6,8 @@ class UserView extends View {
 		["mono/user.svg", "general"],
 		"first name", "middle name", "last name", "display name", "employee id", "site",
 
-		["mono/credential.svg", "authentication"],
-		"domain", "username", "password",
+		["mono/lock.svg", "authentication"],
+		"domain", "credentials", "username", "password",
 
 		["mono/contact.svg", "contact information"],
 		"e-mail", "secondary e-mail", "telephone number", "office number", "mobile number", "internal extension", "mobile extension", "fax",

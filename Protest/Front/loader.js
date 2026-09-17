@@ -67,7 +67,7 @@ const LOADER = {
 		"domain user"  : "mono/domainuser.svg",
 		"address book" : "mono/contact.svg",
 		"hidden"       : "mono/hiddenuser.svg",
-		"credentials"  : "mono/credential.svg"
+		"credentials"  : "mono/key.svg"
 	},
 
 	baseStyles: [
@@ -146,7 +146,7 @@ const LOADER = {
 		"ipdiscovery.js",
 		"reverseproxy.js",
 		"passwordgen.js",
-		"passwordstrength.js",
+		"vault.js",
 		"topology.js",
 		"encoder.js",
 		"netcalc.js",
@@ -335,7 +335,7 @@ const LOADER = {
 		case "UsersList"        : return new UsersList(command.args);
 		case "DevicesGrid"      : return new DevicesGrid();
 		case "UsersGrid"        : return new UsersGrid();
-		case "PasswordStrength" : return new PasswordStrength(command.args);
+		case "Vault"            : return new Vault(command.args);
 		case "Fetch"            : return new Fetch(command.args);
 		case "Monitor"          : return new Monitor(command.args);
 

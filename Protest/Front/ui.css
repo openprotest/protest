@@ -450,6 +450,7 @@
 }
 
 .glass > .window .win-dim {
+	z-index: 3;
 	background-color: rgba(32,32,32,.2);
 }
 

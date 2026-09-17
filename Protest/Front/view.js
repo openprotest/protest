@@ -299,12 +299,10 @@ class View extends Window {
 			const showButton = document.createElement("input");
 			showButton.type = "button";
 			showButton.value = "Show";
-			showButton.disabled = !KEEP.authorization.includes("*") && !KEEP.authorization.includes("passwords:read");
 
 			const stampButton = document.createElement("input");
 			stampButton.type = "button";
 			stampButton.value = " ";
-			stampButton.disabled = !KEEP.authorization.includes("*") && !KEEP.authorization.includes("passwords:read");
 			stampButton.style.minWidth = "40px";
 			stampButton.style.height = "32px";
 			stampButton.style.backgroundImage = "url(mono/stamp.svg?light)";
@@ -352,6 +350,24 @@ class View extends Window {
 				catch (ex) {
 					this.ConfirmBox(ex, true, "mono/error.svg");
 				}
+			};
+		}
+		else if (name.toLowerCase().includes("credentials") && !editMode) {
+			
+			valueBox.style.display = "none";
+
+			const showButton = document.createElement("input");
+			showButton.type = "button";
+			showButton.value = "Show";
+			showButton.className = "with-icon";
+			showButton.style.height = "36px";
+			showButton.style.backgroundImage = "url(mono/key.svg?light)";
+			showButton.disabled = !KEEP.authorization.includes("*") && !KEEP.authorization.includes("vault:read");
+			valueContainer.append(showButton);
+
+			showButton.onclick = async ()=> {
+				const split = value.split(";").map(o=> o.trim()).filter(o=>o.length > 0);
+				await this.ShowCredentialsDialog(split, name);
 			};
 		}
 		else if (name.toLowerCase() === "uplink" && !editMode) {
@@ -410,7 +426,6 @@ class View extends Window {
 
 					portBox.textContent = port;
 					portBox.style.backgroundImage = "url(mono/ethernetport.svg)";
-
 				}
 
 			}
@@ -433,6 +448,230 @@ class View extends Window {
 		}
 
 		return newAttribute;
+	}
+
+	async ShowCredentialsDialog(guidList, attributeName) {
+		const dialog = this.DialogBox("320px");
+		if (dialog === null) return;
+
+		const { okButton, cancelButton, innerBox, buttonBox } = dialog;
+		okButton.style.display = "none";
+		cancelButton.value = "Close";
+
+		const dialogBox = innerBox.parentElement;
+		dialogBox.style.animation = "fade-in .4s";
+		dialogBox.style.maxWidth = "480px";
+		dialogBox.style.margin = "auto auto";
+		dialogBox.style.top = "50%";
+		dialogBox.style.transform = "translateY(-50%)";
+		dialogBox.style.height = "auto";
+		dialogBox.style.paddingTop = "0";
+		dialogBox.style.maxHeight = "calc(100% - 2px)";
+		dialogBox.style.display = "flex";
+		dialogBox.style.flexDirection = "column";
+
+		innerBox.style.position = "static";
+		innerBox.style.margin = "20px";
+		innerBox.style.flex = "1 1 auto";
+		innerBox.style.minHeight = "0";
+		innerBox.style.maxHeight = "400px";
+		innerBox.style.overflowY = "auto";
+
+		buttonBox.style.position = "static";
+		buttonBox.style.paddingTop = "4px";
+		buttonBox.style.flex = "0 0 auto";
+
+		for (let i=0; i<guidList.length; i++) {
+			const credBox = await this.CreateCredentialsBox(guidList[i], attributeName, i === 0);
+			innerBox.appendChild(credBox);
+		}
+	}
+
+	async CreateCredentialsBox(guid, attributeName, setFocus=false) {
+		const container = document.createElement("div");
+		container.style.position = "relative";
+		container.style.backgroundColor = "light-dark(rgb(168,168,168), var(--clr-control))";
+		container.style.margin = "8px 4px";
+		container.style.padding = "8px";
+		container.style.border = "1px solid light-dark(var(--clr-control), rgb(128,128,128))";
+		container.style.borderRadius = "8px";
+
+		const editButton = document.createElement("button");
+		editButton.tabIndex = -1;
+		editButton.setAttribute("tip-below", "Edit");
+		editButton.style.position = "absolute";
+		editButton.style.left = "4px";
+		editButton.style.top = "4px";
+		editButton.style.width = "24px";
+		editButton.style.minWidth = "24px";
+		editButton.style.height = "24px";
+		editButton.style.fontWeight = "normal";
+		editButton.style.backgroundColor = "transparent";
+		editButton.style.backgroundImage = "url(mono/edit.svg)";
+		editButton.style.backgroundSize = "20px 20px";
+		editButton.style.backgroundPosition = "50% 50%";
+		editButton.style.backgroundRepeat = "no-repeat";
+		container.appendChild(editButton);
+
+		const removeButton = document.createElement("button");
+		removeButton.tabIndex = -1;
+		removeButton.setAttribute("tip-below", "Remove");
+		removeButton.style.position = "absolute";
+		removeButton.style.left = "36px";
+		removeButton.style.top = "4px";
+		removeButton.style.width = "24px";
+		removeButton.style.minWidth = "24px";
+		removeButton.style.height = "24px";
+		removeButton.style.fontWeight = "normal";
+		removeButton.style.backgroundColor = "transparent";
+		removeButton.style.backgroundImage = "url(mono/delete.svg)";
+		removeButton.style.backgroundSize = "20px 20px";
+		removeButton.style.backgroundPosition = "50% 50%";
+		removeButton.style.backgroundRepeat = "no-repeat";
+		container.appendChild(removeButton);
+
+		removeButton.onclick = async ()=> {
+			removeButton.disabled = true;
+
+			const obj = Object.create(null);
+			for (let i=0; i<this.attributes.childNodes.length; i++) {
+				if (this.attributes.childNodes[i].childNodes.length < 3) continue;
+				const name = this.attributes.childNodes[i].childNodes[0].value.toLowerCase();
+				const value = this.attributes.childNodes[i].childNodes[1].firstChild.value;
+				obj[name] = {v:value};
+			}
+
+			const newValue = obj[attributeName].v
+				.split(";")
+				.map(o=>o.trim())
+				.filter(o=>o !== guid)
+				.join("; ");
+
+			obj[attributeName] = {v:newValue};
+
+			const response = await fetch(`db/${this.dbTarget}/save?file=${this.args.file}`, {
+				method: "POST",
+				body: JSON.stringify(obj)
+			});
+
+			if (response.status === 200) {
+				this.link[attributeName] = {
+					v: newValue,
+					o: KEEP.username,
+					d: UI.UnixDateToTicks(new Date().getTime()),
+				};
+
+				if (this instanceof DeviceView) {
+					LOADER.devices.data[this.args.file] = this.link;
+				}
+				else if (this instanceof UserView) {
+					LOADER.users.data[this.args.file] = this.link;
+				}
+
+				this.InitializePreview();
+				container.parentElement.removeChild(container);
+			}
+		};
+
+		try {
+			const response = await fetch(`vault/credential/get?guid=${guid}`);
+			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
+			const json = await response.json();
+
+			if (json.error) {
+				editButton.disabled = true;
+				editButton.style.opacity = ".8";
+				throw "Credentials don't exists";
+			}
+
+			const titleBox = document.createElement("div");
+			titleBox.style.padding = "2px 0";
+			titleBox.style.paddingLeft = "64px";
+			titleBox.style.textAlign = "center";
+			titleBox.style.fontWeight = "bold";
+			titleBox.style.textDecoration = "underline";
+			titleBox.textContent = json.name;
+			container.appendChild(titleBox);
+
+			const CreateValue = (name, value)=> {
+				const box = document.createElement("div");
+				box.style.padding = "4px 0 0 0";
+				container.appendChild(box);
+				
+				const labelBox = document.createElement("div");
+				labelBox.style.display = "inline-block";
+				labelBox.style.width = "88px";
+				labelBox.textContent = `${name}:`;
+
+				const valueBox = document.createElement("input");
+				valueBox.style.display = "inline-block";
+				valueBox.style.width = "calc(100% - 144px)";
+				valueBox.type = "text";
+				valueBox.value = value;
+				valueBox.readOnly = true;
+
+				const stampButton = document.createElement("input");
+				stampButton.type = "button";
+				stampButton.value = " ";
+				stampButton.tabIndex = -1;
+				stampButton.style.minWidth = "40px";
+				stampButton.style.height = "32px";
+				stampButton.style.backgroundImage = "url(mono/stamp.svg?light)";
+				stampButton.style.backgroundSize = "24px 24px";
+				stampButton.style.backgroundPosition = "center center";
+				stampButton.style.backgroundRepeat = "no-repeat";
+
+				stampButton.onclick = async ()=> {
+					UI.PromptRelay(this, "stamp", value);
+
+					if (stampButton.style.animation === "") {
+						stampButton.style.animation = "bg-stamp .6s linear";
+						setTimeout(()=> stampButton.style.animation = "", 600);
+					}
+				};
+
+				box.append(labelBox, valueBox, stampButton);
+
+				return valueBox;
+			};
+
+			let first = null;
+
+			if (json.username.length > 0) {
+				const valueBox = CreateValue("Username", json.username);
+				first ??= valueBox;
+			}
+
+			if (json.password.length > 0) {
+				const valueBox = CreateValue("Password", json.password);
+				first ??= valueBox;
+			}
+
+			if (setFocus) {
+				setTimeout(()=>{first?.focus()}, WIN.ANIME_DURATION);
+			}
+
+			editButton.onclick = ()=> {
+				const vault = new Vault("credentials");
+				vault.CredentialDialog({
+					guid: guid,
+					name: json.name,
+					username: json.username,
+					hasPassword: json.password.length > 0,
+					strength: 0,
+				});
+			};
+		}
+		catch (ex) {
+			const errorBox = document.createElement("div");
+			errorBox.style.textAlign = "center";
+			errorBox.style.fontWeight = "bold";
+			errorBox.style.color = "var(--clr-error)";
+			errorBox.textContent = ex;
+			container.appendChild(errorBox);
+		}
+
+		return container;
 	}
 
 	CreateGroupTitle(icon, title) {

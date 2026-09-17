@@ -758,7 +758,6 @@ class Window {
 		const dialog = this.win.getElementsByClassName("win-dim")[0];
 		if (dialog != null) {
 			this.win.removeChild(dialog);
-			this.content.style.filter = "none";
 		}
 
 		let newWin = window.open(
@@ -827,8 +826,6 @@ class Window {
 			newWin.document.body.appendChild(popInButton);
 		}
 
-		this.content.style.filter = "none";
-
 		newWin.onresize = ()=> this.AfterResize();
 
 		popInButton.onclick = ()=> {
@@ -838,8 +835,6 @@ class Window {
 			newWin.onbeforeunload = ()=> {};
 			newWin.close();
 			this.popOutWindow = null;
-
-			this.content.style.filter = "none";
 
 			this.content.style.left = this.isMaximized ? "0" : "4px";
 			this.content.style.right = this.isMaximized ? "0" : "4px";
@@ -963,8 +958,6 @@ class Window {
 			confirmBox.style.backgroundRepeat = "no-repeat";
 		}
 
-		this.content.style.filter = "blur(4px)";
-
 		okButton.onkeydown = event=> {
 			if (event.key === "ArrowRight") { cancelButton.focus(); }
 		};
@@ -984,7 +977,6 @@ class Window {
 			once = true;
 			dim.style.filter = "opacity(0)";
 			confirmBox.style.transform = "scaleY(.2)";
-			this.content.style.filter = "none";
 
 			this.content.inert = false;
 			if (this.toolbar) {
@@ -1074,8 +1066,6 @@ class Window {
 		cancelButton.value = "Cancel";
 		buttonBox.appendChild(cancelButton);
 
-		this.content.style.filter = "blur(4px)";
-
 		dim.onmouseup = dim.onmousedown = event=> {
 			event.stopPropagation();
 			this.BringToFront();
@@ -1096,7 +1086,6 @@ class Window {
 			once = true;
 			dim.style.filter = "opacity(0)";
 			dialogBox.style.transform = "scaleY(.2)";
-			this.content.style.filter = "none";
 
 			this.content.inert = false;
 			if (this.toolbar) {

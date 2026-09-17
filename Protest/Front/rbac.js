@@ -437,7 +437,7 @@ class AccessControl extends Tabs {
 		this.inventoryGroup = this.AddPermissionGroup("Inventory", "url(mono/database.svg)");
 		this.permissionsList.push(this.AddPermissionObject("Devices",      "url(mono/devices.svg)",     this.inventoryGroup, true, true, true));
 		this.permissionsList.push(this.AddPermissionObject("Users",        "url(mono/users.svg)",       this.inventoryGroup, true, true, true));
-		this.permissionsList.push(this.AddPermissionObject("Passwords",    "url(mono/credential.svg)",  this.inventoryGroup, true, false, false));
+		this.permissionsList.push(this.AddPermissionObject("Vault",        "url(mono/vault.svg)",       this.inventoryGroup, true, true, true));
 		this.permissionsList.push(this.AddPermissionObject("Manage hosts", "url(mono/workstation.svg)", this.inventoryGroup, false, true, false));
 		this.permissionsList.push(this.AddPermissionObject("Manage users", "url(mono/user.svg)",        this.inventoryGroup, false, true, false));
 		this.permissionsList.push(this.AddPermissionObject("Fetch",        "url(mono/fetch.svg)",       this.inventoryGroup, false, true, false));

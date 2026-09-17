@@ -35,8 +35,9 @@ class DeviceView extends View {
 		["mono/directory.svg", "Domain information"],
 		"object guid", "distinguished name", "dns hostname", "created on dc",
 
-		["mono/credential.svg", "credentials"],
-		"domain", "username", "password", "ssh username", "ssh password", "vnc password", "uvnc password", "anydesk id", "anydesk password", "snmp profile"
+		["mono/lock.svg", "credentials"],
+		"domain", "credentials", "ssh credentials", "vnc credentials", "uvnc credentials", "anydesk credentials", "snmp profile",
+		"username", "password", "ssh username", "ssh password", "vnc password", "uvnc password", "anydesk id", "anydesk password"
 	];
 
 	static PRINTER_TYPES = ["fax", "multiprinter", "ticket printer", "printer"];
@@ -549,11 +550,23 @@ class DeviceView extends View {
 					file = this.args.file;
 				}
 
+				const credentialAttrNames = ["ssh credentials", "credentials"];
+
 				const sshButton = this.CreateSideButton("mono/ssh.svg", "Secure shell");
-				sshButton.onclick = ()=> new Ssh({host:sshHost, username:username, file:file});
+				sshButton.onclick = async ()=> {
+					const credential = await this.ResolveCredentialGuid(credentialAttrNames);
+					if (credential === null) return; //picker was cancelled
+					if (credential) new Ssh({host:sshHost, credential:credential});
+					else new Ssh({host:sshHost, username:username, file:file});
+				};
 
 				const sftpButton = this.CreateSideButton("mono/shared.svg", "SFTP");
-				sftpButton.onclick = ()=> new Sftp({host:sshHost, username:username, file:file});
+				sftpButton.onclick = async ()=> {
+					const credential = await this.ResolveCredentialGuid(credentialAttrNames);
+					if (credential === null) return; //picker was cancelled
+					if (credential) new Sftp({host:sshHost, credential:credential});
+					else new Sftp({host:sshHost, username:username, file:file});
+				};
 			}
 
 			if (overwriteProtocol.ftp) { //ftp
@@ -665,22 +678,26 @@ class DeviceView extends View {
 				};
 			}
 
-			const hasVncPassword = "vnc password" in this.link || "uvnc password" in this.link;
+			const hasVncPassword = "vnc password" in this.link || "uvnc password" in this.link
+				|| "vnc credentials" in this.link || "uvnc credentials" in this.link;
 
 			if (overwriteProtocol.vnc || overwriteProtocol.uvnc || ports.includes(5900) || hasVncPassword) {
 				const vncPort = overwriteProtocol.vnc || overwriteProtocol.uvnc || 5900;
 				const actionButton = this.CreateSideButton("mono/vnc.svg", "VNC");
 				actionButton.onclick = async ()=> {
-					const attribute = "vnc password" in this.link ? "vnc password"
-						: "uvnc password" in this.link ? "uvnc password"
-						: null;
+					let vncPassword = await this.ResolveCredentialPassword(["vnc credentials", "uvnc credentials"]);
 
-					let vncPassword = null;
-					if (attribute) {
-						const response = await fetch(`/db/${this.dbTarget}/attribute?file=${this.args.file}&attribute=${attribute}`);
-						if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
-						vncPassword = await response.text();
-						if (vncPassword.length === 0) vncPassword = null;
+					if (vncPassword === null) {
+						const attribute = "vnc password" in this.link ? "vnc password"
+							: "uvnc password" in this.link ? "uvnc password"
+							: null;
+
+						if (attribute) {
+							const response = await fetch(`/db/${this.dbTarget}/attribute?file=${this.args.file}&attribute=${attribute}`);
+							if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
+							vncPassword = await response.text();
+							if (vncPassword.length === 0) vncPassword = null;
+						}
 					}
 					new Vnc({ host: host, port: vncPort, password: vncPassword, file: this.args.file });
 				};
@@ -694,8 +711,9 @@ class DeviceView extends View {
 						this.DownloadVnc(host, uvncPort);
 					}
 					else {
-						let uvncPassword = null;
-						if ("uvnc password" in this.link) {
+						let uvncPassword = await this.ResolveCredentialPassword(["uvnc credentials"]);
+
+						if (uvncPassword === null && "uvnc password" in this.link) {
 							const response = await fetch(`/db/${this.dbTarget}/attribute?file=${this.args.file}&attribute=uvnc password`);
 							if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
 							uvncPassword = await response.text();
@@ -2457,11 +2475,11 @@ class DeviceView extends View {
 		const saveButton = super.Edit(isNew);
 
 		saveButton.addEventListener("click", async ()=> {
-			let obj = Object.create(null);
+			const obj = Object.create(null);
 			for (let i=0; i<this.attributes.childNodes.length; i++) {
 				if (this.attributes.childNodes[i].childNodes.length < 3) continue;
-				let name = this.attributes.childNodes[i].childNodes[0].value.toLowerCase();
-				let value = this.attributes.childNodes[i].childNodes[1].firstChild.value;
+				const name = this.attributes.childNodes[i].childNodes[0].value.toLowerCase();
+				const value = this.attributes.childNodes[i].childNodes[1].firstChild.value;
 				obj[name] = {v:value};
 			}
 
@@ -3642,6 +3660,103 @@ class DeviceView extends View {
 				console.error(ex);
 			}
 		});
+	}
+
+	//Resolves a "<prefix> credentials" attribute (";"-joined GUIDs) to a single Vault GUID.
+	//Returns: undefined if none of the given attribute names exist on this device (caller should fall back to
+	//legacy attributes); a GUID string once resolved (immediately if there's only one, otherwise after the user
+	//picks one via a dialog); or null if the user cancelled the picker.
+	async ResolveCredentialGuid(attrNames) {
+		let guids = [];
+
+		for (const attrName of attrNames) {
+			if (attrName in this.link && this.link[attrName].v.length > 0) {
+				guids = this.link[attrName].v.split(";").map(g=> g.trim()).filter(g=> g.length > 0);
+				break;
+			}
+		}
+
+		if (guids.length === 0) return undefined;
+		if (guids.length === 1) return guids[0];
+
+		let credentials = [], sshKeys = [];
+		try {
+			const [credResponse, keyResponse] = await Promise.all([
+				fetch("vault/credential/list"),
+				fetch("vault/sshkey/list")
+			]);
+			if (credResponse.status === 200) credentials = await credResponse.json();
+			if (keyResponse.status === 200) sshKeys = await keyResponse.json();
+		}
+		catch { /* fall through with empty lists; guids still shown by their raw value */ }
+
+		const options = guids.map(guid=> {
+			const cred = credentials.find(c=> c.guid === guid);
+			if (cred) return { guid, label: cred.name || cred.username || guid };
+
+			const key = sshKeys.find(k=> k.guid === guid);
+			if (key) return { guid, label: `${key.name || key.username || guid} (SSH key)` };
+
+			return { guid, label: guid };
+		});
+
+		return new Promise(resolve=> {
+			const dialog = this.DialogBox("180px");
+			if (dialog === null) { resolve(options[0].guid); return; }
+
+			const {okButton, cancelButton, innerBox} = dialog;
+			okButton.value = "Connect";
+
+			innerBox.style.padding = "20px 32px";
+
+			const label = document.createElement("div");
+			label.textContent = "Multiple credentials are linked to this device. Choose one:";
+			label.style.marginBottom = "12px";
+			innerBox.appendChild(label);
+
+			const select = document.createElement("select");
+			select.style.width = "100%";
+			for (const option of options) {
+				const optionElement = document.createElement("option");
+				optionElement.value = option.guid;
+				optionElement.textContent = option.label;
+				select.appendChild(optionElement);
+			}
+			innerBox.appendChild(select);
+
+			okButton.onclick = ()=> {
+				dialog.Close();
+				resolve(select.value);
+			};
+
+			cancelButton.onclick = ()=> {
+				dialog.Close();
+				resolve(null);
+			};
+		});
+	}
+
+	//Resolves credentials the same way as ResolveCredentialGuid, then fetches the plaintext password for VNC
+	//(unlike SSH/SFTP, VNC authentication happens in-browser, so the password has to reach the client).
+	//Returns null both when there is nothing to resolve and when the picker was cancelled - either way, the
+	//caller should treat it as "no vault credential available".
+	async ResolveCredentialPassword(attrNames) {
+		const guid = await this.ResolveCredentialGuid(attrNames);
+		if (!guid) return null;
+
+		try {
+			const response = await fetch(`vault/credential/get?guid=${guid}`);
+			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
+
+			const json = await response.json();
+			if (json.error) throw json.error;
+
+			return json.password.length > 0 ? json.password : null;
+		}
+		catch (ex) {
+			this.ConfirmBox(ex, true, "mono/error.svg");
+			return null;
+		}
 	}
 
 	DownloadRdp(host, port) {

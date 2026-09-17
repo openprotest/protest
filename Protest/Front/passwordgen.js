@@ -352,12 +352,13 @@ class PassGen extends Window {
 	}
 
 	Generate() {
-		if (!this.lowercaseToggle.checkbox.checked && !this.uppercaseToggle.checkbox.checked && !this.numbersToggle.checkbox.checked && !this.symbolsToggle.checkbox.checked)
+		if (!this.lowercaseToggle.checkbox.checked && !this.uppercaseToggle.checkbox.checked && !this.numbersToggle.checkbox.checked && !this.symbolsToggle.checkbox.checked) {
 			this.lowercaseToggle.checkbox.checked = true;
+		}
 
 		if (this.cmbOptions.value === "mem") {
 			let word = "";
-			if (this.words)
+			if (this.words) {
 				for (let i = 0; i < this.lengthRange.value; i++) {
 					if (this.lowercaseToggle.checkbox.checked && this.uppercaseToggle.checkbox.checked) {
 						let w = this.words[Math.floor(Math.random() * this.words.length)];
@@ -369,14 +370,15 @@ class PassGen extends Window {
 					else {
 						word += this.words[Math.floor(Math.random() * this.words.length)];
 					}
-
+					
 					if (i+1 < this.lengthRange.value)word += "-";
 				}
+			}
 
 			if (this.numbersToggle.checkbox.checked) {
 				let temp = word;
 				word = "";
-				for (let i = 0; i < temp.length; i++)
+				for (let i=0; i<temp.length; i++) {
 					if (Math.random() > .4) {
 						let c = temp[i].toLowerCase();
 
@@ -386,11 +388,11 @@ class PassGen extends Window {
 						else if (c === "s") word += "5";
 						else if (c === "t") word += "7";
 						else word += temp[i];
-
 					}
 					else {
 						word += temp[i];
 					}
+				}
 			}
 
 			this.passwordInput.value = word;
@@ -458,8 +460,7 @@ class PassGen extends Window {
 		if (this.lowercaseToggle.checkbox.checked) pool += 26;
 		if (this.symbolsToggle.checkbox.checked) pool += 30;
 
-		let entropy = Math.log2(pool) * this.passwordInput.value.length;
-		//same as     Math.log(pool ** this.passwordInput.value.length, 2));
+		let entropy = pool === 0 ? 0 : Math.log2(pool) * this.passwordInput.value.length;
 
 		let strength = PassGen.StrengthBar(entropy);
 		let color = strength[0];
@@ -520,7 +521,7 @@ class PassGen extends Window {
 		let comment = "";
 		let color = "";
 
-		if (entropy < 19) {
+		if (isNaN(entropy) || entropy < 19) {
 			comment = "Forbidden";
 			color = "#f00";
 		}

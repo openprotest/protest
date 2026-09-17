@@ -35,7 +35,18 @@ internal sealed class Listener {
         ["/db/device/grid"]               = (ctx, username) => DatabaseInstances.devices.GridHandler(ctx, username),
         ["/db/device/attribute"]          = (ctx, username) => DatabaseInstances.devices.AttributeValue(ctx),
 
-        ["/db/getentropy"]                = (ctx, username) => Tools.PasswordStrength.GetEntropy(),
+        ["/vault/credential/list"]        = (ctx, username) => Tools.Vault.List(),
+        ["/vault/credential/get"]         = (ctx, username) => Tools.Vault.GetSecret(ctx),
+        ["/vault/credential/save"]        = (ctx, username) => Tools.Vault.Save(ctx, username),
+        ["/vault/credential/delete"]      = (ctx, username) => Tools.Vault.Delete(ctx, username),
+
+        ["/vault/sshkey/list"]            = (ctx, username) => Tools.VaultSshKeys.List(),
+        ["/vault/sshkey/get"]             = (ctx, username) => Tools.VaultSshKeys.GetSecret(ctx),
+        ["/vault/sshkey/save"]            = (ctx, username) => Tools.VaultSshKeys.Save(ctx, username),
+        ["/vault/sshkey/delete"]          = (ctx, username) => Tools.VaultSshKeys.Delete(ctx, username),
+
+        ["/vault/scan"]                   = (ctx, username) => Tools.VaultMigration.Scan(ctx, username),
+        ["/vault/orphans"]                = (ctx, username) => Tools.VaultMigration.FindOrphans(),
 
         ["/fetch/networkinfo"]            = (ctx, username) => Protocols.Ldap.NetworkInfo(),
         ["/fetch/singledevice"]           = (ctx, username) => Tasks.Fetch.SingleDeviceSerialize(ctx, true),

@@ -248,14 +248,14 @@ class IpDiscovery extends List {
 				this.list.appendChild(element);
 
 				const newHost = {
-					element      : element,
-					key          : {v:key},
-					name         : {v:json.name},
-					ip           : {v:json.ip},
-					ipv6         : {v:json.ipv6},
-					mac          : {v:json.mac},
-					manufacturer : {v:json.manufacturer},
-					services     : {v:services}
+					element     : element,
+					key         : {v:key},
+					name        : {v:json.name},
+					ip          : {v:json.ip},
+					ipv6        : {v:json.ipv6},
+					mac         : {v:json.mac},
+					manufacturer: {v:json.manufacturer},
+					services    : {v:services}
 				};
 
 				this.link.data[key] = newHost;

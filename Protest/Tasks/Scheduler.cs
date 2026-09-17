@@ -55,11 +55,11 @@ internal static class Scheduler {
             Logger.Error(ex);
         }
 
-        jobs.TryAdd("lifeline", new Job { key = "lifeline", label = "Lifeline", enable = true, intervalHours = 8 });
-        jobs.TryAdd("watchdog", new Job { key = "watchdog", label = "Watchdog", enable = true, intervalHours = 0 });
-        jobs.TryAdd("lastseen", new Job { key = "lastseen", label = "Last seen", enable = false, intervalHours = 4 });
-        jobs.TryAdd("dataretention", new Job { key = "dataretention", label = "Data retention", enable = false, intervalHours = 168 });
-        jobs.TryAdd("backup", new Job { key = "backup", label = "Backup", enable = false, intervalHours = 60 * 24 });
+        jobs.TryAdd("lastseen",      new Job { key = "lastseen",      label = "Last seen",      enable = false, intervalHours = 2 });
+        jobs.TryAdd("lifeline",      new Job { key = "lifeline",      label = "Lifeline",       enable = true,  intervalHours = 4 });
+        jobs.TryAdd("watchdog",      new Job { key = "watchdog",      label = "Watchdog",       enable = true,  intervalHours = 0 });
+        jobs.TryAdd("dataretention", new Job { key = "dataretention", label = "Data retention", enable = false, intervalHours = 24 });
+        jobs.TryAdd("backup",        new Job { key = "backup",        label = "Backup",         enable = false, intervalHours = 24 * 30 });
 
         SaveJobs();
     }
@@ -103,9 +103,9 @@ internal static class Scheduler {
         Thread thread = new Thread(() => SchedulerLoop());
 
         task = new TaskWrapper("Scheduler") {
-            thread = thread,
-            author = origin,
-            TotalSteps = 0,
+            thread         = thread,
+            author         = origin,
+            TotalSteps     = 0,
             CompletedSteps = 0
         };
 
