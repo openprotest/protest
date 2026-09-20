@@ -50,7 +50,7 @@
 	background-color: rgb(208,208,208) !important;
 }
 
-.tabs-box > button:focus {
+.tabs-box > button:focus-visible {
 	animation: tabs-outline .3s ease-in;
 	box-shadow: var(--clr-accent) 0px -2px 0px 0px inset, var(--clr-accent) 2px 0px 0px 0px inset, var(--clr-accent) 0px 2px 0px 0px inset;
 }
