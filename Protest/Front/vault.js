@@ -83,6 +83,107 @@ class Vault extends Tabs {
 		return box;
 	}
 
+	FindUsages(guid) {
+		const devices = [];
+		for (const file in LOADER.devices.data) {
+			const entry = LOADER.devices.data[file];
+			for (const key in entry) {
+				if (!key.toLowerCase().includes("credentials")) continue;
+				const value = entry[key].v;
+				if (!value) continue;
+				if (value.split(";").map(o=> o.trim()).includes(guid)) {
+					devices.push({file, entry});
+					break;
+				}
+			}
+		}
+
+		const users = [];
+		for (const file in LOADER.users.data) {
+			const entry = LOADER.users.data[file];
+			for (const key in entry) {
+				if (!key.toLowerCase().includes("credentials")) continue;
+				const value = entry[key].v;
+				if (!value) continue;
+				if (value.split(";").map(o=> o.trim()).includes(guid)) {
+					users.push({file, entry});
+					break;
+				}
+			}
+		}
+
+		return {devices, users};
+	}
+
+	ShowWhereUsed(guid, dialog, whereButton) {
+		const {okButton, cancelButton, innerBox} = dialog;
+
+		const dialogBox = innerBox.parentElement;
+		dialogBox.style.transition = ".4s";
+		dialogBox.style.maxHeight = "calc(100% - 2px)";
+
+		innerBox.textContent = "";
+		innerBox.style.display = "block";
+		innerBox.style.padding = "16px 32px";
+
+		okButton.style.display = "none";
+		cancelButton.value = "Close";
+		whereButton.style.display = "none";
+
+		const {devices, users} = this.FindUsages(guid);
+
+		if (devices.length === 0 && users.length === 0) {
+			const noneBox = document.createElement("div");
+			noneBox.textContent = "Not used by any device or user.";
+			innerBox.appendChild(noneBox);
+			return;
+		}
+
+		const CreateSection = (label, items, ListWindow, resolveColumns, onOpen)=> {
+			const title = document.createElement("div");
+			title.textContent = `${label} (${items.length})`;
+			title.style.position = "relative"; //anchors the tip-below tooltip to itself, not to innerBox
+			title.style.display = "inline-block";
+			title.style.fontWeight = "600";
+			title.style.margin = innerBox.childElementCount > 0 ? "16px 0 4px 0" : "0 0 4px 0";
+			title.style.cursor = "pointer";
+			title.style.textDecoration = "underline";
+			title.setAttribute("tip-below", `Show all in ${label.toLowerCase()}`);
+			title.onclick = ()=> new ListWindow({find: guid});
+			innerBox.appendChild(title);
+
+			const container = document.createElement("div");
+			container.style.position = "relative";
+			container.style.height = "320px";
+			innerBox.appendChild(container);
+
+			const listBox = new ListBox({
+				firstColumnOffset: "4px",
+				onDoubleClick: data=> onOpen(data.file)
+			});
+			listBox.SetupTitleBar();
+			listBox.list.style.border = "rgb(82,82,82) solid 2px";
+			container.append(listBox.listTitleOuter, listBox.list);
+
+			listBox.SetupColumns(resolveColumns);
+			listBox.SetItems(items);
+		};
+
+		if (devices.length > 0) {
+			CreateSection("Devices", devices, DevicesList, [
+				{label:"Name", value:d=> d.entry.name?.v || d.entry.hostname?.v || d.entry.ip?.v || d.file},
+				{label:"Type", value:d=> d.entry.type?.v || ""}
+			], file=> LOADER.OpenDeviceByFile(file));
+		}
+
+		if (users.length > 0) {
+			CreateSection("Users", users, UsersList, [
+				{label:"Name",     value:d=> d.entry["display name"]?.v || d.entry.username?.v || d.file},
+				{label:"Username", value:d=> d.entry.username?.v || ""}
+			], file=> LOADER.OpenUserByFile(file));
+		}
+	}
+
 	async ShowCredentials() {
 		this.args = "credentials";
 		this.tabsPanel.textContent = "";
@@ -274,27 +375,39 @@ class Vault extends Tabs {
 		guidLabel.textContent = "GUID:";
 		const guidInput = document.createElement("input");
 		guidInput.type = "text";
-		guidInput.value = object.guid;
+		guidInput.value = object ? object.guid : "";
 		guidInput.style.all = "unset";
 		guidInput.style.padding = "0 8px";
 		guidInput.style.gridArea = "4 / 3";
 		innerBox.append(guidLabel, guidInput);
 
+		const statusLabel = document.createElement("div");
+		statusLabel.style.visibility = "hidden";
+		statusLabel.style.gridArea = "3 / 5";
+		statusLabel.style.fontWeight = "bold";
+		statusLabel.style.color = "var(--clr-error)";
+		innerBox.appendChild(statusLabel);
+
 		showButton.onclick = async ()=> {
 			if (showButton.value === "Show") {
 				showButton.disabled = true;
 
+				let statusCode = 0;
 				try {
 					const response = await fetch(`vault/credential/get?guid=${object.guid}`);
+					statusCode = response.status;
 					if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
 
 					const json = await response.json();
 					if (json.error) throw json.error;
 
+					statusLabel.style.visibility = "hidden";
+
 					passwordInput.value = json.password;
 				}
 				catch (ex) {
-					this.ConfirmBox(ex, true, "mono/error.svg");
+					statusLabel.textContent = `Status code: ${statusCode}`;
+					statusLabel.style.visibility = "visible";
 				}
 				finally {
 					passwordInput.type = "text";
@@ -313,12 +426,16 @@ class Vault extends Tabs {
 			usernameInput.value = object.username;
 		}
 
-		const whereButton = document.createElement("input");
-		whereButton.type = "button";
-		whereButton.value = "Where is used";
-		whereButton.style.position = "absolute";
-		whereButton.style.right = "8px";
-		buttonBox.appendChild(whereButton);
+		if (object && object.uses > 0) {
+			const whereButton = document.createElement("input");
+			whereButton.type = "button";
+			whereButton.value = "Where is used";
+			whereButton.style.position = "absolute";
+			whereButton.style.right = "8px";
+			buttonBox.appendChild(whereButton);
+
+			whereButton.onclick = ()=> this.ShowWhereUsed(object.guid, dialog, whereButton);
+		}
 
 		okButton.onclick = async ()=> {
 			try {
@@ -350,19 +467,6 @@ class Vault extends Tabs {
 			catch (ex) {
 				this.ConfirmBox(ex, true, "mono/error.svg");
 			}
-		};
-
-		whereButton.onclick = ()=> {
-			const dialogBox = innerBox.parentElement;
-			dialogBox.style.transition = ".4s";
-			dialogBox.style.maxHeight = "calc(100% - 2px)";
-
-			innerBox.textContent = "";
-
-			okButton.style.display = "none";
-			cancelButton.value = "Close";
-			whereButton.style.display = "none";
-
 		};
 
 		setTimeout(()=> { nameInput.focus() }, 200);
@@ -512,7 +616,7 @@ class Vault extends Tabs {
 		const dialog = this.DialogBox("340px");
 		if (dialog === null) return;
 
-		const {okButton, innerBox} = dialog;
+		const {okButton, cancelButton, innerBox, buttonBox} = dialog;
 
 		okButton.value = "Save";
 
@@ -647,6 +751,17 @@ class Vault extends Tabs {
 				this.ConfirmBox(ex, true, "mono/error.svg");
 			}
 		};
+
+		if (object && object.uses > 0) {
+			const whereButton = document.createElement("input");
+			whereButton.type = "button";
+			whereButton.value = "Where is used";
+			whereButton.style.position = "absolute";
+			whereButton.style.right = "8px";
+			buttonBox.appendChild(whereButton);
+
+			whereButton.onclick = ()=> this.ShowWhereUsed(object.guid, dialog, whereButton);
+		}
 
 		setTimeout(()=>{ nameInput.focus() }, 200);
 	}
