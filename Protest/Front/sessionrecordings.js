@@ -3,7 +3,7 @@ class SessionRecordings extends List {
 	constructor(args) {
 		super(args);
 
-		this.AddCssDependencies("list.css");
+		Window.AddCssDependencies("list.css");
 
 		this.SetTitle(this.args.deviceName ? `Session recordings - ${this.args.deviceName}` : "Session recordings");
 		this.SetIcon("mono/screenrecord.svg");

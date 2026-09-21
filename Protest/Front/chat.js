@@ -21,7 +21,7 @@ class Chat extends Window {
 	constructor() {
 		super();
 
-		this.AddCssDependencies("chat.css");
+		Window.AddCssDependencies("chat.css");
 
 		this.SetTitle("Team chat");
 		this.SetIcon("mono/chat.svg");

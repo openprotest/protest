@@ -5,7 +5,7 @@ class Scheduler extends List {
 
 		this.args = args ?? {filter:"", find:"", sort:"", select:null};
 
-		this.AddCssDependencies("list.css");
+		Window.AddCssDependencies("list.css");
 
 		const columns = ["name", "status", "enabled", "interval", "lastrun"];
 		this.SetupColumns(columns);

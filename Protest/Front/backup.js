@@ -5,7 +5,7 @@ class Backup extends List {
 
 		this.args = args ?? {filter:"", find:"", sort:"", select:null};
 
-		this.AddCssDependencies("list.css");
+		Window.AddCssDependencies("list.css");
 
 		this.SetTitle("Backup");
 		this.SetIcon("mono/backup.svg");

@@ -150,7 +150,7 @@ class PortScan extends Console {
 			timeout: 2000,
 		};
 
-		this.AddCssDependencies("tools.css");
+		Window.AddCssDependencies("tools.css");
 
 		this.hashtable = Object.create(null); //contains all the ping elements
 		this.pending = [];                    //pending request

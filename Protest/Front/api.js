@@ -4,7 +4,7 @@ class Api extends List {
 		super();
 		this.args = args ?? {filter:"", find:"", sort:"", select:null};
 
-		this.AddCssDependencies("list.css");
+		Window.AddCssDependencies("list.css");
 
 		this.SetTitle("API links");
 		this.SetIcon("mono/carabiner.svg");

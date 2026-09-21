@@ -291,6 +291,8 @@ document.body.onbeforeunload = ()=> {
 taskbar.oncontextmenu = ()=> false;
 
 class Window {
+	static cssDependencies = [];
+
 	constructor() {
 		this.isMaximized = false;
 		this.isMinimized = false;
@@ -300,7 +302,7 @@ class Window {
 		this.defaultElement = null;
 		this.args = Object.create(null);
 		this.messagesQueue = [];
-		this.cssDependencies = [];
+		
 		this.toolbar = null;
 
 		WIN.startX += 2;
@@ -774,8 +776,8 @@ class Window {
 		for (let i = 0; i < LOADER.baseStyles.length; i++)
 			newWin.document.write(`<link rel='stylesheet' href='${LOADER.baseStyles[i]}'>`);
 
-		for (let i = 0; i < this.cssDependencies.length; i++)
-			newWin.document.write(`<link rel='stylesheet' href='${this.cssDependencies[i]}'>`);
+		for (let i = 0; i < Window.cssDependencies.length; i++)
+			newWin.document.write(`<link rel='stylesheet' href='${Window.cssDependencies[i]}'>`);
 
 		newWin.document.close();
 
@@ -1320,7 +1322,7 @@ class Window {
 		}, 5000);
 	}
 
-	AddCssDependencies(filename) {
+	static AddCssDependencies(filename) {
 		if (document.head.querySelectorAll(`link[href$='${filename}']`).length === 0) {
 			const cssLink = document.createElement("link");
 			cssLink.rel = "stylesheet";
@@ -1328,8 +1330,8 @@ class Window {
 			document.head.appendChild(cssLink);
 		}
 
-		if (!this.cssDependencies.includes(filename)) {
-			this.cssDependencies.push(filename);
+		if (!Window.cssDependencies.includes(filename)) {
+			Window.cssDependencies.push(filename);
 		}
 	}
 }

@@ -4,7 +4,7 @@ class List extends Window {
 		super();
 
 		this.args = { select: null, sort: "", filter: "", find: "", ...args };
-		this.AddCssDependencies("list.css");
+		Window.AddCssDependencies("list.css");
 
 		this.link = null;
 

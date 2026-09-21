@@ -5,7 +5,7 @@ class AccessControl extends Tabs {
 
 		this.args = args ?? "";
 
-		this.AddCssDependencies("list.css");
+		Window.AddCssDependencies("list.css");
 
 		this.SetTitle("Role-based access control");
 		this.SetIcon("mono/rbac.svg");

@@ -3,7 +3,7 @@ class Wmi extends Window {
 	constructor(args) {
 		super();
 
-		this.AddCssDependencies("wmi.css");
+		Window.AddCssDependencies("wmi.css");
 
 		this.args = args ?? { target: "", query: "" };
 

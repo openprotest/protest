@@ -13,7 +13,7 @@ class Log extends Window {
 		this.hasEnded = false;
 		this.isLoading = false;
 
-		this.AddCssDependencies("list.css");
+		Window.AddCssDependencies("list.css");
 
 		this.SetTitle("Log");
 		this.SetIcon("mono/log.svg");

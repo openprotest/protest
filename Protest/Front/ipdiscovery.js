@@ -29,7 +29,7 @@ class IpDiscovery extends List {
 		this.SetTitle("IP discovery");
 		this.SetIcon("mono/ipdiscovery.svg");
 
-		this.AddCssDependencies("list.css");
+		Window.AddCssDependencies("list.css");
 
 		const columns = ["name", "ip", "ipv6", "mac", "manufacturer", "services"];
 		this.SetupColumns(columns);

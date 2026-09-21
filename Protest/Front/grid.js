@@ -8,7 +8,7 @@ class Grid extends Window {
 		this.hideNull = [];
 		this.mods = Object.create(null);
 
-		this.AddCssDependencies("grid.css");
+		Window.AddCssDependencies("grid.css");
 
 		this.content.style.overflow = "hidden";
 

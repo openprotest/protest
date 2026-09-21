@@ -22,8 +22,8 @@ class Monitor extends Window {
 			return;
 		}
 
-		this.AddCssDependencies("monitor.css");
-		this.AddCssDependencies("wmi.css");
+		Window.AddCssDependencies("monitor.css");
+		Window.AddCssDependencies("wmi.css");
 
 		if (this.link.name && this.link.name.v.length > 0) {
 			this.SetTitle(`Resource monitor - ${this.link.name.v}`);

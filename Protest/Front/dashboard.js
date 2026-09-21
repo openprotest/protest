@@ -8,6 +8,6 @@ class Dashboard extends Window {
 		this.SetTitle("Dashboard");
 		this.SetIcon("mono/dashboard.svg");
 
-		//this.AddCssDependencies("dashboard.css");
+		//Window.AddCssDependencies("dashboard.css");
 	}
 }

@@ -37,8 +37,8 @@ class Issues extends List {
 		this.SetTitle("Issues");
 		this.SetIcon("mono/issues.svg");
 
-		this.AddCssDependencies("issues.css");
-		this.AddCssDependencies("list.css");
+		Window.AddCssDependencies("issues.css");
+		Window.AddCssDependencies("list.css");
 
 		const columns = ["severity", "issue", "name", "identifier", "category", "source"];
 		this.SetupColumns(columns);

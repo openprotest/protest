@@ -283,7 +283,7 @@ class HexViewer extends Window {
 		this.SetIcon("mono/hexviewer.svg");
 		this.SetTitle("Hex viewer");
 
-		this.AddCssDependencies("hexviewer.css");
+		Window.AddCssDependencies("hexviewer.css");
 
 		this.content.classList.add("hexviewer-content");
 

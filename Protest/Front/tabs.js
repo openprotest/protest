@@ -3,7 +3,7 @@ class Tabs extends Window {
 	constructor() {
 		super();
 
-		this.AddCssDependencies("tabs.css");
+		Window.AddCssDependencies("tabs.css");
 
 		this.tabsList = [];
 		this.content.classList.add("tabs-content");

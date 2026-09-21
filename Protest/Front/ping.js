@@ -19,7 +19,7 @@ class Ping extends Console {
 		if (this.args.interval < 1) this.args.interval = 1;
 		if (this.args.interval > 5000) this.args.interval = 5000;
 
-		this.AddCssDependencies("tools.css");
+		Window.AddCssDependencies("tools.css");
 
 		this.count = 0;
 		this.hashtable = Object.create(null);

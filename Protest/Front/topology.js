@@ -50,7 +50,7 @@ class Topology extends Window {
 		super();
 		this.args = args ?? { zoom: 1 };
 
-		this.AddCssDependencies("topology.css");
+		Window.AddCssDependencies("topology.css");
 
 		this.SetTitle("Topology");
 		this.SetIcon("mono/topology.svg");

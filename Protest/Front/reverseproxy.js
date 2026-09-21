@@ -10,7 +10,7 @@ class ReverseProxy extends List {
 		super(args);
 		this.args = args ?? {filter:"", find:"", sort:"", select:null, interval:1000};
 
-		this.AddCssDependencies("list.css");
+		Window.AddCssDependencies("list.css");
 
 		this.SetTitle("Reverse proxy");
 		this.SetIcon("mono/reverseproxy.svg");

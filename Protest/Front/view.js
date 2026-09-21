@@ -3,7 +3,7 @@ class View extends Window {
 	constructor(args) {
 		super();
 
-		this.AddCssDependencies("view.css");
+		Window.AddCssDependencies("view.css");
 
 		this.lastWidthValue = 0;
 

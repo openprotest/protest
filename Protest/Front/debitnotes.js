@@ -12,8 +12,8 @@ class DebitNotes extends Window {
 		this.selectedDebit = null;
 		this.selectedElement = null;
 
-		this.AddCssDependencies("debitnotes.css");
-		this.AddCssDependencies("list.css");
+		Window.AddCssDependencies("debitnotes.css");
+		Window.AddCssDependencies("list.css");
 
 		this.SetTitle("Debit notes");
 		this.SetIcon("mono/notes.svg");

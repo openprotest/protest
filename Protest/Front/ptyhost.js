@@ -189,8 +189,8 @@ class PtyHost extends Window {
 			scrollback: PtyHost.DEFAULT_SCROLLBACK
 		}, args);
 
-		this.AddCssDependencies("ptyhost.css");
-		this.AddCssDependencies("xterm/xterm.css");
+		Window.AddCssDependencies("ptyhost.css");
+		Window.AddCssDependencies("xterm/xterm.css");
 
 		this.term = null;
 		this.fitAddon = null;
@@ -995,7 +995,7 @@ class TerminalRecording extends PtyHost {
 	constructor(args) {
 		super(args ?? {});
 
-		this.AddCssDependencies("recordingplayback.css");
+		Window.AddCssDependencies("recordingplayback.css");
 
 		this.AddToolbarSeparator();
 		this.AddSendToChatButton();

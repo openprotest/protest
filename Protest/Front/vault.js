@@ -5,7 +5,7 @@ class Vault extends Tabs {
 
 		this.args = args ?? "";
 
-		this.AddCssDependencies("list.css");
+		Window.AddCssDependencies("list.css");
 
 		this.SetTitle("Vault");
 		this.SetIcon("mono/vault.svg");

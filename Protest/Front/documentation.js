@@ -5,8 +5,8 @@ class Documentation extends Window {
 
 		this.args = args ?? { keywords: "" };
 
-		this.AddCssDependencies("documentation.css");
-		this.AddCssDependencies("list.css");
+		Window.AddCssDependencies("documentation.css");
+		Window.AddCssDependencies("list.css");
 
 		this.SetTitle("Documentation");
 		this.SetIcon("mono/documentation.svg");

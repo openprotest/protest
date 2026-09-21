@@ -29,7 +29,7 @@ class DnsLookup extends Console {
 			isRecursive  : true
 		};
 
-		this.AddCssDependencies("tools.css");
+		Window.AddCssDependencies("tools.css");
 
 		this.hashtable = Object.create(null); //contains all elements
 

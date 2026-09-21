@@ -2961,7 +2961,7 @@ class DeviceView extends View {
 			txtL.onclick = ()=> {
 				if (obj.link !== null && obj.link.length > 0) return;
 
-				this.AddCssDependencies("list.css");
+				Window.AddCssDependencies("list.css");
 
 				const dim = document.createElement("div");
 				dim.style.top = "0";

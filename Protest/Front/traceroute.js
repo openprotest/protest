@@ -5,7 +5,7 @@ class TraceRoute extends Console {
 
 		this.args = args ? args : { entries: [] };
 
-		this.AddCssDependencies("tools.css");
+		Window.AddCssDependencies("tools.css");
 
 		this.hashtable = Object.create(null); //contains all the ping elements
 		this.pending = [];                    //pending request

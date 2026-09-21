@@ -7,7 +7,7 @@ class Sftp extends Window {
 		this.args = args;
 		this.queue = Object.create(null);
 
-		this.AddCssDependencies("files.css");
+		Window.AddCssDependencies("files.css");
 
 		this.SetTitle("SFTP");
 		this.SetIcon("mono/shared.svg");
@@ -99,13 +99,17 @@ class Sftp extends Window {
 	ConnectDialog(target, isNew=false) {
 		const dialog = this.DialogBox("240px");
 		if (dialog === null) return;
-
+		
 		const {okButton, cancelButton, innerBox} = dialog;
-
+		
 		innerBox.parentElement.style.maxWidth = "400px";
-		innerBox.parentElement.parentElement.onclick = event=> { event.stopPropagation(); };
-
+		innerBox.parentElement.parentElement.onclick = event=> event.stopPropagation();
+		
 		innerBox.style.margin = "20px 8px 0 8px";
+
+		const methodBox = new FewBox(["Manual", "Credentials", "SSH key"]);
+		innerBox.appendChild(methodBox);
+		return;
 
 		const hostLabel = document.createElement("div");
 		hostLabel.style.display = "inline-block";

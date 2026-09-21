@@ -9,7 +9,7 @@ class Vnc extends Window {
 
 		this.args = args ?? Object.create(null);
 
-		this.AddCssDependencies("vnc.css");
+		Window.AddCssDependencies("vnc.css");
 
 		this.rfb = null;
 
@@ -504,7 +504,7 @@ class VncRecording extends Vnc {
 	constructor(args) {
 		super({ ...(args ?? {}), isRecording: true });
 
-		this.AddCssDependencies("recordingplayback.css");
+		Window.AddCssDependencies("recordingplayback.css");
 
 		this.canvasBox.style.bottom = "72px";
 

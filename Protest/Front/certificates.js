@@ -5,7 +5,7 @@ class Certificates extends List {
 
 		this.args = args ?? {filter:"", find:"", sort:"", select:null};
 
-		this.AddCssDependencies("list.css");
+		Window.AddCssDependencies("list.css");
 
 		this.SetTitle("Certificates");
 		this.SetIcon("mono/certificate.svg");

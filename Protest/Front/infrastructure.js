@@ -5,7 +5,7 @@ class Infrastructure extends Tabs {
 
 		this.args = args ?? "";
 
-		this.AddCssDependencies("list.css");
+		Window.AddCssDependencies("list.css");
 
 		this.SetTitle("Infrastructure");
 		this.SetIcon("mono/infrastructure.svg");

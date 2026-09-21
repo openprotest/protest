@@ -5,7 +5,7 @@ class AddressBook extends Window {
 
 		this.args = args ?? {view:"card", search:""};
 
-		this.AddCssDependencies("addressbook.css");
+		Window.AddCssDependencies("addressbook.css");
 
 		this.SetTitle("Address book");
 		this.SetIcon("mono/addressbook.svg");

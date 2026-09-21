@@ -6,8 +6,8 @@ class Watchdog extends Window {
 	constructor() {
 		super();
 
-		this.AddCssDependencies("list.css");
-		this.AddCssDependencies("watchdog.css");
+		Window.AddCssDependencies("list.css");
+		Window.AddCssDependencies("watchdog.css");
 
 		this.SetTitle("Watchdog");
 		this.SetIcon("mono/watchdog.svg");

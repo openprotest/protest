@@ -43,7 +43,7 @@ class Snmp extends Window {
 	constructor(args) {
 		super();
 
-		this.AddCssDependencies("snmp.css");
+		Window.AddCssDependencies("snmp.css");
 
 		this.args = args ?? { target: "", community:"", oid:"" };
 

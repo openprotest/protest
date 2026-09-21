@@ -24,7 +24,7 @@ class Mdns extends Console {
 			additionalRrs : false
 		};
 
-		this.AddCssDependencies("tools.css");
+		Window.AddCssDependencies("tools.css");
 
 		this.hashtable = Object.create(null); //contains all elements
 
