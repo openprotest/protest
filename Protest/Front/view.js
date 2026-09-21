@@ -291,10 +291,10 @@ class View extends Window {
 		if (name.toLowerCase().includes("password") && !editMode) {
 			valueBox.value = "";
 			valueBox.style.display = "none";
-
+			
 			const preview = document.createElement("div");
-			preview.style.display = "none";
 			preview.className = "view-password-preview";
+			preview.style.display = "none";
 
 			const showButton = document.createElement("input");
 			showButton.type = "button";
@@ -322,13 +322,26 @@ class View extends Window {
 					preview.style.display = "inline-block";
 					showButton.style.display = "none";
 
+					const countdown = document.createElement("span");
+					countdown.className = "view-countdown";
+					preview.after(countdown);
+
+					const cdLeft = document.createElement("div");
+					cdLeft.appendChild(document.createElement("div"));
+					countdown.appendChild(cdLeft);
+
+					const cdRight = document.createElement("div");
+					cdRight.appendChild(document.createElement("div"));
+					countdown.appendChild(cdRight);
+
 					setTimeout(()=> {
 						if (!this.isClosed) {
 							preview.textContent = "";
 							preview.style.display = "none";
 							showButton.style.display = "inline-block";
+							valueContainer.removeChild(countdown);
 						}
-					}, 15000);
+					}, 20_000);
 				}
 				catch (ex) {
 					this.ConfirmBox(ex, true, "mono/error.svg");
@@ -482,15 +495,29 @@ class View extends Window {
 		buttonBox.style.flex = "0 0 auto";
 
 		for (let i=0; i<guidList.length; i++) {
-			const credBox = await this.CreateCredentialsBox(guidList[i], attributeName, i === 0);
+			const credBox = await this.CreateCredentialsBox(guidList[i], attributeName, i===0);
 			innerBox.appendChild(credBox);
 		}
+
+		const countdown = document.createElement("span");
+		countdown.className = "view-countdown";
+		buttonBox.appendChild(countdown);
+
+		const cdLeft = document.createElement("div");
+		cdLeft.appendChild(document.createElement("div"));
+		countdown.appendChild(cdLeft);
+
+		const cdRight = document.createElement("div");
+		cdRight.appendChild(document.createElement("div"));
+		countdown.appendChild(cdRight);
+
+		setTimeout(()=>dialog.Close(), 20_000);
 	}
 
 	async CreateCredentialsBox(guid, attributeName, setFocus=false) {
 		const container = document.createElement("div");
 		container.style.position = "relative";
-		container.style.backgroundColor = "light-dark(rgb(168,168,168), var(--clr-control))";
+		container.style.backgroundColor = "rgb(168,168,168)";
 		container.style.margin = "8px 4px";
 		container.style.padding = "8px";
 		container.style.border = "1px solid light-dark(var(--clr-control), rgb(128,128,128))";
@@ -606,6 +633,7 @@ class View extends Window {
 				const valueBox = document.createElement("input");
 				valueBox.style.display = "inline-block";
 				valueBox.style.width = "calc(100% - 144px)";
+				valueBox.style.fontWeight = "600";
 				valueBox.type = "text";
 				valueBox.value = value;
 				valueBox.readOnly = true;

@@ -3,6 +3,7 @@ using System.IO;
 using System.Net;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading;
 using Protest.Http;
 
@@ -12,15 +13,25 @@ internal static class VaultSshKeys {
     private static readonly Lock mutex = new Lock();
 
     //SshKeyEntry uses public fields, not properties - IncludeFields is required or System.Text.Json silently ignores them all
-    private static readonly JsonSerializerOptions serializerOptions = new JsonSerializerOptions { IncludeFields = true };
+    private static readonly JsonSerializerOptions serializerOptions = new JsonSerializerOptions {
+        IncludeFields = true,
+        Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase, allowIntegerValues: false) }
+    };
 
     public sealed class SshKeyEntry {
         public Guid guid;
-        public string name       = String.Empty;
-        public string username   = String.Empty;
-        public string privateKey = String.Empty;
-        public string passphrase = String.Empty;
-        public string publicKey  = String.Empty;
+        public string                            name           = String.Empty;
+        public string                            username       = String.Empty;
+        public string                            privateKey     = String.Empty;
+        public string                            passphrase     = String.Empty;
+        public string                            publicKey      = String.Empty;
+        public VaultAccessControl.PermissionMode permissionMode = VaultAccessControl.PermissionMode.None;
+        public string[]                          permissionList = Array.Empty<string>();
+    }
+
+    public static bool IsAllowed(SshKeyEntry entry, string username) {
+        if (entry is null) return false;
+        return VaultAccessControl.IsAllowed(entry.permissionMode, entry.permissionList, username);
     }
 
     public static List<SshKeyEntry> Load() {
@@ -68,7 +79,14 @@ internal static class VaultSshKeys {
             builder.Append($"\"username\":\"{Data.EscapeJsonText(entries[i].username)}\",");
             builder.Append($"\"publicKey\":\"{Data.EscapeJsonText(entries[i].publicKey)}\",");
             builder.Append($"\"hasPassphrase\":{(entries[i].passphrase.Length > 0 ? "true" : "false")},");
-            builder.Append($"\"uses\":{uses}");
+            builder.Append($"\"uses\":{uses},");
+            builder.Append($"\"permissionMode\":{JsonSerializer.Serialize(entries[i].permissionMode, serializerOptions)},");
+            builder.Append("\"permissionList\":[");
+            for (int j = 0; j < (entries[i].permissionList?.Length ?? 0); j++) {
+                if (j > 0) builder.Append(',');
+                builder.Append($"\"{Data.EscapeJsonText(entries[i].permissionList[j])}\"");
+            }
+            builder.Append(']');
             builder.Append('}');
         }
 
@@ -76,7 +94,7 @@ internal static class VaultSshKeys {
         return Encoding.UTF8.GetBytes(builder.ToString());
     }
 
-    public static byte[] GetSecret(HttpListenerContext ctx) {
+    public static byte[] GetSecret(HttpListenerContext ctx, string username) {
         Dictionary<string, string> parameters = Listener.ParseQuery(ctx);
         if (parameters is null || !parameters.TryGetValue("guid", out string guidString) || !Guid.TryParse(guidString, out Guid guid)) {
             return Data.CODE_INVALID_ARGUMENT.Array;
@@ -84,6 +102,10 @@ internal static class VaultSshKeys {
 
         SshKeyEntry entry = Load().Find(e => e.guid == guid);
         if (entry is null) return Data.CODE_NOT_FOUND.Array;
+
+        if (!IsAllowed(entry, username)) {
+            return Data.CODE_UNAUTHORIZED.Array;
+        }
 
         StringBuilder builder = new StringBuilder();
         builder.Append('{');
@@ -111,6 +133,8 @@ internal static class VaultSshKeys {
             incoming.privateKey ??= String.Empty;
             incoming.passphrase ??= String.Empty;
             incoming.publicKey  ??= String.Empty;
+
+            incoming.permissionList = VaultAccessControl.NormalizePermissionList(incoming.permissionList);
 
             List<SshKeyEntry> entries = Load();
             SshKeyEntry existing = incoming.guid != Guid.Empty ? entries.Find(e => e.guid == incoming.guid) : null;

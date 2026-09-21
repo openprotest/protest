@@ -513,6 +513,7 @@ internal static class Auth {
                 path.Add("/vault/sshkey/list");
                 path.Add("/vault/sshkey/get");
                 path.Add("/vault/orphans");
+                path.Add("/vault/users");
                 break;
 
             case "vault:write":
@@ -839,6 +840,29 @@ internal static class Auth {
             }
             builder.Append(']');
 
+            builder.Append('}');
+
+            first = false;
+        }
+
+        builder.Append(']');
+
+        return Encoding.UTF8.GetBytes(builder.ToString());
+    }
+
+    //minimal, non-sensitive username listing - used to populate per-entry access lists (e.g. Vault SSH key whitelist/blacklist)
+    internal static byte[] ListUsernames() {
+        StringBuilder builder = new StringBuilder();
+        builder.Append('[');
+
+        bool first = true;
+        foreach (KeyValuePair<string, AccessControl> access in rbac) {
+            if (!first) builder.Append(',');
+
+            builder.Append('{');
+            builder.Append($"\"username\":\"{Data.EscapeJsonText(access.Value.username)}\",");
+            builder.Append($"\"alias\":\"{Data.EscapeJsonText(access.Value.alias)}\",");
+            builder.Append($"\"color\":\"{Data.EscapeJsonText(access.Value.color)}\"");
             builder.Append('}');
 
             first = false;

@@ -60,7 +60,7 @@ class Vault extends Tabs {
 		const bar = document.createElement("div");
 		bar.style.display = "inline-block";
 		bar.style.width = "40px";
-		bar.style.height = "12px";
+		bar.style.height = "14px";
 		bar.style.flexShrink = "0";
 		bar.style.border = "1px solid rgb(64,64,64)";
 		bar.style.borderRadius = "2px";
@@ -81,6 +81,130 @@ class Vault extends Tabs {
 		}
 
 		return box;
+	}
+
+	CreatePermissionsPanel(innerBox, gridColumn, gridRow, object, onModeChange) {
+		const permissionsPanel = document.createElement("div");
+		permissionsPanel.style.gridColumn = gridColumn;
+		permissionsPanel.style.gridRow = gridRow;
+		permissionsPanel.style.height = "100%";
+		permissionsPanel.style.paddingLeft = "8px";
+		permissionsPanel.style.marginLeft = "12px";
+		permissionsPanel.style.borderLeft = "2px solid var(--clr-control)";
+		permissionsPanel.style.display = "flex";
+		permissionsPanel.style.flexDirection = "column";
+		innerBox.appendChild(permissionsPanel);
+
+		const permissionMode = document.createElement("select");
+		permissionMode.style.width = "100%";
+
+		[
+			["none",      "Allow everyone"],
+			["whitelist", "Whitelist mode"],
+			["blacklist", "Blacklist mode"]
+		].forEach(([value, label])=> {
+			const option = document.createElement("option");
+			option.value = value;
+			option.textContent = label;
+			permissionMode.appendChild(option);
+		});
+		permissionMode.value = object?.permissionMode ?? "none";
+		permissionMode.disabled = true; //re-enabled once the RBAC username list has loaded
+		permissionsPanel.appendChild(permissionMode);
+
+		const permissionUsersContainer = document.createElement("div");
+		permissionUsersContainer.style.position = "relative";
+		permissionUsersContainer.style.flex = "1";
+		permissionUsersContainer.style.marginTop = "8px";
+		permissionUsersContainer.style.display = permissionMode.value === "none" ? "none" : "block";
+		permissionsPanel.appendChild(permissionUsersContainer);
+
+		let selectedUsers = new Set(object?.permissionList ?? []);
+		let previousPermissionMode = permissionMode.value;
+
+		const permissionsListBox = new ListBox({firstColumnOffset: "48px"});
+		permissionsListBox.SetupTitleBar();
+		permissionsListBox.SetupBuiltInSort();
+		permissionsListBox.list.style.border = "rgb(82,82,82) solid 2px";
+		permissionsListBox.list.addEventListener("keydown", event=> permissionsListBox.Keydown(event));
+		permissionUsersContainer.append(permissionsListBox.listTitleOuter, permissionsListBox.list);
+
+		const RenderPermissionCheckbox = username=> {
+			const box = document.createElement("div");
+			box.style.left = "4px";
+			box.style.height = "22px";
+
+			const toggle = this.CreateToggle("", selectedUsers.has(username), box);
+			toggle.label.style.transform = "translateY(-14px)";
+
+			toggle.checkbox.onchange = ()=> {
+				if (toggle.checkbox.checked) {
+					selectedUsers.add(username);
+				}
+				else {
+					selectedUsers.delete(username);
+				}
+			};
+
+			return box;
+		};
+
+		permissionsListBox.inflate = (element, entry, type)=> {
+			element.appendChild(RenderPermissionCheckbox(entry.username));
+			permissionsListBox.InflateElement(element, entry, type);
+		};
+
+		permissionsListBox.SetupColumns([
+			{label:"Username", value:d=> d.username}
+		]);
+
+		permissionMode.onchange = ()=> {
+			const newMode = permissionMode.value;
+
+			const isSwitchBetweenLists = (previousPermissionMode === "whitelist" && newMode === "blacklist")
+				|| (previousPermissionMode === "blacklist" && newMode === "whitelist");
+
+			if (isSwitchBetweenLists) {
+				const inverted = new Set();
+				for (const user of permissionsListBox.items) {
+					if (!selectedUsers.has(user.username)) inverted.add(user.username);
+				}
+				selectedUsers = inverted;
+
+				//flip the existing checkboxes in place rather than rebuilding the list elements
+				for (const checkbox of permissionsListBox.list.querySelectorAll('input[type="checkbox"]')) {
+					checkbox.checked = !checkbox.checked;
+				}
+			}
+
+			previousPermissionMode = newMode;
+			permissionUsersContainer.style.display = newMode === "none" ? "none" : "block";
+
+			onModeChange?.(newMode);
+		};
+
+		(async ()=> {
+			try {
+				const response = await fetch("vault/users");
+				if (response.status !== 200) return;
+
+				const json = await response.json();
+				if (json.error) return;
+
+				permissionsListBox.SetItems(json);
+			}
+			catch (ex) { /* best-effort; permissions section stays empty */ }
+			finally {
+				permissionMode.disabled = false;
+			}
+		})();
+
+		onModeChange?.(permissionMode.value);
+
+		return {
+			getMode: ()=> permissionMode.value,
+			getList: ()=> [...selectedUsers]
+		};
 	}
 
 	FindUsages(guid) {
@@ -139,31 +263,48 @@ class Vault extends Tabs {
 			return;
 		}
 
-		const CreateSection = (label, items, ListWindow, resolveColumns, onOpen)=> {
+		const CreateSection = (label, items, ListWindow, resolveColumns, resolveIcon, onOpen)=> {
 			const title = document.createElement("div");
 			title.textContent = `${label} (${items.length})`;
-			title.style.position = "relative"; //anchors the tip-below tooltip to itself, not to innerBox
+			title.style.position = "relative";
 			title.style.display = "inline-block";
 			title.style.fontWeight = "600";
 			title.style.margin = innerBox.childElementCount > 0 ? "16px 0 4px 0" : "0 0 4px 0";
 			title.style.cursor = "pointer";
 			title.style.textDecoration = "underline";
+			title.style.padding = "2px 0 2px 32px";
+			title.style.backgroundImage = {
+				"Devices": "url(mono/devices.svg)",
+				"Users": "url(mono/users.svg)"
+			}[label];
+			title.style.backgroundSize = "24px 24px";
+			title.style.backgroundPosition = "0 50%";
+			title.style.backgroundRepeat = "no-repeat";
 			title.setAttribute("tip-below", `Show all in ${label.toLowerCase()}`);
 			title.onclick = ()=> new ListWindow({find: guid});
 			innerBox.appendChild(title);
 
 			const container = document.createElement("div");
 			container.style.position = "relative";
-			container.style.height = "320px";
+			container.style.height = "calc(100% - 28px)";
 			innerBox.appendChild(container);
 
 			const listBox = new ListBox({
-				firstColumnOffset: "4px",
 				onDoubleClick: data=> onOpen(data.file)
 			});
 			listBox.SetupTitleBar();
+			listBox.SetupBuiltInSort();
 			listBox.list.style.border = "rgb(82,82,82) solid 2px";
+			listBox.list.addEventListener("keydown", event=> listBox.Keydown(event));
 			container.append(listBox.listTitleOuter, listBox.list);
+
+			listBox.inflate = (element, entry, type)=> {
+				const icon = document.createElement("div");
+				icon.className = "list-element-icon";
+				icon.style.backgroundImage = `url(${resolveIcon(entry)})`;
+				element.appendChild(icon);
+				listBox.InflateElement(element, entry, type);
+			};
 
 			listBox.SetupColumns(resolveColumns);
 			listBox.SetItems(items);
@@ -173,14 +314,20 @@ class Vault extends Tabs {
 			CreateSection("Devices", devices, DevicesList, [
 				{label:"Name", value:d=> d.entry.name?.v || d.entry.hostname?.v || d.entry.ip?.v || d.file},
 				{label:"Type", value:d=> d.entry.type?.v || ""}
-			], file=> LOADER.OpenDeviceByFile(file));
+			], d=> {
+				const type = d.entry.type?.v.toLowerCase() || "";
+				return LOADER.deviceIcons[type] ? LOADER.deviceIcons[type] : "mono/gear.svg";
+			}, file=> LOADER.OpenDeviceByFile(file));
 		}
 
 		if (users.length > 0) {
 			CreateSection("Users", users, UsersList, [
 				{label:"Name",     value:d=> d.entry["display name"]?.v || d.entry.username?.v || d.file},
 				{label:"Username", value:d=> d.entry.username?.v || ""}
-			], file=> LOADER.OpenUserByFile(file));
+			], d=> {
+				const type = d.entry.type?.v.toLowerCase() || "";
+				return LOADER.userIcons[type] ? LOADER.userIcons[type] : "mono/user.svg";
+			}, file=> LOADER.OpenUserByFile(file));
 		}
 	}
 
@@ -324,40 +471,40 @@ class Vault extends Tabs {
 	}
 
 	CredentialDialog(object=null) {
-		const dialog = this.DialogBox("240px");
+		const dialog = this.DialogBox("400px");
 		if (dialog === null) return;
 
-		const {okButton, cancelButton, innerBox, buttonBox} = dialog;
+		const {okButton, innerBox, buttonBox} = dialog;
 
 		okButton.value = "Save";
 
 		innerBox.style.padding = "16px 32px";
 		innerBox.style.display = "grid";
-		innerBox.style.gridTemplateColumns = "auto 88px auto 72px auto";
-		innerBox.style.gridTemplateRows = "repeat(4, 38px)";
+		innerBox.style.gridTemplateRows = "repeat(4, 38px) auto";
 		innerBox.style.alignItems = "center";
+		innerBox.style.transition = ".4s";
 
 		const nameLabel = document.createElement("div");
-		nameLabel.style.gridArea = "1 / 2";
+		nameLabel.style.gridArea = "1 / 1";
 		nameLabel.textContent = "Name:";
 		const nameInput = document.createElement("input");
-		nameInput.style.gridArea = "1 / 3";
+		nameInput.style.gridArea = "1 / 2 / 1 / 4";
 		nameInput.type = "text";
 		innerBox.append(nameLabel, nameInput);
 
 		const usernameLabel = document.createElement("div");
-		usernameLabel.style.gridArea = "2 / 2";
+		usernameLabel.style.gridArea = "2 / 1";
 		usernameLabel.textContent = "Username:";
 		const usernameInput = document.createElement("input");
-		usernameInput.style.gridArea = "2 / 3";
+		usernameInput.style.gridArea = "2 / 2 / 2 / 4";
 		usernameInput.type = "text";
 		innerBox.append(usernameLabel, usernameInput);
 
 		const passwordLabel = document.createElement("div");
-		passwordLabel.style.gridArea = "3 / 2";
+		passwordLabel.style.gridArea = "3 / 1";
 		passwordLabel.textContent = "Password:";
 		const passwordInput = document.createElement("input");
-		passwordInput.style.gridArea = "3 / 3";
+		passwordInput.style.gridArea = "3 / 2";
 		passwordInput.type = "password";
 		passwordInput.placeholder = object ? "unchanged" : "";
 		innerBox.append(passwordLabel, passwordInput);
@@ -365,28 +512,35 @@ class Vault extends Tabs {
 		const showButton = document.createElement("input");
 		showButton.type = "button";
 		showButton.value = "Show";
-		showButton.style.gridArea = "3 / 4";
+		showButton.style.gridArea = "3 / 3";
 		showButton.style.minWidth = "64px";
 		showButton.disabled = !object;
 		innerBox.appendChild(showButton);
 
 		const guidLabel = document.createElement("div");
-		guidLabel.style.gridArea = "4 / 2";
+		guidLabel.style.gridArea = "4 / 1";
 		guidLabel.textContent = "GUID:";
 		const guidInput = document.createElement("input");
 		guidInput.type = "text";
 		guidInput.value = object ? object.guid : "";
 		guidInput.style.all = "unset";
 		guidInput.style.padding = "0 8px";
-		guidInput.style.gridArea = "4 / 3";
+		guidInput.style.gridArea = "4 / 2 / 4 / 4";
 		innerBox.append(guidLabel, guidInput);
 
 		const statusLabel = document.createElement("div");
 		statusLabel.style.visibility = "hidden";
-		statusLabel.style.gridArea = "3 / 5";
+		statusLabel.style.gridArea = "4 / 3";
 		statusLabel.style.fontWeight = "bold";
+		statusLabel.style.fontSize = "small";
 		statusLabel.style.color = "var(--clr-error)";
 		innerBox.appendChild(statusLabel);
+
+		const permissions = this.CreatePermissionsPanel(innerBox, "4", "1 / 6", object, newMode=> {
+			innerBox.style.gridTemplateColumns = newMode === "none"
+				? "100px minmax(140px, 1fr) 72px minmax(160px, .4fr)"
+				: "100px minmax(140px, 1fr) 72px minmax(200px, 1fr)";
+		});
 
 		showButton.onclick = async ()=> {
 			if (showButton.value === "Show") {
@@ -431,7 +585,7 @@ class Vault extends Tabs {
 			whereButton.type = "button";
 			whereButton.value = "Where is used";
 			whereButton.style.position = "absolute";
-			whereButton.style.right = "8px";
+			whereButton.style.left = "8px";
 			buttonBox.appendChild(whereButton);
 
 			whereButton.onclick = ()=> this.ShowWhereUsed(object.guid, dialog, whereButton);
@@ -443,7 +597,9 @@ class Vault extends Tabs {
 					guid: object ? object.guid : "00000000-0000-0000-0000-000000000000",
 					name: nameInput.value,
 					username: usernameInput.value,
-					password: passwordInput.value
+					password: passwordInput.value,
+					permissionMode: permissions.getMode(),
+					permissionList: permissions.getList()
 				};
 
 				if (usernameInput.value.trim().length === 0 && passwordInput.value.trim().length === 0 && !object) {
@@ -616,49 +772,50 @@ class Vault extends Tabs {
 		const dialog = this.DialogBox("340px");
 		if (dialog === null) return;
 
-		const {okButton, cancelButton, innerBox, buttonBox} = dialog;
+		const {okButton, innerBox, buttonBox} = dialog;
 
 		okButton.value = "Save";
 
 		innerBox.style.padding = "16px 32px";
 		innerBox.style.display = "grid";
-		innerBox.style.gridTemplateColumns = "auto 100px 350px 72px auto";
+		//innerBox.style.gridTemplateColumns = "100px minmax(140px, 1fr) 64px minmax(200px, 1fr)";
 		innerBox.style.gridTemplateRows = "repeat(2, 38px) 64px 38px 64px";
 		innerBox.style.alignItems = "center";
+		innerBox.style.transition = ".4s";
 
 		const nameLabel = document.createElement("div");
-		nameLabel.style.gridArea = "1 / 2";
+		nameLabel.style.gridArea = "1 / 1";
 		nameLabel.textContent = "Name:";
 		const nameInput = document.createElement("input");
-		nameInput.style.gridArea = "1 / 3";
+		nameInput.style.gridArea = "1 / 2 / 1 / 4";
 		nameInput.type = "text";
 		innerBox.append(nameLabel, nameInput);
 
 		const usernameLabel = document.createElement("div");
-		usernameLabel.style.gridArea = "2 / 2";
+		usernameLabel.style.gridArea = "2 / 1";
 		usernameLabel.textContent = "Username:";
 		const usernameInput = document.createElement("input");
-		usernameInput.style.gridArea = "2 / 3";
+		usernameInput.style.gridArea = "2 / 2 / 2 / 4";
 		usernameInput.type = "text";
 		innerBox.append(usernameLabel, usernameInput);
 
 		const keyLabel = document.createElement("div");
-		keyLabel.style.gridArea = "3 / 2";
+		keyLabel.style.gridArea = "3 / 1";
 		keyLabel.style.alignSelf = "start";
 		keyLabel.style.marginTop = "8px";
 		keyLabel.textContent = "Private key:";
 		const keyInput = document.createElement("textarea");
-		keyInput.style.gridArea = "3 / 3";
+		keyInput.style.gridArea = "3 / 2 / 3 / 4";
 		keyInput.style.resize = "none";
 		keyInput.style.fontFamily = "monospace";
 		keyInput.placeholder = object ? "unchanged" : "-----BEGIN PRIVATE KEY-----";
 		innerBox.append(keyLabel, keyInput);
 
 		const passphraseLabel = document.createElement("div");
-		passphraseLabel.style.gridArea = "4 / 2";
+		passphraseLabel.style.gridArea = "4 / 1";
 		passphraseLabel.textContent = "Passphrase:";
 		const passphraseInput = document.createElement("input");
-		passphraseInput.style.gridArea = "4 / 3";
+		passphraseInput.style.gridArea = "4 / 2";
 		passphraseInput.type = "password";
 		passphraseInput.placeholder = object ? "unchanged" : "optional";
 		innerBox.append(passphraseLabel, passphraseInput);
@@ -666,22 +823,28 @@ class Vault extends Tabs {
 		const showButton = document.createElement("input");
 		showButton.type = "button";
 		showButton.value = "Show";
-		showButton.style.gridArea = "4 / 4";
+		showButton.style.gridArea = "4 / 3";
 		showButton.style.minWidth = "64px";
 		showButton.disabled = !object;
 		innerBox.appendChild(showButton);
 
 		const publicKeyLabel = document.createElement("div");
-		publicKeyLabel.style.gridArea = "5 / 2";
+		publicKeyLabel.style.gridArea = "5 / 1";
 		publicKeyLabel.style.alignSelf = "start";
 		publicKeyLabel.style.marginTop = "8px";
 		publicKeyLabel.textContent = "Public key:";
 		const publicKeyInput = document.createElement("textarea");
-		publicKeyInput.style.gridArea = "5 / 3";
+		publicKeyInput.style.gridArea = "5 / 2 / 5 / 4";
 		publicKeyInput.style.resize = "none";
 		publicKeyInput.style.fontFamily = "monospace";
 		publicKeyInput.placeholder = "optional";
 		innerBox.append(publicKeyLabel, publicKeyInput);
+
+		const permissions = this.CreatePermissionsPanel(innerBox, "4", "1 / 6", object, newMode=> {
+			innerBox.style.gridTemplateColumns = newMode === "none"
+				? "100px minmax(140px, 1fr) 72px minmax(160px, .4fr)"
+				: "100px minmax(140px, 1fr) 72px minmax(200px, 1fr)";
+		});
 
 		showButton.onclick = async ()=> {
 			if (showButton.value === "Show") {
@@ -731,7 +894,9 @@ class Vault extends Tabs {
 					username: usernameInput.value,
 					privateKey: keyInput.value,
 					passphrase: passphraseInput.value,
-					publicKey: publicKeyInput.value
+					publicKey: publicKeyInput.value,
+					permissionMode: permissions.getMode(),
+					permissionList: permissions.getList()
 				};
 
 				const response = await fetch("vault/sshkey/save", {
@@ -757,13 +922,13 @@ class Vault extends Tabs {
 			whereButton.type = "button";
 			whereButton.value = "Where is used";
 			whereButton.style.position = "absolute";
-			whereButton.style.right = "8px";
+			whereButton.style.left = "8px";
 			buttonBox.appendChild(whereButton);
 
 			whereButton.onclick = ()=> this.ShowWhereUsed(object.guid, dialog, whereButton);
 		}
 
-		setTimeout(()=>{ nameInput.focus() }, 200);
+		setTimeout(()=> nameInput.focus(), 200);
 	}
 
 	ShowMaintenance() {
@@ -865,7 +1030,7 @@ class Vault extends Tabs {
 		orphansListContainer.style.height = "360px";
 		this.tabsPanel.appendChild(orphansListContainer);
 
-		this.orphansListBox = new ListBox({firstColumnOffset: "4px"});
+		this.orphansListBox = new ListBox({firstColumnOffset: "48px"});
 		this.orphansListBox.SetupTitleBar();
 		this.orphansListBox.SetupBuiltInSort();
 		this.activeColumnsListBox = this.orphansListBox;
@@ -877,8 +1042,12 @@ class Vault extends Tabs {
 
 		orphansListContainer.append(this.orphansListBox.listTitleOuter, this.orphansList);
 
+		this.orphansListBox.inflate = (element, entry, type)=> {
+			element.appendChild(this.RenderOrphanCheckbox(entry));
+			this.orphansListBox.InflateElement(element, entry, type);
+		};
+
 		this.orphansListBox.SetupColumns([
-			{label:"", render:d=> this.RenderOrphanCheckbox(d)},
 			{label:"Type", value:d=> d.type === "sshkey" ? "SSH key" : "Credential"},
 			{label:"Name", value:d=> d.name},
 			{label:"Username", value:d=> d.username}
@@ -920,6 +1089,7 @@ class Vault extends Tabs {
 
 	RenderOrphanCheckbox(data) {
 		const box = document.createElement("div");
+		box.style.left = "4px";
 		box.style.height = "22px";
 
 		const key = `${data.type}:${data.guid}`;

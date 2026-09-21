@@ -3,6 +3,7 @@ using System.IO;
 using System.Net;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading;
 using Protest.Http;
 
@@ -11,13 +12,23 @@ namespace Protest.Tools;
 internal static class Vault {
     private static readonly Lock mutex = new Lock();
 
-    private static readonly JsonSerializerOptions serializerOptions = new JsonSerializerOptions { IncludeFields = true };
+    private static readonly JsonSerializerOptions serializerOptions = new JsonSerializerOptions {
+        IncludeFields = true,
+        Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase, allowIntegerValues: false) }
+    };
 
     public sealed class CredentialEntry {
         public Guid guid;
-        public string name     = String.Empty;
-        public string username = String.Empty;
-        public string password = String.Empty;
+        public string                            name           = String.Empty;
+        public string                            username       = String.Empty;
+        public string                            password       = String.Empty;
+        public VaultAccessControl.PermissionMode permissionMode = VaultAccessControl.PermissionMode.None;
+        public string[]                          permissionList = Array.Empty<string>();
+    }
+
+    public static bool IsAllowed(CredentialEntry entry, string username) {
+        if (entry is null) return false;
+        return VaultAccessControl.IsAllowed(entry.permissionMode, entry.permissionList, username);
     }
 
     public static List<CredentialEntry> Load() {
@@ -70,7 +81,14 @@ internal static class Vault {
             builder.Append($"\"username\":\"{Data.EscapeJsonText(entries[i].username)}\",");
             builder.Append($"\"hasPassword\":{(entries[i].password.Length > 0 ? "true" : "false")},");
             builder.Append($"\"strength\":{strength},");
-            builder.Append($"\"uses\":{uses}");
+            builder.Append($"\"uses\":{uses},");
+            builder.Append($"\"permissionMode\":{JsonSerializer.Serialize(entries[i].permissionMode, serializerOptions)},");
+            builder.Append("\"permissionList\":[");
+            for (int j = 0; j < (entries[i].permissionList?.Length ?? 0); j++) {
+                if (j > 0) builder.Append(',');
+                builder.Append($"\"{Data.EscapeJsonText(entries[i].permissionList[j])}\"");
+            }
+            builder.Append(']');
             builder.Append('}');
         }
 
@@ -78,7 +96,7 @@ internal static class Vault {
         return Encoding.UTF8.GetBytes(builder.ToString());
     }
 
-    public static byte[] GetSecret(HttpListenerContext ctx) {
+    public static byte[] GetSecret(HttpListenerContext ctx, string username) {
         Dictionary<string, string> parameters = Listener.ParseQuery(ctx);
         if (parameters is null || !parameters.TryGetValue("guid", out string guidString) || !Guid.TryParse(guidString, out Guid guid)) {
             return Data.CODE_INVALID_ARGUMENT.Array;
@@ -87,7 +105,10 @@ internal static class Vault {
         CredentialEntry entry = Load().Find(e => e.guid == guid);
         if (entry is null) return Data.CODE_NOT_FOUND.Array;
 
-        //return Encoding.UTF8.GetBytes($"{{\"username\":\"{Data.EscapeJsonText(entry.username)}\",\"password\":\"{Data.EscapeJsonText(entry.password)}\"}}");
+        if (!IsAllowed(entry, username)) {
+            return Data.CODE_UNAUTHORIZED.Array;
+        }
+
         return Encoding.UTF8.GetBytes($"{{\"name\":\"{Data.EscapeJsonText(entry.name)}\",\"username\":\"{Data.EscapeJsonText(entry.username)}\",\"password\":\"{Data.EscapeJsonText(entry.password)}\"}}");
     }
 
@@ -104,6 +125,8 @@ internal static class Vault {
             incoming.name     ??= String.Empty;
             incoming.username ??= String.Empty;
             incoming.password ??= String.Empty;
+
+            incoming.permissionList = VaultAccessControl.NormalizePermissionList(incoming.permissionList);
 
             List<CredentialEntry> entries = Load();
             CredentialEntry existing = incoming.guid != Guid.Empty ? entries.Find(e => e.guid == incoming.guid) : null;

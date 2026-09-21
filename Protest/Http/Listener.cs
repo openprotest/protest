@@ -36,17 +36,18 @@ internal sealed class Listener {
         ["/db/device/attribute"]          = (ctx, username) => DatabaseInstances.devices.AttributeValue(ctx),
 
         ["/vault/credential/list"]        = (ctx, username) => Tools.Vault.List(),
-        ["/vault/credential/get"]         = (ctx, username) => Tools.Vault.GetSecret(ctx),
+        ["/vault/credential/get"]         = (ctx, username) => Tools.Vault.GetSecret(ctx, username),
         ["/vault/credential/save"]        = (ctx, username) => Tools.Vault.Save(ctx, username),
         ["/vault/credential/delete"]      = (ctx, username) => Tools.Vault.Delete(ctx, username),
 
         ["/vault/sshkey/list"]            = (ctx, username) => Tools.VaultSshKeys.List(),
-        ["/vault/sshkey/get"]             = (ctx, username) => Tools.VaultSshKeys.GetSecret(ctx),
+        ["/vault/sshkey/get"]             = (ctx, username) => Tools.VaultSshKeys.GetSecret(ctx, username),
         ["/vault/sshkey/save"]            = (ctx, username) => Tools.VaultSshKeys.Save(ctx, username),
         ["/vault/sshkey/delete"]          = (ctx, username) => Tools.VaultSshKeys.Delete(ctx, username),
 
         ["/vault/scan"]                   = (ctx, username) => Tools.VaultMigration.Scan(ctx, username),
         ["/vault/orphans"]                = (ctx, username) => Tools.VaultMigration.FindOrphans(),
+        ["/vault/users"]                  = (ctx, username) => Auth.ListUsernames(),
 
         ["/fetch/networkinfo"]            = (ctx, username) => Protocols.Ldap.NetworkInfo(),
         ["/fetch/singledevice"]           = (ctx, username) => Tasks.Fetch.SingleDeviceSerialize(ctx, true),

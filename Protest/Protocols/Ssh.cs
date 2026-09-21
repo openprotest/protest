@@ -64,7 +64,13 @@ internal static class Ssh {
             host = split[0];
             port = 22;
 
-            AuthenticationMethod[] authMethods = CredentialResolver.Resolve(credentialGuid, ref username, ref password);
+            AuthenticationMethod[] authMethods = CredentialResolver.Resolve(credentialGuid, ref username, ref password, origin, out bool permissionDenied);
+
+            if (permissionDenied) {
+                await WebSocketHelper.WsWriteText(ws, "{\"error\":\"Access denied for this credential\"}"u8.ToArray());
+                await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
+                return;
+            }
 
             if (authMethods is null) {
                 if (!String.IsNullOrEmpty(file) && DatabaseInstances.devices.dictionary.TryGetValue(file, out Database.Entry entry)) {

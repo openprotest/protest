@@ -407,7 +407,6 @@
 	background-size: 0px 0px;
 	background-position: 50% 100%;
 	background-repeat: no-repeat;
-	animation: password-countdown 15s 1 linear;
 }
 
 .view-info-pane {
@@ -1068,6 +1067,50 @@ button.view-live-button:active {
 	width: calc(100% - 8px);
 }
 
+.view-countdown {
+	display: inline-block;
+	width: 24px;
+	height: 24px;
+	margin: 8px;
+	vertical-align: top;
+}
+
+.view-countdown > div {
+	display: inline-block;
+	overflow: hidden;
+	width: 12px;
+	height: 24px;
+}
+
+.view-countdown > div:nth-child(2) {
+	transform: rotate(180deg);
+}
+
+.view-countdown > div > div {
+	display: inline-block;
+	width: 24px;
+	height: 24px;
+	box-sizing: border-box;
+	transform-origin: 50% 50%;
+
+	padding: unset !important;
+	margin: unset !important;
+
+	border-top:	var(--clr-accent) 5px solid !important;
+	border-left:   var(--clr-accent) 5px solid !important;
+	border-bottom: transparent 5px solid !important;
+	border-right:  transparent 5px solid !important;
+	border-radius: 50% !important;
+}
+.view-countdown > div:nth-child(1) > div {
+	transform: rotate(-45deg);
+	animation: countdown-a 20s linear 1 forwards !important;
+}
+.view-countdown > div:nth-child(2) > div {
+	transform: rotate(-45deg);
+	animation: countdown-b 20s linear 1 forwards !important;
+}
+
 @container (min-width: 800px) {
 	.view-timeline,
 	.view-toolbar,
@@ -1075,11 +1118,11 @@ button.view-live-button:active {
 		left: 204px;
 	}
 
-	.view-team > div:nth-child(1) { left: 0px; }
-	.view-team > div:nth-child(2) { left: 32px; }
-	.view-team > div:nth-child(3) { left: 64px; }
-	.view-team > div:nth-child(4) { left: 96px; }
-	.view-team > div:nth-child(5) { left: 128px; }
+	.view-team > div:nth-child(1) {left:0px;}
+	.view-team > div:nth-child(2) {left:32px;}
+	.view-team > div:nth-child(3) {left:64px;}
+	.view-team > div:nth-child(4) {left:96px;}
+	.view-team > div:nth-child(5) {left:128px;}
 
 	.view-team:has(> :nth-child(6)) > div {
 		left: 0px;
@@ -1106,19 +1149,14 @@ button.view-live-button:active {
 }
 
 @keyframes zoom-in-background {
-	0%  { background-position: calc(100% - 12px) center; background-size: 0px 0px; }
-	80% { background-position: calc(100% - 2px) center; background-size: 20px 20px; }
-	100%{ background-position: calc(100% - 4px) center; background-size: 16px 16px; }
+	0%  { background-position:calc(100% - 12px) center; background-size: 0px 0px; }
+	80% { background-position:calc(100% - 2px) center; background-size: 20px 20px; }
+	100%{ background-position:calc(100% - 4px) center; background-size: 16px 16px; }
 }
 
 @keyframes attribute-in {
-	0%  { opacity:0; transform: scaleY(.8);}
-	100%{ opacity:1; transform: scaleY(1);}
-}
-
-@keyframes password-countdown {
-	0%  { background-size: 100% 4px; }
-	100%{ background-size: 0% 4px; }
+	0%  { opacity:0; transform:scaleY(.8);}
+	100%{ opacity:1; transform:scaleY(1);}
 }
 
 @keyframes previous-fall-in {
@@ -1128,12 +1166,12 @@ button.view-live-button:active {
 
 @keyframes slide-right {
 	0%  {opacity:0; transform:translateX(-150px);}
-	100%{opacity:1; transform: none;}
+	100%{opacity:1; transform:none;}
 }
 
 @keyframes side-tools-floating-slide-in {
-	0%  {opacity: 0; transform: scaleX(.5);}
-	100%{opacity: 1; transform: scaleX(1);}
+	0%  {opacity:0; transform:scaleX(.5);}
+	100%{opacity:1; transform:scaleX(1);}
 }
 
 @keyframes led-blink {
@@ -1147,4 +1185,16 @@ button.view-live-button:active {
 	0%   { filter: brightness(.9) drop-shadow(#fff 1px 0 0) drop-shadow(#fff 0 1px 0) drop-shadow(#fff -1px 0 0) drop-shadow(#fff 0 -1px 0); }
 	50%  { filter: brightness(1.25) drop-shadow(#fff 1px 0 0) drop-shadow(#fff 0 1px 0) drop-shadow(#fff -1px 0 0) drop-shadow(#fff 0 -1px 0); }
 	100% { filter: brightness(.9) drop-shadow(#fff 1px 0 0) drop-shadow(#fff 0 1px 0) drop-shadow(#fff -1px 0 0) drop-shadow(#fff 0 -1px 0); }
+}
+
+@keyframes countdown-a {
+    0%  { transform: rotate(-45deg); }
+    50% { transform: rotate(-226deg); }
+    100%{ transform: rotate(-226deg); }
+}
+
+@keyframes countdown-b {
+    0%  { transform: rotate(-45deg); }
+    50% { transform: rotate(-45deg); }
+    100%{ transform: rotate(-225deg); }
 }

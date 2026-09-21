@@ -77,7 +77,13 @@ internal class Sftp {
             host = split[0];
             port = 22;
 
-            AuthenticationMethod[] authMethods = CredentialResolver.Resolve(credentialGuid, ref username, ref password);
+            AuthenticationMethod[] authMethods = CredentialResolver.Resolve(credentialGuid, ref username, ref password, origin, out bool permissionDenied);
+
+            if (permissionDenied) {
+                await WebSocketHelper.WsWriteText(ws, "{\"error\":\"Access denied for this credential\"}"u8.ToArray());
+                await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
+                return;
+            }
 
             if (authMethods is null && (String.IsNullOrEmpty(username) || String.IsNullOrEmpty(password))) {
                 await WebSocketHelper.WsWriteText(ws, "{\"error\":\"Invalid username or password\"}"u8.ToArray());
@@ -189,7 +195,11 @@ internal class Sftp {
             //re-resolve the secret now, from the vault, rather than trusting anything cached on the token
             string reconnectUsername = token.username;
             string reconnectPassword = token.password;
-            AuthenticationMethod[] authMethods = CredentialResolver.Resolve(token.credentialGuid, ref reconnectUsername, ref reconnectPassword);
+            AuthenticationMethod[] authMethods = CredentialResolver.Resolve(token.credentialGuid, ref reconnectUsername, ref reconnectPassword, origin, out bool permissionDenied);
+
+            if (permissionDenied) {
+                return "{\"error\":\"Access denied for this credential\"}"u8.ToArray();
+            }
 
             using SftpClient sftp = authMethods is not null
                 ? new SftpClient(new ConnectionInfo(token.remoteEndpoint.Split(':')[0], 22, reconnectUsername, authMethods))
@@ -258,7 +268,11 @@ internal class Sftp {
             //re-resolve the secret now, from the vault, rather than trusting anything cached on the token
             string reconnectUsername = token.username;
             string reconnectPassword = token.password;
-            AuthenticationMethod[] authMethods = CredentialResolver.Resolve(token.credentialGuid, ref reconnectUsername, ref reconnectPassword);
+            AuthenticationMethod[] authMethods = CredentialResolver.Resolve(token.credentialGuid, ref reconnectUsername, ref reconnectPassword, origin, out bool permissionDenied);
+
+            if (permissionDenied) {
+                return "{\"error\":\"Access denied for this credential\"}"u8.ToArray();
+            }
 
             using SftpClient sftp = authMethods is not null
                 ? new SftpClient(new ConnectionInfo(token.remoteEndpoint.Split(':')[0], 22, reconnectUsername, authMethods))
