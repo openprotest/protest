@@ -99,6 +99,7 @@ const LOADER = {
 		"xterm/xterm.js",
 		"ptyhost.js",
 		"listbox.js",
+		"fewbox.js",
 		"ipbox.js"
 	],
 

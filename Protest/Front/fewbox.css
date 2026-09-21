@@ -1,0 +1,55 @@
+.few-box {
+	position: relative;
+	overflow: hidden;
+	text-align: center;
+	white-space: nowrap;
+	color: var(--clr-dark);
+	background-color: var(--clr-control);
+	border: 1px solid #777;
+	border-radius: 4px;
+	max-width: 400px;
+	margin: 4px;
+}
+
+.few-box:focus-within {
+	animation: focus-outline .3s ease-in forwards;
+}
+
+.few-box > select {
+	animation: none;
+	margin: 0;
+}
+
+.few-box-items > div {
+	display: inline-block;
+	font-weight: 600;
+	border-radius: 4px;
+	margin: 2px;
+	padding: 4px 8px;
+	cursor: pointer;
+}
+
+.few-box-items > div:hover {
+	background-color: color-mix(in srgb, var(--clr-select) 80%, transparent);
+}
+
+.few-box-items > div.selected {
+	background-color: var(--clr-select);
+}
+
+.few-box-select {
+	display: none;
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	padding: 4px 8px;
+	border: none;
+}
+
+.few-box.collapsed .few-box-items {
+	visibility: hidden;
+}
+
+.few-box.collapsed .few-box-select {
+	display: block;
+}
