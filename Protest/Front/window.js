@@ -813,6 +813,7 @@ class Window {
 		popInButton.style.backgroundPosition = "center";
 		popInButton.style.borderRadius = "12px";
 
+		this.content.inert = false;
 		this.content.style.left = "0";
 		this.content.style.right = "0";
 		this.content.style.top = this.toolbar ? "48px" : "26px";
@@ -820,6 +821,7 @@ class Window {
 		newWin.document.body.appendChild(this.content);
 
 		if (this.toolbar) {
+			this.toolbar.inert = false;
 			this.toolbar.style.top = "4px";
 			newWin.document.body.appendChild(this.toolbar);
 			this.toolbar.appendChild(popInButton);
