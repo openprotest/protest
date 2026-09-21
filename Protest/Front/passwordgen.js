@@ -523,23 +523,23 @@ class PassGen extends Window {
 
 		if (isNaN(entropy) || entropy < 19) {
 			comment = "Forbidden";
-			color = "#f00";
+			color = "var(--clr-critical)";
 		}
 		else if (entropy < 28) {
 			comment = "Very weak";
-			color = "#d00";
+			color = "var(--clr-error)";
 		}
 		else if (entropy < 36) {
 			comment = "Weak";
-			color = "#d70";
+			color = "var(--clr-orange)";
 		}
 		else if (entropy < 60) {
 			comment = "Reasonable";
-			color = "#dc0";
+			color = "var(--clr-warning)";
 		}
 		else if (entropy < 128) {
 			comment = "Strong";
-			color = "#8c2";
+			color = "#6a2";
 		}
 		else {
 			comment = "Overkill";
