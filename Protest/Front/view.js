@@ -291,7 +291,7 @@ class View extends Window {
 		if (name.toLowerCase().includes("password") && !editMode) {
 			valueBox.value = "";
 			valueBox.style.display = "none";
-			
+
 			const preview = document.createElement("div");
 			preview.className = "view-password-preview";
 			preview.style.display = "none";
@@ -366,7 +366,7 @@ class View extends Window {
 			};
 		}
 		else if (name.toLowerCase().includes("credentials") && !editMode) {
-			
+
 			valueBox.style.display = "none";
 
 			const showButton = document.createElement("input");
@@ -624,7 +624,7 @@ class View extends Window {
 				const box = document.createElement("div");
 				box.style.padding = "4px 0 0 0";
 				container.appendChild(box);
-				
+
 				const labelBox = document.createElement("div");
 				labelBox.style.display = "inline-block";
 				labelBox.style.width = "88px";

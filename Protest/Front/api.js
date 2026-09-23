@@ -349,9 +349,7 @@ class Api extends List {
 		if (!element.onclick) {
 			element.onclick = ()=> {
 				if (this.selected) this.selected.style.backgroundColor = "";
-				
 				this.args.select = entry.key.v;
-				
 				this.selected = element;
 				element.style.backgroundColor = "var(--clr-select)";
 			};

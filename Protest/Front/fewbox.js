@@ -18,17 +18,31 @@ class FewBox {
 
 		this.Initialize(options);
 
-		this.resizeObserver = new ResizeObserver(()=> this.CheckOverflow());
+		this.resizeObserver = new ResizeObserver(()=> {
+			this.CheckOverflow();
+			if (this.index >= 0) this.MoveHighlight();
+		});
 		this.resizeObserver.observe(this.container);
 
 		this.container.addEventListener("keydown", event=> this.Container_onkeydown(event));
 
-		return this.container;
+		this.CheckOverflow();
+
+		requestAnimationFrame(()=> requestAnimationFrame(()=> this.CheckOverflow()));
+
+		setTimeout(()=> {
+			this.CheckOverflow();
+			if (this.index >= 0) this.MoveHighlight();
+		}, WIN.ANIME_DURATION);
 	}
 
 	Initialize(options) {
 		this.itemsRow = document.createElement("div");
 		this.itemsRow.className = "few-box-items";
+
+		this.highlight = document.createElement("div");
+		this.highlight.className = "few-box-highlight";
+		this.itemsRow.appendChild(this.highlight);
 
 		for (let i=0; i<options.length; i++) {
 			const option = document.createElement("div");
@@ -38,6 +52,7 @@ class FewBox {
 				event.stopPropagation();
 				this.Select(i);
 				this.container.focus();
+				if (this.select.onchange) this.select.onchange();
 			};
 
 			this.itemsRow.appendChild(option);
@@ -50,7 +65,7 @@ class FewBox {
 			this.select.appendChild(new Option(options[i], i));
 		}
 		this.select.selectedIndex = -1;
-		this.select.onchange = ()=> this.Select(this.select.selectedIndex);
+		this.select.addEventListener("change", ()=> this.Select(this.select.selectedIndex));
 
 		this.container.append(this.itemsRow, this.select);
 	}
@@ -76,7 +91,18 @@ class FewBox {
 		this.container.value = this.selected;
 		this.container.selectedIndex = this.index;
 
+		this.MoveHighlight();
+
 		if (this.container.onchange) this.container.onchange();
+	}
+
+	MoveHighlight() {
+		const item = this.itemElements[this.index];
+		this.highlight.style.left = `${item.offsetLeft}px`;
+		this.highlight.style.top = `${item.offsetTop}px`;
+		this.highlight.style.width = `${item.offsetWidth}px`;
+		this.highlight.style.height = `${item.offsetHeight}px`;
+		this.highlight.classList.add("visible");
 	}
 
 	Container_onkeydown(event) {
@@ -84,5 +110,7 @@ class FewBox {
 
 		if (event.key === "ArrowRight") { event.preventDefault(); this.Select(Math.min((this.index < 0 ? -1 : this.index) + 1, this.options.length - 1)); }
 		else if (event.key === "ArrowLeft") { event.preventDefault(); this.Select(Math.max(this.index - 1, 0)); }
+
+		if (this.select.onchange) this.select.onchange();
 	}
 }

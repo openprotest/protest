@@ -370,7 +370,7 @@ class PassGen extends Window {
 					else {
 						word += this.words[Math.floor(Math.random() * this.words.length)];
 					}
-					
+
 					if (i+1 < this.lengthRange.value)word += "-";
 				}
 			}

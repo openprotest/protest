@@ -302,7 +302,7 @@ class Window {
 		this.defaultElement = null;
 		this.args = Object.create(null);
 		this.messagesQueue = [];
-		
+
 		this.toolbar = null;
 
 		WIN.startX += 2;

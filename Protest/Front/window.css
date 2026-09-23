@@ -330,6 +330,13 @@
 .win-dialog input,
 .win-dialog select {
 	box-sizing: border-box;
+	min-width: 0;
+}
+
+.win-dialog select {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
 }
 
 .win-dialog-tab {
