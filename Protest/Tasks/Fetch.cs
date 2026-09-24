@@ -267,16 +267,16 @@ internal static class Fetch {
         }
         else {
             tWmi?.Start();
-            tWmi?.Wait();
+            tWmi?.Wait(token);
             if (token.IsCancellationRequested) return null;
 
             tAd?.Start();
-            tAd?.Wait();
+            tAd?.Wait(token);
             if (token.IsCancellationRequested) return null;
 
 
             tPortScan?.Start();
-            tPortScan?.Wait();
+            tPortScan?.Wait(token);
             if (token.IsCancellationRequested) return null;
         }
 

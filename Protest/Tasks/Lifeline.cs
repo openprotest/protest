@@ -431,8 +431,7 @@ internal static partial class Lifeline {
     }
 
     private static void SnmpPrinterQuery(string file, string host, string _profile, SnmpProfiles.Profile[] snmpProfiles) {
-        IPAddress ipAddress;
-        if (!IPAddress.TryParse(host, out ipAddress)) {
+        if (!IPAddress.TryParse(host, out IPAddress ipAddress)) {
             try {
                 ipAddress = System.Net.Dns.GetHostEntry(host).AddressList[0];
             }
@@ -460,7 +459,7 @@ internal static partial class Lifeline {
 
         uint blackCounter = 0;
         if (printCounters.TryGetValue(Protocols.Snmp.Oid.PRINTER_MARKER_COUNTER_LIFE, out string blackCountString)) {
-            uint.TryParse(blackCountString, out blackCounter);
+            _ = uint.TryParse(blackCountString, out blackCounter);
         }
 
         Lock mutex = snmpMutexes.GetOrAdd(ipAddress.ToString(), new Lock());
@@ -490,8 +489,7 @@ internal static partial class Lifeline {
     }
 
     private static void SnmpSwitchQuery(string file, string host, string _profile, SnmpProfiles.Profile[] snmpProfiles) {
-        IPAddress ipAddress;
-        if (!IPAddress.TryParse(host, out ipAddress)) {
+        if (!IPAddress.TryParse(host, out IPAddress ipAddress)) {
             try {
                 ipAddress = System.Net.Dns.GetHostEntry(host).AddressList[0];
             }

@@ -525,23 +525,36 @@ class Vault extends Tabs {
 		guidInput.style.gridArea = "4 / 2 / 4 / 4";
 		innerBox.append(guidLabel, guidInput);
 
-		const dndLabel = document.createElement("div");
-		dndLabel.style.gridArea = "5 / 1";
-		dndLabel.textContent = "Drag:";
-		const dndElement = document.createElement("div");
-		dndElement.draggable = true;
-		dndElement.style.cursor = "grab";
-		dndElement.style.gridArea = "5 / 2";
-		dndElement.style.width = "56px";
-		dndElement.style.height = "56px";
-		dndElement.style.borderColor = "transparent";
-		dndElement.style.borderStyle = "dashed";
-		dndElement.style.borderRadius = "8px";
-		dndElement.style.backgroundImage = "url(mono/lock.svg)";
-		dndElement.style.backgroundSize = "40px 40px";
-		dndElement.style.backgroundPosition = "50% 50%";
-		dndElement.style.backgroundRepeat = "no-repeat";
-		innerBox.append(dndLabel, dndElement);
+		if (object) {
+			const dndLabel = document.createElement("div");
+			dndLabel.style.gridArea = "5 / 1";
+			dndLabel.textContent = "Drag:";
+			const dndElement = document.createElement("div");
+			dndElement.draggable = true;
+			dndElement.style.cursor = "grab";
+			dndElement.style.gridArea = "5 / 2";
+			dndElement.style.width = "56px";
+			dndElement.style.height = "56px";
+			dndElement.style.borderColor = "transparent";
+			dndElement.style.borderStyle = "dashed";
+			dndElement.style.borderRadius = "8px";
+			dndElement.style.backgroundImage = "url(mono/lock.svg)";
+			dndElement.style.backgroundSize = "40px 40px";
+			dndElement.style.backgroundPosition = "50% 50%";
+			dndElement.style.backgroundRepeat = "no-repeat";
+			
+			innerBox.append(dndLabel, dndElement);
+
+			dndElement.ondragstart = event=> {
+				dndElement.style.borderColor = "var(--clr-dark)";
+				event.dataTransfer.setData("protest-type", "credentials");
+				event.dataTransfer.setData("protest-data", object ? object.guid : null);
+			};
+
+			dndElement.ondragend = event => {
+				dndElement.style.borderColor= "transparent";
+			};
+		}
 
 		const permissions = this.CreatePermissionsPanel(innerBox, "4", "1 / 6", object, newMode=> {
 			innerBox.style.gridTemplateColumns = newMode === "none"
@@ -581,16 +594,6 @@ class Vault extends Tabs {
 				showButton.value = "Show";
 				passwordInput.type = "password";
 			}
-		};
-
-		dndElement.ondragstart = event=> {
-			dndElement.style.borderColor = "var(--clr-dark)";
-			event.dataTransfer.setData("protest-type", "credentials");
-			event.dataTransfer.setData("protest-data", object ? object.guid : null);
-		};
-
-		dndElement.ondragend = event => {
-			dndElement.style.borderColor= "transparent";
 		};
 
 		if (object) {
