@@ -204,7 +204,7 @@ class Sftp extends Window {
 				break;
 			}
 
-			console.log(type, data);
+			credentialsInput.value = data;
 		};
 
 		if ("password" in this.args) {

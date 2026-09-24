@@ -368,12 +368,30 @@ class Vault extends Tabs {
 
 		this.credentialsListBox = new ListBox({
 			firstColumnOffset: "4px",
-			onSelect: (id, element)=> { this.selectedCredential = element._data; },
+			onSelect: (id, element)=> {
+				this.selectedCredential = element._data;
+				this.selectedCredentialElement?.classList.remove("list-element-selected");
+				this.selectedCredentialElement = element;
+				element.classList.add("list-element-selected");
+			},
 			onDoubleClick: data=> this.CredentialDialog(data)
 		});
 		this.credentialsListBox.SetupTitleBar();
 		this.credentialsListBox.SetupBuiltInSort();
 		this.activeColumnsListBox = this.credentialsListBox;
+
+		this.credentialsListBox.inflate = (element, entry, type)=> {
+			this.credentialsListBox.InflateElement(element, entry, type);
+
+			const dragElement = document.createElement("div");
+			dragElement.className = "list-element-drag";
+			dragElement.draggable = true;
+			dragElement.ondragstart = event=> {
+				event.dataTransfer.setData("protest-type", "credentials");
+				event.dataTransfer.setData("protest-data", entry.guid);
+			};
+			element.appendChild(dragElement);
+		};
 
 		this.credentialsListBox.listTitleOuter.style.left = "20px";
 		this.credentialsListBox.listTitleOuter.style.right = "20px";
@@ -526,33 +544,24 @@ class Vault extends Tabs {
 		innerBox.append(guidLabel, guidInput);
 
 		if (object) {
-			const dndLabel = document.createElement("div");
-			dndLabel.style.gridArea = "5 / 1";
-			dndLabel.textContent = "Drag:";
 			const dndElement = document.createElement("div");
 			dndElement.draggable = true;
 			dndElement.style.cursor = "grab";
-			dndElement.style.gridArea = "5 / 2";
-			dndElement.style.width = "56px";
-			dndElement.style.height = "56px";
-			dndElement.style.borderColor = "transparent";
-			dndElement.style.borderStyle = "dashed";
+			dndElement.style.gridArea = "5 / 1";
+			dndElement.style.alignSelf = "end";
+			dndElement.style.width = "54px";
+			dndElement.style.height = "54px";
+			dndElement.style.border = "2px dashed var(--clr-dark)";
 			dndElement.style.borderRadius = "8px";
-			dndElement.style.backgroundImage = "url(mono/lock.svg)";
+			dndElement.style.backgroundImage = "url(mono/key.svg)";
 			dndElement.style.backgroundSize = "40px 40px";
 			dndElement.style.backgroundPosition = "50% 50%";
 			dndElement.style.backgroundRepeat = "no-repeat";
-			
-			innerBox.append(dndLabel, dndElement);
+			innerBox.appendChild(dndElement);
 
 			dndElement.ondragstart = event=> {
-				dndElement.style.borderColor = "var(--clr-dark)";
 				event.dataTransfer.setData("protest-type", "credentials");
 				event.dataTransfer.setData("protest-data", object ? object.guid : null);
-			};
-
-			dndElement.ondragend = event => {
-				dndElement.style.borderColor= "transparent";
 			};
 		}
 
@@ -692,12 +701,30 @@ class Vault extends Tabs {
 
 		this.sshKeysListBox = new ListBox({
 			firstColumnOffset: "4px",
-			onSelect: (id, element)=> { this.selectedSshKey = element._data; },
+			onSelect: (id, element)=> {
+				this.selectedSshKey = element._data;
+				this.selectedSshKeyElement?.classList.remove("list-element-selected");
+				this.selectedSshKeyElement = element;
+				element.classList.add("list-element-selected");
+			},
 			onDoubleClick: data=> this.SshKeyDialog(data)
 		});
 		this.sshKeysListBox.SetupTitleBar();
 		this.sshKeysListBox.SetupBuiltInSort();
 		this.activeColumnsListBox = this.sshKeysListBox;
+
+		this.sshKeysListBox.inflate = (element, entry, type)=> {
+			this.sshKeysListBox.InflateElement(element, entry, type);
+
+			const dragElement = document.createElement("div");
+			dragElement.className = "list-element-drag";
+			dragElement.draggable = true;
+			dragElement.ondragstart = event=> {
+				event.dataTransfer.setData("protest-type", "ssh-key");
+				event.dataTransfer.setData("protest-data", entry.guid);
+			};
+			element.appendChild(dragElement);
+		};
 
 		this.sshKeysListBox.listTitleOuter.style.left = "20px";
 		this.sshKeysListBox.listTitleOuter.style.right = "20px";
@@ -790,7 +817,7 @@ class Vault extends Tabs {
 	}
 
 	SshKeyDialog(object=null) {
-		const dialog = this.DialogBox("340px");
+		const dialog = this.DialogBox("390px");
 		if (dialog === null) return;
 
 		const {okButton, innerBox, buttonBox} = dialog;
@@ -799,8 +826,7 @@ class Vault extends Tabs {
 
 		innerBox.style.padding = "16px 32px";
 		innerBox.style.display = "grid";
-		//innerBox.style.gridTemplateColumns = "100px minmax(140px, 1fr) 64px minmax(200px, 1fr)";
-		innerBox.style.gridTemplateRows = "repeat(2, 38px) 64px 38px 64px";
+		innerBox.style.gridTemplateRows = "repeat(2, 38px) 64px 38px 64px auto";
 		innerBox.style.alignItems = "center";
 		innerBox.style.transition = ".4s";
 
@@ -866,6 +892,28 @@ class Vault extends Tabs {
 				? "100px minmax(140px, 1fr) 72px minmax(160px, .8fr)"
 				: "100px minmax(140px, 1fr) 72px minmax(200px, 1fr)";
 		});
+
+		if (object) {
+			const dndElement = document.createElement("div");
+			dndElement.draggable = true;
+			dndElement.style.cursor = "grab";
+			dndElement.style.gridArea = "6 / 1";
+			dndElement.style.alignSelf = "end";
+			dndElement.style.width = "54px";
+			dndElement.style.height = "54px";
+			dndElement.style.border = "2px dashed var(--clr-dark)";
+			dndElement.style.borderRadius = "8px";
+			dndElement.style.backgroundImage = "url(mono/key.svg)";
+			dndElement.style.backgroundSize = "40px 40px";
+			dndElement.style.backgroundPosition = "50% 50%";
+			dndElement.style.backgroundRepeat = "no-repeat";
+			innerBox.appendChild(dndElement);
+
+			dndElement.ondragstart = event=> {
+				event.dataTransfer.setData("protest-type", "ssh-key");
+				event.dataTransfer.setData("protest-data", object ? object.guid : null);
+			};
+		}
 
 		showButton.onclick = async ()=> {
 			if (showButton.value === "Show") {
