@@ -32,6 +32,7 @@ class ListBox {
 		this.list.className = "list-listbox no-results";
 		this.list.onscroll = ()=> this.UpdateViewport();
 		this.list.tabIndex = 0;
+		this.list.style.bottom = "0";
 
 		this.listTitleOuter = null;
 		this.listTitle = null;
@@ -64,6 +65,7 @@ class ListBox {
 
 		this.counter = document.createElement("div");
 		this.counter.className = "list-counter";
+		this.list.style.bottom = "";
 	}
 
 	SetupBuiltInSort() {

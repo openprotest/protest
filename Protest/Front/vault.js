@@ -89,38 +89,32 @@ class Vault extends Tabs {
 		permissionsPanel.style.gridRow = gridRow;
 		permissionsPanel.style.height = "100%";
 		permissionsPanel.style.paddingLeft = "8px";
-		permissionsPanel.style.marginLeft = "12px";
+		permissionsPanel.style.marginLeft = "8px";
 		permissionsPanel.style.borderLeft = "2px solid var(--clr-control)";
 		permissionsPanel.style.display = "flex";
 		permissionsPanel.style.flexDirection = "column";
 		innerBox.appendChild(permissionsPanel);
 
-		const permissionMode = document.createElement("select");
-		permissionMode.style.width = "100%";
+		const PERMISSION_MODES = ["none", "whitelist", "blacklist"];
+		const permissionModeBox = new FewBox(["Everyone", "Whitelist", "Blacklist"]);
+		permissionModeBox.Select(Math.max(PERMISSION_MODES.indexOf(object?.permissionMode), 0));
+		permissionModeBox.container.style.margin = "0";
+		permissionModeBox.container.style.maxWidth = "none";
+		permissionModeBox.container.inert = true;
+		permissionModeBox.container.style.opacity = ".5";
+		permissionsPanel.appendChild(permissionModeBox.container);
 
-		[
-			["none",      "Allow everyone"],
-			["whitelist", "Whitelist mode"],
-			["blacklist", "Blacklist mode"]
-		].forEach(([value, label])=> {
-			const option = document.createElement("option");
-			option.value = value;
-			option.textContent = label;
-			permissionMode.appendChild(option);
-		});
-		permissionMode.value = object?.permissionMode ?? "none";
-		permissionMode.disabled = true; //re-enabled once the RBAC username list has loaded
-		permissionsPanel.appendChild(permissionMode);
+		const GetPermissionMode = ()=> PERMISSION_MODES[permissionModeBox.index] ?? "none";
 
 		const permissionUsersContainer = document.createElement("div");
 		permissionUsersContainer.style.position = "relative";
 		permissionUsersContainer.style.flex = "1";
 		permissionUsersContainer.style.marginTop = "8px";
-		permissionUsersContainer.style.display = permissionMode.value === "none" ? "none" : "block";
+		permissionUsersContainer.style.display = GetPermissionMode() === "none" ? "none" : "block";
 		permissionsPanel.appendChild(permissionUsersContainer);
 
 		let selectedUsers = new Set(object?.permissionList ?? []);
-		let previousPermissionMode = permissionMode.value;
+		let previousPermissionMode = GetPermissionMode();
 
 		const permissionsListBox = new ListBox({firstColumnOffset: "48px"});
 		permissionsListBox.SetupTitleBar();
@@ -158,8 +152,8 @@ class Vault extends Tabs {
 			{label:"Username", value:d=> d.username}
 		]);
 
-		permissionMode.onchange = ()=> {
-			const newMode = permissionMode.value;
+		permissionModeBox.container.onchange = ()=> {
+			const newMode = GetPermissionMode();
 
 			const isSwitchBetweenLists = (previousPermissionMode === "whitelist" && newMode === "blacklist")
 				|| (previousPermissionMode === "blacklist" && newMode === "whitelist");
@@ -171,7 +165,6 @@ class Vault extends Tabs {
 				}
 				selectedUsers = inverted;
 
-				//flip the existing checkboxes in place rather than rebuilding the list elements
 				for (const checkbox of permissionsListBox.list.querySelectorAll('input[type="checkbox"]')) {
 					checkbox.checked = !checkbox.checked;
 				}
@@ -193,16 +186,17 @@ class Vault extends Tabs {
 
 				permissionsListBox.SetItems(json);
 			}
-			catch (ex) { /* best-effort; permissions section stays empty */ }
+			catch (ex) {}
 			finally {
-				permissionMode.disabled = false;
+				permissionModeBox.container.inert = false;
+				permissionModeBox.container.style.opacity = "";
 			}
 		})();
 
-		onModeChange?.(permissionMode.value);
+		onModeChange?.(GetPermissionMode());
 
 		return {
-			getMode: ()=> permissionMode.value,
+			getMode: GetPermissionMode,
 			getList: ()=> [...selectedUsers]
 		};
 	}
@@ -489,6 +483,7 @@ class Vault extends Tabs {
 		nameLabel.textContent = "Name:";
 		const nameInput = document.createElement("input");
 		nameInput.style.gridArea = "1 / 2 / 1 / 4";
+		nameInput.style.maxWidth = "350px";
 		nameInput.type = "text";
 		innerBox.append(nameLabel, nameInput);
 
@@ -497,6 +492,7 @@ class Vault extends Tabs {
 		usernameLabel.textContent = "Username:";
 		const usernameInput = document.createElement("input");
 		usernameInput.style.gridArea = "2 / 2 / 2 / 4";
+		usernameInput.style.maxWidth = "350px";
 		usernameInput.type = "text";
 		innerBox.append(usernameLabel, usernameInput);
 
@@ -505,6 +501,7 @@ class Vault extends Tabs {
 		passwordLabel.textContent = "Password:";
 		const passwordInput = document.createElement("input");
 		passwordInput.style.gridArea = "3 / 2";
+		passwordInput.style.maxWidth = "350px";
 		passwordInput.type = "password";
 		passwordInput.placeholder = object ? "unchanged" : "";
 		innerBox.append(passwordLabel, passwordInput);
@@ -548,7 +545,7 @@ class Vault extends Tabs {
 
 		const permissions = this.CreatePermissionsPanel(innerBox, "4", "1 / 6", object, newMode=> {
 			innerBox.style.gridTemplateColumns = newMode === "none"
-				? "100px minmax(140px, 1fr) 72px minmax(160px, .4fr)"
+				? "100px minmax(140px, 1fr) 72px minmax(160px, .8fr)"
 				: "100px minmax(140px, 1fr) 72px minmax(200px, 1fr)";
 		});
 
@@ -565,13 +562,14 @@ class Vault extends Tabs {
 					const json = await response.json();
 					if (json.error) throw json.error;
 
-					statusLabel.style.visibility = "hidden";
-
 					passwordInput.value = json.password;
 				}
 				catch (ex) {
-					statusLabel.textContent = `Status code: ${statusCode}`;
-					statusLabel.style.visibility = "visible";
+					dialog.Close();
+					setTimeout(()=> {
+						const message = `${ex}\nstatus code: ${statusCode}`;
+						this.ConfirmBox(message, true, "mono/error.svg");
+					}, WIN.ANIME_DURATION);
 				}
 				finally {
 					passwordInput.type = "text";
@@ -862,7 +860,7 @@ class Vault extends Tabs {
 
 		const permissions = this.CreatePermissionsPanel(innerBox, "4", "1 / 6", object, newMode=> {
 			innerBox.style.gridTemplateColumns = newMode === "none"
-				? "100px minmax(140px, 1fr) 72px minmax(160px, .4fr)"
+				? "100px minmax(140px, 1fr) 72px minmax(160px, .8fr)"
 				: "100px minmax(140px, 1fr) 72px minmax(200px, 1fr)";
 		});
 

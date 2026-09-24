@@ -79,9 +79,7 @@ class DeviceView extends View {
 			this.Edit(true);
 
 			for (const key in origin) {
-				this.attributes.appendChild(
-					this.CreateAttribute(key, origin[key].v, null, null, true)
-				);
+				this.attributes.appendChild(this.CreateAttribute(key, origin[key].v, null, null, true));
 			}
 		}
 		else {
