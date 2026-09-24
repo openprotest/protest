@@ -27,7 +27,6 @@
 
 .few-box-items > div:not(.few-box-highlight) {
 	position: relative;
-	z-index: 1;
 	display: inline-block;
 	font-weight: 600;
 	border-radius: 4px;
@@ -36,12 +35,12 @@
 }
 
 .few-box-items > div:not(.few-box-highlight):hover {
-	background-color: color-mix(in srgb, var(--clr-select) 66%, transparent);
+	background-color: color-mix(in srgb, var(--clr-select) 25%, transparent);
+	box-shadow: var(--clr-select) 0 0 0 1px inset;
 }
 
 .few-box-items > .few-box-highlight {
 	position: absolute;
-	z-index: 0;
 	top: 0;
 	left: 0;
 	width: 0;

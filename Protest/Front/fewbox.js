@@ -52,7 +52,6 @@ class FewBox {
 				event.stopPropagation();
 				this.Select(i);
 				this.container.focus();
-				if (this.select.onchange) this.select.onchange();
 			};
 
 			this.itemsRow.appendChild(option);
@@ -65,7 +64,10 @@ class FewBox {
 			this.select.appendChild(new Option(options[i], i));
 		}
 		this.select.selectedIndex = -1;
-		this.select.addEventListener("change", ()=> this.Select(this.select.selectedIndex));
+		this.select.addEventListener("change", event=> {
+			event.stopPropagation();
+			this.Select(this.select.selectedIndex);
+		});
 
 		this.container.append(this.itemsRow, this.select);
 	}
@@ -74,9 +76,15 @@ class FewBox {
 		const overflows = this.itemsRow.scrollWidth > this.container.clientWidth + 1;
 		if (overflows === this.isCollapsed) return;
 
+		const hadFocus = this.container.contains(document.activeElement);
+
 		this.isCollapsed = overflows;
 		this.container.classList.toggle("collapsed", this.isCollapsed);
 		this.container.tabIndex = this.isCollapsed ? -1 : 0;
+
+		if (hadFocus) {
+			(this.isCollapsed ? this.select : this.container).focus();
+		}
 	}
 
 	Select(index) {
@@ -93,7 +101,7 @@ class FewBox {
 
 		this.MoveHighlight();
 
-		if (this.container.onchange) this.container.onchange();
+		this.container.dispatchEvent(new Event("change", {bubbles: true}));
 	}
 
 	MoveHighlight() {
@@ -108,9 +116,13 @@ class FewBox {
 	Container_onkeydown(event) {
 		if (this.isCollapsed) return;
 
-		if (event.key === "ArrowRight") { event.preventDefault(); this.Select(Math.min((this.index < 0 ? -1 : this.index) + 1, this.options.length - 1)); }
-		else if (event.key === "ArrowLeft") { event.preventDefault(); this.Select(Math.max(this.index - 1, 0)); }
-
-		if (this.select.onchange) this.select.onchange();
+		if (event.key === "ArrowRight" || event.key === "ArrowDown") {
+			event.preventDefault();
+			this.Select(Math.min((this.index < 0 ? -1 : this.index) + 1, this.options.length - 1));
+		}
+		else if (event.key === "ArrowLeft" || event.key === "ArrowUp") {
+			event.preventDefault();
+			this.Select(Math.max(this.index - 1, 0));
+		}
 	}
 }
