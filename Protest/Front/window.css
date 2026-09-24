@@ -395,6 +395,27 @@
 	animation: toast-in .4s ease forwards;
 }
 
+.win-drop-area {
+	position: absolute;
+	pointer-events: none;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	font-size: larger;
+	font-weight: bold;
+	inset: 8px;
+	color: rgb(32,32,32);
+	text-shadow: rgba(255,255,255,.8) 0 0 4px;
+	background-color: var(--clr-transparent);
+	backdrop-filter: blur(8px) brightness(80%);
+	border: var(--clr-accent) solid 2px;
+	border-radius: 20px;
+
+	visibility: hidden;
+	opacity: 0;
+	transform: scale(.95);
+}
+
 .bar-icon {
 	position: absolute;
 	top: 2px;

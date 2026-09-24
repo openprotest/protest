@@ -60,7 +60,7 @@ class Sftp extends Window {
 		this.uploadStats.style.opacity = "0";
 
 		this.dropArea = document.createElement("div");
-		this.dropArea.className = "file-drop-area";
+		this.dropArea.className = "win-drop-area";
 		this.dropArea.textContent = "Drop files here to upload...";
 
 		this.content.append(this.pathBox, this.viewBox, this.counterBox, this.uploadStats, this.dropArea);
@@ -162,6 +162,51 @@ class Sftp extends Window {
 		const rememberPasswordToggle = this.CreateToggle("Remember password", false, innerBox);
 		rememberPasswordToggle.label.style.gridArea = "6 / 2 / 6 / 4";
 
+		const dropArea = document.createElement("div");
+		dropArea.className = "win-drop-area";
+		dropArea.textContent = "Drop credentials here...";
+		dropArea.style.position = "absolute";
+		dropArea.style.visibility = "hidden";
+		dropArea.style.opacity = "0";
+		dropArea.style.transform = "scale(.96)";
+		dialogBox.appendChild(dropArea);
+
+		dialogBox.ondragover = event=> {
+			dropArea.style.transition = ".2s";
+			dropArea.style.visibility = "visible";
+			dropArea.style.opacity = "1";
+			dropArea.style.transform = "none";
+			return false;
+		};
+
+		dialogBox.ondragleave = event=> {
+			dropArea.style.visibility = "hidden";
+			dropArea.style.opacity = "0";
+			dropArea.style.transform = "scale(.96)";
+		};
+
+		dialogBox.ondrop = event=> {
+			event.preventDefault();
+			dropArea.style.visibility = "hidden";
+			dropArea.style.opacity = "0";
+			dropArea.style.transform = "scale(.96)";
+		
+			const type = event.dataTransfer.getData("protest-type");
+			const data = event.dataTransfer.getData("protest-data");
+
+			switch (type) {
+			case "credentials":
+				methodBox.Select(1);
+				break;
+
+			case "ssh-key":
+				methodBox.Select(2);
+				break;
+			}
+
+			console.log(type, data);
+		};
+
 		if ("password" in this.args) {
 			rememberPasswordToggle.checkbox.checked = true;
 			passwordInput.value = this.args.password;
@@ -209,7 +254,7 @@ class Sftp extends Window {
 			UpdateOkState();
 		};
 
-		methodBox.select.onchange = UpdateSelection;
+		methodBox.container.onchange = UpdateSelection;
 
 		(async ()=> {
 			try {
