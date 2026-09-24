@@ -457,7 +457,7 @@ class PtyHost extends Window {
 
 		this.term.onBell(()=> {
 			this.ShakeCursor();
-			if (this.args.bell) this.Bell();
+			if (this.args.bell) UI.PlayBeepSound();
 		});
 
 		this.term.onTitleChange(title=> {
@@ -972,21 +972,6 @@ class PtyHost extends Window {
 		this.bellShakeTimer = setTimeout(()=> root.classList.remove("pty-bell"), 400);
 	}
 
-	Bell() {
-		let ctx = new window.AudioContext();
-		let oscillator = ctx.createOscillator();
-		oscillator.type = "sine";
-		oscillator.frequency.value = 360;
-
-		let gain = ctx.createGain();
-		gain.gain.value = .4;
-
-		oscillator.connect(gain);
-		gain.connect(ctx.destination);
-
-		oscillator.start();
-		setTimeout(()=>oscillator.stop(), 150);
-	}
 }
 
 class TerminalRecording extends PtyHost {

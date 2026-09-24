@@ -307,9 +307,7 @@ const KEEP = {
 		case "chat-emoji":
 		case "chat-command": {
 			if (!KEEP.chatNotificationSound) {
-				KEEP.chatNotificationSound = new Audio("notification.ogg");
-				const volume = localStorage.getItem("notification_volume") == null ? 80 : parseInt(localStorage.getItem("notification_volume"));
-				KEEP.chatNotificationSound.volume = volume / 100;
+				UI.PlayNotificationSound();
 			}
 
 			if (document.hidden

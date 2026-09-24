@@ -722,30 +722,6 @@ class Personalize extends Tabs {
 		this.tabsPanel.appendChild(document.createElement("br"));
 		this.tabsPanel.appendChild(document.createElement("br"));
 
-		const volumeLabel = document.createElement("div");
-		volumeLabel.textContent = "Volume: ";
-		volumeLabel.style.display = "inline-block";
-		volumeLabel.style.minWidth = "100px";
-		volumeLabel.style.fontWeight = "600";
-		this.tabsPanel.appendChild(volumeLabel);
-
-		this.notificationVolume = document.createElement("input");
-		this.notificationVolume.setAttribute("aria-label", "Chat notification volume");
-		this.notificationVolume.type = "range";
-		this.notificationVolume.min = 0;
-		this.notificationVolume.max = 100;
-		this.notificationVolume.style.width = "200px";
-		this.tabsPanel.appendChild(this.notificationVolume);
-
-		this.notificationVolumeValue = document.createElement("div");
-		this.notificationVolumeValue.textContent = "100%";
-		this.notificationVolumeValue.style.paddingLeft = "8px";
-		this.notificationVolumeValue.style.display = "inline-block";
-		this.tabsPanel.appendChild(this.notificationVolumeValue);
-
-		this.tabsPanel.appendChild(document.createElement("br"));
-		this.tabsPanel.appendChild(document.createElement("br"));
-
 		const playButton = document.createElement("input");
 		playButton.type = "button";
 		playButton.value = "Test";
@@ -759,46 +735,28 @@ class Personalize extends Tabs {
 			}
 
 			//playButton.disabled = true;
-
-			const audio = new Audio();
-			audio.src = "notification.ogg";
-			audio.volume = this.notificationVolume.value / 100;
-			audio.play();
-
-			audio.onended = ()=> {
-				playButton.disabled = false;
-				playButton.focus();
-			};
+			UI.PlayNotificationSound();
 		};
 
 		this.openChatWindowOnMessageCheckbox.checked = localStorage.getItem("focus_chat_window") === "true";
 		this.enableNotificationSoundCheckbox.checked = localStorage.getItem("enable_notification_sound") !== "false";
-		this.notificationVolume.value = localStorage.getItem("notification_volume") == null ? 80 : parseInt(localStorage.getItem("notification_volume"));
 
 		const Apply = ()=> {
 			localStorage.setItem("focus_chat_window", this.openChatWindowOnMessageCheckbox.checked);
 			localStorage.setItem("enable_notification_sound", this.enableNotificationSoundCheckbox.checked);
-			localStorage.setItem("notification_volume", this.notificationVolume.value);
 
-			for (let i = 0; i < WIN.array.length; i++) {
+			for (let i=0; i<WIN.array.length; i++) {
 				if (WIN.array[i] instanceof Personalize && WIN.array[i].args === "chat") {
 					WIN.array[i].openChatWindowOnMessageCheckbox.checked = this.openChatWindowOnMessageCheckbox.checked;
 					WIN.array[i].enableNotificationSoundCheckbox.checked = this.enableNotificationSoundCheckbox.checked;
-					WIN.array[i].notificationVolume.value = this.notificationVolume.value;
-
-					WIN.array[i].notificationVolume.disabled = !this.enableNotificationSoundCheckbox.checked;
-					WIN.array[i].notificationVolumeValue.textContent = `${this.notificationVolume.value}%`;
 				}
 			}
 
-			if (KEEP.chatNotificationSound) {
-				KEEP.chatNotificationSound.volume = this.notificationVolume.value / 100;
-			}
+			playButton.disabled = !this.enableNotificationSoundCheckbox.checked;
 		};
 
 		this.openChatWindowOnMessageCheckbox.onchange = ()=> Apply();
 		this.enableNotificationSoundCheckbox.onchange = ()=> Apply();
-		this.notificationVolume.onchange = this.notificationVolume.oninput = ()=> Apply();
 
 		Apply();
 	}

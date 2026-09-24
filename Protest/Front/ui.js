@@ -3,11 +3,12 @@
 const UNIX_BASE_TICKS = 62135596800000; //divided by 10000
 
 const UI = {
-	lastActivity: Date.now(),
+	lastActivity    : Date.now(),
 	lastUpdateFilter: "",
-	regionalFormat: "sys",
-	onMobile: (/Android|webOS|iPhone|iPad|iPod|Opera Mini/i.test(navigator.userAgent)),
-	taskbarPosition: "bottom",
+	regionalFormat  : "sys",
+	audioContext    : null,
+	onMobile        : (/Android|webOS|iPhone|iPad|iPod|Opera Mini/i.test(navigator.userAgent)),
+	taskbarPosition : "bottom",
 
 	Initialize: ()=> {
 		for (let i=0; i<12; i++) { //clock dots
@@ -342,6 +343,54 @@ const UI = {
 		if (compressedAddress.endsWith(":")) compressedAddress += ":";
 
 		return compressedAddress.replace(":::", "::");
+	},
+	
+	PlayBeepSound: onComplete=> {
+		UI.audioContext ??= new window.AudioContext();
+		const ctx = UI.audioContext;
+		const osc = ctx.createOscillator();
+		const gain = ctx.createGain();
+
+		osc.type = "sine";
+		osc.frequency.value = 360;
+
+		gain.gain.setValueAtTime(0, ctx.currentTime);
+		gain.gain.linearRampToValueAtTime(0.4, ctx.currentTime + 0.01);
+		gain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.15);
+
+		osc.connect(gain);
+		gain.connect(ctx.destination);
+
+		osc.onended = ()=> onComplete?.();
+
+		osc.start();
+		osc.stop(ctx.currentTime + .15);
+	},
+
+	PlayNotificationSound: onComplete=> {
+		UI.audioContext ??= new window.AudioContext();
+		const ctx = UI.audioContext;
+		const now = ctx.currentTime;
+
+		const osc = ctx.createOscillator();
+		const gain = ctx.createGain();
+
+		osc.type = "sine";
+		osc.frequency.setValueAtTime(523.25, now);
+		osc.frequency.setValueAtTime(659.25, now + 0.09);
+
+		gain.gain.setValueAtTime(0, now);
+		gain.gain.linearRampToValueAtTime(0.35, now + 0.008);
+		gain.gain.setValueAtTime(0.35, now + 0.07);
+		gain.gain.linearRampToValueAtTime(0, now + 0.18);
+
+		osc.connect(gain);
+		gain.connect(ctx.destination);
+
+		osc.onended = ()=> onComplete?.();
+
+		osc.start(now);
+		osc.stop(now + 0.18);
 	}
 };
 
@@ -353,8 +402,8 @@ const MENU = {
 		{ t:"Users grid",                   i:"mono/gridusers.svg?light",    g:"inventory", h:true,  f:()=> new UsersGrid() },
 		{ t:"New device",                   i:"mono/newdevice.svg?light",    g:"inventory", h:true,  f:()=> new DeviceView({file:null}) },
 		{ t:"New user",                     i:"mono/newuser.svg?light",      g:"inventory", h:true,  f:()=> new UserView({file:null}) },
-		{ t:"Vault",                        i:"mono/vault.svg?light",        g:"inventory", h:false, f:()=> new Vault(),      k:"credentials passwords ssh keys" },
-		{ t:"Session recordings",           i:"mono/screenrecord.svg?light", g:"inventory", h:true,  f:()=> new SessionRecordings(), k:"session record replay playback vnc ssh telnet review" },
+		{ t:"Vault",                        i:"mono/vault.svg?light",        g:"inventory", h:false, f:()=> new Vault(),      k:"credentials passwords keys" },
+		{ t:"Session recordings",           i:"mono/screenrecord.svg?light", g:"inventory", h:true,  f:()=> new SessionRecordings(), k:"session record replay playback review" },
 		{ t:"Fetch",                        i:"mono/fetch.svg?light",        g:"inventory", h:false, f:()=> new Fetch() },
 		{ t:"Fetch devices",                i:"mono/fetch.svg?light",        g:"inventory", h:true,  f:()=> new Fetch("devices") },
 		{ t:"Fetch users",                  i:"mono/fetch.svg?light",        g:"inventory", h:true,  f:()=> new Fetch("users") },
