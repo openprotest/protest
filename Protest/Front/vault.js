@@ -233,7 +233,7 @@ class Vault extends Tabs {
 		return {devices, users};
 	}
 
-	ShowWhereUsed(guid, dialog, whereButton) {
+	ShowUsage(guid, dialog, usageButton) {
 		const {okButton, cancelButton, innerBox} = dialog;
 
 		const dialogBox = innerBox.parentElement;
@@ -246,7 +246,7 @@ class Vault extends Tabs {
 
 		okButton.style.display = "none";
 		cancelButton.value = "Close";
-		whereButton.style.display = "none";
+		usageButton.style.display = "none";
 
 		const {devices, users} = this.FindUsages(guid);
 
@@ -483,7 +483,7 @@ class Vault extends Tabs {
 	}
 
 	CredentialDialog(object=null) {
-		const dialog = this.DialogBox("400px");
+		const dialog = this.DialogBox("280px");
 		if (dialog === null) return;
 
 		const {okButton, innerBox, buttonBox} = dialog;
@@ -492,7 +492,7 @@ class Vault extends Tabs {
 
 		innerBox.style.padding = "16px 32px";
 		innerBox.style.display = "grid";
-		innerBox.style.gridTemplateRows = "repeat(4, 38px) auto";
+		innerBox.style.gridTemplateRows = "repeat(4, 38px)";
 		innerBox.style.alignItems = "center";
 		innerBox.style.transition = ".4s";
 
@@ -543,23 +543,13 @@ class Vault extends Tabs {
 		guidInput.style.gridArea = "4 / 2 / 4 / 4";
 		innerBox.append(guidLabel, guidInput);
 
+		const draggable = document.createElement("div");
 		if (object) {
-			const dndElement = document.createElement("div");
-			dndElement.draggable = true;
-			dndElement.style.cursor = "grab";
-			dndElement.style.gridArea = "5 / 1";
-			dndElement.style.alignSelf = "end";
-			dndElement.style.width = "54px";
-			dndElement.style.height = "54px";
-			dndElement.style.border = "2px dashed var(--clr-dark)";
-			dndElement.style.borderRadius = "8px";
-			dndElement.style.backgroundImage = "url(mono/key.svg)";
-			dndElement.style.backgroundSize = "40px 40px";
-			dndElement.style.backgroundPosition = "50% 50%";
-			dndElement.style.backgroundRepeat = "no-repeat";
-			innerBox.appendChild(dndElement);
+			draggable.draggable = true;
+			draggable.className = "win-draggable-key";
+			buttonBox.appendChild(draggable);
 
-			dndElement.ondragstart = event=> {
+			draggable.ondragstart = event=> {
 				event.dataTransfer.setData("protest-type", "credentials");
 				event.dataTransfer.setData("protest-data", object ? object.guid : null);
 			};
@@ -611,14 +601,17 @@ class Vault extends Tabs {
 		}
 
 		if (object && object.uses > 0) {
-			const whereButton = document.createElement("input");
-			whereButton.type = "button";
-			whereButton.value = "Where is used";
-			whereButton.style.position = "absolute";
-			whereButton.style.left = "8px";
-			buttonBox.appendChild(whereButton);
+			const usageButton = document.createElement("input");
+			usageButton.type = "button";
+			usageButton.value = "Usage";
+			usageButton.style.position = "absolute";
+			usageButton.style.left = "8px";
+			buttonBox.appendChild(usageButton);
 
-			whereButton.onclick = ()=> this.ShowWhereUsed(object.guid, dialog, whereButton);
+			usageButton.onclick = ()=> {
+				this.ShowUsage(object.guid, dialog, usageButton);
+				draggable.style.display = "none";
+			};
 		}
 
 		okButton.onclick = async ()=> {
@@ -817,7 +810,7 @@ class Vault extends Tabs {
 	}
 
 	SshKeyDialog(object=null) {
-		const dialog = this.DialogBox("390px");
+		const dialog = this.DialogBox("340px");
 		if (dialog === null) return;
 
 		const {okButton, innerBox, buttonBox} = dialog;
@@ -826,7 +819,7 @@ class Vault extends Tabs {
 
 		innerBox.style.padding = "16px 32px";
 		innerBox.style.display = "grid";
-		innerBox.style.gridTemplateRows = "repeat(2, 38px) 64px 38px 64px auto";
+		innerBox.style.gridTemplateRows = "repeat(2, 38px) 64px 38px 64px";
 		innerBox.style.alignItems = "center";
 		innerBox.style.transition = ".4s";
 
@@ -893,23 +886,13 @@ class Vault extends Tabs {
 				: "100px minmax(140px, 1fr) 72px minmax(200px, 1fr)";
 		});
 
+		const draggable = document.createElement("div");
 		if (object) {
-			const dndElement = document.createElement("div");
-			dndElement.draggable = true;
-			dndElement.style.cursor = "grab";
-			dndElement.style.gridArea = "6 / 1";
-			dndElement.style.alignSelf = "end";
-			dndElement.style.width = "54px";
-			dndElement.style.height = "54px";
-			dndElement.style.border = "2px dashed var(--clr-dark)";
-			dndElement.style.borderRadius = "8px";
-			dndElement.style.backgroundImage = "url(mono/key.svg)";
-			dndElement.style.backgroundSize = "40px 40px";
-			dndElement.style.backgroundPosition = "50% 50%";
-			dndElement.style.backgroundRepeat = "no-repeat";
-			innerBox.appendChild(dndElement);
+			draggable.draggable = true;
+			draggable.className = "win-draggable-key";
+			buttonBox.appendChild(draggable);
 
-			dndElement.ondragstart = event=> {
+			draggable.ondragstart = event=> {
 				event.dataTransfer.setData("protest-type", "ssh-key");
 				event.dataTransfer.setData("protest-data", object ? object.guid : null);
 			};
@@ -987,14 +970,17 @@ class Vault extends Tabs {
 		};
 
 		if (object && object.uses > 0) {
-			const whereButton = document.createElement("input");
-			whereButton.type = "button";
-			whereButton.value = "Where is used";
-			whereButton.style.position = "absolute";
-			whereButton.style.left = "8px";
-			buttonBox.appendChild(whereButton);
+			const usageButton = document.createElement("input");
+			usageButton.type = "button";
+			usageButton.value = "Usage";
+			usageButton.style.position = "absolute";
+			usageButton.style.left = "8px";
+			buttonBox.appendChild(usageButton);
 
-			whereButton.onclick = ()=> this.ShowWhereUsed(object.guid, dialog, whereButton);
+			usageButton.onclick = ()=> {
+				this.ShowUsage(object.guid, dialog, usageButton);
+				draggable.style.display = "none";
+			};
 		}
 
 		setTimeout(()=> nameInput.focus(), 200);
@@ -1201,7 +1187,7 @@ class Vault extends Tabs {
 		if (this.selectedOrphans.size === 0) return;
 
 		const count = this.selectedOrphans.size;
-		this.ConfirmBox(`Are you sure you want to remove ${count} orphaned entr${count === 1 ? "y" : "ies"}?`, false, "mono/delete.svg").addEventListener("click", async ()=>{
+		this.ConfirmBox(`Are you sure you want to remove ${count} orphaned entry ${count === 1 ? "y" : "ies"}?`, false, "mono/delete.svg").addEventListener("click", async ()=>{
 			this.orphansRemoveButton.disabled = true;
 
 			for (const key of this.selectedOrphans) {

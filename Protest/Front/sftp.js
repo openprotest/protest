@@ -91,6 +91,7 @@ class Sftp extends Window {
 		this.deleteButton.onclick  = ()=> this.DeleteSelected();
 
 		this.viewBox.onkeydown   = event => this.View_onkeydown(event);
+		this.content.ondragenter = event => this.Content_ondragenter(event);
 		this.content.ondragover  = event => this.Content_ondragover(event);
 		this.content.ondragleave = event => this.Content_ondragleave(event);
 		this.content.ondrop      = event => this.Content_ondrop(event);
@@ -100,7 +101,7 @@ class Sftp extends Window {
 		const dialog = this.DialogBox("280px");
 		if (dialog === null) return;
 
-		const {okButton, cancelButton, innerBox} = dialog;
+		const {okButton, cancelButton, innerBox, buttonBox} = dialog;
 
 		const dialogBox = innerBox.parentElement;
 		dialogBox.style.maxWidth = "440px";
@@ -162,6 +163,21 @@ class Sftp extends Window {
 		const rememberPasswordToggle = this.CreateToggle("Remember password", false, innerBox);
 		rememberPasswordToggle.label.style.gridArea = "6 / 2 / 6 / 4";
 
+		const dropAreaLabel = document.createElement("div");
+		dropAreaLabel.setAttribute("tip-below", "Drop key to auto-fill");
+		dropAreaLabel.style.position = "absolute";
+		dropAreaLabel.style.left = "8px";
+		dropAreaLabel.style.bottom = "4px";
+		dropAreaLabel.style.width = "32px";
+		dropAreaLabel.style.height = "32px";
+		dropAreaLabel.style.border = "2px dashed var(--clr-dark)";
+		dropAreaLabel.style.borderRadius = "2px";
+		dropAreaLabel.style.backgroundImage = "url(mono/lock.svg)";
+		dropAreaLabel.style.backgroundSize = "24px 24px";
+		dropAreaLabel.style.backgroundPosition = "center";
+		dropAreaLabel.style.backgroundRepeat = "no-repeat";
+		buttonBox.prepend(dropAreaLabel);
+
 		const dropArea = document.createElement("div");
 		dropArea.className = "win-drop-area";
 		dropArea.textContent = "Drop credentials here...";
@@ -171,7 +187,14 @@ class Sftp extends Window {
 		dropArea.style.transform = "scale(.96)";
 		dialogBox.appendChild(dropArea);
 
-		dialogBox.ondragover = event=> {
+		dialogBox.ondragenter = event=> {
+			const hasCorrectType = event.dataTransfer.types.includes("protest-data");
+			dropArea.textContent= hasCorrectType ? "Drop credentials here..." : "Invalid data type";
+			dropArea.style.border = hasCorrectType ? "" : "2px solid var(--clr-critical)";
+			dropArea.style.backgroundColor = hasCorrectType ? "var(--clr-transparent)" : "color-mix(in srgb, var(--clr-critical) 60%, transparent)";
+		};
+
+		dialogBox.ondragover = ()=> {
 			dropArea.style.transition = ".2s";
 			dropArea.style.visibility = "visible";
 			dropArea.style.opacity = "1";
@@ -179,7 +202,7 @@ class Sftp extends Window {
 			return false;
 		};
 
-		dialogBox.ondragleave = event=> {
+		dialogBox.ondragleave = ()=> {
 			dropArea.style.visibility = "hidden";
 			dropArea.style.opacity = "0";
 			dropArea.style.transform = "scale(.96)";
@@ -197,14 +220,14 @@ class Sftp extends Window {
 			switch (type) {
 			case "credentials":
 				methodBox.Select(1);
+				credentialsInput.value = data;
 				break;
 
 			case "ssh-key":
 				methodBox.Select(2);
+				sshKeyInput.value = data;
 				break;
 			}
-
-			credentialsInput.value = data;
 		};
 
 		if ("password" in this.args) {
@@ -370,9 +393,7 @@ class Sftp extends Window {
 			this.ws.send(connectionString);
 		};
 
-		this.ws.onerror = err=> {
-			console.log(err);
-		};
+		this.ws.onerror = err=> console.log(err);
 
 		this.ws.onclose = ()=> {
 			this.connectButton.disabled = false;
@@ -486,13 +507,13 @@ class Sftp extends Window {
 			if (this.args.workingDirectory !== dir) break;
 
 			const element = this.CreateFileElement({
-				name     : name,
-				fullname : json.path,
-				size     : 0,
-				isFile   : false,
-				isDir    : true,
-				isLink   : false,
-				modified : new Date(),
+				name    : name,
+				fullname: json.path,
+				size    : 0,
+				isFile  : false,
+				isDir   : true,
+				isLink  : false,
+				modified: new Date(),
 			}, false);
 
 			this.viewBox.appendChild(element);
@@ -613,7 +634,7 @@ class Sftp extends Window {
 
 		const date = document.createElement("div");
 		const d = new Date(file.modified*1000);
-		date.textContent = d.toLocaleDateString(UI.regionalFormat) + " " + d.toLocaleTimeString(UI.regionalFormat);
+		date.textContent = `${d.toLocaleDateString(UI.regionalFormat)} ${d.toLocaleTimeString(UI.regionalFormat)}`;
 
 		detailsBox.append(size, date);
 
@@ -859,6 +880,13 @@ class Sftp extends Window {
 			this.Select(elements[index]);
 			this.selectedElement.scrollIntoView({block: "nearest"});
 		}
+	}
+
+	Content_ondragenter(event) {
+		const hasCorrectType = event.dataTransfer.types.includes("Files");
+		this.dropArea.textContent= hasCorrectType ? "Drop credentials here..." : "Invalid data type";
+		this.dropArea.style.border = hasCorrectType ? "" : "2px solid var(--clr-critical)";
+		this.dropArea.style.backgroundColor = hasCorrectType ? "var(--clr-transparent)" : "color-mix(in srgb, var(--clr-critical) 60%, transparent)";
 	}
 
 	Content_ondragover(event) {

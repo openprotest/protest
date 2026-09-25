@@ -137,13 +137,15 @@
 
 .list-element > .list-element-drag {
 	right: 6px;
-	top: 4px;
-	width: 24px;
-	height: 24px;
+	top: 2px;
+	width: 28px;
+	height: 28px;
 	padding: 0;
 	cursor: grab;
 	visibility: hidden;
 
+	border: 2px dashed var(--clr-dark);
+	border-radius: 4px;
 	background-image: url(mono/key.svg);
 	background-size: 20px 20px;
 	background-position: center;

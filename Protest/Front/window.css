@@ -395,6 +395,21 @@
 	animation: toast-in .4s ease forwards;
 }
 
+.win-draggable-key {
+	position: absolute;
+	right: 4px;
+	top: 4px;
+	width: 32px;
+	height: 32px;
+	border: 2px dashed var(--clr-dark);
+	border-radius: 4px;
+	background-image: url(mono/key.svg);
+	background-size: 24px 24px;
+	background-position: center;
+	background-repeat: no-repeat;
+	cursor: grab;
+}
+
 .win-drop-area {
 	position: absolute;
 	pointer-events: none;
@@ -407,9 +422,9 @@
 	color: rgb(32,32,32);
 	text-shadow: rgba(255,255,255,.8) 0 0 4px;
 	background-color: var(--clr-transparent);
-	backdrop-filter: blur(8px) brightness(80%);
+	backdrop-filter: blur(4px) brightness(80%);
 	border: var(--clr-accent) solid 2px;
-	border-radius: 20px;
+	border-radius: 16px;
 
 	visibility: hidden;
 	opacity: 0;
