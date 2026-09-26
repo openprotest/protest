@@ -8,7 +8,14 @@ class Ssh extends PtyHost {
 
 		this.resizeAware = true;
 
-		if (this.args.credential) {
+		const isRestored = this.args.autoconnect === false;
+		delete this.args.autoconnect;
+
+		if (isRestored) {
+			delete this.args.password;
+			this.ConnectDialog(this.args.host, true);
+		}
+		else if (this.args.credential) {
 			this.ConnectViaCredential(this.args.host, this.args.credential);
 		}
 		else if (this.args.file) {
@@ -20,139 +27,168 @@ class Ssh extends PtyHost {
 	}
 
 	ConnectDialog(target, isNew=false) { //overrides
-		const dialog = this.DialogBox("240px");
+		const dialog = this.DialogBox("280px");
 		if (dialog === null) return;
 
-		const {okButton, cancelButton, innerBox} = dialog;
+		const {okButton, cancelButton, innerBox, buttonBox} = dialog;
 
-		innerBox.parentElement.style.maxWidth = "400px";
-		innerBox.parentElement.parentElement.onclick = event=> { event.stopPropagation(); };
+		const dialogBox = innerBox.parentElement;
+		dialogBox.style.maxWidth = "440px";
+		dialogBox.parentElement.onclick = event=> event.stopPropagation();
 
-		innerBox.style.margin = "20px 8px 0 8px";
+		innerBox.style.display = "grid";
+		innerBox.style.gridTemplateColumns = "100px min(auto, 250px)";
+		innerBox.style.alignItems = "center";
+		innerBox.style.margin = "20px 20px 0 20px";
+
+		const methodLabel = document.createElement("div");
+		methodLabel.style.gridArea = "1 / 1";
+		methodLabel.textContent = "Method:";
+		const methodBox = new FewBox(["Manual", "Credentials", "SSH key"]);
+		methodBox.Select(0);
+		methodBox.container.style.gridArea = "1 / 2";
+		innerBox.append(methodLabel, methodBox.container);
 
 		const hostLabel = document.createElement("div");
-		hostLabel.style.display = "inline-block";
-		hostLabel.style.minWidth = "88px";
-		hostLabel.style.paddingLeft = "8px";
+		hostLabel.style.gridArea = "3 / 1";
 		hostLabel.textContent = "Host:";
 		const hostInput = document.createElement("input");
+		hostInput.style.gridArea = "3 / 2";
 		hostInput.type = "text";
-		hostInput.style.width = "calc(100% - 120px)";
-		hostInput.value = target;
+		hostInput.value = target ?? "";
 		innerBox.append(hostLabel, hostInput);
 
-		const modeLabel = document.createElement("div");
-		modeLabel.style.display = "inline-block";
-		modeLabel.style.minWidth = "88px";
-		modeLabel.style.paddingLeft = "8px";
-		modeLabel.textContent = "Credentials:";
-		const modeInput = document.createElement("select");
-		modeInput.style.width = "calc(100% - 120px)";
-		modeInput.append(new Option("Type manually", "manual"), new Option("Saved credential", "credential"), new Option("Saved SSH key", "sshkey"));
-		innerBox.append(modeLabel, modeInput);
-
 		const usernameLabel = document.createElement("div");
-		usernameLabel.style.display = "inline-block";
-		usernameLabel.style.minWidth = "88px";
-		usernameLabel.style.paddingLeft = "8px";
+		usernameLabel.style.gridArea = "4 / 1";
 		usernameLabel.textContent = "Username:";
 		const usernameInput = document.createElement("input");
+		usernameInput.style.gridArea = "4 / 2";
 		usernameInput.type = "text";
-		usernameInput.style.width = "calc(100% - 120px)";
 		usernameInput.value = this.args.username ?? "";
 		innerBox.append(usernameLabel, usernameInput);
 
+		const credentialsLabel = document.createElement("div");
+		credentialsLabel.style.gridArea = "4 / 1";
+		credentialsLabel.textContent = "Credentials:";
+		const credentialsInput = document.createElement("select");
+		credentialsInput.style.gridArea = "4 / 2";
+		innerBox.append(credentialsLabel, credentialsInput);
+
+		const sshKeyLabel = document.createElement("div");
+		sshKeyLabel.style.gridArea = "4 / 1";
+		sshKeyLabel.textContent = "SSH key:";
+		const sshKeyInput = document.createElement("select");
+		sshKeyInput.style.gridArea = "4 / 2";
+		innerBox.append(sshKeyLabel, sshKeyInput);
+
 		const passwordLabel = document.createElement("div");
-		passwordLabel.style.display = "inline-block";
-		passwordLabel.style.minWidth = "88px";
-		passwordLabel.style.paddingLeft = "8px";
+		passwordLabel.style.gridArea = "5 / 1";
 		passwordLabel.textContent = "Password:";
 		const passwordInput = document.createElement("input");
+		passwordInput.style.gridArea = "5 / 2";
 		passwordInput.type = "password";
-		passwordInput.style.width = "calc(100% - 120px)";
 		innerBox.append(passwordLabel, passwordInput);
 
 		const rememberPasswordToggle = this.CreateToggle("Remember password", false, innerBox);
-		rememberPasswordToggle.label.style.margin = "8px 0px 0px 4px";
-
-		const savedLabel = document.createElement("div");
-		savedLabel.style.display = "none";
-		savedLabel.style.minWidth = "88px";
-		savedLabel.style.paddingLeft = "8px";
-		savedLabel.textContent = "Saved:";
-		const savedSelect = document.createElement("select");
-		savedSelect.style.display = "none";
-		savedSelect.style.width = "calc(100% - 120px)";
-		innerBox.append(savedLabel, savedSelect);
+		rememberPasswordToggle.label.style.gridArea = "6 / 2 / 6 / 4";
 
 		if ("password" in this.args) {
 			rememberPasswordToggle.checkbox.checked = true;
 			passwordInput.value = this.args.password;
 		}
 
+		dialogBox.style.transition = ".2s";
+
 		const UpdateOkState = ()=> {
-			if (modeInput.value === "manual") {
-				okButton.disabled = hostInput.value.trim().length === 0 || usernameInput.value.trim().length === 0 || passwordInput.value.length === 0;
-			}
-			else {
-				okButton.disabled = hostInput.value.trim().length === 0 || !savedSelect.value;
+			const host = hostInput.value.trim().length > 0;
+
+			switch (methodBox.index) {
+			case 1:
+				okButton.disabled = !host || !credentialsInput.value;
+				break;
+
+			case 2:
+				okButton.disabled = !host || !sshKeyInput.value;
+				break;
+
+			default:
+				okButton.disabled = !host || usernameInput.value.trim().length === 0 || passwordInput.value.length === 0;
+				break;
 			}
 		};
 
-		const UpdateMode = async ()=> {
-			const manual = modeInput.value === "manual";
+		const UpdateSelection = () => {
+			innerBox.style.gridTemplateRows = methodBox.index === 0 ? "36px 8px repeat(4, 36px)" : "36px 8px repeat(2, 36px)";
+			dialogBox.style.maxHeight = methodBox.index === 0 ? "280px" : "200px";
 
-			usernameLabel.style.display = manual ? "inline-block" : "none";
-			usernameInput.style.display = manual ? "inline-block" : "none";
-			passwordLabel.style.display = manual ? "inline-block" : "none";
-			passwordInput.style.display = manual ? "inline-block" : "none";
-			rememberPasswordToggle.checkbox.style.display = manual ? "" : "none";
-			rememberPasswordToggle.label.style.display = manual ? "" : "none";
+			passwordLabel.style.display    = methodBox.index === 0 ? "initial" : "none";
+			passwordInput.style.display    = methodBox.index === 0 ? "initial" : "none";
 
-			savedLabel.style.display = manual ? "none" : "inline-block";
-			savedSelect.style.display = manual ? "none" : "inline-block";
+			usernameLabel.style.display    = methodBox.index === 0 ? "initial" : "none";
+			usernameInput.style.display    = methodBox.index === 0 ? "initial" : "none";
 
-			if (!manual) {
-				savedSelect.textContent = "";
-				try {
-					const url = modeInput.value === "credential" ? "vault/credential/list" : "vault/sshkey/list";
-					const response = await fetch(url);
-					const json = response.status === 200 ? await response.json() : [];
-					for (const item of json) {
-						savedSelect.append(new Option(item.name || item.username || item.guid, item.guid));
-					}
-				}
-				catch { /* leave the list empty */ }
-			}
+			credentialsLabel.style.display = methodBox.index === 1 ? "initial" : "none";
+			credentialsInput.style.display = methodBox.index === 1 ? "initial" : "none";
+
+			sshKeyLabel.style.display      = methodBox.index === 2 ? "initial" : "none";
+			sshKeyInput.style.display      = methodBox.index === 2 ? "initial" : "none";
+
+			rememberPasswordToggle.label.style.opacity = methodBox.index === 0 ? 1 : 0;
+			rememberPasswordToggle.label.style.display = methodBox.index === 0 ? "initial" : "none";
 
 			UpdateOkState();
 		};
 
-		modeInput.onchange = UpdateMode;
+		methodBox.container.onchange = UpdateSelection;
 
-		okButton.onclick = ()=> {
-			if (modeInput.value !== "manual") {
-				dialog.Close();
-				this.ConnectViaCredential(hostInput.value.trim(), savedSelect.value);
-				return;
-			}
-
-			this.args.username = usernameInput.value.trim();
-
-			if (rememberPasswordToggle.checkbox.checked) {
-				this.args.password = passwordInput.value;
-			}
-			else {
-				delete this.args.password;
-			}
-
-			dialog.Close();
-			this.ConnectViaCredentials(
-				hostInput.value.trim(),
-				usernameInput.value.trim(),
-				passwordInput.value
-			);
+		const SelectVaultEntry = (format, guid)=> {
+			const isSshKey = format === Window.DRAG_SSH_KEY;
+			methodBox.Select(isSshKey ? 2 : 1);
+			(isSshKey ? sshKeyInput : credentialsInput).value = guid;
+			UpdateOkState();
 		};
+
+		const listsLoaded = (async ()=> {
+			try {
+				const [credResponse, keyResponse] = await Promise.all([
+					fetch("vault/credential/list"),
+					fetch("vault/sshkey/list")
+				]);
+
+				if (credResponse.status === 200) {
+					const json = await credResponse.json();
+					for (const item of json) {
+						credentialsInput.append(new Option(item.name || item.username || item.guid, item.guid));
+					}
+				}
+
+				if (keyResponse.status === 200) {
+					const json = await keyResponse.json();
+					for (const item of json) {
+						sshKeyInput.append(new Option(item.name || item.username || item.guid, item.guid));
+					}
+				}
+			}
+			catch {}
+
+			if (this.args.credential) {
+				const isSshKey = [...sshKeyInput.options].some(o=> o.value === this.args.credential);
+				SelectVaultEntry(isSshKey ? Window.DRAG_SSH_KEY : Window.DRAG_CREDENTIALS, this.args.credential);
+			}
+
+			UpdateOkState();
+		})();
+
+		this.AddDropTarget(dialogBox, {
+			accept     : [Window.DRAG_CREDENTIALS, Window.DRAG_SSH_KEY],
+			text       : "Drop credentials here...",
+			labelParent: buttonBox,
+			tip        : "Drop key to auto-fill",
+			onDrop     : async (format, guid)=> {
+				await listsLoaded;
+				SelectVaultEntry(format, guid);
+			}
+		});
 
 		if (isNew) {
 			cancelButton.value = "Close";
@@ -162,21 +198,48 @@ class Ssh extends PtyHost {
 			};
 		}
 
+		okButton.onclick = ()=> {
+			const host = hostInput.value.trim();
+
+			if (methodBox.index === 0) {
+				this.args.username = usernameInput.value.trim();
+
+				if (rememberPasswordToggle.checkbox.checked) {
+					this.args.password = passwordInput.value;
+				}
+				else {
+					delete this.args.password;
+				}
+
+				delete this.args.credential;
+
+				dialog.Close();
+				this.ConnectViaCredentials(host, usernameInput.value.trim(), passwordInput.value);
+			}
+			else {
+				const guid = methodBox.index === 1 ? credentialsInput.value : sshKeyInput.value;
+				this.args.credential = guid;
+
+				dialog.Close();
+				this.ConnectViaCredential(host, guid);
+			}
+		};
+
 		hostInput.onkeydown = usernameInput.onkeydown = passwordInput.onkeydown = event=> {
-			if (dialog.okButton.disabled) return;
+			if (okButton.disabled) return;
 			if (event.key === "Enter") {
-				dialog.okButton.click();
+				okButton.click();
 			}
 		};
 
 		hostInput.onchange = hostInput.oninput =
 		usernameInput.onchange = usernameInput.oninput =
 		passwordInput.onchange = passwordInput.oninput =
-		savedSelect.onchange = UpdateOkState;
+		credentialsInput.onchange =
+		sshKeyInput.onchange = UpdateOkState;
 
-		UpdateMode();
-
-		setTimeout(()=> hostInput.focus(), 200);
+		UpdateSelection();
+		setTimeout(()=> methodBox.container.focus(), 200);
 	}
 
 	ConnectViaCredentials(target, username, password) {

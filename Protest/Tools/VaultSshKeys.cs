@@ -61,6 +61,10 @@ internal static class VaultSshKeys {
         }
     }
 
+    internal static void PersistAll(List<SshKeyEntry> entries) {
+        Persist(entries);
+    }
+
     public static byte[] List() {
         List<SshKeyEntry> entries = Load();
         Dictionary<Guid, int> referenceCounts = VaultMigration.CountReferences();

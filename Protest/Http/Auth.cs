@@ -513,6 +513,7 @@ internal static class Auth {
                 path.Add("/vault/sshkey/list");
                 path.Add("/vault/sshkey/get");
                 path.Add("/vault/orphans");
+                path.Add("/vault/duplicates");
                 path.Add("/vault/users");
                 break;
 
@@ -522,6 +523,7 @@ internal static class Auth {
                 path.Add("/vault/sshkey/save");
                 path.Add("/vault/sshkey/delete");
                 path.Add("/vault/scan");
+                path.Add("/vault/deduplicate");
                 break;
 
             case "fetch:write":

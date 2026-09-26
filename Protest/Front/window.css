@@ -429,6 +429,32 @@
 	visibility: hidden;
 	opacity: 0;
 	transform: scale(.95);
+	transition: .2s;
+}
+
+.win-drop-area.win-drop-area-visible {
+	visibility: visible;
+	opacity: 1;
+	transform: none;
+}
+
+.win-drop-area.win-drop-area-invalid {
+	border-color: var(--clr-critical);
+	background-color: color-mix(in srgb, var(--clr-critical) 60%, transparent);
+}
+
+.win-drop-area-label {
+	position: absolute;
+	left: 8px;
+	bottom: 4px;
+	width: 32px;
+	height: 32px;
+	border: 2px dashed var(--clr-dark);
+	border-radius: 2px;
+	background-image: url(mono/lock.svg);
+	background-size: 24px 24px;
+	background-position: center;
+	background-repeat: no-repeat;
 }
 
 .bar-icon {

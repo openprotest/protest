@@ -489,30 +489,15 @@ class View extends Window {
 		innerBox.style.minHeight = "0";
 		innerBox.style.maxHeight = "400px";
 		innerBox.style.overflowY = "auto";
-		
-		const dropAreaLabel = document.createElement("div");
-		dropAreaLabel.setAttribute("tip-below", "Drop key to add");
-		dropAreaLabel.style.position = "absolute";
-		dropAreaLabel.style.left = "12px";
-		dropAreaLabel.style.bottom = "12px";
-		dropAreaLabel.style.width = "32px";
-		dropAreaLabel.style.height = "32px";
-		dropAreaLabel.style.border = "2px dashed var(--clr-dark)";
-		dropAreaLabel.style.borderRadius = "2px";
-		dropAreaLabel.style.backgroundImage = "url(mono/lock.svg)";
-		dropAreaLabel.style.backgroundSize = "24px 24px";
-		dropAreaLabel.style.backgroundPosition = "center";
-		dropAreaLabel.style.backgroundRepeat = "no-repeat";
-		buttonBox.prepend(dropAreaLabel);
 
-		const dropArea = document.createElement("div");
-		dropArea.className = "win-drop-area";
-		dropArea.textContent = "Drop credentials here...";
-		dropArea.style.position = "absolute";
-		dropArea.style.visibility = "hidden";
-		dropArea.style.opacity = "0";
-		dropArea.style.transform = "scale(.96)";
-		dialogBox.appendChild(dropArea);
+		const errorBox = document.createElement("div");
+		errorBox.style.display = "none";
+		errorBox.style.flex = "0 0 auto";
+		errorBox.style.padding = "4px 20px 0 20px";
+		errorBox.style.textAlign = "center";
+		errorBox.style.fontWeight = "bold";
+		errorBox.style.color = "var(--clr-error)";
+		dialogBox.insertBefore(errorBox, buttonBox);
 
 		buttonBox.style.position = "static";
 		buttonBox.style.paddingTop = "4px";
@@ -530,72 +515,53 @@ class View extends Window {
 		cdRight.appendChild(document.createElement("div"));
 		countdown.appendChild(cdRight);
 
-		const OnRemove = guid=> {
-			const index = guidList.indexOf(guid);
-			if (index !== -1) guidList.splice(index, 1);
-
+		const MarkDirty = ()=> {
 			countdown.style.display = "none";
 			okButton.style.display = "initial";
 			okButton.value = "Save";
 			cancelButton.value = "Cancel";
 		};
 
-		for (let i=0; i<guidList.length; i++) {
-			const credBox = await this.CreateCredentialsBox(guidList[i], attributeName, i===0, OnRemove);
-			innerBox.appendChild(credBox);
-		}
-
-		dialogBox.ondragenter = event=> {
-			const hasCorrectType = event.dataTransfer.types.includes("protest-type")
-				&& event.dataTransfer.getData("protest-type") == "credentials";
-
-			dropArea.textContent = hasCorrectType ? "Drop credentials here..." : "Invalid data type";
-			dropArea.style.border = hasCorrectType ? "" : "2px solid var(--clr-critical)";
-			dropArea.style.backgroundColor = hasCorrectType ? "var(--clr-transparent)" : "color-mix(in srgb, var(--clr-critical) 60%, transparent)";
+		const OnRemove = guid=> {
+			const index = guidList.indexOf(guid);
+			if (index === -1) return;
+			guidList.splice(index, 1);
+			MarkDirty();
 		};
 
-		dialogBox.ondragover = ()=> {
-			countdown.style.display = "none";
+		const {label: dropAreaLabel} = this.AddDropTarget(dialogBox, {
+			accept     : [Window.DRAG_CREDENTIALS],
+			text       : "Drop credentials here...",
+			labelParent: buttonBox,
+			tip        : "Drop key to add",
+			onEnter    : ()=> countdown.style.display = "none",
+			onDrop     : async (format, guid)=> {
+				if (!guid || guidList.includes(guid)) return;
 
-			dropArea.style.transition = ".2s";
-			dropArea.style.visibility = "visible";
-			dropArea.style.opacity = "1";
-			dropArea.style.transform = "none";
-			return false;
-		};
+				const {container, valid} = await this.CreateCredentialsBox(guid, attributeName, false, OnRemove);
 
-		dialogBox.ondragleave = ()=> {
-			dropArea.style.visibility = "hidden";
-			dropArea.style.opacity = "0";
-			dropArea.style.transform = "scale(.96)";
-		};
+				if (valid && guidList.includes(guid)) return;
+				innerBox.appendChild(container);
+				container.scrollIntoView({block: "nearest"});
 
-		dialogBox.ondrop = async event=> {
-			event.preventDefault();
-			dropArea.style.visibility = "hidden";
-			dropArea.style.opacity = "0";
-			dropArea.style.transform = "scale(.96)";
-		
-			const type = event.dataTransfer.getData("protest-type");
-			const data = event.dataTransfer.getData("protest-data");
-			
-			if (type === "credentials") {
-				if (guidList.includes(data)) return;
+				if (!valid) return;
 
-				guidList.push(data);
-
-				okButton.style.display = "initial";
-				okButton.value = "Save";
-				cancelButton.value = "Cancel";
-
-				const credBox = await this.CreateCredentialsBox(data, attributeName, false, OnRemove);
-				innerBox.appendChild(credBox);
-				credBox.scrollIntoView();
+				guidList.push(guid);
+				MarkDirty();
 			}
-		};
+		});
+		dropAreaLabel.style.left = "12px";
+		dropAreaLabel.style.bottom = "12px";
+
+		const initialList = [...guidList];
+		for (let i=0; i<initialList.length; i++) {
+			const {container} = await this.CreateCredentialsBox(initialList[i], attributeName, i===0, OnRemove);
+			innerBox.appendChild(container);
+		}
 
 		okButton.onclick = async ()=> {
 			okButton.disabled = true;
+			errorBox.style.display = "none";
 
 			const obj = Object.create(null);
 			for (let i=0; i<this.attributes.childNodes.length; i++) {
@@ -608,28 +574,39 @@ class View extends Window {
 			const newValue = guidList.join("; ");
 			obj[attributeName] = {v:newValue};
 
-			const response = await fetch(`db/${this.dbTarget}/save?file=${this.args.file}`, {
-				method: "POST",
-				body: JSON.stringify(obj)
-			});
+			try {
+				const response = await fetch(`db/${this.dbTarget}/save?file=${this.args.file}`, {
+					method: "POST",
+					body: JSON.stringify(obj)
+				});
 
-			if (response.status === 200) {
-				this.link[attributeName] = {
-					v: newValue,
-					o: KEEP.username,
-					d: UI.UnixDateToTicks(new Date().getTime()),
-				};
+				if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
 
-				if (this instanceof DeviceView) {
-					LOADER.devices.data[this.args.file] = this.link;
-				}
-				else if (this instanceof UserView) {
-					LOADER.users.data[this.args.file] = this.link;
-				}
-
-				this.InitializePreview();
-				dialog.Close();
+				const json = await response.json();
+				if (json.error) throw json.error;
 			}
+			catch (ex) {
+				errorBox.textContent = ex?.message ?? ex;
+				errorBox.style.display = "block";
+				okButton.disabled = false;
+				return;
+			}
+
+			this.link[attributeName] = {
+				v: newValue,
+				o: KEEP.username,
+				d: UI.UnixDateToTicks(new Date().getTime()),
+			};
+
+			if (this instanceof DeviceView) {
+				LOADER.devices.data[this.args.file] = this.link;
+			}
+			else if (this instanceof UserView) {
+				LOADER.users.data[this.args.file] = this.link;
+			}
+
+			this.InitializePreview();
+			dialog.Close();
 		};
 
 		countdown.ondblclick = ()=> {
@@ -695,16 +672,15 @@ class View extends Window {
 
 		container.appendChild(draggable);
 
-		draggable.ondragstart = event=> {
-			event.dataTransfer.setData("protest-type", "credentials");
-			event.dataTransfer.setData("protest-data", guid);
-		};
+		draggable.ondragstart = event=> Window.SetDragPayload(event, Window.DRAG_CREDENTIALS, guid);
 
 		removeButton.onclick = ()=> {
 			removeButton.disabled = true;
 			container.parentElement?.removeChild(container);
 			onRemove?.(guid);
 		};
+
+		let valid = true;
 
 		try {
 			const response = await fetch(`vault/credential/get?guid=${guid}`);
@@ -714,7 +690,11 @@ class View extends Window {
 			if (json.error) {
 				editButton.disabled = true;
 				editButton.style.opacity = ".8";
-				throw "Credentials don't exists";
+				draggable.style.display = "none";
+				throw {
+					"not found"   : "Credentials don't exist",
+					"unauthorized": "Access denied for this credential"
+				}[json.error] ?? json.error;
 			}
 
 			const titleBox = document.createElement("div");
@@ -798,6 +778,8 @@ class View extends Window {
 			};
 		}
 		catch (ex) {
+			valid = false;
+
 			const errorBox = document.createElement("div");
 			errorBox.style.textAlign = "center";
 			errorBox.style.fontWeight = "bold";
@@ -806,7 +788,7 @@ class View extends Window {
 			container.appendChild(errorBox);
 		}
 
-		return container;
+		return {container, valid};
 	}
 
 	CreateGroupTitle(icon, title) {

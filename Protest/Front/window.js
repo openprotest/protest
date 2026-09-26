@@ -293,6 +293,10 @@ taskbar.oncontextmenu = ()=> false;
 class Window {
 	static cssDependencies = [];
 
+	static DRAG_CREDENTIALS = "protest/credentials";
+	static DRAG_SSH_KEY     = "protest/ssh-key";
+	static DRAG_FILES       = "Files";
+
 	constructor() {
 		this.isMaximized = false;
 		this.isMinimized = false;
@@ -1322,6 +1326,65 @@ class Window {
 		setTimeout(()=> {
 			if (toast.parentElement) toast.parentElement.removeChild(toast);
 		}, 5000);
+	}
+
+	static SetDragPayload(event, format, guid) {
+		event.dataTransfer.effectAllowed = "copy";
+		event.dataTransfer.setData(format, guid);
+	}
+
+	AddDropTarget(target, {accept, text, labelParent=null, tip=null, onEnter=null, onDrop}) {
+		const overlay = document.createElement("div");
+		overlay.className = "win-drop-area";
+		overlay.textContent = text;
+		target.appendChild(overlay);
+
+		let label = null;
+		if (labelParent) {
+			label = document.createElement("div");
+			label.className = "win-drop-area-label";
+			if (tip) label.setAttribute("tip-below", tip);
+			labelParent.prepend(label);
+		}
+
+		const GetFormat = event=> accept.find(o=> event.dataTransfer.types.includes(o)) ?? null;
+		let depth = 0;
+
+		const Hide = ()=> {
+			depth = 0;
+			overlay.classList.remove("win-drop-area-visible");
+		};
+
+		target.addEventListener("dragenter", event=> {
+			if (depth++ > 0) return;
+
+			const format = GetFormat(event);
+			overlay.textContent = format ? text : "Invalid data type";
+			overlay.classList.toggle("win-drop-area-invalid", !format);
+			overlay.classList.add("win-drop-area-visible");
+
+			if (format) onEnter?.(format);
+		});
+
+		target.addEventListener("dragover", event=> {
+			event.preventDefault();
+			event.dataTransfer.dropEffect = GetFormat(event) ? "copy" : "none";
+		});
+
+		target.addEventListener("dragleave", ()=> {
+			if (--depth <= 0) Hide();
+		});
+
+		target.addEventListener("drop", event=> {
+			event.preventDefault();
+			Hide();
+
+			const format = GetFormat(event);
+			if (!format) return;
+			onDrop(format, event.dataTransfer.getData(format), event);
+		});
+
+		return {overlay, label};
 	}
 
 	static AddCssDependencies(filename) {

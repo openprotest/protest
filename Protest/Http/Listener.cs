@@ -47,6 +47,8 @@ internal sealed class Listener {
 
         ["/vault/scan"]                   = (ctx, username) => Tools.VaultMigration.Scan(ctx, username),
         ["/vault/orphans"]                = (ctx, username) => Tools.VaultMigration.FindOrphans(),
+        ["/vault/duplicates"]             = (ctx, username) => Tools.VaultMigration.FindDuplicates(),
+        ["/vault/deduplicate"]            = (ctx, username) => Tools.VaultMigration.Deduplicate(ctx, username),
         ["/vault/users"]                  = (ctx, username) => Auth.ListUsernames(),
 
         ["/fetch/networkinfo"]            = (ctx, username) => Protocols.Ldap.NetworkInfo(),

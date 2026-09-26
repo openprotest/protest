@@ -23,7 +23,14 @@ class Sftp extends Window {
 			this.viewBox.className = "file-view file-list";
 		}
 
-		if (this.args.credential) {
+		const isRestored = this.args.autoconnect === false;
+		delete this.args.autoconnect;
+
+		if (isRestored) {
+			delete this.args.password;
+			this.ConnectDialog(this.args.host, true);
+		}
+		else if (this.args.credential) {
 			this.ConnectViaCredential(this.args.host, this.args.credential);
 		}
 		else if (this.args.file) {
@@ -59,11 +66,7 @@ class Sftp extends Window {
 		this.uploadStats.textContent = "Uploading";
 		this.uploadStats.style.opacity = "0";
 
-		this.dropArea = document.createElement("div");
-		this.dropArea.className = "win-drop-area";
-		this.dropArea.textContent = "Drop files here to upload...";
-
-		this.content.append(this.pathBox, this.viewBox, this.counterBox, this.uploadStats, this.dropArea);
+		this.content.append(this.pathBox, this.viewBox, this.counterBox, this.uploadStats);
 
 		this.spinnerBox = document.createElement("div");
 		this.spinnerBox.style.height = "0";
@@ -91,10 +94,12 @@ class Sftp extends Window {
 		this.deleteButton.onclick  = ()=> this.DeleteSelected();
 
 		this.viewBox.onkeydown   = event => this.View_onkeydown(event);
-		this.content.ondragenter = event => this.Content_ondragenter(event);
-		this.content.ondragover  = event => this.Content_ondragover(event);
-		this.content.ondragleave = event => this.Content_ondragleave(event);
-		this.content.ondrop      = event => this.Content_ondrop(event);
+
+		this.AddDropTarget(this.content, {
+			accept: [Window.DRAG_FILES],
+			text  : "Drop files here to upload...",
+			onDrop: (format, data, event)=> this.Content_ondrop(event)
+		});
 	}
 
 	ConnectDialog(target, isNew=false) {
@@ -163,73 +168,6 @@ class Sftp extends Window {
 		const rememberPasswordToggle = this.CreateToggle("Remember password", false, innerBox);
 		rememberPasswordToggle.label.style.gridArea = "6 / 2 / 6 / 4";
 
-		const dropAreaLabel = document.createElement("div");
-		dropAreaLabel.setAttribute("tip-below", "Drop key to auto-fill");
-		dropAreaLabel.style.position = "absolute";
-		dropAreaLabel.style.left = "8px";
-		dropAreaLabel.style.bottom = "4px";
-		dropAreaLabel.style.width = "32px";
-		dropAreaLabel.style.height = "32px";
-		dropAreaLabel.style.border = "2px dashed var(--clr-dark)";
-		dropAreaLabel.style.borderRadius = "2px";
-		dropAreaLabel.style.backgroundImage = "url(mono/lock.svg)";
-		dropAreaLabel.style.backgroundSize = "24px 24px";
-		dropAreaLabel.style.backgroundPosition = "center";
-		dropAreaLabel.style.backgroundRepeat = "no-repeat";
-		buttonBox.prepend(dropAreaLabel);
-
-		const dropArea = document.createElement("div");
-		dropArea.className = "win-drop-area";
-		dropArea.textContent = "Drop credentials here...";
-		dropArea.style.position = "absolute";
-		dropArea.style.visibility = "hidden";
-		dropArea.style.opacity = "0";
-		dropArea.style.transform = "scale(.96)";
-		dialogBox.appendChild(dropArea);
-
-		dialogBox.ondragenter = event=> {
-			const hasCorrectType = event.dataTransfer.types.includes("protest-data");
-			dropArea.textContent= hasCorrectType ? "Drop credentials here..." : "Invalid data type";
-			dropArea.style.border = hasCorrectType ? "" : "2px solid var(--clr-critical)";
-			dropArea.style.backgroundColor = hasCorrectType ? "var(--clr-transparent)" : "color-mix(in srgb, var(--clr-critical) 60%, transparent)";
-		};
-
-		dialogBox.ondragover = ()=> {
-			dropArea.style.transition = ".2s";
-			dropArea.style.visibility = "visible";
-			dropArea.style.opacity = "1";
-			dropArea.style.transform = "none";
-			return false;
-		};
-
-		dialogBox.ondragleave = ()=> {
-			dropArea.style.visibility = "hidden";
-			dropArea.style.opacity = "0";
-			dropArea.style.transform = "scale(.96)";
-		};
-
-		dialogBox.ondrop = event=> {
-			event.preventDefault();
-			dropArea.style.visibility = "hidden";
-			dropArea.style.opacity = "0";
-			dropArea.style.transform = "scale(.96)";
-		
-			const type = event.dataTransfer.getData("protest-type");
-			const data = event.dataTransfer.getData("protest-data");
-
-			switch (type) {
-			case "credentials":
-				methodBox.Select(1);
-				credentialsInput.value = data;
-				break;
-
-			case "ssh-key":
-				methodBox.Select(2);
-				sshKeyInput.value = data;
-				break;
-			}
-		};
-
 		if ("password" in this.args) {
 			rememberPasswordToggle.checkbox.checked = true;
 			passwordInput.value = this.args.password;
@@ -279,7 +217,14 @@ class Sftp extends Window {
 
 		methodBox.container.onchange = UpdateSelection;
 
-		(async ()=> {
+		const SelectVaultEntry = (format, guid)=> {
+			const isSshKey = format === Window.DRAG_SSH_KEY;
+			methodBox.Select(isSshKey ? 2 : 1);
+			(isSshKey ? sshKeyInput : credentialsInput).value = guid;
+			UpdateOkState();
+		};
+
+		const listsLoaded = (async ()=> {
 			try {
 				const [credResponse, keyResponse] = await Promise.all([
 					fetch("vault/credential/list"),
@@ -302,8 +247,24 @@ class Sftp extends Window {
 			}
 			catch {}
 
+			if (this.args.credential) {
+				const isSshKey = [...sshKeyInput.options].some(o=> o.value === this.args.credential);
+				SelectVaultEntry(isSshKey ? Window.DRAG_SSH_KEY : Window.DRAG_CREDENTIALS, this.args.credential);
+			}
+
 			UpdateOkState();
 		})();
+
+		this.AddDropTarget(dialogBox, {
+			accept     : [Window.DRAG_CREDENTIALS, Window.DRAG_SSH_KEY],
+			text       : "Drop credentials here...",
+			labelParent: buttonBox,
+			tip        : "Drop key to auto-fill",
+			onDrop     : async (format, guid)=> {
+				await listsLoaded;
+				SelectVaultEntry(format, guid);
+			}
+		});
 
 		if (isNew) {
 			cancelButton.value = "Close";
@@ -326,11 +287,15 @@ class Sftp extends Window {
 					delete this.args.password;
 				}
 
+				delete this.args.credential;
+
 				dialog.Close();
 				this.ConnectViaCredentials(host, usernameInput.value.trim(), passwordInput.value);
 			}
 			else {
 				const guid = methodBox.index === 1 ? credentialsInput.value : sshKeyInput.value;
+				this.args.credential = guid;
+
 				dialog.Close();
 				this.ConnectViaCredential(host, guid);
 			}
@@ -882,35 +847,8 @@ class Sftp extends Window {
 		}
 	}
 
-	Content_ondragenter(event) {
-		const hasCorrectType = event.dataTransfer.types.includes("Files");
-		this.dropArea.textContent= hasCorrectType ? "Drop credentials here..." : "Invalid data type";
-		this.dropArea.style.border = hasCorrectType ? "" : "2px solid var(--clr-critical)";
-		this.dropArea.style.backgroundColor = hasCorrectType ? "var(--clr-transparent)" : "color-mix(in srgb, var(--clr-critical) 60%, transparent)";
-	}
-
-	Content_ondragover(event) {
-		this.dropArea.style.transition = ".2s";
-		this.dropArea.style.visibility = "visible";
-		this.dropArea.style.opacity = "1";
-		this.dropArea.style.transform = "none";
-		return false;
-	}
-
-	Content_ondragleave(event) {
-		this.dropArea.style.visibility = "hidden";
-		this.dropArea.style.opacity = "0";
-		this.dropArea.style.transform = "scale(.96)";
-	}
-
 	Content_ondrop(event) {
-		event.preventDefault();
-
-		this.dropArea.style.visibility = "hidden";
-		this.dropArea.style.opacity = "0";
-		this.dropArea.style.transform = "scale(.96)";
-
-		if (this.ws === null) return;
+		if (!this.ws) return;
 		if (this.status !== "idle") return;
 
 		const items = event.dataTransfer.items;

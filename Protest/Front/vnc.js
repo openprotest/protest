@@ -13,7 +13,12 @@ class Vnc extends Window {
 
 		this.rfb = null;
 
+		const isRestored = this.args.autoconnect === false;
+		delete this.args.autoconnect;
+		if (isRestored) delete this.args.password;
+
 		this.password = this.args.password ?? null;
+		this.username = null;
 
 		this.SetTitle("VNC");
 		this.SetIcon("mono/vnc.svg");
@@ -73,7 +78,7 @@ class Vnc extends Window {
 			window.addEventListener("focus", this._clipboardSyncHandler);
 			document.addEventListener("visibilitychange", this._clipboardSyncHandler);
 
-			if (this.args.host && this.args.autoconnect !== false) {
+			if (this.args.host && !isRestored) {
 				this.SetTitle(`VNC - ${this.args.host}`);
 				this.Connect(this.args.host);
 			}
@@ -128,6 +133,7 @@ class Vnc extends Window {
 		const options = Object.create(null);
 		if (this.password) {
 			options.credentials = { password: this.password };
+			if (this.username) options.credentials.username = this.username; //for auth types that also take a username
 		}
 
 		try {
@@ -193,56 +199,168 @@ class Vnc extends Window {
 	}
 
 	ConnectDialog(target="", isNew=false) {
-		const dialog = this.DialogBox("192px");
+		const dialog = this.DialogBox("280px");
 		if (dialog === null) return;
 
-		const {okButton, cancelButton, innerBox} = dialog;
+		const {okButton, cancelButton, innerBox, buttonBox} = dialog;
 		okButton.value = "Connect";
 
-		innerBox.parentElement.style.maxWidth = "400px";
-		innerBox.parentElement.parentElement.onclick = event=> event.stopPropagation();
+		const dialogBox = innerBox.parentElement;
+		dialogBox.style.maxWidth = "440px";
+		dialogBox.parentElement.onclick = event=> event.stopPropagation();
 
-		innerBox.style.margin = "20px 8px 0 8px";
+		innerBox.style.display = "grid";
+		innerBox.style.gridTemplateColumns = "100px min(auto, 250px)";
+		innerBox.style.gridTemplateRows = "36px 8px repeat(3, 36px) auto";
+		innerBox.style.alignItems = "center";
+		innerBox.style.margin = "20px 20px 0 20px";
+
+		const methodLabel = document.createElement("div");
+		methodLabel.style.gridArea = "1 / 1";
+		methodLabel.textContent = "Method:";
+		const methodBox = new FewBox(["Manual", "Credentials"]);
+		methodBox.Select(0);
+		methodBox.container.style.gridArea = "1 / 2";
+		innerBox.append(methodLabel, methodBox.container);
 
 		const hostLabel = document.createElement("div");
-		hostLabel.style.display = "inline-block";
-		hostLabel.style.minWidth = "88px";
-		hostLabel.style.paddingLeft = "8px";
+		hostLabel.style.gridArea = "3 / 1";
 		hostLabel.textContent = "Host:";
 		const hostInput = document.createElement("input");
+		hostInput.style.gridArea = "3 / 2";
 		hostInput.type = "text";
-		hostInput.style.width = "calc(100% - 120px)";
 		hostInput.value = target ?? "";
 		innerBox.append(hostLabel, hostInput);
 
 		const portLabel = document.createElement("div");
-		portLabel.style.display = "inline-block";
-		portLabel.style.minWidth = "88px";
-		portLabel.style.paddingLeft = "8px";
+		portLabel.style.gridArea = "4 / 1";
 		portLabel.textContent = "Port:";
 		const portInput = document.createElement("input");
+		portInput.style.gridArea = "4 / 2";
 		portInput.type = "number";
 		portInput.min = "1";
 		portInput.max = "65535";
-		portInput.style.width = "calc(100% - 120px)";
 		portInput.value = this.args.port || 5900;
 		innerBox.append(portLabel, portInput);
 
 		const passwordLabel = document.createElement("div");
-		passwordLabel.style.display = "inline-block";
-		passwordLabel.style.minWidth = "88px";
-		passwordLabel.style.paddingLeft = "8px";
+		passwordLabel.style.gridArea = "5 / 1";
 		passwordLabel.textContent = "Password:";
 		const passwordInput = document.createElement("input");
+		passwordInput.style.gridArea = "5 / 2";
 		passwordInput.type = "password";
-		passwordInput.style.width = "calc(100% - 120px)";
-		passwordInput.value = this.password ?? "";
+		//a password fetched from the vault is never exposed in the manual field
+		passwordInput.value = this.args.credential ? "" : this.password ?? "";
 		innerBox.append(passwordLabel, passwordInput);
 
-		okButton.onclick = ()=> {
+		const credentialsLabel = document.createElement("div");
+		credentialsLabel.style.gridArea = "5 / 1";
+		credentialsLabel.textContent = "Credentials:";
+		const credentialsInput = document.createElement("select");
+		credentialsInput.style.gridArea = "5 / 2";
+		innerBox.append(credentialsLabel, credentialsInput);
+
+		const errorBox = document.createElement("div");
+		errorBox.style.gridArea = "6 / 1 / 6 / 3";
+		errorBox.style.display = "none";
+		errorBox.style.paddingTop = "4px";
+		errorBox.style.textAlign = "center";
+		errorBox.style.fontWeight = "bold";
+		errorBox.style.color = "var(--clr-error)";
+		innerBox.appendChild(errorBox);
+
+		const UpdateOkState = ()=> {
+			const host = hostInput.value.trim().length > 0;
+			okButton.disabled = !host || (methodBox.index === 1 && !credentialsInput.value);
+		};
+
+		const UpdateSelection = ()=> {
+			passwordLabel.style.display    = methodBox.index === 0 ? "initial" : "none";
+			passwordInput.style.display    = methodBox.index === 0 ? "initial" : "none";
+
+			credentialsLabel.style.display = methodBox.index === 1 ? "initial" : "none";
+			credentialsInput.style.display = methodBox.index === 1 ? "initial" : "none";
+
+			errorBox.style.display = "none";
+			UpdateOkState();
+		};
+
+		methodBox.container.onchange = UpdateSelection;
+
+		const SelectVaultEntry = guid=> {
+			methodBox.Select(1);
+			credentialsInput.value = guid;
+			errorBox.style.display = "none";
+			UpdateOkState();
+		};
+
+		const listLoaded = (async ()=> {
+			try {
+				const response = await fetch("vault/credential/list");
+				if (response.status === 200) {
+					const json = await response.json();
+					for (const item of json) {
+						credentialsInput.append(new Option(item.name || item.username || item.guid, item.guid));
+					}
+				}
+			}
+			catch {}
+
+			if (this.args.credential) {
+				SelectVaultEntry(this.args.credential);
+			}
+
+			UpdateOkState();
+		})();
+
+		this.AddDropTarget(dialogBox, {
+			accept     : [Window.DRAG_CREDENTIALS],
+			text       : "Drop credentials here...",
+			labelParent: buttonBox,
+			tip        : "Drop key to auto-fill",
+			onDrop     : async (format, guid)=> {
+				await listLoaded;
+				SelectVaultEntry(guid);
+			}
+		});
+
+		okButton.onclick = async ()=> {
 			this.args.host = hostInput.value.trim();
 			this.args.port = parseInt(portInput.value) || 5900;
-			this.password = passwordInput.value.length > 0 ? passwordInput.value : null;
+
+			if (methodBox.index === 0) {
+				this.password = passwordInput.value.length > 0 ? passwordInput.value : null;
+				this.username = null;
+				delete this.args.credential;
+			}
+			else {
+				okButton.disabled = true;
+				errorBox.style.display = "none";
+
+				const guid = credentialsInput.value;
+				try {
+					const response = await fetch(`vault/credential/get?guid=${encodeURIComponent(guid)}`);
+					if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
+
+					const json = await response.json();
+					if (json.error) {
+						throw {
+							"not found"   : "Credentials don't exist",
+							"unauthorized": "Access denied for this credential"
+						}[json.error] ?? json.error;
+					}
+
+					this.password = json.password?.length > 0 ? json.password : null;
+					this.username = json.username?.length > 0 ? json.username : null;
+					this.args.credential = guid;
+				}
+				catch (ex) {
+					errorBox.textContent = ex?.message ?? ex;
+					errorBox.style.display = "block";
+					UpdateOkState();
+					return;
+				}
+			}
 
 			dialog.Close();
 			this.Connect();
@@ -261,13 +379,15 @@ class Vnc extends Window {
 			if (event.key === "Enter") okButton.click();
 		};
 
-		hostInput.onchange = hostInput.oninput = ()=> {
-			okButton.disabled = hostInput.value.trim().length === 0;
+		hostInput.onchange = hostInput.oninput = UpdateOkState;
+
+		credentialsInput.onchange = ()=> {
+			errorBox.style.display = "none";
+			UpdateOkState();
 		};
 
-		hostInput.oninput();
-
-		setTimeout(()=> hostInput.focus(), 200);
+		UpdateSelection();
+		setTimeout(()=> methodBox.container.focus(), 200);
 	}
 
 	PromptCredentials() {
@@ -325,7 +445,7 @@ class Vnc extends Window {
 		const passwordInput = document.createElement("input");
 		passwordInput.type = "password";
 		passwordInput.style.width = "calc(100% - 120px)";
-		passwordInput.value = this.password ?? "";
+		passwordInput.value = this.args.credential ? "" : this.password ?? "";
 		innerBox.append(message, passwordLabel, passwordInput);
 
 		passwordInput.onkeydown = event=> {
@@ -334,6 +454,8 @@ class Vnc extends Window {
 
 		okButton.onclick = ()=> {
 			this.password = passwordInput.value.length > 0 ? passwordInput.value : null;
+			this.username = null;
+			delete this.args.credential;
 			dialog.Close();
 			this.Connect();
 		};
@@ -700,7 +822,7 @@ class VncRecording extends Vnc {
 
 	TeardownPlayback() {
 		if (this.controlSocket) {
-			try { this.controlSocket.close(); } catch { /* already closed */ }
+			try { this.controlSocket.close(); } catch {}
 			this.controlSocket = null;
 		}
 

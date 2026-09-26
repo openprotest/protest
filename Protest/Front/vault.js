@@ -14,6 +14,8 @@ class Vault extends Tabs {
 		this.sshKeys = [];
 		this.orphans = [];
 		this.selectedOrphans = new Set();
+		this.duplicates = [];
+		this.selectedDuplicates = new Set();
 
 		this.tabsPanel.style.padding = "20px";
 
@@ -25,9 +27,9 @@ class Vault extends Tabs {
 		this.sshKeysTab.onclick     = ()=> this.ShowSshKeys();
 		this.maintenanceTab.onclick = ()=> this.ShowMaintenance();
 
-		this.activeColumnsListBox = null;
-		this.win.addEventListener("mouseup",   event=> this.activeColumnsListBox?.HandleMouseUp(event));
-		this.win.addEventListener("mousemove", event=> this.activeColumnsListBox?.HandleMouseMove(event));
+		this.activeColumnsListBoxes = [];
+		this.win.addEventListener("mouseup",   event=> this.activeColumnsListBoxes.forEach(o=> o.HandleMouseUp(event)));
+		this.win.addEventListener("mousemove", event=> this.activeColumnsListBoxes.forEach(o=> o.HandleMouseMove(event)));
 
 		switch (this.args) {
 		case "sshkeys":
@@ -49,7 +51,7 @@ class Vault extends Tabs {
 
 	AfterResize() { //overrides
 		super.AfterResize();
-		this.activeColumnsListBox?.FinalizeColumns();
+		this.activeColumnsListBoxes.forEach(o=> o.FinalizeColumns());
 	}
 
 	RenderStrength(strength, hasPassword) {
@@ -378,7 +380,7 @@ class Vault extends Tabs {
 		});
 		this.credentialsListBox.SetupTitleBar();
 		this.credentialsListBox.SetupBuiltInSort();
-		this.activeColumnsListBox = this.credentialsListBox;
+		this.activeColumnsListBoxes = [this.credentialsListBox];
 
 		this.credentialsListBox.inflate = (element, entry, type)=> {
 			this.credentialsListBox.InflateElement(element, entry, type);
@@ -386,10 +388,7 @@ class Vault extends Tabs {
 			const dragElement = document.createElement("div");
 			dragElement.className = "list-element-drag";
 			dragElement.draggable = true;
-			dragElement.ondragstart = event=> {
-				event.dataTransfer.setData("protest-type", "credentials");
-				event.dataTransfer.setData("protest-data", entry.guid);
-			};
+			dragElement.ondragstart = event=> Window.SetDragPayload(event, Window.DRAG_CREDENTIALS, entry.guid);
 			element.appendChild(dragElement);
 		};
 
@@ -549,10 +548,7 @@ class Vault extends Tabs {
 			draggable.className = "win-draggable-key";
 			buttonBox.appendChild(draggable);
 
-			draggable.ondragstart = event=> {
-				event.dataTransfer.setData("protest-type", "credentials");
-				event.dataTransfer.setData("protest-data", object ? object.guid : null);
-			};
+			draggable.ondragstart = event=> Window.SetDragPayload(event, Window.DRAG_CREDENTIALS, object.guid);
 		}
 
 		const permissions = this.CreatePermissionsPanel(innerBox, "4", "1 / 6", object, newMode=> {
@@ -704,7 +700,7 @@ class Vault extends Tabs {
 		});
 		this.sshKeysListBox.SetupTitleBar();
 		this.sshKeysListBox.SetupBuiltInSort();
-		this.activeColumnsListBox = this.sshKeysListBox;
+		this.activeColumnsListBoxes = [this.sshKeysListBox];
 
 		this.sshKeysListBox.inflate = (element, entry, type)=> {
 			this.sshKeysListBox.InflateElement(element, entry, type);
@@ -712,10 +708,7 @@ class Vault extends Tabs {
 			const dragElement = document.createElement("div");
 			dragElement.className = "list-element-drag";
 			dragElement.draggable = true;
-			dragElement.ondragstart = event=> {
-				event.dataTransfer.setData("protest-type", "ssh-key");
-				event.dataTransfer.setData("protest-data", entry.guid);
-			};
+			dragElement.ondragstart = event=> Window.SetDragPayload(event, Window.DRAG_SSH_KEY, entry.guid);
 			element.appendChild(dragElement);
 		};
 
@@ -892,10 +885,7 @@ class Vault extends Tabs {
 			draggable.className = "win-draggable-key";
 			buttonBox.appendChild(draggable);
 
-			draggable.ondragstart = event=> {
-				event.dataTransfer.setData("protest-type", "ssh-key");
-				event.dataTransfer.setData("protest-data", object ? object.guid : null);
-			};
+			draggable.ondragstart = event=> Window.SetDragPayload(event, Window.DRAG_SSH_KEY, object.guid);
 		}
 
 		showButton.onclick = async ()=> {
@@ -1048,6 +1038,112 @@ class Vault extends Tabs {
 		divider.style.margin = "20px 0";
 		this.tabsPanel.appendChild(divider);
 
+		//--- deduplication ---
+
+		const duplicatesTitle = document.createElement("div");
+		duplicatesTitle.textContent = "Deduplication";
+		duplicatesTitle.style.fontWeight = "600";
+		duplicatesTitle.style.marginBottom = "4px";
+		this.tabsPanel.appendChild(duplicatesTitle);
+
+		const duplicatesIntro = document.createElement("div");
+		duplicatesIntro.textContent = "Credentials that share the same username and password, and SSH keys that share the same username, private key and passphrase. Each group is merged into the kept entry: every device and user referencing a duplicate is pointed to it, then the duplicates are deleted. The kept entry's name and permissions remain, double-click a group to choose a different one. Groups with different permissions are not selected by default.";
+		duplicatesIntro.style.maxWidth = "800px";
+		this.tabsPanel.appendChild(duplicatesIntro);
+
+		const duplicatesOptions = document.createElement("div");
+		duplicatesOptions.className = "rbac-options";
+		duplicatesOptions.style.margin = "8px 0";
+		this.tabsPanel.appendChild(duplicatesOptions);
+
+		const duplicateSelectNoneButton = document.createElement("input");
+		duplicateSelectNoneButton.type = "button";
+		duplicateSelectNoneButton.value = "Select none";
+		duplicateSelectNoneButton.classList = "with-icon";
+		duplicateSelectNoneButton.style.backgroundImage = "url(mono/selectnone.svg?light)";
+
+		const duplicateSelectAllButton = document.createElement("input");
+		duplicateSelectAllButton.type = "button";
+		duplicateSelectAllButton.value = "Select all";
+		duplicateSelectAllButton.classList = "with-icon";
+		duplicateSelectAllButton.style.backgroundImage = "url(mono/selectall.svg?light)";
+
+		duplicatesOptions.append(duplicateSelectNoneButton, duplicateSelectAllButton);
+
+		const duplicatesListContainer = document.createElement("div");
+		duplicatesListContainer.style.position = "relative";
+		duplicatesListContainer.style.maxWidth = "720px";
+		duplicatesListContainer.style.height = "240px";
+		this.tabsPanel.appendChild(duplicatesListContainer);
+
+		this.duplicatesListBox = new ListBox({
+			firstColumnOffset: "48px",
+			onDoubleClick: data=> this.ChooseDuplicateKeeper(data)
+		});
+		this.duplicatesListBox.SetupTitleBar();
+		this.duplicatesListBox.SetupBuiltInSort();
+
+		this.duplicatesList = this.duplicatesListBox.list;
+		this.duplicatesList.style.overflowY = "auto";
+		this.duplicatesList.style.border = "rgb(82,82,82) solid 2px";
+		this.duplicatesList.addEventListener("keydown", event=> this.duplicatesListBox.Keydown(event));
+
+		duplicatesListContainer.append(this.duplicatesListBox.listTitleOuter, this.duplicatesList);
+
+		this.duplicatesListBox.inflate = (element, entry, type)=> {
+			element.appendChild(this.RenderDuplicateCheckbox(entry));
+			this.duplicatesListBox.InflateElement(element, entry, type);
+		};
+
+		const Keeper = group=> group.entries.find(o=> o.guid === group.keep);
+
+		this.duplicatesListBox.SetupColumns([
+			{label:"Type",        value:d=> d.type === "sshkey" ? "SSH key" : "Credential"},
+			{label:"Keep",        value:d=> Keeper(d).name},
+			{label:"Username",    value:d=> Keeper(d).username},
+			{label:"Duplicates",  value:d=> d.entries.filter(o=> o.guid !== d.keep).map(o=> o.name).join(", ")},
+			{label:"Usage",       sortValue:d=> d.entries.reduce((sum, o)=> sum + o.uses, 0), value:d=> d.entries.reduce((sum, o)=> sum + o.uses, 0)},
+			{label:"Permissions", value:d=> d.permissionsDiffer ? "Differ" : "Same"}
+		]);
+
+		this.duplicatesMergeButton = document.createElement("input");
+		this.duplicatesMergeButton.type = "button";
+		this.duplicatesMergeButton.value = "Merge selected";
+		this.duplicatesMergeButton.className = "with-icon";
+		this.duplicatesMergeButton.style.backgroundImage = "url(mono/consolidate.svg?light)";
+		this.duplicatesMergeButton.disabled = true;
+		this.tabsPanel.appendChild(this.duplicatesMergeButton);
+
+		this.duplicatesResult = document.createElement("span");
+		this.duplicatesResult.style.marginLeft = "12px";
+		this.tabsPanel.appendChild(this.duplicatesResult);
+
+		duplicateSelectNoneButton.onclick = ()=> {
+			this.selectedDuplicates.clear();
+
+			for (const checkbox of this.duplicatesList.querySelectorAll('input[type="checkbox"]')) {
+				checkbox.checked = false;
+			}
+
+			this.duplicatesMergeButton.disabled = true;
+		};
+
+		duplicateSelectAllButton.onclick = ()=> {
+			this.selectedDuplicates = new Set(this.duplicates.map(d=> d.keep));
+
+			for (const checkbox of this.duplicatesList.querySelectorAll('input[type="checkbox"]')) {
+				checkbox.checked = true;
+			}
+
+			this.duplicatesMergeButton.disabled = this.selectedDuplicates.size === 0;
+		};
+
+		this.duplicatesMergeButton.onclick = ()=> this.MergeSelectedDuplicates();
+
+		const divider2 = document.createElement("hr");
+		divider2.style.margin = "20px 0";
+		this.tabsPanel.appendChild(divider2);
+
 		//--- orphaned entries ---
 
 		const orphansTitle = document.createElement("div");
@@ -1088,7 +1184,7 @@ class Vault extends Tabs {
 		this.orphansListBox = new ListBox({firstColumnOffset: "48px"});
 		this.orphansListBox.SetupTitleBar();
 		this.orphansListBox.SetupBuiltInSort();
-		this.activeColumnsListBox = this.orphansListBox;
+		this.activeColumnsListBoxes = [this.duplicatesListBox, this.orphansListBox];
 
 		this.orphansList = this.orphansListBox.list;
 		this.orphansList.style.overflowY = "auto";
@@ -1138,8 +1234,123 @@ class Vault extends Tabs {
 
 		this.orphansRemoveButton.onclick = ()=> this.RemoveSelectedOrphans();
 
+		this.GetDuplicates();
 		this.GetOrphans();
 		this.AfterResize();
+	}
+
+	RenderDuplicateCheckbox(data) {
+		const box = document.createElement("div");
+		box.style.left = "4px";
+		box.style.height = "22px";
+
+		const toggle = this.CreateToggle("", this.selectedDuplicates.has(data.keep), box);
+		toggle.label.style.transform = "translateY(-14px)";
+
+		toggle.checkbox.onchange = ()=> {
+			if (toggle.checkbox.checked) {
+				this.selectedDuplicates.add(data.keep);
+			}
+			else {
+				this.selectedDuplicates.delete(data.keep);
+			}
+
+			this.duplicatesMergeButton.disabled = this.selectedDuplicates.size === 0;
+		};
+
+		return box;
+	}
+
+	async GetDuplicates() {
+		try {
+			const response = await fetch("vault/duplicates");
+			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
+
+			const json = await response.json();
+			if (json.error) throw json.error;
+
+			this.duplicates = json;
+
+			this.selectedDuplicates = new Set(this.duplicates.filter(d=> !d.permissionsDiffer).map(d=> d.keep));
+			this.duplicatesListBox.SetItems(this.duplicates);
+			this.duplicatesMergeButton.disabled = this.selectedDuplicates.size === 0;
+		}
+		catch (ex) {
+			this.ConfirmBox(ex, true, "mono/error.svg");
+		}
+	}
+
+	ChooseDuplicateKeeper(group) {
+		const dialog = this.DialogBox("160px");
+		if (dialog === null) return;
+
+		const {okButton, innerBox} = dialog;
+
+		innerBox.style.padding = "20px 32px";
+		innerBox.style.overflow = "hidden";
+		innerBox.parentElement.style.maxWidth = "480px";
+
+		const label = document.createElement("div");
+		label.textContent = "Keep this entry, the others are merged into it:";
+		label.style.marginBottom = "12px";
+		innerBox.appendChild(label);
+
+		const select = document.createElement("select");
+		select.style.width = "100%";
+		for (const entry of group.entries) {
+			select.append(new Option(`${entry.name || entry.username || entry.guid} (usage: ${entry.uses})`, entry.guid));
+		}
+		select.value = group.keep;
+		innerBox.appendChild(select);
+
+		okButton.onclick = ()=> {
+			const wasSelected = this.selectedDuplicates.delete(group.keep);
+			group.keep = select.value;
+			if (wasSelected) this.selectedDuplicates.add(group.keep);
+
+			this.duplicatesListBox.SetItems(this.duplicates);
+			dialog.Close();
+		};
+
+		setTimeout(()=> select.focus(), 200);
+	}
+
+	MergeSelectedDuplicates() {
+		const groups = this.duplicates.filter(d=> this.selectedDuplicates.has(d.keep));
+		if (groups.length === 0) return;
+
+		const count = groups.reduce((sum, d)=> sum + d.entries.length - 1, 0);
+		const message = `Merge ${count} duplicate${count === 1 ? "" : "s"} into ${groups.length} entr${groups.length === 1 ? "y" : "ies"}? Devices and users that reference a duplicate will be updated, and the duplicates will be deleted.`;
+
+		this.ConfirmBox(message, false, "mono/consolidate.svg").addEventListener("click", async ()=>{
+			this.duplicatesMergeButton.disabled = true;
+			this.duplicatesResult.textContent = "Merging...";
+
+			const payload = groups.map(d=> ({
+				keep  : d.keep,
+				remove: d.entries.filter(o=> o.guid !== d.keep).map(o=> o.guid)
+			}));
+
+			try {
+				const response = await fetch("vault/deduplicate", {
+					method: "POST",
+					body: JSON.stringify(payload)
+				});
+				if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
+
+				const json = await response.json();
+				if (json.error) throw json.error;
+
+				this.duplicatesResult.textContent = `Merged ${json.merged} group(s), removed ${json.removed} duplicate(s), updated ${json.updated} device/user entr${json.updated === 1 ? "y" : "ies"}.`;
+			}
+			catch (ex) {
+				this.duplicatesResult.textContent = "";
+				this.ConfirmBox(ex, true, "mono/error.svg");
+			}
+
+			this.GetDuplicates();
+			this.GetOrphans();
+		});
 	}
 
 	RenderOrphanCheckbox(data) {

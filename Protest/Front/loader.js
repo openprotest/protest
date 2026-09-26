@@ -366,8 +366,8 @@ const LOADER = {
 		case "RemoteShell"  : return new RemoteShell(command.args);
 		case "Rs232"        : return new Rs232(command.args);
 		case "Telnet"       : return new Telnet(command.args);
-		case "Ssh"          : return new Ssh(command.args);
-		case "Sftp"         : return new Sftp(command.args);
+		case "Ssh"          : return new Ssh({ ...command.args, autoconnect:false });
+		case "Sftp"         : return new Sftp({ ...command.args, autoconnect:false });
 		case "Vnc"          : return new Vnc({ ...command.args, autoconnect:false });
 		case "VncRecording" : return new VncRecording(command.args);
 		case "TerminalRecording" : return new TerminalRecording(command.args);
