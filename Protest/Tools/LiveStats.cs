@@ -129,61 +129,53 @@ internal static class LiveStats {
 
             string[] pingArray = Array.Empty<string>();
             if (_ip?.value?.Length > 0) {
-                pingArray = _ip.value.Split(';').Select(o => o.Trim()).ToArray();
+                pingArray = _ip.value.Split(';').Select(o => o.Trim()).Where(o => o.Length > 0).ToArray();
             }
             else if (_hostname?.value?.Length > 0) {
-                pingArray = _hostname.value.Split(';').Select(o => o.Trim()).ToArray();
+                pingArray = _hostname.value.Split(';').Select(o => o.Trim()).Where(o => o.Length > 0).ToArray();
             }
-
 
             string firstAlive = null;
             PingReply firstReply = null;
-            Lock firstAliveLock = new Lock();
 
             if (pingArray.Length > 0) {
-                List<Task> pingTasks = new List<Task>(pingArray.Length);
+                //ping in parallel, but report sequentially: a websocket allows only one send at a time
+                PingReply[] replies = await Task.WhenAll(pingArray.Select(async host => {
+                    try {
+                        using System.Net.NetworkInformation.Ping p = new System.Net.NetworkInformation.Ping();
+                        return await p.SendPingAsync(host, 200);
+                    }
+                    catch {
+                        return null;
+                    }
+                }));
 
                 for (int i = 0; i < pingArray.Length; i++) {
-                    int index = i;
-                    pingTasks.Add(Task.Run(async () => {
-                        try {
-                            using System.Net.NetworkInformation.Ping p = new System.Net.NetworkInformation.Ping();
-                            PingReply reply = await p.SendPingAsync(pingArray[index], 200);
+                    PingReply reply = replies[i];
 
-                            switch ((int)reply.Status) {
-                            case (int)IPStatus.Success:
-                                lock (firstAliveLock) {
-                                    if (firstAlive is null) {
-                                        firstAlive = pingArray[index];
-                                        firstReply = reply;
-                                    }
-                                }
+                    string echoReply;
+                    if (reply is null) {
+                        echoReply = "Error";
+                    }
+                    else if (reply.Status == IPStatus.Success) {
+                        echoReply = reply.RoundtripTime.ToString();
+                        LastSeen.Seen(pingArray[i]);
 
-                                await WebSocketHelper.WsWriteText(ws, $"{{\"echoReply\":\"{reply.RoundtripTime}\",\"for\":\"{pingArray[index]}\",\"source\":\"ICMP\"}}");
-                                LastSeen.Seen(pingArray[index]);
-                                break;
-
-                            case (int)IPStatus.TimedOut:
-                                await WebSocketHelper.WsWriteText(ws, $"{{\"echoReply\":\"Timed out\",\"for\":\"{pingArray[index]}\",\"source\":\"ICMP\"}}");
-                                break;
-
-                            case 11050:
-                                await WebSocketHelper.WsWriteText(ws, $"{{\"echoReply\":\"General failure\",\"for\":\"{pingArray[index]}\",\"source\":\"ICMP\"}}");
-                                break;
-
-                            default:
-                                await WebSocketHelper.WsWriteText(ws, $"{{\"echoReply\":\"{reply.Status.ToString()}\",\"for\":\"{pingArray[index]}\",\"source\":\"ICMP\"}}");
-                                break;
-                            }
-
+                        if (firstAlive is null) {
+                            firstAlive = pingArray[i];
+                            firstReply = reply;
                         }
-                        catch {
-                            await WebSocketHelper.WsWriteText(ws, $"{{\"echoReply\":\"Error\",\"for\":\"{pingArray[index]}\",\"source\":\"ICMP\"}}");
-                        }
-                    }));
+                    }
+                    else {
+                        echoReply = (int)reply.Status switch {
+                            (int)IPStatus.TimedOut => "Timed out",
+                            11050                  => "General failure",
+                            _                      => reply.Status.ToString()
+                        };
+                    }
+
+                    await WebSocketHelper.WsWriteText(ws, $"{{\"echoReply\":\"{echoReply}\",\"for\":\"{pingArray[i]}\",\"source\":\"ICMP\"}}");
                 }
-
-                await Task.WhenAll(pingTasks);
 
                 if (firstAlive is null) {
                     for (int i = 0; i < pingArray.Length; i++) {

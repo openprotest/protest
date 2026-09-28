@@ -832,7 +832,7 @@ button.view-live-button:active {
 
 .view-info-box.with-additional::after,
 .view-warning-box.with-additional::after,
-.view-error-box.with-additional:after,
+.view-error-box.with-additional::after,
 .view-critical-box.with-additional::after {
 	cursor: pointer;
 	content: "";
@@ -918,7 +918,7 @@ button.view-live-button:active {
 
 .view-info-box.with-additional > div:nth-child(3),
 .view-warning-box.with-additional > div:nth-child(3),
-.view-error-box.with-additiona,
+.view-error-box.with-additional > div:nth-child(3),
 .view-critical-box.with-additional > div:nth-child(3) {
 	-webkit-user-select: none;
 	user-select: none;
