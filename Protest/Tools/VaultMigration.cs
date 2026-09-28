@@ -38,36 +38,20 @@ internal static class VaultMigration {
     public static byte[] FindOrphans() {
         Dictionary<Guid, int> referenceCounts = CountReferences();
 
-        List<Vault.CredentialEntry> credentials = Vault.Load();
-        List<VaultSshKeys.SshKeyEntry> sshKeys = VaultSshKeys.Load();
-
         StringBuilder builder = new StringBuilder();
         builder.Append('[');
         bool first = true;
 
-        foreach (Vault.CredentialEntry entry in credentials) {
-            if (referenceCounts.ContainsKey(entry.guid)) continue;
+        foreach (VaultItem item in LoadVaultItems(Vault.Load(), VaultSshKeys.Load())) {
+            if (referenceCounts.ContainsKey(item.guid)) continue;
             if (!first) builder.Append(',');
             first = false;
 
             builder.Append('{');
-            builder.Append("\"type\":\"credential\",");
-            builder.Append($"\"guid\":\"{entry.guid}\",");
-            builder.Append($"\"name\":\"{Data.EscapeJsonText(entry.name)}\",");
-            builder.Append($"\"username\":\"{Data.EscapeJsonText(entry.username)}\"");
-            builder.Append('}');
-        }
-
-        foreach (VaultSshKeys.SshKeyEntry entry in sshKeys) {
-            if (referenceCounts.ContainsKey(entry.guid)) continue;
-            if (!first) builder.Append(',');
-            first = false;
-
-            builder.Append('{');
-            builder.Append("\"type\":\"sshkey\",");
-            builder.Append($"\"guid\":\"{entry.guid}\",");
-            builder.Append($"\"name\":\"{Data.EscapeJsonText(entry.name)}\",");
-            builder.Append($"\"username\":\"{Data.EscapeJsonText(entry.username)}\"");
+            builder.Append($"\"type\":\"{item.type}\",");
+            builder.Append($"\"guid\":\"{item.guid}\",");
+            builder.Append($"\"name\":\"{Data.EscapeJsonText(item.name)}\",");
+            builder.Append($"\"username\":\"{Data.EscapeJsonText(item.username)}\"");
             builder.Append('}');
         }
 

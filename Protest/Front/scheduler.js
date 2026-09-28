@@ -1,5 +1,14 @@
 "use strict";
 class Scheduler extends List {
+	static JOB_ICONS = {
+		"lifeline"     : "mono/lifeline.svg",
+		"lastseen"     : "mono/lastseen.svg",
+		"watchdog"     : "mono/watchdog.svg",
+		"issues"       : "mono/issues.svg",
+		"dataretention": "mono/dataretention.svg",
+		"backup"       : "mono/backup.svg"
+	};
+
 	constructor(args) {
 		super(args);
 
@@ -82,13 +91,7 @@ class Scheduler extends List {
 	}
 
 	InflateElement(element, entry) { //overrides
-		let icon = {
-			"lifeline"     : "mono/lifeline.svg",
-			"lastseen"     : "mono/lastseen.svg",
-			"watchdog"     : "mono/watchdog.svg",
-			"dataretention": "mono/dataretention.svg",
-			"backup"       : "mono/backup.svg"
-		}[element.id.toLowerCase()] ?? "mono/task.svg";
+		const icon = Scheduler.JOB_ICONS[element.id.toLowerCase()] ?? "mono/task.svg";
 
 		const iconBox = document.createElement("div");
 		iconBox.className = "list-element-icon";
@@ -157,13 +160,7 @@ class Scheduler extends List {
 		nameLabel.style.backgroundSize = "24px 24px";
 		nameLabel.style.backgroundPosition = "0 50%";
 		nameLabel.style.backgroundRepeat = "no-repeat";
-		nameLabel.style.backgroundImage = {
-			"lifeline"     : "url(mono/lifeline.svg)",
-			"lastseen"     : "url(mono/lastseen.svg)",
-			"watchdog"     : "url(mono/watchdog.svg)",
-			"dataretention": "url(mono/dataretention.svg)",
-			"backup"       : "url(mono/backup.svg)"
-		}[job.key];
+		nameLabel.style.backgroundImage = `url(${Scheduler.JOB_ICONS[job.key] ?? "mono/task.svg"})`;
 
 		const enableBox = document.createElement("div");
 		enableBox.style.gridColumn = "1 / 3";
