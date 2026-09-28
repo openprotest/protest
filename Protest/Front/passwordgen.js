@@ -467,7 +467,7 @@ class PassGen extends Window {
 		let fill = strength[1];
 		let comment = strength[2];
 
-		this.strengthBar.style.boxShadow = `${color} ${Math.round(fill)}px 0 0 inset`;
+		this.strengthBar.style.boxShadow = `${color} ${Math.round(fill)}px 0 0 inset, color-mix(in srgb, ${color} 66%, #202020) ${Math.round(fill+1)}px 0 0 inset`;
 		this.commentLabel.textContent = comment;
 		this.entropyValueLabel.textContent = Math.round(entropy);
 
