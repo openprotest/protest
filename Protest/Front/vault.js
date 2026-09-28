@@ -1,5 +1,12 @@
 "use strict";
 class Vault extends Tabs {
+	static ErrorMessage(error) {
+		return {
+			"not found"   : "Credentials don't exist",
+			"unauthorized": "Access denied for this credential"
+		}[error] ?? error;
+	}
+
 	constructor(args) {
 		super();
 
@@ -74,11 +81,11 @@ class Vault extends Tabs {
 
 		if (hasPassword) {
 			const [color, fill, comment] = PassGen.StrengthBar(strength);
-			bar.style.boxShadow = `${color} ${Math.round(fill)}px 0 0 inset`;
+			bar.style.boxShadow = `${color} ${Math.round(fill)}px 0 0 inset, color-mix(in srgb, ${color} 66%, #202020) ${Math.round(fill+1)}px 0 0 inset`;
 			label.textContent = comment;
 		}
 		else {
-			label.textContent = "—";
+			label.textContent = "--";
 			label.style.color = "var(--clr-control)";
 		}
 
@@ -125,28 +132,15 @@ class Vault extends Tabs {
 		permissionsListBox.list.addEventListener("keydown", event=> permissionsListBox.Keydown(event));
 		permissionUsersContainer.append(permissionsListBox.listTitleOuter, permissionsListBox.list);
 
-		const RenderPermissionCheckbox = username=> {
-			const box = document.createElement("div");
-			box.style.left = "4px";
-			box.style.height = "22px";
-
-			const toggle = this.CreateToggle("", selectedUsers.has(username), box);
-			toggle.label.style.transform = "translateY(-14px)";
-
-			toggle.checkbox.onchange = ()=> {
-				if (toggle.checkbox.checked) {
-					selectedUsers.add(username);
+		permissionsListBox.inflate = (element, entry, type)=> {
+			element.appendChild(this.RenderSelectionToggle(selectedUsers.has(entry.username), checked=> {
+				if (checked) {
+					selectedUsers.add(entry.username);
 				}
 				else {
-					selectedUsers.delete(username);
+					selectedUsers.delete(entry.username);
 				}
-			};
-
-			return box;
-		};
-
-		permissionsListBox.inflate = (element, entry, type)=> {
-			element.appendChild(RenderPermissionCheckbox(entry.username));
+			}));
 			permissionsListBox.InflateElement(element, entry, type);
 		};
 
@@ -531,16 +525,18 @@ class Vault extends Tabs {
 		showButton.disabled = !object;
 		innerBox.appendChild(showButton);
 
-		const guidLabel = document.createElement("div");
-		guidLabel.style.gridArea = "4 / 1";
-		guidLabel.textContent = "GUID:";
-		const guidInput = document.createElement("input");
-		guidInput.type = "text";
-		guidInput.value = object ? object.guid : "";
-		guidInput.style.all = "unset";
-		guidInput.style.padding = "0 8px";
-		guidInput.style.gridArea = "4 / 2 / 4 / 4";
-		innerBox.append(guidLabel, guidInput);
+		if (object) {
+			const guidLabel = document.createElement("div");
+			guidLabel.style.gridArea = "4 / 1";
+			guidLabel.textContent = "GUID:";
+			const guidInput = document.createElement("input");
+			guidInput.type = "text";
+			guidInput.value = object.guid;
+			guidInput.style.all = "unset";
+			guidInput.style.padding = "0 8px";
+			guidInput.style.gridArea = "4 / 2 / 4 / 4";
+			innerBox.append(guidLabel, guidInput);
+		}
 
 		const draggable = document.createElement("div");
 		if (object) {
@@ -583,6 +579,7 @@ class Vault extends Tabs {
 					passwordInput.type = "text";
 					showButton.value = "Hide";
 					showButton.disabled = false;
+					passwordInput.focus();
 				}
 			}
 			else {
@@ -803,7 +800,7 @@ class Vault extends Tabs {
 	}
 
 	SshKeyDialog(object=null) {
-		const dialog = this.DialogBox("340px");
+		const dialog = this.DialogBox("365px");
 		if (dialog === null) return;
 
 		const {okButton, innerBox, buttonBox} = dialog;
@@ -812,7 +809,7 @@ class Vault extends Tabs {
 
 		innerBox.style.padding = "16px 32px";
 		innerBox.style.display = "grid";
-		innerBox.style.gridTemplateRows = "repeat(2, 38px) 64px 38px 64px";
+		innerBox.style.gridTemplateRows = "repeat(2, 38px) 64px 38px 64px 38px";
 		innerBox.style.alignItems = "center";
 		innerBox.style.transition = ".4s";
 
@@ -873,6 +870,19 @@ class Vault extends Tabs {
 		publicKeyInput.placeholder = "optional";
 		innerBox.append(publicKeyLabel, publicKeyInput);
 
+		if (object) {
+			const guidLabel = document.createElement("div");
+			guidLabel.style.gridArea = "6 / 1";
+			guidLabel.textContent = "GUID:";
+			const guidInput = document.createElement("input");
+			guidInput.type = "text";
+			guidInput.value = object.guid;
+			guidInput.style.all = "unset";
+			guidInput.style.padding = "0 8px";
+			guidInput.style.gridArea = "6 / 2 / 6 / 4";
+			innerBox.append(guidLabel, guidInput);
+		}
+
 		const permissions = this.CreatePermissionsPanel(innerBox, "4", "1 / 6", object, newMode=> {
 			innerBox.style.gridTemplateColumns = newMode === "none"
 				? "100px minmax(140px, 1fr) 72px minmax(160px, .8fr)"
@@ -909,6 +919,7 @@ class Vault extends Tabs {
 					passphraseInput.type = "text";
 					showButton.value = "Hide";
 					showButton.disabled = false;
+					passphraseInput.focus();
 				}
 			}
 			else {
@@ -982,7 +993,7 @@ class Vault extends Tabs {
 		this.content.style.overflowY = "auto";
 		this.tabsPanel.style.overflowY = "auto";
 
-		//--- scan and consolidate ---
+		//scan and consolidate
 
 		const consolidateSection = document.createElement("div");
 		this.tabsPanel.appendChild(consolidateSection);
@@ -1038,7 +1049,7 @@ class Vault extends Tabs {
 		divider.style.margin = "20px 0";
 		this.tabsPanel.appendChild(divider);
 
-		//--- deduplication ---
+		//deduplication
 
 		const duplicatesTitle = document.createElement("div");
 		duplicatesTitle.textContent = "Deduplication";
@@ -1051,24 +1062,7 @@ class Vault extends Tabs {
 		duplicatesIntro.style.maxWidth = "800px";
 		this.tabsPanel.appendChild(duplicatesIntro);
 
-		const duplicatesOptions = document.createElement("div");
-		duplicatesOptions.className = "rbac-options";
-		duplicatesOptions.style.margin = "8px 0";
-		this.tabsPanel.appendChild(duplicatesOptions);
-
-		const duplicateSelectNoneButton = document.createElement("input");
-		duplicateSelectNoneButton.type = "button";
-		duplicateSelectNoneButton.value = "Select none";
-		duplicateSelectNoneButton.classList = "with-icon";
-		duplicateSelectNoneButton.style.backgroundImage = "url(mono/selectnone.svg?light)";
-
-		const duplicateSelectAllButton = document.createElement("input");
-		duplicateSelectAllButton.type = "button";
-		duplicateSelectAllButton.value = "Select all";
-		duplicateSelectAllButton.classList = "with-icon";
-		duplicateSelectAllButton.style.backgroundImage = "url(mono/selectall.svg?light)";
-
-		duplicatesOptions.append(duplicateSelectNoneButton, duplicateSelectAllButton);
+		const duplicateSelection = this.AddSelectionOptions();
 
 		const duplicatesListContainer = document.createElement("div");
 		duplicatesListContainer.style.position = "relative";
@@ -1091,7 +1085,15 @@ class Vault extends Tabs {
 		duplicatesListContainer.append(this.duplicatesListBox.listTitleOuter, this.duplicatesList);
 
 		this.duplicatesListBox.inflate = (element, entry, type)=> {
-			element.appendChild(this.RenderDuplicateCheckbox(entry));
+			element.appendChild(this.RenderSelectionToggle(this.selectedDuplicates.has(entry.keep), checked=> {
+				if (checked) {
+					this.selectedDuplicates.add(entry.keep);
+				}
+				else {
+					this.selectedDuplicates.delete(entry.keep);
+				}
+				this.duplicatesMergeButton.disabled = this.selectedDuplicates.size === 0;
+			}));
 			this.duplicatesListBox.InflateElement(element, entry, type);
 		};
 
@@ -1118,25 +1120,10 @@ class Vault extends Tabs {
 		this.duplicatesResult.style.marginLeft = "12px";
 		this.tabsPanel.appendChild(this.duplicatesResult);
 
-		duplicateSelectNoneButton.onclick = ()=> {
-			this.selectedDuplicates.clear();
-
-			for (const checkbox of this.duplicatesList.querySelectorAll('input[type="checkbox"]')) {
-				checkbox.checked = false;
-			}
-
-			this.duplicatesMergeButton.disabled = true;
-		};
-
-		duplicateSelectAllButton.onclick = ()=> {
-			this.selectedDuplicates = new Set(this.duplicates.map(d=> d.keep));
-
-			for (const checkbox of this.duplicatesList.querySelectorAll('input[type="checkbox"]')) {
-				checkbox.checked = true;
-			}
-
+		duplicateSelection.bind(this.duplicatesList, selectAll=> {
+			this.selectedDuplicates = new Set(selectAll ? this.duplicates.map(d=> d.keep) : []);
 			this.duplicatesMergeButton.disabled = this.selectedDuplicates.size === 0;
-		};
+		});
 
 		this.duplicatesMergeButton.onclick = ()=> this.MergeSelectedDuplicates();
 
@@ -1144,7 +1131,7 @@ class Vault extends Tabs {
 		divider2.style.margin = "20px 0";
 		this.tabsPanel.appendChild(divider2);
 
-		//--- orphaned entries ---
+		//orphaned entries
 
 		const orphansTitle = document.createElement("div");
 		orphansTitle.textContent = "Orphaned entries";
@@ -1156,24 +1143,7 @@ class Vault extends Tabs {
 		orphansIntro.textContent = "Vault entries no longer referenced by any device or user. Select the ones you want to delete.";
 		this.tabsPanel.appendChild(orphansIntro);
 
-		this.orphansOptions = document.createElement("div");
-		this.orphansOptions.className = "rbac-options";
-		this.orphansOptions.style.margin = "8px 0";
-		this.tabsPanel.appendChild(this.orphansOptions);
-
-		const orphanSelectNoneButton = document.createElement("input");
-		orphanSelectNoneButton.type = "button";
-		orphanSelectNoneButton.value = "Select none";
-		orphanSelectNoneButton.classList = "with-icon";
-		orphanSelectNoneButton.style.backgroundImage = "url(mono/selectnone.svg?light)";
-
-		const orphanSelectAllButton = document.createElement("input");
-		orphanSelectAllButton.type = "button";
-		orphanSelectAllButton.value = "Select all";
-		orphanSelectAllButton.classList = "with-icon";
-		orphanSelectAllButton.style.backgroundImage = "url(mono/selectall.svg?light)";
-
-		this.orphansOptions.append(orphanSelectNoneButton, orphanSelectAllButton);
+		const orphanSelection = this.AddSelectionOptions();
 
 		const orphansListContainer = document.createElement("div");
 		orphansListContainer.style.position = "relative";
@@ -1194,7 +1164,16 @@ class Vault extends Tabs {
 		orphansListContainer.append(this.orphansListBox.listTitleOuter, this.orphansList);
 
 		this.orphansListBox.inflate = (element, entry, type)=> {
-			element.appendChild(this.RenderOrphanCheckbox(entry));
+			const key = `${entry.type}:${entry.guid}`;
+			element.appendChild(this.RenderSelectionToggle(this.selectedOrphans.has(key), checked=> {
+				if (checked) {
+					this.selectedOrphans.add(key);
+				}
+				else {
+					this.selectedOrphans.delete(key);
+				}
+				this.orphansRemoveButton.disabled = this.selectedOrphans.size === 0;
+			}));
 			this.orphansListBox.InflateElement(element, entry, type);
 		};
 
@@ -1212,25 +1191,10 @@ class Vault extends Tabs {
 		this.orphansRemoveButton.disabled = true;
 		this.tabsPanel.appendChild(this.orphansRemoveButton);
 
-		orphanSelectNoneButton.onclick = ()=> {
-			this.selectedOrphans.clear();
-
-			for (const checkbox of this.orphansList.querySelectorAll('input[type="checkbox"]')) {
-				checkbox.checked = false;
-			}
-
-			this.orphansRemoveButton.disabled = true;
-		};
-
-		orphanSelectAllButton.onclick = ()=> {
-			this.selectedOrphans = new Set(this.orphans.map(d=> `${d.type}:${d.guid}`));
-
-			for (const checkbox of this.orphansList.querySelectorAll('input[type="checkbox"]')) {
-				checkbox.checked = true;
-			}
-
+		orphanSelection.bind(this.orphansList, selectAll=> {
+			this.selectedOrphans = new Set(selectAll ? this.orphans.map(d=> `${d.type}:${d.guid}`) : []);
 			this.orphansRemoveButton.disabled = this.selectedOrphans.size === 0;
-		};
+		});
 
 		this.orphansRemoveButton.onclick = ()=> this.RemoveSelectedOrphans();
 
@@ -1239,26 +1203,52 @@ class Vault extends Tabs {
 		this.AfterResize();
 	}
 
-	RenderDuplicateCheckbox(data) {
+	//toggle for the first column of a list, onChange(checked)
+	RenderSelectionToggle(checked, onChange) {
 		const box = document.createElement("div");
 		box.style.left = "4px";
 		box.style.height = "22px";
 
-		const toggle = this.CreateToggle("", this.selectedDuplicates.has(data.keep), box);
+		const toggle = this.CreateToggle("", checked, box);
 		toggle.label.style.transform = "translateY(-14px)";
-
-		toggle.checkbox.onchange = ()=> {
-			if (toggle.checkbox.checked) {
-				this.selectedDuplicates.add(data.keep);
-			}
-			else {
-				this.selectedDuplicates.delete(data.keep);
-			}
-
-			this.duplicatesMergeButton.disabled = this.selectedDuplicates.size === 0;
-		};
+		toggle.checkbox.onchange = ()=> onChange(toggle.checkbox.checked);
 
 		return box;
+	}
+
+	AddSelectionOptions() {
+		const options = document.createElement("div");
+		options.className = "rbac-options";
+		options.style.margin = "8px 0";
+		this.tabsPanel.appendChild(options);
+
+		const selectNoneButton = document.createElement("input");
+		selectNoneButton.type = "button";
+		selectNoneButton.value = "Select none";
+		selectNoneButton.classList = "with-icon";
+		selectNoneButton.style.backgroundImage = "url(mono/selectnone.svg?light)";
+
+		const selectAllButton = document.createElement("input");
+		selectAllButton.type = "button";
+		selectAllButton.value = "Select all";
+		selectAllButton.classList = "with-icon";
+		selectAllButton.style.backgroundImage = "url(mono/selectall.svg?light)";
+
+		options.append(selectNoneButton, selectAllButton);
+
+		return {
+			bind: (list, onSelect)=> {
+				const Select = selectAll=> {
+					for (const checkbox of list.querySelectorAll('input[type="checkbox"]')) {
+						checkbox.checked = selectAll;
+					}
+					onSelect(selectAll);
+				};
+
+				selectNoneButton.onclick = ()=> Select(false);
+				selectAllButton.onclick  = ()=> Select(true);
+			}
+		};
 	}
 
 	async GetDuplicates() {
@@ -1353,29 +1343,6 @@ class Vault extends Tabs {
 		});
 	}
 
-	RenderOrphanCheckbox(data) {
-		const box = document.createElement("div");
-		box.style.left = "4px";
-		box.style.height = "22px";
-
-		const key = `${data.type}:${data.guid}`;
-		const toggle = this.CreateToggle("", this.selectedOrphans.has(key), box);
-		toggle.label.style.transform = "translateY(-14px)";
-
-		toggle.checkbox.onchange = ()=> {
-			if (toggle.checkbox.checked) {
-				this.selectedOrphans.add(key);
-			}
-			else {
-				this.selectedOrphans.delete(key);
-			}
-
-			this.orphansRemoveButton.disabled = this.selectedOrphans.size === 0;
-		};
-
-		return box;
-	}
-
 	async GetOrphans() {
 		try {
 			const response = await fetch("vault/orphans");
@@ -1398,7 +1365,7 @@ class Vault extends Tabs {
 		if (this.selectedOrphans.size === 0) return;
 
 		const count = this.selectedOrphans.size;
-		this.ConfirmBox(`Are you sure you want to remove ${count} orphaned entry ${count === 1 ? "y" : "ies"}?`, false, "mono/delete.svg").addEventListener("click", async ()=>{
+		this.ConfirmBox(`Are you sure you want to remove ${count} orphaned entr${count === 1 ? "y" : "ies"}?`, false, "mono/delete.svg").addEventListener("click", async ()=>{
 			this.orphansRemoveButton.disabled = true;
 
 			for (const key of this.selectedOrphans) {

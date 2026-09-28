@@ -683,19 +683,22 @@ class DeviceView extends View {
 				const vncPort = overwriteProtocol.vnc || overwriteProtocol.uvnc || 5900;
 				const actionButton = this.CreateSideButton("mono/vnc.svg", "VNC");
 				actionButton.onclick = async ()=> {
-					let vncPassword = await this.ResolveCredentialPassword(["vnc credentials", "uvnc credentials"]);
+					const credential = await this.ResolveCredentialGuid(["vnc credentials", "uvnc credentials"]);
+					if (credential) {
+						new Vnc({ host: host, port: vncPort, credential: credential, file: this.args.file });
+						return;
+					}
 
-					if (vncPassword === null) {
-						const attribute = "vnc password" in this.link ? "vnc password"
-							: "uvnc password" in this.link ? "uvnc password"
-							: null;
+					let vncPassword = null;
+					const attribute = "vnc password" in this.link ? "vnc password"
+						: "uvnc password" in this.link ? "uvnc password"
+						: null;
 
-						if (attribute) {
-							const response = await fetch(`/db/${this.dbTarget}/attribute?file=${this.args.file}&attribute=${attribute}`);
-							if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
-							vncPassword = await response.text();
-							if (vncPassword.length === 0) vncPassword = null;
-						}
+					if (attribute) {
+						const response = await fetch(`/db/${this.dbTarget}/attribute?file=${this.args.file}&attribute=${attribute}`);
+						if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
+						vncPassword = await response.text();
+						if (vncPassword.length === 0) vncPassword = null;
 					}
 					new Vnc({ host: host, port: vncPort, password: vncPassword, file: this.args.file });
 				};
@@ -3734,10 +3737,6 @@ class DeviceView extends View {
 		});
 	}
 
-	//Resolves credentials the same way as ResolveCredentialGuid, then fetches the plaintext password for VNC
-	//(unlike SSH/SFTP, VNC authentication happens in-browser, so the password has to reach the client).
-	//Returns null both when there is nothing to resolve and when the picker was cancelled - either way, the
-	//caller should treat it as "no vault credential available".
 	async ResolveCredentialPassword(attrNames) {
 		const guid = await this.ResolveCredentialGuid(attrNames);
 		if (!guid) return null;

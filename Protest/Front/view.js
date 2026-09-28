@@ -691,10 +691,7 @@ class View extends Window {
 				editButton.disabled = true;
 				editButton.style.opacity = ".8";
 				draggable.style.display = "none";
-				throw {
-					"not found"   : "Credentials don't exist",
-					"unauthorized": "Access denied for this credential"
-				}[json.error] ?? json.error;
+				throw Vault.ErrorMessage(json.error);
 			}
 
 			const titleBox = document.createElement("div");

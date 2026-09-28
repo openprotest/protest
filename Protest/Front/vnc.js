@@ -18,7 +18,6 @@ class Vnc extends Window {
 		if (isRestored) delete this.args.password;
 
 		this.password = this.args.password ?? null;
-		this.username = null;
 
 		this.SetTitle("VNC");
 		this.SetIcon("mono/vnc.svg");
@@ -50,21 +49,18 @@ class Vnc extends Window {
 		this.statusBox.textContent = "Connecting...";
 
 		if (!this.args.isRecording) {
-			this.connectButton.onclick    = ()=> this.ConnectDialog(this.args.host);
-			this.cadButton.onclick        = ()=> { if (this.rfb) this.rfb.sendCtrlAltDel(); };
-			this.metaButton.onclick       = ()=> this.SendMeta();
-			this.sendTextButton.onclick   = ()=> this.SendTextDialog();
-			this.clipboardButton.onclick  = ()=> this.ToggleClipboardSync();
-			this.viewOnlyButton.onclick   = ()=> this.ToggleViewOnly();
-			this.refreshButton.onclick    = ()=> this.RefreshScreen();
+			this.connectButton.onclick   = ()=> this.ConnectDialog(this.args.host);
+			this.cadButton.onclick       = ()=> { if (this.rfb) this.rfb.sendCtrlAltDel(); };
+			this.metaButton.onclick      = ()=> this.SendMeta();
+			this.sendTextButton.onclick  = ()=> this.SendTextDialog();
+			this.clipboardButton.onclick = ()=> this.ToggleClipboardSync();
+			this.viewOnlyButton.onclick  = ()=> this.ToggleViewOnly();
+			this.refreshButton.onclick   = ()=> this.RefreshScreen();
 		}
 
 		this.fitButton.onclick        = ()=> this.ToggleScaling();
 		this.screenshotButton.onclick = ()=> this.SaveScreenshot();
-
-		this.fullScreenButton.onclick = ()=> {
-			this.canvasBox.requestFullscreen();
-		};
+		this.fullScreenButton.onclick = ()=> this.canvasBox.requestFullscreen();
 
 		this.scaleViewport = true;
 		this.viewOnly      = false;
@@ -130,15 +126,16 @@ class Vnc extends Window {
 		this.statusBox.textContent = "Connecting...";
 		this.content.appendChild(this.statusBox);
 
+		//vault credentials are resolved and authenticated by the server, only manual passwords are handled by noVNC
 		const options = Object.create(null);
-		if (this.password) {
+		if (this.password && !this.args.credential) {
 			options.credentials = { password: this.password };
-			if (this.username) options.credentials.username = this.username; //for auth types that also take a username
 		}
 
 		try {
 			const fileParam = this.args.file ? `&file=${encodeURIComponent(this.args.file)}` : "";
-			const url = `${KEEP.isSecure ? "wss" : "ws"}://${window.location.host}/ws/vnc?target=${encodeURIComponent(target)}${fileParam}`;
+			const credentialParam = this.args.credential ? `&credential=${encodeURIComponent(this.args.credential)}` : "";
+			const url = `${KEEP.isSecure ? "wss" : "ws"}://${window.location.host}/ws/vnc?target=${encodeURIComponent(target)}${fileParam}${credentialParam}`;
 			this.rfb = new RFB(this.canvasBox, url, options);
 		}
 		catch (ex) {
@@ -157,7 +154,11 @@ class Vnc extends Window {
 
 		this._securityFailed = false;
 
+		//reconnecting replaces this.rfb before the old instance reports its disconnect, ignore events from stale instances
+		const rfb = this.rfb;
+
 		this.rfb.addEventListener("connect", ()=> {
+			if (this.rfb !== rfb) return;
 			this.SetTitle(`VNC - ${host}`);
 			this.statusBox.style.display = "none";
 			this.connectButton.disabled = true;
@@ -165,6 +166,7 @@ class Vnc extends Window {
 		});
 
 		this.rfb.addEventListener("disconnect", e=> {
+			if (this.rfb !== rfb) return;
 			this.rfb = null;
 			this.connectButton.disabled = false;
 
@@ -177,6 +179,7 @@ class Vnc extends Window {
 		});
 
 		this.rfb.addEventListener("securityfailure", e=> {
+			if (this.rfb !== rfb) return;
 			this._securityFailed = true;
 			this.statusBox.style.display = "initial";
 			this.statusBox.style.backgroundImage = "url(mono/error.svg)";
@@ -186,7 +189,8 @@ class Vnc extends Window {
 		});
 
 		this.rfb.addEventListener("credentialsrequired", ()=> {
-			this.PromptCredentials();
+			if (this.rfb !== rfb) return;
+			this.ConnectDialog(this.args.host, false, true);
 		});
 
 		this.rfb.addEventListener("clipboard", e=> {
@@ -198,8 +202,8 @@ class Vnc extends Window {
 		});
 	}
 
-	ConnectDialog(target="", isNew=false) {
-		const dialog = this.DialogBox("280px");
+	ConnectDialog(target="", isNew=false, credentialsRequired=false) {
+		const dialog = this.DialogBox("240px");
 		if (dialog === null) return;
 
 		const {okButton, cancelButton, innerBox, buttonBox} = dialog;
@@ -211,7 +215,7 @@ class Vnc extends Window {
 
 		innerBox.style.display = "grid";
 		innerBox.style.gridTemplateColumns = "100px min(auto, 250px)";
-		innerBox.style.gridTemplateRows = "36px 8px repeat(3, 36px) auto";
+		innerBox.style.gridTemplateRows = "36px 8px repeat(3, 36px)";
 		innerBox.style.alignItems = "center";
 		innerBox.style.margin = "20px 20px 0 20px";
 
@@ -249,7 +253,6 @@ class Vnc extends Window {
 		const passwordInput = document.createElement("input");
 		passwordInput.style.gridArea = "5 / 2";
 		passwordInput.type = "password";
-		//a password fetched from the vault is never exposed in the manual field
 		passwordInput.value = this.args.credential ? "" : this.password ?? "";
 		innerBox.append(passwordLabel, passwordInput);
 
@@ -259,15 +262,6 @@ class Vnc extends Window {
 		const credentialsInput = document.createElement("select");
 		credentialsInput.style.gridArea = "5 / 2";
 		innerBox.append(credentialsLabel, credentialsInput);
-
-		const errorBox = document.createElement("div");
-		errorBox.style.gridArea = "6 / 1 / 6 / 3";
-		errorBox.style.display = "none";
-		errorBox.style.paddingTop = "4px";
-		errorBox.style.textAlign = "center";
-		errorBox.style.fontWeight = "bold";
-		errorBox.style.color = "var(--clr-error)";
-		innerBox.appendChild(errorBox);
 
 		const UpdateOkState = ()=> {
 			const host = hostInput.value.trim().length > 0;
@@ -281,7 +275,6 @@ class Vnc extends Window {
 			credentialsLabel.style.display = methodBox.index === 1 ? "initial" : "none";
 			credentialsInput.style.display = methodBox.index === 1 ? "initial" : "none";
 
-			errorBox.style.display = "none";
 			UpdateOkState();
 		};
 
@@ -290,7 +283,6 @@ class Vnc extends Window {
 		const SelectVaultEntry = guid=> {
 			methodBox.Select(1);
 			credentialsInput.value = guid;
-			errorBox.style.display = "none";
 			UpdateOkState();
 		};
 
@@ -324,46 +316,30 @@ class Vnc extends Window {
 			}
 		});
 
-		okButton.onclick = async ()=> {
-			this.args.host = hostInput.value.trim();
-			this.args.port = parseInt(portInput.value) || 5900;
+		okButton.onclick = ()=> {
+			const host = hostInput.value.trim();
+			const port = parseInt(portInput.value) || 5900;
+			const sameTarget = host === this.args.host && port === (this.args.port || 5900);
+			this.args.host = host;
+			this.args.port = port;
 
 			if (methodBox.index === 0) {
 				this.password = passwordInput.value.length > 0 ? passwordInput.value : null;
-				this.username = null;
 				delete this.args.credential;
 			}
 			else {
-				okButton.disabled = true;
-				errorBox.style.display = "none";
-
-				const guid = credentialsInput.value;
-				try {
-					const response = await fetch(`vault/credential/get?guid=${encodeURIComponent(guid)}`);
-					if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
-
-					const json = await response.json();
-					if (json.error) {
-						throw {
-							"not found"   : "Credentials don't exist",
-							"unauthorized": "Access denied for this credential"
-						}[json.error] ?? json.error;
-					}
-
-					this.password = json.password?.length > 0 ? json.password : null;
-					this.username = json.username?.length > 0 ? json.username : null;
-					this.args.credential = guid;
-				}
-				catch (ex) {
-					errorBox.textContent = ex?.message ?? ex;
-					errorBox.style.display = "block";
-					UpdateOkState();
-					return;
-				}
+				this.password = null;
+				this.args.credential = credentialsInput.value;
 			}
 
 			dialog.Close();
-			this.Connect();
+
+			if (credentialsRequired && sameTarget && this.rfb && !this.args.credential) {
+				this.rfb.sendCredentials({ password: this.password ?? "" });
+			}
+			else {
+				this.Connect();
+			}
 		};
 
 		if (isNew) {
@@ -371,6 +347,12 @@ class Vnc extends Window {
 			cancelButton.onclick = ()=> {
 				dialog.Close();
 				this.Close();
+			};
+		}
+		else if (credentialsRequired) {
+			cancelButton.onclick = ()=> {
+				dialog.Close();
+				try { this.rfb?.disconnect(); } catch {}
 			};
 		}
 
@@ -381,45 +363,10 @@ class Vnc extends Window {
 
 		hostInput.onchange = hostInput.oninput = UpdateOkState;
 
-		credentialsInput.onchange = ()=> {
-			errorBox.style.display = "none";
-			UpdateOkState();
-		};
+		credentialsInput.onchange = UpdateOkState;
 
 		UpdateSelection();
 		setTimeout(()=> methodBox.container.focus(), 200);
-	}
-
-	PromptCredentials() {
-		const dialog = this.DialogBox("150px");
-		if (dialog === null) return;
-
-		const {okButton, innerBox} = dialog;
-		okButton.value = "Connect";
-
-		innerBox.style.padding = "20px";
-		innerBox.parentElement.style.maxWidth = "400px";
-		innerBox.parentElement.parentElement.onclick = event=> { event.stopPropagation(); };
-
-		const passwordLabel = document.createElement("div");
-		passwordLabel.style.display = "inline-block";
-		passwordLabel.style.minWidth = "88px";
-		passwordLabel.textContent = "Password:";
-		const passwordInput = document.createElement("input");
-		passwordInput.type = "password";
-		passwordInput.style.width = "calc(100% - 120px)";
-		innerBox.append(passwordLabel, passwordInput);
-
-		passwordInput.onkeydown = event=> {
-			if (event.key === "Enter") okButton.click();
-		};
-
-		okButton.onclick = ()=> {
-			dialog.Close();
-			if (this.rfb) this.rfb.sendCredentials({ password: passwordInput.value });
-		};
-
-		setTimeout(()=> passwordInput.focus(), 200);
 	}
 
 	PromptPasswordRetry(reason) {
@@ -454,7 +401,6 @@ class Vnc extends Window {
 
 		okButton.onclick = ()=> {
 			this.password = passwordInput.value.length > 0 ? passwordInput.value : null;
-			this.username = null;
 			delete this.args.credential;
 			dialog.Close();
 			this.Connect();
