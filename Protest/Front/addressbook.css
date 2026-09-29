@@ -65,6 +65,7 @@
 	bottom: 0;
 	overflow: hidden;
 	white-space: nowrap;
+	backdrop-filter: none !important;
 }
 
 .address-book-frequent > div {
