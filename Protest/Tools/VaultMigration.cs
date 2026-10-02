@@ -238,7 +238,7 @@ internal static class VaultMigration {
             ConcurrentDictionary<string, Database.Attribute> modifications = new ConcurrentDictionary<string, Database.Attribute>();
 
             foreach (KeyValuePair<string, Database.Attribute> attr in entry.attributes) {
-                if (!attr.Key.Contains("credentials", StringComparison.OrdinalIgnoreCase)) continue;
+                if (!IsReferenceAttribute(attr.Key)) continue;
                 if (String.IsNullOrEmpty(attr.Value?.value)) continue;
 
                 bool replaced = false;
@@ -277,6 +277,10 @@ internal static class VaultMigration {
         return updated;
     }
 
+    //attributes that reference vault entries by guid: "<prefix> credentials" and "ssh key"
+    internal static bool IsReferenceAttribute(string name) =>
+        name.Contains("credentials", StringComparison.OrdinalIgnoreCase) || name.Equals("ssh key", StringComparison.OrdinalIgnoreCase);
+
     public static Dictionary<Guid, int> CountReferences() {
         Dictionary<Guid, int> counts = new Dictionary<Guid, int>();
         CountReferencesInDatabase(DatabaseInstances.devices, counts);
@@ -287,7 +291,7 @@ internal static class VaultMigration {
     private static void CountReferencesInDatabase(Database database, Dictionary<Guid, int> counts) {
         foreach (Database.Entry entry in database.dictionary.Values) {
             foreach (KeyValuePair<string, Database.Attribute> attr in entry.attributes) {
-                if (!attr.Key.Contains("credentials", StringComparison.OrdinalIgnoreCase)) continue;
+                if (!IsReferenceAttribute(attr.Key)) continue;
                 if (String.IsNullOrEmpty(attr.Value?.value)) continue;
 
                 string[] parts = attr.Value.value.Split(';');

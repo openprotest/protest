@@ -14,6 +14,31 @@ namespace Protest.Protocols;
 
 internal static class Ssh {
 
+    private const int DEFAULT_PORT = 22;
+
+    //"host", "host:port", "[ipv6]" or "[ipv6]:port", a bare ipv6 address has no port
+    internal static (string host, int port) ParseTarget(string target) {
+        target = target?.Trim() ?? String.Empty;
+
+        if (target.StartsWith('[')) {
+            int end = target.IndexOf(']');
+            if (end > 0) {
+                string rest = target[(end + 1)..];
+                return (target[1..end], rest.StartsWith(':') ? ParsePort(rest[1..]) : DEFAULT_PORT);
+            }
+        }
+
+        int colon = target.IndexOf(':');
+        if (colon > 0 && colon == target.LastIndexOf(':')) {
+            return (target[..colon], ParsePort(target[(colon + 1)..]));
+        }
+
+        return (target, DEFAULT_PORT);
+    }
+
+    private static int ParsePort(string value) =>
+        int.TryParse(value, out int port) && port is > 0 and <= 65535 ? port : DEFAULT_PORT;
+
     public static async Task WebSocketHandler(HttpListenerContext ctx) {
         if (!Auth.IsAuthenticatedAndAuthorized(ctx, ctx.Request.Url.AbsolutePath)) {
             ctx.Response.Close();
@@ -60,11 +85,18 @@ internal static class Ssh {
                 if (lines[i].StartsWith("credential=")) credentialGuid = lines[i][11..];
             }
 
-            string[] split = target.Split(':');
-            host = split[0];
-            port = 22;
+            (host, port) = ParseTarget(target);
 
-            AuthenticationMethod[] authMethods = CredentialResolver.Resolve(credentialGuid, ref username, ref password, origin, out bool permissionDenied);
+            AuthenticationMethod[] authMethods;
+            bool permissionDenied;
+            try {
+                authMethods = CredentialResolver.Resolve(credentialGuid, ref username, ref password, origin, out permissionDenied);
+            }
+            catch (SshException ex) { //invalid private key or wrong passphrase
+                await WebSocketHelper.WsWriteText(ws, $"{{\"error\":\"Unable to load the SSH key: {Data.EscapeJsonText(ex.Message)}\"}}");
+                await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
+                return;
+            }
 
             if (permissionDenied) {
                 await WebSocketHelper.WsWriteText(ws, "{\"error\":\"Access denied for this credential\"}"u8.ToArray());
@@ -100,7 +132,7 @@ internal static class Ssh {
 
             using SshClient ssh = authMethods is not null
                 ? new SshClient(new ConnectionInfo(host, port, username, authMethods))
-                : new SshClient(port == 22 ? host : $"{host}:{port}", username, password);
+                : new SshClient(host, port, username, password);
             ssh.Connect();
 
             Logger.Action(origin, "Remote-access", $"Establish SSH connection to {username}@{host}:{port}");
@@ -135,12 +167,12 @@ internal static class Ssh {
             }
         }
         catch (SshAuthenticationException ex) {
-            await WebSocketHelper.WsWriteText(ws, $"{{\"error\":\"{ex.Message}\"}}");
+            await WebSocketHelper.WsWriteText(ws, $"{{\"error\":\"{Data.EscapeJsonText(ex.Message)}\"}}");
             await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
             return;
         }
         catch (SocketException ex) {
-            await WebSocketHelper.WsWriteText(ws, $"{{\"error\":\"{ex.Message}\"}}");
+            await WebSocketHelper.WsWriteText(ws, $"{{\"error\":\"{Data.EscapeJsonText(ex.Message)}\"}}");
             await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
             return;
         }

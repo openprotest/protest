@@ -368,15 +368,24 @@ class Sftp extends Window {
 			}
 		};
 
+		let connected = false;
+
 		this.ws.onmessage = async event=> {
 			let json = JSON.parse(event.data);
 			if (json.connected) {
+				connected = true;
 				this.SetTitle(`SFTP - ${target}`);
 				this.pathBox.style.visibility = "visible";
 				this.content.focus();
 			}
 			else if (json.action) {
 				await this.ActionMux(json);
+			}
+			else if (json.error && !connected) {
+				//login failed, let the user pick another method
+				this.ConfirmBox(json.error, true, "mono/error.svg")?.addEventListener("click", ()=> {
+					setTimeout(()=> this.ConnectDialog(this.args.host, false), 200);
+				});
 			}
 			else if (json.error) {
 				this.ConfirmBox(json.error, true, "mono/error.svg");

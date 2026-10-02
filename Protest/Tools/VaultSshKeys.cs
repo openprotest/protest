@@ -113,6 +113,7 @@ internal static class VaultSshKeys {
 
         StringBuilder builder = new StringBuilder();
         builder.Append('{');
+        builder.Append($"\"name\":\"{Data.EscapeJsonText(entry.name)}\",");
         builder.Append($"\"username\":\"{Data.EscapeJsonText(entry.username)}\",");
         builder.Append($"\"privateKey\":\"{Data.EscapeJsonText(entry.privateKey)}\",");
         builder.Append($"\"passphrase\":\"{Data.EscapeJsonText(entry.passphrase)}\",");

@@ -365,7 +365,7 @@ class View extends Window {
 				}
 			};
 		}
-		else if (name.toLowerCase().includes("credentials") && !editMode) {
+		else if (Vault.IsReferenceAttribute(name) && !editMode) {
 
 			valueBox.style.display = "none";
 
@@ -529,9 +529,11 @@ class View extends Window {
 			MarkDirty();
 		};
 
+		const isSshKey = attributeName.toLowerCase() === "ssh key";
+
 		const {label: dropAreaLabel} = this.AddDropTarget(dialogBox, {
-			accept     : [Window.DRAG_CREDENTIALS],
-			text       : "Drop credentials here...",
+			accept     : [isSshKey ? Window.DRAG_SSH_KEY : Window.DRAG_CREDENTIALS],
+			text       : isSshKey ? "Drop SSH keys here..." : "Drop credentials here...",
 			labelParent: buttonBox,
 			tip        : "Drop key to add",
 			onEnter    : ()=> countdown.style.display = "none",
@@ -672,7 +674,10 @@ class View extends Window {
 
 		container.appendChild(draggable);
 
-		draggable.ondragstart = event=> Window.SetDragPayload(event, Window.DRAG_CREDENTIALS, guid);
+		const isSshKey = attributeName.toLowerCase() === "ssh key";
+		const endpoint = isSshKey ? "vault/sshkey" : "vault/credential";
+
+		draggable.ondragstart = event=> Window.SetDragPayload(event, isSshKey ? Window.DRAG_SSH_KEY : Window.DRAG_CREDENTIALS, guid);
 
 		removeButton.onclick = ()=> {
 			removeButton.disabled = true;
@@ -683,7 +688,7 @@ class View extends Window {
 		let valid = true;
 
 		try {
-			const response = await fetch(`vault/credential/get?guid=${guid}`);
+			const response = await fetch(`${endpoint}/get?guid=${guid}`);
 			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
 			const json = await response.json();
 
@@ -754,7 +759,19 @@ class View extends Window {
 				first ??= valueBox;
 			}
 
-			if (json.password.length > 0) {
+			if (isSshKey) {
+				//the private key stays in the vault editor
+				if (json.passphrase.length > 0) {
+					const valueBox = CreateValue("Passphrase", json.passphrase);
+					first ??= valueBox;
+				}
+
+				if (json.publicKey.length > 0) {
+					const valueBox = CreateValue("Public key", json.publicKey);
+					first ??= valueBox;
+				}
+			}
+			else if (json.password.length > 0) {
 				const valueBox = CreateValue("Password", json.password);
 				first ??= valueBox;
 			}
@@ -763,15 +780,25 @@ class View extends Window {
 				setTimeout(()=>{first?.focus()}, WIN.ANIME_DURATION);
 			}
 
-			editButton.onclick = ()=> {
-				const vault = new Vault("credentials");
-				vault.CredentialDialog({
-					guid: guid,
-					name: json.name,
-					username: json.username,
-					hasPassword: json.password.length > 0,
-					strength: 0,
-				});
+			editButton.onclick = async ()=> {
+				//open the editor with the full entry, a partial one would reset its permissions on save
+				try {
+					const listResponse = await fetch(`${endpoint}/list`);
+					if (listResponse.status !== 200) LOADER.HttpErrorHandler(listResponse.status);
+
+					const entry = (await listResponse.json()).find(o=> o.guid === guid);
+					if (!entry) throw Vault.ErrorMessage("not found");
+
+					if (isSshKey) {
+						new Vault("sshkeys").SshKeyDialog(entry);
+					}
+					else {
+						new Vault("credentials").CredentialDialog(entry);
+					}
+				}
+				catch (ex) {
+					this.ConfirmBox(ex?.message ?? ex, true, "mono/error.svg");
+				}
 			};
 		}
 		catch (ex) {

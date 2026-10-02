@@ -7,6 +7,12 @@ class Vault extends Tabs {
 		}[error] ?? error;
 	}
 
+	//attributes that reference vault entries by guid: "<prefix> credentials" and "ssh key"
+	static IsReferenceAttribute(name) {
+		const lowerCase = name.toLowerCase();
+		return lowerCase.includes("credentials") || lowerCase === "ssh key";
+	}
+
 	constructor(args) {
 		super();
 
@@ -202,7 +208,7 @@ class Vault extends Tabs {
 		for (const file in LOADER.devices.data) {
 			const entry = LOADER.devices.data[file];
 			for (const key in entry) {
-				if (!key.toLowerCase().includes("credentials")) continue;
+				if (!Vault.IsReferenceAttribute(key)) continue;
 				const value = entry[key].v;
 				if (!value) continue;
 				if (value.split(";").map(o=> o.trim()).includes(guid)) {
@@ -216,7 +222,7 @@ class Vault extends Tabs {
 		for (const file in LOADER.users.data) {
 			const entry = LOADER.users.data[file];
 			for (const key in entry) {
-				if (!key.toLowerCase().includes("credentials")) continue;
+				if (!Vault.IsReferenceAttribute(key)) continue;
 				const value = entry[key].v;
 				if (!value) continue;
 				if (value.split(";").map(o=> o.trim()).includes(guid)) {

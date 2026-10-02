@@ -73,11 +73,18 @@ internal class Sftp {
                 if (lines[i].StartsWith("credential=")) credentialGuid = lines[i][11..];
             }
 
-            string[] split = target.Split(':');
-            host = split[0];
-            port = 22;
+            (host, port) = Ssh.ParseTarget(target);
 
-            AuthenticationMethod[] authMethods = CredentialResolver.Resolve(credentialGuid, ref username, ref password, origin, out bool permissionDenied);
+            AuthenticationMethod[] authMethods;
+            bool permissionDenied;
+            try {
+                authMethods = CredentialResolver.Resolve(credentialGuid, ref username, ref password, origin, out permissionDenied);
+            }
+            catch (SshException ex) { //invalid private key or wrong passphrase
+                await WebSocketHelper.WsWriteText(ws, $"{{\"error\":\"Unable to load the SSH key: {Data.EscapeJsonText(ex.Message)}\"}}");
+                await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
+                return;
+            }
 
             if (permissionDenied) {
                 await WebSocketHelper.WsWriteText(ws, "{\"error\":\"Access denied for this credential\"}"u8.ToArray());
@@ -93,7 +100,7 @@ internal class Sftp {
 
             using SftpClient sftp = authMethods is not null
                 ? new SftpClient(new ConnectionInfo(host, port, username, authMethods))
-                : new SftpClient(port == 22 ? host : $"{host}:{port}", username, password);
+                : new SftpClient(host, port, username, password);
             sftp.Connect();
 
             //the control connection is authenticated now - drop the resolved secret rather than holding it in
@@ -201,9 +208,11 @@ internal class Sftp {
                 return "{\"error\":\"Access denied for this credential\"}"u8.ToArray();
             }
 
+            (string host, int port) = Ssh.ParseTarget(token.remoteEndpoint);
+
             using SftpClient sftp = authMethods is not null
-                ? new SftpClient(new ConnectionInfo(token.remoteEndpoint.Split(':')[0], 22, reconnectUsername, authMethods))
-                : new SftpClient(token.remoteEndpoint, reconnectUsername, reconnectPassword);
+                ? new SftpClient(new ConnectionInfo(host, port, reconnectUsername, authMethods))
+                : new SftpClient(host, port, reconnectUsername, reconnectPassword);
             sftp.Connect();
 
             SftpFileAttributes attributes = sftp.GetAttributes(token.path);
@@ -274,9 +283,11 @@ internal class Sftp {
                 return "{\"error\":\"Access denied for this credential\"}"u8.ToArray();
             }
 
+            (string host, int port) = Ssh.ParseTarget(token.remoteEndpoint);
+
             using SftpClient sftp = authMethods is not null
-                ? new SftpClient(new ConnectionInfo(token.remoteEndpoint.Split(':')[0], 22, reconnectUsername, authMethods))
-                : new SftpClient(token.remoteEndpoint, reconnectUsername, reconnectPassword);
+                ? new SftpClient(new ConnectionInfo(host, port, reconnectUsername, authMethods))
+                : new SftpClient(host, port, reconnectUsername, reconnectPassword);
             sftp.Connect();
 
             Action<int> callback = async value => {

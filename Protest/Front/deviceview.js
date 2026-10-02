@@ -36,7 +36,7 @@ class DeviceView extends View {
 		"object guid", "distinguished name", "dns hostname", "created on dc",
 
 		["mono/lock.svg", "credentials"],
-		"domain", "credentials", "ssh credentials", "vnc credentials", "uvnc credentials", "anydesk credentials", "snmp profile",
+		"domain", "credentials", "ssh key", "ssh credentials", "vnc credentials", "uvnc credentials", "anydesk credentials", "snmp profile",
 		"username", "password", "ssh username", "ssh password", "vnc password", "uvnc password", "anydesk id", "anydesk password"
 	];
 
@@ -548,11 +548,16 @@ class DeviceView extends View {
 					file = this.args.file;
 				}
 
-				const credentialAttrNames = ["ssh credentials", "credentials"];
+				//an ssh key takes priority over username/password credentials
+				const ResolveSshCredential = async ()=> {
+					const key = await this.ResolveCredentialGuid(["ssh key"]);
+					if (key !== undefined) return key; //a key, or null if the picker was cancelled
+					return await this.ResolveCredentialGuid(["ssh credentials", "credentials"]);
+				};
 
 				const sshButton = this.CreateSideButton("mono/ssh.svg", "Secure shell");
 				sshButton.onclick = async ()=> {
-					const credential = await this.ResolveCredentialGuid(credentialAttrNames);
+					const credential = await ResolveSshCredential();
 					if (credential === null) return; //picker was cancelled
 					if (credential) new Ssh({host:sshHost, credential:credential});
 					else new Ssh({host:sshHost, username:username, file:file});
@@ -560,7 +565,7 @@ class DeviceView extends View {
 
 				const sftpButton = this.CreateSideButton("mono/shared.svg", "SFTP");
 				sftpButton.onclick = async ()=> {
-					const credential = await this.ResolveCredentialGuid(credentialAttrNames);
+					const credential = await ResolveSshCredential();
 					if (credential === null) return; //picker was cancelled
 					if (credential) new Sftp({host:sshHost, credential:credential});
 					else new Sftp({host:sshHost, username:username, file:file});
