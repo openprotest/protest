@@ -351,6 +351,15 @@ class PassGen extends Window {
 		catch {}
 	}
 
+	static RandomInt(max) {
+		const limit = Math.floor(0x100000000 / max) * max;
+		const buffer = new Uint32Array(1);
+		do {
+			crypto.getRandomValues(buffer);
+		} while (buffer[0] >= limit);
+		return buffer[0] % max;
+	}
+
 	Generate() {
 		if (!this.lowercaseToggle.checkbox.checked && !this.uppercaseToggle.checkbox.checked && !this.numbersToggle.checkbox.checked && !this.symbolsToggle.checkbox.checked) {
 			this.lowercaseToggle.checkbox.checked = true;
@@ -361,14 +370,14 @@ class PassGen extends Window {
 			if (this.words) {
 				for (let i = 0; i < this.lengthRange.value; i++) {
 					if (this.lowercaseToggle.checkbox.checked && this.uppercaseToggle.checkbox.checked) {
-						let w = this.words[Math.floor(Math.random() * this.words.length)];
+						let w = this.words[PassGen.RandomInt(this.words.length)];
 						word += w[0].toUpperCase() + w.substring(1);
 					}
 					else if (this.uppercaseToggle.checkbox.checked){
-						word += this.words[Math.floor(Math.random() * this.words.length)].toUpperCase();
+						word += this.words[PassGen.RandomInt(this.words.length)].toUpperCase();
 					}
 					else {
-						word += this.words[Math.floor(Math.random() * this.words.length)];
+						word += this.words[PassGen.RandomInt(this.words.length)];
 					}
 
 					if (i+1 < this.lengthRange.value)word += "-";
@@ -379,7 +388,7 @@ class PassGen extends Window {
 				let temp = word;
 				word = "";
 				for (let i=0; i<temp.length; i++) {
-					if (Math.random() > .4) {
+					if (PassGen.RandomInt(10) >= 4) {
 						let c = temp[i].toLowerCase();
 
 						if (c === "i") word += "1";
@@ -425,9 +434,9 @@ class PassGen extends Window {
 
 		let word = "";
 		for (let i=0; i<this.lengthRange.value; i++) {
-			let dice = Math.round(Math.random() * pool.length);
+			let dice = PassGen.RandomInt(pool.length + 1);
 			if (dice < pool.length) {
-				word += pool[dice][Math.round(Math.random() * (pool[dice].length - 1))];
+				word += pool[dice][PassGen.RandomInt(pool[dice].length)];
 				flag[dice] = true;
 			}
 			else {
@@ -435,15 +444,15 @@ class PassGen extends Window {
 
 				for (let j=0; j<flag.length; j++)
 					if (!flag[j]) {
-						word += pool[j][Math.round(Math.random() * (pool[j].length - 1))];
+						word += pool[j][PassGen.RandomInt(pool[j].length)];
 						flag[j] = true;
 						ok = true;
 						break;
 					}
 
 				if (!ok) {
-					dice = Math.round(Math.random() * (pool.length - 1));
-					word += pool[dice][Math.round(Math.random() * (pool[dice].length - 1))];
+					dice = PassGen.RandomInt(pool.length);
+					word += pool[dice][PassGen.RandomInt(pool[dice].length)];
 					flag[dice] = true;
 				}
 			}
