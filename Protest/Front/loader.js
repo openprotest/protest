@@ -147,6 +147,7 @@ const LOADER = {
 		"ipdiscovery.js",
 		"reverseproxy.js",
 		"passwordgen.js",
+		"qrgenerator.js",
 		"vault.js",
 		"topology.js",
 		"encoder.js",
@@ -332,13 +333,13 @@ const LOADER = {
 		case "DeviceView": return LOADER.OpenDeviceByFile(command.args.file);
 		case "UserView"  : return LOADER.OpenUserByFile(command.args.file);
 
-		case "DevicesList"      : return new DevicesList(command.args);
-		case "UsersList"        : return new UsersList(command.args);
-		case "DevicesGrid"      : return new DevicesGrid();
-		case "UsersGrid"        : return new UsersGrid();
-		case "Vault"            : return new Vault(command.args);
-		case "Fetch"            : return new Fetch(command.args);
-		case "Monitor"          : return new Monitor(command.args);
+		case "DevicesList" : return new DevicesList(command.args);
+		case "UsersList"   : return new UsersList(command.args);
+		case "DevicesGrid" : return new DevicesGrid();
+		case "UsersGrid"   : return new UsersGrid();
+		case "Vault"       : return new Vault(command.args);
+		case "Fetch"       : return new Fetch(command.args);
+		case "Monitor"     : return new Monitor(command.args);
 
 		case "AddressBook"   : return new AddressBook(command.args);
 		case "Chat"          : return new Chat();
@@ -377,6 +378,7 @@ const LOADER = {
 		case "Snmp"         : return new Snmp(command.args);
 
 		case "PassGen"        : return new PassGen();
+		case "QrGenerator"    : return new QrGenerator(command.args);
 		case "Encoder"        : return new Encoder(command.args);
 		case "NetCalc"        : return new NetCalc();
 		case "KeyboardTester" : return new KeyboardTester(command.args);

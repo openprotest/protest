@@ -448,6 +448,7 @@ const MENU = {
 		{ t:"Encoder",            i:"mono/encoder.svg?light",       g:"utilities", h:true,  f:args=> new Encoder(args),    k:"binary hex base64 url html decode" },
 		{ t:"Network calculator", i:"mono/netcalc.svg?light",       g:"utilities", h:false, f:()=> new NetCalc(),        k:"subnet" },
 		{ t:"Password generator", i:"mono/passgen.svg?light",       g:"utilities", h:false, f:()=> new PassGen(),          k:"code" },
+		{ t:"QR code generator",  i:"mono/qrcode.svg?light",        g:"utilities", h:true,  f:args=> new QrGenerator(args), k:"qr code barcode generator" },
 		{ t:"Screen capture",     i:"mono/screenrecord.svg?light",  g:"utilities", h:true,  f:()=> new ScreenCapture(),  k:"recorder shot" },
 		{ t:"Camera tester",      i:"mono/webcam.svg?light",        g:"utilities", h:true,  f:()=> new CameraTester(),   k:"webcam" },
 		{ t:"Microphone tester",  i:"mono/mic.svg?light",           g:"utilities", h:true,  f:()=> new MicTester(),      k:"audio input" },
