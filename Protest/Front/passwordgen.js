@@ -1,5 +1,16 @@
 "use strict";
 class PassGen extends Window {
+	static GUESSES_PER_SECOND = 3e12; //a fast, unsalted hash (e.g. NTLM) on an 8-GPU rig
+	static SUBSTITUTION_BITS = -(0.6 * Math.log2(0.6) + 0.4 * Math.log2(0.4)); //a 60/40 coin flip, ~0.97 bits
+
+	static COMMON = [
+		"123456789", "12345678", "1234567", "123456", "12345", "1234", "123",
+		"987654321", "87654321", "7654321", "654321", "54321", "4321", "321",
+		"666", "abc", "qwerty", "!@#$%^&*", "!\"#$%^&*", "pass", "pa55", "word", "w0rd",
+		"admin", "root", "public", "welcome", "login", "master", "hello", "letmein",
+		"sunshine", "love", "princess", "monkey", "donald", "football", "whatever", "asshole", "dragon"
+	];
+
 	constructor() {
 		super();
 
@@ -199,6 +210,7 @@ class PassGen extends Window {
 		stampButton.style.borderRadius = "0 4px 4px 0";
 
 		this.ttcLabel = document.createElement("div");
+		this.ttcLabel.title = "Average time to crack: a fast, unsalted hash on an 8-GPU rig, at 3 trillion guesses per second.";
 		this.ttcLabel.style.color = "var(--clr-contrast)";
 		this.ttcLabel.style.whiteSpace = "nowrap";
 		this.content.appendChild(this.ttcLabel);
@@ -213,7 +225,7 @@ class PassGen extends Window {
 				this.lowercaseToggle.checkbox.checked = false;
 				this.uppercaseToggle.checkbox.checked = false;
 				this.symbolsToggle.checkbox.checked = false;
-				this.similarToggle.checkbox.checked = false;
+				this.similarToggle.checkbox.checked = true;
 				this.lowercaseToggle.checkbox.disabled = true;
 				this.uppercaseToggle.checkbox.disabled = true;
 				this.numbersToggle.checkbox.disabled = true;
@@ -296,6 +308,7 @@ class PassGen extends Window {
 				let phrase = this.passwordInput.value.split("-");
 				this.lengthRange.value = phrase.length;
 				this.lengthInput.value = phrase.length;
+				this.Strength();
 				return;
 			}
 
@@ -367,6 +380,7 @@ class PassGen extends Window {
 
 		if (this.cmbOptions.value === "mem") {
 			let word = "";
+			let substitutable = 0;
 			if (this.words) {
 				for (let i = 0; i < this.lengthRange.value; i++) {
 					if (this.lowercaseToggle.checkbox.checked && this.uppercaseToggle.checkbox.checked) {
@@ -388,6 +402,8 @@ class PassGen extends Window {
 				let temp = word;
 				word = "";
 				for (let i=0; i<temp.length; i++) {
+					if ("ieast".includes(temp[i].toLowerCase())) substitutable++;
+
 					if (PassGen.RandomInt(10) >= 4) {
 						let c = temp[i].toLowerCase();
 
@@ -403,6 +419,12 @@ class PassGen extends Window {
 					}
 				}
 			}
+
+			const wordCount = this.words && word.length > 0 ? parseInt(this.lengthRange.value) : 0;
+			this.generated = {
+				value  : word,
+				entropy: wordCount * Math.log2(this.words?.length ?? 1) + substitutable * PassGen.SUBSTITUTION_BITS
+			};
 
 			this.passwordInput.value = word;
 			this.Strength();
@@ -458,18 +480,43 @@ class PassGen extends Window {
 			}
 		}
 
+		const bitsPerCharacter = Math.log2(pool.length) + pool.reduce((sum, set)=> sum + Math.log2(set.length), 0) / pool.length;
+		this.generated = {
+			value  : word,
+			entropy: bitsPerCharacter * word.length
+		};
+
 		this.passwordInput.value = word;
 		this.Strength();
 	}
 
-	Strength() {
-		let pool = 0;
-		if (this.numbersToggle.checkbox.checked) pool += 10;
-		if (this.uppercaseToggle.checkbox.checked) pool += 26;
-		if (this.lowercaseToggle.checkbox.checked) pool += 26;
-		if (this.symbolsToggle.checkbox.checked) pool += 30;
+	static EstimateEntropy(password) {
+		for (const common of PassGen.COMMON) {
+			password = password.replace(new RegExp(common.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi"), "");
+		}
 
-		let entropy = pool === 0 ? 0 : Math.log2(pool) * this.passwordInput.value.length;
+		let hasNumbers = false, hasUppercase = false, hasLowercase = false, hasSymbols = false;
+		for (let i = 0; i < password.length; i++) {
+			const b = password.charCodeAt(i);
+			if (b > 47 && b < 58) hasNumbers = true;
+			else if (b > 64 && b < 91) hasUppercase = true;
+			else if (b > 96 && b < 123) hasLowercase = true;
+			else hasSymbols = true;
+		}
+
+		let pool = 0;
+		if (hasNumbers)   pool += 10;
+		if (hasUppercase) pool += 26;
+		if (hasLowercase) pool += 26;
+		if (hasSymbols)   pool += 33;
+
+		return pool === 0 ? 0 : Math.log2(pool) * password.length;
+	}
+
+	Strength() {
+		const value = this.passwordInput.value;
+
+		const entropy = this.generated?.value === value ? this.generated.entropy : PassGen.EstimateEntropy(value);
 
 		let strength = PassGen.StrengthBar(entropy);
 		let color = strength[0];
@@ -480,8 +527,7 @@ class PassGen extends Window {
 		this.commentLabel.textContent = comment;
 		this.entropyValueLabel.textContent = Math.round(entropy);
 
-		let combinations = pool ** this.passwordInput.value.length;
-		let ttc = combinations / 350000000000; //time to crack in seconds
+		let ttc = 2 ** entropy / 2 / PassGen.GUESSES_PER_SECOND; //time to crack in seconds
 
 		let eon = Math.floor(ttc / (1000000000 * 365 * 24 * 3600));
 		ttc -= eon * 1000000000 * 365 * 24 * 3600;

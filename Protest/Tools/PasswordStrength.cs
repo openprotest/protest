@@ -1,5 +1,3 @@
-﻿using System.Numerics;
-
 namespace Protest.Tools;
 
 internal static class PasswordStrength {
@@ -52,16 +50,13 @@ internal static class PasswordStrength {
 
     public static double Entropy(string password, out int length, out int pool, string[] related = null) {
         for (int i = 0; i < COMMON.Length; i++) {
-            if (password.IndexOf(COMMON[i], StringComparison.InvariantCultureIgnoreCase) > -1) {
-                password = password.Replace(COMMON[i], String.Empty);
-            }
+            password = password.Replace(COMMON[i], String.Empty, StringComparison.InvariantCultureIgnoreCase);
         }
 
         if (related != null) {
             for (int i = 0; i < related.Length; i++) {
-                if (related[i].Length != 0 && password.IndexOf(related[i], StringComparison.InvariantCultureIgnoreCase) > -1) {
-                    password = password.Replace(related[i], String.Empty);
-                }
+                if (related[i].Length == 0) continue;
+                password = password.Replace(related[i], String.Empty, StringComparison.InvariantCultureIgnoreCase);
             }
         }
 
@@ -90,79 +85,9 @@ internal static class PasswordStrength {
         if (hasNumbers)   pool += 10;
         if (hasUppercase) pool += 26;
         if (hasLowercase) pool += 26;
-        if (hasSymbols)   pool += 30;
+        if (hasSymbols)   pool += 32;
 
         double entropy = Math.Log(Math.Pow(pool, len), 2);
-        //same as:       Math.Log(pool, 2) * len
-
         return entropy;
-    }
-
-    public static string CalculateTtc(int length, int pool) {
-        try {
-            BigInteger gps = 500_000_000_000; //guesses per seconds
-            BigInteger combinations = BigInteger.Pow(pool, length);
-            BigInteger stc = combinations / gps; //seconds to crack
-
-            BigInteger EON = 365 * 24 * 3600;
-            EON *= 1_000_000_000;
-            BigInteger MILLENNIUM = 365 * 24 * 3600;
-            MILLENNIUM *= 1000;
-
-            BigInteger eons = stc / EON;
-            stc -= eons * EON;
-
-            if (eons > 1) {
-                return "Eons";
-            }
-
-            BigInteger millenniums = stc / MILLENNIUM;
-            stc -= millenniums * MILLENNIUM;
-
-            BigInteger years = stc / (365 * 24 * 3600);
-            stc -= years * (365 * 24 * 3600);
-
-            BigInteger days = stc / (24 * 3600);
-            stc -= days * (24 * 3600);
-
-            BigInteger hours = stc / 3600;
-            stc -= hours * 3600;
-
-            BigInteger minutes = stc / 60;
-            stc -= minutes * 60;
-
-            BigInteger seconds = stc;
-
-
-            string ttc = String.Empty;
-            if (eons != 0)        ttc = eons == 1 ? $"1 eon, " : $"{eons} eons, ";
-            if (millenniums != 0) ttc += millenniums == 1 ? $"1 millennium, " : $"{millenniums} millenniums, ";
-            if (years != 0)       ttc += years == 1 ? $"1 year, " : $"{years} years, ";
-            if (days != 0)        ttc += days == 1 ? $"1 day, " : $"{days} days, ";
-            if (hours != 0)       ttc += hours == 1 ? $"1 hour, " : $"{hours} hours, ";
-            if (minutes != 0)     ttc += minutes == 1 ? $"1 minute, " : $"{minutes} minutes, ";
-
-            if (seconds != 0) {
-                if (ttc.Length == 0) {
-                    ttc += seconds == 1 ? $"a second" : $"{seconds} seconds";
-                }
-                else {
-                    ttc += seconds == 1 ? $"and 1 second" : $"and {seconds} seconds";
-                }
-            }
-
-            if (ttc.EndsWith(", ")) {
-                ttc = ttc[..^2];
-            }
-
-            if (ttc.Length == 0) {
-                ttc = "less than a second";
-            }
-
-            return ttc;
-        }
-        catch {
-            return null;
-        }
     }
 }
