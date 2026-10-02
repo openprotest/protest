@@ -164,9 +164,9 @@ class QrGenerator extends Window {
 		this.form.style.display = "grid";
 		this.form.style.gridTemplateColumns = "repeat(auto-fit, minmax(260px, 1fr))";
 		this.form.style.gap = "4px 16px";
-		this.form.style.maxHeight = "196px"; //the vcard fields in two columns
+		this.form.style.maxHeight = "196px";
 		this.form.style.marginBottom = "12px";
-		this.form.style.padding = "4px"; //room for the 3px focus outline, the scrolling area clips it otherwise
+		this.form.style.padding = "4px";
 		this.form.style.overflowY = "auto";
 		container.appendChild(this.form);
 

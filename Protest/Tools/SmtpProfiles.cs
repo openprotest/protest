@@ -1,11 +1,14 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Net;
-using System.Net.Mail;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
+using MailKit.Net.Smtp;
+using MailKit.Security;
+using MimeKit;
+using MimeKit.Text;
 using Protest.Http;
 
 namespace Protest.Tools;
@@ -29,6 +32,11 @@ internal static class SmtpProfiles {
         public string username;
         public string password;
         public bool ssl;
+        public string clientId;
+        public string clientSecret;
+        public string tenant;
+        public string refreshToken;
+        public string session; //pending oauth sign-in, never stored
     }
 
     static SmtpProfiles() {
@@ -76,60 +84,101 @@ internal static class SmtpProfiles {
         using StreamReader reader = new StreamReader(ctx.Request.InputStream, ctx.Request.ContentEncoding);
         string payload = reader.ReadToEnd();
 
-        Profile[] oldProfiles;
-        try {
-            byte[] bytes;
-            lock (mutex) {
-                bytes = File.ReadAllBytes(Data.FILE_SMTP_PROFILES);
-            }
-
-            byte[] plain = Cryptography.Decrypt(bytes, Configuration.DB_KEY, Configuration.DB_KEY_IV);
-
-            oldProfiles = JsonSerializer.Deserialize<Profile[]>(plain);
-        }
-        catch {
-            oldProfiles = Array.Empty<Profile>();
-        }
-
         try {
             Profile[] newProfiles = JsonSerializer.Deserialize<Profile[]>(payload, smtpProfileSerializerOptionsWithPasswords);
 
-            for (int i = 0; i < newProfiles.Length; i++) {
-                if (newProfiles[i].guid == default(Guid)) {
-                    newProfiles[i] = newProfiles[i] with { guid = Guid.NewGuid() };
-                }
+            lock (mutex) {
+                Profile[] oldProfiles = Load();
 
-                if (newProfiles[i].password?.Length > 0) continue;
+                for (int i = 0; i < newProfiles.Length; i++) {
+                    Profile profile = newProfiles[i];
 
-                Profile old = null;
-                for (int j = 0; j < oldProfiles.Length; j++) {
-                    if (newProfiles[i].guid == oldProfiles[j].guid) {
-                        old = oldProfiles[j];
-                        break;
+                    if (profile.guid == default(Guid)) {
+                        profile.guid = Guid.NewGuid();
+                    }
+
+                    Profile old = Array.Find(oldProfiles, o => o.guid == profile.guid);
+                    if (!MergeSecrets(profile, old)) {
+                        return Encoding.UTF8.GetBytes("{\"error\":\"The sign-in has expired. Sign in again.\"}");
                     }
                 }
 
-                if (old is not null) {
-                    newProfiles[i] = newProfiles[i] with { password = old.password };
-                }
+                Store(newProfiles);
             }
 
-            byte[] plain = JsonSerializer.SerializeToUtf8Bytes(newProfiles, smtpProfileSerializerOptionsWithPasswords);
-            byte[] cipher = Cryptography.Encrypt(plain, Configuration.DB_KEY, Configuration.DB_KEY_IV);
-            lock (mutex) {
-                File.WriteAllBytes(Data.FILE_SMTP_PROFILES, cipher);
-            }
+            SmtpOAuth.ClearCache();
 
             Logger.Action(origin, "Environment", $"Modify SMTP profiles");
         }
         catch (JsonException) {
             return Data.CODE_INVALID_ARGUMENT.Array;
         }
+        catch (ArgumentException ex) {
+            return Encoding.UTF8.GetBytes($"{{\"error\":\"{Data.EscapeJsonText(ex.Message)}\"}}");
+        }
         catch (Exception) {
             return Data.CODE_FAILED.Array;
         }
 
         return Data.CODE_OK.Array;
+    }
+
+    private static bool MergeSecrets(Profile profile, Profile old) {
+        if (String.IsNullOrEmpty(profile.password))     profile.password     = old?.password;
+        if (String.IsNullOrEmpty(profile.clientSecret)) profile.clientSecret = old?.clientSecret;
+
+        profile.clientId = profile.clientId?.Trim();
+        profile.tenant   = profile.provider == Provider.Outlook ? SmtpOAuth.NormalizeTenant(profile.tenant) : null;
+
+        string session = profile.session;
+        profile.session = null;
+
+        if (profile.provider == Provider.SmtpServer) {
+            profile.clientId = profile.clientSecret = profile.tenant = profile.refreshToken = null;
+            return true;
+        }
+
+        profile.password = null;
+        profile.ssl = true; //outlook and gmail only accept the oauth sign-in over tls
+
+        if (session is not null) {
+            if (!SmtpOAuth.TakeSession(session, profile.provider, out string clientId, out string clientSecret, out string tenant, out string refreshToken, out string email)) {
+                return false;
+            }
+            profile.clientId     = clientId;
+            profile.clientSecret = clientSecret;
+            profile.tenant       = tenant;
+            profile.refreshToken = refreshToken;
+            profile.username     = email;
+            if (String.IsNullOrWhiteSpace(profile.sender)) profile.sender = email;
+        }
+        else if (old is not null && old.provider == profile.provider && old.clientId == profile.clientId && old.tenant == profile.tenant) {
+            profile.refreshToken = old.refreshToken;
+            profile.username     = old.username;
+        }
+        else {
+            profile.refreshToken = null;
+        }
+
+        return true;
+    }
+
+    private static void Store(Profile[] profiles) {
+        byte[] plain = JsonSerializer.SerializeToUtf8Bytes(profiles, smtpProfileSerializerOptionsWithPasswords);
+        byte[] cipher = Cryptography.Encrypt(plain, Configuration.DB_KEY, Configuration.DB_KEY_IV);
+        lock (mutex) {
+            File.WriteAllBytes(Data.FILE_SMTP_PROFILES, cipher);
+        }
+    }
+
+    public static void UpdateRefreshToken(Guid guid, string refreshToken) {
+        lock (mutex) {
+            Profile[] profiles = Load();
+            Profile profile = Array.Find(profiles, o => o.guid == guid);
+            if (profile is null) return;
+            profile.refreshToken = refreshToken;
+            Store(profiles);
+        }
     }
 
     public static byte[] SendTest(HttpListenerContext ctx) {
@@ -190,29 +239,57 @@ internal static class SmtpProfiles {
             """;
 
         try {
-            using MailMessage mail = new MailMessage {
-                From = new MailAddress(profile.sender, "Pro-test"),
-                Subject = "E-mail test from Pro-test",
-                IsBodyHtml = true
-            };
-
-            AlternateView view = AlternateView.CreateAlternateViewFromString(body, null, "text/html");
-            mail.AlternateViews.Add(view);
-
-            mail.To.Add(recipient);
-
-            using SmtpClient smtp = new SmtpClient(profile.server) {
-                Port = profile.port,
-                EnableSsl = profile.ssl,
-                Credentials = new NetworkCredential(profile.username, profile.password),
-            };
-            smtp.Send(mail);
-
+            Send(profile, new string[] { recipient }, "E-mail test from Pro-test", body);
             return Data.CODE_OK.Array;
         }
         catch (Exception ex) {
             return Encoding.UTF8.GetBytes($"{{\"error\":\"{Data.EscapeJsonText(ex.Message)}\"}}");
         }
+    }
+
+    public static void Send(Profile profile, string[] recipients, string subject, string htmlBody) {
+        MailboxAddress from = MailboxAddress.Parse(profile.sender);
+        from.Name = "Pro-test";
+
+        using MimeMessage message = new MimeMessage();
+        message.From.Add(from);
+        message.Subject = subject;
+        message.Body = new TextPart(TextFormat.Html) { Text = htmlBody };
+
+        for (int i = 0; i < recipients.Length; i++) {
+            message.To.AddRange(InternetAddressList.Parse(recipients[i]));
+        }
+
+        bool isOAuth = profile.provider != Provider.SmtpServer;
+
+        //oauth profiles are always over tls, including ones stored before that was enforced
+        SecureSocketOptions security = !profile.ssl && !isOAuth ? SecureSocketOptions.None
+            : profile.port == 465 ? SecureSocketOptions.SslOnConnect
+            : SecureSocketOptions.StartTls;
+
+        string accessToken = isOAuth ? SmtpOAuth.GetAccessToken(profile) : null;
+
+        using SmtpClient smtp = new SmtpClient {
+            CheckCertificateRevocation = false
+        };
+
+        smtp.Connect(profile.server, profile.port, security);
+
+        if (isOAuth) {
+            try {
+                smtp.Authenticate(new SaslMechanismOAuth2(profile.username, accessToken));
+            }
+            catch (AuthenticationException) {
+                SmtpOAuth.ForgetAccessToken(profile.guid);
+                throw;
+            }
+        }
+        else if (!String.IsNullOrEmpty(profile.username) && smtp.Capabilities.HasFlag(SmtpCapabilities.Authentication)) {
+            smtp.Authenticate(profile.username, profile.password ?? String.Empty);
+        }
+
+        smtp.Send(message);
+        smtp.Disconnect(true);
     }
 }
 
@@ -255,6 +332,11 @@ internal sealed class SmtpProfilesJsonConverter : JsonConverter<SmtpProfiles.Pro
                         case "password" : profile.password   = hidePasswords ? String.Empty : reader.GetString(); break;
                         case "ssl"      : profile.ssl        = reader.GetBoolean(); break;
                         case "guid"     : profile.guid       = reader.GetGuid(); break;
+                        case "clientId"     : profile.clientId     = reader.GetString(); break;
+                        case "clientSecret" : profile.clientSecret = hidePasswords ? String.Empty : reader.GetString(); break;
+                        case "tenant"       : profile.tenant       = reader.GetString(); break;
+                        case "refreshToken" : profile.refreshToken = hidePasswords ? String.Empty : reader.GetString(); break;
+                        case "session"      : profile.session      = reader.GetString(); break;
                         default: reader.Skip(); break;
                         }
                     }
@@ -276,6 +358,11 @@ internal sealed class SmtpProfilesJsonConverter : JsonConverter<SmtpProfiles.Pro
         ReadOnlySpan<byte> _password = "password"u8;
         ReadOnlySpan<byte> _ssl      = "ssl"u8;
         ReadOnlySpan<byte> _guid     = "guid"u8;
+        ReadOnlySpan<byte> _clientId     = "clientId"u8;
+        ReadOnlySpan<byte> _clientSecret = "clientSecret"u8;
+        ReadOnlySpan<byte> _tenant       = "tenant"u8;
+        ReadOnlySpan<byte> _refreshToken = "refreshToken"u8;
+        ReadOnlySpan<byte> _signedIn     = "signedIn"u8;
 
         writer.WriteStartArray();
 
@@ -289,6 +376,15 @@ internal sealed class SmtpProfilesJsonConverter : JsonConverter<SmtpProfiles.Pro
             writer.WriteString(_password, hidePasswords ? String.Empty : value[i].password);
             writer.WriteBoolean(_ssl, value[i].ssl);
             writer.WriteString(_guid, value[i].guid);
+            writer.WriteString(_clientId, value[i].clientId);
+            writer.WriteString(_clientSecret, hidePasswords ? String.Empty : value[i].clientSecret);
+            writer.WriteString(_tenant, value[i].tenant);
+            if (hidePasswords) {
+                writer.WriteBoolean(_signedIn, !String.IsNullOrEmpty(value[i].refreshToken));
+            }
+            else {
+                writer.WriteString(_refreshToken, value[i].refreshToken);
+            }
             writer.WriteEndObject();
         }
 

@@ -619,9 +619,10 @@ class Infrastructure extends Tabs {
 			let index = this.smtpProfiles.indexOf(this.selectedSmtpProfile);
 			if (index === -1) return;
 
-			this.ConfirmBox("Are you sure you want to remove this SMTP profile?", false, "mono/delete.svg").addEventListener("click", ()=>{
+			this.ConfirmBox("Are you sure you want to remove this SMTP profile?", false, "mono/delete.svg").addEventListener("click", async ()=>{
 				this.smtpProfiles.splice(index, 1);
-				this.SaveSmtpProfiles();
+				const error = await this.SaveSmtpProfiles();
+				if (error) this.ConfirmBox(error, true, "mono/error.svg");
 				this.selectedSmtpProfile = null;
 				this.profilesTestButton.disabled = true;
 				this.smtpProfilesListBox.SetItems(this.smtpProfiles);
@@ -668,7 +669,7 @@ class Infrastructure extends Tabs {
 				dialog.innerBox.appendChild(status);
 
 				try {
-					const response = await fetch(`config/smtpprofiles/test?guid=${this.selectedSmtpProfile.guid}&recipient=${recipientInput.value}`);
+					const response = await fetch(`config/smtpprofiles/test?guid=${this.selectedSmtpProfile.guid}&recipient=${encodeURIComponent(recipientInput.value)}`);
 					const json = await response.json();
 					if (json.error) throw (json.error);
 					dialog.Close();
@@ -1126,17 +1127,25 @@ class Infrastructure extends Tabs {
 		innerBox.style.display = "grid";
 		innerBox.style.padding = "16px 32px";
 		innerBox.style.gridTemplateColumns = "auto 120px 275px auto";
-		innerBox.style.gridTemplateRows = "repeat(7, 38px)";
 		innerBox.style.alignItems = "center";
 		innerBox.parentElement.style.maxWidth = "640px";
 
+		const PRESETS = {
+			1: { server: "smtp.office365.com", port: 587 },
+			2: { server: "smtp.gmail.com",     port: 587 }
+		};
+
+		const CreateField = (label, type="text")=> {
+			const labelElement = document.createElement("div");
+			labelElement.textContent = label;
+			const input = document.createElement("input");
+			input.type = type;
+			return [labelElement, input];
+		};
+
 		const providerLabel = document.createElement("div");
-		providerLabel.style.gridArea = "1 / 2";
 		providerLabel.textContent = "Provider:";
 		const providerInput = document.createElement("select");
-		providerInput.style.gridArea = "1 / 3";
-		providerInput.disabled = true;
-		innerBox.append(providerLabel, providerInput);
 
 		const providers = ["SMTP server", "Outlook", "Gmail"];
 
@@ -1147,120 +1156,422 @@ class Infrastructure extends Tabs {
 			providerInput.append(option);
 		}
 
-		const serverLabel = document.createElement("div");
-		serverLabel.style.gridArea = "2 / 2";
-		serverLabel.textContent = "SMTP server:";
-		const serverInput = document.createElement("input");
-		serverInput.style.gridArea = "2 / 3";
-		serverInput.type = "text";
+		const [serverLabel, serverInput] = CreateField("SMTP server:");
 		serverInput.placeholder = "smtp.example.com";
-		innerBox.append(serverLabel, serverInput);
 
-		const portLabel = document.createElement("div");
-		portLabel.style.gridArea = "3 / 2";
-		portLabel.textContent = "Port:";
-		const portInput = document.createElement("input");
-		portInput.style.gridArea = "3 / 3";
-		portInput.type = "number";
+		const [portLabel, portInput] = CreateField("Port:", "number");
 		portInput.min = 1;
 		portInput.max = 65535;
 		portInput.value = 587;
-		innerBox.append(portLabel, portInput);
 
-		const senderLabel = document.createElement("div");
-		senderLabel.style.gridArea = "4 / 2";
-		senderLabel.textContent = "Sender:";
-		const senderInput = document.createElement("input");
-		senderInput.style.gridArea = "4 / 3";
-		senderInput.type = "text";
-		innerBox.append(senderLabel, senderInput);
+		const [senderLabel, senderInput] = CreateField("Sender:");
 
-		const usernameLabel = document.createElement("div");
-		usernameLabel.style.gridArea = "5 / 2";
-		usernameLabel.textContent = "Username:";
-		const usernameInput = document.createElement("input");
-		usernameInput.style.gridArea = "5 / 3";
-		usernameInput.type = "text";
-		innerBox.append(usernameLabel, usernameInput);
+		const [usernameLabel, usernameInput] = CreateField("Username:");
 
-		const passwordLabel = document.createElement("div");
-		passwordLabel.style.gridArea = "6 / 2";
-		passwordLabel.textContent = "Password:";
-		const passwordInput = document.createElement("input");
-		passwordInput.style.gridArea = "6 / 3";
-		passwordInput.type = "password";
-		passwordInput.placeholder = object ? "unchanged" : "";
-		innerBox.append(passwordLabel, passwordInput);
+		const [passwordLabel, passwordInput] = CreateField("Password:", "password");
+		passwordInput.placeholder = object?.provider === 0 ? "unchanged" : "";
+
+		const [clientIdLabel, clientIdInput] = CreateField("Client ID:");
+
+		const [clientSecretLabel, clientSecretInput] = CreateField("Client secret:", "password");
+		clientSecretInput.placeholder = object?.provider === 2 ? "unchanged" : "";
+
+		const [tenantLabel, tenantInput] = CreateField("Tenant:");
+		tenantInput.placeholder = "common";
+
+		const accountLabel = document.createElement("div");
+		accountLabel.textContent = "Account:";
+
+		const accountBox = document.createElement("div");
+		accountBox.style.display = "flex";
+		accountBox.style.alignItems = "center";
+
+		const accountStatus = document.createElement("div");
+		accountStatus.style.flex = "1";
+		accountStatus.style.overflow = "hidden";
+		accountStatus.style.textOverflow = "ellipsis";
+		accountStatus.style.whiteSpace = "nowrap";
+
+		const signInButton = document.createElement("input");
+		signInButton.type = "button";
+		signInButton.value = "Sign in";
+
+		accountBox.append(accountStatus, signInButton);
 
 		const sslBox = document.createElement("div");
-		sslBox.style.gridArea = "7 / 2";
-		innerBox.appendChild(sslBox);
 
-		const oAuthButton = document.createElement("input");
-		oAuthButton.type = "button";
-		oAuthButton.value = "Sign in";
-		oAuthButton.style.height = "40px";
-		oAuthButton.style.margin = "0px 64px";
-		oAuthButton.style.gridArea = "3 / 3";
+		const sslToggle = this.CreateToggle("SSL", true, sslBox);
 
-		const GmailOAuth = ()=> {
+		let session = null;
+		let sessionUser = null;
+		let signInId = null;
 
+		const SignedInAs = ()=> {
+			if (session) return sessionUser;
+			if (!object?.signedIn) return null;
+
+			const provider = parseInt(providerInput.value);
+			if (object.provider !== provider) return null;
+			if (object.clientId !== clientIdInput.value.trim()) return null;
+			if (provider === 1 && (object.tenant || "common") !== (tenantInput.value.trim() || "common")) return null;
+
+			return object.username;
 		};
 
-		const OutlookOAuth = ()=> {
-
+		const UpdateAccount = ()=> {
+			const username = SignedInAs();
+			accountStatus.style.color = "";
+			accountStatus.textContent = username ? username : "Not signed in";
+			accountStatus.title = username ?? "";
+			signInButton.value = username ? "Sign in again" : "Sign in";
 		};
 
-		providerInput.onchange = ()=> {
-			innerBox.parentElement.style.transition = ".2s";
+		const ShowAccountError = message=> {
+			accountStatus.style.color = "var(--clr-error)";
+			accountStatus.textContent = message;
+			accountStatus.title = message;
+		};
 
+		const ResetSession = ()=> {
+			session = null;
+			sessionUser = null;
+			UpdateAccount();
+		};
+
+		clientIdInput.oninput = clientSecretInput.oninput = tenantInput.oninput = ResetSession;
+
+		const Layout = rows=> {
 			innerBox.textContent = "";
-			innerBox.append(providerLabel, providerInput);
-			providerInput.focus();
+			innerBox.style.gridTemplateRows = `repeat(${rows.length}, 38px)`;
+			innerBox.parentElement.style.maxHeight = `${rows.length * 38 + 84}px`;
 
-			switch (parseInt(providerInput.value)) {
-			case 1: //Outlook
-				innerBox.style.gridTemplateRows = "38px 10px 48px";
-				innerBox.parentElement.style.maxHeight = "200px";
-				innerBox.appendChild(oAuthButton);
-				oAuthButton.onclick = OutlookOAuth;
-				break;
-
-			case 2: //GMail
-			innerBox.style.gridTemplateRows = "38px 10px 48px";
-			innerBox.parentElement.style.maxHeight = "200px";
-			innerBox.appendChild(oAuthButton);
-			oAuthButton.onclick = GmailOAuth;
-			break;
-
-			default:
-				innerBox.style.gridTemplateRows = "repeat(7, 38px)";
-				innerBox.parentElement.style.maxHeight = "350px";
-
-				innerBox.append(serverLabel, serverInput);
-				innerBox.append(portLabel, portInput);
-				innerBox.append(senderLabel, senderInput);
-				innerBox.append(usernameLabel, usernameInput);
-				innerBox.append(passwordLabel, passwordInput);
-				innerBox.appendChild(sslBox);
+			for (let i=0; i<rows.length; i++) {
+				const [label, input] = rows[i];
+				label.style.gridArea = `${i+1} / 2`;
+				innerBox.appendChild(label);
+				if (input) {
+					input.style.gridArea = `${i+1} / 3`;
+					innerBox.appendChild(input);
+				}
 			}
 		};
 
-		const sslToggle = this.CreateToggle("SSL", true, sslBox);
+		const ShowForm = ()=> {
+			innerBox.parentElement.style.transition = ".2s";
+			okButton.disabled = false;
+			signInId = null;
+
+			const provider = parseInt(providerInput.value);
+
+			//outlook and gmail only accept the oauth sign-in over tls
+			sslToggle.checkbox.disabled = provider !== 0;
+			if (provider !== 0) sslToggle.checkbox.checked = true;
+
+			if (provider === 0) {
+				Layout([
+					[providerLabel, providerInput],
+					[serverLabel, serverInput],
+					[portLabel, portInput],
+					[senderLabel, senderInput],
+					[usernameLabel, usernameInput],
+					[passwordLabel, passwordInput],
+					[sslBox]
+				]);
+			}
+			else {
+				Layout([
+					[providerLabel, providerInput],
+					[serverLabel, serverInput],
+					[portLabel, portInput],
+					[senderLabel, senderInput],
+					[clientIdLabel, clientIdInput],
+					provider === 1 ? [tenantLabel, tenantInput] : [clientSecretLabel, clientSecretInput],
+					[accountLabel, accountBox],
+					[sslBox]
+				]);
+			}
+
+			senderInput.placeholder = provider === 0 ? "" : "account address";
+			UpdateAccount();
+		};
+
+		let lastProvider = 0;
+		providerInput.onchange = ()=> {
+			const provider = parseInt(providerInput.value);
+			const isPreset = serverInput.value.length === 0 || Object.values(PRESETS).some(o=> o.server === serverInput.value);
+
+			if (PRESETS[provider] && isPreset) {
+				serverInput.value = PRESETS[provider].server;
+				portInput.value = PRESETS[provider].port;
+				sslToggle.checkbox.checked = true;
+			}
+			else if (provider === 0 && lastProvider !== 0 && isPreset) {
+				serverInput.value = "";
+			}
+
+			lastProvider = provider;
+			ResetSession();
+			ShowForm();
+			providerInput.focus();
+		};
+
+		const CreatePanel = title=> {
+			okButton.disabled = true;
+			innerBox.textContent = "";
+			innerBox.style.gridTemplateRows = "auto";
+			innerBox.parentElement.style.maxHeight = "400px";
+
+			const panel = document.createElement("div");
+			panel.style.gridArea = "1 / 2 / 2 / 4";
+			panel.style.lineHeight = "1.6";
+			innerBox.appendChild(panel);
+
+			const titleLabel = document.createElement("div");
+			titleLabel.style.fontWeight = "bold";
+			titleLabel.style.marginBottom = "8px";
+			titleLabel.textContent = title;
+			panel.appendChild(titleLabel);
+
+			const status = document.createElement("div");
+			status.style.minHeight = "24px";
+			status.style.margin = "8px 0";
+
+			const backButton = document.createElement("input");
+			backButton.type = "button";
+			backButton.value = "Back";
+			backButton.onclick = ShowForm;
+
+			return {panel, status, backButton};
+		};
+
+		const ShowStatus = (status, message, isError)=> {
+			status.style.color = isError ? "var(--clr-error)" : "";
+			status.textContent = message;
+		};
+
+		const SignedIn = (id, username)=> {
+			session = id;
+			sessionUser = username;
+			if (senderInput.value.length === 0) senderInput.value = username;
+			ShowForm();
+		};
+
+		const DeviceCodePanel = json=> {
+			const {panel, status, backButton} = CreatePanel("Sign in with Microsoft");
+
+			const description = document.createElement("div");
+			description.textContent = "Open the sign-in page and enter this code:";
+			panel.appendChild(description);
+
+			const codeBox = document.createElement("div");
+			codeBox.style.display = "flex";
+			codeBox.style.alignItems = "center";
+			codeBox.style.margin = "8px 0";
+			panel.appendChild(codeBox);
+
+			const codeLabel = document.createElement("div");
+			codeLabel.style.fontFamily = "monospace";
+			codeLabel.style.fontSize = "24px";
+			codeLabel.style.fontWeight = "bold";
+			codeLabel.style.letterSpacing = "2px";
+			codeLabel.style.userSelect = "all";
+			codeLabel.style.marginRight = "12px";
+			codeLabel.textContent = json.userCode;
+			codeBox.appendChild(codeLabel);
+
+			if (navigator.clipboard) {
+				const copyButton = document.createElement("input");
+				copyButton.type = "button";
+				copyButton.value = "Copy";
+				copyButton.onclick = ()=> navigator.clipboard.writeText(json.userCode).catch(()=>{});
+				codeBox.appendChild(copyButton);
+			}
+
+			const openButton = document.createElement("input");
+			openButton.type = "button";
+			openButton.value = "Open sign-in page";
+			openButton.style.marginLeft = "0";
+			openButton.onclick = ()=> window.open(json.verificationUri, "_blank", "noopener");
+
+			panel.append(openButton, status, backButton);
+			ShowStatus(status, "Waiting for you to sign in...", false);
+			openButton.focus();
+
+			const id = json.id;
+			let interval = Math.max(json.interval || 5, 2);
+
+			const Poll = async ()=> {
+				while (innerBox.isConnected && signInId === id) {
+					await new Promise(resolve=> setTimeout(resolve, interval * 1000));
+					if (!innerBox.isConnected || signInId !== id) return;
+
+					try {
+						const response = await fetch(`config/smtpprofiles/oauth/poll?id=${encodeURIComponent(id)}`);
+						if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
+
+						const result = await response.json();
+						if (result.error) throw result.error;
+						if (signInId !== id) return;
+
+						if (result.status === "done") {
+							SignedIn(id, result.username);
+							return;
+						}
+
+						if (result.slowDown) interval += 5;
+					}
+					catch (ex) {
+						if (signInId === id) ShowStatus(status, ex, true);
+						return;
+					}
+				}
+			};
+
+			Poll();
+		};
+
+		const AuthCodePanel = json=> {
+			const {panel, status, backButton} = CreatePanel("Sign in with Google");
+
+			const openButton = document.createElement("input");
+			openButton.type = "button";
+			openButton.value = "Open sign-in page";
+			openButton.style.marginLeft = "0";
+			openButton.onclick = ()=> window.open(json.authUrl, "_blank", "noopener");
+			panel.appendChild(openButton);
+
+			const description = document.createElement("div");
+			description.style.margin = "8px 0";
+			description.textContent = "After you allow access, the browser is sent to 127.0.0.1 and shows a \"can't be reached\" page. That is expected. Copy the full address from its address bar and paste it here:";
+			panel.appendChild(description);
+
+			const responseBox = document.createElement("div");
+			responseBox.style.display = "flex";
+			responseBox.style.alignItems = "center";
+			panel.appendChild(responseBox);
+
+			const responseInput = document.createElement("input");
+			responseInput.type = "text";
+			responseInput.placeholder = "http://127.0.0.1:47115/?state=...&code=...";
+			responseInput.style.flex = "1";
+			responseInput.style.marginLeft = "0";
+
+			const continueButton = document.createElement("input");
+			continueButton.type = "button";
+			continueButton.value = "Continue";
+
+			responseBox.append(responseInput, continueButton);
+			panel.append(status, backButton);
+			openButton.focus();
+
+			const id = json.id;
+
+			continueButton.onclick = async ()=> {
+				if (responseInput.value.trim().length === 0) {
+					responseInput.required = true;
+					responseInput.focus();
+					return;
+				}
+
+				responseInput.required = false;
+				continueButton.disabled = true;
+				ShowStatus(status, "Signing in...", false);
+
+				try {
+					const response = await fetch("config/smtpprofiles/oauth/complete", {
+						method: "POST",
+						body: JSON.stringify({ id: id, response: responseInput.value.trim() })
+					});
+					if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
+
+					const result = await response.json();
+					if (result.error) throw result.error;
+					if (signInId !== id) return;
+
+					SignedIn(id, result.username);
+				}
+				catch (ex) {
+					if (signInId === id) ShowStatus(status, ex, true);
+				}
+				finally {
+					continueButton.disabled = false;
+				}
+			};
+
+			responseInput.onkeydown = event=> {
+				if (event.key === "Enter") continueButton.click();
+			};
+		};
+
+		signInButton.onclick = async ()=> {
+			const provider = parseInt(providerInput.value);
+			const clientId = clientIdInput.value.trim();
+
+			if (clientId.length === 0) {
+				clientIdInput.required = true;
+				clientIdInput.focus();
+				return;
+			}
+			clientIdInput.required = false;
+
+			if (provider === 2 && clientSecretInput.value.length === 0 && !(object?.provider === 2 && object.clientId === clientId)) {
+				clientSecretInput.required = true;
+				clientSecretInput.focus();
+				return;
+			}
+			clientSecretInput.required = false;
+
+			signInButton.disabled = true;
+
+			try {
+				const response = await fetch("config/smtpprofiles/oauth/start", {
+					method: "POST",
+					body: JSON.stringify({
+						provider    : provider,
+						clientId    : clientId,
+						clientSecret: provider === 2 ? clientSecretInput.value : "",
+						tenant      : provider === 1 ? tenantInput.value.trim() : "",
+						guid        : object?.guid ?? ""
+					})
+				});
+				if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
+
+				const json = await response.json();
+				if (json.error) throw json.error;
+
+				signInId = json.id;
+				if (json.mode === "device") {
+					DeviceCodePanel(json);
+				}
+				else {
+					AuthCodePanel(json);
+				}
+			}
+			catch (ex) {
+				ShowAccountError(ex);
+			}
+			finally {
+				signInButton.disabled = false;
+			}
+		};
 
 		if (object) {
 			providerInput.value = object.provider;
 			serverInput.value = object.server;
 			portInput.value = object.port;
 			senderInput.value = object.sender;
-			usernameInput.value = object.username;
+			usernameInput.value = object.provider === 0 ? object.username : "";
 			passwordInput.value = object.password;
+			clientIdInput.value = object.clientId ?? "";
+			tenantInput.value = object.tenant ?? "";
 			sslToggle.checkbox.checked = object.ssl;
 		}
 
 		if (!providerInput.value) {
 			providerInput.value = "0";
 		}
+
+		lastProvider = parseInt(providerInput.value);
 
 		okButton.onclick = async ()=>{
 			let isNew = object === null;
@@ -1270,11 +1581,16 @@ class Infrastructure extends Tabs {
 				isNew = true;
 			}
 
+			const provider = parseInt(providerInput.value);
+			const isOAuth = provider !== 0;
+
 			let requiredFieldMissing = false;
 
-			const requiredFields = isNew
-				? [serverInput, portInput, senderInput, usernameInput, passwordInput]
-				: [serverInput, portInput, senderInput, usernameInput];
+			const requiredFields = isOAuth
+				? [serverInput, portInput, clientIdInput]
+				: isNew || object.provider !== 0
+					? [serverInput, portInput, senderInput, usernameInput, passwordInput]
+					: [serverInput, portInput, senderInput, usernameInput];
 
 			for (let i=0; i<requiredFields.length; i++) {
 				if (requiredFields[i].value.length === 0) {
@@ -1290,16 +1606,27 @@ class Infrastructure extends Tabs {
 
 			if (requiredFieldMissing) return;
 
+			const account = SignedInAs();
+			if (isOAuth && !account) {
+				ShowAccountError("Sign in before saving");
+				signInButton.focus();
+				return;
+			}
+
 			const newObject = {
-				provider : parseInt(providerInput.value),
-				server   : serverInput.value,
-				port     : parseInt(portInput.value),
-				sender   : senderInput.value,
-				username : usernameInput.value,
-				password : passwordInput.value,
-				ssl      : sslToggle.checkbox.checked,
+				provider    : provider,
+				server      : serverInput.value,
+				port        : parseInt(portInput.value),
+				sender      : senderInput.value || (isOAuth ? account : ""),
+				username    : isOAuth ? account : usernameInput.value,
+				password    : isOAuth ? "" : passwordInput.value,
+				ssl         : sslToggle.checkbox.checked,
+				clientId    : isOAuth ? clientIdInput.value.trim() : null,
+				clientSecret: provider === 2 ? clientSecretInput.value : "",
+				tenant      : provider === 1 ? tenantInput.value.trim() : null,
 			};
 
+			if (session) newObject.session = session;
 			if (object && object.guid) newObject.guid = object.guid;
 
 			if (isNew) {
@@ -1309,12 +1636,13 @@ class Infrastructure extends Tabs {
 				this.smtpProfiles[index] = newObject;
 			}
 
-			await this.SaveSmtpProfiles();
+			const error = await this.SaveSmtpProfiles();
 			dialog.Close();
 			this.ShowSmtp();
+			if (error) setTimeout(()=> this.ConfirmBox(error, true, "mono/error.svg"), 250);
 		};
 
-		providerInput.onchange();
+		ShowForm();
 
 		setTimeout(()=>{ serverInput.focus() }, 200);
 	}
@@ -1847,9 +2175,10 @@ class Infrastructure extends Tabs {
 
 			const json = await response.json();
 			if (json.error) throw(json.error);
+			return null;
 		}
 		catch (ex) {
-			this.ConfirmBox(ex, true, "mono/error.svg");
+			return ex;
 		}
 	}
 

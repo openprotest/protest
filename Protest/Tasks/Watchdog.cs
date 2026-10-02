@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Net.Http;
-using System.Net.Mail;
 using System.Net.NetworkInformation;
 using System.Net.Security;
 using System.Net.Sockets;
@@ -847,30 +846,11 @@ internal static class Watchdog {
         try
 #endif
         {
-            using MailMessage mail = new MailMessage {
-                From = new MailAddress(profile.sender, "Pro-test"),
-                Subject = $"Watchdog notification - {target} - {DateTime.Now.ToString(Data.DATETIME_FORMAT_TIMEZONE)}",
-                IsBodyHtml = true
-            };
-
-            AlternateView view = AlternateView.CreateAlternateViewFromString(body.ToString(), null, "text/html");
-            mail.AlternateViews.Add(view);
-
-            for (int i = 0; i < notification.recipients.Length; i++) {
-                mail.To.Add(notification.recipients[i]);
-            }
-
-            using SmtpClient smtp = new SmtpClient(profile.server) {
-                Port        = profile.port,
-                EnableSsl   = profile.ssl,
-                Credentials = new NetworkCredential(profile.username, profile.password)
-            };
-            smtp.Send(mail);
+            string subject = $"Watchdog notification - {target} - {DateTime.Now.ToString(Data.DATETIME_FORMAT_TIMEZONE)}";
+            SmtpProfiles.Send(profile, notification.recipients, subject, body.ToString());
         }
 #if !DEBUG
-        catch (SmtpFailedRecipientException ex) { Logger.Error(ex); }
-        catch (SmtpException ex)                { Logger.Error(ex); }
-        catch (Exception ex)                    { Logger.Error(ex); }
+        catch (Exception ex) { Logger.Error(ex); }
 #endif
     }
 }

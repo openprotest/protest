@@ -156,6 +156,9 @@ internal sealed class Listener {
         ["/config/smtpprofiles/list"]     = (ctx, username) => Tools.SmtpProfiles.List(),
         ["/config/smtpprofiles/save"]     = (ctx, username) => Tools.SmtpProfiles.Save(ctx, username),
         ["/config/smtpprofiles/test"]     = (ctx, username) => Tools.SmtpProfiles.SendTest(ctx),
+        ["/config/smtpprofiles/oauth/start"]    = (ctx, username) => Tools.SmtpOAuth.Start(ctx),
+        ["/config/smtpprofiles/oauth/poll"]     = (ctx, username) => Tools.SmtpOAuth.Poll(ctx),
+        ["/config/smtpprofiles/oauth/complete"] = (ctx, username) => Tools.SmtpOAuth.Complete(ctx),
 
         ["/config/snmpprofiles/list"]     = (ctx, username) => Tools.SnmpProfiles.List(ctx),
         ["/config/snmpprofiles/save"]     = (ctx, username) => Tools.SnmpProfiles.Save(ctx, username),

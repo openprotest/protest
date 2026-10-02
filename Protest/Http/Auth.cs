@@ -726,6 +726,9 @@ internal static class Auth {
                 path.Add("/config/smtpprofiles/list");
                 path.Add("/config/smtpprofiles/save");
                 path.Add("/config/smtpprofiles/test");
+                path.Add("/config/smtpprofiles/oauth/start");
+                path.Add("/config/smtpprofiles/oauth/poll");
+                path.Add("/config/smtpprofiles/oauth/complete");
                 path.Add("/config/snmpprofiles/list");
                 path.Add("/config/snmpprofiles/save");
                 path.Add("/config/checkupdate");
