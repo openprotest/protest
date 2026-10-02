@@ -147,12 +147,13 @@ class About extends Tabs {
 			container.append(nameBox, linkBox);
 		};
 
-		CreateCredit("Renci.SshNet",               "Renci",           "https://nuget.org/packages/SSH.NET");
-		CreateCredit("Lextm.SharpSnmpLib",         "Lextm",           "https://nuget.org/packages/Lextm.SharpSnmpLib");
-		CreateCredit("Otp.NET",                    "kspearrin",       "https://nuget.org/packages/Otp.NET/1.2.2");
+		CreateCredit("SSH.NET",                    "Renci",           "https://github.com/sshnet/SSH.NET");
+		CreateCredit("SharpSnmpLib",               "Lextm",           "https://github.com/lextudio/sharpsnmplib");
+		CreateCredit("MailKit",                    "jstedfast ",      "https://github.com/jstedfast/mailkit");
+		CreateCredit("Otp.NET",                    "kspearrin",       "https://github.com/kspearrin/Otp.NET");
 		CreateCredit("Porta.Pty",                  "Laird McConnell", "https://github.com/tomlm/Porta.Pty");
-		CreateCredit("noVNC",                      "noVNC team",      "https://github.com/novnc/noVNC");
-		CreateCredit("xterm.js",                   "xterm.js team",   "https://github.com/xtermjs");
+		CreateCredit("noVNC",                      "Joel Martin",     "https://github.com/novnc/noVNC");
+		CreateCredit("Xterm.js",                   "Xterm.js team",   "https://github.com/xtermjs");
 		CreateCredit("QRCode.js",                  "Sangmin, Shim",   "https://github.com/davidshimjs/qrcodejs");
 		CreateCredit("MAC addresses lookup table", "ieee",            "https://regauth.standards.ieee.org/standards-ra-web/pub/view.html");
 		CreateCredit("Open Sans typeface",         "Steve Matteson",  "");
