@@ -239,15 +239,33 @@ internal static class SmtpProfiles {
             """;
 
         try {
-            Send(profile, new string[] { recipient }, "E-mail test from Pro-test", body);
-            return Data.CODE_OK.Array;
+            string reply = Send(profile, new string[] { recipient }, "E-mail test from Pro-test", body);
+
+            string warning = null;
+            string senderAddress = MailboxAddress.Parse(profile.sender).Address;
+            if (profile.provider != Provider.SmtpServer && !senderAddress.Equals(profile.username, StringComparison.OrdinalIgnoreCase)) {
+                warning = profile.provider == Provider.Outlook
+                    ? $"The sender ({senderAddress}) is not the signed-in account ({profile.username}). Microsoft accepts the message, but returns it as undeliverable unless the account has Send As permission for that address. Check {profile.username}'s inbox for a bounce."
+                    : $"The sender ({senderAddress}) is not the signed-in account ({profile.username}). Gmail replaces it with {profile.username} unless it is a verified alias of that account.";
+            }
+
+            StringBuilder json = new StringBuilder();
+            json.Append($"{{\"status\":\"ok\",\"server\":\"{Data.EscapeJsonText(profile.server)}\",\"reply\":\"{Data.EscapeJsonText(reply)}\"");
+            if (warning is not null) json.Append($",\"warning\":\"{Data.EscapeJsonText(warning)}\"");
+            json.Append('}');
+            return Encoding.UTF8.GetBytes(json.ToString());
+        }
+        catch (SmtpCommandException ex) {
+            Logger.Error(ex);
+            return Encoding.UTF8.GetBytes($"{{\"error\":\"{Data.EscapeJsonText($"{profile.server} rejected the message ({(int)ex.StatusCode}): {ex.Message}")}\"}}");
         }
         catch (Exception ex) {
+            Logger.Error(ex);
             return Encoding.UTF8.GetBytes($"{{\"error\":\"{Data.EscapeJsonText(ex.Message)}\"}}");
         }
     }
 
-    public static void Send(Profile profile, string[] recipients, string subject, string htmlBody) {
+    public static string Send(Profile profile, string[] recipients, string subject, string htmlBody) {
         MailboxAddress from = MailboxAddress.Parse(profile.sender);
         from.Name = "Pro-test";
 
@@ -284,12 +302,18 @@ internal static class SmtpProfiles {
                 throw;
             }
         }
-        else if (!String.IsNullOrEmpty(profile.username) && smtp.Capabilities.HasFlag(SmtpCapabilities.Authentication)) {
+        else if (!String.IsNullOrEmpty(profile.username)) {
+            if (!smtp.Capabilities.HasFlag(SmtpCapabilities.Authentication)) {
+                throw new InvalidOperationException(security == SecureSocketOptions.None
+                    ? $"{profile.server} does not offer authentication without encryption. Turn on SSL, or clear the username to send without logging in."
+                    : $"{profile.server} does not offer authentication. Clear the username to send without logging in.");
+            }
             smtp.Authenticate(profile.username, profile.password ?? String.Empty);
         }
 
-        smtp.Send(message);
+        string reply = smtp.Send(message);
         smtp.Disconnect(true);
+        return reply;
     }
 }
 

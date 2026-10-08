@@ -1,5 +1,7 @@
 "use strict";
 class Infrastructure extends Tabs {
+	static SMTP_PROVIDERS = ["SMTP server", "Outlook", "Gmail"];
+
 	constructor(args) {
 		super();
 
@@ -604,9 +606,9 @@ class Infrastructure extends Tabs {
 		this.tabsPanel.appendChild(this.smtpProfilesList);
 
 		this.smtpProfilesListBox.SetupColumns([
+			{label:"Provider", value:d=> Infrastructure.SMTP_PROVIDERS[d.provider]},
 			{label:"SMTP server", value:d=> d.server},
-			{label:"Port", value:d=> d.port},
-			{label:"Username", value:d=> d.username}
+			{label:"Sender", value:d=> d.sender}
 		]);
 
 		this.profilesNewButton.onclick = ()=>{
@@ -670,9 +672,16 @@ class Infrastructure extends Tabs {
 
 				try {
 					const response = await fetch(`config/smtpprofiles/test?guid=${this.selectedSmtpProfile.guid}&recipient=${encodeURIComponent(recipientInput.value)}`);
+					if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
+
 					const json = await response.json();
 					if (json.error) throw (json.error);
 					dialog.Close();
+
+					let message = `${json.server} accepted the test e-mail.`;
+					if (json.reply) message += `\nServer reply: ${json.reply}`;
+					if (json.warning) message += `\n\n${json.warning}`;
+					setTimeout(()=>this.ConfirmBox(message, true, json.warning ? "mono/warning.svg" : "mono/checked.svg"), 250);
 				}
 				catch (ex) {
 					dialog.Close();
@@ -1147,12 +1156,10 @@ class Infrastructure extends Tabs {
 		providerLabel.textContent = "Provider:";
 		const providerInput = document.createElement("select");
 
-		const providers = ["SMTP server", "Outlook", "Gmail"];
-
-		for (let i=0; i<providers.length; i++) {
+		for (let i=0; i<Infrastructure.SMTP_PROVIDERS.length; i++) {
 			const option = document.createElement("option");
 			option.value = i;
-			option.textContent = providers[i];
+			option.textContent = Infrastructure.SMTP_PROVIDERS[i];
 			providerInput.append(option);
 		}
 
@@ -1176,7 +1183,7 @@ class Infrastructure extends Tabs {
 		const [clientSecretLabel, clientSecretInput] = CreateField("Client secret:", "password");
 		clientSecretInput.placeholder = object?.provider === 2 ? "unchanged" : "";
 
-		const [tenantLabel, tenantInput] = CreateField("Tenant:");
+		const [tenantLabel, tenantInput] = CreateField("Tenant ID:");
 		tenantInput.placeholder = "common";
 
 		const accountLabel = document.createElement("div");
@@ -1263,7 +1270,6 @@ class Infrastructure extends Tabs {
 
 			const provider = parseInt(providerInput.value);
 
-			//outlook and gmail only accept the oauth sign-in over tls
 			sslToggle.checkbox.disabled = provider !== 0;
 			if (provider !== 0) sslToggle.checkbox.checked = true;
 

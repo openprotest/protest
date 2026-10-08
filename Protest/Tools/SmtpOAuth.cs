@@ -367,7 +367,13 @@ internal static class SmtpOAuth {
             int end = description.IndexOfAny(['\r', '\n']);
             int trace = description.IndexOf(" Trace ID:", StringComparison.Ordinal);
             if (trace > 0 && (end < 0 || trace < end)) end = trace;
-            throw new OAuthException(error, end > 0 ? description[..end].Trim() : description);
+            if (end > 0) description = description[..end].Trim();
+
+            if (description.StartsWith("AADSTS7000218", StringComparison.Ordinal)) {
+                description = "The app registration does not allow public client flows. In Microsoft Entra, open the app registration > Authentication, set \"Allow public client flows\" to Yes, save, and sign in again.";
+            }
+
+            throw new OAuthException(error, description);
         }
 
         if (!response.IsSuccessStatusCode) {
