@@ -112,3 +112,41 @@
 *[tip-below]:disabled::before, *[tip-below]:disabled:after {
 	visibility: hidden;
 }
+
+@supports (anchor-name: --a) and (position-try-fallbacks: --a) {
+	@position-try --tip-end {
+		left: auto;
+		right: anchor(right, 0);
+	}
+
+	@position-try --tip-start {
+		right: auto;
+		left: anchor(left, 0);
+	}
+
+	*[tip] {
+		anchor-name: --tip;
+		anchor-scope: --tip;
+	}
+
+	*[tip]::before {
+		position: fixed;
+		position-anchor: --tip;
+		top: calc(anchor(top, 0px) - 35px);
+		left: anchor(left, 0);
+		position-try-fallbacks: --tip-end;
+	}
+
+	*[tip-below] {
+		anchor-name: --tip-below;
+		anchor-scope: --tip-below;
+	}
+
+	*[tip-below]::before {
+		position: fixed;
+		position-anchor: --tip-below;
+		top: calc(anchor(bottom, 100%) + 6px);
+		left: calc(anchor(center, 50%) - 24px);
+		position-try-fallbacks: --tip-end, --tip-start;
+	}
+}
