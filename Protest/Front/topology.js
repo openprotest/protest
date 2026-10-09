@@ -733,11 +733,11 @@ class Topology extends Window {
 				const device = this.devices[json.speed.file];
 				device.speed = json.speed;
 			}
-			else if (json.traffice) {
+			else if (json.traffic) {
 				const device = this.devices[json.traffic.file];
 				device.traffic = json.traffic;
 			}
-			else if (json.errore) {
+			else if (json.error) {
 				const device = this.devices[json.error.file];
 				device.error = json.error;
 			}

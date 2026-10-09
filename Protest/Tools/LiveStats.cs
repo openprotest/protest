@@ -222,29 +222,28 @@ internal static class LiveStats {
             if (entry.attributes.TryGetValue("eset uuid", out Database.Attribute esetAttribute)
                 && !String.IsNullOrWhiteSpace(esetAttribute.value)) {
 
-                await Eset.FetchAsync();
+                await Eset.FetchAllAsync();
 
                 entry.attributes.TryGetValue("fqdn", out Database.Attribute fqdn);
 
-                Eset.DeviceEntry deviceInfo = default;
                 bool esetMatch =
-                    Eset.TryResolveDevice(_hostname?.value, out deviceInfo) ||
-                    Eset.TryResolveDevice(fqdn?.value, out deviceInfo);
+                    Eset.TryFindByUuid(esetAttribute.value, out Eset.DeviceEntry deviceInfo, out long detectionsCount, out string esetSource) ||
+                    Eset.TryResolveDevice(_hostname?.value, out deviceInfo, out esetSource) ||
+                    Eset.TryResolveDevice(fqdn?.value, out deviceInfo, out esetSource);
 
                 if (esetMatch && deviceInfo.functionalityProblemCount > 0) {
                     byte[] bytes = JsonSerializer.SerializeToUtf8Bytes(new Dictionary<string, object> {
                             { "error", $"ESET functionality problem(s): {deviceInfo.functionalityProblemCount}" },
-                            { "source", "ESET" },
+                            { "source", esetSource },
                             { "timestamp",  DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString() }
                         });
                     await WebSocketHelper.WsWriteText(ws, bytes);
                 }
 
-                if (Eset.detectionsPerDeviceCount.TryGetValue(esetAttribute.value, out long detectionsCount)
-                    && detectionsCount > 0) {
+                if (esetMatch && detectionsCount > 0) {
                     byte[] bytes = JsonSerializer.SerializeToUtf8Bytes(new Dictionary<string, object> {
                             { "warning", $"End-point detections: {detectionsCount}" },
-                            { "source", "ESET" },
+                            { "source", esetSource },
                             { "timestamp",  DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString() }
                         });
                     await WebSocketHelper.WsWriteText(ws, bytes);

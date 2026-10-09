@@ -528,6 +528,7 @@ internal static class Auth {
 
             case "fetch:write":
                 path.Add("/fetch/networkinfo");
+                path.Add("/fetch/integrations");
                 path.Add("/fetch/singledevice");
                 path.Add("/fetch/singleuser");
                 path.Add("/fetch/status");
@@ -685,9 +686,12 @@ internal static class Auth {
                 break;
 
             case "integration:write":
-                path.Add("/config/integration/getstatus");
-                path.Add("/config/integration/getcred");
+                path.Add("/config/integration/types");
+                path.Add("/config/integration/list");
+                path.Add("/config/integration/get");
                 path.Add("/config/integration/save");
+                path.Add("/config/integration/delete");
+                path.Add("/config/integration/test");
                 break;
 
             case "api links:write":

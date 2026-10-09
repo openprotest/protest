@@ -65,9 +65,9 @@ const LOADER = {
 
 	userIcons : {
 		"domain user"  : "mono/domainuser.svg",
+		"entra user"   : "mono/domainuser.svg",
 		"address book" : "mono/contact.svg",
 		"hidden"       : "mono/hiddenuser.svg",
-		"credentials"  : "mono/key.svg"
 	},
 
 	baseStyles: [

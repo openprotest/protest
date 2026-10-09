@@ -36,6 +36,8 @@ internal static class Fetch {
         public ConcurrentDictionary<string, ConcurrentDictionary<string, string[]>> dataset;
     }
 
+    public readonly record struct IntegrationSelectors(string Eset, string Entra, string Unifi);
+
     private static readonly JsonSerializerOptions fetchSerializerOptions;
 
     public static TaskWrapper task;
@@ -59,6 +61,8 @@ internal static class Fetch {
         parameters.TryGetValue("snmp", out string snmpProfileGuid);
         parameters.TryGetValue("portscan", out string portScan);
         parameters.TryGetValue("eset", out string esetApi);
+        parameters.TryGetValue("entra", out string entraApi);
+        parameters.TryGetValue("unifi", out string unifiApi);
 
         if (target is null) {
             return Data.CODE_INVALID_ARGUMENT.Array;
@@ -76,7 +80,11 @@ internal static class Fetch {
             ldap?.Equals("true") ?? false,
             snmpProfiles,
             portScan,
-            esetApi?.Equals("true") ?? false,
+            new IntegrationSelectors(
+                Integration.Integration.NormalizeSelector(esetApi),
+                Integration.Integration.NormalizeSelector(entraApi),
+                Integration.Integration.NormalizeSelector(unifiApi)
+            ),
             asynchronous,
             CancellationToken.None
         );
@@ -87,7 +95,8 @@ internal static class Fetch {
 
         return JsonSerializer.SerializeToUtf8Bytes(data, fetchSerializerOptions);
     }
-    public static async Task<ConcurrentDictionary<string, string[]>> SingleDeviceAsync(string target, bool useDns, bool useWmi, bool useLdap, SnmpProfiles.Profile[] snmpProfiles, string argPortScan, bool esetApi, bool asynchronous, CancellationToken token) {
+
+    public static async Task<ConcurrentDictionary<string, string[]>> SingleDeviceAsync(string target, bool useDns, bool useWmi, bool useLdap, SnmpProfiles.Profile[] snmpProfiles, string argPortScan, IntegrationSelectors integrations, bool asynchronous, CancellationToken token) {
         PingReply reply = null;
         try {
             using Ping ping = new Ping();
@@ -101,13 +110,17 @@ internal static class Fetch {
         }
 
         if (reply?.Status == IPStatus.Success) {
-            ConcurrentDictionary<string, string[]> data = SingleDevice(target, useDns, useWmi, useLdap, snmpProfiles, argPortScan, esetApi, asynchronous, token);
+            ConcurrentDictionary<string, string[]> data = SingleDevice(target, useDns, useWmi, useLdap, snmpProfiles, argPortScan, integrations, asynchronous, token);
             return data;
         }
 
         return null;
     }
-    public static ConcurrentDictionary<string, string[]> SingleDevice(string target, bool useDns, bool useWmi, bool useLdap, SnmpProfiles.Profile[] snmpProfiles, string argPortScan, bool useEsetApi, bool asynchronous, CancellationToken token) {
+    public static ConcurrentDictionary<string, string[]> SingleDevice(string target, bool useDns, bool useWmi, bool useLdap, SnmpProfiles.Profile[] snmpProfiles, string argPortScan, IntegrationSelectors integrations, bool asynchronous, CancellationToken token) {
+        string esetSelector = integrations.Eset;
+        string entraSelector = integrations.Entra;
+        string unifiSelector = integrations.Unifi;
+
         if (target.Contains(';')) {
             target = target.Split(';')[0].Trim();
         }
@@ -348,7 +361,6 @@ internal static class Fetch {
 
         if (token.IsCancellationRequested) return null;
 
-        //if no type found, try guessing from ports
         if (!data.ContainsKey("type") && !String.IsNullOrEmpty(portsString)) {
             int[] ports = portsString.Split(';').Select(o => int.Parse(o.Trim())).ToArray();
 
@@ -469,47 +481,48 @@ internal static class Fetch {
             return null;
         }
 
-        if (useEsetApi) {
-            Eset.FetchAsync().GetAwaiter().GetResult();
+        data.TryGetValue("fqdn", out string[] dataFqdn);
+        data.TryGetValue("hostname", out string[] dataHostname);
 
-            data.TryGetValue("fqdn", out string[] dataFqdn);
-            data.TryGetValue("hostname", out string[] dataHostname);
+        if (esetSelector is not null) {
+            Eset.FetchAllAsync(esetSelector).GetAwaiter().GetResult();
 
             Eset.DeviceEntry esetEntry = default;
+            string esetSource = null;
             bool esetMatch =
-                (dataFqdn?.Length > 0 && Eset.TryResolveDevice(dataFqdn[0], out esetEntry)) ||
-                (dataHostname?.Length > 0 && Eset.TryResolveDevice(dataHostname[0], out esetEntry));
+                (dataFqdn?.Length > 0 && Eset.TryResolveDevice(dataFqdn[0], out esetEntry, out esetSource, esetSelector)) ||
+                (dataHostname?.Length > 0 && Eset.TryResolveDevice(dataHostname[0], out esetEntry, out esetSource, esetSelector));
 
             if (esetMatch) {
-                data.TryAdd("eset uuid", new[] { esetEntry.uuid, "ESET", string.Empty });
+                data.TryAdd("eset uuid", new[] { esetEntry.uuid, esetSource, string.Empty });
 
                 if (!data.ContainsKey("operating system") && esetEntry.os is not null) {
-                    data.TryAdd("operating system", new[] { esetEntry.os, "ESET", string.Empty });
+                    data.TryAdd("operating system", new[] { esetEntry.os, esetSource, string.Empty });
                 }
 
                 if (!data.ContainsKey("os version") && esetEntry.osVer is not null) {
-                    data.TryAdd("os version", new[] { esetEntry.osVer, "ESET", string.Empty });
+                    data.TryAdd("os version", new[] { esetEntry.osVer, esetSource, string.Empty });
                 }
 
                 if (esetEntry.ip is not null) {
                     if (esetEntry.ip.Contains('.') && !data.ContainsKey("ip")) {
-                        data.TryAdd("ip", new[] { esetEntry.ip, "ESET", string.Empty });
+                        data.TryAdd("ip", new[] { esetEntry.ip, esetSource, string.Empty });
                     }
                     else if (esetEntry.ip.Contains(':') && !data.ContainsKey("ipv6")) {
-                        data.TryAdd("ipv6", new[] { esetEntry.ip, "ESET", string.Empty });
+                        data.TryAdd("ipv6", new[] { esetEntry.ip, esetSource, string.Empty });
                     }
                 }
 
                 if (!data.ContainsKey("mac address") && esetEntry.mac is not null) {
-                    data.TryAdd("mac address", new[] { esetEntry.mac, "ESET", string.Empty });
+                    data.TryAdd("mac address", new[] { esetEntry.mac, esetSource, string.Empty });
                 }
 
                 if (!data.ContainsKey("manufacturer") && esetEntry.manufacturer is not null) {
-                    data.TryAdd("manufacturer", new[] { esetEntry.manufacturer, "ESET", string.Empty });
+                    data.TryAdd("manufacturer", new[] { esetEntry.manufacturer, esetSource, string.Empty });
                 }
 
                 if (!data.ContainsKey("serial number") && esetEntry.serialNumber is not null) {
-                    data.TryAdd("serial number", new[] { esetEntry.serialNumber, "ESET", string.Empty });
+                    data.TryAdd("serial number", new[] { esetEntry.serialNumber, esetSource, string.Empty });
                 }
 
                 if (!data.ContainsKey("processor") && esetEntry.processors is not null) {
@@ -520,12 +533,75 @@ internal static class Fetch {
                         string name = Data.ProcessorString(esetEntry.processors[i]);
                         cpuString.Append(name);
                     }
-                    data.TryAdd("processor", new[] { cpuString.ToString(), "ESET", string.Empty });
+                    data.TryAdd("processor", new[] { cpuString.ToString(), esetSource, string.Empty });
                 }
             }
         }
 
+        if (entraSelector is not null) {
+            EntraId.FetchDevicesAsync(entraSelector, false, token).GetAwaiter().GetResult();
+
+            EntraId.DeviceEntry entraEntry = default;
+            string entraSource = null;
+            bool entraMatch = (dataFqdn?.Length > 0 && EntraId.TryResolveDevice(dataFqdn[0], entraSelector, out entraEntry, out entraSource)) ||
+                (dataHostname?.Length > 0 && EntraId.TryResolveDevice(dataHostname[0], entraSelector, out entraEntry, out entraSource));
+
+            if (entraMatch) {
+                if (!String.IsNullOrEmpty(entraEntry.deviceId)) {
+                    data.TryAdd("entra device id", new[] { entraEntry.deviceId, entraSource, string.Empty });
+                }
+
+                if (!data.ContainsKey("operating system") && entraEntry.os is not null) {
+                    data.TryAdd("operating system", new[] { entraEntry.os, entraSource, string.Empty });
+                }
+
+                if (!data.ContainsKey("os version") && entraEntry.osVer is not null) {
+                    data.TryAdd("os version", new[] { entraEntry.osVer, entraSource, string.Empty });
+                }
+
+                if (!data.ContainsKey("manufacturer") && entraEntry.manufacturer is not null) {
+                    data.TryAdd("manufacturer", new[] { entraEntry.manufacturer, entraSource, string.Empty });
+                }
+
+                if (!data.ContainsKey("model") && entraEntry.model is not null) {
+                    data.TryAdd("model", new[] { entraEntry.model, entraSource, string.Empty });
+                }
+            }
+        }
+
+        if (unifiSelector is not null) {
+            UniFi.RefreshAllAsync(unifiSelector, false, token).GetAwaiter().GetResult();
+
+            string[] dataMacs = data.TryGetValue("mac address", out string[] macValue) ? macValue[0].Split(';') : [];
+            string[] dataIps = data.TryGetValue("ip", out string[] ipValue) ? ipValue[0].Split(';') : [];
+
+            if (UniFi.TryResolveDevice(dataMacs, dataIps, unifiSelector, out UniFi.DeviceEntry unifiEntry, out string unifiSource)) {
+                ApplyUnifiDevice(data, unifiEntry, unifiSource);
+            }
+        }
+
         return data;
+    }
+
+    private static void ApplyUnifiDevice(ConcurrentDictionary<string, string[]> data, UniFi.DeviceEntry device, string source) {
+        if (device.type is not null && (!data.TryGetValue("type", out string[] type) || type[1] == "Port-scan")) {
+            data["type"] = new[] { device.type, source, String.Empty };
+        }
+
+        void Add(string key, string value) {
+            if (!String.IsNullOrWhiteSpace(value)) {
+                data.TryAdd(key, new[] { value, source, String.Empty });
+            }
+        }
+
+        Add("name", device.name);
+        Add("ip", device.ip);
+        Add("mac address", device.mac);
+        Add("manufacturer", "Ubiquiti");
+        Add("model", device.model);
+        Add("firmware version", device.firmware);
+        Add("serial number", device.serial);
+        Add("unifi id", device.id);
     }
 
     public static byte[] SingleUserSerialize(HttpListenerContext ctx) {
@@ -582,6 +658,8 @@ internal static class Fetch {
         string ldap = null;
         string portScan = null;
         string esetApi = null;
+        string entraApi = null;
+        string unifiApi = null;
         string retriesStr = null;
         string intervalStr = null;
 
@@ -606,6 +684,12 @@ internal static class Fetch {
             }
             else if (payloadLines[i].StartsWith("eset=")) {
                 esetApi = payloadLines[i][5..].Trim();
+            }
+            else if (payloadLines[i].StartsWith("entra=")) {
+                entraApi = payloadLines[i][6..].Trim();
+            }
+            else if (payloadLines[i].StartsWith("unifi=")) {
+                unifiApi = payloadLines[i][6..].Trim();
             }
             else if (payloadLines[i].StartsWith("retries=")) {
                 retriesStr = payloadLines[i][8..].Trim();
@@ -633,7 +717,6 @@ internal static class Fetch {
         snmp2       ??= "false";
         snmp3       ??= "false";
         portScan    ??= "false";
-        esetApi     ??= "false";
         retriesStr  ??= "0";
         intervalStr ??= "-1";
 
@@ -729,14 +812,18 @@ internal static class Fetch {
             ldap?.Equals("true") ?? false,
             filteredSnmpProfiles.ToArray(),
             portScan,
-            esetApi?.Equals("true") ?? false,
+            new IntegrationSelectors(
+                Integration.Integration.NormalizeSelector(esetApi),
+                Integration.Integration.NormalizeSelector(entraApi),
+                Integration.Integration.NormalizeSelector(unifiApi)
+            ),
             retries,
             interval,
             origin
         );
     }
 
-    public static byte[] DevicesTask(string[] hosts, bool dns, bool wmi, bool ldap, SnmpProfiles.Profile[] snmpProfiles, string portScan, bool esetApi, int retries, float interval, string origin) {
+    public static byte[] DevicesTask(string[] hosts, bool dns, bool wmi, bool ldap, SnmpProfiles.Profile[] snmpProfiles, string portScan, IntegrationSelectors integrations, int retries, float interval, string origin) {
         if (task is not null) return Data.CODE_OTHER_TASK_IN_PROGRESS.Array;
         if (result is not null) return Data.CODE_OTHER_TASK_IN_PROGRESS.Array;
 
@@ -745,11 +832,24 @@ internal static class Fetch {
         int totalFetched = 0;
         int totalRetries = 0;
 
+        string esetSelector = integrations.Eset;
+        string entraSelector = integrations.Entra;
+        string unifiSelector = integrations.Unifi;
+
         Thread thread = new Thread(async () => {
             task?.status = TaskWrapper.TaskStatus.Running;
 
-            if (esetApi) {
-                await Eset.FetchAsync();
+            if (esetSelector is not null) {
+                await Eset.FetchAllAsync(esetSelector);
+            }
+
+            if (entraSelector is not null) {
+                await EntraId.FetchDevicesAsync(entraSelector, true, task.cancellationToken); //the user asked for fresh data
+            }
+
+            List<(UniFi.DeviceEntry device, string source)> unifiDevices = new List<(UniFi.DeviceEntry, string)>();
+            if (unifiSelector is not null) {
+                unifiDevices = await UniFi.FetchDevicesAsync(unifiSelector, task.cancellationToken);
             }
 
             ConcurrentDictionary<string, ConcurrentDictionary<string, string[]>> dataset = new ConcurrentDictionary<string, ConcurrentDictionary<string, string[]>>();
@@ -764,7 +864,7 @@ internal static class Fetch {
 
                     List<Task<ConcurrentDictionary<string, string[]>>> tasks = new List<Task<ConcurrentDictionary<string, string[]>>>(size);
                     for (int i = 0; i < size; i++) {
-                        tasks.Add(SingleDeviceAsync(queue[i], dns, wmi, ldap, snmpProfiles, portScan , esetApi, false, task.cancellationToken));
+                        tasks.Add(SingleDeviceAsync(queue[i], dns, wmi, ldap, snmpProfiles, portScan, integrations, false, task.cancellationToken));
                     }
 
                     ConcurrentDictionary<string, string[]>[] result = await Task.WhenAll(tasks);
@@ -804,6 +904,47 @@ internal static class Fetch {
                 else {
                     break;
                 }
+            }
+
+            if (unifiDevices.Count > 0 && task is not null && !task.cancellationToken.IsCancellationRequested) {
+                HashSet<string> knownMacs = new HashSet<string>();
+                HashSet<string> knownIps = new HashSet<string>();
+
+                void Remember(ConcurrentDictionary<string, string[]> properties) {
+                    if (properties.TryGetValue("mac address", out string[] macs)) {
+                        foreach (string mac in macs[0].Split(';')) {
+                            string key = UniFi.MacKey(mac);
+                            if (key is not null) knownMacs.Add(key);
+                        }
+                    }
+
+                    if (properties.TryGetValue("ip", out string[] ips)) {
+                        foreach (string ip in ips[0].Split(';')) knownIps.Add(ip.Trim());
+                    }
+                }
+
+                foreach (ConcurrentDictionary<string, string[]> properties in dataset.Values) {
+                    if (properties is not null) Remember(properties);
+                }
+
+                int added = 0;
+
+                foreach ((UniFi.DeviceEntry device, string source) in unifiDevices) {
+                    string macKey = UniFi.MacKey(device.mac);
+                    if (macKey is not null && knownMacs.Contains(macKey)) continue;
+                    if (!String.IsNullOrEmpty(device.ip) && knownIps.Contains(device.ip)) continue;
+
+                    ConcurrentDictionary<string, string[]> properties = new ConcurrentDictionary<string, string[]>();
+                    ApplyUnifiDevice(properties, device, source);
+
+                    if (dataset.TryAdd(device.ip ?? $"unifi:{device.mac ?? device.id}", properties)) {
+                        Remember(properties);
+                        added++;
+                    }
+                }
+
+                task.TotalSteps += added;
+                task.CompletedSteps += added;
             }
 
             if (task is not null) {
@@ -850,37 +991,69 @@ internal static class Fetch {
     public static byte[] UsersTask(HttpListenerContext ctx, string origin) {
         Dictionary<string, string> parameters = Listener.ParseQuery(ctx);
 
-        if (parameters is null) {
+        using StreamReader reader = new StreamReader(ctx.Request.InputStream, ctx.Request.ContentEncoding);
+        string[] payloadLines = reader.ReadToEnd().Split('\n');
+
+        string ldap = null;
+        string entra = null;
+
+        for (int i = 0; i < payloadLines.Length; i++) {
+            if (payloadLines[i].StartsWith("ldap=")) {
+                ldap = payloadLines[i][5..].Trim();
+            }
+            else if (payloadLines[i].StartsWith("entra=")) {
+                entra = payloadLines[i][6..].Trim();
+            }
+        }
+
+        bool useLdap = !String.Equals(ldap, "false", StringComparison.OrdinalIgnoreCase);
+        string entraSelector = Integration.Integration.NormalizeSelector(entra);
+
+        if (!useLdap && entraSelector is null) {
             return Data.CODE_INVALID_ARGUMENT.ToArray();
         }
 
-        if (parameters.ContainsKey("update")) {
-            IEnumerable<Database.Entry> values = DatabaseInstances.users.dictionary.Values;
-            List<string> users = new List<string>(values.Count());
-            foreach (Database.Entry entry in values) {
-                if (!entry.attributes.TryGetValue("type", out Database.Attribute type)) continue;
-                if (!entry.attributes.TryGetValue("username", out Database.Attribute username)) continue;
-                if (type.value != "Domain user") continue;
-                if (username.value is null) continue;
-                users.Add(username.value);
-            }
-
-            return UsersTask(users.ToArray(), origin);
+        if (entraSelector is not null && Integration.Integration.GetEnabledInstances("entra", entraSelector).Length == 0) {
+            return "{\"error\":\"The selected Entra ID integration is not available.\"}"u8.ToArray();
         }
-        else if (parameters.TryGetValue("domain", out string domain)) {
-            if (domain is null) {
+
+        string[] users = Array.Empty<string>();
+
+        if (useLdap) {
+            if (parameters is null) {
                 return Data.CODE_INVALID_ARGUMENT.ToArray();
             }
 
-            string[] users = OperatingSystem.IsWindows() ? Protocols.Ldap.GetAllUsers(domain) : Array.Empty<string>();
-            if (users is null) return Data.CODE_FAILED.Array;
+            if (parameters.ContainsKey("update")) {
+                IEnumerable<Database.Entry> values = DatabaseInstances.users.dictionary.Values;
+                List<string> list = new List<string>(values.Count());
+                foreach (Database.Entry entry in values) {
+                    if (!entry.attributes.TryGetValue("type", out Database.Attribute type)) continue;
+                    if (!entry.attributes.TryGetValue("username", out Database.Attribute username)) continue;
+                    if (type.value != "Domain user") continue;
+                    if (username.value is null) continue;
+                    list.Add(username.value);
+                }
 
-            return UsersTask(users, origin);
+                users = list.ToArray();
+            }
+            else if (parameters.TryGetValue("domain", out string domain)) {
+                if (domain is null) {
+                    return Data.CODE_INVALID_ARGUMENT.ToArray();
+                }
+
+                users = OperatingSystem.IsWindows() ? Protocols.Ldap.GetAllUsers(domain) : Array.Empty<string>();
+                if (users is null) return Data.CODE_FAILED.Array;
+            }
+            else {
+                return Data.CODE_INVALID_ARGUMENT.ToArray();
+            }
         }
 
-        return Data.CODE_INVALID_ARGUMENT.ToArray();
+        return UsersTask(users, entraSelector, origin);
     }
-    public static byte[] UsersTask(string[] users, string origin) {
+
+    public static byte[] UsersTask(string[] users, string entraSelector, string origin) {
         if (task is not null) return Data.CODE_OTHER_TASK_IN_PROGRESS.Array;
         if (result is not null) return Data.CODE_OTHER_TASK_IN_PROGRESS.Array;
 
@@ -889,6 +1062,18 @@ internal static class Fetch {
             ConcurrentDictionary<string, ConcurrentDictionary<string, string[]>> dataset = new ConcurrentDictionary<string, ConcurrentDictionary<string, string[]>>();
 
             task.status = TaskWrapper.TaskStatus.Running;
+
+            List<(EntraId.UserEntry user, string source)> entraUsers = new List<(EntraId.UserEntry, string)>();
+            if (entraSelector is not null) {
+                try {
+                    entraUsers = EntraId.FetchUsersAsync(entraSelector, task.cancellationToken).GetAwaiter().GetResult();
+                }
+                catch (Exception ex) {
+                    Logger.Error(ex);
+                }
+
+                task.TotalSteps = users.Length + entraUsers.Count;
+            }
 
             for (int i = 0; i < users.Length; i++) {
                 ConcurrentDictionary<string, string[]> hash = SingleUser(users[i]);
@@ -903,6 +1088,31 @@ internal static class Fetch {
                 if (DateTime.UtcNow.Ticks - lastBroadcast > 30_000_000) { //after 3 seconds
                     KeepAlive.Broadcast($"{{\"action\":\"update-fetch\",\"type\":\"users\",\"task\":{Encoding.UTF8.GetString(Status())}}}", "/fetch/status");
                     lastBroadcast = DateTime.UtcNow.Ticks;
+                }
+            }
+
+            if (entraUsers.Count > 0 && !task.cancellationToken.IsCancellationRequested) {
+                Dictionary<string, string> keys = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+                foreach (string key in dataset.Keys) {
+                    keys.TryAdd(key, key);
+                }
+
+                foreach ((EntraId.UserEntry user, string source) in entraUsers) {
+                    task.CompletedSteps++;
+
+                    if (!keys.TryGetValue(user.username, out string datasetKey)) {
+                        datasetKey = user.username;
+                        keys.Add(datasetKey, datasetKey);
+                    }
+
+                    if (!dataset.TryGetValue(datasetKey, out ConcurrentDictionary<string, string[]> properties) || properties is null) {
+                        properties = new ConcurrentDictionary<string, string[]>();
+                        dataset[datasetKey] = properties;
+                    }
+
+                    foreach (KeyValuePair<string, string> attribute in user.attributes) {
+                        properties.TryAdd(attribute.Key, new[] { attribute.Value, source, String.Empty });
+                    }
                 }
             }
 

@@ -16,25 +16,27 @@ class Infrastructure extends Tabs {
 		this.dhcpRange = [];
 		this.smtpProfiles = [];
 		this.snmpProfiles = [];
-		this.integrationStatus = {};
+		this.integrations = [];
+		this.integrationTypes = null;
+		this.selectedIntegration = null;
 
 		this.tabsPanel.style.padding = "24px";
 		this.tabsPanel.style.overflowY = "auto";
 
-		this.dataRetention  = this.AddTab("Data retention", "mono/dataretention.svg");
 		this.zonesTab       = this.AddTab("Zones", "mono/router.svg");
 		this.dhcpTab        = this.AddTab("DHCP range", "mono/dhcp.svg");
 		this.adTab          = this.AddTab("Active directory", "mono/directory.svg");
 		this.smtpTab        = this.AddTab("SMTP", "mono/email.svg");
 		this.snmpTab        = this.AddTab("SNMP", "mono/snmp.svg");
 		this.integrationTab = this.AddTab("Integration", "mono/integration.svg");
+		this.dataRetention  = this.AddTab("Data retention", "mono/dataretention.svg");
 
-		this.dataRetention.onclick  = ()=> this.ShowDataRetention();
 		this.zonesTab.onclick       = ()=> this.ShowZones();
 		this.dhcpTab.onclick        = ()=> this.ShowDhcpRange();
 		this.adTab.onclick          = ()=> this.ShowActiveDirectory();
 		this.smtpTab.onclick        = ()=> this.ShowSmtp();
 		this.snmpTab.onclick        = ()=> this.ShowSnmp();
+		this.dataRetention.onclick  = ()=> this.ShowDataRetention();
 		this.integrationTab.onclick = ()=> this.ShowIntegration();
 
 		this.activeColumnsListBox = null;
@@ -42,11 +44,6 @@ class Infrastructure extends Tabs {
 		this.win.addEventListener("mousemove", event=> this.activeColumnsListBox?.HandleMouseMove(event));
 
 		switch (this.args) {
-		case "zones":
-			this.zonesTab.className = "v-tab-selected";
-			this.ShowZones();
-			break;
-
 		case "dhcp":
 			this.dhcpTab.className = "v-tab-selected";
 			this.ShowDhcpRange();
@@ -72,9 +69,14 @@ class Infrastructure extends Tabs {
 			this.ShowIntegration();
 			break;
 
-		default:
+		case "dataretention":
 			this.dataRetention.className = "v-tab-selected";
 			this.ShowDataRetention();
+			break;
+
+		default:
+			this.zonesTab.className = "v-tab-selected";
+			this.ShowZones();
 			break;
 		}
 
@@ -109,13 +111,32 @@ class Infrastructure extends Tabs {
 		this.args = "dataretention";
 		this.tabsPanel.textContent = "";
 
+		const deleteContainer = document.createElement("div");
+		deleteContainer.style.padding = "20px";
+		deleteContainer.style.border = "2px solid var(--clr-control)";
+		deleteContainer.style.borderRadius = "8px";
+		this.tabsPanel.appendChild(deleteContainer);
+
+		const deleteSectionTitle = document.createElement("div");
+		deleteSectionTitle.textContent = "Delete historical data";
+		deleteSectionTitle.style.fontWeight = "700";
+		deleteSectionTitle.style.fontSize = "1.05em";
+		deleteSectionTitle.style.padding = "0 12px 8px";
+		deleteContainer.appendChild(deleteSectionTitle);
+
+		const intro = document.createElement("div");
+		intro.textContent = "Permanently delete historical data older than a chosen number of days. This cannot be undone.";
+		intro.style.padding = "0 12px";
+		intro.style.marginBottom = "16px";
+		deleteContainer.appendChild(intro);
+
 		const recordingContainer = document.createElement("div");
 		recordingContainer.style.display = "grid";
 		recordingContainer.style.gridTemplateColumns = "48px 32px 200px 1fr";
 		recordingContainer.style.alignItems = "center";
 		recordingContainer.style.columnGap = "16px";
 		recordingContainer.style.padding = "20px";
-		recordingContainer.style.margin = "0 20px 40px 20px";
+		recordingContainer.style.margin = "40px 0 20px 0";
 		recordingContainer.style.border = "2px solid var(--clr-control)";
 		recordingContainer.style.borderRadius = "8px";
 		this.tabsPanel.appendChild(recordingContainer);
@@ -145,26 +166,6 @@ class Infrastructure extends Tabs {
 		recordingDescription.style.fontSize = "smaller";
 		recordingDescription.style.opacity = "0.8";
 		recordingContainer.appendChild(recordingDescription);
-
-		const deleteContainer = document.createElement("div");
-		deleteContainer.style.padding = "20px";
-		deleteContainer.style.margin = "0 20px";
-		deleteContainer.style.border = "2px solid var(--clr-control)";
-		deleteContainer.style.borderRadius = "8px";
-		this.tabsPanel.appendChild(deleteContainer);
-
-		const deleteSectionTitle = document.createElement("div");
-		deleteSectionTitle.textContent = "Delete historical data";
-		deleteSectionTitle.style.fontWeight = "700";
-		deleteSectionTitle.style.fontSize = "1.05em";
-		deleteSectionTitle.style.padding = "0 12px 8px";
-		deleteContainer.appendChild(deleteSectionTitle);
-
-		const intro = document.createElement("div");
-		intro.textContent = "Permanently delete historical data older than a chosen number of days. This cannot be undone.";
-		intro.style.padding = "0 12px";
-		intro.style.marginBottom = "16px";
-		deleteContainer.appendChild(intro);
 
 		recordingToggle.checkbox.onchange = async ()=> {
 			recordingToggle.checkbox.disabled = true;
@@ -799,21 +800,62 @@ class Infrastructure extends Tabs {
 		this.args = "integration";
 		this.tabsPanel.textContent = "";
 
+		this.selectedIntegration = null;
+
+		this.options = document.createElement("div");
+		this.options.className = "rbac-options";
+		this.options.style.position = "absolute";
+		this.options.style.left = "20px";
+		this.options.style.right = "8px";
+		this.options.style.top = "8px";
+		this.options.style.overflow = "hidden";
+		this.options.style.whiteSpace = "nowrap";
+		this.tabsPanel.appendChild(this.options);
+
+		this.integrationAddButton = document.createElement("input");
+		this.integrationAddButton.type = "button";
+		this.integrationAddButton.value = "Add";
+		this.integrationAddButton.className = "with-icon";
+		this.integrationAddButton.style.backgroundImage = "url(mono/add.svg?light)";
+
+		this.integrationRemoveButton = document.createElement("input");
+		this.integrationRemoveButton.type = "button";
+		this.integrationRemoveButton.value = "Remove";
+		this.integrationRemoveButton.className = "with-icon";
+		this.integrationRemoveButton.style.backgroundImage = "url(mono/delete.svg?light)";
+
+		this.integrationTestButton = document.createElement("input");
+		this.integrationTestButton.type = "button";
+		this.integrationTestButton.value = "Test";
+		this.integrationTestButton.disabled = true;
+		this.integrationTestButton.className = "with-icon";
+		this.integrationTestButton.style.backgroundImage = "url(mono/checked.svg?light)";
+
+		this.options.append(this.integrationAddButton, this.integrationRemoveButton, this.integrationTestButton);
+
 		this.integrationListBox = new ListBox({
 			firstColumnOffset: "4px",
-			onSelect: (id, element)=> {},
-			onDoubleClick: data=> this.IntegrationDialog(data.name)
+			onSelect: (id, element)=> {
+				this.selectedIntegration = element._data;
+				this.integrationTestButton.disabled = false;
+			},
+			onDoubleClick: data=> this.IntegrationDialog(data)
 		});
 		this.integrationListBox.SetupTitleBar();
 		this.integrationListBox.SetupBuiltInSort();
 
 		this.activeColumnsListBox = this.integrationListBox;
 
+		this.integrationListBox.listTitleOuter.style.left = "20px";
+		this.integrationListBox.listTitleOuter.style.right = "20px";
+		this.integrationListBox.listTitleOuter.style.top = "50px";
+		this.tabsPanel.appendChild(this.integrationListBox.listTitleOuter);
+
 		this.integrationList = this.integrationListBox.list;
 		this.integrationList.style.overflowY = "auto";
 		this.integrationList.style.left = "20px";
 		this.integrationList.style.right = "20px";
-		this.integrationList.style.top = "20px";
+		this.integrationList.style.top = "80px";
 		this.integrationList.style.bottom = "20px";
 		this.integrationList.style.border = "rgb(82,82,82) solid 2px";
 		this.integrationList.addEventListener("keydown", event=> this.integrationListBox.Keydown(event));
@@ -826,25 +868,62 @@ class Infrastructure extends Tabs {
 				const cell = document.createElement("div");
 				cell.textContent = d.name;
 				cell.style.paddingLeft = "32px";
-				if (d.status) {
-					cell.style.backgroundImage = d.status ? "url(mono/connect.svg)" : "url(mono/pause.svg)";
-					cell.style.backgroundSize = "20px 20px";
-					cell.style.backgroundPosition = "4px 50%";
-					cell.style.backgroundRepeat = "no-repeat";
-				}
+				cell.style.backgroundImage = d.enabled && !d.error ? "url(mono/connect.svg)" : "url(mono/disconnect.svg)";
+				cell.style.backgroundSize = "20px 20px";
+				cell.style.backgroundPosition = "4px 50%";
+				cell.style.backgroundRepeat = "no-repeat";
 				return cell;
 			}},
+			{label:"Type", value:d=> d.label},
+			{label:"Status", value:d=> d.enabled ? (d.error ? d.error : "Enabled") : "Disabled"},
+			{label:"Description", value:d=> d.description.replace(/\s+/g, " ")}
 		]);
 
-		this.integrationListBox.SetItems([
-			//{name: "EntraID",    status: this.integrationStatus["entraid"] ?? false},
-			{name: "ESET",       status: this.integrationStatus["eset"] ?? false},
-			//{name: "Unifi",      status: this.integrationStatus["unifi"] ?? false},
-			//{name: "Sophos",     status: this.integrationStatus["sophos"] ?? false},
-			//{name: "Checkpoint", status: this.integrationStatus["checkpoint"] ?? false},
-		]);
+		this.integrationAddButton.onclick = ()=> this.IntegrationTypeDialog();
 
-		this.GetIntegrationStatus();
+		this.integrationRemoveButton.onclick = ()=> {
+			const target = this.selectedIntegration;
+			if (!target) return;
+
+			this.ConfirmBox(`Are you sure you want to remove "${target.name}"?`, false, "mono/delete.svg").addEventListener("click", async ()=> {
+				try {
+					const response = await fetch(`config/integration/delete?id=${encodeURIComponent(target.id)}`);
+					if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
+
+					const json = await response.json();
+					if (json.error) throw(json.error);
+				}
+				catch (ex) {
+					this.ConfirmBox(ex, true, "mono/error.svg");
+				}
+
+				this.GetIntegrations();
+			});
+		};
+
+		this.integrationTestButton.onclick = async ()=> {
+			const target = this.selectedIntegration;
+			if (!target) return;
+
+			this.integrationTestButton.disabled = true;
+
+			try {
+				const response = await fetch(`config/integration/test?id=${encodeURIComponent(target.id)}`);
+				if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
+
+				const json = await response.json();
+				if (json.error) throw(json.error);
+
+				this.ConfirmBox(`Successfully signed in to "${target.name}".`, true, "mono/checked.svg");
+			}
+			catch (ex) {
+				this.ConfirmBox(ex, true, "mono/error.svg");
+			}
+
+			this.GetIntegrations();
+		};
+
+		this.GetIntegrations();
 		this.AfterResize();
 	}
 
@@ -918,27 +997,42 @@ class Infrastructure extends Tabs {
 		}
 	}
 
-	async GetIntegrationStatus() {
+	async GetIntegrations() {
 		try {
-			const response = await fetch("config/integration/getstatus");
+			const response = await fetch("config/integration/list");
 
 			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
 
 			const json = await response.json();
 			if (json.error) throw(json.error);
 
-			this.integrationStatus = json;
-
-			this.integrationListBox.SetItems([
-				//{name: "EntraID",    status: this.integrationStatus["entraid"] ?? false},
-				{name: "ESET",       status: this.integrationStatus["eset"] ?? false},
-				//{name: "Unifi",      status: this.integrationStatus["unifi"] ?? false},
-				//{name: "Sophos",     status: this.integrationStatus["sophos"] ?? false},
-				//{name: "Checkpoint", status: this.integrationStatus["checkpoint"] ?? false},
-			]);
+			this.integrations = json;
+			this.selectedIntegration = null;
+			this.integrationTestButton.disabled = true;
+			this.integrationListBox.SetItems(this.integrations);
 		}
 		catch (ex) {
 			this.ConfirmBox(ex, true, "mono/error.svg");
+		}
+	}
+
+	async GetIntegrationTypes() {
+		if (this.integrationTypes) return this.integrationTypes;
+
+		try {
+			const response = await fetch("config/integration/types");
+
+			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
+
+			const json = await response.json();
+			if (json.error) throw(json.error);
+
+			this.integrationTypes = json;
+			return json;
+		}
+		catch (ex) {
+			this.ConfirmBox(ex, true, "mono/error.svg");
+			return null;
 		}
 	}
 
@@ -2026,8 +2120,91 @@ class Infrastructure extends Tabs {
 		setTimeout(()=>{ nameInput.focus() }, 200);
 	}
 
-	async IntegrationDialog(name) {
-		const dialog = this.DialogBox("280px");
+	async IntegrationTypeDialog() {
+		const types = await this.GetIntegrationTypes();
+		if (!types || types.length === 0) return;
+
+		const dialog = this.DialogBox("300px");
+		if (dialog === null) return;
+
+		const {okButton, innerBox} = dialog;
+
+		const dialogBox = innerBox.parentElement;
+		dialogBox.style.maxWidth = "480px";
+		
+		okButton.value = "Next";
+		innerBox.style.padding = "20px";
+
+		const caption = document.createElement("div");
+		caption.textContent = "Select integration type:";
+		caption.style.paddingBottom = "12px";
+		innerBox.appendChild(caption);
+
+		const container = document.createElement("div");
+		container.style.position = "relative";
+		container.style.height = "160px";
+		innerBox.appendChild(container);
+
+		let selectedType = null;
+
+		const Proceed = type=> {
+			dialog.Close();
+			setTimeout(()=> this.IntegrationDialog(null, type), 250);
+		};
+
+		const listBox = new ListBox({ onSelect: (id, element)=> { selectedType = element._data; } });
+		listBox.list.style.top = "0";
+		listBox.list.style.border = "rgb(82,82,82) solid 2px";
+		listBox.list.addEventListener("keydown", event=> listBox.Keydown(event));
+		container.appendChild(listBox.list);
+
+		listBox.inflate = (element, entry)=> {
+			const label = document.createElement("div");
+			label.textContent = entry.label;
+			label.style.left = "8px";
+			label.style.right = "0";
+			element.appendChild(label);
+
+			element.onclick = ()=> listBox.Select(element);
+			element.ondblclick = ()=> Proceed(entry);
+		};
+
+		listBox.SetItems(types);
+
+		okButton.onclick = ()=> {
+			if (selectedType) Proceed(selectedType);
+		};
+
+		setTimeout(()=> {
+			listBox.UpdateViewport(true);
+			listBox.Select(listBox.list.firstChild);
+			listBox.list.focus();
+		}, 200);
+	}
+
+	async IntegrationDialog(object=null, type=null) {
+		const types = await this.GetIntegrationTypes();
+		if (!types) return;
+
+		const typeInfo = object ? types.find(o=> o.type === object.type) : type;
+		if (!typeInfo) return;
+
+		let current = null;
+		if (object) {
+			try {
+				const response = await fetch(`config/integration/get?id=${encodeURIComponent(object.id)}`);
+				if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
+
+				current = await response.json();
+				if (current.error) throw(current.error);
+			}
+			catch (ex) {
+				this.ConfirmBox(ex, true, "mono/error.svg");
+				return;
+			}
+		}
+
+		const dialog = this.DialogBox(`${340 + typeInfo.fields.length * 40}px`);
 		if (dialog === null) return;
 
 		const {okButton, innerBox} = dialog;
@@ -2036,9 +2213,7 @@ class Infrastructure extends Tabs {
 		innerBox.style.padding = "20px";
 		innerBox.parentElement.style.maxWidth = "560px";
 
-		const attributes = [];
-
-		const CreateAttribute = (name, label)=> {
+		const CreateRow = (label, control)=> {
 			const container = document.createElement("div");
 			container.style.padding = "4px 0";
 			container.style.whiteSpace = "nowrap";
@@ -2047,93 +2222,150 @@ class Infrastructure extends Tabs {
 			const labelBox = document.createElement("div");
 			labelBox.textContent = `${label}: `;
 			labelBox.style.display = "inline-block";
-			labelBox.style.minWidth = "150px";
+			labelBox.style.verticalAlign = "top";
+			labelBox.style.minWidth = "170px";
 			container.appendChild(labelBox);
 
-			const valueInput = document.createElement("input");
-			valueInput.type = name === "password" ? "password" : "text";
-			valueInput.style.width = "calc(100% - 160px)";
-			valueInput.style.minWidth = "100px";
-			container.appendChild(valueInput);
-
-			attributes.push({
-				name      : name,
-				valueInput: valueInput
-			});
-
-			return valueInput;
+			control.style.width = "calc(100% - 180px)";
+			control.style.minWidth = "100px";
+			container.appendChild(control);
 		};
 
+		const typeInput = document.createElement("input");
+		typeInput.type = "text";
+		typeInput.value = typeInfo.label;
+		typeInput.disabled = true;
+		CreateRow("Type", typeInput);
+
+		const nameInput = document.createElement("input");
+		nameInput.type = "text";
+		nameInput.maxLength = 64;
+		CreateRow("Name", nameInput);
+
+		const descriptionInput = document.createElement("textarea");
+		descriptionInput.style.boxSizing = "border-box";
+		descriptionInput.rows = 3;
+		descriptionInput.maxLength = 500;
+		descriptionInput.placeholder = "optional";
+		descriptionInput.style.resize = "none";
+		CreateRow("Description", descriptionInput);
+
 		const enableBox = document.createElement("div");
-		enableBox.style.paddingBottom = "12px";
+		enableBox.style.padding = "8px 0 12px 0";
 		innerBox.appendChild(enableBox);
 
-		const enableToggle = this.CreateToggle(`Enable ${name}`, this.integrationStatus[name.toLowerCase()] ?? false, enableBox);
+		const enableToggle = this.CreateToggle("Enabled", current ? current.enabled : true, enableBox);
 		enableToggle.label.style.minWidth = "38px";
 		enableToggle.label.style.margin = "2px";
 
-		switch (name) {
-		case "ESET":
-			const urlInput      = CreateAttribute("url", "Identity endpoint");
-			urlInput.setAttribute("list", "ESET_URL_DATALIST");
+		const fieldInputs = [];
 
-			const usernameInput = CreateAttribute("username", "Username");
-			const passwordInput = CreateAttribute("password", "Password");
+		for (const field of typeInfo.fields) {
+			const input = document.createElement("input");
+			input.type = field.secret ? "password" : "text";
+			input.maxLength = 512;
 
-			const urlDatalist = document.createElement("datalist");
-			urlDatalist.id = "ESET_URL_DATALIST";
-			urlDatalist.style.display = "none";
-			innerBox.appendChild(urlDatalist);
-
-			const esetEndpoint = ["eu01.protect.eset.com", "eu02.protect.eset.com", "us01.protect.eset.com", "ca01.protect.eset.com"];
-			for (let i=0; i<esetEndpoint.length; i++) {
-				const option = document.createElement("option");
-				option.value = esetEndpoint[i];
-				urlDatalist.appendChild(option);
+			if (field.secret && current) {
+				input.placeholder = "unchanged";
+			}
+			else if (field.optional) {
+				input.placeholder = "optional";
 			}
 
-			try {
-				const response = await fetch("config/integration/getcred?category=eset");
-				if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
+			if (field.suggestions.length > 0) {
+				const datalist = document.createElement("datalist");
+				datalist.id = `INTEGRATION_${field.name}_DATALIST`;
+				datalist.style.display = "none";
+				innerBox.appendChild(datalist);
 
-				const json = await response.json();
-				if (json.error) throw(json.error);
+				for (const suggestion of field.suggestions) {
+					const option = document.createElement("option");
+					option.value = suggestion;
+					datalist.appendChild(option);
+				}
 
-				urlInput.value = json.url;
-				usernameInput.value = json.username;
-				passwordInput.placeholder = "unchanged";
+				input.setAttribute("list", datalist.id);
 			}
-			catch (ex) {
-				this.ConfirmBox(ex, true, "mono/error.svg");
+
+			if (current && field.name in current.config) {
+				input.value = current.config[field.name];
 			}
 
-			break;
+			CreateRow(field.label, input);
+			fieldInputs.push({field, input});
 		}
 
+		if (current) {
+			nameInput.value = current.name;
+			descriptionInput.value = current.description;
+		}
+
+		const errorBox = document.createElement("div");
+		errorBox.style.minHeight = "20px";
+		errorBox.style.paddingTop = "8px";
+		errorBox.style.color = "var(--clr-error)";
+		innerBox.appendChild(errorBox);
+
 		okButton.onclick = async ()=> {
-			dialog.Close();
+			errorBox.textContent = "";
 
-			let url = `config/integration/save?category=${name.toLowerCase()}`;
-			url += `&enable=${enableToggle.checkbox.checked}`;
-
-			for (let i=0; i<attributes.length; i++) {
-				url += `&${attributes[i].name}=${encodeURIComponent(attributes[i].valueInput.value)}`;
+			const requiredInputs = [nameInput];
+			for (const o of fieldInputs) {
+				if (o.field.optional) continue;
+				if (!o.field.secret || !current) requiredInputs.push(o.input);
 			}
 
+			let requiredFieldMissing = false;
+
+			for (let i=0; i<requiredInputs.length; i++) {
+				if (requiredInputs[i].value.trim().length === 0) {
+					if (!requiredFieldMissing) requiredInputs[i].focus();
+					requiredInputs[i].required = true;
+					requiredFieldMissing = true;
+					requiredInputs[i].style.animationDuration = `${(i+1)*.1}s`;
+				}
+				else {
+					requiredInputs[i].required = false;
+				}
+			}
+
+			if (requiredFieldMissing) return;
+
+			const config = {};
+			for (const o of fieldInputs) {
+				config[o.field.name] = o.input.value;
+			}
+
+			okButton.disabled = true;
+
 			try {
-				const response = await fetch(url);
+				const response = await fetch("config/integration/save", {
+					method: "POST",
+					body: JSON.stringify({
+						id         : current?.id,
+						type       : typeInfo.type,
+						name       : nameInput.value,
+						description: descriptionInput.value,
+						enabled    : enableToggle.checkbox.checked,
+						config     : config
+					})
+				});
+
 				if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
 
 				const json = await response.json();
 				if (json.error) throw(json.error);
 
+				dialog.Close();
+				this.GetIntegrations();
 			}
 			catch (ex) {
-				this.ConfirmBox(ex, true, "mono/error.svg");
+				errorBox.textContent = ex;
+				okButton.disabled = false;
 			}
 		};
 
-		enableToggle.label.focus();
+		setTimeout(()=> nameInput.focus(), 200);
 	}
 
 	async SaveZones() {

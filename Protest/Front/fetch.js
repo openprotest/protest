@@ -171,6 +171,37 @@ class Fetch extends Tabs {
 		this.esetApiCheckbox.type = "checkbox";
 		this.esetApiCheckbox.checked = false;
 
+		this.integrations = [];
+
+		const CreateIntegrationInput = row=> {
+			const input = document.createElement("select");
+			input.style.width = "180px";
+			input.style.gridArea = `${row} / 5`;
+			input.disabled = true;
+			return input;
+		};
+
+		this.esetApiInput = CreateIntegrationInput(11);
+
+		this.entraDevicesCheckbox = document.createElement("input");
+		this.entraDevicesCheckbox.type = "checkbox";
+		this.entraDevicesCheckbox.checked = false;
+		this.entraDevicesInput = CreateIntegrationInput(12);
+
+		this.unifiCheckbox = document.createElement("input");
+		this.unifiCheckbox.type = "checkbox";
+		this.unifiCheckbox.checked = false;
+		this.unifiInput = CreateIntegrationInput(13);
+
+		this.usersLdapCheckbox = document.createElement("input");
+		this.usersLdapCheckbox.type = "checkbox";
+		this.usersLdapCheckbox.checked = true;
+
+		this.entraUsersCheckbox = document.createElement("input");
+		this.entraUsersCheckbox.type = "checkbox";
+		this.entraUsersCheckbox.checked = false;
+		this.entraUsersInput = CreateIntegrationInput(6);
+
 		this.portScanInput = document.createElement("select");
 		this.portScanInput.style.width = "180px";
 		this.portScanInput.style.gridArea = "10 / 5";
@@ -213,7 +244,7 @@ class Fetch extends Tabs {
 
 
 		this.retriesLabel = document.createElement("div");
-		this.retriesLabel.style.gridArea = "13 / 3";
+		this.retriesLabel.style.gridArea = "15 / 3";
 		this.retriesLabel.textContent = "Retries:";
 
 		this.retriesRange = document.createElement("input");
@@ -221,17 +252,17 @@ class Fetch extends Tabs {
 		this.retriesRange.min = 0;
 		this.retriesRange.max = 4;
 		this.retriesRange.value = 0;
-		this.retriesRange.style.gridArea = "13 / 5";
+		this.retriesRange.style.gridArea = "15 / 5";
 		this.retriesRange.style.width = "180px";
 
 		this.retriesCommentLabel = document.createElement("div");
-		this.retriesCommentLabel.style.gridArea = "13 / 6 / auto / 8";
+		this.retriesCommentLabel.style.gridArea = "15 / 6 / auto / 8";
 		this.retriesCommentLabel.style.fontSize = "small";
 		this.retriesCommentLabel.style.lineHeight = "14px";
 		this.retriesCommentLabel.style.minWidth = "150px";
 
 		this.intervalLabel = document.createElement("div");
-		this.intervalLabel.style.gridArea = "14 / 3";
+		this.intervalLabel.style.gridArea = "16 / 3";
 		this.intervalLabel.textContent = "Retry interval:";
 
 		this.intervalRange = document.createElement("input");
@@ -239,11 +270,11 @@ class Fetch extends Tabs {
 		this.intervalRange.min = 0;
 		this.intervalRange.max = 8;
 		this.intervalRange.value = 2;
-		this.intervalRange.style.gridArea = "14 / 5";
+		this.intervalRange.style.gridArea = "16 / 5";
 		this.intervalRange.style.width = "180px";
 
 		this.intervalCommentLabel = document.createElement("div");
-		this.intervalCommentLabel.style.gridArea = "14 / 6 / auto / 8";
+		this.intervalCommentLabel.style.gridArea = "16 / 6 / auto / 8";
 		this.intervalCommentLabel.style.fontSize = "small";
 		this.intervalCommentLabel.style.lineHeight = "14px";
 		this.intervalCommentLabel.style.minWidth = "150px";
@@ -290,6 +321,22 @@ class Fetch extends Tabs {
 
 		this.portScanCheckbox.onchange = ()=> {
 			this.portScanInput.disabled = !this.portScanCheckbox.checked;
+		};
+
+		this.esetApiCheckbox.onchange = ()=> {
+			this.esetApiInput.disabled = !this.esetApiCheckbox.checked;
+		};
+
+		this.entraDevicesCheckbox.onchange = ()=> {
+			this.entraDevicesInput.disabled = !this.entraDevicesCheckbox.checked;
+		};
+
+		this.unifiCheckbox.onchange = ()=> {
+			this.unifiInput.disabled = !this.unifiCheckbox.checked;
+		};
+
+		this.entraUsersCheckbox.onchange = ()=> {
+			this.entraUsersInput.disabled = !this.entraUsersCheckbox.checked;
 		};
 
 		this.portScanInput.onchange = ()=> {
@@ -347,18 +394,25 @@ class Fetch extends Tabs {
 				uri = "fetch/users";
 			}
 
-			if (this.updateRadio.checked) {
-				uri += "?update=true";
+			if (this.args === "users" && !this.usersLdapCheckbox.checked && !this.entraUsersCheckbox.checked) {
+				this.ConfirmBox("Please select at least one source", true);
+				return;
 			}
-			else if (this.ipRadio.checked) {
-				uri += `?range=${this.ipFrom.GetIpString()}-${this.ipTo.GetIpString()}`;
-			}
-			else if (this.domainRadio.checked) {
-				if (this.domainInput.value.length === 0) {
-					this.ConfirmBox("Please enter a domain", true);
-					return;
+
+			if (this.args === "devices" || this.usersLdapCheckbox.checked) {
+				if (this.updateRadio.checked) {
+					uri += "?update=true";
 				}
-				uri += `?domain=${this.domainInput.value}`;
+				else if (this.ipRadio.checked) {
+					uri += `?range=${this.ipFrom.GetIpString()}-${this.ipTo.GetIpString()}`;
+				}
+				else if (this.domainRadio.checked) {
+					if (this.domainInput.value.length === 0) {
+						this.ConfirmBox("Please enter a domain", true);
+						return;
+					}
+					uri += `?domain=${this.domainInput.value}`;
+				}
 			}
 
 			if (this.args === "devices") {
@@ -369,7 +423,9 @@ class Fetch extends Tabs {
 				if (this.wmiCheckbox.checked)      body += "wmi=true\n";
 				if (this.ldapCheckbox.checked)     body += "ldap=true\n";
 				if (this.portScanCheckbox.checked) body += `portscan=${this.portScanInput.value}\n`;
-				if (this.esetApiCheckbox.checked)  body += `eset=${this.esetApiCheckbox.checked}\n`;
+				if (this.esetApiCheckbox.checked)  body += `eset=${this.esetApiInput.value}\n`;
+				if (this.entraDevicesCheckbox.checked) body += `entra=${this.entraDevicesInput.value}\n`;
+				if (this.unifiCheckbox.checked)    body += `unifi=${this.unifiInput.value}\n`;
 
 				if (this.snmp2Checkbox.checked && this.snmp2Profiles) {
 					let profiles = [];
@@ -401,7 +457,8 @@ class Fetch extends Tabs {
 				body += `interval=${this.intervalRange.value}\n`;
 			}
 			else if (this.args === "users") {
-				body = `fetch/users?domain=${this.domainInput.value}`;
+				body = `ldap=${this.usersLdapCheckbox.checked}\n`;
+				if (this.entraUsersCheckbox.checked) body += `entra=${this.entraUsersInput.value}\n`;
 			}
 
 			fetchButton.disabled = cancelButton.disabled = true;
@@ -442,6 +499,68 @@ class Fetch extends Tabs {
 
 		this.GetCurrentNetworkInfo();
 		this.GetFetchStatus();
+		this.GetIntegrations();
+	}
+
+	async GetIntegrations() {
+		try {
+			const response = await fetch("fetch/integrations");
+
+			if (response.status !== 200) return;
+
+			const json = await response.json();
+			if (json.error) throw(json.error);
+
+			this.integrations = json;
+		}
+		catch {
+			this.integrations = [];
+		}
+
+		this.PopulateIntegrationInput(this.esetApiInput, this.esetApiCheckbox, "eset");
+		this.PopulateIntegrationInput(this.entraDevicesInput, this.entraDevicesCheckbox, "entra");
+		this.PopulateIntegrationInput(this.unifiInput, this.unifiCheckbox, "unifi");
+		this.PopulateIntegrationInput(this.entraUsersInput, this.entraUsersCheckbox, "entra");
+	}
+
+	PopulateIntegrationInput(input, checkbox, type) {
+		const previous = input.value;
+		const entries = this.integrations.filter(o=> o.type === type);
+
+		input.textContent = "";
+
+		if (entries.length === 0) {
+			const none = document.createElement("option");
+			none.value = "";
+			none.textContent = "Not configured";
+			input.appendChild(none);
+
+			checkbox.checked = false;
+			checkbox.disabled = true;
+			input.disabled = true;
+			return;
+		}
+
+		if (entries.length > 1) {
+			const all = document.createElement("option");
+			all.value = "all";
+			all.textContent = "All";
+			input.appendChild(all);
+		}
+
+		for (const entry of entries) {
+			const option = document.createElement("option");
+			option.value = entry.id;
+			option.textContent = entry.name;
+			input.appendChild(option);
+		}
+
+		if (previous && entries.some(o=> o.id === previous)) {
+			input.value = previous;
+		}
+
+		checkbox.disabled = false;
+		input.disabled = !checkbox.checked;
 	}
 
 	async GetCurrentNetworkInfo() {
@@ -581,7 +700,7 @@ class Fetch extends Tabs {
 	ShowDevices() {
 		this.args = "devices";
 		this.tabsPanel.textContent = "";
-		this.tabsPanel.style.gridTemplateRows = "repeat(3, 40px) repeat(13, 36px)";
+		this.tabsPanel.style.gridTemplateRows = "repeat(3, 40px) repeat(15, 36px)";
 
 		this.tabsPanel.appendChild(this.updateRadio);
 		const updateOption = this.AddRadioLabel(this.tabsPanel, this.updateRadio, "Update existing records");
@@ -610,8 +729,6 @@ class Fetch extends Tabs {
 		this.tabsPanel.appendChild(this.dnsCheckBox);
 		const dns = this.AddCheckBoxLabel(this.tabsPanel, this.dnsCheckBox, "DNS");
 		dns.style.gridArea = "5 / 3";
-
-		//TODO: SSDP
 
 		this.tabsPanel.appendChild(this.snmp2Checkbox);
 		const snmp2 = this.AddCheckBoxLabel(this.tabsPanel, this.snmp2Checkbox, "SNMP V1/2");
@@ -643,6 +760,17 @@ class Fetch extends Tabs {
 		this.tabsPanel.appendChild(this.esetApiCheckbox);
 		const esetApi = this.AddCheckBoxLabel(this.tabsPanel, this.esetApiCheckbox, "ESET");
 		esetApi.style.gridArea = "11 / 3";
+		this.tabsPanel.appendChild(this.esetApiInput);
+
+		this.tabsPanel.appendChild(this.entraDevicesCheckbox);
+		const entraDevices = this.AddCheckBoxLabel(this.tabsPanel, this.entraDevicesCheckbox, "Entra ID");
+		entraDevices.style.gridArea = "12 / 3";
+		this.tabsPanel.appendChild(this.entraDevicesInput);
+
+		this.tabsPanel.appendChild(this.unifiCheckbox);
+		const unifi = this.AddCheckBoxLabel(this.tabsPanel, this.unifiCheckbox, "UniFi");
+		unifi.style.gridArea = "13 / 3";
+		this.tabsPanel.appendChild(this.unifiInput);
 
 		this.tabsPanel.appendChild(this.portScanInput);
 		this.tabsPanel.appendChild(this.portScanCommentLabel);
@@ -652,13 +780,15 @@ class Fetch extends Tabs {
 		this.tabsPanel.append(this.intervalLabel, this.intervalRange, this.intervalCommentLabel);
 
 		this.tabsPanel.appendChild(this.buttonsBox);
-		this.buttonsBox.style.gridArea = "16 / 2 / auto / 7";
+		this.buttonsBox.style.gridArea = "18 / 2 / auto / 7";
+
+		this.GetIntegrations();
 	}
 
 	ShowUsers() {
 		this.args = "users";
 		this.tabsPanel.textContent = "";
-		this.tabsPanel.style.gridTemplateRows = "repeat(3, 40px) repeat(4, 36px)";
+		this.tabsPanel.style.gridTemplateRows = "repeat(3, 40px) repeat(5, 36px)";
 
 		this.ipRadio.disabled = true;
 		this.domainInput.disabled = false;
@@ -689,14 +819,19 @@ class Fetch extends Tabs {
 		protocolsLabel.textContent = "Protocols:";
 		this.tabsPanel.appendChild(protocolsLabel);
 
-		this.tabsPanel.appendChild(this.ldapCheckbox);
-		const ldap = this.AddCheckBoxLabel(this.tabsPanel, this.ldapCheckbox, "LDAP");
+		this.tabsPanel.appendChild(this.usersLdapCheckbox);
+		const ldap = this.AddCheckBoxLabel(this.tabsPanel, this.usersLdapCheckbox, "LDAP");
 		ldap.style.gridArea = "5 / 3";
-		this.ldapCheckbox.checked = true;
-		this.ldapCheckbox.disabled = true;
+
+		this.tabsPanel.appendChild(this.entraUsersCheckbox);
+		const entraUsers = this.AddCheckBoxLabel(this.tabsPanel, this.entraUsersCheckbox, "Entra ID");
+		entraUsers.style.gridArea = "6 / 3";
+		this.tabsPanel.appendChild(this.entraUsersInput);
 
 		this.tabsPanel.appendChild(this.buttonsBox);
-		this.buttonsBox.style.gridArea = "7 / 2 / auto / 7";
+		this.buttonsBox.style.gridArea = "8 / 2 / auto / 7";
+
+		this.GetIntegrations();
 	}
 
 	ShowImport() {

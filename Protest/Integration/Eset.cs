@@ -1,6 +1,5 @@
-﻿using System.Collections.Concurrent;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.IO;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
@@ -10,23 +9,12 @@ using System.Threading.Tasks;
 
 namespace Protest.Integration;
 
-internal static class Eset {
+internal sealed class Eset {
     private static readonly HttpClient httpClient;
-
-    private static readonly SemaphoreSlim fetchSemaphore;
-
-    private static string accessToken;
-    private static string refreshToken;
-    private static DateTime tokenExpiryUtc;
-
-    private static string iamUrl;
-    private static string deviceUrl;
+    private static readonly ConcurrentDictionary<string, Eset> clients = new ConcurrentDictionary<string, Eset>();
 
     private const long CACHE_TTL = 72_000_000_000L; //2 hours in ticks
-    private static long cacheDate;
-
-    public static readonly ConcurrentDictionary<string, DeviceEntry> devicesCache;
-    public static readonly ConcurrentDictionary<string, long> detectionsPerDeviceCount;
+    private static readonly TimeSpan RETRY_AFTER_FAILURE = TimeSpan.FromMinutes(5);
 
     public struct DeviceEntry {
         public string   uuid;
@@ -43,26 +31,105 @@ internal static class Eset {
         public string[] processors;
     }
 
+    private readonly string id;
+    private readonly SemaphoreSlim fetchSemaphore = new SemaphoreSlim(1, 1);
+
+    private string accessToken;
+    private string refreshToken;
+    private DateTime tokenExpiryUtc;
+
+    private string iamUrl;
+    private string deviceUrl;
+
+    private long cacheDate;
+    private DateTime retryAfterUtc;
+    private volatile string lastError;
+
+    private volatile ConcurrentDictionary<string, DeviceEntry> devicesCache = new ConcurrentDictionary<string, DeviceEntry>();
+    private volatile ConcurrentDictionary<string, DeviceEntry> devicesByUuid = new ConcurrentDictionary<string, DeviceEntry>(StringComparer.OrdinalIgnoreCase);
+    private volatile ConcurrentDictionary<string, long> detectionsPerDeviceCount = new ConcurrentDictionary<string, long>(StringComparer.OrdinalIgnoreCase);
+
     static Eset() {
         httpClient = new HttpClient();
         httpClient.DefaultRequestHeaders.Add("User-Agent", "Pro-test");
-
-        fetchSemaphore = new SemaphoreSlim(1, 1);
-        devicesCache = new ConcurrentDictionary<string, DeviceEntry>();
-        detectionsPerDeviceCount = new ConcurrentDictionary<string, long>();
     }
 
-    public static async Task FetchAsync() {
-        try {
-            await fetchSemaphore.WaitAsync();
+    private Eset(string id) {
+        this.id = id;
+    }
 
+    internal static Eset Get(string id) => clients.GetOrAdd(id, key => new Eset(key));
+
+    //forgets the login and the cache, used when the credentials change or the instance is removed
+    internal static void Drop(string id) => clients.TryRemove(id, out _);
+
+    internal static string GetLastError(string id) => clients.TryGetValue(id, out Eset client) ? client.lastError : null;
+
+    //selector: null or "all" for every enabled instance, or the id of the one to use (see Integration.NormalizeSelector)
+    private static Eset[] GetEnabled(string selector = "all") =>
+        Integration.GetEnabledInstances("eset", selector).Select(i => Get(i.Id)).ToArray();
+
+    //The tenant name shown as the origin of the data it provides.
+    private string Label => Integration.TryGetInstance(id, out Integration.Instance instance)
+        ? Integration.SourceLabel(instance)
+        : "ESET";
+
+    //The selected tenants in parallel; a tenant that fails does not hold back or break the others.
+    public static async Task FetchAllAsync(string selector = "all") {
+        Eset[] enabled = GetEnabled(selector);
+        if (enabled.Length == 0) return;
+
+        await Task.WhenAll(enabled.Select(client => client.FetchAsync()));
+    }
+
+    //First match wins, tenants are searched in name order.
+    public static bool TryResolveDevice(string name, out DeviceEntry entry, out string source, string selector = "all") {
+        entry = default;
+        source = null;
+
+        if (String.IsNullOrWhiteSpace(name)) return false;
+
+        foreach (Eset client in GetEnabled(selector)) {
+            if (client.TryResolve(name, out entry)) {
+                source = client.Label;
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    //The uuid is unique across tenants, so unlike the host name it always finds the right one.
+    public static bool TryFindByUuid(string uuid, out DeviceEntry entry, out long detections, out string source) {
+        entry = default;
+        detections = 0;
+        source = null;
+
+        if (String.IsNullOrWhiteSpace(uuid)) return false;
+
+        foreach (Eset client in GetEnabled()) {
+            bool hasDevice = client.devicesByUuid.TryGetValue(uuid, out DeviceEntry deviceEntry);
+            bool hasDetections = client.detectionsPerDeviceCount.TryGetValue(uuid, out long count);
+            if (!hasDevice && !hasDetections) continue;
+
+            entry = deviceEntry;
+            detections = count;
+            source = client.Label;
+            return true;
+        }
+
+        return false;
+    }
+
+    public async Task FetchAsync() {
+        await fetchSemaphore.WaitAsync();
+
+        try {
             if (DateTime.UtcNow.Ticks - cacheDate < CACHE_TTL) return;
+            if (DateTime.UtcNow < retryAfterUtc) return;
 
             if (!IsAuthenticated()) {
-                ReadCredentials(out string url, out string username, out string password);
-                iamUrl = GetIamUrl(url);
-                deviceUrl = GetDeviceManagementUrl(url);
-                await AuthenticateAsync(username, password);
+                await AuthenticateStoredAsync();
             }
 
             Task<List<JsonElement>> devicesTask    = FetchDevicesAsync(deviceUrl);
@@ -75,63 +142,61 @@ internal static class Eset {
                 devicesOk = true;
             }
             catch (Exception ex) {
-                Logger.Error(ex);
+                Fail(ex);
             }
 
             try {
                 ParseDetections(await detectionsTask);
             }
             catch (Exception ex) {
-                Logger.Error(ex);
+                Logger.Error($"{Label}: {ex.Message}");
             }
 
             if (devicesOk) {
                 cacheDate = DateTime.UtcNow.Ticks;
+                lastError = null;
             }
         }
         catch (Exception ex) {
-            Logger.Error(ex);
+            Fail(ex);
         }
         finally {
             fetchSemaphore.Release();
         }
     }
 
-    public static byte[] GetApiCredentials() {
-        ReadCredentials(out string url, out string username, out _);
-        return Encoding.UTF8.GetBytes($"{{\"url\":\"{Data.EscapeJsonText(url)}\",\"username\":\"{username}\"}}");
-    }
-
-    public static byte[] SetApiCredentials(Dictionary<string, string> parameters) {
-        if (parameters is null) {
-            return Data.CODE_INVALID_ARGUMENT.Array;
-        }
-
-        if (!parameters.TryGetValue("url", out string url)) return Data.CODE_INVALID_ARGUMENT.Array;
-        if (!parameters.TryGetValue("username", out string username)) return Data.CODE_INVALID_ARGUMENT.Array;
-        if (!parameters.TryGetValue("password", out string password)) return Data.CODE_INVALID_ARGUMENT.Array;
-
-        byte[] plain = JsonSerializer.SerializeToUtf8Bytes(new {
-            url      = url,
-            username = username,
-            password = password
-        });
-
-        byte[] cipher = Cryptography.Encrypt(plain, Configuration.DB_KEY, Configuration.DB_KEY_IV);
+    //Logs in again with the stored credentials; returns the reason when it fails.
+    public async Task<string> TestAsync() {
+        await fetchSemaphore.WaitAsync();
 
         try {
-            File.WriteAllBytes(Path.Join(Data.DIR_INTEGRATION, "eset.json"), cipher);
-        }
-        catch (IOException ex) {
-            Logger.Error(ex);
-            return Data.CODE_FAILED.ToArray();
-        }
+            await AuthenticateStoredAsync();
 
-        return Data.CODE_OK.ToArray();
+            lastError = null;
+            retryAfterUtc = default;
+            return null;
+        }
+        catch (Exception ex) {
+            lastError = Shorten(ex.Message);
+            return ex.Message;
+        }
+        finally {
+            fetchSemaphore.Release();
+        }
     }
 
-    private static void ParseDevice(List<JsonElement> devices) {
-        devicesCache.Clear();
+    //A tenant that cannot be reached is not retried on every single device fetch.
+    private void Fail(Exception ex) {
+        Logger.Error($"{Label}: {ex.Message}");
+        lastError = Shorten(ex.Message);
+        retryAfterUtc = DateTime.UtcNow + RETRY_AFTER_FAILURE;
+    }
+
+    private static string Shorten(string message) => message.Length > 200 ? message[..200] : message;
+
+    private void ParseDevice(List<JsonElement> devices) {
+        ConcurrentDictionary<string, DeviceEntry> byName = new ConcurrentDictionary<string, DeviceEntry>();
+        ConcurrentDictionary<string, DeviceEntry> byUuid = new ConcurrentDictionary<string, DeviceEntry>(StringComparer.OrdinalIgnoreCase);
 
         for (int i = 0; i < devices.Count; i++) {
             JsonElement device = devices[i];
@@ -204,23 +269,27 @@ internal static class Eset {
                 }
             }
 
+            if (!String.IsNullOrEmpty(entry.uuid)) {
+                byUuid[entry.uuid] = entry;
+            }
+
             if (String.IsNullOrWhiteSpace(entry.displayName)) continue;
 
             string name = entry.displayName.ToLowerInvariant();
-            devicesCache[name] = entry;
+            byName[name] = entry;
 
             int dot = name.IndexOf('.');
             if (dot > 0) {
-                devicesCache.TryAdd(name[..dot], entry);
+                byName.TryAdd(name[..dot], entry);
             }
         }
 
+        devicesCache = byName;
+        devicesByUuid = byUuid;
     }
 
-    public static bool TryResolveDevice(string name, out DeviceEntry entry) {
+    private bool TryResolve(string name, out DeviceEntry entry) {
         entry = default;
-
-        if (String.IsNullOrWhiteSpace(name)) return false;
 
         name = name.ToLowerInvariant();
         if (devicesCache.TryGetValue(name, out entry)) return true;
@@ -231,20 +300,24 @@ internal static class Eset {
         return false;
     }
 
-    private static void ParseDetections(List<JsonElement> detections) {
-        detectionsPerDeviceCount.Clear();
+    private void ParseDetections(List<JsonElement> detections) {
+        ConcurrentDictionary<string, long> counts = new ConcurrentDictionary<string, long>(StringComparer.OrdinalIgnoreCase);
 
         for (int i = 0; i < detections.Count; i++) {
             JsonElement detection = detections[i];
             if (!detection.TryGetProperty("context", out JsonElement contextEl)) continue;
             if (!contextEl.TryGetProperty("deviceUuid", out JsonElement deviceUuidEl)) continue;
 
-            Eset.detectionsPerDeviceCount.AddOrUpdate(deviceUuidEl.GetString(), 1, (_, current) => current + 1);
+            counts.AddOrUpdate(deviceUuidEl.GetString(), 1, (_, current) => current + 1);
         }
+
+        detectionsPerDeviceCount = counts;
     }
 
     private static string GetRegion(string protectServerUrl) {
-        string host = protectServerUrl.Split('/').Last(s => s.Length > 0);
+        string host = protectServerUrl.Split('/').LastOrDefault(s => s.Length > 0);
+        if (String.IsNullOrEmpty(host)) throw new Exception("Invalid identity endpoint");
+
         string subdomain = host.Split('.')[0];
         string region = subdomain.TrimEnd('0', '1', '2', '3', '4', '5', '6', '7', '8', '9');
         return String.IsNullOrEmpty(region) ? "eu" : region;
@@ -256,36 +329,30 @@ internal static class Eset {
     private static string GetDeviceManagementUrl(string protectServerUrl) =>
         $"https://{GetRegion(protectServerUrl)}.device-management.eset.systems";
 
-    private static void ReadCredentials(out string url, out string username, out string password) {
-        string filename = Path.Join(Data.DIR_INTEGRATION, "eset.json");
-
-        if (!File.Exists(filename)) {
-            url      = String.Empty;
-            username = String.Empty;
-            password = String.Empty;
-            return;
-        }
-
-        byte[] cipher = File.ReadAllBytes(filename);
-        byte[] plain = Cryptography.Decrypt(cipher, Configuration.DB_KEY, Configuration.DB_KEY_IV);
-
-        using JsonDocument doc = JsonDocument.Parse(plain);
-
-        url      = doc.RootElement.GetProperty("url").GetString();
-        username = doc.RootElement.GetProperty("username").GetString();
-        password = doc.RootElement.GetProperty("password").GetString();
-    }
-
-    private static bool IsAuthenticated() =>
+    private bool IsAuthenticated() =>
         !String.IsNullOrWhiteSpace(accessToken) && DateTime.UtcNow < tokenExpiryUtc;
 
-    private static async Task AuthenticateAsync(string username, string password) {
+    private async Task AuthenticateStoredAsync() {
+        Dictionary<string, string> config = Integration.ReadConfig(id);
+
+        if (config is null
+            || !config.TryGetValue("url", out string url)
+            || !config.TryGetValue("username", out string username)
+            || !config.TryGetValue("password", out string password)) {
+            throw new Exception("The credentials are missing or unreadable");
+        }
+
+        iamUrl = GetIamUrl(url);
+        deviceUrl = GetDeviceManagementUrl(url);
+        await AuthenticateAsync(username, password);
+    }
+
+    private async Task AuthenticateAsync(string username, string password) {
         using FormUrlEncodedContent form = new FormUrlEncodedContent([
             new("username", username),
             new("password", password),
             new("grant_type", "password")
         ]);
-
 
         using HttpResponseMessage response = await httpClient.PostAsync($"{iamUrl}/oauth/token", form);
 
@@ -297,18 +364,17 @@ internal static class Eset {
 
         using JsonDocument doc = JsonDocument.Parse(json);
 
-        Eset.accessToken = doc.RootElement.GetProperty("access_token").GetString();
+        accessToken = doc.RootElement.GetProperty("access_token").GetString();
 
         if (doc.RootElement.TryGetProperty("refresh_token", out JsonElement refresh)) {
-            Eset.refreshToken = refresh.GetString();
+            refreshToken = refresh.GetString();
         }
 
         int expiresIn = doc.RootElement.GetProperty("expires_in").GetInt32();
-        Eset.tokenExpiryUtc = DateTime.UtcNow.AddSeconds(expiresIn - 60);
-
+        tokenExpiryUtc = DateTime.UtcNow.AddSeconds(expiresIn - 60);
     }
 
-    private static async Task<List<JsonElement>> FetchDevicesAsync(string deviceMgmtUrl) {
+    private async Task<List<JsonElement>> FetchDevicesAsync(string deviceMgmtUrl) {
         List<JsonElement> devices = new List<JsonElement>();
         string pageToken = null;
 
@@ -348,7 +414,7 @@ internal static class Eset {
         return devices;
     }
 
-    private static async Task<List<JsonElement>> FetchDetectionsAsync(string deviceMgmtUrl) {
+    private async Task<List<JsonElement>> FetchDetectionsAsync(string deviceMgmtUrl) {
         List<JsonElement> detections = new List<JsonElement>();
         string pageToken = null;
 

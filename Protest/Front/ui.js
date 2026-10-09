@@ -308,9 +308,9 @@ const UI = {
 
 	GenerateUuid: prefix=> {
 		if (prefix) {
-			return `${prefix}-${"xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx".replace(/[x]/g, ()=>(window.crypto.getRandomValues(new Uint8Array(1))[0] & 0b00001111).toString(16))}`;
+			return `${prefix}-${"xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx".replace(/[x]/g, ()=>(crypto.getRandomValues(new Uint8Array(1))[0] & 0b00001111).toString(16))}`;
 		}
-		return "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx".replace(/[x]/g, ()=>(window.crypto.getRandomValues(new Uint8Array(1))[0] & 0b00001111).toString(16));
+		return "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx".replace(/[x]/g, ()=>(crypto.getRandomValues(new Uint8Array(1))[0] & 0b00001111).toString(16));
 	},
 
 	CompressIPv6: ipv6 => {
@@ -439,26 +439,26 @@ const MENU = {
 		{ t:"SNMP polling",       i:"mono/snmp.svg?light",          g:"utilities", h:false, f:args=> new Snmp(args) },
 		{ t:"WMI client",         i:"mono/wmi.svg?light",           g:"utilities", h:false, f:args=> new Wmi(args),          k:"windows management instrumentation" },
 		{ t:"Terminal",           i:"mono/terminal.svg?light",      g:"utilities", h:true,  f:()=> new Terminal({}),         k:"terminal shell console cmd bash" },
-		{ t:"RS-232 console",     i:"mono/serialconsole.svg?light", g:"utilities", h:true,  f:()=> new Rs232(),            k:"rs 232 serial console terminal" },
+		{ t:"RS-232 console",     i:"mono/serialconsole.svg?light", g:"utilities", h:true,  f:()=> new Rs232(),              k:"rs 232 serial console terminal" },
 		{ t:"Remote shell",       i:"mono/remote.svg?light",        g:"utilities", h:true,  f:()=> new RemoteShell({host:""}), k:"winrm powershell psremoting windows terminal shell" },
 		{ t:"Secure shell",       i:"mono/ssh.svg?light",           g:"utilities", h:true,  f:()=> new Ssh({host:""}),       k:"ssh terminal" },
 		{ t:"SFTP client",        i:"mono/shared.svg?light",        g:"utilities", h:true,  f:()=> new Sftp({host:""})},
-		{ t:"Telnet",             i:"mono/telnet.svg?light",        g:"utilities", h:true,  f:()=> new Telnet({host:""}),  k:"terminal" },
-		{ t:"VNC",                i:"mono/vnc.svg?light",           g:"utilities", h:true,  f:()=> new Vnc(),              k:"vnc uvnc remote rfb" },
-		{ t:"Encoder",            i:"mono/encoder.svg?light",       g:"utilities", h:true,  f:args=> new Encoder(args),    k:"binary hex base64 url html decode" },
-		{ t:"Network calculator", i:"mono/netcalc.svg?light",       g:"utilities", h:false, f:()=> new NetCalc(),        k:"subnet" },
-		{ t:"Password generator", i:"mono/passgen.svg?light",       g:"utilities", h:false, f:()=> new PassGen(),          k:"code" },
-		{ t:"QR code generator",  i:"mono/qrcode.svg?light",        g:"utilities", h:true,  f:args=> new QrGenerator(args), k:"qr code barcode generator" },
-		{ t:"Screen capture",     i:"mono/screenrecord.svg?light",  g:"utilities", h:true,  f:()=> new ScreenCapture(),  k:"recorder shot" },
-		{ t:"Camera tester",      i:"mono/webcam.svg?light",        g:"utilities", h:true,  f:()=> new CameraTester(),   k:"webcam" },
-		{ t:"Microphone tester",  i:"mono/mic.svg?light",           g:"utilities", h:true,  f:()=> new MicTester(),      k:"audio input" },
-		{ t:"Keyboard tester",    i:"mono/keyboard.svg?light",      g:"utilities", h:true,  f:()=> new KeyboardTester(), k:"keys" },
+		{ t:"Telnet",             i:"mono/telnet.svg?light",        g:"utilities", h:true,  f:()=> new Telnet({host:""}),    k:"terminal" },
+		{ t:"VNC",                i:"mono/vnc.svg?light",           g:"utilities", h:true,  f:()=> new Vnc(),                k:"vnc uvnc remote rfb" },
+		{ t:"Encoder",            i:"mono/encoder.svg?light",       g:"utilities", h:true,  f:args=> new Encoder(args),      k:"binary hex base64 url html decode" },
+		{ t:"Network calculator", i:"mono/netcalc.svg?light",       g:"utilities", h:false, f:()=> new NetCalc(),            k:"subnet" },
+		{ t:"Password generator", i:"mono/passgen.svg?light",       g:"utilities", h:false, f:()=> new PassGen(),            k:"code" },
+		{ t:"QR code generator",  i:"mono/qrcode.svg?light",        g:"utilities", h:true,  f:args=> new QrGenerator(args),  k:"qr code barcode generator" },
+		{ t:"Screen capture",     i:"mono/screenrecord.svg?light",  g:"utilities", h:true,  f:()=> new ScreenCapture(),      k:"recorder shot" },
+		{ t:"Camera tester",      i:"mono/webcam.svg?light",        g:"utilities", h:true,  f:()=> new CameraTester(),       k:"webcam" },
+		{ t:"Microphone tester",  i:"mono/mic.svg?light",           g:"utilities", h:true,  f:()=> new MicTester(),          k:"audio input" },
+		{ t:"Keyboard tester",    i:"mono/keyboard.svg?light",      g:"utilities", h:true,  f:()=> new KeyboardTester(),     k:"keys" },
 		{ t:"Gamepad tester",     i:"mono/gamepad.svg?light",       g:"utilities", h:true,  f:()=> new KeyboardTester("gamepad"), k:"joystick" },
 
 		{ t:"Infrastructure",  i:"mono/infrastructure.svg?light", g:"manage", h:false, f:()=> new Infrastructure(), k:"settings environment" },
 		{ t:"Data retention",  i:"mono/dataretention.svg?light",  g:"manage", h:false, f:()=> new Infrastructure("dataretention"), k:"cleanup compliance" },
-		{ t:"Zones",           i:"mono/router.svg?light",         g:"manage", h:true,  f:()=> new Infrastructure("zones") },
-		{ t:"DHCP range",      i:"mono/dhcp.svg?light",           g:"manage", h:true,  f:()=> new Infrastructure("dhcp"), k:"ip addresses"},
+		{ t:"Zones",           i:"mono/router.svg?light",         g:"manage", h:true,  f:()=> new Infrastructure("zones"), k:"sites" },
+		{ t:"DHCP range",      i:"mono/dhcp.svg?light",           g:"manage", h:true,  f:()=> new Infrastructure("dhcp"), k:"ip addresses" },
 		{ t:"SMTP settings",   i:"mono/email.svg?light",          g:"manage", h:true,  f:()=> new Infrastructure("smtp") },
 		{ t:"SNMP settings",   i:"mono/snmp.svg?light",           g:"manage", h:true,  f:()=> new Infrastructure("snmp") },
 		{ t:"Integration",     i:"mono/integration.svg?light",    g:"manage", h:false, f:()=> new Infrastructure("integration") },

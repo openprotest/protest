@@ -52,6 +52,7 @@ internal sealed class Listener {
         ["/vault/users"]                  = (ctx, username) => Auth.ListUsernames(),
 
         ["/fetch/networkinfo"]            = (ctx, username) => Protocols.Ldap.NetworkInfo(),
+        ["/fetch/integrations"]           = (ctx, username) => Integration.Integration.ListEnabled(),
         ["/fetch/singledevice"]           = (ctx, username) => Tasks.Fetch.SingleDeviceSerialize(ctx, true),
         ["/fetch/singleuser"]             = (ctx, username) => Tasks.Fetch.SingleUserSerialize(ctx),
         ["/fetch/status"]                 = (ctx, username) => Tasks.Fetch.Status(),
@@ -163,9 +164,12 @@ internal sealed class Listener {
         ["/config/snmpprofiles/list"]     = (ctx, username) => Tools.SnmpProfiles.List(ctx),
         ["/config/snmpprofiles/save"]     = (ctx, username) => Tools.SnmpProfiles.Save(ctx, username),
 
-        ["/config/integration/getstatus"] = (ctx, username) => Integration.Integration.GetStatus(),
-        ["/config/integration/getcred"]   = (ctx, username) => Integration.Integration.GetCredentials(ctx),
+        ["/config/integration/types"]     = (ctx, username) => Integration.Integration.GetTypes(),
+        ["/config/integration/list"]      = (ctx, username) => Integration.Integration.List(),
+        ["/config/integration/get"]       = (ctx, username) => Integration.Integration.Get(ctx),
         ["/config/integration/save"]      = (ctx, username) => Integration.Integration.Save(ctx, username),
+        ["/config/integration/delete"]    = (ctx, username) => Integration.Integration.Delete(ctx, username),
+        ["/config/integration/test"]      = (ctx, username) => Integration.Integration.Test(ctx, username),
 
         ["/config/cert/list"]             = (ctx, username) => Tools.Cert.List(),
         ["/config/cert/create"]           = (ctx, username) => Tools.Cert.Create(ctx, username),
