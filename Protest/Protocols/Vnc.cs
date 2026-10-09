@@ -332,6 +332,10 @@ internal static class Vnc {
                     return;
                 }
 
+                if (recording is not null && HasUserInput(message)) {
+                    recording.MarkInteracted();
+                }
+
                 await stream.WriteAsync(message, cts.Token);
                 await stream.FlushAsync(cts.Token);
             }
@@ -342,6 +346,61 @@ internal static class Vnc {
         finally {
             cts.Cancel();
         }
+    }
+
+    private static bool HasUserInput(byte[] message) {
+        bool input = false;
+        int i = 0;
+
+        while (i < message.Length) {
+            int length;
+
+            switch (message[i]) {
+            case 0: //SetPixelFormat
+                length = 20;
+                break;
+
+            case 2: //SetEncodings
+                if (i + 4 > message.Length) return false;
+                length = 4 + 4 * (message[i + 2] << 8 | message[i + 3]);
+                break;
+
+            case 3: //FramebufferUpdateRequest
+                length = 10;
+                break;
+
+            case 4: //KeyEvent
+                length = 8;
+                input = true;
+                break;
+
+            case 5: //PointerEvent
+                if (i + 2 > message.Length) return false;
+                length = 6;
+                if (message[i + 1] != 0) input = true; //button mask, includes the wheel
+                break;
+
+            case 6: //ClientCutText
+                if (i + 8 > message.Length) return false;
+                uint textLength = (uint)(message[i + 4] << 24 | message[i + 5] << 16 | message[i + 6] << 8 | message[i + 7]);
+                if (textLength > message.Length) return false;
+                length = 8 + (int)textLength;
+                break;
+
+            case 255: //QEMU extended key event
+                if (i + 2 > message.Length || message[i + 1] != 0) return false;
+                length = 12;
+                input = true;
+                break;
+
+            default:
+                return false;
+            }
+
+            i += length;
+        }
+
+        return input && i == message.Length;
     }
 
     private static async Task PumpToWs(WebSocket ws, NetworkStream stream, CancellationTokenSource cts, SessionRecording recording) {

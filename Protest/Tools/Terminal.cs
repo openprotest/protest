@@ -132,6 +132,7 @@ internal static partial class Terminal {
             if (!Auth.IsAuthenticatedAndAuthorized(ctx, wsPath)) break;
             if (TryResizePty(buffer, result.Count, pty)) continue;
 
+            recording?.MarkInteracted();
             await pty.WriterStream.WriteAsync(buffer.AsMemory(0, result.Count), token);
             await pty.WriterStream.FlushAsync(token);
         }

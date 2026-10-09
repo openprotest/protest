@@ -163,6 +163,7 @@ internal static class Ssh {
 
                 if (TryResizeShell(buff, receiveResult.Count, shellStream)) continue;
 
+                recording?.MarkInteracted();
                 shellStream.Write(Encoding.UTF8.GetString(buff, 0, receiveResult.Count));
             }
         }

@@ -172,6 +172,7 @@ internal static class SerialCom {
             if (result.MessageType == WebSocketMessageType.Close) break;
             if (!Auth.IsAuthenticatedAndAuthorized(ctx, "/ws/serial")) break;
 
+            recording?.MarkInteracted();
             await port.BaseStream.WriteAsync(buffer.AsMemory(0, result.Count), token);
             await port.BaseStream.FlushAsync(token);
         }

@@ -22,6 +22,10 @@ internal sealed class SessionRecording {
     private readonly string username;
     private readonly DateTime startUtc;
 
+    private const long MAX_PENDING_BYTES = 32 * 1024 * 1024;
+    private readonly List<(long offsetMs, byte[] data)> pending = new List<(long, byte[])>();
+    private long pendingBytes;
+
     private FileStream videoFile;
 
     private bool stopped;
@@ -194,22 +198,40 @@ internal sealed class SessionRecording {
     internal static SessionRecording Start(string protocol, string host, int port, string device, string username) {
         if (!Configuration.sessionRecording) return null;
 
+        string id = $"{DateTime.UtcNow:yyyyMMddHHmmss}_{Cryptography.RandomStringGenerator(8)}";
+        string dir = Path.Join(Data.DIR_RECORDINGS, protocol, id);
+
+        return new SessionRecording(id, protocol, dir, host, port, device, username);
+    }
+
+    internal void MarkInteracted() {
+        lock (writeLock) {
+            if (stopped || videoFile is not null) return;
+            Activate();
+        }
+    }
+
+    private void Activate() {
         try {
-            string id = $"{DateTime.UtcNow:yyyyMMddHHmmss}_{Cryptography.RandomStringGenerator(8)}";
-            string dir = Path.Join(Data.DIR_RECORDINGS, protocol, id);
-            Directory.CreateDirectory(dir);
+            Directory.CreateDirectory(directory);
+            videoFile = new FileStream(Path.Join(directory, "video.bin"), FileMode.Create, FileAccess.Write, FileShare.Read);
 
-            SessionRecording recording = new SessionRecording(id, protocol, dir, host, port, device, username);
+            WriteMetaFile(null);
 
-            recording.videoFile = new FileStream(Path.Join(dir, "video.bin"), FileMode.Create, FileAccess.Write, FileShare.Read);
-
-            recording.WriteMetaFile(null);
-
-            return recording;
+            foreach ((long offsetMs, byte[] data) in pending) {
+                WriteChunk(videoFile, offsetMs, data, data.Length);
+            }
         }
         catch (Exception ex) {
             Logger.Error(ex);
-            return null;
+
+            videoFile?.Dispose();
+            videoFile = null;
+            stopped = true;
+        }
+        finally {
+            pending.Clear();
+            pendingBytes = 0;
         }
     }
 
@@ -218,7 +240,23 @@ internal sealed class SessionRecording {
 
         lock (writeLock) {
             if (stopped) return;
-            WriteChunk(videoFile, clock.ElapsedMilliseconds, buffer, count);
+
+            long offsetMs = clock.ElapsedMilliseconds;
+
+            if (videoFile is null) {
+                if (pendingBytes + count <= MAX_PENDING_BYTES) {
+                    pending.Add((offsetMs, buffer.AsSpan(0, count).ToArray())); //callers reuse their buffers
+                    pendingBytes += count;
+                    return;
+                }
+
+                //too much output to hold back, and this is no short session: record from here on rather
+                //than risk an unrecorded session that the user later takes over
+                Activate();
+                if (videoFile is null) return;
+            }
+
+            WriteChunk(videoFile, offsetMs, buffer, count);
         }
     }
 
@@ -231,15 +269,24 @@ internal sealed class SessionRecording {
     }
 
     internal void Stop() {
+        bool recorded;
+
         lock (writeLock) {
             if (stopped) return;
             stopped = true;
+
+            recorded = videoFile is not null;
+
+            pending.Clear(); //the user never interacted, nothing is stored
+            pendingBytes = 0;
 
             try { videoFile?.Flush(); videoFile?.Dispose(); }
             catch (Exception ex) { Logger.Debug(ex); }
         }
 
-        WriteMetaFile(DateTime.UtcNow);
+        if (recorded) {
+            WriteMetaFile(DateTime.UtcNow);
+        }
     }
 
     private void WriteMetaFile(DateTime? end) {

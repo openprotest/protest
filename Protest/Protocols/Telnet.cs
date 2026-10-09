@@ -90,6 +90,7 @@ internal static class Telnet {
 
                 if (TryResizeTelnet(buff, receiveResult.Count, stream, ref nawsAnnounced)) continue;
 
+                recording?.MarkInteracted();
                 stream.Write(buff, 0, receiveResult.Count);
             }
         }
