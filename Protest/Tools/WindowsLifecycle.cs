@@ -63,6 +63,7 @@ internal static class WindowsLifecycle {
         new ReleaseInfo("24H2", 26100, new DateOnly(2026, 10, 13), new DateOnly(2027, 10, 12), new DateOnly(2029, 10, 9), new DateOnly(2034, 10, 10), false),
         new ReleaseInfo("25H2", 26200, new DateOnly(2027, 10, 12), new DateOnly(2028, 10, 10), null,                      null, false),
         new ReleaseInfo("26H1", 28000, new DateOnly(2028, 3, 14),  new DateOnly(2029, 3, 13),  null,                      null, false),
+        new ReleaseInfo("26H2", 26300, new DateOnly(2028, 10, 10), new DateOnly(2029, 10, 9),  null,                      null, false)
     };
 
     private static readonly (string product, int build, DateOnly extendedEnd)[] windowsServerReleases = new[] {
