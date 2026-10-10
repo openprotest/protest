@@ -181,17 +181,17 @@ class Fetch extends Tabs {
 			return input;
 		};
 
-		this.esetApiInput = CreateIntegrationInput(11);
+		this.esetApiInput = CreateIntegrationInput(12);
 
 		this.entraDevicesCheckbox = document.createElement("input");
 		this.entraDevicesCheckbox.type = "checkbox";
 		this.entraDevicesCheckbox.checked = false;
-		this.entraDevicesInput = CreateIntegrationInput(12);
+		this.entraDevicesInput = CreateIntegrationInput(13);
 
 		this.unifiCheckbox = document.createElement("input");
 		this.unifiCheckbox.type = "checkbox";
 		this.unifiCheckbox.checked = false;
-		this.unifiInput = CreateIntegrationInput(13);
+		this.unifiInput = CreateIntegrationInput(14);
 
 		this.usersLdapCheckbox = document.createElement("input");
 		this.usersLdapCheckbox.type = "checkbox";
@@ -244,7 +244,7 @@ class Fetch extends Tabs {
 
 
 		this.retriesLabel = document.createElement("div");
-		this.retriesLabel.style.gridArea = "15 / 3";
+		this.retriesLabel.style.gridArea = "16 / 3";
 		this.retriesLabel.textContent = "Retries:";
 
 		this.retriesRange = document.createElement("input");
@@ -252,17 +252,17 @@ class Fetch extends Tabs {
 		this.retriesRange.min = 0;
 		this.retriesRange.max = 4;
 		this.retriesRange.value = 0;
-		this.retriesRange.style.gridArea = "15 / 5";
+		this.retriesRange.style.gridArea = "16 / 5";
 		this.retriesRange.style.width = "180px";
 
 		this.retriesCommentLabel = document.createElement("div");
-		this.retriesCommentLabel.style.gridArea = "15 / 6 / auto / 8";
+		this.retriesCommentLabel.style.gridArea = "16 / 6 / auto / 8";
 		this.retriesCommentLabel.style.fontSize = "small";
 		this.retriesCommentLabel.style.lineHeight = "14px";
 		this.retriesCommentLabel.style.minWidth = "150px";
 
 		this.intervalLabel = document.createElement("div");
-		this.intervalLabel.style.gridArea = "16 / 3";
+		this.intervalLabel.style.gridArea = "17 / 3";
 		this.intervalLabel.textContent = "Retry interval:";
 
 		this.intervalRange = document.createElement("input");
@@ -270,11 +270,11 @@ class Fetch extends Tabs {
 		this.intervalRange.min = 0;
 		this.intervalRange.max = 8;
 		this.intervalRange.value = 2;
-		this.intervalRange.style.gridArea = "16 / 5";
+		this.intervalRange.style.gridArea = "17 / 5";
 		this.intervalRange.style.width = "180px";
 
 		this.intervalCommentLabel = document.createElement("div");
-		this.intervalCommentLabel.style.gridArea = "16 / 6 / auto / 8";
+		this.intervalCommentLabel.style.gridArea = "17 / 6 / auto / 8";
 		this.intervalCommentLabel.style.fontSize = "small";
 		this.intervalCommentLabel.style.lineHeight = "14px";
 		this.intervalCommentLabel.style.minWidth = "150px";
@@ -341,12 +341,12 @@ class Fetch extends Tabs {
 
 		this.portScanInput.onchange = ()=> {
 			this.portScanCommentLabel.textContent = {
-				"basic"      : "Scan only common protocols",
-				"wellknown"  : "Scan ports 1 to 1023",
-				"extended"   : "Scan ports 1 to 8191",
-				"registered" : "Scan ports 1024 to 49151 (slow)",
-				"full"       : "Scan ports 1 to 49151 (slow)",
-				"dynamic"    : "Scan ports 49152 to 65535 (slow)"
+				"basic"      : "Only common protocols (34)",
+				"wellknown"  : "TCP ports 1 - 1023",
+				"extended"   : "TCP ports 1 - 8191",
+				"registered" : "TCP ports 1024 - 49151 (slow)",
+				"full"       : "TCP ports 1 - 49151 (slow)",
+				"dynamic"    : "TCP ports 49152 - 65535 (slow)"
 			  } [this.portScanInput.value];
 		};
 
@@ -700,15 +700,17 @@ class Fetch extends Tabs {
 	ShowDevices() {
 		this.args = "devices";
 		this.tabsPanel.textContent = "";
-		this.tabsPanel.style.gridTemplateRows = "repeat(3, 40px) repeat(15, 36px)";
+		this.tabsPanel.style.gridTemplateRows = "repeat(3, 40px) repeat(16, 36px)";
 
 		this.tabsPanel.appendChild(this.updateRadio);
 		const updateOption = this.AddRadioLabel(this.tabsPanel, this.updateRadio, "Update existing records");
+		updateOption.style.fontWeight = "600";
 		updateOption.style.gridArea = "1 / 2 / 1 / 6";
 
 		this.ipRadio.disabled = false;
 		this.tabsPanel.appendChild(this.ipRadio);
 		const ipOption = this.AddRadioLabel(this.tabsPanel, this.ipRadio, "IP range:");
+		ipOption.style.fontWeight = "600";
 		ipOption.style.gridArea = "2 / 2";
 
 		this.tabsPanel.appendChild(this.rangeBox);
@@ -717,11 +719,13 @@ class Fetch extends Tabs {
 
 		this.tabsPanel.appendChild(this.domainRadio);
 		const domainOption = this.AddRadioLabel(this.tabsPanel, this.domainRadio, "Domain:");
+		domainOption.style.fontWeight = "600";
 		domainOption.style.gridArea = "3 / 2";
 
 		this.tabsPanel.appendChild(this.domainInput);
 
 		const protocolsLabel = document.createElement("div");
+		protocolsLabel.style.fontWeight = "600";
 		protocolsLabel.style.gridArea = "5 / 2";
 		protocolsLabel.textContent = "Protocols:";
 		this.tabsPanel.appendChild(protocolsLabel);
@@ -757,19 +761,25 @@ class Fetch extends Tabs {
 		const portScan = this.AddCheckBoxLabel(this.tabsPanel, this.portScanCheckbox, "Port scan");
 		portScan.style.gridArea = "10 / 3";
 
+		const integrationsLabel = document.createElement("div");
+		integrationsLabel.style.fontWeight = "600";
+		integrationsLabel.style.gridArea = "12 / 2";
+		integrationsLabel.textContent = "Integrations:";
+		this.tabsPanel.appendChild(integrationsLabel);
+
 		this.tabsPanel.appendChild(this.esetApiCheckbox);
 		const esetApi = this.AddCheckBoxLabel(this.tabsPanel, this.esetApiCheckbox, "ESET");
-		esetApi.style.gridArea = "11 / 3";
+		esetApi.style.gridArea = "12 / 3";
 		this.tabsPanel.appendChild(this.esetApiInput);
 
 		this.tabsPanel.appendChild(this.entraDevicesCheckbox);
 		const entraDevices = this.AddCheckBoxLabel(this.tabsPanel, this.entraDevicesCheckbox, "Entra ID");
-		entraDevices.style.gridArea = "12 / 3";
+		entraDevices.style.gridArea = "13 / 3";
 		this.tabsPanel.appendChild(this.entraDevicesInput);
 
 		this.tabsPanel.appendChild(this.unifiCheckbox);
 		const unifi = this.AddCheckBoxLabel(this.tabsPanel, this.unifiCheckbox, "UniFi");
-		unifi.style.gridArea = "13 / 3";
+		unifi.style.gridArea = "14 / 3";
 		this.tabsPanel.appendChild(this.unifiInput);
 
 		this.tabsPanel.appendChild(this.portScanInput);
@@ -780,7 +790,7 @@ class Fetch extends Tabs {
 		this.tabsPanel.append(this.intervalLabel, this.intervalRange, this.intervalCommentLabel);
 
 		this.tabsPanel.appendChild(this.buttonsBox);
-		this.buttonsBox.style.gridArea = "18 / 2 / auto / 7";
+		this.buttonsBox.style.gridArea = "19 / 2 / auto / 7";
 
 		this.GetIntegrations();
 	}
@@ -798,10 +808,12 @@ class Fetch extends Tabs {
 
 		this.tabsPanel.appendChild(this.updateRadio);
 		const updateOption = this.AddRadioLabel(this.tabsPanel, this.updateRadio, "Update existing records");
+		updateOption.style.fontWeight = "600";
 		updateOption.style.gridArea = "1 / 2 / 1 / 6";
 
 		this.tabsPanel.appendChild(this.ipRadio);
 		const ipOption = this.AddRadioLabel(this.tabsPanel, this.ipRadio, "IP range:");
+		ipOption.style.fontWeight = "600";
 		ipOption.style.gridArea = "2 / 2";
 
 		this.tabsPanel.appendChild(this.rangeBox);
@@ -810,11 +822,13 @@ class Fetch extends Tabs {
 
 		this.tabsPanel.appendChild(this.domainRadio);
 		const domainOption = this.AddRadioLabel(this.tabsPanel, this.domainRadio, "Domain:");
+		domainOption.style.fontWeight = "600";
 		domainOption.style.gridArea = "3 / 2";
 
 		this.tabsPanel.appendChild(this.domainInput);
 
 		const protocolsLabel = document.createElement("div");
+		protocolsLabel.style.fontWeight = "600";
 		protocolsLabel.style.gridArea = "5 / 2";
 		protocolsLabel.textContent = "Protocols:";
 		this.tabsPanel.appendChild(protocolsLabel);
@@ -822,6 +836,12 @@ class Fetch extends Tabs {
 		this.tabsPanel.appendChild(this.usersLdapCheckbox);
 		const ldap = this.AddCheckBoxLabel(this.tabsPanel, this.usersLdapCheckbox, "LDAP");
 		ldap.style.gridArea = "5 / 3";
+
+		const integrationsLabel = document.createElement("div");
+		integrationsLabel.style.fontWeight = "600";
+		integrationsLabel.style.gridArea = "6 / 2";
+		integrationsLabel.textContent = "Integrations:";
+		this.tabsPanel.appendChild(integrationsLabel);
 
 		this.tabsPanel.appendChild(this.entraUsersCheckbox);
 		const entraUsers = this.AddCheckBoxLabel(this.tabsPanel, this.entraUsersCheckbox, "Entra ID");
