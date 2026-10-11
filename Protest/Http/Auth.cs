@@ -680,6 +680,15 @@ internal static class Auth {
                 path.Add("");
                 break;*/
 
+            case "syslog:read":
+                //path.Add("/syslog/");
+                break;
+
+            case "syslog:write":
+                path.Add("/syslog/listeners/list");
+                path.Add("/syslog/listeners/list");
+                break;
+
             case "scheduler:write":
                 path.Add("/scheduler/list");
                 path.Add("/scheduler/save");

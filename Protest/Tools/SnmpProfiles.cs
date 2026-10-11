@@ -4,7 +4,6 @@ using System.Net;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
-using Protest.Http;
 
 namespace Protest.Tools;
 
@@ -102,7 +101,7 @@ internal static class SnmpProfiles {
     }
 
     public static byte[] List(HttpListenerContext ctx) {
-        Dictionary<string, string> parameters = Listener.ParseQuery(ctx);
+        Dictionary<string, string> parameters = Http.Listener.ParseQuery(ctx);
 
         bool withPassword = (parameters?.TryGetValue("password", out string flag) ?? false) && flag == "true";
 
@@ -158,9 +157,7 @@ internal static class SnmpProfiles {
     }
 
     public static bool FromGuid(Guid profileGuid, out Profile profile, SnmpProfiles.Profile[] snmpProfiles = null) {
-        if (snmpProfiles is null) {
-            snmpProfiles = SnmpProfiles.Load();
-        }
+        snmpProfiles ??= SnmpProfiles.Load();
 
         for (int i = 0; i < snmpProfiles.Length; i++) {
             if (snmpProfiles[i].guid != profileGuid) continue;

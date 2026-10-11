@@ -47,7 +47,7 @@
 }
 
 .tabs-box > button:not(:disabled):active {
-	background-color: rgb(208,208,208) !important;
+	background-color: rgb(192,192,192) !important;
 }
 
 .tabs-box > button:focus-visible {

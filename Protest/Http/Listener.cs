@@ -118,6 +118,9 @@ internal sealed class Listener {
         ["/snmp/walk"]                    = (ctx, username) => Protocols.Snmp.Polling.WalkHandler(ctx),
         ["/snmp/switchinterface"]         = (ctx, username) => Protocols.Snmp.Polling.GetInterfaces(ctx),
 
+        ["/syslog/listeners/list"]        = (ctx, username) => Protocols.Syslog.List(),
+        ["/syslog/listeners/save"]        = (ctx, username) => Protocols.Syslog.Save(ctx, username),
+
         ["/sftp/download"]                = (ctx, username) => Protocols.Sftp.DownloadFileHandler(ctx, username),
         ["/sftp/upload"]                  = (ctx, username) => Protocols.Sftp.UploadFileHandler(ctx, username),
 
@@ -154,9 +157,9 @@ internal sealed class Listener {
         ["/config/dhcprange/list"]        = (ctx, username) => Tools.DhcpRange.ListRange(),
         ["/config/dhcprange/save"]        = (ctx, username) => Tools.DhcpRange.SaveRange(ctx, username),
 
-        ["/config/smtpprofiles/list"]     = (ctx, username) => Tools.SmtpProfiles.List(),
-        ["/config/smtpprofiles/save"]     = (ctx, username) => Tools.SmtpProfiles.Save(ctx, username),
-        ["/config/smtpprofiles/test"]     = (ctx, username) => Tools.SmtpProfiles.SendTest(ctx),
+        ["/config/smtpprofiles/list"]           = (ctx, username) => Tools.SmtpProfiles.List(),
+        ["/config/smtpprofiles/save"]           = (ctx, username) => Tools.SmtpProfiles.Save(ctx, username),
+        ["/config/smtpprofiles/test"]           = (ctx, username) => Tools.SmtpProfiles.SendTest(ctx),
         ["/config/smtpprofiles/oauth/start"]    = (ctx, username) => Tools.SmtpOAuth.Start(ctx),
         ["/config/smtpprofiles/oauth/poll"]     = (ctx, username) => Tools.SmtpOAuth.Poll(ctx),
         ["/config/smtpprofiles/oauth/complete"] = (ctx, username) => Tools.SmtpOAuth.Complete(ctx),
