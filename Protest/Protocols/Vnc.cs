@@ -63,12 +63,12 @@ internal static class Vnc {
         string password = null;
 
         if (serverSideAuth) {
-            if (!Guid.TryParse(credentialGuid, out Guid guid) || !Tools.Vault.FromGuid(guid, out Tools.Vault.CredentialEntry credential)) {
+            if (!Guid.TryParse(credentialGuid, out Guid guid) || !Vault.FromGuid(guid, out Vault.CredentialEntry credential)) {
                 await RejectClient(ws, "Credentials don't exist");
                 return;
             }
 
-            if (!Tools.Vault.IsAllowed(credential, origin)) {
+            if (!Vault.IsAllowed(credential, origin)) {
                 await RejectClient(ws, "Access denied for this credential");
                 return;
             }

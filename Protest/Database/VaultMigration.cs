@@ -5,7 +5,7 @@ using System.Net;
 using System.Text;
 using System.Text.Json;
 
-namespace Protest.Tools;
+namespace Protest;
 
 internal static class VaultMigration {
 

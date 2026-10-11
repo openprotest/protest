@@ -12,8 +12,8 @@ internal static class CredentialResolver {
             return null;
         }
 
-        if (Tools.VaultSshKeys.FromGuid(guid, out Tools.VaultSshKeys.SshKeyEntry key)) {
-            if (!Tools.VaultSshKeys.IsAllowed(key, requestingUser)) {
+        if (VaultSshKeys.FromGuid(guid, out VaultSshKeys.SshKeyEntry key)) {
+            if (!VaultSshKeys.IsAllowed(key, requestingUser)) {
                 permissionDenied = true;
                 return null;
             }
@@ -28,8 +28,8 @@ internal static class CredentialResolver {
             return new AuthenticationMethod[] { new PrivateKeyAuthenticationMethod(username, privateKeyFile) };
         }
 
-        if (Tools.Vault.FromGuid(guid, out Tools.Vault.CredentialEntry credential)) {
-            if (!Tools.Vault.IsAllowed(credential, requestingUser)) {
+        if (Vault.FromGuid(guid, out Vault.CredentialEntry credential)) {
+            if (!Vault.IsAllowed(credential, requestingUser)) {
                 permissionDenied = true;
                 return null;
             }

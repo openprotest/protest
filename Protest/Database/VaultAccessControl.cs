@@ -1,7 +1,7 @@
 using System.Linq;
 using Protest.Http;
 
-namespace Protest.Tools;
+namespace Protest;
 
 internal static class VaultAccessControl {
     public enum PermissionMode {
