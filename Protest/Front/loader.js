@@ -160,7 +160,8 @@ const LOADER = {
 		"api.js",
 		"certificates.js",
 		"backup.js",
-		"log.js"
+		"log.js",
+		"syslog.js"
 	],
 
 	Initialize: ()=> {
@@ -395,6 +396,7 @@ const LOADER = {
 		case "Certificates"   : return new Certificates(command.args);
 		case "Backup"         : return new Backup(command.args);
 		case "Log"            : return new Log(command.args);
+		case "Syslog"         : return new Syslog(command.args);
 		}
 	},
 

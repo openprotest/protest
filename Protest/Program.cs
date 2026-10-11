@@ -64,6 +64,7 @@ internal class Program {
         Console.Write($"{"Starting tasks",-24}");
         Proxy.ReverseProxy.Initialize();
         Protocols.SessionRecording.Initialize();
+        Protocols.Syslog.Initialize();
         Tasks.Scheduler.Initialize();
         Console.WriteLine("Done");
 

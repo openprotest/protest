@@ -1,0 +1,255 @@
+.syslog-toggle-button {
+	background-size: 22px 22px !important;
+	width: 28px !important;
+	height: 28px !important;
+	margin: 6px !important;
+}
+
+.syslog-listeners-view {
+	display: flex;
+	flex-direction: column;
+	padding: 16px 24px 8px 24px;
+}
+
+.syslog-listeners {
+	flex: 1;
+	min-height: 46px;
+	overflow-x: hidden;
+	overflow-y: auto;
+	border-radius: 4px;
+	color: var(--clr-dark);
+	background-color: var(--clr-pane);
+}
+
+.syslog-listeners-empty {
+	padding: 14px 8px;
+	text-align: center;
+	opacity: .6;
+}
+
+.syslog-listener {
+	position: relative;
+	height: 45px;
+	cursor: default;
+}
+
+.syslog-listener:not(:last-child) {
+	border-bottom: rgb(128,128,128) 1px solid;
+}
+
+.syslog-listener:hover {
+	background-color: var(--clr-highlight);
+}
+
+.syslog-listener.selected {
+	background-color: var(--clr-select);
+}
+
+.syslog-listener > .syslog-listener-toggle {
+	position: absolute;
+	left: 4px;
+	top: 11px;
+	height: 22px;
+}
+
+.syslog-listener > .syslog-listener-toggle > label {
+	display: block;
+	width: 36px;
+	height: 22px;
+	min-width: 0;
+	padding: 0;
+}
+
+.syslog-listener-name,
+.syslog-listener-endpoint {
+	position: absolute;
+	left: 48px;
+	right: 44px;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.syslog-listener-name {
+	top: 4px;
+	font-weight: 600;
+}
+
+.syslog-listener-endpoint {
+	top: 23px;
+	font-family: monospace;
+	font-size: 12px;
+	opacity: .8;
+}
+
+.syslog-listeners-message {
+	padding: 8px 4px 0 4px;
+	color: var(--clr-error);
+	font-weight: 600;
+	user-select: text;
+}
+
+.syslog-listeners-delete {
+	display: flex;
+	align-items: center;
+	padding: 16px 24px 0 80px;
+	background-image: url(mono/delete.svg);
+	background-size: 48px 48px;
+	background-position: 20px calc(50% + 8px);
+	background-repeat: no-repeat;
+}
+
+.syslog-listener > .syslog-listener-delete {
+	position: absolute;
+	right: 8px;
+	top: 8px;
+	width: 28px;
+	min-width: 0;
+	height: 28px;
+	margin: 0;
+	padding: 0;
+	border: 0;
+	border-radius: 4px;
+	background-color: transparent;
+	background-image: url(mono/delete.svg);
+	background-size: 20px 20px;
+	background-position: center;
+	background-repeat: no-repeat;
+	box-shadow: none;
+}
+
+.syslog-listener > .syslog-listener-delete:hover {
+	background-color: rgba(0,0,0,.15);
+}
+
+.syslog-listener > .syslog-listener-delete:active {
+	background-color: rgba(0,0,0,.25);
+}
+
+.syslog-list > .list-element {
+	height: 24px;
+	contain-intrinsic-size: 25px;
+}
+
+.syslog-list > .list-element > div {
+	top: 1px;
+	line-height: 22px;
+}
+
+.syslog-list > .list-element > .syslog-severity-dot {
+	left: 10px;
+	top: 7px;
+	width: 10px;
+	height: 10px;
+	padding: 0;
+	border-radius: 5px;
+	box-shadow: rgba(0,0,0,.4) 0 0 0 1px inset;
+}
+
+.syslog-list > .list-element.syslog-marker {
+	text-align: center;
+	line-height: 24px;
+	color: #606060;
+}
+
+.syslog-details {
+	position: absolute;
+	left: 0;
+	right: 0;
+	bottom: 30px;
+	height: 92px;
+	box-sizing: border-box;
+	padding: 4px 8px;
+	overflow-x: hidden;
+	overflow-y: auto;
+	border-top: 2px solid var(--clr-control);
+	border-radius: 0 0 4px 4px;
+	color: var(--clr-dark);
+	background-color: var(--clr-pane);
+	user-select: text;
+}
+
+.syslog-details-meta {
+	display: flex;
+	flex-wrap: wrap;
+	column-gap: 16px;
+	font-size: 13px;
+}
+
+.syslog-details-meta > span > b {
+	padding-right: 4px;
+}
+
+.syslog-details-message {
+	margin-top: 4px;
+	font-family: monospace;
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.syslog-details-sd {
+	margin-top: 2px;
+	font-family: monospace;
+	font-size: 12px;
+	opacity: .8;
+	word-break: break-all;
+}
+
+.syslog-options {
+	position: absolute;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	height: 26px;
+	overflow: hidden;
+	white-space: nowrap;
+	display: flex;
+	align-items: center;
+}
+
+.syslog-options > .syslog-status {
+	margin-left: auto;
+	padding-right: 8px;
+	opacity: .8;
+}
+
+.syslog-range {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 0 4px;
+}
+
+.syslog-range > input[type="range"] {
+	flex: 1;
+	min-width: 0;
+}
+
+.syslog-range > div {
+	width: 128px;
+	white-space: nowrap;
+}
+
+.syslog-whitelist {
+	height: 100%;
+	padding-left: 12px;
+	margin-left: 4px;
+	border-left: 2px solid var(--clr-control);
+	display: flex;
+	flex-direction: column;
+	box-sizing: border-box;
+	min-width: 0;
+}
+
+.syslog-whitelist-hint {
+	padding: 6px 4px;
+	font-size: 13px;
+	opacity: .8;
+}
+
+.syslog-whitelist-container {
+	position: relative;
+	flex: 1;
+	margin-top: 4px;
+	min-height: 120px;
+}

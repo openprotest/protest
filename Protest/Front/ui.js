@@ -419,6 +419,7 @@ const MENU = {
 		{ t:"Topology",            i:"mono/topology.svg?light",     g:"tools", h:false, f:()=> new Topology() },
 		{ t:"Issues",              i:"mono/issues.svg?light",       g:"tools", h:false, f:()=> new Issues() },
 		{ t:"Reverse proxy",       i:"mono/reverseproxy.svg?light", g:"tools", h:false, f:args=> new ReverseProxy(args) },
+		{ t:"Syslog",              i:"mono/syslog.svg?light",       g:"tools", h:true, f:args=> new Syslog(args), k:"rfc5424 rfc3164 events listener" },
 		{ t:"IP discovery",        i:"mono/ipdiscovery.svg?light",  g:"tools", h:true,  f:()=> new IpDiscovery() },
 		//{ t:"Software deployment", i:"mono/package.svg?light",      g:"tools", h:true,  f:args=> new Packages(args), k:"packages" },
 		//{ t:"Scripts",             i:"mono/scripts.svg?light",      g:"tools", h:false, f:args=> {} },

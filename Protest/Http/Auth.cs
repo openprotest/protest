@@ -681,12 +681,16 @@ internal static class Auth {
                 break;*/
 
             case "syslog:read":
-                //path.Add("/syslog/");
+                path.Add("/syslog");
+                path.Add("/syslog/list");
+                path.Add("/syslog/devices");
                 break;
 
             case "syslog:write":
                 path.Add("/syslog/listeners/list");
-                path.Add("/syslog/listeners/list");
+                path.Add("/syslog/listeners/save");
+                path.Add("/config/smtpprofiles/list");
+                path.Add("/config/cert/list");
                 break;
 
             case "scheduler:write":
@@ -758,6 +762,7 @@ internal static class Auth {
                 path.Add("/config/dataretention/watchdog");
                 path.Add("/config/dataretention/recordings");
                 path.Add("/config/dataretention/logs");
+                path.Add("/config/dataretention/syslog");
                 path.Add("/config/dataretention/devicetimeline");
                 path.Add("/config/dataretention/usertimeline");
                 path.Add("/config/dataretention/settings/save");

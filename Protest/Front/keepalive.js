@@ -137,6 +137,16 @@ const KEEP = {
 			WIN.array.filter(win=> win instanceof Log).forEach(log=> log.Add(message.msg));
 			break;
 
+		case "syslog":
+			if (typeof Syslog === "undefined") break;
+			WIN.array.filter(win=> win instanceof Syslog).forEach(syslog=> syslog.AddLive(message.lines));
+			break;
+
+		case "syslog-listeners":
+			if (typeof Syslog === "undefined") break;
+			WIN.array.filter(win=> win instanceof Syslog).forEach(syslog=> syslog.ListenersChanged());
+			break;
+
 		case "force-reload":
 			location.reload();
 			break;

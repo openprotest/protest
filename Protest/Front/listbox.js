@@ -430,6 +430,46 @@ class ListBox {
 		this.UpdateViewport(true);
 	}
 
+	AddItems(items, prepend=false) {
+		if (!items || items.length === 0) return;
+
+		const fragment = document.createDocumentFragment();
+		for (let i=0; i<items.length; i++) {
+			const element = document.createElement("div");
+			element.className = "list-element";
+			element._data = items[i];
+			fragment.appendChild(element);
+		}
+
+		if (prepend) {
+			this.items.unshift(...items);
+			this.list.prepend(fragment);
+		}
+		else {
+			this.items.push(...items);
+			this.list.appendChild(fragment);
+		}
+
+		this.UpdateViewport();
+	}
+
+	RemoveItems(count, fromStart=true) {
+		count = Math.min(count, this.list.childNodes.length);
+
+		for (let i=0; i<count; i++) {
+			const element = fromStart ? this.list.firstChild : this.list.lastChild;
+			if (element === this.selected) this.selected = null;
+			element.remove();
+		}
+
+		if (fromStart) {
+			this.items.splice(0, count);
+		}
+		else {
+			this.items.splice(this.items.length - count, count);
+		}
+	}
+
 	ApplySort() {
 		if (!this.builtInSort || !this.sortColumnElement) return;
 
