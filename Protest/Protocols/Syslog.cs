@@ -28,6 +28,8 @@ internal static partial class Syslog {
     private const int    MAX_PAGE_LINES      = 2_000;
     private const long   MAX_PAGE_SCAN_BYTES = 256L * 1024 * 1024;
     private const int    EMAIL_INTERVAL      = 60; //seconds
+    private const int    MAX_UNKNOWN_SENDERS = 1_024;
+    private const int    UNKNOWN_INTERVAL    = 600; //seconds
     private const string TIMESTAMP_FORMAT    = "yyyy-MM-dd HH:mm:ss.fff";
     private const int    TIMESTAMP_LENGTH    = 23;
     private const sbyte  OFF                 = -1;
@@ -106,6 +108,10 @@ internal static partial class Syslog {
         public int emailOverflow;
         public int emailSending;
         public long lastEmail;
+
+        public readonly Lock unknownMutex = new Lock();
+        public readonly Dictionary<IPAddress, long> unknownSenders = new Dictionary<IPAddress, long>();
+        public long unknownReset;
 
         public Runner(SyslogListener config) {
             Apply(config);
@@ -588,9 +594,45 @@ internal static partial class Syslog {
     //returns the sender's device file, or null when the listener does not accept it
     private static string AcceptedDevice(Runner runner, IPAddress remote) {
         string file = ResolveDevice(remote);
-        if (file is null) return null;
+        if (file is null) {
+            WriteUnknownSender(runner, remote);
+            return null;
+        }
         if (runner.config.accept == AcceptMode.Whitelist && !runner.whitelist.Contains(file)) return null;
         return file;
+    }
+
+    //once per address per interval, when the listener echoes to the console
+    private static void WriteUnknownSender(Runner runner, IPAddress remote) {
+        SyslogListener config = runner.config;
+        if (config.console == OFF) return;
+
+        DateTime now = DateTime.UtcNow;
+        long interval = TimeSpan.TicksPerSecond * UNKNOWN_INTERVAL;
+
+        lock (runner.unknownMutex) {
+            if (runner.unknownSenders.TryGetValue(remote, out long last) && now.Ticks - last < interval) return;
+
+            //bounded for spoofed sources, start over at most once per interval
+            if (runner.unknownSenders.Count >= MAX_UNKNOWN_SENDERS && !runner.unknownSenders.ContainsKey(remote)) {
+                if (now.Ticks - runner.unknownReset < interval) return;
+                runner.unknownSenders.Clear();
+                runner.unknownReset = now.Ticks;
+            }
+
+            runner.unknownSenders[remote] = now.Ticks;
+        }
+
+        string text = $"{now.ToString(Data.DATETIME_FORMAT_FILE, CultureInfo.InvariantCulture)}\tsyslog {"Unknown",-13} {remote,-24} not in the devices database, dropped ({config.protocol} {config.port})";
+
+        lock (consoleMutex) {
+            try {
+                Console.ForegroundColor = ConsoleColor.DarkYellow;
+                Console.WriteLine(text);
+                Console.ResetColor();
+            }
+            catch { } //also called from the accept loop, must not throw
+        }
     }
 
     private static void Receive(Runner runner, IPAddress remote, byte[] buffer, int offset, int length) {

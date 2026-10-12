@@ -42,6 +42,9 @@ class DeviceView extends View {
 
 	static PRINTER_TYPES = ["fax", "multiprinter", "ticket printer", "printer"];
 	static SWITCH_TYPES = ["switch", "router", "firewall"];
+	static LOG_ENTRIES = 10;
+	static LOG_LEVELS = "01234"; //warning and above
+	static LOG_FILTERS = {emergFilter:true, alertFilter:true, critFilter:true, errorFilter:true, warnFilter:true, noticeFilter:false, infoFilter:false, debugFilter:false};
 
 	constructor(args) {
 		super(args);
@@ -54,6 +57,11 @@ class DeviceView extends View {
 
 		this.liveStatsWebSockets = null;
 		this.link = LOADER.devices.data[this.args.file];
+
+		//graphs, then the recent syslog messages and snmp traps below them
+		this.liveGraphs = document.createElement("div");
+		this.liveLogs = document.createElement("div");
+		this.liveD.append(this.liveGraphs, this.liveLogs);
 		this.order = "group";
 		this.groupSchema = DeviceView.DEVICES_GROUP_SCHEMA;
 		this.dbTarget = "device";
@@ -72,6 +80,8 @@ class DeviceView extends View {
 			if (this.link && this.link.ip) {
 				this.InitializeGraphs();
 			}
+
+			this.InitializeLogs();
 		}
 		else if (args.copy) {
 			const origin = LOADER.devices.data[args.copy];
@@ -1884,7 +1894,7 @@ class DeviceView extends View {
 			const graphBox = document.createElement("div");
 			graphBox.className = "view-lifeline-graph";
 			graphBox.style.height = `${28}px`;
-			this.liveD.appendChild(graphBox);
+			this.liveGraphs.appendChild(graphBox);
 
 			const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
 			svg.setAttribute("width", GRAPH_WIDTH + DAY_WIDTH);
@@ -1930,7 +1940,7 @@ class DeviceView extends View {
 			const graphBox = document.createElement("div");
 			graphBox.className = "view-lifeline-graph";
 			graphBox.style.height = `${height + 28}px`;
-			this.liveD.appendChild(graphBox);
+			this.liveGraphs.appendChild(graphBox);
 
 			const labelBox = document.createElement("div");
 			labelBox.className = "view-lifeline-label";
@@ -2248,11 +2258,11 @@ class DeviceView extends View {
 		};
 
 		let x0 = 0;
-		this.liveD.onmousedown = event=>{
+		this.liveGraphs.onmousedown = event=>{
 			x0 = event.clientX;
 		};
 
-		this.liveD.onmousemove = event=>{
+		this.liveGraphs.onmousemove = event=>{
 			if (event.buttons !== 1) return;
 
 			let dx = event.clientX - x0;
@@ -2412,6 +2422,131 @@ class DeviceView extends View {
 			GenerateGraph(data, "Topology changes", "delta", "mono/tree.svg");
 		}
 
+	}
+
+	//the most recent syslog messages and snmp traps, warning and above, each section shows only when the device has any
+	InitializeLogs() {
+		//created in order, they fill in as the requests complete
+		const syslogBox = this.CreateLogBox("Syslog", "mono/syslog.svg");
+		const trapsBox = this.CreateLogBox("SNMP traps", "mono/trap.svg");
+
+		this.LoadSyslog(syslogBox);
+		this.LoadSnmpTraps(trapsBox);
+	}
+
+	CreateLogBox(label, icon) {
+		const box = document.createElement("div");
+		box.className = "view-log-box";
+		box.style.display = "none";
+		this.liveLogs.appendChild(box);
+
+		const title = document.createElement("div");
+		title.className = "view-log-title";
+		title.textContent = label.toUpperCase();
+		title.style.backgroundImage = `url(${icon}?light)`;
+
+		const list = document.createElement("div");
+		box.append(title, list);
+
+		return {box:box, list:list};
+	}
+
+	//newest first
+	async FetchLogLines(endpoint) {
+		try {
+			const response = await fetch(`${endpoint}?device=${encodeURIComponent(this.args.file)}&limit=${DeviceView.LOG_ENTRIES}&levels=${DeviceView.LOG_LEVELS}`);
+			if (response.status !== 200) return [];
+
+			const json = await response.json();
+			return Array.isArray(json?.lines) ? json.lines.reverse() : [];
+		}
+		catch {
+			return [];
+		}
+	}
+
+	AddLogEntry(list, entry, onOpen) {
+		const element = document.createElement("div");
+		element.className = "view-log-entry";
+		element.title = entry.source ? `${entry.source}\n${entry.text}` : entry.text;
+		element.ondblclick = onOpen;
+
+		const dot = document.createElement("div");
+		dot.className = "view-log-dot";
+		dot.style.backgroundColor = entry.color;
+
+		const time = document.createElement("div");
+		time.className = "view-log-time";
+		time.textContent = entry.time;
+
+		element.append(dot, time);
+
+		if (entry.source) {
+			const source = document.createElement("div");
+			source.className = "view-log-source";
+			source.textContent = entry.source;
+			element.appendChild(source);
+		}
+
+		const text = document.createElement("div");
+		text.className = "view-log-text";
+		text.textContent = entry.text;
+		element.appendChild(text);
+
+		list.appendChild(element);
+	}
+
+	async LoadSyslog(logBox) {
+		if (typeof Syslog === "undefined") return;
+
+		const entries = (await this.FetchLogLines("syslog/list"))
+			.map(o=> Syslog.ParseLine(o))
+			.filter(o=> o);
+
+		if (entries.length === 0) return;
+
+		const Open = ()=> new Syslog({device:this.args.file, ...DeviceView.LOG_FILTERS});
+
+		for (const entry of entries) {
+			this.AddLogEntry(logBox.list, {
+				time : Syslog.LocalTime(entry.time).substring(0, 19),
+				color: Syslog.SEVERITY_COLOR[entry.severity],
+				text : entry.msg
+			}, Open);
+		}
+
+		logBox.box.style.display = "";
+	}
+
+	async LoadSnmpTraps(logBox) {
+		if (typeof SnmpTraps === "undefined") return;
+
+		const entries = (await this.FetchLogLines("snmptraps/list"))
+			.map(o=> SnmpTraps.ParseLine(o))
+			.filter(o=> o);
+
+		if (entries.length === 0) return;
+
+		const Open = ()=> new SnmpTraps({device:this.args.file, ...DeviceView.LOG_FILTERS});
+
+		const Render = ()=> {
+			logBox.list.textContent = "";
+			for (const entry of entries) {
+				this.AddLogEntry(logBox.list, {
+					time  : SnmpTraps.LocalTime(entry.time).substring(0, 19),
+					color : SnmpTraps.SEVERITY_COLOR[entry.severity],
+					source: SnmpTraps.OidName(entry.oid),
+					text  : SnmpTraps.VariablesSummary(entry.variables)
+				}, Open);
+			}
+		};
+
+		Render();
+		logBox.box.style.display = "";
+
+		//render again once the mib names are loaded
+		const oids = entries.flatMap(o=> [o.oid, ...o.variables.flatMap(v=> v[1] === "ObjectIdentifier" ? [v[0], v[2]] : [v[0]])]);
+		if (await SnmpTraps.LoadMibs(oids)) Render();
 	}
 
 	RttToColor(rtt) {

@@ -65,6 +65,7 @@ internal class Program {
         Proxy.ReverseProxy.Initialize();
         Protocols.SessionRecording.Initialize();
         Protocols.Syslog.Initialize();
+        Protocols.Snmp.Traps.Initialize();
         Tasks.Scheduler.Initialize();
         Console.WriteLine("Done");
 

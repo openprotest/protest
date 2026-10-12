@@ -215,6 +215,7 @@ class Infrastructure extends Tabs {
 			{ key: "lastseen",       label: "Last seen",          icon: "mono/lastseen.svg",     endpoint: "config/dataretention/lastseen",       defaultDays: 365, description: "The most recent time each device responded." },
 			{ key: "watchdog",       label: "Watchdog",           icon: "mono/watchdog.svg",     endpoint: "config/dataretention/watchdog",       defaultDays: 90,  description: "Historical uptime results recorded by watchers." },
 			{ key: "syslog",         label: "Syslog",             icon: "mono/syslog.svg",       endpoint: "config/dataretention/syslog",         defaultDays: 90,  description: "Syslog messages received from devices." },
+			{ key: "snmptraps",      label: "SNMP traps",         icon: "mono/trap.svg",         endpoint: "config/dataretention/snmptraps",      defaultDays: 90,  description: "SNMP traps and informs received from devices." },
 			{ key: "recordings",     label: "Session recordings", icon: "mono/screenrecord.svg", endpoint: "config/dataretention/recordings",     defaultDays: 30,  description: "Recorded VNC, SSH, telnet, remote shell, serial console, and terminal sessions." },
 			{ key: "logs",           label: "Logs",               icon: "mono/log.svg",          endpoint: "config/dataretention/logs",           defaultDays: 90,  description: "Action log files." },
 		];

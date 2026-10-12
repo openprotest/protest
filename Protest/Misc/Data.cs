@@ -62,6 +62,7 @@ internal static class Data {
     public static readonly string DIR_SCRIPTS        = Path.Join(DIR_DATA, "scripts");
     public static readonly string DIR_RECORDINGS     = Path.Join(DIR_DATA, "recordings");
     public static readonly string DIR_SYSLOG         = Path.Join(DIR_DATA, "syslog");
+    public static readonly string DIR_SNMP_TRAPS     = Path.Join(DIR_DATA, "snmptraps");
     public static readonly string DIR_DEBIT          = Path.Join(DIR_DATA, "debit");
     public static readonly string DIR_DEBIT_SHORT    = Path.Join(DIR_DEBIT, "short");
     public static readonly string DIR_DEBIT_LONG     = Path.Join(DIR_DEBIT, "long");
@@ -74,6 +75,8 @@ internal static class Data {
     public static readonly string FILE_SMTP_PROFILES     = Path.Join(DIR_DATA, "smtpprofiles.json");
     public static readonly string FILE_SNMP_PROFILES     = Path.Join(DIR_DATA, "snmpprofiles.json");
     public static readonly string FILE_SYSLOG_LISTENERS  = Path.Join(DIR_DATA, "syslog.json");
+    public static readonly string FILE_SNMP_TRAPS_LISTENERS = Path.Join(DIR_DATA, "snmptraps.json");
+    public static readonly string FILE_SNMP_TRAPS_ENGINE = Path.Join(DIR_DATA, "snmptrapsengine.json");
     public static readonly string FILE_NOTIFICATIONS     = Path.Join(DIR_DATA, "notifications.json");
     public static readonly string FILE_SCHEDULER         = Path.Join(DIR_DATA, "scheduler.json");
     public static readonly string FILE_DATA_RETENTION    = Path.Join(DIR_DATA, "dataretention.json");

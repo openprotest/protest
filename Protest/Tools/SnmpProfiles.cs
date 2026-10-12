@@ -136,6 +136,7 @@ internal static class SnmpProfiles {
             }
 
             Logger.Action(origin, "Environment", "Modify SNMP profiles");
+            Protocols.Snmp.Traps.ReloadCredentials();
         }
         catch (JsonException) {
             return Data.CODE_INVALID_ARGUMENT.Array;

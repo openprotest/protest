@@ -161,7 +161,8 @@ const LOADER = {
 		"certificates.js",
 		"backup.js",
 		"log.js",
-		"syslog.js"
+		"syslog.js",
+		"snmptraps.js"
 	],
 
 	Initialize: ()=> {
@@ -397,6 +398,7 @@ const LOADER = {
 		case "Backup"         : return new Backup(command.args);
 		case "Log"            : return new Log(command.args);
 		case "Syslog"         : return new Syslog(command.args);
+		case "SnmpTraps"      : return new SnmpTraps(command.args);
 		}
 	},
 

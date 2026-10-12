@@ -819,6 +819,71 @@ button.view-live-button:active {
 	pointer-events: none;
 }
 
+.view-log-box {
+	margin-top: 8px;
+	padding-bottom: 4px;
+	border-radius: 4px;
+	color: var(--clr-light);
+	background-color: #10101080;
+	overflow: hidden;
+}
+
+.view-log-title {
+	height: 32px;
+	line-height: 32px;
+	padding-left: 40px;
+	font-size: 12px;
+	font-weight: 600;
+	background-size: 24px 24px;
+	background-position: 8px center;
+	background-repeat: no-repeat;
+	text-shadow: var(--clr-dark) 0 0 2px;
+}
+
+.view-log-entry {
+	display: flex;
+	align-items: center;
+	column-gap: 8px;
+	height: 24px;
+	padding: 0 8px;
+	font-size: 12px;
+	white-space: nowrap;
+	cursor: default;
+}
+
+.view-log-entry:hover {
+	background-color: #ffffff20;
+}
+
+.view-log-entry > .view-log-dot {
+	flex: none;
+	width: 10px;
+	height: 10px;
+	border-radius: 5px;
+	box-shadow: rgba(0,0,0,.4) 0 0 0 1px inset;
+}
+
+.view-log-entry > .view-log-time {
+	flex: none;
+	opacity: .7;
+	font-variant-numeric: tabular-nums;
+}
+
+.view-log-entry > .view-log-source {
+	flex: none;
+	max-width: 30%;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	font-weight: 600;
+}
+
+.view-log-entry > .view-log-text {
+	flex: 1;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
 .view-info-box,
 .view-warning-box,
 .view-error-box,

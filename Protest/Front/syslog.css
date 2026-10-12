@@ -41,8 +41,15 @@
 .syslog-listeners-form > select,
 .syslog-listeners-form > .few-box,
 .syslog-listeners-form > .syslog-range,
-.syslog-whitelist-accept > .few-box {
+.syslog-whitelist-accept > .few-box,
+.syslog-whitelist-find > input {
 	max-width: 300px;
+}
+
+/* same label width, so the inputs line up */
+.syslog-whitelist-accept > div:first-child,
+.syslog-whitelist-find > div:first-child {
+	width: 96px;
 }
 
 /* not enough room for the device list on the side, move it below */
@@ -59,7 +66,8 @@
 		border-left: none;
 	}
 
-	.syslog-whitelist-accept > div:first-child {
+	.syslog-whitelist-accept > div:first-child,
+	.syslog-whitelist-find > div:first-child {
 		width: 112px;
 	}
 }
@@ -72,7 +80,7 @@
 
 .syslog-listeners {
 	flex: 1;
-	min-height: 46px;
+	min-height: 61px;
 	overflow-x: hidden;
 	overflow-y: auto;
 	border-radius: 4px;
@@ -88,7 +96,7 @@
 
 .syslog-listener {
 	position: relative;
-	height: 45px;
+	height: 60px;
 	cursor: default;
 }
 
@@ -107,7 +115,7 @@
 .syslog-listener > .syslog-listener-toggle {
 	position: absolute;
 	left: 4px;
-	top: 11px;
+	top: 19px;
 	height: 22px;
 }
 
@@ -120,7 +128,8 @@
 }
 
 .syslog-listener-name,
-.syslog-listener-endpoint {
+.syslog-listener-endpoint,
+.syslog-listener-stats {
 	position: absolute;
 	left: 48px;
 	right: 44px;
@@ -139,6 +148,17 @@
 	font-family: monospace;
 	font-size: 12px;
 	opacity: .8;
+}
+
+.syslog-listener-stats {
+	top: 40px;
+	font-size: 12px;
+	opacity: .8;
+}
+
+.syslog-listener-stats.failed,
+.syslog-listener-dropped {
+	font-weight: 600;
 }
 
 .syslog-listeners-message {
@@ -164,7 +184,7 @@
 .syslog-listener > .syslog-listener-delete {
 	position: absolute;
 	right: 8px;
-	top: 8px;
+	top: 16px;
 	width: 28px;
 	min-width: 0;
 	height: 28px;
@@ -189,18 +209,18 @@
 }
 
 .syslog-list > .list-element {
-	height: 24px;
-	contain-intrinsic-size: 25px;
+	height: 28px;
+	contain-intrinsic-size: 29px;
 }
 
 .syslog-list > .list-element > div {
-	top: 1px;
-	line-height: 22px;
+	top: 2px;
+	line-height: 24px;
 }
 
 .syslog-list > .list-element > .syslog-severity-dot {
-	left: 10px;
-	top: 7px;
+	left: 8px;
+	top: 9px;
 	width: 10px;
 	height: 10px;
 	padding: 0;
@@ -275,6 +295,23 @@
 	opacity: .8;
 }
 
+.syslog-action-icon {
+	position: relative;
+	display: inline-block;
+	width: 18px;
+	height: 18px;
+	padding: 0 3px 0 0;
+	filter: drop-shadow(#000 0 0 1px);
+}
+
+.syslog-action-icon > div {
+	position: absolute;
+	width: 18px;
+	height: 18px;
+	mask-size: 18px 18px;
+	mask-repeat: no-repeat;
+}
+
 .syslog-range {
 	display: flex;
 	align-items: center;
@@ -304,25 +341,22 @@
 	min-width: 0;
 }
 
-.syslog-whitelist-accept {
+.syslog-whitelist-accept,
+.syslog-whitelist-find {
 	display: flex;
 	align-items: center;
 	column-gap: 8px;
 }
 
-.syslog-whitelist-accept > div:first-child {
+.syslog-whitelist-accept > div:first-child,
+.syslog-whitelist-find > div:first-child {
 	flex: none;
 }
 
-.syslog-whitelist-accept > .few-box {
+.syslog-whitelist-accept > .few-box,
+.syslog-whitelist-find > input {
 	flex: 1;
 	min-width: 0;
-}
-
-.syslog-whitelist-hint {
-	padding: 6px 4px;
-	font-size: 13px;
-	opacity: .8;
 }
 
 .syslog-whitelist-container {

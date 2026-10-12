@@ -462,7 +462,7 @@ class AccessControl extends Tabs {
 		this.permissionsList.push(this.AddPermissionObject("Remote shell",      "url(mono/terminal.svg)",      this.toolsGroup, false, true, false));
 		this.permissionsList.push(this.AddPermissionObject("WMI",               "url(mono/wmi.svg)",           this.toolsGroup, false, true, false));
 		this.permissionsList.push(this.AddPermissionObject("SNMP polling",      "url(mono/snmp.svg)",          this.toolsGroup, false, true, false));
-		//this.permissionsList.push(this.AddPermissionObject("SNMP traps",        "url(mono/trap.svg)",          this.toolsGroup, false, true, false));
+		this.permissionsList.push(this.AddPermissionObject("SNMP traps",        "url(mono/trap.svg)",          this.toolsGroup, true, true, true));
 
 		this.manageGroup = this.AddPermissionGroup("Manage", "url(mono/logo.svg)");
 		this.permissionsList.push(this.AddPermissionObject("Infrastructure",  "url(mono/infrastructure.svg)", this.manageGroup, false, true, false));

@@ -46,6 +46,7 @@ class Scheduler extends List {
 			{ key: "lastseen",       label: "Last seen",          icon: "mono/lastseen.svg",     defaultDays: 365 },
 			{ key: "watchdog",       label: "Watchdog",           icon: "mono/watchdog.svg",     defaultDays: 90 },
 			{ key: "syslog",         label: "Syslog",             icon: "mono/syslog.svg",       defaultDays: 90 },
+			{ key: "snmptraps",      label: "SNMP traps",         icon: "mono/trap.svg",         defaultDays: 90 },
 			{ key: "recordings",     label: "Session recordings", icon: "mono/screenrecord.svg", defaultDays: 30 },
 			{ key: "logs",           label: "Logs",               icon: "mono/log.svg",          defaultDays: 90 },
 		];

@@ -672,9 +672,18 @@ internal static class Auth {
                 path.Add("/snmp/switchinterface");
                 break;
 
-            /*case "snmp traps:write":
-                path.Add("");
-                break;*/
+            case "snmp traps:read":
+                path.Add("/snmptraps");
+                path.Add("/snmptraps/list");
+                path.Add("/snmptraps/devices");
+                break;
+
+            case "snmp traps:write":
+                path.Add("/snmptraps/listeners/list");
+                path.Add("/snmptraps/listeners/save");
+                path.Add("/config/smtpprofiles/list");
+                path.Add("/config/snmpprofiles/list");
+                break;
 
             /*case "scripts:write":
                 path.Add("");
@@ -763,6 +772,7 @@ internal static class Auth {
                 path.Add("/config/dataretention/recordings");
                 path.Add("/config/dataretention/logs");
                 path.Add("/config/dataretention/syslog");
+                path.Add("/config/dataretention/snmptraps");
                 path.Add("/config/dataretention/devicetimeline");
                 path.Add("/config/dataretention/usertimeline");
                 path.Add("/config/dataretention/settings/save");

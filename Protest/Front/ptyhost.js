@@ -235,7 +235,7 @@ class PtyHost extends Window {
 		this.AddToolbarSeparator();
 
 		this.darkModeButton = this.AddToolbarButton("Dark mode", "mono/darkmode.svg?light");
-		this.bellSoundButton = this.AddToolbarButton("Bell sound", "mono/notifications.svg?light");
+		this.bellSoundButton = this.AddToolbarButton("Bell sound", "mono/bell.svg?light");
 		this.optionsButton = this.AddToolbarButton("Options", "mono/wrench.svg?light");
 		this.AddToolbarSeparator();
 

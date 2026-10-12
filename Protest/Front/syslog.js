@@ -1,7 +1,8 @@
 "use strict";
 class Syslog extends Window {
 	static SEVERITY       = ["Emergency", "Alert", "Critical", "Error", "Warning", "Notice", "Info", "Debug"];
-	static SEVERITY_COLOR = ["rgb(224,32,168)", "rgb(232,0,0)", "rgb(236,40,12)", "rgb(240,80,24)", "rgb(255,186,0)", "rgb(32,128,232)", "rgb(114,140,170)", "rgb(96,96,96)"];
+	static SEVERITY_COLOR = ["rgb(208,32,168)", "var(--clr-critical)", "var(--clr-error)", "rgb(240,128,24)", "var(--clr-warning)", "rgb(30,166,190)", "rgb(32,148,240)", "rgb(120,139,163)"];
+	static SEVERITY_ICON  = ["mono/emergency.svg", "mono/bell.svg", "mono/critical.svg", "mono/error.svg", "mono/warning.svg", "mono/notice.svg", "mono/info.svg", "mono/bug.svg"];
 	static FACILITY       = ["kern", "user", "mail", "daemon", "auth", "syslog", "lpr", "news", "uucp", "cron", "authpriv", "ftp", "ntp", "audit", "alert", "clock", "local0", "local1", "local2", "local3", "local4", "local5", "local6", "local7"];
 	static PROTOCOL       = {1:"UDP", 2:"TCP", 3:"TLS"};
 	static DEFAULT_PORT   = {1:514, 2:601, 3:6514};
@@ -10,31 +11,31 @@ class Syslog extends Window {
 	static PAGE_SIZE      = 1_000;
 
 	static SEVERITY_FILTERS = [
-		{key:"emergFilter", tip:"Emergency",     icon:"mono/critical.svg",     color:"rgb(224,32,168)",    levels:[0]},
-		{key:"alertFilter", tip:"Alert",         icon:"mono/notification.svg", color:"var(--clr-critical)", levels:[1]},
-		{key:"critFilter",  tip:"Critical",      icon:"mono/error.svg",        color:"var(--clr-error)",    levels:[2]},
-		{key:"errorFilter", tip:"Error",         icon:"mono/error.svg",        color:"var(--clr-error)",    levels:[3]},
-		{key:"warnFilter",  tip:"Warning",       icon:"mono/warning.svg",      color:"var(--clr-warning)",  levels:[4]},
-		{key:"noticeFilter",tip:"Notice",        icon:"mono/info.svg",         color:"rgb(32,148,240)",   levels:[5]},
-		{key:"infoFilter",  tip:"Informational", icon:"mono/info.svg",         color:"rgb(114,140,170)",  levels:[6]},
-		{key:"debugFilter", tip:"Debug",         icon:"mono/code.svg",         color:"rgb(168,168,168)",     levels:[7]},
+		{key:"emergFilter", tip:"Emergency",     icon:"mono/emergency.svg", color:Syslog.SEVERITY_COLOR[0], levels:[0]},
+		{key:"alertFilter", tip:"Alert",         icon:"mono/bell.svg",      color:Syslog.SEVERITY_COLOR[1], levels:[1]},
+		{key:"critFilter",  tip:"Critical",      icon:"mono/critical.svg",  color:Syslog.SEVERITY_COLOR[2], levels:[2]},
+		{key:"errorFilter", tip:"Error",         icon:"mono/error.svg",     color:Syslog.SEVERITY_COLOR[3], levels:[3]},
+		{key:"warnFilter",  tip:"Warning",       icon:"mono/warning.svg",   color:Syslog.SEVERITY_COLOR[4], levels:[4]},
+		{key:"noticeFilter",tip:"Notice",        icon:"mono/notice.svg",    color:Syslog.SEVERITY_COLOR[5], levels:[5]},
+		{key:"infoFilter",  tip:"Informational", icon:"mono/info.svg",      color:Syslog.SEVERITY_COLOR[6], levels:[6]},
+		{key:"debugFilter", tip:"Debug",         icon:"mono/bug.svg",       color:Syslog.SEVERITY_COLOR[7], levels:[7]},
 	];
 
 	constructor(args) {
 		super();
 
 		this.args = {
-			autoScroll   : true,
-			device       : "",
-			find         : "",
-			emergFilter  : true,
-			alertFilter  : true,
-			critFilter   : true,
-			errorFilter  : true,
-			warnFilter   : true,
-			noticeFilter : false,
-			infoFilter   : false,
-			debugFilter  : false,
+			autoScroll  : true,
+			device      : "",
+			find        : "",
+			emergFilter : true,
+			alertFilter : true,
+			critFilter  : true,
+			errorFilter : true,
+			warnFilter  : true,
+			noticeFilter: false,
+			infoFilter  : false,
+			debugFilter : false,
 			...args
 		};
 
@@ -366,13 +367,6 @@ class Syslog extends Window {
 		this.content.append(this.details, this.options);
 	}
 
-	static ThresholdLabel(value) {
-		if (value < 0) return "Off";
-		if (value >= 7) return "All";
-		if (value === 0) return "Emergency only";
-		return `${Syslog.SEVERITY[value]} and up`;
-	}
-
 	static LocalTime(utc) {
 		const date = new Date(`${utc.replace(" ", "T")}Z`);
 		if (isNaN(date.getTime())) return utc;
@@ -658,10 +652,6 @@ class Syslog extends Window {
 		element.appendChild(dot);
 
 		this.listBox.InflateElement(element, entry, type);
-
-		if (entry.severity <= 3) {
-			element.style.color = `color-mix(in srgb, ${Syslog.SEVERITY_COLOR[entry.severity]} 60%, var(--clr-dark))`;
-		}
 	}
 
 	ShowDetails(entry) {
@@ -803,7 +793,9 @@ class Syslog extends Window {
 		if (dialog === null) return;
 
 		const {okButton, cancelButton, innerBox, buttonBox} = dialog;
-		innerBox.parentElement.style.maxWidth = "1240px";
+		innerBox.parentElement.style.left = "40px";
+		innerBox.parentElement.style.width = "calc(100% - 80px)";
+		innerBox.parentElement.style.maxWidth = "calc(100% - 80px)";
 		innerBox.className = "syslog-listeners-view";
 		innerBox.style.overflowY = "hidden";
 
@@ -866,15 +858,73 @@ class Syslog extends Window {
 			endpointBox.className = "syslog-listener-endpoint";
 			endpointBox.textContent = endpoint;
 
+			const statsBox = document.createElement("div");
+			statsBox.className = "syslog-listener-stats";
+
 			const deleteButton = document.createElement("button");
 			deleteButton.className = "syslog-listener-delete";
 			deleteButton.setAttribute("aria-label", "Delete");
 
-			element.append(nameBox, endpointBox, deleteButton);
-			return {element, deleteButton};
+			element.append(nameBox, endpointBox, statsBox, deleteButton);
+			return {element, deleteButton, statsBox};
+		};
+
+		const statsBoxes = new Map(); //guid to stats element, rebuilt by RenderList
+		let renderVersion = 0;
+
+		const SetStats = (statsBox, listener)=> {
+			statsBox.textContent = "";
+			statsBox.title = "";
+			statsBox.classList.toggle("failed", listener.enabled && !listener.running);
+
+			if (!listener.enabled) {
+				statsBox.textContent = "disabled";
+				return;
+			}
+
+			if (!listener.running) {
+				statsBox.textContent = "not running";
+				statsBox.title = listener.error ?? "";
+				return;
+			}
+
+			const received = document.createElement("span");
+			received.textContent = `received ${listener.received.toLocaleString(UI.regionalFormat)}`;
+
+			const dropped = document.createElement("span");
+			dropped.textContent = `dropped ${listener.dropped.toLocaleString(UI.regionalFormat)}`;
+			if (listener.dropped > 0) dropped.className = "syslog-listener-dropped";
+
+			statsBox.append(received, ", ", dropped);
+			statsBox.title = "Counters since the listener started.\nDropped: the sender's IP does not match a device in the database, the device is not whitelisted, or the TCP client limit was reached.";
+		};
+
+		//live counters while the dialog is open, without rebuilding the list
+		const PollStats = async ()=> {
+			if (!innerBox.isConnected) return;
+			const version = renderVersion;
+
+			try {
+				const response = await fetch("syslog/listeners/list");
+				if (response.status === 200) {
+					const json = await response.json();
+					//skip stale responses, the list was rebuilt in the meantime
+					if (Array.isArray(json) && version === renderVersion) {
+						for (let i=0; i<json.length; i++) {
+							const statsBox = statsBoxes.get(json[i].guid);
+							if (statsBox) SetStats(statsBox, json[i]);
+						}
+					}
+				}
+			}
+			catch {}
+
+			if (innerBox.isConnected) setTimeout(PollStats, 2_000);
 		};
 
 		const RenderList = ()=> {
+			renderVersion++;
+			statsBoxes.clear();
 			list.textContent = "";
 
 			if (this.listeners.length === 0 && !isDraft) {
@@ -888,10 +938,13 @@ class Syslog extends Window {
 				const listener = this.listeners[i];
 				const address = listener.bindAddress.includes(":") ? `[${listener.bindAddress}]` : listener.bindAddress;
 
-				const {element, deleteButton} = CreateItem(
+				const {element, deleteButton, statsBox} = CreateItem(
 					listener.name || `Syslog ${Syslog.PROTOCOL[listener.protocol]}`,
 					`${Syslog.PROTOCOL[listener.protocol]} ${address}:${listener.port}`
 				);
+
+				SetStats(statsBox, listener);
+				statsBoxes.set(listener.guid, statsBox);
 
 				if (!isDraft && listener.guid === selectedGuid) element.classList.add("selected");
 				element.onclick = ()=> Select(listener.guid);
@@ -957,11 +1010,25 @@ class Syslog extends Window {
 			range.min = -1;
 			range.max = 7;
 			range.step = 1;
+			range.style.maxWidth = "100px";
 
 			const valueLabel = document.createElement("div");
 
 			range.oninput = ()=> {
-				valueLabel.textContent = Syslog.ThresholdLabel(parseInt(range.value));
+				valueLabel.textContent = range.value == -1 ? "Off" : "";
+
+				for (let i=0; i<parseInt(range.value)+1; i++) {
+					const severityIcon = document.createElement("div");
+					severityIcon.setAttribute("tip-below", Syslog.SEVERITY[i]);
+					severityIcon.className = "syslog-action-icon";
+					valueLabel.appendChild(severityIcon);
+
+					const severityIconInner = document.createElement("div");
+					severityIconInner.style.backgroundColor = Syslog.SEVERITY_COLOR[i];
+					severityIconInner.style.maskImage = `url(${Syslog.SEVERITY_ICON[i]})`;
+					severityIcon.appendChild(severityIconInner);
+				}
+
 				range.onchange?.();
 			};
 
@@ -1036,15 +1103,17 @@ class Syslog extends Window {
 		acceptBox.container.style.margin = "2px 4px";
 		acceptRow.append(acceptLabel, acceptBox.container);
 
-		const hint = document.createElement("div");
-		hint.className = "syslog-whitelist-hint";
-		whitelistPanel.appendChild(hint);
+		const findRow = document.createElement("div");
+		findRow.className = "syslog-whitelist-find";
+		whitelistPanel.appendChild(findRow);
+
+		const findLabel = document.createElement("div");
+		findLabel.textContent = "Find:";
 
 		const findDeviceInput = document.createElement("input");
 		findDeviceInput.type = "search";
-		findDeviceInput.placeholder = "Find";
-		findDeviceInput.style.margin = "2px 0";
-		whitelistPanel.appendChild(findDeviceInput);
+		findDeviceInput.style.margin = "2px 4px";
+		findRow.append(findLabel, findDeviceInput);
 
 		const whitelistContainer = document.createElement("div");
 		whitelistContainer.className = "syslog-whitelist-container";
@@ -1103,10 +1172,7 @@ class Syslog extends Window {
 
 		const UpdateAccept = ()=> {
 			const isWhitelist = acceptBox.index === 1;
-			hint.textContent = isWhitelist
-				? "Accept messages only from the selected devices."
-				: "Accept messages from any device in the database. Senders are matched by the device's IP address.";
-			findDeviceInput.style.display = isWhitelist ? "" : "none";
+			findRow.style.display = isWhitelist ? "" : "none";
 			whitelistContainer.style.display = isWhitelist ? "" : "none";
 			if (isWhitelist) setTimeout(()=> devicesListBox.FinalizeColumns(), 0);
 		};
@@ -1389,5 +1455,6 @@ class Syslog extends Window {
 		RenderList();
 		LoadEditor();
 		SetMessage(null);
+		setTimeout(PollStats, 2_000);
 	}
 }

@@ -1,0 +1,424 @@
+.snmptraps-toggle-button {
+	background-size: 22px 22px !important;
+	width: 28px !important;
+	height: 28px !important;
+	margin: 6px !important;
+}
+
+.snmptraps-listeners-view {
+	display: flex;
+	gap: 16px;
+	padding: 16px 24px 8px 24px;
+	box-sizing: border-box;
+}
+
+.snmptraps-listeners-side {
+	flex: none;
+	width: 260px;
+	display: flex;
+	flex-direction: column;
+	min-height: 0;
+}
+
+.snmptraps-listeners-editor {
+	position: relative;
+	flex: 1;
+	min-width: 0;
+	overflow-x: hidden;
+	overflow-y: auto;
+	container-type: inline-size;
+}
+
+.snmptraps-listeners-form {
+	display: grid;
+	grid-template-columns: 112px minmax(240px, 308px) minmax(220px, 1fr);
+	grid-auto-rows: 36px;
+	align-items: center;
+	column-gap: 8px;
+}
+
+.snmptraps-listeners-form > input,
+.snmptraps-listeners-form > select,
+.snmptraps-listeners-form > .few-box,
+.snmptraps-listeners-form > .snmptraps-range,
+.snmptraps-whitelist-accept > .few-box,
+.snmptraps-whitelist-find > input {
+	max-width: 300px;
+}
+
+/* same label width, so the inputs line up */
+.snmptraps-whitelist-accept > div:first-child,
+.snmptraps-whitelist-find > div:first-child {
+	width: 96px;
+}
+
+/* not enough room for the device list on the side, move it below */
+@container (max-width: 640px) {
+	.snmptraps-listeners-form {
+		grid-template-columns: 112px minmax(0, 1fr);
+	}
+
+	.snmptraps-listeners-form > .snmptraps-whitelist {
+		grid-area: auto / 1 / span 8 / 3 !important;
+		height: calc(100% - 32px);
+		margin: 32px 0 0 0;
+		padding: 0;
+		border-left: none;
+	}
+
+	.snmptraps-whitelist-accept > div:first-child,
+	.snmptraps-whitelist-find > div:first-child {
+		width: 112px;
+	}
+}
+
+.snmptraps-listeners-placeholder {
+	padding-top: 64px;
+	text-align: center;
+	opacity: .6;
+}
+
+.snmptraps-listeners {
+	flex: 1;
+	min-height: 61px;
+	overflow-x: hidden;
+	overflow-y: auto;
+	border-radius: 4px;
+	color: var(--clr-dark);
+	background-color: var(--clr-pane);
+}
+
+.snmptraps-listeners-empty {
+	padding: 14px 8px;
+	text-align: center;
+	opacity: .6;
+}
+
+.snmptraps-listener {
+	position: relative;
+	height: 60px;
+	cursor: default;
+}
+
+.snmptraps-listener:not(:last-child) {
+	border-bottom: rgb(128,128,128) 1px solid;
+}
+
+.snmptraps-listener:hover {
+	background-color: var(--clr-highlight);
+}
+
+.snmptraps-listener.selected {
+	background-color: var(--clr-select);
+}
+
+.snmptraps-listener > .snmptraps-listener-toggle {
+	position: absolute;
+	left: 4px;
+	top: 19px;
+	height: 22px;
+}
+
+.snmptraps-listener > .snmptraps-listener-toggle > label {
+	display: block;
+	width: 36px;
+	height: 22px;
+	min-width: 0;
+	padding: 0;
+}
+
+.snmptraps-listener-name,
+.snmptraps-listener-endpoint,
+.snmptraps-listener-stats {
+	position: absolute;
+	left: 48px;
+	right: 44px;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.snmptraps-listener-name {
+	top: 4px;
+	font-weight: 600;
+}
+
+.snmptraps-listener-endpoint {
+	top: 23px;
+	font-family: monospace;
+	font-size: 12px;
+	opacity: .8;
+}
+
+.snmptraps-listener-stats {
+	top: 40px;
+	font-size: 12px;
+	opacity: .8;
+}
+
+.snmptraps-listener-stats.failed,
+.snmptraps-listener-dropped {
+	font-weight: 600;
+}
+
+.snmptraps-listeners-message {
+	padding: 8px 4px 0 4px;
+	color: var(--clr-error);
+	font-weight: 600;
+	user-select: text;
+}
+
+.snmptraps-listeners-delete {
+	display: flex;
+	align-items: center;
+	min-height: 64px;
+	margin-top: 48px;
+	padding: 0 16px 0 80px;
+	font-weight: 600;
+	background-image: url(mono/delete.svg);
+	background-size: 48px 48px;
+	background-position: 16px center;
+	background-repeat: no-repeat;
+}
+
+.snmptraps-listener > .snmptraps-listener-delete {
+	position: absolute;
+	right: 8px;
+	top: 16px;
+	width: 28px;
+	min-width: 0;
+	height: 28px;
+	margin: 0;
+	padding: 0;
+	border: 0;
+	border-radius: 4px;
+	background-color: transparent;
+	background-image: url(mono/delete.svg);
+	background-size: 20px 20px;
+	background-position: center;
+	background-repeat: no-repeat;
+	box-shadow: none;
+}
+
+.snmptraps-listener > .snmptraps-listener-delete:hover {
+	background-color: rgba(0,0,0,.15);
+}
+
+.snmptraps-listener > .snmptraps-listener-delete:active {
+	background-color: rgba(0,0,0,.25);
+}
+
+.snmptraps-list > .list-element {
+	height: 28px;
+	contain-intrinsic-size: 29px;
+}
+
+.snmptraps-list > .list-element > div {
+	top: 2px;
+	line-height: 24px;
+}
+
+.snmptraps-list > .list-element > .snmptraps-severity-dot {
+	left: 8px;
+	top: 9px;
+	width: 10px;
+	height: 10px;
+	padding: 0;
+	border-radius: 5px;
+	box-shadow: rgba(0,0,0,.4) 0 0 0 1px inset;
+}
+
+.snmptraps-list > .list-element.snmptraps-marker {
+	text-align: center;
+	line-height: 24px;
+	color: #606060;
+}
+
+.snmptraps-details {
+	position: absolute;
+	left: 0;
+	right: 0;
+	bottom: 30px;
+	height: 136px;
+	box-sizing: border-box;
+	padding: 4px 8px;
+	overflow-x: hidden;
+	overflow-y: auto;
+	border-top: 2px solid var(--clr-control);
+	border-radius: 0 0 4px 4px;
+	color: var(--clr-dark);
+	background-color: var(--clr-pane);
+	user-select: text;
+}
+
+.snmptraps-details-meta {
+	display: flex;
+	flex-wrap: wrap;
+	column-gap: 16px;
+	font-size: 13px;
+}
+
+.snmptraps-details-meta > span > b {
+	padding-right: 4px;
+}
+
+.snmptraps-details-message {
+	margin-top: 4px;
+	font-family: monospace;
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.snmptraps-details-sd {
+	margin-top: 2px;
+	font-family: monospace;
+	font-size: 12px;
+	opacity: .8;
+	word-break: break-all;
+}
+
+.snmptraps-options {
+	position: absolute;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	height: 26px;
+	overflow: hidden;
+	white-space: nowrap;
+	display: flex;
+	align-items: center;
+}
+
+.snmptraps-options > .snmptraps-status {
+	margin-left: auto;
+	padding-right: 8px;
+	opacity: .8;
+}
+
+.snmptraps-action-icon {
+	position: relative;
+	display: inline-block;
+	width: 18px;
+	height: 18px;
+	padding: 0 3px 0 0;
+	filter: drop-shadow(#000 0 0 1px);
+}
+
+.snmptraps-action-icon > div {
+	position: absolute;
+	width: 18px;
+	height: 18px;
+	mask-size: 18px 18px;
+	mask-repeat: no-repeat;
+}
+
+.snmptraps-range {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 0 4px;
+	box-sizing: border-box;
+}
+
+.snmptraps-range > input[type="range"] {
+	flex: 1;
+	min-width: 0;
+}
+
+.snmptraps-range > div {
+	width: 128px;
+	white-space: nowrap;
+}
+
+.snmptraps-whitelist {
+	height: 100%;
+	padding-left: 12px;
+	margin-left: 24px;
+	border-left: 2px solid var(--clr-control);
+	display: flex;
+	flex-direction: column;
+	box-sizing: border-box;
+	min-width: 0;
+}
+
+.snmptraps-whitelist-accept,
+.snmptraps-whitelist-find {
+	display: flex;
+	align-items: center;
+	column-gap: 8px;
+}
+
+.snmptraps-whitelist-accept > div:first-child,
+.snmptraps-whitelist-find > div:first-child {
+	flex: none;
+}
+
+.snmptraps-whitelist-accept > .few-box,
+.snmptraps-whitelist-find > input {
+	flex: 1;
+	min-width: 0;
+}
+
+.snmptraps-whitelist-container {
+	position: relative;
+	flex: 1;
+	margin-top: 4px;
+	min-height: 120px;
+}
+
+.snmptraps-credentials {
+	align-self: stretch;
+	max-width: 300px;
+	margin: 4px;
+	overflow-x: hidden;
+	overflow-y: auto;
+	border-radius: 4px;
+	background-color: var(--clr-pane);
+	color: var(--clr-dark);
+}
+
+.snmptraps-credentials > div {
+	height: 28px;
+	padding: 0 4px;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.snmptraps-credentials-empty {
+	padding: 6px 8px;
+	opacity: .6;
+}
+
+.snmptraps-credentials-hint {
+	font-size: 13px;
+	line-height: 16px;
+	white-space: pre-line;
+	opacity: .8;
+}
+
+.snmptraps-credentials-hint.warning {
+	font-weight: 600;
+	opacity: 1;
+}
+
+.snmptraps-engine {
+	font-family: monospace;
+}
+
+.snmptraps-details-vars {
+	display: grid;
+	grid-template-columns: max-content max-content minmax(0, 1fr);
+	column-gap: 12px;
+	margin-top: 4px;
+	font-family: monospace;
+	font-size: 12px;
+}
+
+.snmptraps-details-vars > div {
+	overflow-wrap: anywhere;
+}
+
+.snmptraps-details-vars > div:nth-child(3n+2) {
+	opacity: .7;
+}

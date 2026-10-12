@@ -147,6 +147,16 @@ const KEEP = {
 			WIN.array.filter(win=> win instanceof Syslog).forEach(syslog=> syslog.ListenersChanged());
 			break;
 
+		case "snmptraps":
+			if (typeof SnmpTraps === "undefined") break;
+			WIN.array.filter(win=> win instanceof SnmpTraps).forEach(traps=> traps.AddLive(message.lines));
+			break;
+
+		case "snmptraps-listeners":
+			if (typeof SnmpTraps === "undefined") break;
+			WIN.array.filter(win=> win instanceof SnmpTraps).forEach(traps=> traps.ListenersChanged());
+			break;
+
 		case "force-reload":
 			location.reload();
 			break;

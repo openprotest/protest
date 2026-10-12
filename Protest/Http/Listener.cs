@@ -118,6 +118,11 @@ internal sealed class Listener {
         ["/snmp/walk"]                    = (ctx, username) => Protocols.Snmp.Polling.WalkHandler(ctx),
         ["/snmp/switchinterface"]         = (ctx, username) => Protocols.Snmp.Polling.GetInterfaces(ctx),
 
+        ["/snmptraps/list"]               = (ctx, username) => Protocols.Snmp.Traps.ListHandler(ctx),
+        ["/snmptraps/devices"]            = (ctx, username) => Protocols.Snmp.Traps.ListDevices(),
+        ["/snmptraps/listeners/list"]     = (ctx, username) => Protocols.Snmp.Traps.List(),
+        ["/snmptraps/listeners/save"]     = (ctx, username) => Protocols.Snmp.Traps.Save(ctx, username),
+
         ["/syslog/list"]                  = (ctx, username) => Protocols.Syslog.ListHandler(ctx),
         ["/syslog/devices"]               = (ctx, username) => Protocols.Syslog.ListDevices(),
         ["/syslog/listeners/list"]        = (ctx, username) => Protocols.Syslog.List(),
@@ -189,6 +194,7 @@ internal sealed class Listener {
         ["/config/dataretention/recordings"]     = (ctx, username) => DataRetention.Handler(ctx, username, "recordings"),
         ["/config/dataretention/logs"]           = (ctx, username) => DataRetention.Handler(ctx, username, "logs"),
         ["/config/dataretention/syslog"]         = (ctx, username) => DataRetention.Handler(ctx, username, "syslog"),
+        ["/config/dataretention/snmptraps"]      = (ctx, username) => DataRetention.Handler(ctx, username, "snmptraps"),
         ["/config/dataretention/devicetimeline"] = (ctx, username) => DataRetention.Handler(ctx, username, "devicetimeline"),
         ["/config/dataretention/usertimeline"]   = (ctx, username) => DataRetention.Handler(ctx, username, "usertimeline"),
 
