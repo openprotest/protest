@@ -3,7 +3,7 @@ class SpeedTest extends Window {
 	static CONNECTIONS = [1, 2, 4, 6, 8, 16];
 	static DURATIONS   = [10, 15, 30];
 	static UPLOAD_SIZE = 32 * 1024 * 1024; //per request, fewer gaps between the requests than 8 MB
-	static SCALE       = [0, 1, 5, 10, 50, 100, 250, 500, 1000, 2500, 10000]; //Mbps, an equal angle per step
+	static SCALE       = [0, 1, 10, 100, 250, 500, 1000, 2500, 10000, 25000, 100000]; //Mbps, an equal angle per step
 	static WARMUP      = 1000; //milliseconds at the start of each direction, left out of every measurement
 	static SMOOTHING   = 1000; //milliseconds, the speed is averaged over this window
 	static HTTP1_LIMIT = 6;    //browser connections per server over http/1.1
