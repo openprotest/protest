@@ -6,6 +6,7 @@ using System.Net;
 using System.Net.NetworkInformation;
 using System.Data;
 using System.Text;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Runtime.Versioning;
@@ -605,6 +606,9 @@ internal static partial class Lifeline {
             date = now.ToString("yyyyMM");
         }
 
+        //both end up in the path
+        if (!IsValidName(file) || !IsMonth(date)) return null;
+
         try {
             return File.ReadAllBytes(Path.Join(Data.DIR_LIFELINE, type, file, date));
         }
@@ -631,12 +635,122 @@ internal static partial class Lifeline {
             date = now.ToString("yyyyMM");
         }
 
+        //both end up in the path
+        if (!IsValidName(host) || !IsMonth(date)) return null;
+
         try {
             return File.ReadAllBytes(Path.Join(Data.DIR_LIFELINE, "rtt", host, date));
         }
         catch {
             return null;
         }
+    }
+
+    private static readonly string[] FILE_TYPES = ["cpu", "memory", "disk", "diskio", "printcount", "switchcount", "switchstpchanges"];
+
+    //the months that hold data, per type, for a device file and its ping host
+    public static byte[] ListMonths(HttpListenerContext ctx) {
+        Dictionary<string, string> parameters = Listener.ParseQuery(ctx);
+        if (parameters is null) return Data.CODE_INVALID_ARGUMENT.Array;
+
+        parameters.TryGetValue("file", out string file);
+        parameters.TryGetValue("host", out string host);
+
+        using MemoryStream ms = new MemoryStream();
+        using (Utf8JsonWriter writer = new Utf8JsonWriter(ms)) {
+            writer.WriteStartObject();
+
+            if (IsValidName(host)) {
+                WriteMonths(writer, "rtt", host);
+            }
+
+            if (IsValidName(file)) {
+                for (int i = 0; i < FILE_TYPES.Length; i++) {
+                    WriteMonths(writer, FILE_TYPES[i], file);
+                }
+            }
+
+            writer.WriteEndObject();
+        }
+
+        return ms.ToArray();
+    }
+
+    //device files and ping hosts that hold lifeline data
+    public static byte[] ListDevices() {
+        HashSet<string> files = new HashSet<string>(StringComparer.Ordinal);
+        for (int i = 0; i < FILE_TYPES.Length; i++) {
+            CollectNames(FILE_TYPES[i], files);
+        }
+
+        HashSet<string> hosts = new HashSet<string>(StringComparer.Ordinal);
+        CollectNames("rtt", hosts);
+
+        using MemoryStream ms = new MemoryStream();
+        using (Utf8JsonWriter writer = new Utf8JsonWriter(ms)) {
+            writer.WriteStartObject();
+
+            writer.WriteStartArray("files");
+            foreach (string file in files.Order(StringComparer.Ordinal)) writer.WriteStringValue(file);
+            writer.WriteEndArray();
+
+            writer.WriteStartArray("hosts");
+            foreach (string host in hosts.Order(StringComparer.Ordinal)) writer.WriteStringValue(host);
+            writer.WriteEndArray();
+
+            writer.WriteEndObject();
+        }
+
+        return ms.ToArray();
+    }
+
+    private static void CollectNames(string type, HashSet<string> names) {
+        try {
+            DirectoryInfo root = new DirectoryInfo(Path.Join(Data.DIR_LIFELINE, type));
+            if (!root.Exists) return;
+
+            foreach (DirectoryInfo dir in root.EnumerateDirectories()) {
+                if (names.Contains(dir.Name)) continue;
+                if (dir.EnumerateFiles().Any(o => o.Length > 0 && IsMonth(o.Name))) {
+                    names.Add(dir.Name);
+                }
+            }
+        }
+        catch (Exception ex) {
+            Logger.Error(ex);
+        }
+    }
+
+    private static void WriteMonths(Utf8JsonWriter writer, string type, string name) {
+        writer.WriteStartArray(type);
+
+        try {
+            DirectoryInfo dir = new DirectoryInfo(Path.Join(Data.DIR_LIFELINE, type, name));
+            if (dir.Exists) {
+                string[] months = dir.GetFiles()
+                    .Where(o => o.Length > 0 && IsMonth(o.Name))
+                    .Select(o => o.Name)
+                    .Order(StringComparer.Ordinal)
+                    .ToArray();
+
+                for (int i = 0; i < months.Length; i++) writer.WriteStringValue(months[i]);
+            }
+        }
+        catch (Exception ex) {
+            Logger.Error(ex);
+        }
+
+        writer.WriteEndArray();
+    }
+
+    private static bool IsValidName(string name) {
+        return !String.IsNullOrEmpty(name)
+            && name.IndexOfAny(Path.GetInvalidFileNameChars()) < 0
+            && name != "." && name != "..";
+    }
+
+    private static bool IsMonth(string value) {
+        return value is not null && value.Length == 6 && value.All(char.IsAsciiDigit);
     }
 
     internal static int DeleteOlderThan(int days) {

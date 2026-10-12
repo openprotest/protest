@@ -104,6 +104,8 @@ internal sealed class Listener {
         ["/lifeline/printcount/view"]     = (ctx, username) => Tasks.Lifeline.ViewFile(ctx, "printcount"),
         ["/lifeline/switchcount/view"]    = (ctx, username) => Tasks.Lifeline.ViewFile(ctx, "switchcount"),
         ["/lifeline/switchstpchanges/view"] = (ctx, username) => Tasks.Lifeline.ViewFile(ctx, "switchstpchanges"),
+        ["/lifeline/months"]              = (ctx, username) => Tasks.Lifeline.ListMonths(ctx),
+        ["/lifeline/devices"]             = (ctx, username) => Tasks.Lifeline.ListDevices(),
 
         ["/tools/bulkping"]               = (ctx, username) => Protocols.Icmp.BulkPing(ctx),
         ["/tools/dnslookup"]              = (ctx, username) => Protocols.Dns.Resolve(ctx),

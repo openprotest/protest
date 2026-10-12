@@ -1,0 +1,172 @@
+.lifeline-toggle-button {
+	background-size: 22px 22px !important;
+	width: 28px !important;
+	height: 28px !important;
+	margin: 6px !important;
+}
+
+.lifeline-timeline {
+	cursor: grab;
+	position: absolute;
+	left: 212px;
+	right: 4px;
+	top: 4px;
+	height: 40px;
+	background-color: rgba(64,64,64,.8);
+	border-radius: 4px;
+	overflow: hidden;
+	transition: .2s;
+	user-select: none;
+}
+
+.lifeline-range {
+	position: absolute;
+	left: 4px;
+	top: 4px;
+	width: 200px;
+	height: 40px;
+	box-sizing: border-box;
+	padding-left: 8px;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	font-size: 12px;
+	line-height: 16px;
+	white-space: nowrap;
+	overflow: hidden;
+	opacity: .8;
+}
+
+.lifeline-timeline > svg {
+	position: absolute;
+}
+
+.lifeline-list {
+	position: absolute;
+	left: 4px;
+	right: 4px;
+	top: 48px;
+	bottom: 4px;
+	overflow-x: hidden;
+	overflow-y: auto;
+}
+
+.lifeline-device {
+	height: 32px;
+	line-height: 32px;
+	margin-top: 4px;
+	padding-left: 36px;
+	font-weight: 600;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	background-size: 24px 24px;
+	background-position: 4px center;
+	background-repeat: no-repeat;
+	cursor: default;
+}
+
+.lifeline-row {
+	position: relative;
+	height: 72px;
+	margin-bottom: 2px;
+}
+
+.lifeline-label {
+	position: absolute;
+	left: 0;
+	top: 0;
+	width: 200px;
+	height: 100%;
+	box-sizing: border-box;
+	padding: 0 4px 0 36px;
+	display: flex;
+	align-items: center;
+	font-size: 13px;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	background-size: 22px 22px;
+	background-position: 8px center;
+	background-repeat: no-repeat;
+}
+
+.lifeline-graph {
+	position: absolute;
+	left: 208px;
+	right: 0;
+	top: 0;
+	height: 100%;
+	overflow: hidden;
+	border-radius: 4px;
+	background-color: #10101080;
+	cursor: grab;
+	user-select: none;
+}
+
+.lifeline-graph:active {
+	cursor: grabbing;
+}
+
+.lifeline-graph > svg {
+	position: absolute;
+	top: 0;
+}
+
+.lifeline-marker {
+	position: absolute;
+	top: 0;
+	width: 1px;
+	height: 100%;
+	background-color: #fff;
+	pointer-events: none;
+}
+
+.lifeline-tooltip {
+	position: absolute;
+	top: 4px;
+	padding: 2px 6px;
+	border-radius: 4px;
+	font-size: 12px;
+	font-weight: 600;
+	white-space: nowrap;
+	color: #fff;
+	background-color: rgba(32,32,32,.85);
+	pointer-events: none;
+}
+
+.lifeline-empty {
+	padding: 8px 36px;
+	opacity: .6;
+}
+
+.lifeline-devices-dialog {
+	display: flex;
+	flex-direction: column;
+	padding: 16px 24px 8px 24px;
+	box-sizing: border-box;
+}
+
+.lifeline-devices-find {
+	display: flex;
+	align-items: center;
+	column-gap: 8px;
+}
+
+.lifeline-devices-find > div:first-child {
+	flex: none;
+	width: 48px;
+}
+
+.lifeline-devices-find > input {
+	flex: 1;
+	min-width: 0;
+	max-width: 300px;
+}
+
+.lifeline-devices-container {
+	position: relative;
+	flex: 1;
+	margin-top: 4px;
+	min-height: 120px;
+}

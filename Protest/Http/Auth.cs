@@ -555,6 +555,8 @@ internal static class Auth {
                 path.Add("/lifeline/printcount/view");
                 path.Add("/lifeline/switchcount/view");
                 path.Add("/lifeline/switchstpchanges/view");
+                path.Add("/lifeline/months");
+                path.Add("/lifeline/devices");
                 path.Add("/ws/livestats/device");
                 path.Add("/ws/monitor");
                 break;

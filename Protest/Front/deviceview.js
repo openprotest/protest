@@ -1942,6 +1942,10 @@ class DeviceView extends View {
 			graphBox.style.height = `${height + 28}px`;
 			this.liveGraphs.appendChild(graphBox);
 
+			if (opt.metric && typeof Lifeline !== "undefined") {
+				graphBox.ondblclick = ()=> new Lifeline({devices:[this.args.file], metrics:[opt.metric]});
+			}
+
 			const labelBox = document.createElement("div");
 			labelBox.className = "view-lifeline-label";
 			labelBox.textContent = label.toUpperCase();
@@ -2299,7 +2303,7 @@ class DeviceView extends View {
 				data.push({d:date, v:rtt});
 			}
 
-			GenerateGraph(data, "Roundtrip time", "ping", "mono/ping.svg");
+			GenerateGraph(data, "Roundtrip time", "ping", "mono/ping.svg", {metric:"ping"});
 		}
 
 		if (cpuArray.length > 0) {
@@ -2311,7 +2315,7 @@ class DeviceView extends View {
 				data.push({d:date, v:usage});
 			}
 
-			GenerateGraph(data, "CPU usage", "percent", "mono/cpu.svg");
+			GenerateGraph(data, "CPU usage", "percent", "mono/cpu.svg", {metric:"cpu"});
 		}
 
 		if (memoryArray.length > 0) {
@@ -2329,7 +2333,7 @@ class DeviceView extends View {
 				data.push({d:date, v:used*1024, t:total*1024});
 			}
 
-			GenerateGraph(data, "Memory", "vol", "mono/ram.svg");
+			GenerateGraph(data, "Memory", "vol", "mono/ram.svg", {metric:"memory"});
 		}
 
 		if (diskSpaceArray.length > 0) {
@@ -2359,7 +2363,7 @@ class DeviceView extends View {
 				index += 17 * count;
 			}
 
-			data.forEach ((value, key)=> GenerateGraph(value, `Disk space (${key})`, "vol", "mono/hdd.svg"));
+			data.forEach ((value, key)=> GenerateGraph(value, `Disk space (${key})`, "vol", "mono/hdd.svg", {metric:"disk"}));
 		}
 
 		if (diskIoArray.length > 0) {
@@ -2371,7 +2375,7 @@ class DeviceView extends View {
 				data.push({d:date, v:io});
 			}
 
-			GenerateGraph(data, "Disk I/O", "percent", "mono/hdd.svg");
+			GenerateGraph(data, "Disk I/O", "percent", "mono/hdd.svg", {metric:"diskio"});
 		}
 
 		if (printCounterArray.length > 0) {
@@ -2385,7 +2389,7 @@ class DeviceView extends View {
 				data.push({d:date, v:counter});
 			}
 
-			GenerateGraph(data, "Print counter", "delta", "mono/printer.svg");
+			GenerateGraph(data, "Print counter", "delta", "mono/printer.svg", {metric:"printcount"});
 		}
 
 		if (switchCounterArray.length > 0) {
@@ -2404,8 +2408,8 @@ class DeviceView extends View {
 				errorData.push({d:date, v:error});
 			}
 
-			GenerateGraph(trafficData, "Traffic", "traffic", "mono/traffic.svg");
-			GenerateGraph(errorData, "Errors", "errors", "mono/error.svg");
+			GenerateGraph(trafficData, "Traffic", "traffic", "mono/traffic.svg", {metric:"traffic"});
+			GenerateGraph(errorData, "Errors", "errors", "mono/error.svg", {metric:"errors"});
 		}
 
 		if (switchStpArray.length > 0) {
@@ -2419,7 +2423,7 @@ class DeviceView extends View {
 				data.push({d:date, v:counter});
 			}
 
-			GenerateGraph(data, "Topology changes", "delta", "mono/tree.svg");
+			GenerateGraph(data, "Topology changes", "delta", "mono/tree.svg", {metric:"stp"});
 		}
 
 	}
