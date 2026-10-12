@@ -623,8 +623,8 @@ internal static class Auth {
                 path.Add("/tools/ntp");
                 path.Add("/tools/locateip");
                 path.Add("/tools/maclookup");
-                //path.Add("/tools/downstream");
-                //path.Add("/tools/upstream");
+                path.Add("/speedtest");
+                path.Add("/ws/speedtest");
                 break;
 
             case "terminal:write":

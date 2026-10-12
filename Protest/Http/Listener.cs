@@ -363,6 +363,12 @@ internal sealed class Listener {
 
             if (await WebSocketHandler(ctx)) return;
 
+            //streamed, outside the byte[] routing
+            if (String.Equals(ctx.Request.Url.AbsolutePath, "/speedtest", StringComparison.Ordinal)) {
+                await Tools.SpeedTest.Handler(ctx);
+                return;
+            }
+
             Dictionary<string, string> parameters = ParseQuery(ctx);
 
             if (await DynamicHandler(ctx, parameters)) return;
@@ -544,6 +550,7 @@ internal sealed class Listener {
         case "/ws/portscan"         : await Tools.PortScan.WebSocketHandler(ctx);     return true;
         case "/ws/traceroute"       : await Tools.TraceRoute.WebSocketHandler(ctx);   return true;
         case "/ws/websitecheck"     : await Tools.WebsiteCheck.WebSocketHandler(ctx); return true;
+        case "/ws/speedtest"        : await Tools.SpeedTest.WebSocketHandler(ctx);    return true;
         case "/ws/monitor"          : await Tools.Monitor.WebSocketHandler(ctx);      return true;
         case "/ws/topology"         : await Tools.Topology.WebSocketHandler(ctx);     return true;
         case "/ws/livestats/device" : await Tools.LiveStats.DeviceStats(ctx);         return true;
