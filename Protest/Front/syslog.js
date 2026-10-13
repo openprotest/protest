@@ -1,7 +1,7 @@
 "use strict";
 class Syslog extends Window {
 	static SEVERITY       = ["Emergency", "Alert", "Critical", "Error", "Warning", "Notice", "Info", "Debug"];
-	static SEVERITY_COLOR = ["rgb(208,32,168)", "var(--clr-critical)", "var(--clr-error)", "rgb(240,128,24)", "var(--clr-warning)", "rgb(38,186,158)", "rgb(32,148,240)", "rgb(128,148,168)"];
+	static SEVERITY_COLOR = ["rgb(208,32,168)", "var(--clr-critical)", "var(--clr-error)", "var(--clr-orange)", "var(--clr-warning)", "rgb(38,186,158)", "rgb(32,148,240)", "rgb(128,148,168)"];
 	static SEVERITY_ICON  = ["mono/emergency.svg", "mono/bell.svg", "mono/critical.svg", "mono/error.svg", "mono/warning.svg", "mono/notice.svg", "mono/info.svg", "mono/bug.svg"];
 	static FACILITY       = ["kern", "user", "mail", "daemon", "auth", "syslog", "lpr", "news", "uucp", "cron", "authpriv", "ftp", "ntp", "audit", "alert", "clock", "local0", "local1", "local2", "local3", "local4", "local5", "local6", "local7"];
 	static PROTOCOL       = {1:"UDP", 2:"TCP", 3:"TLS"};

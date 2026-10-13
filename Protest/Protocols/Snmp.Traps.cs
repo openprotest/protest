@@ -51,9 +51,9 @@ internal static partial class Traps {
         "bindAddress": "0.0.0.0",
         "port"       : 162,
         "console"    : -1,
-        "disk"       : 7,
+        "disk"       : 5,
         "email"      : -1,
-        "live"       : 7,
+        "live"       : 5,
         "accept"     : 0
     }]
     """;
@@ -69,14 +69,12 @@ internal static partial class Traps {
     };
 
     internal enum Severity : byte {
-        Emergency = 0,
-        Alert = 1,
-        Critical = 2,
-        Error = 3,
-        Warning = 4,
-        Notice = 5,
-        Informational = 6,
-        Debug = 7
+        Critical = 0,
+        Major = 1,
+        Minor = 2,
+        Warning = 3,
+        Indeterminate = 4,
+        Cleared = 5
     }
 
     internal enum AcceptMode : byte { AllDevices=0, Whitelist=1 }
@@ -92,9 +90,9 @@ internal static partial class Traps {
 
         //minimum severity that triggers each action, -1 is off
         public sbyte console = OFF;
-        public sbyte disk    = (sbyte)Severity.Debug;
+        public sbyte disk    = (sbyte)Severity.Cleared;
         public sbyte email   = OFF;
-        public sbyte live    = (sbyte)Severity.Debug;
+        public sbyte live    = (sbyte)Severity.Cleared;
 
         public Guid smtpProfile;
         public string[] recipients = [];
@@ -382,10 +380,10 @@ internal static partial class Traps {
         listener.bindAddress = String.IsNullOrWhiteSpace(listener.bindAddress) ? "0.0.0.0" : listener.bindAddress.Trim();
         if (!IPAddress.TryParse(listener.bindAddress, out _)) return false;
 
-        listener.console = Math.Clamp(listener.console, OFF, (sbyte)Severity.Debug);
-        listener.disk    = Math.Clamp(listener.disk,    OFF, (sbyte)Severity.Debug);
-        listener.email   = Math.Clamp(listener.email,   OFF, (sbyte)Severity.Warning); //no emails for notice, info and debug
-        listener.live    = Math.Clamp(listener.live,    OFF, (sbyte)Severity.Debug);
+        listener.console = Math.Clamp(listener.console, OFF, (sbyte)Severity.Cleared);
+        listener.disk    = Math.Clamp(listener.disk,    OFF, (sbyte)Severity.Cleared);
+        listener.email   = Math.Clamp(listener.email,   OFF, (sbyte)Severity.Warning);
+        listener.live    = Math.Clamp(listener.live,    OFF, (sbyte)Severity.Cleared);
 
         listener.recipients = (listener.recipients ?? [])
             .Where(o => !String.IsNullOrWhiteSpace(o))
@@ -790,10 +788,15 @@ internal static partial class Traps {
         return String.Empty;
     }
 
+    //fixed for the standard traps, the severity of any other trap is not known
     private static byte TrapSeverity(string oid) => oid switch {
-        "1.3.6.1.6.3.1.1.5.3" or "1.3.6.1.6.3.1.1.5.5" or "1.3.6.1.6.3.1.1.5.6" => (byte)Severity.Warning,
-        "1.3.6.1.6.3.1.1.5.1" or "1.3.6.1.6.3.1.1.5.2" or "1.3.6.1.6.3.1.1.5.4" => (byte)Severity.Notice,
-        _ => (byte)Severity.Informational
+        "1.3.6.1.6.3.1.1.5.3" => (byte)Severity.Major,   //linkDown
+        "1.3.6.1.6.3.1.1.5.6" => (byte)Severity.Major,   //egpNeighborLoss
+        "1.3.6.1.6.3.1.1.5.1" => (byte)Severity.Warning, //coldStart
+        "1.3.6.1.6.3.1.1.5.2" => (byte)Severity.Warning, //warmStart
+        "1.3.6.1.6.3.1.1.5.5" => (byte)Severity.Warning, //authenticationFailure
+        "1.3.6.1.6.3.1.1.5.4" => (byte)Severity.Cleared, //linkUp, clears linkDown
+        _ => (byte)Severity.Indeterminate
     };
 
     private static void SendReport(Runner runner, ISnmpMessage request, IPEndPoint endpoint) {
@@ -1070,13 +1073,14 @@ internal static partial class Traps {
     }
 
     private static void WriteConsole(DateTime time, Trap trap, IPAddress remote) {
-        ConsoleColor color = trap.severity switch {
-            <= 2 => ConsoleColor.Red,
-            3    => ConsoleColor.DarkRed,
-            4    => ConsoleColor.Yellow,
-            5    => ConsoleColor.Cyan,
-            6    => ConsoleColor.Gray,
-            _    => ConsoleColor.DarkGray
+        ConsoleColor color = (Severity)trap.severity switch {
+            Severity.Critical      => ConsoleColor.Red,
+            Severity.Major         => ConsoleColor.DarkYellow,
+            Severity.Minor         => ConsoleColor.Yellow,
+            Severity.Warning       => ConsoleColor.Cyan,
+            Severity.Indeterminate => ConsoleColor.Magenta,
+            Severity.Cleared       => ConsoleColor.Green,
+            _                      => ConsoleColor.Gray
         };
 
         string variables = VariablesToText(trap.variables, ", ");
@@ -1273,11 +1277,12 @@ internal static partial class Traps {
 
         for (int i = 0; i < items.Count; i++) {
             EmailItem item = items[i];
-            string color = item.trap.severity switch {
-                <= 2 => "#c00000",
-                3    => "#e06000",
-                4    => "#a08000",
-                _    => "#202020"
+            string color = (Severity)item.trap.severity switch {
+                Severity.Critical => "#c00000",
+                Severity.Major    => "#e06000",
+                Severity.Minor    => "#a08000",
+                Severity.Warning  => "#1070a0",
+                _                 => "#202020"
             };
 
             body.Append($"<tr style=\"color:{color};vertical-align:top\">");
@@ -1365,11 +1370,12 @@ internal static partial class Traps {
         if (before is null) skip = 0;
 
         //severity levels to include, as digits, e.g. "0123"
-        int levelMask = 0xff;
+        const int MAX_SEVERITY = (int)Severity.Cleared;
+        int levelMask = (1 << (MAX_SEVERITY + 1)) - 1;
         if (parameters.TryGetValue("levels", out string levelsString)) {
             levelMask = 0;
             for (int i = 0; i < levelsString.Length; i++) {
-                if (levelsString[i] >= '0' && levelsString[i] <= '7') levelMask |= 1 << (levelsString[i] - '0');
+                if (levelsString[i] >= '0' && levelsString[i] <= '0' + MAX_SEVERITY) levelMask |= 1 << (levelsString[i] - '0');
             }
         }
 
@@ -1522,7 +1528,7 @@ internal static partial class Traps {
                 if (line.AsSpan().Count('\t') < 9) continue;
 
                 int severity = line[TIMESTAMP_LENGTH + 1] - '0';
-                if (severity < 0 || severity > 7 || (levelMask & (1 << severity)) == 0) continue;
+                if (severity < 0 || severity > (int)Severity.Cleared || (levelMask & (1 << severity)) == 0) continue;
 
                 if (before is not null && String.CompareOrdinal(line, 0, before, 0, TIMESTAMP_LENGTH) > 0) continue;
                 if (to is not null && String.CompareOrdinal(line, 0, to, 0, TIMESTAMP_LENGTH) >= 0) continue;

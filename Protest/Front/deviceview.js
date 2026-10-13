@@ -45,6 +45,9 @@ class DeviceView extends View {
 	static LOG_ENTRIES = 10;
 	static LOG_LEVELS = "01234"; //warning and above
 	static LOG_FILTERS = {emergFilter:true, alertFilter:true, critFilter:true, errorFilter:true, warnFilter:true, noticeFilter:false, infoFilter:false, debugFilter:false};
+	static TRAP_LEVELS = "0123"; //critical to warning
+	static TRAP_FILTERS = {criticalFilter:true, majorFilter:true, minorFilter:true, warningFilter:true, indeterminateFilter:false, clearedFilter:false};
+	static PING_BAR_WIDTH = 9; //pixels, the roundtrip time boxes
 
 	constructor(args) {
 		super(args);
@@ -1951,10 +1954,10 @@ class DeviceView extends View {
 			labelBox.textContent = label.toUpperCase();
 			graphBox.appendChild(labelBox);
 
-			const iconBox = document.createElement("div");
-			iconBox.className = "view-lifeline-icon";
-			iconBox.style.backgroundImage = `url(${icon}?light)`;
-			graphBox.appendChild(iconBox);
+				const iconBox = document.createElement("div");
+				iconBox.className = "view-lifeline-icon";
+				iconBox.style.backgroundImage = `url(${icon}?light)`;
+				graphBox.appendChild(iconBox);
 
 			const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
 			svg.setAttribute("width", GRAPH_WIDTH + DAY_WIDTH);
@@ -2456,9 +2459,9 @@ class DeviceView extends View {
 	}
 
 	//newest first
-	async FetchLogLines(endpoint) {
+	async FetchLogLines(endpoint, levels) {
 		try {
-			const response = await fetch(`${endpoint}?device=${encodeURIComponent(this.args.file)}&limit=${DeviceView.LOG_ENTRIES}&levels=${DeviceView.LOG_LEVELS}`);
+			const response = await fetch(`${endpoint}?device=${encodeURIComponent(this.args.file)}&limit=${DeviceView.LOG_ENTRIES}&levels=${levels}`);
 			if (response.status !== 200) return [];
 
 			const json = await response.json();
@@ -2503,7 +2506,7 @@ class DeviceView extends View {
 	async LoadSyslog(logBox) {
 		if (typeof Syslog === "undefined") return;
 
-		const entries = (await this.FetchLogLines("syslog/list"))
+		const entries = (await this.FetchLogLines("syslog/list", DeviceView.LOG_LEVELS))
 			.map(o=> Syslog.ParseLine(o))
 			.filter(o=> o);
 
@@ -2525,13 +2528,13 @@ class DeviceView extends View {
 	async LoadSnmpTraps(logBox) {
 		if (typeof SnmpTraps === "undefined") return;
 
-		const entries = (await this.FetchLogLines("snmptraps/list"))
+		const entries = (await this.FetchLogLines("snmptraps/list", DeviceView.TRAP_LEVELS))
 			.map(o=> SnmpTraps.ParseLine(o))
 			.filter(o=> o);
 
 		if (entries.length === 0) return;
 
-		const Open = ()=> new SnmpTraps({device:this.args.file, ...DeviceView.LOG_FILTERS});
+		const Open = ()=> new SnmpTraps({device:this.args.file, ...DeviceView.TRAP_FILTERS});
 
 		const Render = ()=> {
 			logBox.list.textContent = "";

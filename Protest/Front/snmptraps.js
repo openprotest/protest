@@ -1,8 +1,8 @@
 "use strict";
 class SnmpTraps extends Window {
-	static SEVERITY       = ["Emergency", "Alert", "Critical", "Error", "Warning", "Notice", "Info", "Debug"];
-	static SEVERITY_COLOR = ["rgb(208,32,168)", "var(--clr-critical)", "var(--clr-error)", "rgb(240,128,24)", "var(--clr-warning)", "rgb(38,186,158)", "rgb(32,148,240)", "rgb(128,148,168)"];
-	static SEVERITY_ICON  = ["mono/emergency.svg", "mono/bell.svg", "mono/critical.svg", "mono/error.svg", "mono/warning.svg", "mono/notice.svg", "mono/info.svg", "mono/bug.svg"];
+	static SEVERITY       = ["Critical", "Major", "Minor", "Warning", "Indeterminate", "Cleared"];
+	static SEVERITY_COLOR = ["var(--clr-critical)", "var(--clr-error)", "var(--clr-orange)", "var(--clr-warning)", "rgb(32,148,240)", "hsl(92,66%,50%)"];
+	static SEVERITY_ICON  = ["mono/critical.svg", "mono/error.svg", "mono/info.svg", "mono/warning.svg", "mono/indeterminate.svg", "mono/checked.svg"];
 	static VERSION_LABEL  = {"1":"v1", "2c":"v2c", "3":"v3"};
 	static DEFAULT_PORT   = 162;
 	static EMPTY_GUID     = "00000000-0000-0000-0000-000000000000";
@@ -27,31 +27,29 @@ class SnmpTraps extends Window {
 	static MIB_REQUESTS = new Map();
 
 	static SEVERITY_FILTERS = [
-		{key:"emergFilter", tip:"Emergency",     icon:"mono/emergency.svg", color:SnmpTraps.SEVERITY_COLOR[0], levels:[0]},
-		{key:"alertFilter", tip:"Alert",         icon:"mono/bell.svg",      color:SnmpTraps.SEVERITY_COLOR[1], levels:[1]},
-		{key:"critFilter",  tip:"Critical",      icon:"mono/critical.svg",  color:SnmpTraps.SEVERITY_COLOR[2], levels:[2]},
-		{key:"errorFilter", tip:"Error",         icon:"mono/error.svg",     color:SnmpTraps.SEVERITY_COLOR[3], levels:[3]},
-		{key:"warnFilter",  tip:"Warning",       icon:"mono/warning.svg",   color:SnmpTraps.SEVERITY_COLOR[4], levels:[4]},
-		{key:"noticeFilter",tip:"Notice",        icon:"mono/notice.svg",    color:SnmpTraps.SEVERITY_COLOR[5], levels:[5]},
-		{key:"infoFilter",  tip:"Informational", icon:"mono/info.svg",      color:SnmpTraps.SEVERITY_COLOR[6], levels:[6]},
-		{key:"debugFilter", tip:"Debug",         icon:"mono/bug.svg",       color:SnmpTraps.SEVERITY_COLOR[7], levels:[7]},
+		{key:"criticalFilter",      tip:"Critical",      icon:SnmpTraps.SEVERITY_ICON[0], color:SnmpTraps.SEVERITY_COLOR[0], levels:[0]},
+		{key:"majorFilter",         tip:"Major",         icon:SnmpTraps.SEVERITY_ICON[1], color:SnmpTraps.SEVERITY_COLOR[1], levels:[1]},
+		{key:"minorFilter",         tip:"Minor",         icon:SnmpTraps.SEVERITY_ICON[2], color:SnmpTraps.SEVERITY_COLOR[2], levels:[2]},
+		{key:"warningFilter",       tip:"Warning",       icon:SnmpTraps.SEVERITY_ICON[3], color:SnmpTraps.SEVERITY_COLOR[3], levels:[3]},
+		{key:"indeterminateFilter", tip:"Indeterminate", icon:SnmpTraps.SEVERITY_ICON[4], color:SnmpTraps.SEVERITY_COLOR[4], levels:[4]},
+		{key:"clearedFilter",       tip:"Cleared",       icon:SnmpTraps.SEVERITY_ICON[5], color:SnmpTraps.SEVERITY_COLOR[5], levels:[5]},
 	];
+
+	static ALL_LEVELS = (1 << SnmpTraps.SEVERITY.length) - 1;
 
 	constructor(args) {
 		super();
 
 		this.args = {
-			autoScroll  : true,
-			device      : "",
-			find        : "",
-			emergFilter : true,
-			alertFilter : true,
-			critFilter  : true,
-			errorFilter : true,
-			warnFilter  : true,
-			noticeFilter: true,
-			infoFilter  : true,
-			debugFilter : false,
+			autoScroll         : true,
+			device             : "",
+			find               : "",
+			criticalFilter     : true,
+			majorFilter        : true,
+			minorFilter        : true,
+			warningFilter      : true,
+			indeterminateFilter: true,
+			clearedFilter      : true,
 			...args
 		};
 
@@ -533,7 +531,7 @@ class SnmpTraps extends Window {
 		if (split.length < 11) return null;
 
 		const severity = parseInt(split[2]);
-		if (isNaN(severity)) return null;
+		if (isNaN(severity) || severity < 0 || severity >= SnmpTraps.SEVERITY.length) return null;
 
 		let variables;
 		try {
@@ -600,9 +598,9 @@ class SnmpTraps extends Window {
 		if (filter.device)  query.push(`device=${encodeURIComponent(filter.device)}`);
 		if (filter.find)    query.push(`q=${encodeURIComponent(filter.find)}`);
 
-		if (filter.levels !== 0xff) {
+		if (filter.levels !== SnmpTraps.ALL_LEVELS) {
 			let levels = "";
-			for (let i=0; i<8; i++) {
+			for (let i=0; i<SnmpTraps.SEVERITY.length; i++) {
 				if (filter.levels & (1 << i)) levels += i;
 			}
 			query.push(`levels=${levels}`);
@@ -618,7 +616,7 @@ class SnmpTraps extends Window {
 		if (filter.device && line.substring(0, t1) !== filter.device) return false;
 
 		const severity = line.charCodeAt(t1 + 25) - 48;
-		if (severity < 0 || severity > 7 || !(filter.levels & (1 << severity))) return false;
+		if (severity < 0 || severity >= SnmpTraps.SEVERITY.length || !(filter.levels & (1 << severity))) return false;
 
 		if (filter.findLower) {
 			const start = line.indexOf("\t", t1 + 27); //after version
@@ -1126,7 +1124,7 @@ class SnmpTraps extends Window {
 			form.appendChild(section);
 		};
 
-		const AddRange = (label, max=7)=> {
+		const AddRange = (label, max=SnmpTraps.SEVERITY.length-1)=> {
 			const box = document.createElement("div");
 			box.className = "snmptraps-range";
 
@@ -1217,7 +1215,7 @@ class SnmpTraps extends Window {
 		const consoleRange = AddRange("Console");
 		const diskRange    = AddRange("Disk");
 		const liveRange    = AddRange("Live view");
-		const emailRange   = AddRange("Email", 4); //up to warning, no emails for notice, info and debug
+		const emailRange   = AddRange("Email", 3); //up to warning, no emails for indeterminate and cleared
 
 		const smtpInput = document.createElement("select");
 		AddRow("SMTP profile", smtpInput);
@@ -1497,8 +1495,8 @@ class SnmpTraps extends Window {
 			engineInput.value = editing?.engineId ?? this.listeners[0]?.engineId ?? "";
 
 			SetRange(consoleRange, editing?.console ?? -1);
-			SetRange(diskRange,    editing?.disk    ?? 7);
-			SetRange(liveRange,    editing?.live    ?? 7);
+			SetRange(diskRange,    editing?.disk    ?? SnmpTraps.SEVERITY.length - 1);
+			SetRange(liveRange,    editing?.live    ?? SnmpTraps.SEVERITY.length - 1);
 			SetRange(emailRange,   editing?.email   ?? -1);
 
 			smtpInput.value = editing?.smtpProfile ?? SnmpTraps.EMPTY_GUID;
