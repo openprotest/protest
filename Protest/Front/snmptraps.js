@@ -1,7 +1,7 @@
 "use strict";
 class SnmpTraps extends Window {
 	static SEVERITY       = ["Emergency", "Alert", "Critical", "Error", "Warning", "Notice", "Info", "Debug"];
-	static SEVERITY_COLOR = ["rgb(208,32,168)", "var(--clr-critical)", "var(--clr-error)", "rgb(240,128,24)", "var(--clr-warning)", "rgb(30,166,190)", "rgb(32,148,240)", "rgb(120,139,163)"];
+	static SEVERITY_COLOR = ["rgb(208,32,168)", "var(--clr-critical)", "var(--clr-error)", "rgb(240,128,24)", "var(--clr-warning)", "rgb(38,186,158)", "rgb(32,148,240)", "rgb(128,148,168)"];
 	static SEVERITY_ICON  = ["mono/emergency.svg", "mono/bell.svg", "mono/critical.svg", "mono/error.svg", "mono/warning.svg", "mono/notice.svg", "mono/info.svg", "mono/bug.svg"];
 	static VERSION_LABEL  = {"1":"v1", "2c":"v2c", "3":"v3"};
 	static DEFAULT_PORT   = 162;
@@ -24,7 +24,7 @@ class SnmpTraps extends Window {
 		"1.3.6.1.2.1.1.3.0"    : "sysUpTime.0"
 	};
 
-	static MIB_REQUESTS = new Map(); //mib file to pending or settled request
+	static MIB_REQUESTS = new Map();
 
 	static SEVERITY_FILTERS = [
 		{key:"emergFilter", tip:"Emergency",     icon:"mono/emergency.svg", color:SnmpTraps.SEVERITY_COLOR[0], levels:[0]},
@@ -41,17 +41,17 @@ class SnmpTraps extends Window {
 		super();
 
 		this.args = {
-			autoScroll   : true,
-			device       : "",
-			find         : "",
-			emergFilter  : true,
-			alertFilter  : true,
-			critFilter   : true,
-			errorFilter  : true,
-			warnFilter   : true,
-			noticeFilter : true,
-			infoFilter   : true,
-			debugFilter  : false,
+			autoScroll  : true,
+			device      : "",
+			find        : "",
+			emergFilter : true,
+			alertFilter : true,
+			critFilter  : true,
+			errorFilter : true,
+			warnFilter  : true,
+			noticeFilter: true,
+			infoFilter  : true,
+			debugFilter : false,
 			...args
 		};
 
@@ -327,6 +327,7 @@ class SnmpTraps extends Window {
 		});
 
 		this.listBox.SetupTitleBar();
+		this.listBox.SetupCounter(()=> this.EntryCount());
 		this.listBox.list.classList.add("snmptraps-list");
 		this.listBox.list.style.bottom = "170px";
 		this.listBox.Attach(this.content);
@@ -356,7 +357,6 @@ class SnmpTraps extends Window {
 		this.win.addEventListener("mouseup", event=> this.listBox.HandleMouseUp(event));
 		this.win.addEventListener("mousemove", event=> this.listBox.HandleMouseMove(event));
 
-		//keep the newest line in view while the list resizes
 		this.isAtBottom = true;
 		new ResizeObserver(()=> {
 			if (this.args.autoScroll && this.isAtBottom) this.listBox.list.scrollTop = this.listBox.list.scrollHeight;
@@ -368,8 +368,12 @@ class SnmpTraps extends Window {
 		this.options = document.createElement("div");
 		this.options.className = "snmptraps-options";
 
+		this.options.appendChild(this.listBox.counter);
+
 		const autoScrollBox = document.createElement("div");
+		autoScrollBox.style.paddingLeft = "16px";
 		this.options.appendChild(autoScrollBox);
+
 		this.autoScrollToggle = this.CreateToggle("Auto-scroll", this.args.autoScroll, autoScrollBox);
 		this.autoScrollToggle.checkbox.onchange = ()=> {
 			this.args.autoScroll = this.autoScrollToggle.checkbox.checked;
@@ -800,11 +804,16 @@ class SnmpTraps extends Window {
 		this.hasEnded = false;
 	}
 
+	//the end marker is always the first item
+	EntryCount() {
+		const items = this.listBox.items;
+		return items.length - (items[0]?.marker ? 1 : 0);
+	}
+
 	UpdateStatus() {
-		const count = this.listBox.items.filter(o=> !o.marker).length;
-		this.statusLabel.textContent = this.isLoading && count === 0
-			? "Loading..."
-			: `${count} ${count === 1 ? "trap" : "traps"}`;
+		const count = this.EntryCount();
+		this.listBox.counter.textContent = count;
+		this.statusLabel.textContent = this.isLoading && count === 0 ? "Loading..." : "";
 	}
 
 	InflateRow(element, entry, type) {
@@ -1035,73 +1044,15 @@ class SnmpTraps extends Window {
 			endpointBox.className = "snmptraps-listener-endpoint";
 			endpointBox.textContent = endpoint;
 
-			const statsBox = document.createElement("div");
-			statsBox.className = "snmptraps-listener-stats";
-
 			const deleteButton = document.createElement("button");
 			deleteButton.className = "snmptraps-listener-delete";
 			deleteButton.setAttribute("aria-label", "Delete");
 
-			element.append(nameBox, endpointBox, statsBox, deleteButton);
-			return {element, deleteButton, statsBox};
-		};
-
-		const statsBoxes = new Map(); //guid to stats element, rebuilt by RenderList
-		let renderVersion = 0;
-
-		const SetStats = (statsBox, listener)=> {
-			statsBox.textContent = "";
-			statsBox.title = "";
-			statsBox.classList.toggle("failed", listener.enabled && !listener.running);
-
-			if (!listener.enabled) {
-				statsBox.textContent = "disabled";
-				return;
-			}
-
-			if (!listener.running) {
-				statsBox.textContent = "not running";
-				statsBox.title = listener.error ?? "";
-				return;
-			}
-
-			const received = document.createElement("span");
-			received.textContent = `received ${listener.received.toLocaleString(UI.regionalFormat)}`;
-
-			const dropped = document.createElement("span");
-			dropped.textContent = `dropped ${listener.dropped.toLocaleString(UI.regionalFormat)}`;
-			if (listener.dropped > 0) dropped.className = "snmptraps-listener-dropped";
-
-			statsBox.append(received, ", ", dropped);
-			statsBox.title = "Counters since the listener started.\nDropped: the sender's IP does not match a device in the database, the device is not whitelisted, the community or SNMPv3 credentials were not accepted, or the message could not be decoded.";
-		};
-
-		//live counters while the dialog is open, without rebuilding the list
-		const PollStats = async ()=> {
-			if (!innerBox.isConnected) return;
-			const version = renderVersion;
-
-			try {
-				const response = await fetch("snmptraps/listeners/list");
-				if (response.status === 200) {
-					const json = await response.json();
-					//skip stale responses, the list was rebuilt in the meantime
-					if (Array.isArray(json) && version === renderVersion) {
-						for (let i=0; i<json.length; i++) {
-							const statsBox = statsBoxes.get(json[i].guid);
-							if (statsBox) SetStats(statsBox, json[i]);
-						}
-					}
-				}
-			}
-			catch {}
-
-			if (innerBox.isConnected) setTimeout(PollStats, 2_000);
+			element.append(nameBox, endpointBox, deleteButton);
+			return {element, deleteButton};
 		};
 
 		const RenderList = ()=> {
-			renderVersion++;
-			statsBoxes.clear();
 			list.textContent = "";
 
 			if (this.listeners.length === 0 && !isDraft) {
@@ -1115,13 +1066,10 @@ class SnmpTraps extends Window {
 				const listener = this.listeners[i];
 				const address = listener.bindAddress.includes(":") ? `[${listener.bindAddress}]` : listener.bindAddress;
 
-				const {element, deleteButton, statsBox} = CreateItem(
+				const {element, deleteButton} = CreateItem(
 					listener.name || "SNMP traps",
 					`UDP ${address}:${listener.port}`
 				);
-
-				SetStats(statsBox, listener);
-				statsBoxes.set(listener.guid, statsBox);
 
 				if (!isDraft && listener.guid === selectedGuid) element.classList.add("selected");
 				element.onclick = ()=> Select(listener.guid);
@@ -1178,14 +1126,14 @@ class SnmpTraps extends Window {
 			form.appendChild(section);
 		};
 
-		const AddRange = label=> {
+		const AddRange = (label, max=7)=> {
 			const box = document.createElement("div");
 			box.className = "snmptraps-range";
 
 			const range = document.createElement("input");
 			range.type = "range";
 			range.min = -1;
-			range.max = 7;
+			range.max = max;
 			range.step = 1;
 			range.style.maxWidth = "100px";
 
@@ -1196,7 +1144,7 @@ class SnmpTraps extends Window {
 
 				for (let i=0; i<parseInt(range.value)+1; i++) {
 					const severityIcon = document.createElement("div");
-					severityIcon.setAttribute("tip-below", SnmpTraps.SEVERITY[i]);
+					severityIcon.setAttribute("tip", SnmpTraps.SEVERITY[i]);
 					severityIcon.className = "snmptraps-action-icon";
 					valueLabel.appendChild(severityIcon);
 
@@ -1267,9 +1215,9 @@ class SnmpTraps extends Window {
 		AddSection("Actions, by minimum severity");
 
 		const consoleRange = AddRange("Console");
-		const diskRange    = AddRange("Write to disk");
+		const diskRange    = AddRange("Disk");
 		const liveRange    = AddRange("Live view");
-		const emailRange   = AddRange("Email");
+		const emailRange   = AddRange("Email", 4); //up to warning, no emails for notice, info and debug
 
 		const smtpInput = document.createElement("select");
 		AddRow("SMTP profile", smtpInput);
@@ -1367,6 +1315,7 @@ class SnmpTraps extends Window {
 			const isWhitelist = acceptBox.index === 1;
 			findRow.style.display = isWhitelist ? "" : "none";
 			whitelistContainer.style.display = isWhitelist ? "" : "none";
+			whitelistPanel.classList.toggle("collapsed", !isWhitelist);
 			if (isWhitelist) setTimeout(()=> devicesListBox.FinalizeColumns(), 0);
 		};
 		acceptBox.container.onchange = ()=> UpdateAccept();
@@ -1658,6 +1607,5 @@ class SnmpTraps extends Window {
 		RenderList();
 		LoadEditor();
 		SetMessage(null);
-		setTimeout(PollStats, 2_000);
 	}
 }

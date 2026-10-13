@@ -100,8 +100,6 @@ internal static partial class Syslog {
         public TcpListener tcp;
         public X509Certificate2 certificate;
         public int clients;
-        public long received;
-        public long dropped;
 
         public readonly ConcurrentQueue<EmailItem> emailQueue = new ConcurrentQueue<EmailItem>();
         public int emailCount;
@@ -229,8 +227,6 @@ internal static partial class Syslog {
 
                 writer.WriteBoolean("running",       runner is not null);
                 writer.WriteNumber("clients",        runner is null ? 0 : Volatile.Read(ref runner.clients));
-                writer.WriteNumber("received",       runner is null ? 0 : Interlocked.Read(ref runner.received));
-                writer.WriteNumber("dropped",        runner is null ? 0 : Interlocked.Read(ref runner.dropped));
                 writer.WriteString("error",          error);
                 writer.WriteEndObject();
             }
@@ -295,7 +291,7 @@ internal static partial class Syslog {
 
         listener.console = Math.Clamp(listener.console, OFF, (sbyte)Severity.Debug);
         listener.disk    = Math.Clamp(listener.disk,    OFF, (sbyte)Severity.Debug);
-        listener.email   = Math.Clamp(listener.email,   OFF, (sbyte)Severity.Debug);
+        listener.email   = Math.Clamp(listener.email,   OFF, (sbyte)Severity.Warning); //no emails for notice, info and debug
         listener.live    = Math.Clamp(listener.live,    OFF, (sbyte)Severity.Debug);
 
         listener.recipients = (listener.recipients ?? [])
@@ -471,14 +467,12 @@ internal static partial class Syslog {
             IPAddress remote = NormalizeAddress(((IPEndPoint)client.Client.RemoteEndPoint).Address);
 
             if (AcceptedDevice(runner, remote) is null) {
-                Interlocked.Increment(ref runner.dropped);
                 client.Dispose();
                 continue;
             }
 
             if (Interlocked.Increment(ref runner.clients) > MAX_TCP_CLIENTS) {
                 Interlocked.Decrement(ref runner.clients);
-                Interlocked.Increment(ref runner.dropped);
                 client.Dispose();
                 continue;
             }
@@ -637,12 +631,8 @@ internal static partial class Syslog {
 
     private static void Receive(Runner runner, IPAddress remote, byte[] buffer, int offset, int length) {
         string file = AcceptedDevice(runner, remote);
-        if (file is null) {
-            Interlocked.Increment(ref runner.dropped);
-            return;
-        }
+        if (file is null) return;
 
-        Interlocked.Increment(ref runner.received);
         SyslogListener config = runner.config;
 
         if (length > MAX_MESSAGE_LENGTH) length = MAX_MESSAGE_LENGTH;

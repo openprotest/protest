@@ -397,11 +397,11 @@ const UI = {
 const MENU = {
 	items: [
 		{ t:"Devices",                      i:"mono/devices.svg?light",      g:"inventory", h:false, f:()=> new DevicesList() },
-		{ t:"Users",                        i:"mono/users.svg?light",        g:"inventory", h:false, f:()=> new UsersList() },
+		{ t:"Users",                        i:"mono/users.svg?light",        g:"inventory", h:false, f:()=> new UsersList() }, 
 		{ t:"Devices grid",                 i:"mono/griddevices.svg?light",  g:"inventory", h:true,  f:()=> new DevicesGrid() },
-		{ t:"Users grid",                   i:"mono/gridusers.svg?light",    g:"inventory", h:true,  f:()=> new UsersGrid() },
-		{ t:"New device",                   i:"mono/newdevice.svg?light",    g:"inventory", h:true,  f:()=> new DeviceView({file:null}) },
-		{ t:"New user",                     i:"mono/newuser.svg?light",      g:"inventory", h:true,  f:()=> new UserView({file:null}) },
+		{ t:"Users grid",                   i:"mono/gridusers.svg?light",    g:"inventory", h:true,  f:()=> new UsersGrid()},
+		{ t:"New device",                   i:"mono/newdevice.svg?light",    g:"inventory", h:true,  f:()=> new DeviceView({file:null}), k:"add" },
+		{ t:"New user",                     i:"mono/newuser.svg?light",      g:"inventory", h:true,  f:()=> new UserView({file:null}),   k:"add" },
 		{ t:"Vault",                        i:"mono/vault.svg?light",        g:"inventory", h:false, f:()=> new Vault(), k:"credentials passwords keys" },
 		{ t:"Session recordings",           i:"mono/screenrecord.svg?light", g:"inventory", h:true,  f:()=> new SessionRecordings(), k:"session record replay playback review" },
 		{ t:"Fetch",                        i:"mono/fetch.svg?light",        g:"inventory", h:false, f:()=> new Fetch() },

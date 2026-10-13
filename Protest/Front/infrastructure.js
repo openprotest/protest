@@ -105,11 +105,24 @@ class Infrastructure extends Tabs {
 		}
 
 		this.activeColumnsListBox?.FinalizeColumns();
+		this.UpdateRetentionLayout();
+	}
+
+	//on narrow windows the descriptions make room for the labels
+	UpdateRetentionLayout() {
+		if (!this.retentionRows?.[0]?.row.isConnected) return;
+
+		const compact = this.tabsPanel.offsetWidth < 600;
+		for (const o of this.retentionRows) {
+			o.description.style.display = compact ? "none" : "";
+			o.row.style.gridTemplateColumns = compact ? o.compactColumns : o.columns;
+		}
 	}
 
 	ShowDataRetention() {
 		this.args = "dataretention";
 		this.tabsPanel.textContent = "";
+		this.retentionRows = []; //{row, description, columns, compactColumns}
 
 		const deleteContainer = document.createElement("div");
 		deleteContainer.style.padding = "20px";
@@ -166,6 +179,8 @@ class Infrastructure extends Tabs {
 		recordingDescription.style.fontSize = "smaller";
 		recordingDescription.style.opacity = "0.8";
 		recordingContainer.appendChild(recordingDescription);
+
+		this.retentionRows.push({row:recordingContainer, description:recordingDescription, columns:"48px 32px 200px 1fr", compactColumns:"48px 32px 1fr"});
 
 		recordingToggle.checkbox.onchange = async ()=> {
 			recordingToggle.checkbox.disabled = true;
@@ -258,6 +273,8 @@ class Infrastructure extends Tabs {
 			description.style.opacity = "0.8";
 			row.appendChild(description);
 
+			this.retentionRows.push({row, description, columns:"48px 32px 160px 1fr auto", compactColumns:"48px 32px 1fr auto"});
+
 			const daysBox = document.createElement("div");
 			daysBox.style.whiteSpace = "nowrap";
 			daysBox.style.textAlign = "right";
@@ -277,6 +294,8 @@ class Infrastructure extends Tabs {
 
 			rows.push({ category, checkbox, daysInput });
 		}
+
+		this.UpdateRetentionLayout();
 
 		const footer = document.createElement("div");
 		footer.style.textAlign = "right";

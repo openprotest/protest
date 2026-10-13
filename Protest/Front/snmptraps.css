@@ -66,6 +66,11 @@
 		border-left: none;
 	}
 
+	/* only the accept row, no empty space to scroll to */
+	.snmptraps-listeners-form > .snmptraps-whitelist.collapsed {
+		grid-area: auto / 1 / span 2 / 3 !important;
+	}
+
 	.snmptraps-whitelist-accept > div:first-child,
 	.snmptraps-whitelist-find > div:first-child {
 		width: 112px;
@@ -80,7 +85,7 @@
 
 .snmptraps-listeners {
 	flex: 1;
-	min-height: 61px;
+	min-height: 46px;
 	overflow-x: hidden;
 	overflow-y: auto;
 	border-radius: 4px;
@@ -96,7 +101,7 @@
 
 .snmptraps-listener {
 	position: relative;
-	height: 60px;
+	height: 45px;
 	cursor: default;
 }
 
@@ -115,7 +120,7 @@
 .snmptraps-listener > .snmptraps-listener-toggle {
 	position: absolute;
 	left: 4px;
-	top: 19px;
+	top: 11px;
 	height: 22px;
 }
 
@@ -128,8 +133,7 @@
 }
 
 .snmptraps-listener-name,
-.snmptraps-listener-endpoint,
-.snmptraps-listener-stats {
+.snmptraps-listener-endpoint {
 	position: absolute;
 	left: 48px;
 	right: 44px;
@@ -148,17 +152,6 @@
 	font-family: monospace;
 	font-size: 12px;
 	opacity: .8;
-}
-
-.snmptraps-listener-stats {
-	top: 40px;
-	font-size: 12px;
-	opacity: .8;
-}
-
-.snmptraps-listener-stats.failed,
-.snmptraps-listener-dropped {
-	font-weight: 600;
 }
 
 .snmptraps-listeners-message {
@@ -184,7 +177,7 @@
 .snmptraps-listener > .snmptraps-listener-delete {
 	position: absolute;
 	right: 8px;
-	top: 16px;
+	top: 8px;
 	width: 28px;
 	min-width: 0;
 	height: 28px;
@@ -287,6 +280,13 @@
 	white-space: nowrap;
 	display: flex;
 	align-items: center;
+	column-gap: 8px;
+}
+
+/* the counter sits in the row, the auto-scroll toggle follows it */
+.snmptraps-options > .list-counter {
+	position: static;
+	margin-left: 2px;
 }
 
 .snmptraps-options > .snmptraps-status {

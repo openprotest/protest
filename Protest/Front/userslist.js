@@ -20,7 +20,7 @@ class UsersList extends List {
 		this.SetupToolbar();
 		this.LinkData(LOADER.users);
 
-		this.addButton = this.AddToolbarButton("Add", "mono/add.svg?light");
+		this.addButton = this.AddToolbarButton("New user", "mono/add.svg?light");
 		this.deleteButton = this.AddToolbarButton("Delete", "mono/delete.svg?light");
 		this.SetupFilter();
 		this.SetupFind();

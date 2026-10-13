@@ -135,8 +135,6 @@ internal static partial class Traps {
         public volatile Credentials credentials;
         public readonly CancellationTokenSource cts = new CancellationTokenSource();
         public UdpClient udp;
-        public long received;
-        public long dropped;
 
         public readonly ConcurrentQueue<EmailItem> emailQueue = new ConcurrentQueue<EmailItem>();
         public int emailCount;
@@ -316,8 +314,6 @@ internal static partial class Traps {
                 writer.WriteEndArray();
 
                 writer.WriteBoolean("running",       runner is not null);
-                writer.WriteNumber("received",       runner is null ? 0 : Interlocked.Read(ref runner.received));
-                writer.WriteNumber("dropped",        runner is null ? 0 : Interlocked.Read(ref runner.dropped));
                 writer.WriteString("error",          error);
                 writer.WriteString("warning",        runner?.credentials.warning);
                 writer.WriteString("engineId",       engine);
@@ -388,7 +384,7 @@ internal static partial class Traps {
 
         listener.console = Math.Clamp(listener.console, OFF, (sbyte)Severity.Debug);
         listener.disk    = Math.Clamp(listener.disk,    OFF, (sbyte)Severity.Debug);
-        listener.email   = Math.Clamp(listener.email,   OFF, (sbyte)Severity.Debug);
+        listener.email   = Math.Clamp(listener.email,   OFF, (sbyte)Severity.Warning); //no emails for notice, info and debug
         listener.live    = Math.Clamp(listener.live,    OFF, (sbyte)Severity.Debug);
 
         listener.recipients = (listener.recipients ?? [])
@@ -661,10 +657,7 @@ internal static partial class Traps {
         IPAddress remote = NormalizeAddress(endpoint.Address);
 
         string file = AcceptedDevice(runner, remote);
-        if (file is null) {
-            Interlocked.Increment(ref runner.dropped);
-            return;
-        }
+        if (file is null) return;
 
         Credentials credentials = runner.credentials;
 
@@ -673,7 +666,6 @@ internal static partial class Traps {
             messages = MessageFactory.ParseMessages(buffer, 0, buffer.Length, credentials.registry);
         }
         catch {
-            Interlocked.Increment(ref runner.dropped);
             return;
         }
 
@@ -689,13 +681,8 @@ internal static partial class Traps {
             }
 
             if (outcome == Outcome.Protocol) continue;
+            if (outcome == Outcome.Rejected || trap is null) continue;
 
-            if (outcome == Outcome.Rejected || trap is null) {
-                Interlocked.Increment(ref runner.dropped);
-                continue;
-            }
-
-            Interlocked.Increment(ref runner.received);
             Process(runner, file, remote, trap);
         }
     }
