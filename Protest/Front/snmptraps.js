@@ -334,12 +334,13 @@ class SnmpTraps extends Window {
 			{label:"severity",  render:d=> SnmpTraps.SeverityCell(d.severity)},
 			{label:"time",      value:d=> SnmpTraps.LocalTime(d.time).substring(0, 19)},
 			{label:"device",    value:d=> SnmpTraps.DeviceName(d.file, d.ip)},
+			{label:"source",    value:d=> d.ip},
 			{label:"version",   value:d=> SnmpTraps.VERSION_LABEL[d.version] ?? d.version},
 			{label:"trap",      value:d=> SnmpTraps.OidName(d.oid)},
 			{label:"variables", value:d=> SnmpTraps.VariablesSummary(d.variables)}
 		]);
 
-		const widths = [15, 8, 13, 7, 15, 42];
+		const widths = [10, 13, 13, 10, 5, 13, 36];
 		let left = 0;
 		for (let i=0; i<widths.length; i++) {
 			this.listBox.columnsElements[i].style.left = `${left}%`;
@@ -397,6 +398,11 @@ class SnmpTraps extends Window {
 		const entry = LOADER.devices.data[file];
 		if (!entry) return fallback || file;
 		return entry.name?.v || entry.hostname?.v || entry.ip?.v || fallback || file;
+	}
+
+	//the agent address in the trap (v1 agent-addr, v2c/v3 snmpTrapAddress.0), as the sender reports it
+	static OriginIp(entry) {
+		return !entry.agent || entry.agent === "0.0.0.0" ? "--" : entry.agent;
 	}
 
 	static Unescape(value) {
@@ -858,6 +864,7 @@ class SnmpTraps extends Window {
 		AddMeta("Severity", SnmpTraps.SEVERITY[entry.severity]);
 		AddMeta("Time",     SnmpTraps.LocalTime(entry.time));
 		AddMeta("Device",   SnmpTraps.DeviceName(entry.file, entry.ip));
+		AddMeta("Origin",   SnmpTraps.OriginIp(entry));
 		AddMeta("Source",   entry.ip);
 		AddMeta("Agent",    entry.agent);
 		AddMeta("Version",  SnmpTraps.VERSION_LABEL[entry.version] ?? entry.version);

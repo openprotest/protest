@@ -35,7 +35,6 @@ internal static partial class Syslog {
     private const sbyte  OFF                 = -1;
 
     private static readonly Lock mutex = new Lock();
-    private static readonly Lock indexMutex = new Lock();
     private static readonly Lock consoleMutex = new Lock();
 
     private static readonly string DEFAULT = """
@@ -134,9 +133,6 @@ internal static partial class Syslog {
     internal static readonly ConcurrentDictionary<Guid, SyslogListener> listeners = new ConcurrentDictionary<Guid, SyslogListener>();
     private static readonly ConcurrentDictionary<Guid, Runner> running = new ConcurrentDictionary<Guid, Runner>();
     private static readonly ConcurrentDictionary<Guid, string> errors = new ConcurrentDictionary<Guid, string>();
-
-    private static long indexVersion = long.MinValue;
-    private static Dictionary<IPAddress, string> ipIndex = new Dictionary<IPAddress, string>();
 
     private static readonly Channel<DiskEntry> diskChannel = Channel.CreateBounded<DiskEntry>(new BoundedChannelOptions(100_000) {
         FullMode = BoundedChannelFullMode.DropWrite,
@@ -441,7 +437,7 @@ internal static partial class Syslog {
             }
 
             try {
-                Receive(runner, NormalizeAddress(result.RemoteEndPoint.Address), result.Buffer, 0, result.Buffer.Length);
+                Receive(runner, SenderIndex.NormalizeAddress(result.RemoteEndPoint.Address), result.Buffer, 0, result.Buffer.Length);
             }
             catch (Exception ex) {
                 Logger.Error(ex);
@@ -464,12 +460,8 @@ internal static partial class Syslog {
                 continue;
             }
 
-            IPAddress remote = NormalizeAddress(((IPEndPoint)client.Client.RemoteEndPoint).Address);
-
-            if (AcceptedDevice(runner, remote) is null) {
-                client.Dispose();
-                continue;
-            }
+            //the sender is resolved per message, a connection may come through a nat
+            IPAddress remote = SenderIndex.NormalizeAddress(((IPEndPoint)client.Client.RemoteEndPoint).Address);
 
             if (Interlocked.Increment(ref runner.clients) > MAX_TCP_CLIENTS) {
                 Interlocked.Decrement(ref runner.clients);
@@ -581,23 +573,60 @@ internal static partial class Syslog {
         return i + terminator + 1 - offset;
     }
 
-    private static IPAddress NormalizeAddress(IPAddress address) {
-        return address.IsIPv4MappedToIPv6 ? address.MapToIPv4() : address;
-    }
-
-    //returns the sender's device file, or null when the listener does not accept it
-    private static string AcceptedDevice(Runner runner, IPAddress remote) {
-        string file = ResolveDevice(remote);
+    private static string AcceptedDevice(Runner runner, IPAddress remote, in Message message) {
+        string file = ResolveDevice(remote, message);
         if (file is null) {
-            WriteUnknownSender(runner, remote);
+            WriteUnknownSender(runner, remote, message.hostname);
             return null;
         }
         if (runner.config.accept == AcceptMode.Whitelist && !runner.whitelist.Contains(file)) return null;
         return file;
     }
 
+    private static string ResolveDevice(IPAddress remote, in Message message) {
+        foreach (string ip in OriginAddresses(message.structuredData)) {
+            string file = SenderIndex.Resolve(ip);
+            if (file is not null) return file;
+        }
+
+        return SenderIndex.ResolveHost(message.hostname) ?? SenderIndex.Resolve(remote);
+    }
+
+    //RFC 5424 7.2: [origin ip="..." ip="..."]
+    private static List<string> OriginAddresses(string structuredData) {
+        List<string> list = new List<string>();
+        int i = 0;
+
+        while (i < structuredData.Length) {
+            int start = structuredData.IndexOf("[origin", i, StringComparison.Ordinal);
+            if (start < 0) break;
+            i = start + 7;
+            if (i < structuredData.Length && structuredData[i] != ' ' && structuredData[i] != ']') continue;
+
+            while (i < structuredData.Length && structuredData[i] != ']') {
+                while (i < structuredData.Length && structuredData[i] == ' ') i++;
+
+                int equals = structuredData.IndexOf('=', i);
+                if (equals < 0 || equals + 1 >= structuredData.Length || structuredData[equals + 1] != '"') return list;
+                bool isIp = structuredData.AsSpan(i, equals - i).SequenceEqual("ip");
+
+                StringBuilder value = new StringBuilder();
+                i = equals + 2;
+                while (i < structuredData.Length && structuredData[i] != '"') {
+                    if (structuredData[i] == '\\' && i + 1 < structuredData.Length) i++;
+                    value.Append(structuredData[i++]);
+                }
+                i++; //closing quote
+
+                if (isIp) list.Add(value.ToString());
+            }
+        }
+
+        return list;
+    }
+
     //once per address per interval, when the listener echoes to the console
-    private static void WriteUnknownSender(Runner runner, IPAddress remote) {
+    private static void WriteUnknownSender(Runner runner, IPAddress remote, string hostname) {
         SyslogListener config = runner.config;
         if (config.console == OFF) return;
 
@@ -617,7 +646,7 @@ internal static partial class Syslog {
             runner.unknownSenders[remote] = now.Ticks;
         }
 
-        string text = $"{now.ToString(Data.DATETIME_FORMAT_FILE, CultureInfo.InvariantCulture)}\tsyslog {"Unknown",-13} {remote,-24} not in the devices database, dropped ({config.protocol} {config.port})";
+        string text = $"{now.ToString(Data.DATETIME_FORMAT_FILE, CultureInfo.InvariantCulture)}\tsyslog {"Unknown",-13} {remote,-24} {(String.IsNullOrEmpty(hostname) ? "" : $"host {hostname}, ")}not in the devices database, dropped ({config.protocol} {config.port})";
 
         lock (consoleMutex) {
             try {
@@ -630,14 +659,14 @@ internal static partial class Syslog {
     }
 
     private static void Receive(Runner runner, IPAddress remote, byte[] buffer, int offset, int length) {
-        string file = AcceptedDevice(runner, remote);
-        if (file is null) return;
-
-        SyslogListener config = runner.config;
-
         if (length > MAX_MESSAGE_LENGTH) length = MAX_MESSAGE_LENGTH;
         string text = Encoding.UTF8.GetString(buffer, offset, length);
         Message message = Parse(text);
+
+        string file = AcceptedDevice(runner, remote, message);
+        if (file is null) return;
+
+        SyslogListener config = runner.config;
 
         int severity = message.severity;
         bool toConsole = severity <= config.console;
@@ -679,48 +708,6 @@ internal static partial class Syslog {
                 Interlocked.Increment(ref runner.emailOverflow);
             }
         }
-    }
-
-    //maps an IP address to a device file, rebuilt whenever the devices database changes
-    private static string ResolveDevice(IPAddress address) {
-        Database db = DatabaseInstances.devices;
-        if (db is null) return null;
-
-        long version = Interlocked.Read(ref db.version);
-        Dictionary<IPAddress, string> index = Volatile.Read(ref ipIndex);
-
-        if (version != Interlocked.Read(ref indexVersion)) {
-            lock (indexMutex) {
-                if (version != Interlocked.Read(ref indexVersion)) {
-                    index = BuildIndex(db);
-                    Volatile.Write(ref ipIndex, index);
-                    Interlocked.Exchange(ref indexVersion, version);
-                }
-                else {
-                    index = ipIndex;
-                }
-            }
-        }
-
-        return index.TryGetValue(address, out string file) ? file : null;
-    }
-
-    private static Dictionary<IPAddress, string> BuildIndex(Database db) {
-        Dictionary<IPAddress, string> index = new Dictionary<IPAddress, string>();
-
-        foreach (KeyValuePair<string, Database.Entry> pair in db.dictionary) {
-            if (!pair.Value.attributes.TryGetValue("ip", out Database.Attribute ip)) continue;
-            if (String.IsNullOrEmpty(ip?.value)) continue;
-
-            string[] split = ip.value.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-            for (int i = 0; i < split.Length; i++) {
-                if (IPAddress.TryParse(split[i], out IPAddress address)) {
-                    index.TryAdd(NormalizeAddress(address), pair.Key);
-                }
-            }
-        }
-
-        return index;
     }
 
     //time \t severity \t facility \t source \t hostname \t app \t procid \t msgid \t structured-data \t message

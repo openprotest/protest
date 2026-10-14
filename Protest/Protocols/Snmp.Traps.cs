@@ -40,7 +40,6 @@ internal static partial class Traps {
     private const string OID_USM_UNKNOWN_ENGINE_ID = "1.3.6.1.6.3.15.1.1.4.0";
 
     private static readonly Lock mutex = new Lock();
-    private static readonly Lock indexMutex = new Lock();
     private static readonly Lock consoleMutex = new Lock();
 
     private static readonly string DEFAULT = """
@@ -166,9 +165,6 @@ internal static partial class Traps {
     internal static readonly ConcurrentDictionary<Guid, TrapListener> listeners = new ConcurrentDictionary<Guid, TrapListener>();
     private static readonly ConcurrentDictionary<Guid, Runner> running = new ConcurrentDictionary<Guid, Runner>();
     private static readonly ConcurrentDictionary<Guid, string> errors = new ConcurrentDictionary<Guid, string>();
-
-    private static long indexVersion = long.MinValue;
-    private static Dictionary<IPAddress, string> ipIndex = new Dictionary<IPAddress, string>();
 
     //snmp engine, authoritative for the informs we receive
     private static byte[] engineId;
@@ -603,15 +599,12 @@ internal static partial class Traps {
         }
     }
 
-    private static IPAddress NormalizeAddress(IPAddress address) {
-        return address.IsIPv4MappedToIPv6 ? address.MapToIPv4() : address;
-    }
-
     //returns the sender's device file, or null when the listener does not accept it
-    private static string AcceptedDevice(Runner runner, IPAddress remote) {
-        string file = ResolveDevice(remote);
+    //by the agent address the device reports, that survives nat, then by the source address
+    private static string AcceptedDevice(Runner runner, IPAddress remote, string agent) {
+        string file = SenderIndex.Resolve(agent) ?? SenderIndex.Resolve(remote);
         if (file is null) {
-            WriteUnknownSender(runner, remote);
+            WriteUnknownSender(runner, remote, agent);
             return null;
         }
         if (runner.config.accept == AcceptMode.Whitelist && !runner.whitelist.Contains(file)) return null;
@@ -619,7 +612,7 @@ internal static partial class Traps {
     }
 
     //once per address per interval, when the listener echoes to the console
-    private static void WriteUnknownSender(Runner runner, IPAddress remote) {
+    private static void WriteUnknownSender(Runner runner, IPAddress remote, string agent) {
         TrapListener config = runner.config;
         if (config.console == OFF) return;
 
@@ -639,7 +632,7 @@ internal static partial class Traps {
             runner.unknownSenders[remote] = now.Ticks;
         }
 
-        string text = $"{now.ToString(Data.DATETIME_FORMAT_FILE, CultureInfo.InvariantCulture)}\ttrap   {"Unknown",-13} {remote,-24} not in the devices database, dropped (UDP {config.port})";
+        string text = $"{now.ToString(Data.DATETIME_FORMAT_FILE, CultureInfo.InvariantCulture)}\ttrap   {"Unknown",-13} {remote,-24} {(String.IsNullOrEmpty(agent) || agent == remote.ToString() ? "" : $"agent {agent}, ")}not in the devices database, dropped (UDP {config.port})";
 
         lock (consoleMutex) {
             try {
@@ -652,11 +645,7 @@ internal static partial class Traps {
     }
 
     private static void Receive(Runner runner, IPEndPoint endpoint, byte[] buffer) {
-        IPAddress remote = NormalizeAddress(endpoint.Address);
-
-        string file = AcceptedDevice(runner, remote);
-        if (file is null) return;
-
+        IPAddress remote = SenderIndex.NormalizeAddress(endpoint.Address);
         Credentials credentials = runner.credentials;
 
         IList<ISnmpMessage> messages;
@@ -670,23 +659,26 @@ internal static partial class Traps {
         for (int i = 0; i < messages.Count; i++) {
             Outcome outcome;
             Trap trap;
+            string file;
             try {
-                outcome = Decode(runner, credentials, messages[i], endpoint, out trap);
+                outcome = Decode(runner, credentials, messages[i], endpoint, remote, out trap, out file);
             }
             catch {
                 outcome = Outcome.Rejected;
                 trap = null;
+                file = null;
             }
 
             if (outcome == Outcome.Protocol) continue;
-            if (outcome == Outcome.Rejected || trap is null) continue;
+            if (outcome == Outcome.Rejected || trap is null || file is null) continue;
 
             Process(runner, file, remote, trap);
         }
     }
 
-    private static Outcome Decode(Runner runner, Credentials credentials, ISnmpMessage message, IPEndPoint endpoint, out Trap trap) {
+    private static Outcome Decode(Runner runner, Credentials credentials, ISnmpMessage message, IPEndPoint endpoint, IPAddress remote, out Trap trap, out string file) {
         trap = null;
+        file = null;
 
         //header, privacy and scope are not supported on v1 traps
         if (message is TrapV1Message v1) {
@@ -702,7 +694,9 @@ internal static partial class Traps {
                 variables = v1.Variables(),
                 severity  = TrapSeverity(oid)
             };
-            return Outcome.Accepted;
+
+            file = AcceptedDevice(runner, remote, trap.agent);
+            return file is null ? Outcome.Rejected : Outcome.Accepted;
         }
 
         SnmpType type = message.TypeCode();
@@ -725,19 +719,10 @@ internal static partial class Traps {
 
             //a message below the user's security level would bypass authentication
             if ((message.Header.SecurityLevel & required) != required) return Outcome.Rejected;
-
-            if (type == SnmpType.InformRequestPdu) SendV3Response(runner, message, endpoint);
         }
         else {
             if (type != SnmpType.TrapV2Pdu && type != SnmpType.InformRequestPdu) return Outcome.Rejected;
-
-            OctetString community = message.Community();
-            if (!IsCommunityAccepted(credentials, community)) return Outcome.Rejected;
-
-            if (type == SnmpType.InformRequestPdu) {
-                ResponseMessage response = new ResponseMessage(message.RequestId(), message.Version, community, ErrorCode.NoError, 0, message.Pdu().Variables);
-                SendTo(runner, response.ToBytes(), endpoint);
-            }
+            if (!IsCommunityAccepted(credentials, message.Community())) return Outcome.Rejected;
         }
 
         (ObjectIdentifier enterprise, uint timestamp) = message switch {
@@ -760,6 +745,19 @@ internal static partial class Traps {
             variables = variables,
             severity  = TrapSeverity(trapOid)
         };
+
+        file = AcceptedDevice(runner, remote, trap.agent);
+        if (file is null) return Outcome.Rejected;
+
+        if (type == SnmpType.InformRequestPdu) {
+            if (message.Version == VersionCode.V3) {
+                SendV3Response(runner, message, endpoint);
+            }
+            else {
+                ResponseMessage response = new ResponseMessage(message.RequestId(), message.Version, message.Community(), ErrorCode.NoError, 0, message.Pdu().Variables);
+                SendTo(runner, response.ToBytes(), endpoint);
+            }
+        }
 
         return Outcome.Accepted;
     }
@@ -896,48 +894,6 @@ internal static partial class Traps {
                 Interlocked.Increment(ref runner.emailOverflow);
             }
         }
-    }
-
-    //maps an IP address to a device file, rebuilt whenever the devices database changes
-    private static string ResolveDevice(IPAddress address) {
-        Database db = DatabaseInstances.devices;
-        if (db is null) return null;
-
-        long version = Interlocked.Read(ref db.version);
-        Dictionary<IPAddress, string> index = Volatile.Read(ref ipIndex);
-
-        if (version != Interlocked.Read(ref indexVersion)) {
-            lock (indexMutex) {
-                if (version != Interlocked.Read(ref indexVersion)) {
-                    index = BuildIndex(db);
-                    Volatile.Write(ref ipIndex, index);
-                    Interlocked.Exchange(ref indexVersion, version);
-                }
-                else {
-                    index = ipIndex;
-                }
-            }
-        }
-
-        return index.TryGetValue(address, out string file) ? file : null;
-    }
-
-    private static Dictionary<IPAddress, string> BuildIndex(Database db) {
-        Dictionary<IPAddress, string> index = new Dictionary<IPAddress, string>();
-
-        foreach (KeyValuePair<string, Database.Entry> pair in db.dictionary) {
-            if (!pair.Value.attributes.TryGetValue("ip", out Database.Attribute ip)) continue;
-            if (String.IsNullOrEmpty(ip?.value)) continue;
-
-            string[] split = ip.value.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-            for (int i = 0; i < split.Length; i++) {
-                if (IPAddress.TryParse(split[i], out IPAddress address)) {
-                    index.TryAdd(NormalizeAddress(address), pair.Key);
-                }
-            }
-        }
-
-        return index;
     }
 
     //time \t severity \t version \t source \t pdu \t user \t trap oid \t uptime \t agent \t variables

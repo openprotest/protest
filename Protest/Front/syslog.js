@@ -320,11 +320,12 @@ class Syslog extends Window {
 			{label:"severity", render:d=> Syslog.SeverityCell(d.severity)},
 			{label:"time",     value:d=> Syslog.LocalTime(d.time).substring(0, 19)},
 			{label:"device",   value:d=> Syslog.DeviceName(d.file, d.ip)},
-			{label:"host",     value:d=> d.host},
+			{label:"source",   value:d=> d.ip},
+			{label:"hostname", value:d=> d.hostname},
 			{label:"message",  value:d=> d.msg}
 		]);
 
-		const widths = [17, 8, 13, 10, 52];
+		const widths = [10, 13, 13, 10, 10, 44];
 		let left = 0;
 		for (let i=0; i<widths.length; i++) {
 			this.listBox.columnsElements[i].style.left = `${left}%`;
@@ -384,6 +385,14 @@ class Syslog extends Window {
 		return entry.name?.v || entry.hostname?.v || entry.ip?.v || fallback || file;
 	}
 
+	//the addresses in the RFC 5424 [origin ip="..."] element, as the sender reports them
+	static OriginIp(entry) {
+		const element = /\[origin ([^\]]*)\]/.exec(entry.sd)?.[1];
+		if (!element) return "--";
+		const ips = [...element.matchAll(/\bip="([^"]*)"/g)].map(o=> o[1]).filter(o=> o.length > 0 && o !== "0.0.0.0");
+		return ips.length > 0 ? ips.join("; ") : "--";
+	}
+
 	static Unescape(value) {
 		if (value.indexOf("\\") < 0) return value;
 		return value.replace(/\\(.)/g, (_, c)=> c === "t" ? "\t" : c === "n" ? "\n" : c === "r" ? "\r" : c);
@@ -403,7 +412,7 @@ class Syslog extends Window {
 			severity: severity,
 			facility: parseInt(split[3]),
 			ip      : split[4],
-			host    : Syslog.Unescape(split[5]),
+			hostname: Syslog.Unescape(split[5]),
 			app     : Syslog.Unescape(split[6]),
 			procid  : Syslog.Unescape(split[7]),
 			msgid   : Syslog.Unescape(split[8]),
@@ -690,8 +699,9 @@ class Syslog extends Window {
 		AddMeta("Time",     Syslog.LocalTime(entry.time));
 		AddMeta("Facility", Syslog.FACILITY[entry.facility] ?? entry.facility);
 		AddMeta("Device",   Syslog.DeviceName(entry.file, entry.ip));
+		AddMeta("Origin",   Syslog.OriginIp(entry));
 		AddMeta("Source",   entry.ip);
-		AddMeta("Host",     entry.host);
+		AddMeta("Hostname", entry.hostname);
 		AddMeta("App",      entry.app);
 		AddMeta("PID",      entry.procid);
 		AddMeta("Msg ID",   entry.msgid);
