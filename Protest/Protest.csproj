@@ -53,9 +53,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.DirectoryServices" Version="10.0.12" />
-    <PackageReference Include="System.Management" Version="10.0.12" />
-    <PackageReference Include="System.IO.Ports" Version="10.0.12" />
+    <PackageReference Include="System.Security.Cryptography.Pkcs" Version="10.0.13" />
+    <PackageReference Include="System.DirectoryServices" Version="10.0.13" />
+    <PackageReference Include="System.Management" Version="10.0.13" />
+    <PackageReference Include="System.IO.Ports" Version="10.0.13" />
     <PackageReference Include="Yarp.ReverseProxy" Version="2.3.0" />
     <PackageReference Include="SSH.NET" Version="2026.0.0" />
     <PackageReference Include="Lextm.SharpSnmpLib" Version="12.5.7" />
