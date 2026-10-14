@@ -8,6 +8,7 @@ class SnmpTraps extends Window {
 	static EMPTY_GUID     = "00000000-0000-0000-0000-000000000000";
 	static MAX_ROWS       = 20_000;
 	static PAGE_SIZE      = 1_000;
+	static UNMATCHED      = ":unmatched"; //device filter for senders not in the devices database, never a file name
 
 	//not covered by the mib files
 	static KNOWN_OIDS = {
@@ -56,6 +57,7 @@ class SnmpTraps extends Window {
 		this.listeners = [];
 		this.listenersView = null;
 		this.knownDevices = new Set();
+		this.hasUnmatched = false;
 
 		this.filter = null;
 		this.cursor = null;
@@ -144,26 +146,34 @@ class SnmpTraps extends Window {
 		const Refresh = ()=> {
 			const keyword = filterInput.value.toLowerCase();
 
+			const isUnmatched = this.args.device === SnmpTraps.UNMATCHED;
+
 			const files = new Set(this.knownDevices);
-			if (this.args.device) files.add(this.args.device);
+			if (this.args.device && !isUnmatched) files.add(this.args.device);
 
 			const devices = [...files]
 				.map(file=> ({file:file, name:SnmpTraps.DeviceName(file), type:LOADER.devices.data[file]?.type?.v?.toLowerCase()}))
-				.filter(o=> o.name.toLowerCase().includes(keyword))
 				.sort((a, b)=> a.name.localeCompare(b.name));
+
+			//live only, listed once an unmatched sender is seen
+			if (this.hasUnmatched || isUnmatched) {
+				devices.unshift({file:SnmpTraps.UNMATCHED, name:"Unmatched", icon:"mono/question.svg"});
+			}
+
+			const filtered = devices.filter(o=> o.name.toLowerCase().includes(keyword));
 
 			index = -1;
 			filtersList.textContent = "";
-			filterMenu.style.height = `${32 + devices.length * 33}px`;
+			filterMenu.style.height = `${32 + filtered.length * 33}px`;
 			filterButton.style.borderBottom = this.args.device ? "#c0c0c0 solid 3px" : "";
 
-			for (let i=0; i<devices.length; i++) {
-				const device = devices[i];
+			for (let i=0; i<filtered.length; i++) {
+				const device = filtered[i];
 
 				const newDevice = document.createElement("div");
 				newDevice.textContent = device.name;
 				newDevice.style.textTransform = "none";
-				newDevice.style.backgroundImage = `url(${LOADER.deviceIcons[device.type] ?? "mono/gear.svg"})`;
+				newDevice.style.backgroundImage = `url(${device.icon ?? LOADER.deviceIcons[device.type] ?? "mono/gear.svg"})`;
 				filtersList.appendChild(newDevice);
 
 				if (device.file === this.args.device) {
@@ -333,7 +343,7 @@ class SnmpTraps extends Window {
 		this.listBox.SetupColumns([
 			{label:"severity",  render:d=> SnmpTraps.SeverityCell(d.severity)},
 			{label:"time",      value:d=> SnmpTraps.LocalTime(d.time).substring(0, 19)},
-			{label:"device",    value:d=> SnmpTraps.DeviceName(d.file, d.source)},
+			{label:"device",    render:d=> SnmpTraps.DeviceCell(d)},
 			{label:"source",    value:d=> d.source},
 			{label:"version",   value:d=> SnmpTraps.VERSION_LABEL[d.version] ?? d.version},
 			{label:"trap",      value:d=> SnmpTraps.OidName(d.oid)},
@@ -403,6 +413,18 @@ class SnmpTraps extends Window {
 	//the agent address in the trap (v1 agent-addr, v2c/v3 snmpTrapAddress.0), as the sender reports it
 	static OriginIp(entry) {
 		return !entry.origin || entry.origin === "0.0.0.0" ? "--" : entry.origin;
+	}
+
+	static DeviceCell(entry) {
+		const cell = document.createElement("div");
+		if (entry.file) {
+			cell.textContent = SnmpTraps.DeviceName(entry.file, entry.source);
+		}
+		else {
+			cell.textContent = "Unmatched";
+			cell.className = "snmptraps-unmatched";
+		}
+		return cell;
 	}
 
 	static Unescape(value) {
@@ -619,7 +641,7 @@ class SnmpTraps extends Window {
 		const t1 = line.indexOf("\t");
 		if (t1 < 0 || line.length < t1 + 28) return false;
 
-		if (filter.device && line.substring(0, t1) !== filter.device) return false;
+		if (filter.device && line.substring(0, t1) !== (filter.device === SnmpTraps.UNMATCHED ? "" : filter.device)) return false;
 
 		const severity = line.charCodeAt(t1 + 25) - 48;
 		if (severity < 0 || severity >= SnmpTraps.SEVERITY.length || !(filter.levels & (1 << severity))) return false;
@@ -646,6 +668,12 @@ class SnmpTraps extends Window {
 		this.UpdateStatus();
 
 		try {
+			//unmatched lines are never stored, only the live view has them
+			if (this.filter.device === SnmpTraps.UNMATCHED) {
+				this.hasEnded = true;
+				return;
+			}
+
 			const response = await fetch(`snmptraps/list?${this.BuildQuery(this.filter, null)}`);
 			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
 
@@ -685,6 +713,7 @@ class SnmpTraps extends Window {
 
 	async LoadOlder() {
 		if (this.isLoading || this.hasEnded || !this.cursor?.before) return;
+		if (this.filter?.device === SnmpTraps.UNMATCHED) return;
 
 		const token = this.loadToken;
 		this.isLoading = true;
@@ -757,6 +786,10 @@ class SnmpTraps extends Window {
 				this.knownDevices.add(file);
 				newDevice = true;
 			}
+			else if (file.length === 0 && !this.hasUnmatched) {
+				this.hasUnmatched = true;
+				newDevice = true;
+			}
 
 			if (!this.MatchLive(lines[i], this.filter)) continue;
 			const entry = SnmpTraps.ParseLine(lines[i]);
@@ -817,7 +850,9 @@ class SnmpTraps extends Window {
 	UpdateStatus() {
 		const count = this.EntryCount();
 		this.listBox.counter.textContent = count;
-		this.statusLabel.textContent = this.isLoading && count === 0 ? "Loading..." : "";
+		this.statusLabel.textContent = this.isLoading && count === 0 ? "Loading..."
+			: this.filter?.device === SnmpTraps.UNMATCHED ? "Live view only, unmatched entries are not saved"
+			: "";
 	}
 
 	static SeverityCell(severity) {
@@ -863,7 +898,7 @@ class SnmpTraps extends Window {
 
 		AddMeta("Severity", SnmpTraps.SEVERITY[entry.severity]);
 		AddMeta("Time",     SnmpTraps.LocalTime(entry.time));
-		AddMeta("Device",   SnmpTraps.DeviceName(entry.file, entry.source));
+		AddMeta("Device",   entry.file ? SnmpTraps.DeviceName(entry.file, entry.source) : "Not in the devices database");
 		AddMeta("Origin",   SnmpTraps.OriginIp(entry));
 		AddMeta("Source",   entry.source);
 		AddMeta("Version",  SnmpTraps.VERSION_LABEL[entry.version] ?? entry.version);
@@ -871,6 +906,13 @@ class SnmpTraps extends Window {
 		AddMeta("User",     entry.user);
 		AddMeta("Uptime",   isNaN(entry.uptime) ? null : SnmpTraps.FormatTicks(entry.uptime));
 		AddMeta("Trap",     trapName === entry.oid ? entry.oid : `${trapName} (${entry.oid})`);
+
+		if (!entry.file) {
+			const note = document.createElement("div");
+			note.className = "snmptraps-details-unmatched";
+			note.textContent = "Live view only, this entry is not saved and does not trigger emails.";
+			this.details.appendChild(note);
+		}
 
 		if (entry.variables.length === 0) return;
 
@@ -951,7 +993,8 @@ class SnmpTraps extends Window {
 			recipients : o.recipients ?? [],
 			accept     : o.accept,
 			devices    : o.devices ?? [],
-			credentials: o.credentials ?? []
+			credentials: o.credentials ?? [],
+			unmatched  : o.unmatched === true
 		}));
 
 		//taken before the request, a keep-alive refresh can land while it is pending
@@ -1183,6 +1226,11 @@ class SnmpTraps extends Window {
 		nameInput.placeholder = "SNMP traps";
 		AddRow("Name", nameInput);
 
+		//senders not in the devices database, never saved or emailed
+		const unmatchedBox = document.createElement("div");
+		AddRow("Unmatched", unmatchedBox);
+		const unmatchedToggle = this.CreateToggle("Console and live view", false, unmatchedBox);
+
 		const bindInput = document.createElement("input");
 		bindInput.type = "text";
 		bindInput.placeholder = "0.0.0.0";
@@ -1324,6 +1372,7 @@ class SnmpTraps extends Window {
 
 		const UpdateAccept = ()=> {
 			const isWhitelist = acceptBox.index === 1;
+			unmatchedToggle.checkbox.disabled = isWhitelist; //whitelist listeners always drop them
 			findRow.style.display = isWhitelist ? "" : "none";
 			whitelistContainer.style.display = isWhitelist ? "" : "none";
 			whitelistPanel.classList.toggle("collapsed", !isWhitelist);
@@ -1452,7 +1501,8 @@ class SnmpTraps extends Window {
 				recipients : recipientsInput.value.split(/[;,\s]+/).map(o=> o.trim()).filter(o=> o.length > 0),
 				accept     : acceptBox.index === 1 ? 1 : 0,
 				devices    : [...selectedDevices],
-				credentials: [...selectedCredentials]
+				credentials: [...selectedCredentials],
+				unmatched  : acceptBox.index === 0 && unmatchedToggle.checkbox.checked
 			};
 
 			const list = listener
@@ -1525,6 +1575,7 @@ class SnmpTraps extends Window {
 			RenderCredentials();
 
 			acceptBox.Select(editing?.accept === 1 ? 1 : 0);
+			unmatchedToggle.checkbox.checked = editing ? editing.unmatched === true : true;
 			selectedDevices.clear();
 			for (const file of editing?.devices ?? []) selectedDevices.add(file);
 

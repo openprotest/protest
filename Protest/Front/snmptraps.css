@@ -423,3 +423,15 @@
 .snmptraps-details-vars > div:nth-child(3n+2) {
 	opacity: .7;
 }
+
+/* not in the devices database, live view only */
+.snmptraps-list > .list-element > .snmptraps-unmatched {
+	font-style: italic;
+	opacity: .6;
+}
+
+.snmptraps-details-unmatched {
+	margin-top: 4px;
+	font-style: italic;
+	font-weight: 600;
+}

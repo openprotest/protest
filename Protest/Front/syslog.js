@@ -9,6 +9,7 @@ class Syslog extends Window {
 	static EMPTY_GUID     = "00000000-0000-0000-0000-000000000000";
 	static MAX_ROWS       = 20_000;
 	static PAGE_SIZE      = 1_000;
+	static UNMATCHED      = ":unmatched"; //device filter for senders not in the devices database, never a file name
 
 	static SEVERITY_FILTERS = [
 		{key:"emergFilter", tip:"Emergency",     icon:"mono/emergency.svg", color:Syslog.SEVERITY_COLOR[0], levels:[0]},
@@ -42,6 +43,7 @@ class Syslog extends Window {
 		this.listeners = [];
 		this.listenersView = null;
 		this.knownDevices = new Set();
+		this.hasUnmatched = false;
 
 		this.filter = null;
 		this.cursor = null;
@@ -130,26 +132,34 @@ class Syslog extends Window {
 		const Refresh = ()=> {
 			const keyword = filterInput.value.toLowerCase();
 
+			const isUnmatched = this.args.device === Syslog.UNMATCHED;
+
 			const files = new Set(this.knownDevices);
-			if (this.args.device) files.add(this.args.device);
+			if (this.args.device && !isUnmatched) files.add(this.args.device);
 
 			const devices = [...files]
 				.map(file=> ({file:file, name:Syslog.DeviceName(file), type:LOADER.devices.data[file]?.type?.v?.toLowerCase()}))
-				.filter(o=> o.name.toLowerCase().includes(keyword))
 				.sort((a, b)=> a.name.localeCompare(b.name));
+
+			//live only, listed once an unmatched sender is seen
+			if (this.hasUnmatched || isUnmatched) {
+				devices.unshift({file:Syslog.UNMATCHED, name:"Unmatched", icon:"mono/question.svg"});
+			}
+
+			const filtered = devices.filter(o=> o.name.toLowerCase().includes(keyword));
 
 			index = -1;
 			filtersList.textContent = "";
-			filterMenu.style.height = `${32 + devices.length * 33}px`;
+			filterMenu.style.height = `${32 + filtered.length * 33}px`;
 			filterButton.style.borderBottom = this.args.device ? "#c0c0c0 solid 3px" : "";
 
-			for (let i=0; i<devices.length; i++) {
-				const device = devices[i];
+			for (let i=0; i<filtered.length; i++) {
+				const device = filtered[i];
 
 				const newDevice = document.createElement("div");
 				newDevice.textContent = device.name;
 				newDevice.style.textTransform = "none";
-				newDevice.style.backgroundImage = `url(${LOADER.deviceIcons[device.type] ?? "mono/gear.svg"})`;
+				newDevice.style.backgroundImage = `url(${device.icon ?? LOADER.deviceIcons[device.type] ?? "mono/gear.svg"})`;
 				filtersList.appendChild(newDevice);
 
 				if (device.file === this.args.device) {
@@ -319,7 +329,7 @@ class Syslog extends Window {
 		this.listBox.SetupColumns([
 			{label:"severity", render:d=> Syslog.SeverityCell(d.severity)},
 			{label:"time",     value:d=> Syslog.LocalTime(d.time).substring(0, 19)},
-			{label:"device",   value:d=> Syslog.DeviceName(d.file, d.source)},
+			{label:"device",   render:d=> Syslog.DeviceCell(d)},
 			{label:"source",   value:d=> d.source},
 			{label:"hostname", value:d=> d.hostname},
 			{label:"message",  value:d=> d.msg}
@@ -393,6 +403,18 @@ class Syslog extends Window {
 		return ips.length > 0 ? ips.join("; ") : "--";
 	}
 
+	static DeviceCell(entry) {
+		const cell = document.createElement("div");
+		if (entry.file) {
+			cell.textContent = Syslog.DeviceName(entry.file, entry.source);
+		}
+		else {
+			cell.textContent = "Unmatched";
+			cell.className = "syslog-unmatched";
+		}
+		return cell;
+	}
+
 	static Unescape(value) {
 		if (value.indexOf("\\") < 0) return value;
 		return value.replace(/\\(.)/g, (_, c)=> c === "t" ? "\t" : c === "n" ? "\n" : c === "r" ? "\r" : c);
@@ -459,7 +481,7 @@ class Syslog extends Window {
 		const t1 = line.indexOf("\t");
 		if (t1 < 0 || line.length < t1 + 28) return false;
 
-		if (filter.device && line.substring(0, t1) !== filter.device) return false;
+		if (filter.device && line.substring(0, t1) !== (filter.device === Syslog.UNMATCHED ? "" : filter.device)) return false;
 
 		const severity = line.charCodeAt(t1 + 25) - 48;
 		if (severity < 0 || severity > 7 || !(filter.levels & (1 << severity))) return false;
@@ -486,6 +508,12 @@ class Syslog extends Window {
 		this.UpdateStatus();
 
 		try {
+			//unmatched lines are never stored, only the live view has them
+			if (this.filter.device === Syslog.UNMATCHED) {
+				this.hasEnded = true;
+				return;
+			}
+
 			const response = await fetch(`syslog/list?${this.BuildQuery(this.filter, null)}`);
 			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
 
@@ -523,6 +551,7 @@ class Syslog extends Window {
 
 	async LoadOlder() {
 		if (this.isLoading || this.hasEnded || !this.cursor?.before) return;
+		if (this.filter?.device === Syslog.UNMATCHED) return;
 
 		const token = this.loadToken;
 		this.isLoading = true;
@@ -594,6 +623,10 @@ class Syslog extends Window {
 				this.knownDevices.add(file);
 				newDevice = true;
 			}
+			else if (file.length === 0 && !this.hasUnmatched) {
+				this.hasUnmatched = true;
+				newDevice = true;
+			}
 
 			if (!this.MatchLive(lines[i], this.filter)) continue;
 			const entry = Syslog.ParseLine(lines[i]);
@@ -653,7 +686,9 @@ class Syslog extends Window {
 	UpdateStatus() {
 		const count = this.EntryCount();
 		this.listBox.counter.textContent = count;
-		this.statusLabel.textContent = this.isLoading && count === 0 ? "Loading..." : "";
+		this.statusLabel.textContent = this.isLoading && count === 0 ? "Loading..."
+			: this.filter?.device === Syslog.UNMATCHED ? "Live view only, unmatched entries are not saved"
+			: "";
 	}
 
 	static SeverityCell(severity) {
@@ -698,13 +733,20 @@ class Syslog extends Window {
 		AddMeta("Severity", Syslog.SEVERITY[entry.severity]);
 		AddMeta("Time",     Syslog.LocalTime(entry.time));
 		AddMeta("Facility", Syslog.FACILITY[entry.facility] ?? entry.facility);
-		AddMeta("Device",   Syslog.DeviceName(entry.file, entry.source));
+		AddMeta("Device",   entry.file ? Syslog.DeviceName(entry.file, entry.source) : "Not in the devices database");
 		AddMeta("Origin",   Syslog.OriginIp(entry));
 		AddMeta("Source",   entry.source);
 		AddMeta("Hostname", entry.hostname);
 		AddMeta("App",      entry.app);
 		AddMeta("PID",      entry.procid);
 		AddMeta("Msg ID",   entry.msgid);
+
+		if (!entry.file) {
+			const note = document.createElement("div");
+			note.className = "syslog-details-unmatched";
+			note.textContent = "Live view only, this entry is not saved and does not trigger emails.";
+			this.details.appendChild(note);
+		}
 
 		const message = document.createElement("div");
 		message.className = "syslog-details-message";
@@ -779,7 +821,8 @@ class Syslog extends Window {
 			smtpProfile: o.smtpProfile || Syslog.EMPTY_GUID,
 			recipients : o.recipients ?? [],
 			accept     : o.accept,
-			devices    : o.devices ?? []
+			devices    : o.devices ?? [],
+			unmatched  : o.unmatched === true
 		}));
 
 		//taken before the request, a keep-alive refresh can land while it is pending
@@ -1015,6 +1058,11 @@ class Syslog extends Window {
 		protocolBox.container.style.margin = "2px 4px";
 		AddRow("Protocol", protocolBox.container);
 
+		//senders not in the devices database, never saved or emailed
+		const unmatchedBox = document.createElement("div");
+		AddRow("Unmatched", unmatchedBox);
+		const unmatchedToggle = this.CreateToggle("Console and live view", false, unmatchedBox);
+
 		const GetProtocol = ()=> parseInt(Object.keys(Syslog.PROTOCOL)[protocolBox.index] ?? 1);
 
 		const bindInput = document.createElement("input");
@@ -1136,6 +1184,7 @@ class Syslog extends Window {
 
 		const UpdateAccept = ()=> {
 			const isWhitelist = acceptBox.index === 1;
+			unmatchedToggle.checkbox.disabled = isWhitelist; //whitelist listeners always drop them
 			findRow.style.display = isWhitelist ? "" : "none";
 			whitelistContainer.style.display = isWhitelist ? "" : "none";
 			whitelistPanel.classList.toggle("collapsed", !isWhitelist);
@@ -1250,7 +1299,8 @@ class Syslog extends Window {
 				smtpProfile: smtpInput.value || Syslog.EMPTY_GUID,
 				recipients : recipientsInput.value.split(/[;,\s]+/).map(o=> o.trim()).filter(o=> o.length > 0),
 				accept     : acceptBox.index === 1 ? 1 : 0,
-				devices    : [...selectedDevices]
+				devices    : [...selectedDevices],
+				unmatched  : acceptBox.index === 0 && unmatchedToggle.checkbox.checked
 			};
 
 			const list = listener
@@ -1327,6 +1377,7 @@ class Syslog extends Window {
 			}
 
 			acceptBox.Select(editing?.accept === 1 ? 1 : 0);
+			unmatchedToggle.checkbox.checked = editing ? editing.unmatched === true : true;
 			selectedDevices.clear();
 			for (const file of editing?.devices ?? []) selectedDevices.add(file);
 

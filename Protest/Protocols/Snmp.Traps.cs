@@ -24,6 +24,7 @@ internal static partial class Traps {
     private const int    MAX_VARIABLES       = 128;
     private const int    MAX_VALUE_LENGTH    = 1_024;
     private const int    MAX_LIVE_QUEUE      = 5_000;
+    private const int    MAX_LIVE_UNMATCHED  = 500;
     private const int    MAX_LIVE_BATCH      = 1_000;
     private const int    MAX_EMAIL_LINES     = 100;
     private const int    MAX_PAGE_LINES      = 2_000;
@@ -31,6 +32,7 @@ internal static partial class Traps {
     private const int    EMAIL_INTERVAL      = 60; //seconds
     private const int    MAX_UNKNOWN_SENDERS = 1_024;
     private const int    UNKNOWN_INTERVAL    = 600; //seconds
+    private const int    MAX_UNMATCHED_LINES = 20; //console lines per second, per listener
     private const string TIMESTAMP_FORMAT    = "yyyy-MM-dd HH:mm:ss.fff";
     private const int    TIMESTAMP_LENGTH    = 23;
     private const sbyte  OFF                 = -1;
@@ -100,6 +102,9 @@ internal static partial class Traps {
         public string[] devices = []; //device files
 
         public Guid[] credentials = []; //snmp profiles, empty accepts any community and every snmpv3 profile
+
+        //senders not in the devices database, to the console and the live view only, never to disk or email
+        public bool unmatched = true;
     }
 
     internal sealed class EngineState {
@@ -142,6 +147,8 @@ internal static partial class Traps {
         public readonly Lock unknownMutex = new Lock();
         public readonly Dictionary<IPAddress, long> unknownSenders = new Dictionary<IPAddress, long>();
         public long unknownReset;
+        public long unmatchedSecond;
+        public int unmatchedLines;
 
         public Runner(TrapListener config, SnmpProfiles.Profile[] profiles) {
             Apply(config, profiles);
@@ -179,6 +186,7 @@ internal static partial class Traps {
 
     private static readonly ConcurrentQueue<string> liveQueue = new ConcurrentQueue<string>();
     private static int liveCount;
+    private static int liveUnmatched;
     private static int liveFlushing;
 
     private static readonly JsonWriterOptions jsonWriterOptions = new JsonWriterOptions {
@@ -307,6 +315,7 @@ internal static partial class Traps {
                 for (int j = 0; j < o.credentials.Length; j++) writer.WriteStringValue(o.credentials[j]);
                 writer.WriteEndArray();
 
+                writer.WriteBoolean("unmatched",     o.unmatched);
                 writer.WriteBoolean("running",       runner is not null);
                 writer.WriteString("error",          error);
                 writer.WriteString("warning",        runner?.credentials.warning);
@@ -388,6 +397,7 @@ internal static partial class Traps {
             .ToArray();
 
         if (!Enum.IsDefined(listener.accept)) listener.accept = AcceptMode.AllDevices;
+        if (listener.accept == AcceptMode.Whitelist) listener.unmatched = false;
 
         listener.devices = (listener.devices ?? [])
             .Where(IsValidFile)
@@ -599,9 +609,11 @@ internal static partial class Traps {
         }
     }
 
+    //returns the device file, empty for an unmatched sender the listener shows, or null when it is dropped
     private static string AcceptedDevice(Runner runner, IPAddress remote, string origin) {
         string file = SenderIndex.Resolve(origin) ?? SenderIndex.Resolve(remote);
         if (file is null) {
+            if (runner.config.unmatched) return String.Empty;
             WriteUnknownSender(runner, remote, origin);
             return null;
         }
@@ -744,7 +756,8 @@ internal static partial class Traps {
         file = AcceptedDevice(runner, remote, trap.origin);
         if (file is null) return Outcome.Rejected;
 
-        if (type == SnmpType.InformRequestPdu) {
+        //unmatched informs are not stored, acknowledging would tell the sender they were delivered
+        if (type == SnmpType.InformRequestPdu && file.Length > 0) {
             if (message.Version == VersionCode.V3) {
                 SendV3Response(runner, message, endpoint);
             }
@@ -848,11 +861,12 @@ internal static partial class Traps {
 
     private static void Process(Runner runner, string file, IPAddress remote, Trap trap) {
         TrapListener config = runner.config;
+        bool matched = file.Length > 0;
 
         int severity = trap.severity;
-        bool toConsole = severity <= config.console;
-        bool toDisk    = severity <= config.disk;
-        bool toEmail   = severity <= config.email;
+        bool toConsole = severity <= config.console && (matched || AllowUnmatchedConsole(runner));
+        bool toDisk    = severity <= config.disk && matched;
+        bool toEmail   = severity <= config.email && matched;
         bool toLive    = severity <= config.live;
 
         if (!toConsole && !toDisk && !toEmail && !toLive) return;
@@ -867,17 +881,12 @@ internal static partial class Traps {
             }
 
             if (toLive) {
-                if (Interlocked.Increment(ref liveCount) <= MAX_LIVE_QUEUE) {
-                    liveQueue.Enqueue($"{file}\t{line}");
-                }
-                else {
-                    Interlocked.Decrement(ref liveCount);
-                }
+                EnqueueLive(file, line);
             }
         }
 
         if (toConsole) {
-            WriteConsole(now, trap, remote);
+            WriteConsole(now, trap, remote, matched);
         }
 
         if (toEmail) {
@@ -888,6 +897,36 @@ internal static partial class Traps {
                 Interlocked.Decrement(ref runner.emailCount);
                 Interlocked.Increment(ref runner.emailOverflow);
             }
+        }
+    }
+
+    //unmatched lines have an empty file and a smaller share of the queue, so they can not push out the devices' lines
+    private static void EnqueueLive(string file, string line) {
+        bool matched = file.Length > 0;
+
+        if (!matched && Interlocked.Increment(ref liveUnmatched) > MAX_LIVE_UNMATCHED) {
+            Interlocked.Decrement(ref liveUnmatched);
+            return;
+        }
+
+        if (Interlocked.Increment(ref liveCount) <= MAX_LIVE_QUEUE) {
+            liveQueue.Enqueue($"{file}\t{line}");
+            return;
+        }
+
+        Interlocked.Decrement(ref liveCount);
+        if (!matched) Interlocked.Decrement(ref liveUnmatched);
+    }
+
+    //bounded per listener, a flood from unknown senders would hold the console lock
+    private static bool AllowUnmatchedConsole(Runner runner) {
+        long second = Environment.TickCount64 / 1000;
+        lock (runner.unknownMutex) {
+            if (runner.unmatchedSecond != second) {
+                runner.unmatchedSecond = second;
+                runner.unmatchedLines = 0;
+            }
+            return ++runner.unmatchedLines <= MAX_UNMATCHED_LINES;
         }
     }
 
@@ -1021,7 +1060,7 @@ internal static partial class Traps {
         return builder.ToString();
     }
 
-    private static void WriteConsole(DateTime time, Trap trap, IPAddress remote) {
+    private static void WriteConsole(DateTime time, Trap trap, IPAddress remote, bool matched) {
         ConsoleColor color = (Severity)trap.severity switch {
             Severity.Critical      => ConsoleColor.Red,
             Severity.Major         => ConsoleColor.DarkYellow,
@@ -1033,7 +1072,7 @@ internal static partial class Traps {
         };
 
         string variables = VariablesToText(trap.variables, ", ");
-        string text = $"{time.ToString(Data.DATETIME_FORMAT_FILE, CultureInfo.InvariantCulture)}\ttrap   {(Severity)trap.severity,-13} {remote,-24} {TrapName(trap.oid)}{(variables.Length > 0 ? ": " : "")}{variables}";
+        string text = $"{time.ToString(Data.DATETIME_FORMAT_FILE, CultureInfo.InvariantCulture)}\ttrap   {(Severity)trap.severity,-13} {remote,-24} {(matched ? "" : "[unmatched] ")}{TrapName(trap.oid)}{(variables.Length > 0 ? ": " : "")}{variables}";
 
         lock (consoleMutex) {
             Console.ForegroundColor = color;
@@ -1141,6 +1180,7 @@ internal static partial class Traps {
                 int count = 0;
                 while (count < MAX_LIVE_BATCH && liveQueue.TryDequeue(out string line)) {
                     Interlocked.Decrement(ref liveCount);
+                    if (line[0] == '\t') Interlocked.Decrement(ref liveUnmatched);
                     writer.WriteStringValue(line);
                     count++;
                 }

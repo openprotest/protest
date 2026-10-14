@@ -23,6 +23,7 @@ internal static partial class Syslog {
     private const int    MAX_FRAME_LENGTH    = 65_536;
     private const int    MAX_TCP_CLIENTS     = 256;
     private const int    MAX_LIVE_QUEUE      = 5_000;
+    private const int    MAX_LIVE_UNMATCHED  = 500;
     private const int    MAX_LIVE_BATCH      = 1_000;
     private const int    MAX_EMAIL_LINES     = 100;
     private const int    MAX_PAGE_LINES      = 2_000;
@@ -30,6 +31,7 @@ internal static partial class Syslog {
     private const int    EMAIL_INTERVAL      = 60; //seconds
     private const int    MAX_UNKNOWN_SENDERS = 1_024;
     private const int    UNKNOWN_INTERVAL    = 600; //seconds
+    private const int    MAX_UNMATCHED_LINES = 20; //console lines per second, per listener
     private const string TIMESTAMP_FORMAT    = "yyyy-MM-dd HH:mm:ss.fff";
     private const int    TIMESTAMP_LENGTH    = 23;
     private const sbyte  OFF                 = -1;
@@ -89,6 +91,9 @@ internal static partial class Syslog {
 
         public AcceptMode accept = AcceptMode.AllDevices;
         public string[] devices = []; //device files
+
+        //senders not in the devices database, to the console and the live view only, never to disk or email
+        public bool unmatched = true;
     }
 
     private sealed class Runner {
@@ -109,6 +114,8 @@ internal static partial class Syslog {
         public readonly Lock unknownMutex = new Lock();
         public readonly Dictionary<IPAddress, long> unknownSenders = new Dictionary<IPAddress, long>();
         public long unknownReset;
+        public long unmatchedSecond;
+        public int unmatchedLines;
 
         public Runner(SyslogListener config) {
             Apply(config);
@@ -141,6 +148,7 @@ internal static partial class Syslog {
 
     private static readonly ConcurrentQueue<string> liveQueue = new ConcurrentQueue<string>();
     private static int liveCount;
+    private static int liveUnmatched;
     private static int liveFlushing;
 
     private static readonly JsonWriterOptions jsonWriterOptions = new JsonWriterOptions {
@@ -221,6 +229,7 @@ internal static partial class Syslog {
                 for (int j = 0; j < o.devices.Length; j++) writer.WriteStringValue(o.devices[j]);
                 writer.WriteEndArray();
 
+                writer.WriteBoolean("unmatched",     o.unmatched);
                 writer.WriteBoolean("running",       runner is not null);
                 writer.WriteNumber("clients",        runner is null ? 0 : Volatile.Read(ref runner.clients));
                 writer.WriteString("error",          error);
@@ -297,6 +306,7 @@ internal static partial class Syslog {
             .ToArray();
 
         if (!Enum.IsDefined(listener.accept)) listener.accept = AcceptMode.AllDevices;
+        if (listener.accept == AcceptMode.Whitelist) listener.unmatched = false;
 
         listener.devices = (listener.devices ?? [])
             .Where(IsValidFile)
@@ -573,9 +583,11 @@ internal static partial class Syslog {
         return i + terminator + 1 - offset;
     }
 
+    //returns the device file, empty for an unmatched sender the listener shows, or null when it is dropped
     private static string AcceptedDevice(Runner runner, IPAddress remote, in Message message) {
         string file = ResolveDevice(remote, message);
         if (file is null) {
+            if (runner.config.unmatched) return String.Empty;
             WriteUnknownSender(runner, remote, message.hostname);
             return null;
         }
@@ -668,11 +680,12 @@ internal static partial class Syslog {
         if (file is null) return;
 
         SyslogListener config = runner.config;
+        bool matched = file.Length > 0;
 
         int severity = message.severity;
-        bool toConsole = severity <= config.console;
-        bool toDisk    = severity <= config.disk;
-        bool toEmail   = severity <= config.email;
+        bool toConsole = severity <= config.console && (matched || AllowUnmatchedConsole(runner));
+        bool toDisk    = severity <= config.disk && matched;
+        bool toEmail   = severity <= config.email && matched;
         bool toLive    = severity <= config.live;
 
         if (!toConsole && !toDisk && !toEmail && !toLive) return;
@@ -687,17 +700,12 @@ internal static partial class Syslog {
             }
 
             if (toLive) {
-                if (Interlocked.Increment(ref liveCount) <= MAX_LIVE_QUEUE) {
-                    liveQueue.Enqueue($"{file}\t{line}");
-                }
-                else {
-                    Interlocked.Decrement(ref liveCount);
-                }
+                EnqueueLive(file, line);
             }
         }
 
         if (toConsole) {
-            WriteConsole(now, message, remote);
+            WriteConsole(now, message, remote, matched);
         }
 
         if (toEmail) {
@@ -708,6 +716,36 @@ internal static partial class Syslog {
                 Interlocked.Decrement(ref runner.emailCount);
                 Interlocked.Increment(ref runner.emailOverflow);
             }
+        }
+    }
+
+    //unmatched lines have an empty file and a smaller share of the queue, so they can not push out the devices' lines
+    private static void EnqueueLive(string file, string line) {
+        bool matched = file.Length > 0;
+
+        if (!matched && Interlocked.Increment(ref liveUnmatched) > MAX_LIVE_UNMATCHED) {
+            Interlocked.Decrement(ref liveUnmatched);
+            return;
+        }
+
+        if (Interlocked.Increment(ref liveCount) <= MAX_LIVE_QUEUE) {
+            liveQueue.Enqueue($"{file}\t{line}");
+            return;
+        }
+
+        Interlocked.Decrement(ref liveCount);
+        if (!matched) Interlocked.Decrement(ref liveUnmatched);
+    }
+
+    //bounded per listener, a flood from unknown senders would hold the console lock
+    private static bool AllowUnmatchedConsole(Runner runner) {
+        long second = Environment.TickCount64 / 1000;
+        lock (runner.unknownMutex) {
+            if (runner.unmatchedSecond != second) {
+                runner.unmatchedSecond = second;
+                runner.unmatchedLines = 0;
+            }
+            return ++runner.unmatchedLines <= MAX_UNMATCHED_LINES;
         }
     }
 
@@ -744,7 +782,7 @@ internal static partial class Syslog {
         return builder;
     }
 
-    private static void WriteConsole(DateTime time, in Message message, IPAddress remote) {
+    private static void WriteConsole(DateTime time, in Message message, IPAddress remote, bool matched) {
         ConsoleColor color = message.severity switch {
             <= 2 => ConsoleColor.Red,
             3    => ConsoleColor.DarkRed,
@@ -755,8 +793,9 @@ internal static partial class Syslog {
         };
 
         string source = String.IsNullOrEmpty(message.hostname) ? remote.ToString() : message.hostname;
+        string unmatched = matched ? String.Empty : $"[unmatched {remote}] ";
         string app = String.IsNullOrEmpty(message.app) ? String.Empty : $"{message.app}: ";
-        string text = $"{time.ToString(Data.DATETIME_FORMAT_FILE, CultureInfo.InvariantCulture)}\tsyslog {(Severity)message.severity,-13} {source,-24} {app}{message.text}";
+        string text = $"{time.ToString(Data.DATETIME_FORMAT_FILE, CultureInfo.InvariantCulture)}\tsyslog {(Severity)message.severity,-13} {source,-24} {unmatched}{app}{message.text}";
 
         lock (consoleMutex) {
             Console.ForegroundColor = color;
@@ -864,6 +903,7 @@ internal static partial class Syslog {
                 int count = 0;
                 while (count < MAX_LIVE_BATCH && liveQueue.TryDequeue(out string line)) {
                     Interlocked.Decrement(ref liveCount);
+                    if (line[0] == '\t') Interlocked.Decrement(ref liveUnmatched);
                     writer.WriteStringValue(line);
                     count++;
                 }

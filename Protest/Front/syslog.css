@@ -366,3 +366,15 @@
 	margin-top: 4px;
 	min-height: 120px;
 }
+
+/* not in the devices database, live view only */
+.syslog-list > .list-element > .syslog-unmatched {
+	font-style: italic;
+	opacity: .6;
+}
+
+.syslog-details-unmatched {
+	margin-top: 4px;
+	font-style: italic;
+	font-weight: 600;
+}
