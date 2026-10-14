@@ -331,8 +331,8 @@ class SnmpTraps extends Window {
 		this.listBox.Attach(this.content);
 
 		this.listBox.SetupColumns([
+			{label:"severity",  render:d=> SnmpTraps.SeverityCell(d.severity)},
 			{label:"time",      value:d=> SnmpTraps.LocalTime(d.time).substring(0, 19)},
-			{label:"severity",  value:d=> SnmpTraps.SEVERITY[d.severity]},
 			{label:"device",    value:d=> SnmpTraps.DeviceName(d.file, d.ip)},
 			{label:"version",   value:d=> SnmpTraps.VERSION_LABEL[d.version] ?? d.version},
 			{label:"trap",      value:d=> SnmpTraps.OidName(d.oid)},
@@ -814,6 +814,13 @@ class SnmpTraps extends Window {
 		this.statusLabel.textContent = this.isLoading && count === 0 ? "Loading..." : "";
 	}
 
+	static SeverityCell(severity) {
+		const cell = document.createElement("div");
+		cell.textContent = SnmpTraps.SEVERITY[severity];
+		cell.style.color = `color-mix(in srgb, ${SnmpTraps.SEVERITY_COLOR[severity]} 50%, black)`;
+		return cell;
+	}
+
 	InflateRow(element, entry, type) {
 		if (entry.marker) {
 			element.classList.add("snmptraps-marker");
@@ -848,8 +855,8 @@ class SnmpTraps extends Window {
 
 		const trapName = SnmpTraps.OidName(entry.oid);
 
-		AddMeta("Time",     SnmpTraps.LocalTime(entry.time));
 		AddMeta("Severity", SnmpTraps.SEVERITY[entry.severity]);
+		AddMeta("Time",     SnmpTraps.LocalTime(entry.time));
 		AddMeta("Device",   SnmpTraps.DeviceName(entry.file, entry.ip));
 		AddMeta("Source",   entry.ip);
 		AddMeta("Agent",    entry.agent);

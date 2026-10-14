@@ -394,13 +394,7 @@ class Personalize extends Tabs {
 			if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
 
 			const selectedColor = JSON.parse(localStorage.getItem("accent_color")) ?? [0,0,0];
-
-			const selectedIndex = accentColors.findIndex(
-			color =>
-				color[0] === selectedColor[0] &&
-				color[1] === selectedColor[1] &&
-				color[2] === selectedColor[2]
-			);
+			const selectedIndex = accentColors.findIndex(color => color[0]===selectedColor[0] && color[1]===selectedColor[1] && color[2]===selectedColor[2]);
 
 			let nextIndex;
 			if (event.key === "ArrowLeft") {

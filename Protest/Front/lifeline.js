@@ -4,11 +4,10 @@ class Lifeline extends Window {
 	static DAY_TICKS      = 86_400_000;
 	static GRAPH_HEIGHT   = 64;
 	static ROW_HEIGHT     = 72;
-	static MIN_DAY_PIXELS = 60;   //the zoom levels of the watchdog, its day markers need the room
+	static MIN_DAY_PIXELS = 60;
 	static MAX_DAY_PIXELS = 1920;
 	static MAX_SVG_CACHE  = 400;
 
-	//source is the lifeline type on disk, rtt is keyed by host, the rest by device file
 	static METRICS = [
 		{key:"ping",       label:"Roundtrip time",   icon:"mono/ping.svg",    source:"rtt",              type:"ping"},
 		{key:"cpu",        label:"CPU usage",        icon:"mono/cpu.svg",     source:"cpu",              type:"percent"},
@@ -103,7 +102,6 @@ class Lifeline extends Window {
 		this.marker = document.createElement("div");
 		this.marker.className = "lifeline-marker";
 
-		//drag to move back and forth in time
 		let seeking = false;
 		let mouseX0 = 0;
 		let offset0 = 0;
@@ -140,7 +138,6 @@ class Lifeline extends Window {
 			this.timeline.style.cursor = "";
 		});
 
-		//back to now
 		this.timeline.ondblclick = ()=> {
 			this.args.offset = 0;
 			this.Seek();
@@ -265,7 +262,6 @@ class Lifeline extends Window {
 		if (token === this.loadToken) this.sources.set(file, source);
 	}
 
-	//reuses rows, and their rendered days, when the selection changes
 	GetRow(file, metric, caption) {
 		const id = `${file}|${metric.key}|${caption ?? ""}`;
 		let row = this.rowsById.get(id);

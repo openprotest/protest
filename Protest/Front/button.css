@@ -2,9 +2,8 @@ button, input[type="button"], input[type="submit"], input[type="reset"], input[t
 	font-size: var(--global-font-size);
 	font-family: var(--global-font-family);
 	font-weight: 600;
-
+	color: #C0C0C0;
 	background-color: rgb(96,96,96);
-	color: var(--clr-light);
 	outline: 0;
 	border: 0;
 	min-width: 72px;

@@ -317,8 +317,8 @@ class Syslog extends Window {
 		this.listBox.Attach(this.content);
 
 		this.listBox.SetupColumns([
+			{label:"severity", render:d=> Syslog.SeverityCell(d.severity)},
 			{label:"time",     value:d=> Syslog.LocalTime(d.time).substring(0, 19)},
-			{label:"severity", value:d=> Syslog.SEVERITY[d.severity]},
 			{label:"device",   value:d=> Syslog.DeviceName(d.file, d.ip)},
 			{label:"host",     value:d=> d.host},
 			{label:"message",  value:d=> d.msg}
@@ -647,6 +647,13 @@ class Syslog extends Window {
 		this.statusLabel.textContent = this.isLoading && count === 0 ? "Loading..." : "";
 	}
 
+	static SeverityCell(severity) {
+		const cell = document.createElement("div");
+		cell.textContent = Syslog.SEVERITY[severity];
+		cell.style.color = `color-mix(in srgb, ${Syslog.SEVERITY_COLOR[severity]} 50%, black)`;
+		return cell;
+	}
+
 	InflateRow(element, entry, type) {
 		if (entry.marker) {
 			element.classList.add("syslog-marker");
@@ -679,8 +686,8 @@ class Syslog extends Window {
 			meta.appendChild(span);
 		};
 
-		AddMeta("Time",     Syslog.LocalTime(entry.time));
 		AddMeta("Severity", Syslog.SEVERITY[entry.severity]);
+		AddMeta("Time",     Syslog.LocalTime(entry.time));
 		AddMeta("Facility", Syslog.FACILITY[entry.facility] ?? entry.facility);
 		AddMeta("Device",   Syslog.DeviceName(entry.file, entry.ip));
 		AddMeta("Source",   entry.ip);

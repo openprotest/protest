@@ -503,9 +503,11 @@ class View extends Window {
 		buttonBox.style.paddingTop = "4px";
 		buttonBox.style.flex = "0 0 auto";
 
+		const hasCredentials = guidList.length > 0;
+
 		const countdown = document.createElement("span");
 		countdown.className = "view-countdown";
-		buttonBox.appendChild(countdown);
+		if (hasCredentials) buttonBox.appendChild(countdown);
 
 		const cdLeft = document.createElement("div");
 		cdLeft.appendChild(document.createElement("div"));
@@ -522,10 +524,16 @@ class View extends Window {
 			cancelButton.value = "Cancel";
 		};
 
+		let emptyBox = null;
+		const UpdateAddButton = ()=> {
+			if (emptyBox) emptyBox.style.display = guidList.length === 0 ? "flex" : "none";
+		};
+
 		const OnRemove = guid=> {
 			const index = guidList.indexOf(guid);
 			if (index === -1) return;
 			guidList.splice(index, 1);
+			UpdateAddButton();
 			MarkDirty();
 		};
 
@@ -533,7 +541,7 @@ class View extends Window {
 
 		const {label: dropAreaLabel} = this.AddDropTarget(dialogBox, {
 			accept     : [isSshKey ? Window.DRAG_SSH_KEY : Window.DRAG_CREDENTIALS],
-			text       : isSshKey ? "Drop SSH keys here..." : "Drop credentials here...",
+			text       : isSshKey ? "Drop SSH-key here..." : "Drop credentials here...",
 			labelParent: buttonBox,
 			tip        : "Drop key to add",
 			onEnter    : ()=> countdown.style.display = "none",
@@ -549,11 +557,60 @@ class View extends Window {
 				if (!valid) return;
 
 				guidList.push(guid);
+				UpdateAddButton();
 				MarkDirty();
 			}
 		});
 		dropAreaLabel.style.left = "12px";
 		dropAreaLabel.style.bottom = "12px";
+
+		emptyBox = document.createElement("div");
+		emptyBox.style.flexDirection = "column";
+		emptyBox.style.alignItems = "center";
+		emptyBox.style.gap = "6px";
+		emptyBox.style.marginBottom = "20px";
+		emptyBox.style.padding = "10px 20px";
+		emptyBox.style.textAlign = "center";
+		emptyBox.style.border = "2px dashed color-mix(in srgb, var(--clr-dark) 60%, transparent)";
+		emptyBox.style.borderRadius = "8px";
+		emptyBox.style.animation = "fade-in .4s";
+		innerBox.prepend(emptyBox);
+
+		const emptyIcon = document.createElement("div");
+		emptyIcon.style.width = "40px";
+		emptyIcon.style.height = "40px";
+		emptyIcon.style.backgroundColor = "var(--clr-dark)";
+		emptyIcon.style.opacity = ".6";
+		emptyIcon.style.maskImage = `url(${isSshKey ? "mono/key.svg" : "mono/lock.svg"})`;
+		emptyIcon.style.maskSize = "contain";
+		emptyIcon.style.maskRepeat = "no-repeat";
+		emptyIcon.style.maskPosition = "center";
+
+		const emptyText = document.createElement("div");
+		emptyText.style.opacity = ".6";
+		emptyText.style.fontWeight = "600";
+		emptyText.textContent = isSshKey ? "SSH-key list is empty" : "Credentials list is empty";
+
+		emptyBox.append(emptyIcon, emptyText);
+
+		if (!isSshKey) {
+			const addButton = document.createElement("input");
+			addButton.type = "button";
+			addButton.value = "Create credentials";
+			addButton.className = "with-icon";
+			addButton.style.backgroundImage = "url(mono/add.svg?light)";
+			addButton.style.height = "36px";
+			addButton.style.marginTop = "6px";
+			addButton.disabled = !KEEP.authorization.includes("*") && (!KEEP.authorization.includes("vault:write") || !KEEP.authorization.includes(`${this.dbTarget}s:write`));
+			emptyBox.appendChild(addButton);
+
+			addButton.onclick = ()=> {
+				dialog.Close();
+				setTimeout(()=> this.AddCredentialsDialog(attributeName, guidList), WIN.ANIME_DURATION);
+			};
+		}
+
+		UpdateAddButton();
 
 		const initialList = [...guidList];
 		for (let i=0; i<initialList.length; i++) {
@@ -565,27 +622,10 @@ class View extends Window {
 			okButton.disabled = true;
 			errorBox.style.display = "none";
 
-			const obj = Object.create(null);
-			for (let i=0; i<this.attributes.childNodes.length; i++) {
-				if (this.attributes.childNodes[i].childNodes.length < 3) continue;
-				const name = this.attributes.childNodes[i].childNodes[0].value.toLowerCase();
-				const value = this.attributes.childNodes[i].childNodes[1].firstChild.value;
-				obj[name] = {v:value};
-			}
-
 			const newValue = guidList.join("; ");
-			obj[attributeName] = {v:newValue};
 
 			try {
-				const response = await fetch(`db/${this.dbTarget}/save?file=${this.args.file}`, {
-					method: "POST",
-					body: JSON.stringify(obj)
-				});
-
-				if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
-
-				const json = await response.json();
-				if (json.error) throw json.error;
+				await this.SaveReferenceAttribute(attributeName, newValue);
 			}
 			catch (ex) {
 				errorBox.textContent = ex?.message ?? ex;
@@ -594,20 +634,6 @@ class View extends Window {
 				return;
 			}
 
-			this.link[attributeName] = {
-				v: newValue,
-				o: KEEP.username,
-				d: UI.UnixDateToTicks(new Date().getTime()),
-			};
-
-			if (this instanceof DeviceView) {
-				LOADER.devices.data[this.args.file] = this.link;
-			}
-			else if (this instanceof UserView) {
-				LOADER.users.data[this.args.file] = this.link;
-			}
-
-			this.InitializePreview();
 			dialog.Close();
 		};
 
@@ -615,10 +641,160 @@ class View extends Window {
 			countdown.style.display = "none";
 		};
 
-		setTimeout(()=> {
-			if (countdown.style.display === "none") return;
-			dialog.Close();
-		}, 20_000);
+		if (hasCredentials) {
+			setTimeout(()=> {
+				if (countdown.style.display === "none") return;
+				dialog.Close();
+			}, 20_000);
+		}
+	}
+
+	async SaveReferenceAttribute(attributeName, newValue) { //throws on failure
+		const obj = Object.create(null);
+		for (let i=0; i<this.attributes.childNodes.length; i++) {
+			if (this.attributes.childNodes[i].childNodes.length < 3) continue;
+			const name = this.attributes.childNodes[i].childNodes[0].value.toLowerCase();
+			const value = this.attributes.childNodes[i].childNodes[1].firstChild.value;
+			obj[name] = {v:value};
+		}
+		obj[attributeName] = {v:newValue};
+
+		const response = await fetch(`db/${this.dbTarget}/save?file=${this.args.file}`, {
+			method: "POST",
+			body: JSON.stringify(obj)
+		});
+
+		if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
+
+		const json = await response.json();
+		if (json.error) throw json.error;
+
+		this.link[attributeName] = {
+			v: newValue,
+			o: KEEP.username,
+			d: UI.UnixDateToTicks(new Date().getTime()),
+		};
+
+		if (this instanceof DeviceView) {
+			LOADER.devices.data[this.args.file] = this.link;
+		}
+		else if (this instanceof UserView) {
+			LOADER.users.data[this.args.file] = this.link;
+		}
+
+		this.InitializePreview();
+	}
+
+	GetEntryName() {
+		const keys = this instanceof DeviceView
+			? ["name", "hostname", "ip"]
+			: ["name", "display name", "username"];
+
+		for (const key of keys) {
+			const value = this.link?.[key]?.v?.trim();
+			if (value) return value;
+		}
+
+		return "";
+	}
+
+	AddCredentialsDialog(attributeName, guidList=[]) {
+		const dialog = this.DialogBox("220px");
+		if (dialog === null) return;
+
+		const {okButton, innerBox} = dialog;
+		const dialogBox = innerBox.parentElement;
+
+		okButton.value = "Save";
+
+		dialogBox.style.animation = "fade-in .4s";
+		dialogBox.style.maxWidth = "600px";
+		dialogBox.style.top = "50%";
+		dialogBox.style.transform = "translateY(-50%)";
+
+		innerBox.style.padding = "16px 32px";
+		innerBox.style.display = "grid";
+		innerBox.style.gridTemplateColumns = "96px minmax(40px, 1fr) 72px";
+		innerBox.style.gridTemplateRows = "repeat(3, 38px)";
+		innerBox.style.alignItems = "center";
+
+		const nameLabel = document.createElement("div");
+		nameLabel.style.gridArea = "1 / 1";
+		nameLabel.textContent = "Name:";
+		const nameInput = document.createElement("input");
+		nameInput.style.gridArea = "1 / 2 / 1 / 4";
+		nameInput.style.maxWidth = "350px";
+		nameInput.type = "text";
+		nameInput.value = this.GetEntryName();
+		innerBox.append(nameLabel, nameInput);
+
+		const usernameLabel = document.createElement("div");
+		usernameLabel.style.gridArea = "2 / 1";
+		usernameLabel.textContent = "Username:";
+		const usernameInput = document.createElement("input");
+		usernameInput.style.gridArea = "2 / 2 / 2 / 4";
+		usernameInput.style.maxWidth = "350px";
+		usernameInput.type = "text";
+		innerBox.append(usernameLabel, usernameInput);
+
+		const passwordLabel = document.createElement("div");
+		passwordLabel.style.gridArea = "3 / 1";
+		passwordLabel.textContent = "Password:";
+		const passwordInput = document.createElement("input");
+		passwordInput.style.gridArea = "3 / 2";
+		passwordInput.style.maxWidth = "350px";
+		passwordInput.type = "password";
+		innerBox.append(passwordLabel, passwordInput);
+
+		const showButton = document.createElement("input");
+		showButton.type = "button";
+		showButton.value = "Show";
+		showButton.style.gridArea = "3 / 3";
+		showButton.style.minWidth = "64px";
+		innerBox.appendChild(showButton);
+
+		showButton.onclick = ()=> {
+			const hidden = passwordInput.type === "password";
+			passwordInput.type = hidden ? "text" : "password";
+			showButton.value = hidden ? "Hide" : "Show";
+		};
+
+		okButton.onclick = async ()=> {
+			if (usernameInput.value.trim().length === 0 && passwordInput.value.trim().length === 0) {
+				this.ConfirmBox("Enter a username, a password, or both.", true, "mono/warning.svg");
+				return;
+			}
+
+			okButton.disabled = true;
+
+			try {
+				const response = await fetch("vault/credential/save", {
+					method: "POST",
+					body: JSON.stringify({
+						guid: "00000000-0000-0000-0000-000000000000",
+						name: nameInput.value,
+						username: usernameInput.value,
+						password: passwordInput.value,
+						permissionMode: "none",
+						permissionList: []
+					})
+				});
+
+				if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
+
+				const json = await response.json();
+				if (json.error) throw json.error;
+
+				await this.SaveReferenceAttribute(attributeName, [...guidList, json.guid].join("; "));
+				dialog.Close();
+			}
+			catch (ex) {
+				okButton.disabled = false;
+				this.ConfirmBox(ex?.message ?? ex, true, "mono/error.svg");
+			}
+		};
+
+		setTimeout(()=> usernameInput.focus(), WIN.ANIME_DURATION);
 	}
 
 	async CreateCredentialsBox(guid, attributeName, setFocus=false, onRemove=null) {
