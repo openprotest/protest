@@ -462,8 +462,8 @@ const MENU = {
 		{ t:"Data retention",  i:"mono/dataretention.svg?light",  g:"manage", h:false, f:()=> new Infrastructure("dataretention"), k:"cleanup compliance" },
 		{ t:"Zones",           i:"mono/router.svg?light",         g:"manage", h:true,  f:()=> new Infrastructure("zones"), k:"sites" },
 		{ t:"DHCP range",      i:"mono/dhcp.svg?light",           g:"manage", h:true,  f:()=> new Infrastructure("dhcp"), k:"ip addresses" },
-		{ t:"SMTP settings",   i:"mono/email.svg?light",          g:"manage", h:true,  f:()=> new Infrastructure("smtp") },
-		{ t:"SNMP settings",   i:"mono/snmp.svg?light",           g:"manage", h:true,  f:()=> new Infrastructure("snmp") },
+		{ t:"SMTP settings",   i:"mono/email.svg?light",          g:"manage", h:true,  f:()=> new Infrastructure("smtp profiles") },
+		{ t:"SNMP settings",   i:"mono/snmp.svg?light",           g:"manage", h:true,  f:()=> new Infrastructure("snmp profiles") },
 		{ t:"Integration",     i:"mono/integration.svg?light",    g:"manage", h:false, f:()=> new Infrastructure("integration") },
 
 		{ t:"Personalize",     i:"mono/personalize.svg?light", g:"manage", h:false, f:()=> new Personalize() },
@@ -476,7 +476,7 @@ const MENU = {
 		{ t:"Open sessions",  i:"mono/hourglass.svg?light",   g:"manage", h:true,  f:()=> new AccessControl("sessions"), k:"alive connections" },
 
 		{ t:"API links",      i:"mono/carabiner.svg?light",   g:"manage", h:false, f:()=> new Api()},
-		{ t:"Scheduler",      i:"mono/timeline.svg?light",    g:"manage", h:false, f:()=> new Scheduler(), k:"tasks automation jobs cron" },
+		{ t:"Scheduler",      i:"mono/timeline.svg?light",    g:"manage", h:false, f:()=> new Scheduler(), k:"tasks automations jobs" },
 		{ t:"Certificates",   i:"mono/certificate.svg?light", g:"manage", h:false, f:()=> new Certificates(), k: "ssl tls" },
 		{ t:"Backup",         i:"mono/backup.svg?light",      g:"manage", h:false, f:()=> new Backup() },
 		{ t:"Log",            i:"mono/log.svg?light",         g:"manage", h:false, f:()=> new Log() },
