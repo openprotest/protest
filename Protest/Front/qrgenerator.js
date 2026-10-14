@@ -24,7 +24,7 @@ class QrGenerator extends Window {
 			encode: f=> {
 				const url = f.url.trim();
 				if (url.length === 0) return "";
-				return /^[a-z][a-z0-9+.-]*:\/\//i.test(url) ? url : `https://${url}`; //"host:port" is not a scheme
+				return /^[a-z][a-z0-9+.-]*:\/\//i.test(url) ? url : `https://${url}`;
 			}
 		},
 		{
@@ -63,7 +63,7 @@ class QrGenerator extends Window {
 				const lines = ["BEGIN:VCARD", "VERSION:3.0"];
 				lines.push(`N:${esc(f.last)};${esc(f.first)};;;`);
 				const fullName = `${f.first.trim()} ${f.last.trim()}`.trim() || f.org.trim() || f.email.trim();
-				lines.push(`FN:${esc(fullName)}`); //required, readers show it as the contact name
+				lines.push(`FN:${esc(fullName)}`);
 				if (f.org.trim())     lines.push(`ORG:${esc(f.org)}`);
 				if (f.title.trim())   lines.push(`TITLE:${esc(f.title)}`);
 				if (f.phone.trim())   lines.push(`TEL;TYPE=WORK,VOICE:${esc(f.phone)}`);
@@ -284,6 +284,8 @@ class QrGenerator extends Window {
 		this.saveButton.style.backgroundImage = "url(mono/floppy.svg?light)";
 		buttons.append(this.formatInput, this.saveButton);
 
+		this.lightInput.disabled = this.args.transparent;
+
 		this.typeBox.Select(QrGenerator.TYPES.findIndex(o=> o.name === this.args.type));
 		this.BuildForm();
 
@@ -325,7 +327,6 @@ class QrGenerator extends Window {
 			this.lightInput.disabled = this.args.transparent;
 			this.DrawPreview();
 		};
-		this.lightInput.disabled = this.args.transparent;
 
 		this.saveButton.onclick = ()=> this.Save();
 
