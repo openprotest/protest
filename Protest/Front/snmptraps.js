@@ -1,8 +1,8 @@
 "use strict";
 class SnmpTraps extends Window {
 	static SEVERITY       = ["Critical", "Major", "Minor", "Warning", "Indeterminate", "Cleared"];
-	static SEVERITY_COLOR = ["var(--clr-critical)", "var(--clr-error)", "var(--clr-orange)", "var(--clr-warning)", "rgb(32,148,240)", "hsl(92,66%,50%)"];
-	static SEVERITY_ICON  = ["mono/critical.svg", "mono/error.svg", "mono/info.svg", "mono/warning.svg", "mono/indeterminate.svg", "mono/checked.svg"];
+	static SEVERITY_COLOR = ["var(--clr-critical)", "var(--clr-error)", "var(--clr-orange)", "var(--clr-warning)", "rgb(32,148,240)", "rgb(112,192,48)"];
+	static SEVERITY_ICON  = ["mono/critical.svg", "mono/error.svg", "mono/error.svg", "mono/warning.svg", "mono/indeterminate.svg", "mono/checked.svg"];
 	static VERSION_LABEL  = {"1":"v1", "2c":"v2c", "3":"v3"};
 	static DEFAULT_PORT   = 162;
 	static EMPTY_GUID     = "00000000-0000-0000-0000-000000000000";
@@ -973,7 +973,7 @@ class SnmpTraps extends Window {
 	async ListenersDialog() {
 		if (!await this.ListListeners()) return;
 
-		const dialog = this.DialogBox("640px");
+		const dialog = this.DialogBox("660px");
 		if (dialog === null) return;
 
 		const {okButton, cancelButton, innerBox, buttonBox} = dialog;

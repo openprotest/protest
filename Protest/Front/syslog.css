@@ -225,6 +225,7 @@
 	text-align: center;
 	line-height: 24px;
 	color: #606060;
+	background-color: transparent !important;
 }
 
 .syslog-details {

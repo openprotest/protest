@@ -231,7 +231,7 @@ class Lifeline extends Window {
 
 		this.now = Date.now() + Lifeline.HOUR_TICKS;
 		this.sources.clear();
-		for (const row of this.rows) {
+		for (const row of this.rowsById.values()) {
 			row.series = null;
 			row.svgCache.clear();
 		}
@@ -557,7 +557,7 @@ class Lifeline extends Window {
 		}
 		diffs.sort((a, b)=> a - b);
 
-		return Math.max(diffs[Math.floor(diffs.length / 2)] * 2.5, 2 * Lifeline.HOUR_TICKS);
+		return Math.max(diffs[Math.floor(diffs.length * 3 / 4)] * 2.5, 2 * Lifeline.HOUR_TICKS);
 	}
 
 	Series(row) {
