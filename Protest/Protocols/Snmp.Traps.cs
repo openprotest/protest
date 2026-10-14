@@ -121,7 +121,7 @@ internal static partial class Traps {
         public string user = String.Empty;
         public string oid;
         public uint uptime;
-        public string agent = String.Empty;
+        public string origin = String.Empty;
         public IList<Variable> variables;
         public byte severity;
     }
@@ -599,20 +599,17 @@ internal static partial class Traps {
         }
     }
 
-    //returns the sender's device file, or null when the listener does not accept it
-    //by the agent address the device reports, that survives nat, then by the source address
-    private static string AcceptedDevice(Runner runner, IPAddress remote, string agent) {
-        string file = SenderIndex.Resolve(agent) ?? SenderIndex.Resolve(remote);
+    private static string AcceptedDevice(Runner runner, IPAddress remote, string origin) {
+        string file = SenderIndex.Resolve(origin) ?? SenderIndex.Resolve(remote);
         if (file is null) {
-            WriteUnknownSender(runner, remote, agent);
+            WriteUnknownSender(runner, remote, origin);
             return null;
         }
         if (runner.config.accept == AcceptMode.Whitelist && !runner.whitelist.Contains(file)) return null;
         return file;
     }
 
-    //once per address per interval, when the listener echoes to the console
-    private static void WriteUnknownSender(Runner runner, IPAddress remote, string agent) {
+    private static void WriteUnknownSender(Runner runner, IPAddress remote, string origin) {
         TrapListener config = runner.config;
         if (config.console == OFF) return;
 
@@ -632,7 +629,7 @@ internal static partial class Traps {
             runner.unknownSenders[remote] = now.Ticks;
         }
 
-        string text = $"{now.ToString(Data.DATETIME_FORMAT_FILE, CultureInfo.InvariantCulture)}\ttrap   {"Unknown",-13} {remote,-24} {(String.IsNullOrEmpty(agent) || agent == remote.ToString() ? "" : $"agent {agent}, ")}not in the devices database, dropped (UDP {config.port})";
+        string text = $"{now.ToString(Data.DATETIME_FORMAT_FILE, CultureInfo.InvariantCulture)}\ttrap   {"Unknown",-13} {remote,-24} {(String.IsNullOrEmpty(origin) || origin == remote.ToString() ? "" : $"origin {origin}, ")}not in the devices database, dropped (UDP {config.port})";
 
         lock (consoleMutex) {
             try {
@@ -669,9 +666,7 @@ internal static partial class Traps {
                 file = null;
             }
 
-            if (outcome == Outcome.Protocol) continue;
-            if (outcome == Outcome.Rejected || trap is null || file is null) continue;
-
+            if (outcome != Outcome.Accepted) continue;
             Process(runner, file, remote, trap);
         }
     }
@@ -690,12 +685,12 @@ internal static partial class Traps {
                 pdu       = "trap",
                 oid       = oid,
                 uptime    = v1.TimeStamp,
-                agent     = v1.AgentAddress?.ToString() ?? String.Empty,
+                origin    = v1.AgentAddress?.ToString() ?? String.Empty,
                 variables = v1.Variables(),
                 severity  = TrapSeverity(oid)
             };
 
-            file = AcceptedDevice(runner, remote, trap.agent);
+            file = AcceptedDevice(runner, remote, trap.origin);
             return file is null ? Outcome.Rejected : Outcome.Accepted;
         }
 
@@ -741,12 +736,12 @@ internal static partial class Traps {
             user      = user,
             oid       = trapOid,
             uptime    = timestamp,
-            agent     = FindTrapAddress(variables),
+            origin    = FindTrapAddress(variables),
             variables = variables,
             severity  = TrapSeverity(trapOid)
         };
 
-        file = AcceptedDevice(runner, remote, trap.agent);
+        file = AcceptedDevice(runner, remote, trap.origin);
         if (file is null) return Outcome.Rejected;
 
         if (type == SnmpType.InformRequestPdu) {
@@ -896,8 +891,6 @@ internal static partial class Traps {
         }
     }
 
-    //time \t severity \t version \t source \t pdu \t user \t trap oid \t uptime \t agent \t variables
-    //variables are a json array of [oid, type, value], json escapes the tabs and line breaks
     private static string FormatLine(DateTime time, Trap trap, IPAddress remote) {
         StringBuilder builder = new StringBuilder(256);
         builder.Append(time.ToString(TIMESTAMP_FORMAT, CultureInfo.InvariantCulture)).Append('\t');
@@ -908,7 +901,7 @@ internal static partial class Traps {
         AppendEscaped(builder, trap.user).Append('\t');
         builder.Append(trap.oid).Append('\t');
         builder.Append(trap.uptime).Append('\t');
-        AppendEscaped(builder, trap.agent).Append('\t');
+        AppendEscaped(builder, trap.origin).Append('\t');
         builder.Append(VariablesToJson(trap.variables));
         return builder.ToString();
     }
@@ -1491,7 +1484,7 @@ internal static partial class Traps {
                 if (from is not null && String.CompareOrdinal(line, 0, from, 0, TIMESTAMP_LENGTH) < 0) continue;
 
                 if (query is not null) {
-                    //match on source, pdu, user, trap oid, uptime, agent and variables
+                    //match on source, pdu, user, trap oid, uptime, origin and variables
                     int start = line.IndexOf('\t', TIMESTAMP_LENGTH + 3);
                     if (start < 0 || !line.AsSpan(start + 1).Contains(query, StringComparison.OrdinalIgnoreCase)) continue;
                 }

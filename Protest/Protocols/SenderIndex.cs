@@ -11,6 +11,8 @@ internal static class SenderIndex {
         public readonly Dictionary<string, string> label = new Dictionary<string, string>(StringComparer.Ordinal);
     }
 
+    private static readonly string[] NAME_ATTRIBUTES = ["hostname", "name"];
+
     private static readonly Lock mutex = new Lock();
     private static long indexVersion = long.MinValue;
     private static Index index = new Index();
@@ -42,9 +44,9 @@ internal static class SenderIndex {
         Index current = Current();
         if (current is null) return null;
 
-        if (host.Contains('.') && current.fqdn.TryGetValue(host, out string file)) return file;
-
         int dot = host.IndexOf('.');
+        if (dot > 0 && current.fqdn.TryGetValue(host, out string file)) return file;
+
         string label = Simplify(dot < 0 ? host : host[..dot]);
         if (label.Length == 0) return null;
         return current.label.TryGetValue(label, out file) ? file : null;
@@ -82,18 +84,18 @@ internal static class SenderIndex {
     }
 
     private static Index Build(Database db) {
-        Index index = new Index();
+        Index next = new Index();
 
         foreach (KeyValuePair<string, Database.Entry> pair in db.dictionary) {
             if (pair.Value.attributes.TryGetValue("ip", out Database.Attribute ip) && !String.IsNullOrEmpty(ip?.value)) {
                 foreach (string value in Split(ip.value)) {
                     if (IPAddress.TryParse(value, out IPAddress address)) {
-                        index.ip.TryAdd(NormalizeAddress(address), pair.Key);
+                        next.ip.TryAdd(NormalizeAddress(address), pair.Key);
                     }
                 }
             }
 
-            foreach (string attribute in new string[] { "hostname", "name" }) {
+            foreach (string attribute in NAME_ATTRIBUTES) {
                 if (!pair.Value.attributes.TryGetValue(attribute, out Database.Attribute name) || String.IsNullOrEmpty(name?.value)) continue;
 
                 foreach (string value in Split(name.value)) {
@@ -101,18 +103,18 @@ internal static class SenderIndex {
 
                     //a display name, as a whole
                     if (value.Contains(' ')) {
-                        AddName(index.label, Simplify(value), pair.Key);
+                        AddName(next.label, Simplify(value), pair.Key);
                         continue;
                     }
 
                     int dot = value.IndexOf('.');
-                    if (dot > 0) AddName(index.fqdn, value, pair.Key);
-                    AddName(index.label, Simplify(dot < 0 ? value : value[..dot]), pair.Key);
+                    if (dot > 0) AddName(next.fqdn, value, pair.Key);
+                    AddName(next.label, Simplify(dot < 0 ? value : value[..dot]), pair.Key);
                 }
             }
         }
 
-        return index;
+        return next;
     }
 
     private static string[] Split(string value) {

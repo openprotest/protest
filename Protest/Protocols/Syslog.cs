@@ -605,6 +605,7 @@ internal static partial class Syslog {
 
             while (i < structuredData.Length && structuredData[i] != ']') {
                 while (i < structuredData.Length && structuredData[i] == ' ') i++;
+                if (i >= structuredData.Length || structuredData[i] == ']') break;
 
                 int equals = structuredData.IndexOf('=', i);
                 if (equals < 0 || equals + 1 >= structuredData.Length || structuredData[equals + 1] != '"') return list;
@@ -646,7 +647,7 @@ internal static partial class Syslog {
             runner.unknownSenders[remote] = now.Ticks;
         }
 
-        string text = $"{now.ToString(Data.DATETIME_FORMAT_FILE, CultureInfo.InvariantCulture)}\tsyslog {"Unknown",-13} {remote,-24} {(String.IsNullOrEmpty(hostname) ? "" : $"host {hostname}, ")}not in the devices database, dropped ({config.protocol} {config.port})";
+        string text = $"{now.ToString(Data.DATETIME_FORMAT_FILE, CultureInfo.InvariantCulture)}\tsyslog {"Unknown",-13} {remote,-24} {(String.IsNullOrEmpty(hostname) ? "" : $"hostname {hostname}, ")}not in the devices database, dropped ({config.protocol} {config.port})";
 
         lock (consoleMutex) {
             try {

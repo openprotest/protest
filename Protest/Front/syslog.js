@@ -319,8 +319,8 @@ class Syslog extends Window {
 		this.listBox.SetupColumns([
 			{label:"severity", render:d=> Syslog.SeverityCell(d.severity)},
 			{label:"time",     value:d=> Syslog.LocalTime(d.time).substring(0, 19)},
-			{label:"device",   value:d=> Syslog.DeviceName(d.file, d.ip)},
-			{label:"source",   value:d=> d.ip},
+			{label:"device",   value:d=> Syslog.DeviceName(d.file, d.source)},
+			{label:"source",   value:d=> d.source},
 			{label:"hostname", value:d=> d.hostname},
 			{label:"message",  value:d=> d.msg}
 		]);
@@ -411,7 +411,7 @@ class Syslog extends Window {
 			time    : split[1],
 			severity: severity,
 			facility: parseInt(split[3]),
-			ip      : split[4],
+			source  : split[4],
 			hostname: Syslog.Unescape(split[5]),
 			app     : Syslog.Unescape(split[6]),
 			procid  : Syslog.Unescape(split[7]),
@@ -659,7 +659,7 @@ class Syslog extends Window {
 	static SeverityCell(severity) {
 		const cell = document.createElement("div");
 		cell.textContent = Syslog.SEVERITY[severity];
-		cell.style.color = `color-mix(in srgb, ${Syslog.SEVERITY_COLOR[severity]} 50%, black)`;
+		cell.style.color = `color-mix(in srgb, ${Syslog.SEVERITY_COLOR[severity]} 40%, black)`;
 		return cell;
 	}
 
@@ -698,9 +698,9 @@ class Syslog extends Window {
 		AddMeta("Severity", Syslog.SEVERITY[entry.severity]);
 		AddMeta("Time",     Syslog.LocalTime(entry.time));
 		AddMeta("Facility", Syslog.FACILITY[entry.facility] ?? entry.facility);
-		AddMeta("Device",   Syslog.DeviceName(entry.file, entry.ip));
+		AddMeta("Device",   Syslog.DeviceName(entry.file, entry.source));
 		AddMeta("Origin",   Syslog.OriginIp(entry));
-		AddMeta("Source",   entry.ip);
+		AddMeta("Source",   entry.source);
 		AddMeta("Hostname", entry.hostname);
 		AddMeta("App",      entry.app);
 		AddMeta("PID",      entry.procid);

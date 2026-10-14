@@ -333,8 +333,8 @@ class SnmpTraps extends Window {
 		this.listBox.SetupColumns([
 			{label:"severity",  render:d=> SnmpTraps.SeverityCell(d.severity)},
 			{label:"time",      value:d=> SnmpTraps.LocalTime(d.time).substring(0, 19)},
-			{label:"device",    value:d=> SnmpTraps.DeviceName(d.file, d.ip)},
-			{label:"source",    value:d=> d.ip},
+			{label:"device",    value:d=> SnmpTraps.DeviceName(d.file, d.source)},
+			{label:"source",    value:d=> d.source},
 			{label:"version",   value:d=> SnmpTraps.VERSION_LABEL[d.version] ?? d.version},
 			{label:"trap",      value:d=> SnmpTraps.OidName(d.oid)},
 			{label:"variables", value:d=> SnmpTraps.VariablesSummary(d.variables)}
@@ -402,7 +402,7 @@ class SnmpTraps extends Window {
 
 	//the agent address in the trap (v1 agent-addr, v2c/v3 snmpTrapAddress.0), as the sender reports it
 	static OriginIp(entry) {
-		return !entry.agent || entry.agent === "0.0.0.0" ? "--" : entry.agent;
+		return !entry.origin || entry.origin === "0.0.0.0" ? "--" : entry.origin;
 	}
 
 	static Unescape(value) {
@@ -531,7 +531,7 @@ class SnmpTraps extends Window {
 		return variables.map(o=> `${SnmpTraps.OidName(o[0])}=${SnmpTraps.FormatValue(o)}`).join(", ");
 	}
 
-	//file \t time \t severity \t version \t source \t pdu \t user \t trap oid \t uptime \t agent \t variables
+	//file \t time \t severity \t version \t source \t pdu \t user \t trap oid \t uptime \t origin \t variables
 	static ParseLine(line) {
 		const split = line.split("\t");
 		if (split.length < 11) return null;
@@ -553,12 +553,12 @@ class SnmpTraps extends Window {
 			time     : split[1],
 			severity : severity,
 			version  : split[3],
-			ip       : split[4],
+			source   : split[4],
 			pdu      : split[5],
 			user     : SnmpTraps.Unescape(split[6]),
 			oid      : split[7],
 			uptime   : parseInt(split[8]),
-			agent    : SnmpTraps.Unescape(split[9]),
+			origin   : SnmpTraps.Unescape(split[9]),
 			variables: variables
 		};
 	}
@@ -823,7 +823,7 @@ class SnmpTraps extends Window {
 	static SeverityCell(severity) {
 		const cell = document.createElement("div");
 		cell.textContent = SnmpTraps.SEVERITY[severity];
-		cell.style.color = `color-mix(in srgb, ${SnmpTraps.SEVERITY_COLOR[severity]} 50%, black)`;
+		cell.style.color = `color-mix(in srgb, ${SnmpTraps.SEVERITY_COLOR[severity]} 40%, black)`;
 		return cell;
 	}
 
@@ -863,10 +863,9 @@ class SnmpTraps extends Window {
 
 		AddMeta("Severity", SnmpTraps.SEVERITY[entry.severity]);
 		AddMeta("Time",     SnmpTraps.LocalTime(entry.time));
-		AddMeta("Device",   SnmpTraps.DeviceName(entry.file, entry.ip));
+		AddMeta("Device",   SnmpTraps.DeviceName(entry.file, entry.source));
 		AddMeta("Origin",   SnmpTraps.OriginIp(entry));
-		AddMeta("Source",   entry.ip);
-		AddMeta("Agent",    entry.agent);
+		AddMeta("Source",   entry.source);
 		AddMeta("Version",  SnmpTraps.VERSION_LABEL[entry.version] ?? entry.version);
 		AddMeta("PDU",      entry.pdu);
 		AddMeta("User",     entry.user);
