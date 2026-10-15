@@ -68,6 +68,7 @@ internal sealed class Cache {
 
         {"js",   "application/javascript; charset=utf-8"},
         {"json", "application/json; charset=utf-8"},
+        {"wasm", "application/wasm"},
         {"zip",  "application/zip"},
         //{"7z",  "application/x-7z-compressed"},
         //{"rar",  "application/x-rar-compressed"}

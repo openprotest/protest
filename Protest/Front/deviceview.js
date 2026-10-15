@@ -520,12 +520,12 @@ class DeviceView extends View {
 			if (ports.includes(5985) || ports.includes(5986)) {
 				if (this.link.hostname && this.link.hostname.v.length > 0) {
 					const hostname = this.link.hostname.v;
-					const remoteShellButton = this.CreateSideButton("mono/remote.svg", "Remote shell");
+					const remoteShellButton = this.CreateSideButton("mono/remoteshell.svg", "Remote shell");
 					remoteShellButton.onclick = ()=> new RemoteShell({host: hostname});
 				}
 				else if (this.link.fqdn && this.link.fqdn.v.length > 0) {
 					const hostname = this.link.fqdn.v;
-					const remoteShellButton = this.CreateSideButton("mono/remote.svg", "Remote shell");
+					const remoteShellButton = this.CreateSideButton("mono/remoteshell.svg", "Remote shell");
 					remoteShellButton.onclick = ()=> new RemoteShell({host: hostname});
 				}
 			}
@@ -671,27 +671,27 @@ class DeviceView extends View {
 				};
 			}
 
-			if (overwriteProtocol.rdp) { //rdp
+			if (overwriteProtocol.rdp || ports.includes(3389)) { //rdp
+				const rdpPort = overwriteProtocol.rdp || 3389;
+
 				const actionButton = this.CreateSideButton("mono/rdp.svg", "Remote desktop");
-				actionButton.onclick = ()=> {
-					if (localStorage.getItem("prefer_rdp_file") === "true") {
-						this.DownloadRdp(host, overwriteProtocol.rdp);
-					}
-					else {
-						UI.PromptRelay(this, "rdp", `${host}:${overwriteProtocol.rdp}`);
-					}
+				actionButton.onclick = async ()=> {
+					const credential = await this.ResolveCredentialGuid(["credentials"]);
+					if (credential === null) return; //picker cancelled
+					new Rdp({ host: host, port: rdpPort, credential: credential, file: this.args.file });
 				};
-			}
-			else if (ports.includes(3389)) {
-				const actionButton = this.CreateSideButton("mono/rdp.svg", "Remote desktop");
-				actionButton.onclick = ()=> {
-					if (localStorage.getItem("prefer_rdp_file") === "true") {
-						this.DownloadRdp(host, 3389);
-					}
-					else {
-						UI.PromptRelay(this, "rdp", host);
-					}
-				};
+
+				if (localStorage.getItem("enable_rdp_relay") === "true") {
+					const relayButton = this.CreateSideButton("mono/rdp.svg", "Microsoft RDP");
+					relayButton.onclick = ()=> {
+						if (localStorage.getItem("prefer_rdp_file") === "true") {
+							this.DownloadRdp(host, rdpPort);
+						}
+						else {
+							UI.PromptRelay(this, "rdp", overwriteProtocol.rdp ? `${host}:${overwriteProtocol.rdp}` : host);
+						}
+					};
+				}
 			}
 
 			const hasVncPassword = "vnc password" in this.link || "uvnc password" in this.link

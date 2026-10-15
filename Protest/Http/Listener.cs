@@ -313,7 +313,8 @@ internal sealed class Listener {
             ctx.Response.AddHeader("X-Content-Type-Options", "nosniff");
 
             //relaxed policy for debit-notes printing
-            ctx.Response.AddHeader("Content-Security-Policy", "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'");
+            //wasm-unsafe-eval lets the IronRDP client compile its WebAssembly module
+            ctx.Response.AddHeader("Content-Security-Policy", "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; img-src 'self' data:; style-src 'self' 'unsafe-inline'");
             //ctx.Response.AddHeader("Content-Security-Policy", "default-src 'self'; img-src 'self' data:");
 
             string path = ctx.Request.Url.PathAndQuery;
@@ -544,6 +545,7 @@ internal sealed class Listener {
         case "/ws/serial"           : await Protocols.SerialCom.WebSocketHandler(ctx); return true;
         case "/ws/sftp"             : await Protocols.Sftp.WebSocketHandler(ctx);     return true;
         case "/ws/vnc"              : await Protocols.Vnc.WebSocketHandler(ctx);      return true;
+        case "/ws/rdp"              : await Protocols.Rdp.WebSocketHandler(ctx);      return true;
         case "/ws/terminal"         : await Tools.Terminal.WebSocketHandler(ctx);     return true;
         case "/ws/winrm"            : await Tools.WinRM.WebSocketHandler(ctx);        return true;
         case "/ws/ipdiscovery"      : await Tools.IpDiscovery.WebSocketHandler(ctx);  return true;

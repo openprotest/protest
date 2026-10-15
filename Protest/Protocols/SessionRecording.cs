@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -493,13 +494,20 @@ internal sealed class SessionRecording {
         if (ws is null) return;
 
         using CancellationTokenSource cts = new CancellationTokenSource();
-        PlaybackState state = new PlaybackState(startMs);
 
         try {
-            Task sender = SendLoop(ws, videoPath, state, startMs, cts);
-            Task receiver = ControlLoop(ws, state, cts);
+            if (String.Equals(protocol, "rdp", StringComparison.Ordinal)) {
+                await RdpPlayback(ctx, ws, videoPath, startMs, cts);
+            }
+            else {
+                PlaybackState state = new PlaybackState(startMs);
 
-            await Task.WhenAny(sender, receiver);
+                Task sender = SendLoop(ws, videoPath, state, startMs, 0, null, cts);
+                Task receiver = ControlLoop(ws, state, cts);
+
+                await Task.WhenAny(sender, receiver);
+            }
+
             cts.Cancel();
         }
         finally {
@@ -511,6 +519,112 @@ internal sealed class SessionRecording {
                     Logger.Debug(ex);
                 }
             }
+        }
+    }
+
+    private sealed record RdpPlaybackControl(PlaybackState State, CancellationTokenSource Cts, WebSocket Socket);
+
+    //IronRDP opens its own WebSocket for the recorded stream, so the player paces it through a second, control connection,
+    //which also tells it when the desktop is resized. Both carry the same key and the control connection is opened first.
+    //The first chunk of an RDP recording is the RDCleanPath response that answers the player's request.
+    private static readonly ConcurrentDictionary<string, RdpPlaybackControl> rdpPlaybackControls = new ConcurrentDictionary<string, RdpPlaybackControl>();
+
+    private static async Task RdpPlayback(HttpListenerContext ctx, WebSocket ws, string videoPath, double startMs, CancellationTokenSource cts) {
+        string key = ctx.Request.QueryString["key"];
+        if (String.IsNullOrEmpty(key) || key.Length > 64) return;
+
+        if (ctx.Request.QueryString["control"] == "1") {
+            PlaybackState state = new PlaybackState(startMs);
+            if (!rdpPlaybackControls.TryAdd(key, new RdpPlaybackControl(state, cts, ws))) return;
+
+            try {
+                await ControlLoop(ws, state, cts);
+            }
+            finally {
+                rdpPlaybackControls.TryRemove(key, out _);
+            }
+            return;
+        }
+
+        RdpPlaybackControl control = null;
+        for (int i = 0; i < 100 && !rdpPlaybackControls.TryGetValue(key, out control); i++) {
+            await Task.Delay(50);
+        }
+        if (control is null) return;
+
+        //the stream ends along with its control connection
+        CancellationTokenRegistration registration;
+        try {
+            registration = control.Cts.Token.Register(() => cts.Cancel());
+        }
+        catch (ObjectDisposedException) {
+            return;
+        }
+
+        using (registration) {
+            (byte[] request, _) = await Rdp.ReceivePdu(ws, cts.Token);
+            if (request is null) return;
+
+            byte[] handshake = await ReadFirstChunk(videoPath, cts.Token);
+            if (handshake is null) return;
+
+            await ws.SendAsync(new ArraySegment<byte>(handshake), WebSocketMessageType.Binary, true, cts.Token);
+
+            //IronRDP resizes its canvas only for resizes it asked for, the player resizes it ahead of a recorded one
+            Rdp.DesktopSizeScanner scanner = new Rdp.DesktopSizeScanner();
+            Rdp.ChannelFilter filter = new Rdp.ChannelFilter();
+
+            async Task<byte[]> BeforeSend(byte[] payload) {
+                List<(int width, int height)> sizes = scanner.Scan(payload);
+                if (sizes is not null) {
+                    (int width, int height) = sizes[^1];
+                    await WebSocketHelper.WsWriteText(control.Socket, $"{{\"event\":\"resize\",\"width\":{width},\"height\":{height}}}");
+                    await Task.Delay(50, cts.Token);
+                }
+
+                return filter.Filter(payload);
+            }
+
+            Task<bool> sender = SendLoop(ws, videoPath, control.State, startMs, 1, BeforeSend, cts);
+            Task drain = DrainLoop(ws, cts);
+
+            //the stream is cut at the end as well, the player tells the end from a failure by this event, sent before the cut
+            if (await Task.WhenAny(sender, drain) == sender && await sender) {
+                try {
+                    await WebSocketHelper.WsWriteText(control.Socket, "{\"event\":\"end\"}");
+                }
+                catch (Exception ex) {
+                    Logger.Debug(ex);
+                }
+            }
+        }
+    }
+
+    private static async Task<byte[]> ReadFirstChunk(string videoPath, CancellationToken token) {
+        using FileStream fs = new FileStream(videoPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+
+        byte[] header = new byte[12];
+        if (await ReadExactAsync(fs, header, 12, token) < 12) return null;
+
+        int length = BitConverter.ToInt32(header, 8);
+        if (length <= 0 || length > 1_048_576) return null;
+
+        byte[] payload = new byte[length];
+        return await ReadExactAsync(fs, payload, length, token) < length ? null : payload;
+    }
+
+    //Discards what the player sends, its input never reaches anything.
+    private static async Task DrainLoop(WebSocket ws, CancellationTokenSource cts) {
+        try {
+            while (ws.State == WebSocketState.Open && !cts.IsCancellationRequested) {
+                byte[] message = await WebSocketHelper.WsReadBinary(ws, cts.Token, 16_384);
+                if (message is null) return; //close frame received
+            }
+        }
+        catch (OperationCanceledException) { }
+        catch (WebSocketException) { }
+        finally {
+            cts.Cancel();
         }
     }
 
@@ -529,13 +643,22 @@ internal sealed class SessionRecording {
         }
     }
 
-    private static async Task SendLoop(WebSocket ws, string videoPath, PlaybackState state, double startMs, CancellationTokenSource cts) {
+    //beforeSend sees each chunk before it goes out and returns what to send instead, nothing when empty.
+    //Returns true once the last chunk is out, the connection is then left for the caller to end.
+    private static async Task<bool> SendLoop(WebSocket ws, string videoPath, PlaybackState state, double startMs, int skipChunks, Func<byte[], Task<byte[]>> beforeSend, CancellationTokenSource cts) {
+        bool ended = false;
+
         try {
             using FileStream fs = new FileStream(videoPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
             byte[] header = new byte[12];
 
-            //RFB's framebuffer updates are incremental (no keyframes), so a seek is handled by the client
-            //opening a brand new connection (and a brand new RFB instance) with the desired start time here:
+            for (int i = 0; i < skipChunks; i++) {
+                if (fs.Read(header, 0, 12) < 12) return false;
+                fs.Seek(BitConverter.ToInt32(header, 8), SeekOrigin.Current);
+            }
+
+            //RFB's framebuffer updates, like RDP's, are incremental (no keyframes), so a seek is handled by the client
+            //opening a brand new connection (and a brand new decoder) with the desired start time here:
             //replaying everything up to startMs back-to-back, unthrottled, lets a fresh decoder reconstruct
             //the exact screen state at that point, exactly as if it had been connected from the beginning.
             while (startMs > 0 && fs.Position < fs.Length) {
@@ -553,9 +676,12 @@ internal sealed class SessionRecording {
                     break;
                 }
 
-                await ws.SendAsync(new ArraySegment<byte>(payload), WebSocketMessageType.Binary, true, cts.Token);
+                if (beforeSend is not null) payload = await beforeSend(payload);
+                if (payload.Length > 0) {
+                    await ws.SendAsync(new ArraySegment<byte>(payload), WebSocketMessageType.Binary, true, cts.Token);
+                }
 
-                if (ws.State != WebSocketState.Open || cts.IsCancellationRequested) return;
+                if (ws.State != WebSocketState.Open || cts.IsCancellationRequested) return false;
             }
 
             long? pendingOffset = null;
@@ -563,18 +689,21 @@ internal sealed class SessionRecording {
 
             while (ws.State == WebSocketState.Open && !cts.IsCancellationRequested) {
                 if (pendingPayload is null) {
-                    if (fs.Position >= fs.Length) {
-                        return; //nothing more to stream; the client reconnects (with a start offset) to seek elsewhere
+                    //nothing more to stream, a chunk cut short by an unclean shutdown ends it too;
+                    //the client reconnects (with a start offset) to seek elsewhere
+                    if (fs.Position >= fs.Length || fs.Read(header, 0, 12) < 12) {
+                        ended = true;
+                        break;
                     }
-
-                    int read = fs.Read(header, 0, 12);
-                    if (read < 12) break;
 
                     long offsetMs = BitConverter.ToInt64(header, 0);
                     int length = BitConverter.ToInt32(header, 8);
                     byte[] payload = new byte[length];
                     int readCount = await ReadExactAsync(fs, payload, length, cts.Token);
-                    if (readCount < length) break;
+                    if (readCount < length) {
+                        ended = true;
+                        break;
+                    }
 
                     pendingOffset = offsetMs;
                     pendingPayload = payload;
@@ -583,7 +712,10 @@ internal sealed class SessionRecording {
                 double virtualNow = state.CurrentVirtualTime(out bool playing);
 
                 if (playing && virtualNow >= pendingOffset.Value) {
-                    await ws.SendAsync(new ArraySegment<byte>(pendingPayload), WebSocketMessageType.Binary, true, cts.Token);
+                    if (beforeSend is not null) pendingPayload = await beforeSend(pendingPayload);
+                    if (pendingPayload.Length > 0) {
+                        await ws.SendAsync(new ArraySegment<byte>(pendingPayload), WebSocketMessageType.Binary, true, cts.Token);
+                    }
                     pendingOffset = null;
                     pendingPayload = null;
                 }
@@ -596,8 +728,10 @@ internal sealed class SessionRecording {
         catch (WebSocketException) { }
         catch (IOException) { }
         finally {
-            cts.Cancel();
+            if (!ended) cts.Cancel();
         }
+
+        return ended;
     }
 
     private static async Task<int> ReadExactAsync(FileStream fs, byte[] buffer, int count, CancellationToken token) {

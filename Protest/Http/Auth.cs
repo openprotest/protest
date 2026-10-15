@@ -655,6 +655,10 @@ internal static class Auth {
                 path.Add("/ws/vnc");
                 break;
 
+            case "rdp:write":
+                path.Add("/ws/rdp");
+                break;
+
             case "session recordings:read":
                 path.Add("/recordings/list");
                 path.Add("/recordings/meta");

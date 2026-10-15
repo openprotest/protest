@@ -813,6 +813,13 @@ class Personalize extends Tabs {
 		this.tabsPanel.appendChild(document.createElement("br"));
 		this.tabsPanel.appendChild(document.createElement("br"));
 
+		this.rdpRelayCheckbox = document.createElement("input");
+		this.rdpRelayCheckbox.type = "checkbox";
+		this.tabsPanel.appendChild(this.rdpRelayCheckbox);
+		this.AddCheckBoxLabel(this.tabsPanel, this.rdpRelayCheckbox, "Enable Microsoft RDP");
+		this.tabsPanel.appendChild(document.createElement("br"));
+		this.tabsPanel.appendChild(document.createElement("br"));
+
 		this.preferRdpFileCheckbox = document.createElement("input");
 		this.preferRdpFileCheckbox.type = "checkbox";
 		this.tabsPanel.appendChild(this.preferRdpFileCheckbox);
@@ -828,12 +835,14 @@ class Personalize extends Tabs {
 		this.tabsPanel.appendChild(document.createElement("br"));
 
 		this.psRemoteCheckbox.checked      = localStorage.getItem("enable_psexec") === "true";
+		this.rdpRelayCheckbox.checked      = localStorage.getItem("enable_rdp_relay") === "true";
 		this.preferRdpFileCheckbox.checked = localStorage.getItem("prefer_rdp_file") === "true";
 		this.preferVncFileCheckbox.checked = localStorage.getItem("prefer_vnc_file") === "true";
 
 		const Apply = ()=> {
 			localStorage.setItem("relay_key", this.presharedKeyInput.value);
 			localStorage.setItem("enable_psexec", this.psRemoteCheckbox.checked);
+			localStorage.setItem("enable_rdp_relay", this.rdpRelayCheckbox.checked);
 			localStorage.setItem("prefer_rdp_file", this.preferRdpFileCheckbox.checked);
 			localStorage.setItem("prefer_vnc_file", this.preferVncFileCheckbox.checked);
 
@@ -841,6 +850,7 @@ class Personalize extends Tabs {
 				if (WIN.array[i] instanceof Personalize && WIN.array[i].args === "relay" && WIN.array[i] !== this) {
 					WIN.array[i].presharedKeyInput.value = this.presharedKeyInput.value;
 					WIN.array[i].psRemoteCheckbox.checked = this.psRemoteCheckbox.checked;
+					WIN.array[i].rdpRelayCheckbox.checked = this.rdpRelayCheckbox.checked;
 					WIN.array[i].preferRdpFileCheckbox.checked = this.preferRdpFileCheckbox.checked;
 					WIN.array[i].preferVncFileCheckbox.checked = this.preferVncFileCheckbox.checked;
 				}
@@ -848,6 +858,7 @@ class Personalize extends Tabs {
 		};
 
 		this.psRemoteCheckbox.onchange = Apply;
+		this.rdpRelayCheckbox.onchange = Apply;
 		this.preferRdpFileCheckbox.onchange = Apply;
 		this.preferVncFileCheckbox.onchange = Apply;
 		this.presharedKeyInput.onchange = Apply;

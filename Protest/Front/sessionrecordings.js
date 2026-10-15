@@ -62,9 +62,10 @@ class SessionRecordings extends List {
 	GetTypeIcon(type) { //overrides
 		switch (type) {
 		case "vnc":      return "mono/vnc.svg";
+		case "rdp":      return "mono/rdp.svg";
 		case "ssh":      return "mono/ssh.svg";
 		case "telnet":   return "mono/telnet.svg";
-		case "winrm":    return "mono/remote.svg";
+		case "winrm":    return "mono/remoteshell.svg";
 		case "serial":   return "mono/serialconsole.svg";
 		case "terminal": return "mono/terminal.svg";
 		default:         return "mono/screenrecord.svg";
@@ -136,6 +137,9 @@ class SessionRecordings extends List {
 		switch (protocol) {
 		case "vnc":
 			new VncRecording({ recordingId: id });
+			break;
+		case "rdp":
+			new RdpRecording({ recordingId: id });
 			break;
 		case "ssh":
 		case "telnet":

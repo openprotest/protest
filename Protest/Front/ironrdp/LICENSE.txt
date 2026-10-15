@@ -1,0 +1,37 @@
+IronRDP web client
+https://github.com/Devolutions/IronRDP
+
+  iron-remote-desktop.js        @devolutions/iron-remote-desktop 0.11.0
+  iron-remote-desktop-rdp.js    @devolutions/iron-remote-desktop-rdp 0.7.0
+  iron-remote-desktop-rdp.wasm  @devolutions/iron-remote-desktop-rdp 0.7.0
+
+The package inlines its WebAssembly module as a base64 data URL. It is served here as its own file instead, and
+line 4 of iron-remote-desktop-rdp.js loads it by URL: Firefox attributes the module's URL to every WebAssembly stack
+frame, and with a multi-megabyte data URL each captured stack copied and hashed the whole string.
+
+IronRDP is licensed under either of the MIT license or the Apache License,
+Version 2.0, at your option. These files are used under the MIT license:
+
+Permission is hereby granted, free of charge, to any
+person obtaining a copy of this software and associated
+documentation files (the "Software"), to deal in the
+Software without restriction, including without
+limitation the rights to use, copy, modify, merge,
+publish, distribute, sublicense, and/or sell copies of
+the Software, and to permit persons to whom the Software
+is furnished to do so, subject to the following
+conditions:
+
+The above copyright notice and this permission notice
+shall be included in all copies or substantial portions
+of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF
+ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
+TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT
+SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
+IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+DEALINGS IN THE SOFTWARE.
