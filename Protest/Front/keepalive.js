@@ -133,6 +133,10 @@ const KEEP = {
 			usernameLabel.textContent = KEEP.username;
 			break;
 
+		case "sessionrecording":
+			KEEP.sessionRecording = message.enable;
+			break;
+
 		case "log":
 			WIN.array.filter(win=> win instanceof Log).forEach(log=> log.Add(message.msg));
 			break;

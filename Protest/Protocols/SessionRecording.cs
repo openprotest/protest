@@ -188,6 +188,8 @@ internal sealed class SessionRecording {
 
             Logger.Action(origin, "Data retention", $"Session recording {(enable ? "enabled" : "disabled")}");
 
+            KeepAlive.Broadcast($"{{\"action\":\"sessionrecording\",\"enable\":{(enable ? "true" : "false")}}}", "/ws/keepalive");
+
             return Data.CODE_OK.Array;
         }
         catch (Exception ex) {
