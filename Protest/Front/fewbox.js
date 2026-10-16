@@ -23,6 +23,7 @@ class FewBox {
 			if (this.index >= 0) this.MoveHighlight();
 		});
 		this.resizeObserver.observe(this.container);
+		this.resizeObserver.observe(this.itemsRow);
 
 		this.container.addEventListener("keydown", event=> this.Container_onkeydown(event));
 
@@ -73,7 +74,7 @@ class FewBox {
 	}
 
 	CheckOverflow() {
-		const overflows = this.itemsRow.scrollWidth > this.container.clientWidth + 1;
+		const overflows = this.itemsRow.offsetWidth > this.container.clientWidth + 1;
 		if (overflows === this.isCollapsed) return;
 
 		const hadFocus = this.container.contains(document.activeElement);

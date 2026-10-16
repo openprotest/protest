@@ -6,6 +6,16 @@ class Rdp extends Window {
 	static loadPromise = null;
 	static library = null;
 
+	static RESOLUTIONS = [
+		{ width:640,  height:480,  name:null },
+		{ width:800,  height:600,  name:null },
+		{ width:1024, height:768,  name:null },
+		{ width:1280, height:720,  name:"HD" },
+		{ width:1920, height:1080, name:"Full HD" },
+		{ width:2560, height:1440, name:"2K" },
+		{ width:3840, height:2160, name:"4K" }
+	];
+
 	static ACKNOWLEDGE_STEP = 16384; //well under the gateway's window
 	static MAX_POINTER_SIZE = 32; //browsers drop a bigger cursor near the viewport's edge, as IronRDP notes
 	static nativeWebSocket = null;
@@ -54,9 +64,8 @@ class Rdp extends Window {
 		this.connected = false;
 
 		this.scaleToFit = true;
-		this.matchWindow = !this.args.isRecording;
+		this.resolution = Rdp.ParseResolution(this.args.resolution); //null matches the window
 		this.resizeTimeout = null;
-		this.windowedResolution = null;
 		this.remoteScale = 100;
 		this.pointerCache = new Map(); //the server's pointer cache, as cursor styles
 		this.clipboardSync = false;
@@ -75,7 +84,7 @@ class Rdp extends Window {
 			this.metaButton       = this.AddToolbarButton("Send meta", "mono/winkey.svg?light");
 			this.clipboardButton  = this.AddToolbarButton("Clipboard sync", "mono/clipboard.svg?light");
 			this.AddToolbarSeparator();
-			this.matchButton      = this.AddToolbarButton("Match window resolution", "mono/monitor.svg?light");
+			this.resolutionDropDown = this.AddToolbarDropdown("mono/resolution.svg?light");
 		}
 
 		this.fitButton        = this.AddToolbarButton("Fit to window", "mono/fittoscreen.svg?light");
@@ -103,9 +112,8 @@ class Rdp extends Window {
 
 		if (this.args.isRecording) return;
 
-		this.matchButton.style.borderBottom = "3px solid rgb(192,192,192)";
+		this.SetupResolutionMenu();
 
-		this.matchButton.onclick      = ()=> this.ToggleMatchWindow();
 		this.connectButton.onclick    = ()=> this.ConnectDialog(this.args.host);
 		this.cadButton.onclick        = ()=> { if (this.connected) this.userInteraction.ctrlAltDel(); };
 		this.metaButton.onclick       = ()=> { if (this.connected) this.userInteraction.metaKey(); };
@@ -130,14 +138,8 @@ class Rdp extends Window {
 		window.addEventListener("focus", this._clipboardSyncHandler);
 		document.addEventListener("visibilitychange", this._clipboardSyncHandler);
 
-		//full screen takes the screen's resolution, the windowed one is kept to return to when not matching the window
-		this._fullscreenHandler = ()=> {
-			const canvas = this.element?.shadowRoot?.querySelector("canvas");
-			if (this.IsFullscreen() && canvas && !this.windowedResolution) {
-				this.windowedResolution = { width:canvas.width, height:canvas.height };
-			}
-			this.ScheduleResize();
-		};
+		//full screen takes the screen's resolution, leaving it returns to the selected one
+		this._fullscreenHandler = ()=> this.ScheduleResize();
 		document.addEventListener("fullscreenchange", this._fullscreenHandler);
 
 		//without credentials the dialog asks for them first
@@ -650,10 +652,12 @@ class Rdp extends Window {
 		}
 	}
 
+	//The remote desktop starts at the selected resolution or the window's size, up to 4096x2160 which every server takes,
+	//a bigger one is asked for once connected.
 	GetDesktopSize() {
-		//the remote desktop starts at the size of the window, the width has to be even
-		let width  = Math.min(Math.max(this.canvasBox.clientWidth,  640), 4096);
-		let height = Math.min(Math.max(this.canvasBox.clientHeight, 480), 2160);
+		const size = this.resolution ?? Rdp.ClampResolution(this.canvasBox.clientWidth, this.canvasBox.clientHeight);
+		let width  = Math.min(size.width, 4096);
+		let height = Math.min(size.height, 2160);
 		width -= width % 2;
 		return { width:width, height:height };
 	}
@@ -711,7 +715,7 @@ class Rdp extends Window {
 		dialogBox.parentElement.onclick = event=> event.stopPropagation();
 
 		innerBox.style.display = "grid";
-		innerBox.style.gridTemplateColumns = "100px min(auto, 250px)";
+		innerBox.style.gridTemplateColumns = "100px minmax(50px, 300px)";
 		innerBox.style.gridTemplateRows = "36px 8px repeat(4, 36px)";
 		innerBox.style.alignItems = "center";
 		innerBox.style.margin = "20px 20px 0 20px";
@@ -925,14 +929,119 @@ class Rdp extends Window {
 		}, 200);
 	}
 
-	ToggleMatchWindow() {
-		this.matchWindow = !this.matchWindow;
-		this.matchButton.style.borderBottom = this.matchWindow ? "3px solid rgb(192,192,192)" : "none";
+	SetupResolutionMenu() {
+		const dropdown = this.resolutionDropDown;
+		dropdown.button.setAttribute("aria-label", "Resolution");
+		dropdown.menu.style.height = `${(Rdp.RESOLUTIONS.length + 2) * 32 + 4}px`;
+
+		const AddOption = (text, onclick)=> {
+			const option = document.createElement("div");
+			option.style.paddingLeft = "8px"; //no icons
+			option.textContent = text;
+			option.onclick = ()=> {
+				dropdown.button.blur(); //closes the menu
+				onclick();
+			};
+			dropdown.list.append(option);
+			return option;
+		};
+
+		this.resolutionOptions = [{ option:AddOption("Match window", ()=> this.SetResolution(null)), resolution:null }];
+
+		for (const preset of Rdp.RESOLUTIONS) {
+			const text = `${preset.width} x ${preset.height}${preset.name ? ` (${preset.name})` : ""}`;
+			this.resolutionOptions.push({ option:AddOption(text, ()=> this.SetResolution(preset)), resolution:preset });
+		}
+
+		this.customResolutionOption = AddOption("Custom...", ()=> this.CustomResolutionDialog());
+
+		this.UpdateResolutionMenu();
+	}
+
+	UpdateResolutionMenu() {
+		const preset = this.resolution
+			? Rdp.RESOLUTIONS.find(o=> o.width === this.resolution.width && o.height === this.resolution.height) ?? null
+			: null;
+		const isCustom = this.resolution !== null && preset === null;
+
+		for (const {option, resolution} of this.resolutionOptions) {
+			const selected = resolution === null ? this.resolution === null : resolution === preset;
+			option.style.backgroundColor = selected ? "var(--clr-select)" : "";
+		}
+
+		this.customResolutionOption.textContent = isCustom ? `Custom (${this.resolution.width} x ${this.resolution.height})` : "Custom...";
+		this.customResolutionOption.style.backgroundColor = isCustom ? "var(--clr-select)" : "";
+	}
+
+	//null matches the window, the choice is kept in the args so a restored window keeps it
+	SetResolution(resolution) {
+		this.resolution = resolution ? Rdp.ClampResolution(resolution.width, resolution.height) : null;
+		this.args.resolution = this.resolution ? `${this.resolution.width}x${this.resolution.height}` : "window";
+		this.UpdateResolutionMenu();
 		this.ScheduleResize();
 	}
 
-	//Asks the server for a new resolution once resizing settles: the screen's own in full screen, the window's while
-	//matching it, otherwise the one from before full screen. Servers older than 2012 R2 ignore it.
+	CustomResolutionDialog() {
+		const dialog = this.DialogBox("170px");
+		if (dialog === null) return;
+
+		const {okButton, cancelButton, innerBox} = dialog;
+		okButton.value = "Apply";
+
+		innerBox.style.padding = "20px";
+		innerBox.parentElement.style.maxWidth = "360px";
+		innerBox.parentElement.parentElement.onclick = event=> event.stopPropagation();
+
+		const current = this.resolution ?? this.GetTargetResolution(1);
+
+		const widthLabel = document.createElement("div");
+		widthLabel.style.display = "inline-block";
+		widthLabel.style.minWidth = "72px";
+		widthLabel.textContent = "Width:";
+		const widthInput = document.createElement("input");
+		widthInput.type = "number";
+		widthInput.min = "640";
+		widthInput.max = "8192";
+		widthInput.step = "2";
+		widthInput.style.width = "120px";
+		widthInput.value = current.width;
+
+		const heightLabel = document.createElement("div");
+		heightLabel.style.display = "inline-block";
+		heightLabel.style.minWidth = "72px";
+		heightLabel.style.marginTop = "8px";
+		heightLabel.textContent = "Height:";
+		const heightInput = document.createElement("input");
+		heightInput.type = "number";
+		heightInput.min = "480";
+		heightInput.max = "8192";
+		heightInput.style.width = "120px";
+		heightInput.value = current.height;
+
+		innerBox.append(widthLabel, widthInput, document.createElement("br"), heightLabel, heightInput);
+
+		const UpdateOkState = ()=> {
+			okButton.disabled = !(parseInt(widthInput.value) > 0 && parseInt(heightInput.value) > 0);
+		};
+		widthInput.oninput = heightInput.oninput = UpdateOkState;
+
+		widthInput.onkeydown = heightInput.onkeydown = event=> {
+			if (event.key === "Enter" && !okButton.disabled) okButton.click();
+		};
+
+		okButton.onclick = ()=> {
+			dialog.Close();
+			this.SetResolution({ width:parseInt(widthInput.value), height:parseInt(heightInput.value) });
+		};
+
+		cancelButton.value = "Cancel";
+
+		setTimeout(()=> {
+			widthInput.focus();
+			widthInput.select();
+		}, 200);
+	}
+
 	ScheduleResize() {
 		if (this.args.isRecording) return;
 
@@ -945,16 +1054,11 @@ class Rdp extends Window {
 			if (this.IsFullscreen()) {
 				target = this.GetTargetResolution(window.devicePixelRatio || 1);
 			}
-			else if (this.matchWindow) {
-				target = this.GetTargetResolution(1);
-				this.windowedResolution = null;
-			}
-			else if (this.windowedResolution) {
-				target = { ...this.windowedResolution, scale:100 };
-				this.windowedResolution = null;
+			else if (this.resolution) {
+				target = { ...this.resolution, scale:100 };
 			}
 			else {
-				return;
+				target = this.GetTargetResolution(1);
 			}
 
 			if (target.width === canvas.width && target.height === canvas.height && target.scale === this.remoteScale) return;
@@ -965,14 +1069,24 @@ class Rdp extends Window {
 	}
 
 	//In device pixels with a matching scale factor, so the remote desktop is as sharp as the screen and its text keeps
-	//its size. The width has to be even.
+	//its size.
 	GetTargetResolution(pixelRatio) {
-		let width  = Math.min(Math.max(Math.round(this.canvasBox.clientWidth  * pixelRatio), 640), 8192);
-		let height = Math.min(Math.max(Math.round(this.canvasBox.clientHeight * pixelRatio), 480), 8192);
-		width -= width % 2;
-
+		const size = Rdp.ClampResolution(Math.round(this.canvasBox.clientWidth * pixelRatio), Math.round(this.canvasBox.clientHeight * pixelRatio));
 		const scale = Math.min(Math.max(Math.round(pixelRatio * 100), 100), 500);
-		return { width:width, height:height, scale:scale };
+		return { width:size.width, height:size.height, scale:scale };
+	}
+
+	//Within what the display control channel takes, the width has to be even.
+	static ClampResolution(width, height) {
+		width  = Math.min(Math.max(width,  640), 8192);
+		height = Math.min(Math.max(height, 480), 8192);
+		return { width:width - width % 2, height:height };
+	}
+
+	//"window" or "WIDTHxHEIGHT", as kept in the args
+	static ParseResolution(value) {
+		const match = /^(\d+)x(\d+)$/.exec(value ?? "");
+		return match ? Rdp.ClampResolution(parseInt(match[1]), parseInt(match[2])) : null;
 	}
 
 	IsFullscreen() {

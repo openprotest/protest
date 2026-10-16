@@ -23,6 +23,8 @@
 
 .few-box-items {
 	position: relative;
+	width: max-content;
+	margin: 0 auto;
 }
 
 .few-box-items > div:not(.few-box-highlight) {

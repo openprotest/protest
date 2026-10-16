@@ -561,6 +561,7 @@ class View extends Window {
 				MarkDirty();
 			}
 		});
+
 		dropAreaLabel.style.left = "12px";
 		dropAreaLabel.style.bottom = "12px";
 
@@ -876,12 +877,13 @@ class View extends Window {
 			}
 
 			const titleBox = document.createElement("div");
-			titleBox.style.padding = "2px 0";
-			titleBox.style.paddingLeft = "64px";
-			titleBox.style.paddingRight = "32px";
+			titleBox.style.padding = "2px 32px 8px 64px";
 			titleBox.style.textAlign = "center";
 			titleBox.style.fontWeight = "bold";
 			titleBox.style.textDecoration = "underline";
+			titleBox.style.whiteSpace = "nowrap";
+			titleBox.style.overflow = "hidden";
+			titleBox.style.textOverflow = "ellipsis";
 			titleBox.textContent = json.name;
 			container.appendChild(titleBox);
 
@@ -936,7 +938,6 @@ class View extends Window {
 			}
 
 			if (isSshKey) {
-				//the private key stays in the vault editor
 				if (json.passphrase.length > 0) {
 					const valueBox = CreateValue("Passphrase", json.passphrase);
 					first ??= valueBox;
@@ -949,6 +950,8 @@ class View extends Window {
 			}
 			else if (json.password.length > 0) {
 				const valueBox = CreateValue("Password", json.password);
+				valueBox.type = "password";
+				valueBox.onfocus = ()=> { valueBox.type = "text"; };
 				first ??= valueBox;
 			}
 
