@@ -637,7 +637,7 @@ class DeviceView extends View {
 				const actionButton = this.CreateSideButton("mono/earth.svg", "HTTPS");
 				actionButton.onclick = ()=> {
 					const link = document.createElement("a");
-					link.href = "https://" + host + ":" + overwriteProtocol.https;
+					link.href = `https://${host}:${overwriteProtocol.https}`;
 					link.target = "_blank";
 					link.click();
 				};
@@ -646,7 +646,7 @@ class DeviceView extends View {
 				const actionButton = this.CreateSideButton("mono/earth.svg", "HTTPS");
 				actionButton.onclick = ()=> {
 					const link = document.createElement("a");
-					link.href = "https://" + host;
+					link.href = `https://${host}`;
 					link.target = "_blank";
 					link.click();
 				};
@@ -656,7 +656,7 @@ class DeviceView extends View {
 				const actionButton = this.CreateSideButton("mono/earth.svg", "HTTP");
 				actionButton.onclick = ()=> {
 					const link = document.createElement("a");
-					link.href = "http://" + host + ":" + overwriteProtocol.http;
+					link.href = `http://${host}:${overwriteProtocol.http}`;
 					link.target = "_blank";
 					link.click();
 				};
@@ -665,7 +665,7 @@ class DeviceView extends View {
 				const actionButton = this.CreateSideButton("mono/earth.svg", "HTTP");
 				actionButton.onclick = ()=> {
 					const link = document.createElement("a");
-					link.href = "http://" + host;
+					link.href = `http://${host}`;
 					link.target = "_blank";
 					link.click();
 				};
@@ -771,7 +771,9 @@ class DeviceView extends View {
 
 		if ("anydesk id" in this.link && this.link["anydesk id"].v.length > 0) { //anydesk
 			const actionButton = this.CreateSideButton("mono/anydesk.svg", "AnyDesk");
-			actionButton.onclick = ()=> UI.PromptRelay(this, "anydesk", this.link["anydesk id"].v);
+			actionButton.onclick = ()=> {
+				window.location.href = `anydesk:${this.link["anydesk id"].v.replaceAll(" ", "")}`;
+			};
 		}
 
 		if (this.link.type) {
