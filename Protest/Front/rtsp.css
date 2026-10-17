@@ -1,0 +1,100 @@
+.rtsp-canvas-box {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	overflow: auto;
+	background-color: #000;
+}
+
+.rtsp-canvas-box > canvas {
+	flex: none;
+	display: block;
+	margin: auto;
+}
+
+.rtsp-canvas-box.rtsp-fit {
+	overflow: hidden;
+}
+
+.rtsp-canvas-box.rtsp-fit > canvas {
+	width: 100%;
+	height: 100%;
+	object-fit: contain;
+}
+
+.rtsp-status-box {
+	display: none;
+	position: absolute;
+	z-index: 2;
+	left: 50%;
+	top: 20px;
+	transform: translateX(-50%);
+	max-width: calc(100% - 120px);
+	padding: 20px 20px 20px 64px;
+	text-align: center;
+	border-radius: 4px;
+	box-shadow: var(--clr-dark) 0 0 4px;
+	font-family: var(--global-font-family);
+	font-weight: 800;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	color: var(--clr-dark);
+	background-color: var(--clr-select);
+	background-image: url(mono/connect.svg);
+	background-size: 48px 48px;
+	background-position: 8px 50%;
+	background-repeat: no-repeat;
+	-webkit-user-select: none; user-select: none;
+	pointer-events: none;
+}
+
+.rtsp-certificate-warning {
+	display: none;
+	position: absolute;
+	z-index: 1;
+	right: 8px;
+	top: 8px;
+	padding: 4px 10px 4px 28px;
+	border-radius: 4px;
+	font-family: var(--global-font-family);
+	font-size: 12px;
+	font-weight: 600;
+	color: #f0c040;
+	background-color: rgba(0,0,0,.65);
+	background-image: url(mono/warning.svg?light);
+	background-size: 16px 16px;
+	background-position: 6px 50%;
+	background-repeat: no-repeat;
+	cursor: pointer;
+	-webkit-user-select: none; user-select: none;
+}
+
+.rtsp-info-box {
+	display: none;
+	grid-template-columns: auto auto;
+	column-gap: 12px;
+	row-gap: 2px;
+	position: absolute;
+	z-index: 1;
+	left: 8px;
+	top: 8px;
+	max-width: calc(100% - 40px);
+	padding: 8px 12px;
+	border-radius: 4px;
+	font-family: monospace;
+	font-size: 12px;
+	color: #e0e0e0;
+	background-color: rgba(0,0,0,.65);
+	-webkit-user-select: text; user-select: text;
+}
+
+.rtsp-info-box > div {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.rtsp-info-box > div:nth-child(odd) {
+	color: #a0a0a0;
+}

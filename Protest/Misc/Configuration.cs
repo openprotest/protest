@@ -18,6 +18,12 @@ internal static class Configuration {
     internal static bool addressBook = false;
     internal static bool backdoor = true;
 
+    //RTSP viewer destinations and limits, see Protocols.Rtsp.DestinationPolicy
+    internal static readonly List<IPNetwork> rtspAllow = new List<IPNetwork>();
+    internal static readonly List<IPNetwork> rtspDeny = new List<IPNetwork>();
+    internal static int rtspMaxSessions = 64;
+    internal static int rtspMaxUserSessions = 16;
+
     internal static string frontPath = Path.Join(Data.DIR_BASE, "Front");
     internal static string[] httpPrefixes = new string[] { "http://127.0.0.1:8080/" };
 
@@ -71,6 +77,28 @@ internal static class Configuration {
 
             case "backdoor":
                 backdoor = String.Equals(value.ToString(), "true", StringComparison.OrdinalIgnoreCase);
+                break;
+
+            case "rtsp_allow":
+                if (!Protocols.Rtsp.DestinationPolicy.TryParseNetworks(value.ToString(), rtspAllow)) {
+                    Logger.Error($"Invalid entry in rtsp_allow, it was ignored: {value}");
+                }
+                break;
+
+            case "rtsp_deny":
+                //an unreadable deny entry would leave a range open, so it stops the RTSP viewer instead
+                if (!Protocols.Rtsp.DestinationPolicy.TryParseNetworks(value.ToString(), rtspDeny)) {
+                    Logger.Error($"Invalid entry in rtsp_deny, the RTSP viewer is disabled: {value}");
+                    rtspMaxSessions = 0;
+                }
+                break;
+
+            case "rtsp_max_sessions":
+                if (int.TryParse(value, out int maxSessions) && maxSessions >= 0 && rtspMaxSessions > 0) rtspMaxSessions = maxSessions;
+                break;
+
+            case "rtsp_max_user_sessions":
+                if (int.TryParse(value, out int maxUserSessions) && maxUserSessions >= 0) rtspMaxUserSessions = maxUserSessions;
                 break;
             }
         }
@@ -142,6 +170,14 @@ internal static class Configuration {
 
         builder.AppendLine($"# When the backdoor flag set to true, requests originating from the loopback address bypass authentication");
         builder.AppendLine($"backdoor = {backdoor.ToString().ToLower()}");
+        builder.AppendLine();
+
+        builder.AppendLine($"# The RTSP viewer refuses loopback, link-local, multicast, broadcast and cloud metadata addresses.");
+        builder.AppendLine($"# rtsp_allow excepts addresses or ranges from that, rtsp_deny refuses more, both take comma separated lists.");
+        builder.AppendLine($"#rtsp_allow = 127.0.0.1/32");
+        builder.AppendLine($"#rtsp_deny = 10.20.0.0/16, 192.168.50.10");
+        builder.AppendLine($"#rtsp_max_sessions = 64");
+        builder.AppendLine($"#rtsp_max_user_sessions = 16");
         builder.AppendLine();
 
         File.WriteAllText(Data.FILE_CONFIG, builder.ToString());

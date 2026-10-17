@@ -449,6 +449,7 @@ const MENU = {
 		{ t:"Telnet",             i:"mono/telnet.svg?light",        g:"utilities", h:true,  f:()=> new Telnet({host:""}),    k:"terminal" },
 		{ t:"VNC",                i:"mono/vnc.svg?light",           g:"utilities", h:true,  f:()=> new Vnc(),                k:"vnc uvnc remote rfb" },
 		{ t:"Remote desktop",     i:"mono/rdp.svg?light",           g:"utilities", h:true,  f:()=> new Rdp(),                k:"rdp mstsc remote desktop ironrdp" },
+		{ t:"RTSP viewer",        i:"mono/camera.svg?light",        g:"utilities", h:true,  f:()=> new Rtsp(),               k:"real time streaming cctv nvr video h264 h265 hevc mjpeg" },
 		{ t:"Encoder",            i:"mono/encoder.svg?light",       g:"utilities", h:true,  f:args=> new Encoder(args),      k:"binary hex base64 url html decode" },
 		{ t:"Network calculator", i:"mono/netcalc.svg?light",       g:"utilities", h:true,  f:()=> new NetCalc(),            k:"subnet" },
 		{ t:"Password generator", i:"mono/passgen.svg?light",       g:"utilities", h:true,  f:()=> new PassGen(),            k:"code" },

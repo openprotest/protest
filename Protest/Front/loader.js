@@ -140,6 +140,7 @@ const LOADER = {
 		"sftp.js",
 		"vnc.js",
 		"rdp.js",
+		"rtsp.js",
 		"sessionrecordings.js",
 		"wmi.js",
 		"snmp.js",
@@ -378,6 +379,7 @@ const LOADER = {
 		case "VncRecording" : return new VncRecording(command.args);
 		case "Rdp"          : return new Rdp({ ...command.args, autoconnect:false });
 		case "RdpRecording" : return new RdpRecording(command.args);
+		case "Rtsp"         : return new Rtsp({ ...command.args, autoconnect:false });
 		case "TerminalRecording" : return new TerminalRecording(command.args);
 		case "SessionRecordings" : return new SessionRecordings(command.args);
 		case "Wmi"          : return new Wmi(command.args);

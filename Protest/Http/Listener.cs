@@ -546,6 +546,7 @@ internal sealed class Listener {
         case "/ws/sftp"             : await Protocols.Sftp.WebSocketHandler(ctx);     return true;
         case "/ws/vnc"              : await Protocols.Vnc.WebSocketHandler(ctx);      return true;
         case "/ws/rdp"              : await Protocols.Rdp.WebSocketHandler(ctx);      return true;
+        case "/ws/rtsp"             : await Protocols.Rtsp.WebSocketHandler(ctx);     return true;
         case "/ws/terminal"         : await Tools.Terminal.WebSocketHandler(ctx);     return true;
         case "/ws/winrm"            : await Tools.WinRM.WebSocketHandler(ctx);        return true;
         case "/ws/ipdiscovery"      : await Tools.IpDiscovery.WebSocketHandler(ctx);  return true;

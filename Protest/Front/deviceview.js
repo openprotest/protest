@@ -6,7 +6,7 @@ class DeviceView extends View {
 		"type", "name",
 
 		["mono/portscan.svg", "network"],
-		"ip", "ipv6", "mask", "hostname", "fqdn", "mac address", "dhcp enabled", "ports", "network adapter speed", "uplink", "overwriteprotocol",
+		"ip", "ipv6", "mask", "hostname", "fqdn", "mac address", "dhcp enabled", "ports", "network adapter speed", "uplink", "overwriteprotocol", "rtsp url",
 
 		[".", "device"],
 		"manufacturer", "model", "serial number", "chassis type", "description", "descriptor",
@@ -36,7 +36,7 @@ class DeviceView extends View {
 		"object guid", "distinguished name", "dns hostname", "created on dc",
 
 		["mono/lock.svg", "credentials"],
-		"domain", "credentials", "ssh key", "ssh credentials", "vnc credentials", "uvnc credentials", "anydesk credentials", "snmp profile",
+		"domain", "credentials", "ssh key", "ssh credentials", "vnc credentials", "uvnc credentials", "rtsp credentials", "anydesk credentials", "snmp profile",
 		"username", "password", "ssh username", "ssh password", "vnc password", "uvnc password", "anydesk id", "anydesk password"
 	];
 
@@ -767,6 +767,27 @@ class DeviceView extends View {
 					printTestButton.removeAttribute("busy");
 				};
 			}
+		}
+
+		const rtspUrl = this.link["rtsp url"]?.v.trim() ?? "";
+		const rtspPorts = this.link.ports ? this.link.ports.v.split(";").map(o=> parseInt(o.trim())) : [];
+		const hasRtsp = overwriteProtocol.rtsp || overwriteProtocol.rtsps || rtspPorts.includes(554) || rtspPorts.includes(322);
+
+		if (rtspUrl.length > 0 || (host && hasRtsp)) { //rtsp
+			let url = rtspUrl;
+			if (url.length === 0) { //without a stream path, the viewer asks for one
+				const secure = !overwriteProtocol.rtsp && !rtspPorts.includes(554);
+				const port = secure ? overwriteProtocol.rtsps || 322 : overwriteProtocol.rtsp || 554;
+				const address = host.includes(":") ? `[${host}]` : host;
+				url = `${secure ? "rtsps" : "rtsp"}://${address}:${port}/`;
+			}
+
+			const rtspButton = this.CreateSideButton("mono/camera.svg", "RTSP viewer");
+			rtspButton.onclick = async ()=> {
+				const credential = await this.ResolveCredentialGuid(["rtsp credentials", "credentials"]);
+				if (credential === null) return; //picker cancelled
+				new Rtsp({ url: url, credential: credential });
+			};
 		}
 
 		if ("anydesk id" in this.link && this.link["anydesk id"].v.length > 0) { //anydesk

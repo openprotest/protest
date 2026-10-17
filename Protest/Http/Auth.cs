@@ -659,6 +659,10 @@ internal static class Auth {
                 path.Add("/ws/rdp");
                 break;
 
+            case "rtsp:write":
+                path.Add("/ws/rtsp");
+                break;
+
             case "session recordings:read":
                 path.Add("/recordings/list");
                 path.Add("/recordings/meta");
