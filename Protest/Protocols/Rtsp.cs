@@ -115,18 +115,15 @@ internal static partial class Rtsp {
             return;
         }
 
-        //The principal is the session's user. "loopback", which vault access lists let through, is only for a loopback
-        //request the backdoor admitted without a session, a user signed in on the server itself keeps their own rights.
         string sessionId = ctx.Request.Cookies["sessionid"]?.Value;
-        string origin = Auth.GetUsername(sessionId);
+        string origin = Auth.GetPrincipal(sessionId, ctx.Request.RemoteEndPoint.Address);
         if (origin is null) {
-            if (!Configuration.backdoor || !IPAddress.IsLoopback(ctx.Request.RemoteEndPoint.Address)) {
-                ctx.Response.StatusCode = 403;
-                ctx.Response.Close();
-                return;
-            }
-            sessionId = null;
-            origin = "loopback";
+            ctx.Response.StatusCode = 403;
+            ctx.Response.Close();
+            return;
+        }
+        if (String.Equals(origin, "loopback", StringComparison.Ordinal)) {
+            sessionId = null; //admitted by the backdoor, there is no session to follow
         }
 
         WebSocket ws;

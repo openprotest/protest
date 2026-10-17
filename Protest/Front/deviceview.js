@@ -782,7 +782,7 @@ class DeviceView extends View {
 				url = `${secure ? "rtsps" : "rtsp"}://${address}:${port}/`;
 			}
 
-			const rtspButton = this.CreateSideButton("mono/camera.svg", "RTSP viewer");
+			const rtspButton = this.CreateSideButton("mono/camera.svg", "RTSP");
 			rtspButton.onclick = async ()=> {
 				const credential = await this.ResolveCredentialGuid(["rtsp credentials", "credentials"]);
 				if (credential === null) return; //picker cancelled
@@ -2456,7 +2456,6 @@ class DeviceView extends View {
 
 	//the most recent syslog messages and snmp traps, warning and above, each section shows only when the device has any
 	InitializeLogs() {
-		//created in order, they fill in as the requests complete
 		const syslogBox = this.CreateLogBox("Syslog", "mono/syslog.svg");
 		const trapsBox = this.CreateLogBox("SNMP traps", "mono/trap.svg");
 
@@ -2481,7 +2480,6 @@ class DeviceView extends View {
 		return {box:box, list:list};
 	}
 
-	//newest first
 	async FetchLogLines(endpoint, levels) {
 		try {
 			const response = await fetch(`${endpoint}?device=${encodeURIComponent(this.args.file)}&limit=${DeviceView.LOG_ENTRIES}&levels=${levels}`);

@@ -51,12 +51,6 @@ internal static class SpeedTest {
         public readonly ConcurrentDictionary<string, Connection> connections = new ConcurrentDictionary<string, Connection>(StringComparer.Ordinal);
     }
 
-    private static string GetUsername(HttpListenerContext ctx) {
-        return IPAddress.IsLoopback(ctx.Request.RemoteEndPoint.Address)
-            ? "loopback"
-            : Auth.GetUsername(ctx.Request.Cookies["sessionid"]?.Value);
-    }
-
     //client assigned, e.g. "d0", "u3"
     private static bool IsValidConnectionId(string id) {
         if (String.IsNullOrEmpty(id) || id.Length > 32) return false;
@@ -79,6 +73,13 @@ internal static class SpeedTest {
             return;
         }
 
+        string username = Auth.GetPrincipal(ctx);
+        if (username is null) {
+            ctx.Response.StatusCode = 403;
+            ctx.Response.Close();
+            return;
+        }
+
         WebSocket ws;
         try {
             HttpListenerWebSocketContext wsc = await ctx.AcceptWebSocketAsync(null);
@@ -96,7 +97,7 @@ internal static class SpeedTest {
             return;
         }
 
-        Session session = new Session { username = GetUsername(ctx) };
+        Session session = new Session { username = username };
         sessions[session.id] = session;
 
         using SemaphoreSlim writeLock = new SemaphoreSlim(1, 1);
@@ -225,7 +226,7 @@ internal static class SpeedTest {
         }
 
         //only the user who opened the session
-        if (!sessions.TryGetValue(sessionId, out Session session) || session.username != GetUsername(ctx)) {
+        if (!sessions.TryGetValue(sessionId, out Session session) || session.username != Auth.GetPrincipal(ctx)) {
             Close(ctx, HttpStatusCode.NotFound);
             return;
         }

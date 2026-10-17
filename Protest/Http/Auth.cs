@@ -466,6 +466,18 @@ internal static class Auth {
         return null;
     }
 
+    //The acting user is the session's user. "loopback", which vault access lists let through, is only for a loopback
+    //request the backdoor admitted without a session, a user signed in on the server itself keeps their own rights.
+    internal static string GetPrincipal(HttpListenerContext ctx) =>
+        GetPrincipal(ctx.Request.Cookies["sessionid"]?.Value, ctx.Request.RemoteEndPoint?.Address);
+
+    internal static string GetPrincipal(string sessionId, IPAddress remoteIp) {
+        string username = GetUsername(sessionId);
+        if (username is not null) return username;
+        if (Configuration.backdoor && remoteIp is not null && IPAddress.IsLoopback(remoteIp)) return "loopback";
+        return null;
+    }
+
     private static HashSet<string> PopulateAccessPath(string[] accessList) {
         HashSet<string> path = new HashSet<string> {
             "/global",

@@ -55,8 +55,11 @@ internal static class Vnc {
 
         if (ws is null) return;
 
-        string sessionId = ctx.Request.Cookies["sessionid"]?.Value;
-        string origin = IPAddress.IsLoopback(ctx.Request.RemoteEndPoint.Address) ? "loopback" : Auth.GetUsername(sessionId);
+        string origin = Auth.GetPrincipal(ctx);
+        if (origin is null) {
+            ws.Abort();
+            return;
+        }
 
         //with a vault credential, the proxy authenticates on the client's behalf and the password never reaches the browser
         bool serverSideAuth = !String.IsNullOrEmpty(credentialGuid);

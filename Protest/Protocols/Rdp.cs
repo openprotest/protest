@@ -72,8 +72,11 @@ internal static class Rdp {
 
         if (ws is null) return;
 
-        string sessionId = ctx.Request.Cookies["sessionid"]?.Value;
-        string origin = IPAddress.IsLoopback(ctx.Request.RemoteEndPoint.Address) ? "loopback" : Auth.GetUsername(sessionId);
+        string origin = Auth.GetPrincipal(ctx);
+        if (origin is null) {
+            ws.Abort();
+            return;
+        }
 
         TcpClient tcp = new TcpClient() {
             NoDelay = true,              //input events are small and latency bound, Nagle would hold them back

@@ -488,13 +488,17 @@ internal sealed class Listener {
     }
 
     private static async Task<bool> DynamicHandler(HttpListenerContext ctx, Dictionary<string, string> parameters) {
-        string sessionId = ctx.Request.Cookies["sessionid"]?.Value;
-        string username = IPAddress.IsLoopback(ctx.Request.RemoteEndPoint.Address) ? "loopback" : Auth.GetUsername(sessionId);
-
         ctx.Response.AddHeader("Cache-Control", "no-cache");
 
         string path = ctx.Request.Url.AbsolutePath;
         if (routing.TryGetValue(path, out Func<HttpListenerContext, string, byte[]> handler)) {
+            string username = Auth.GetPrincipal(ctx);
+            if (username is null) {
+                ctx.Response.StatusCode = (int)HttpStatusCode.Forbidden;
+                ctx.Response.Close();
+                return true;
+            }
+
             byte[] buffer = handler(ctx, username);
             ctx.Response.StatusCode = (int)HttpStatusCode.OK;
             ctx.Response.ContentLength64 = buffer?.Length ?? 0;

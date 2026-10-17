@@ -40,6 +40,14 @@ internal static class KeepAlive {
             return;
         }
 
+        string sessionId = ctx.Request.Cookies["sessionid"]?.Value;
+        string username = Auth.GetPrincipal(ctx);
+        if (username is null) {
+            ctx.Response.StatusCode = 403;
+            ctx.Response.Close();
+            return;
+        }
+
         WebSocket ws;
         try {
             HttpListenerWebSocketContext wsc = await ctx.AcceptWebSocketAsync(null);
@@ -52,9 +60,6 @@ internal static class KeepAlive {
         }
 
         if (ws is null) return;
-
-        string sessionId = ctx.Request.Cookies["sessionid"]?.Value;
-        string username = IPAddress.IsLoopback(ctx.Request.RemoteEndPoint.Address) ? "loopback" : Auth.GetUsername(sessionId);
 
         string[] accessArray = Auth.rbac.TryGetValue(username, out Auth.AccessControl accessControl) && accessControl is not null ? accessControl.authorization : new string[] { "*" };
 
