@@ -960,7 +960,6 @@ class View extends Window {
 			}
 
 			editButton.onclick = async ()=> {
-				//open the editor with the full entry, a partial one would reset its permissions on save
 				try {
 					const listResponse = await fetch(`${endpoint}/list`);
 					if (listResponse.status !== 200) LOADER.HttpErrorHandler(listResponse.status);
@@ -982,6 +981,10 @@ class View extends Window {
 		}
 		catch (ex) {
 			valid = false;
+
+			editButton.style.display = "none";
+			removeButton.style.display = "none";
+			draggable.style.display = "none";
 
 			const errorBox = document.createElement("div");
 			errorBox.style.textAlign = "center";
