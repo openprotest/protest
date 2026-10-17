@@ -79,7 +79,7 @@ internal static class Documentation {
 
     public static byte[] View(Dictionary<string, string> parameters, bool serveGZip = false) {
         parameters.TryGetValue("name", out string name);
-        if (String.IsNullOrEmpty(name)) {
+        if (!Data.IsValidFilename(name)) {
             return Data.CODE_INVALID_ARGUMENT.Array;
         }
 
@@ -112,6 +112,9 @@ internal static class Documentation {
         string filename = payload[0];
         foreach (char c in Path.GetInvalidFileNameChars()) {
             filename = filename.Replace(c, '_');
+        }
+        if (!Data.IsValidFilename(filename)) {
+            return Data.CODE_INVALID_ARGUMENT.Array;
         }
 
         List<string> keywords = new List<string>();
@@ -225,7 +228,7 @@ internal static class Documentation {
         }
 
         parameters.TryGetValue("name", out string name);
-        if (String.IsNullOrEmpty(name)) {
+        if (!Data.IsValidFilename(name)) {
             return Data.CODE_INVALID_ARGUMENT.Array;
         }
 

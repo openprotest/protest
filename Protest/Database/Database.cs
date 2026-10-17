@@ -176,6 +176,9 @@ internal sealed class Database {
         if (String.IsNullOrEmpty(file)) {
             file = GenerateFilename();
         }
+        else if (!Data.IsValidFilename(file)) {
+            return false;
+        }
 
         bool exist = dictionary.ContainsKey(file);
         if (!exist) method = SaveMethod.createnew;
@@ -325,6 +328,10 @@ internal sealed class Database {
 
             Dictionary<string, ConcurrentDictionary<string, Attribute>> mods = JsonSerializer.Deserialize<Dictionary<string, ConcurrentDictionary<string, Attribute>>>(payload, options);
 
+            if (mods.Keys.Any(o => !Data.IsValidFilename(o))) {
+                return Data.CODE_INVALID_ARGUMENT.Array;
+            }
+
             foreach (KeyValuePair<string, ConcurrentDictionary<string, Attribute>> pair in mods) {
                 Save(pair.Key, pair.Value, SaveMethod.merge, origin);
             }
@@ -352,6 +359,8 @@ internal sealed class Database {
             else {
                file = GenerateFilename();
             }
+
+            if (!String.IsNullOrEmpty(file) && !Data.IsValidFilename(file)) return Data.CODE_INVALID_ARGUMENT.Array;
 
             string payload;
             using StreamReader reader = new StreamReader(ctx.Request.InputStream, ctx.Request.ContentEncoding);
@@ -392,7 +401,7 @@ internal sealed class Database {
         }
 
         parameters!.TryGetValue("file", out string file);
-        if (file is null) {
+        if (!Data.IsValidFilename(file)) {
             return Data.CODE_INVALID_ARGUMENT.Array;
         }
 
@@ -410,7 +419,7 @@ internal sealed class Database {
 
         parameters.TryGetValue("file", out string file);
 
-        if (file is null) {
+        if (!Data.IsValidFilename(file)) {
             return Data.CODE_INVALID_ARGUMENT.Array;
         }
 

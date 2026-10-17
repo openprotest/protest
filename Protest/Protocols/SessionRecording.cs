@@ -379,10 +379,8 @@ internal sealed class SessionRecording {
         if (parameters is null ||
             !parameters.TryGetValue("protocol", out string protocol) ||
             !parameters.TryGetValue("id", out string id) ||
-            string.IsNullOrEmpty(protocol) ||
-            string.IsNullOrEmpty(id) ||
-            protocol.Contains("..") ||
-            id.Contains("..")) {
+            !Data.IsValidFilename(protocol) ||
+            !Data.IsValidFilename(id)) {
             return Data.CODE_INVALID_ARGUMENT.Array;
         }
 
@@ -464,7 +462,7 @@ internal sealed class SessionRecording {
         string protocol = ctx.Request.QueryString["protocol"];
         string id = ctx.Request.QueryString["id"];
 
-        if (string.IsNullOrEmpty(protocol) || string.IsNullOrEmpty(id) || protocol.Contains("..") || id.Contains("..")) {
+        if (!Data.IsValidFilename(protocol) || !Data.IsValidFilename(id)) {
             ctx.Response.StatusCode = 400;
             ctx.Response.Close();
             return;

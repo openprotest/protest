@@ -525,6 +525,11 @@ internal static class Watchdog {
             return null;
         }
 
+        //both end up in the path
+        if (!Data.IsValidFilename(file) || !Data.IsDigits(date, Data.DATE_FORMAT_FILE.Length)) {
+            return null;
+        }
+
         try {
             string path = Path.Join(Data.DIR_WATCHDOG, $"{file}_", date);
             byte[] bytes = File.ReadAllBytes(path);
@@ -543,6 +548,9 @@ internal static class Watchdog {
 
         if (parameters is null || !parameters.TryGetValue("file", out string file) || file is null) {
             file = Database.GenerateFilename();
+        }
+        else if (!Data.IsValidFilename(file)) {
+            return Data.CODE_INVALID_ARGUMENT.Array;
         }
 
         try {
@@ -589,6 +597,9 @@ internal static class Watchdog {
         }
 
         parameters.TryGetValue("file", out string file);
+        if (!Data.IsValidFilename(file)) {
+            return Data.CODE_INVALID_ARGUMENT.Array;
+        }
 
         try {
             if (!watchers.Remove(file, out Watcher watcher)) {

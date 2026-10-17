@@ -100,7 +100,7 @@ internal static class Backup {
         if (parameters is null) { return Data.CODE_FAILED.Array; }
 
         parameters.TryGetValue("name", out string name);
-        if (String.IsNullOrEmpty(name)) { return Data.CODE_INVALID_ARGUMENT.Array; }
+        if (!Data.IsValidFilename(name)) { return Data.CODE_INVALID_ARGUMENT.Array; }
 
         string filename = Path.Join(Data.DIR_BACKUP, name);
 
@@ -125,7 +125,7 @@ internal static class Backup {
         if (parameters is null) { return Data.CODE_FAILED.Array; }
 
         parameters.TryGetValue("name", out string name);
-        if (String.IsNullOrEmpty(name)) { return Data.CODE_INVALID_ARGUMENT.Array; }
+        if (!Data.IsValidFilename(name)) { return Data.CODE_INVALID_ARGUMENT.Array; }
 
         string filename = Path.Join(Data.DIR_BACKUP, name);
 

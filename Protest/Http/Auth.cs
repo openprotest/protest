@@ -945,7 +945,7 @@ internal static class Auth {
         color    = Uri.UnescapeDataString(color ?? String.Empty);
         bool isDomainUser = Uri.UnescapeDataString(isDomainString ?? String.Empty) == "true";
 
-        if (username is null) return Data.CODE_INVALID_ARGUMENT.Array;
+        if (!Data.IsValidFilename(username)) return Data.CODE_INVALID_ARGUMENT.Array; //unescaped twice, so check again
         if (username == "loopback") return Data.CODE_INVALID_ARGUMENT.Array;
 
         AccessControl access;
@@ -1023,11 +1023,7 @@ internal static class Auth {
             return Data.CODE_INVALID_ARGUMENT.Array;
         }
 
-        if (username is null) {
-            return Data.CODE_INVALID_ARGUMENT.Array;
-        }
-
-        if (username.Contains("..")) {
+        if (!Data.IsValidFilename(username)) {
             return Data.CODE_INVALID_ARGUMENT.Array;
         }
 

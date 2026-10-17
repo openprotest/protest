@@ -191,7 +191,7 @@ internal static class DebitNotes {
         string status = null;
         parameters?.TryGetValue("status", out status);
         parameters?.TryGetValue("file", out file);
-        if (String.IsNullOrEmpty(file)) return Data.CODE_INVALID_ARGUMENT.Array;
+        if (!Data.IsValidFilename(file)) return Data.CODE_INVALID_ARGUMENT.Array;
 
         string filename = status switch  {
             "short"    => Path.Join(Data.DIR_DEBIT_SHORT, file),
@@ -278,7 +278,7 @@ internal static class DebitNotes {
         string status = null;
         parameters?.TryGetValue("status", out status);
         parameters?.TryGetValue("file", out file);
-        if (String.IsNullOrEmpty(file)) return Data.CODE_INVALID_ARGUMENT.Array;
+        if (!Data.IsValidFilename(file)) return Data.CODE_INVALID_ARGUMENT.Array;
 
         string filename = status switch  {
             "short" => Path.Join(Data.DIR_DEBIT_SHORT, file),
@@ -305,7 +305,7 @@ internal static class DebitNotes {
         string status = null;
         parameters?.TryGetValue("status", out status);
         parameters?.TryGetValue("file", out file);
-        if (String.IsNullOrEmpty(file)) return Data.CODE_INVALID_ARGUMENT.Array;
+        if (!Data.IsValidFilename(file)) return Data.CODE_INVALID_ARGUMENT.Array;
 
         string filename = status switch  {
             "short" => Path.Join(Data.DIR_DEBIT_SHORT, file),

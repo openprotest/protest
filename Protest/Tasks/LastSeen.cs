@@ -11,6 +11,8 @@ internal static class LastSeen {
 
     public static void Seen(string ip) {
         ip = ip.ToLower().Replace(':', '_');
+        if (!Data.IsValidFilename(ip)) return;
+
         string filename = $"{Data.DIR_LASTSEEN}\\{ip}.txt";
         try {
             Lock mutex = mutexes.GetOrAdd(ip, new Lock());
@@ -40,6 +42,8 @@ internal static class LastSeen {
                 Logger.Debug(ex);
             }
         }
+
+        if (!Data.IsValidFilename(ip)) return "Never";
 
         string filename = $"{Data.DIR_LASTSEEN}\\{ip}.txt";
 

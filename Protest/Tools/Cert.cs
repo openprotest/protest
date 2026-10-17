@@ -193,6 +193,8 @@ internal static class Cert {
     }
 
     private static byte[] GetCertInfo(string name, string password) {
+        if (!Data.IsValidFilename(name)) { return Data.CODE_INVALID_ARGUMENT.Array; }
+
         string filename = Path.Join(Data.DIR_CERTIFICATES, name);
 
         if (!File.Exists(filename)) {
@@ -261,7 +263,7 @@ internal static class Cert {
         if (parameters is null) { return Data.CODE_FAILED.Array; }
 
         parameters.TryGetValue("name", out string name);
-        if (String.IsNullOrEmpty(name)) { return Data.CODE_INVALID_ARGUMENT.Array; }
+        if (!Data.IsValidFilename(name)) { return Data.CODE_INVALID_ARGUMENT.Array; }
 
         try {
             string filename = Path.Join(Data.DIR_CERTIFICATES, name);
@@ -286,7 +288,7 @@ internal static class Cert {
         if (parameters is null) { return Data.CODE_FAILED.Array; }
 
         parameters.TryGetValue("name", out string name);
-        if (String.IsNullOrEmpty(name)) { return Data.CODE_INVALID_ARGUMENT.Array; }
+        if (!Data.IsValidFilename(name)) { return Data.CODE_INVALID_ARGUMENT.Array; }
 
         string filename = Path.Join(Data.DIR_CERTIFICATES, name);
 

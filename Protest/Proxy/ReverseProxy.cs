@@ -300,6 +300,10 @@ internal static class ReverseProxy {
             return Data.CODE_FAILED.ToArray();
         }
 
+        if (!Guid.TryParse(guid, out _)) {
+            return Data.CODE_INVALID_ARGUMENT.ToArray();
+        }
+
         if (running.ContainsKey(guid)) {
             return "{\"error\":\"Unable to delete this proxy while it's running.\"}"u8.ToArray();
         }
@@ -320,6 +324,10 @@ internal static class ReverseProxy {
 
         if (parameters is null || !parameters.TryGetValue("guid", out string guid)) {
             return Data.CODE_FAILED.ToArray();
+        }
+
+        if (!Guid.TryParse(guid, out _)) {
+            return Data.CODE_INVALID_ARGUMENT.ToArray();
         }
 
         if (running.ContainsKey(guid)) {
@@ -367,6 +375,9 @@ internal static class ReverseProxy {
             else if (obj.protocol == ProxyProtocol.HTTP || obj.protocol == ProxyProtocol.HTTPS) {
                 string certificateFilename = null;
                 if (obj.certificate is not null) {
+                    if (!Data.IsValidFilename(obj.certificate)) {
+                        return Data.CODE_INVALID_ARGUMENT.ToArray();
+                    }
                     string path = Path.Join(Data.DIR_CERTIFICATES, obj.certificate);
                     certificateFilename = path;
                 }

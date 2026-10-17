@@ -119,6 +119,16 @@ internal static class Data {
         }
     }
 
+    public static bool IsValidFilename(string name) {
+        return !String.IsNullOrEmpty(name)
+            && name.IndexOfAny(Path.GetInvalidFileNameChars()) < 0
+            && name != "." && name != "..";
+    }
+
+    public static bool IsDigits(string value, int length) {
+        return value is not null && value.Length == length && value.All(char.IsAsciiDigit);
+    }
+
     public static string SizeToString(long size) {
         if (size < 8_192) return $"{size} Bytes";
         if (size < 8_192 * 1024) return $"{Math.Floor(size / 1024f)} KB";
