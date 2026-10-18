@@ -17,22 +17,14 @@ internal sealed class IpFilter {
     public IpFilterMode mode    = IpFilterMode.Blacklist;
     public string[]     entries = Array.Empty<string>();
 
-    private IPNetwork[] networks;
+    //parsed by ValidateAndNormalize, which runs on create and before a proxy starts
+    private IPNetwork[] networks = Array.Empty<IPNetwork>();
 
     public bool IsAllowed(EndPoint endPoint) {
         if (!enabled) return true;
-        return IsAllowed((endPoint as IPEndPoint)?.Address);
-    }
+        if (endPoint is not IPEndPoint ipEndPoint) return false;
 
-    public bool IsAllowed(IPAddress address) {
-        if (!enabled) return true;
-        if (address is null) return false;
-
-        if (address.IsIPv4MappedToIPv6) {
-            address = address.MapToIPv4();
-        }
-
-        networks ??= ParseNetworks(entries);
+        IPAddress address = Unmap(ipEndPoint.Address);
 
         bool listed = false;
         for (int i = 0; i < networks.Length; i++) {
@@ -51,6 +43,7 @@ internal sealed class IpFilter {
             return "Invalid IP filter mode.";
         }
 
+        List<IPNetwork> parsed = new List<IPNetwork>();
         List<string> normalized = new List<string>();
         foreach (string entry in entries ?? Array.Empty<string>()) {
             if (String.IsNullOrWhiteSpace(entry)) continue;
@@ -59,9 +52,10 @@ internal sealed class IpFilter {
                 return $"Invalid IP filter entry: {entry.Trim()}";
             }
 
-            string text = ToEntryString(network);
+            string text = network.PrefixLength == MaxPrefix(network.BaseAddress) ? network.BaseAddress.ToString() : network.ToString();
             if (!normalized.Contains(text)) {
                 normalized.Add(text);
+                parsed.Add(network);
             }
         }
 
@@ -70,13 +64,12 @@ internal sealed class IpFilter {
         }
 
         entries = normalized.ToArray();
-        networks = null;
+        networks = parsed.ToArray();
         return null;
     }
 
-    public static bool TryParseEntry(string entry, out IPNetwork network) {
+    private static bool TryParseEntry(string entry, out IPNetwork network) {
         network = default;
-        if (String.IsNullOrWhiteSpace(entry)) return false;
 
         string[] split = entry.Trim().Split('/');
         if (split.Length > 2) return false;
@@ -86,11 +79,9 @@ internal sealed class IpFilter {
         //IPAddress also accepts shorthand, octal and hex IPv4 forms, e.g. 10.1 or 010.0.0.1
         if (address.AddressFamily == AddressFamily.InterNetwork && address.ToString() != split[0]) return false;
 
-        if (address.IsIPv4MappedToIPv6) {
-            address = address.MapToIPv4();
-        }
+        address = Unmap(address);
 
-        int maxPrefix = address.AddressFamily == AddressFamily.InterNetwork ? 32 : 128;
+        int maxPrefix = MaxPrefix(address);
         int prefix = maxPrefix;
         if (split.Length == 2 && (!int.TryParse(split[1], out prefix) || prefix < 0 || prefix > maxPrefix)) return false;
 
@@ -105,18 +96,9 @@ internal sealed class IpFilter {
         return true;
     }
 
-    private static string ToEntryString(IPNetwork network) {
-        int maxPrefix = network.BaseAddress.AddressFamily == AddressFamily.InterNetwork ? 32 : 128;
-        return network.PrefixLength == maxPrefix ? network.BaseAddress.ToString() : network.ToString();
-    }
+    private static IPAddress Unmap(IPAddress address) =>
+        address.IsIPv4MappedToIPv6 ? address.MapToIPv4() : address;
 
-    private static IPNetwork[] ParseNetworks(string[] entries) {
-        List<IPNetwork> list = new List<IPNetwork>();
-        foreach (string entry in entries ?? Array.Empty<string>()) {
-            if (TryParseEntry(entry, out IPNetwork network)) {
-                list.Add(network);
-            }
-        }
-        return list.ToArray();
-    }
+    private static int MaxPrefix(IPAddress address) =>
+        address.AddressFamily == AddressFamily.InterNetwork ? 32 : 128;
 }

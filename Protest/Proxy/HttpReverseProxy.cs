@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Connections;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.Hosting;
@@ -21,7 +22,7 @@ internal sealed class HttpReverseProxy : ReverseProxyAbstract {
     private readonly HttpLimits limits;
 
     public HttpReverseProxy(Guid guid, HttpLimits limits, IpFilter ipFilter) : base(guid, ipFilter) {
-        this.limits = limits ?? new HttpLimits();
+        this.limits = limits;
     }
 
     public override bool Start(IPEndPoint proxy, string destination, string certificate, string password, string origin) {
@@ -127,14 +128,9 @@ internal sealed class HttpReverseProxy : ReverseProxyAbstract {
 
             options.Listen(endPoint, listenOptions => {
                 //registered first, so filtered clients are dropped before the TLS handshake
-                listenOptions.Use(next => connection => {
-                    if (ipFilter.IsAllowed(connection.RemoteEndPoint)) {
-                        return next(connection);
-                    }
-
-                    connection.Abort();
-                    return Task.CompletedTask;
-                });
+                if (ipFilter.enabled) {
+                    listenOptions.Use(FilterConnections(ipFilter));
+                }
 
                 if (String.IsNullOrEmpty(certificate)) return;
 
@@ -154,6 +150,17 @@ internal sealed class HttpReverseProxy : ReverseProxyAbstract {
             throw;
         }
     }
+
+    //captures only the filter, the middleware lives as long as the host
+    private static Func<ConnectionDelegate, ConnectionDelegate> FilterConnections(IpFilter filter) =>
+        next => connection => {
+            if (filter.IsAllowed(connection.RemoteEndPoint)) {
+                return next(connection);
+            }
+
+            connection.Abort();
+            return Task.CompletedTask;
+        };
 
     private void Configure(IApplicationBuilder application) {
         application.UseMiddleware<TrafficCountingHttpMiddleware>(bytesRx, bytesTx);
@@ -249,7 +256,7 @@ internal sealed class HttpLimits {
 
     public string Validate() {
         try {
-            Apply(new KestrelServerOptions().Limits);
+            Apply(new KestrelServerLimits());
         }
         catch (ArgumentException ex) {
             return ex.Message;

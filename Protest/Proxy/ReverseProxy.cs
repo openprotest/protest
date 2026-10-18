@@ -41,6 +41,12 @@ internal static class ReverseProxy {
     private static readonly JsonSerializerOptions serializerOptions;
     private static readonly JsonSerializerOptions serializerOptionsWithPassword;
 
+    //for the nested limits and ipfilter objects
+    internal static readonly JsonSerializerOptions nestedOptions = new JsonSerializerOptions {
+        IncludeFields = true,
+        Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase) }
+    };
+
     static ReverseProxy() {
         serializerOptions = new JsonSerializerOptions();
         serializerOptions.Converters.Add(new ReverseProxyObjectJsonConverter(true));
@@ -202,9 +208,12 @@ internal static class ReverseProxy {
     }
 
     public static byte[] List() {
+        //the dialog fills new proxies with these
+        string defaults = $"\"defaults\":{{\"limits\":{JsonSerializer.Serialize(new HttpLimits(), nestedOptions)}}}";
+
         try {
             DirectoryInfo directory = new DirectoryInfo(Data.DIR_REVERSE_PROXY);
-            if (!directory.Exists) return "{}"u8.ToArray();
+            if (!directory.Exists) return Encoding.UTF8.GetBytes($"{{\"data\":{{}},\"length\":0,{defaults}}}");
 
             FileInfo[] files = directory.GetFiles();
 
@@ -233,7 +242,8 @@ internal static class ReverseProxy {
 
             builder.Append("},");
 
-            builder.Append($"\"length\":{files.Length}");
+            builder.Append($"\"length\":{files.Length},");
+            builder.Append(defaults);
 
             builder.Append('}');
 
@@ -265,14 +275,9 @@ internal static class ReverseProxy {
                 return "{\"error\":\"Unable to modify this proxy while it's running.\"}"u8.ToArray();
             }
 
-            string limitsError = entry.limits.Validate();
-            if (limitsError is not null) {
-                return JsonSerializer.SerializeToUtf8Bytes(new { error = limitsError });
-            }
-
-            string ipFilterError = entry.ipfilter.ValidateAndNormalize();
-            if (ipFilterError is not null) {
-                return JsonSerializer.SerializeToUtf8Bytes(new { error = ipFilterError });
+            string error = Validate(entry);
+            if (error is not null) {
+                return JsonSerializer.SerializeToUtf8Bytes(new { error });
             }
 
             string path = Path.Join(Data.DIR_REVERSE_PROXY, entry.guid.ToString());
@@ -368,12 +373,17 @@ internal static class ReverseProxy {
     }
 
     public static byte[] StartProxy(ReverseProxyObject obj, string origin) {
+        //also parses the ip filter, a stored entry that no longer parses refuses to start rather than being skipped
+        string error = Validate(obj);
+        if (error is not null) {
+            return JsonSerializer.SerializeToUtf8Bytes(new { error });
+        }
+
         ReverseProxyAbstract proxy = obj.protocol switch {
-            ProxyProtocol.TCP   => new TcpReverseProxy(obj.guid, obj.ipfilter),
-            ProxyProtocol.UDP   => new UdpReverseProxy(obj.guid, obj.ipfilter),
-            ProxyProtocol.HTTP  => new HttpReverseProxy(obj.guid, obj.limits, obj.ipfilter),
-            ProxyProtocol.HTTPS => new HttpReverseProxy(obj.guid, obj.limits, obj.ipfilter),
-            _=> new TcpReverseProxy(obj.guid, obj.ipfilter)
+            ProxyProtocol.TCP                         => new TcpReverseProxy(obj.guid, obj.ipfilter),
+            ProxyProtocol.UDP                         => new UdpReverseProxy(obj.guid, obj.ipfilter),
+            ProxyProtocol.HTTP or ProxyProtocol.HTTPS => new HttpReverseProxy(obj.guid, obj.limits, obj.ipfilter),
+            _                                         => new TcpReverseProxy(obj.guid, obj.ipfilter)
         };
 
         try {
@@ -410,6 +420,9 @@ internal static class ReverseProxy {
         return Data.CODE_OK.ToArray();
     }
 
+    private static string Validate(ReverseProxyObject entry) =>
+        entry.limits.Validate() ?? entry.ipfilter.ValidateAndNormalize();
+
     public static byte[] Stop(HttpListenerContext ctx, string origin) {
         Dictionary<string, string> parameters = Listener.ParseQuery(ctx);
 
@@ -436,11 +449,6 @@ internal static class ReverseProxy {
 }
 
 file sealed class ReverseProxyObjectJsonConverter : JsonConverter<ReverseProxy.ReverseProxyObject> {
-    private static readonly JsonSerializerOptions nestedOptions = new JsonSerializerOptions {
-        IncludeFields = true,
-        Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase) }
-    };
-
     private readonly bool ignorePasswords;
 
     public ReverseProxyObjectJsonConverter() {
@@ -490,8 +498,8 @@ file sealed class ReverseProxyObjectJsonConverter : JsonConverter<ReverseProxy.R
                 case "destaddr"    : destaddr    = reader.GetString();  break;
                 case "destport"    : destport    = reader.GetInt32();   break;
                 case "autostart"   : autostart   = reader.GetBoolean(); break;
-                case "limits"      : limits      = JsonSerializer.Deserialize<HttpLimits>(ref reader, nestedOptions); break;
-                case "ipfilter"    : ipfilter    = JsonSerializer.Deserialize<IpFilter>(ref reader, nestedOptions); break;
+                case "limits"      : limits      = JsonSerializer.Deserialize<HttpLimits>(ref reader, ReverseProxy.nestedOptions); break;
+                case "ipfilter"    : ipfilter    = JsonSerializer.Deserialize<IpFilter>(ref reader, ReverseProxy.nestedOptions); break;
                 default            : reader.Skip(); break;
                 }
             }
@@ -539,9 +547,9 @@ file sealed class ReverseProxyObjectJsonConverter : JsonConverter<ReverseProxy.R
         writer.WriteNumber(_destport, value.destport);
         writer.WriteBoolean(_autostart, value.autostart);
         writer.WritePropertyName(_limits);
-        JsonSerializer.Serialize(writer, value.limits ?? new HttpLimits(), nestedOptions);
+        JsonSerializer.Serialize(writer, value.limits, ReverseProxy.nestedOptions);
         writer.WritePropertyName(_ipfilter);
-        JsonSerializer.Serialize(writer, value.ipfilter ?? new IpFilter(), nestedOptions);
+        JsonSerializer.Serialize(writer, value.ipfilter, ReverseProxy.nestedOptions);
         writer.WriteEndObject();
     }
 }

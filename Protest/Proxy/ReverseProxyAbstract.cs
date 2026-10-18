@@ -19,7 +19,7 @@ internal abstract class ReverseProxyAbstract {
 
     public ReverseProxyAbstract(Guid guid, IpFilter ipFilter) {
         this.guid = guid;
-        this.ipFilter = ipFilter ?? new IpFilter();
+        this.ipFilter = ipFilter;
         bytesRx = new ConcurrentDictionary<string, long>();
         bytesTx = new ConcurrentDictionary<string, long>();
         cancellationTokenSource = new CancellationTokenSource();

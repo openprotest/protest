@@ -39,6 +39,7 @@ internal sealed class UdpReverseProxy : ReverseProxyAbstract {
         while (!cancellationToken.IsCancellationRequested) {
             try {
                 UdpReceiveResult result = await udpListener.ReceiveAsync();
+                if (!ipFilter.IsAllowed(result.RemoteEndPoint)) continue;
                 _ = Task.Run(() => ServeClient(result));
             }
             catch (Exception) {
@@ -48,8 +49,6 @@ internal sealed class UdpReverseProxy : ReverseProxyAbstract {
     }
 
     private async Task ServeClient(UdpReceiveResult udpResult) {
-        if (!ipFilter.IsAllowed(udpResult.RemoteEndPoint)) return;
-
         try {
             using UdpClient destinationClient = new UdpClient();
             string clientIp = udpResult.RemoteEndPoint.Address.ToString();

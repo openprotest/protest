@@ -39,6 +39,13 @@ internal sealed class TcpReverseProxy : ReverseProxyAbstract {
         while (!cancellationToken.IsCancellationRequested) {
             try {
                 TcpClient client = await tcpListener.AcceptTcpClientAsync();
+
+                //drop filtered clients before reaching the destination
+                if (!ipFilter.IsAllowed(client.Client.RemoteEndPoint)) {
+                    client.Dispose();
+                    continue;
+                }
+
                 _ = Task.Run(() => ServeClient(client));
             }
             catch (Exception) {
@@ -51,15 +58,10 @@ internal sealed class TcpReverseProxy : ReverseProxyAbstract {
         if (proxyClient is null) return;
 
         try {
-            IPEndPoint remoteEndPoint = (IPEndPoint)proxyClient.Client.RemoteEndPoint;
-
-            //drop filtered clients before reaching the destination
-            if (!ipFilter.IsAllowed(remoteEndPoint)) return;
-
             using TcpClient destinationClient = new TcpClient();
             await destinationClient.ConnectAsync(destinationEndPoint, cancellationToken);
 
-            string  clientIp = remoteEndPoint.Address.ToString();
+            string  clientIp = ((IPEndPoint)proxyClient.Client.RemoteEndPoint).Address.ToString();
 
             //using ProxyStreamWrapper countingClientStream = new ProxyStreamWrapper(proxyClient.GetStream(), clientIp, bytesRx, bytesTx);
             using NetworkStream proxyStream = proxyClient.GetStream();
