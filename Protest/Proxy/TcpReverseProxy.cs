@@ -8,7 +8,7 @@ internal sealed class TcpReverseProxy : ReverseProxyAbstract {
     private TcpListener tcpListener;
     private IPEndPoint destinationEndPoint;
 
-    public TcpReverseProxy(Guid guid) : base(guid) {}
+    public TcpReverseProxy(Guid guid, IpFilter ipFilter) : base(guid, ipFilter) {}
 
     public override bool Start(IPEndPoint listener, string destination, string certificate, string password, string origin) {
         try {
@@ -51,10 +51,15 @@ internal sealed class TcpReverseProxy : ReverseProxyAbstract {
         if (proxyClient is null) return;
 
         try {
+            IPEndPoint remoteEndPoint = (IPEndPoint)proxyClient.Client.RemoteEndPoint;
+
+            //drop filtered clients before reaching the destination
+            if (!ipFilter.IsAllowed(remoteEndPoint)) return;
+
             using TcpClient destinationClient = new TcpClient();
             await destinationClient.ConnectAsync(destinationEndPoint, cancellationToken);
 
-            string  clientIp = ((IPEndPoint)proxyClient.Client.RemoteEndPoint).Address.ToString();
+            string  clientIp = remoteEndPoint.Address.ToString();
 
             //using ProxyStreamWrapper countingClientStream = new ProxyStreamWrapper(proxyClient.GetStream(), clientIp, bytesRx, bytesTx);
             using NetworkStream proxyStream = proxyClient.GetStream();

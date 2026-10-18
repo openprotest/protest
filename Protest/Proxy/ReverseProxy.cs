@@ -32,6 +32,8 @@ internal static class ReverseProxy {
         public string        destaddr;
         public int           destport;
         public bool          autostart;
+        public HttpLimits    limits;
+        public IpFilter      ipfilter;
     }
 
     public static readonly ConcurrentDictionary<string, ReverseProxyAbstract> running = new ConcurrentDictionary<string, ReverseProxyAbstract>();
@@ -263,6 +265,16 @@ internal static class ReverseProxy {
                 return "{\"error\":\"Unable to modify this proxy while it's running.\"}"u8.ToArray();
             }
 
+            string limitsError = entry.limits.Validate();
+            if (limitsError is not null) {
+                return JsonSerializer.SerializeToUtf8Bytes(new { error = limitsError });
+            }
+
+            string ipFilterError = entry.ipfilter.ValidateAndNormalize();
+            if (ipFilterError is not null) {
+                return JsonSerializer.SerializeToUtf8Bytes(new { error = ipFilterError });
+            }
+
             string path = Path.Join(Data.DIR_REVERSE_PROXY, entry.guid.ToString());
 
             if (entry.guid == Guid.Empty) {
@@ -357,11 +369,11 @@ internal static class ReverseProxy {
 
     public static byte[] StartProxy(ReverseProxyObject obj, string origin) {
         ReverseProxyAbstract proxy = obj.protocol switch {
-            ProxyProtocol.TCP   => new TcpReverseProxy(obj.guid),
-            ProxyProtocol.UDP   => new UdpReverseProxy(obj.guid),
-            ProxyProtocol.HTTP  => new HttpReverseProxy(obj.guid),
-            ProxyProtocol.HTTPS => new HttpReverseProxy(obj.guid),
-            _=> new TcpReverseProxy(obj.guid)
+            ProxyProtocol.TCP   => new TcpReverseProxy(obj.guid, obj.ipfilter),
+            ProxyProtocol.UDP   => new UdpReverseProxy(obj.guid, obj.ipfilter),
+            ProxyProtocol.HTTP  => new HttpReverseProxy(obj.guid, obj.limits, obj.ipfilter),
+            ProxyProtocol.HTTPS => new HttpReverseProxy(obj.guid, obj.limits, obj.ipfilter),
+            _=> new TcpReverseProxy(obj.guid, obj.ipfilter)
         };
 
         try {
@@ -424,6 +436,11 @@ internal static class ReverseProxy {
 }
 
 file sealed class ReverseProxyObjectJsonConverter : JsonConverter<ReverseProxy.ReverseProxyObject> {
+    private static readonly JsonSerializerOptions nestedOptions = new JsonSerializerOptions {
+        IncludeFields = true,
+        Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase) }
+    };
+
     private readonly bool ignorePasswords;
 
     public ReverseProxyObjectJsonConverter() {
@@ -445,6 +462,8 @@ file sealed class ReverseProxyObjectJsonConverter : JsonConverter<ReverseProxy.R
         string destaddr                     = null;
         int destport                        = 0;
         bool autostart                      = false;
+        HttpLimits limits                   = null;
+        IpFilter ipfilter                   = null;
 
         while (reader.Read()) {
             if (reader.TokenType == JsonTokenType.EndObject) {
@@ -471,6 +490,9 @@ file sealed class ReverseProxyObjectJsonConverter : JsonConverter<ReverseProxy.R
                 case "destaddr"    : destaddr    = reader.GetString();  break;
                 case "destport"    : destport    = reader.GetInt32();   break;
                 case "autostart"   : autostart   = reader.GetBoolean(); break;
+                case "limits"      : limits      = JsonSerializer.Deserialize<HttpLimits>(ref reader, nestedOptions); break;
+                case "ipfilter"    : ipfilter    = JsonSerializer.Deserialize<IpFilter>(ref reader, nestedOptions); break;
+                default            : reader.Skip(); break;
                 }
             }
         }
@@ -485,7 +507,9 @@ file sealed class ReverseProxyObjectJsonConverter : JsonConverter<ReverseProxy.R
             proxyport   = proxyport,
             destaddr    = destaddr,
             destport    = destport,
-            autostart   = autostart
+            autostart   = autostart,
+            limits      = limits ?? new HttpLimits(),
+            ipfilter    = ipfilter ?? new IpFilter()
         };
     }
 
@@ -500,6 +524,8 @@ file sealed class ReverseProxyObjectJsonConverter : JsonConverter<ReverseProxy.R
         ReadOnlySpan<byte> _destaddr    = "destaddr"u8;
         ReadOnlySpan<byte> _destport    = "destport"u8;
         ReadOnlySpan<byte> _autostart   = "autostart"u8;
+        ReadOnlySpan<byte> _limits      = "limits"u8;
+        ReadOnlySpan<byte> _ipfilter    = "ipfilter"u8;
 
         writer.WriteStartObject();
         writer.WriteString(_guid, value.guid.ToString());
@@ -512,6 +538,10 @@ file sealed class ReverseProxyObjectJsonConverter : JsonConverter<ReverseProxy.R
         writer.WriteString(_destaddr, value.destaddr);
         writer.WriteNumber(_destport, value.destport);
         writer.WriteBoolean(_autostart, value.autostart);
+        writer.WritePropertyName(_limits);
+        JsonSerializer.Serialize(writer, value.limits ?? new HttpLimits(), nestedOptions);
+        writer.WritePropertyName(_ipfilter);
+        JsonSerializer.Serialize(writer, value.ipfilter ?? new IpFilter(), nestedOptions);
         writer.WriteEndObject();
     }
 }

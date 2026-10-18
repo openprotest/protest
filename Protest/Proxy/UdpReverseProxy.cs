@@ -9,7 +9,7 @@ internal sealed class UdpReverseProxy : ReverseProxyAbstract {
     private UdpClient udpListener;
     private IPEndPoint destinationEndPoint;
 
-    public UdpReverseProxy(Guid guid) : base(guid) {}
+    public UdpReverseProxy(Guid guid, IpFilter ipFilter) : base(guid, ipFilter) {}
 
     public override bool Start(IPEndPoint listener, string destination, string certificate, string password, string origin) {
         try {
@@ -48,6 +48,8 @@ internal sealed class UdpReverseProxy : ReverseProxyAbstract {
     }
 
     private async Task ServeClient(UdpReceiveResult udpResult) {
+        if (!ipFilter.IsAllowed(udpResult.RemoteEndPoint)) return;
+
         try {
             using UdpClient destinationClient = new UdpClient();
             string clientIp = udpResult.RemoteEndPoint.Address.ToString();

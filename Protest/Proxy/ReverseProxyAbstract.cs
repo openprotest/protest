@@ -9,6 +9,7 @@ internal abstract class ReverseProxyAbstract {
     protected readonly CancellationToken cancellationToken;
 
     public readonly Guid guid;
+    protected readonly IpFilter ipFilter;
     public bool isRunning = false;
     public ulong errors;
     protected Thread thread;
@@ -16,8 +17,9 @@ internal abstract class ReverseProxyAbstract {
     public readonly ConcurrentDictionary<string, long> bytesRx;
     public readonly ConcurrentDictionary<string, long> bytesTx;
 
-    public ReverseProxyAbstract(Guid guid) {
+    public ReverseProxyAbstract(Guid guid, IpFilter ipFilter) {
         this.guid = guid;
+        this.ipFilter = ipFilter ?? new IpFilter();
         bytesRx = new ConcurrentDictionary<string, long>();
         bytesTx = new ConcurrentDictionary<string, long>();
         cancellationTokenSource = new CancellationTokenSource();

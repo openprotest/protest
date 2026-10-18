@@ -18,8 +18,11 @@ namespace Protest.Proxy;
 internal sealed class HttpReverseProxy : ReverseProxyAbstract {
     private IHostBuilder hostBuilder;
     private IHost host;
+    private readonly HttpLimits limits;
 
-    public HttpReverseProxy(Guid guid) : base(guid) {}
+    public HttpReverseProxy(Guid guid, HttpLimits limits, IpFilter ipFilter) : base(guid, ipFilter) {
+        this.limits = limits ?? new HttpLimits();
+    }
 
     public override bool Start(IPEndPoint proxy, string destination, string certificate, string password, string origin) {
         Exception returnStatus = null;
@@ -109,41 +112,39 @@ internal sealed class HttpReverseProxy : ReverseProxyAbstract {
     private static void ConfigureLogging(ILoggingBuilder logger) {
         logger.ClearProviders();
 
-        //logger.AddConsole();
-        //logger.SetMinimumLevel(LogLevel.Warning);
-        //logger.AddFilter("Microsoft", LogLevel.Warning);
-        //logger.AddFilter("Microsoft.Hosting.Lifetime", LogLevel.Information);
-        //logger.AddFilter("Yarp.ReverseProxy", LogLevel.Warning);
+#if DEBUG
+        logger.AddConsole();
+        logger.SetMinimumLevel(LogLevel.Warning);
+        logger.AddFilter("Microsoft", LogLevel.Warning);
+        logger.AddFilter("Microsoft.Hosting.Lifetime", LogLevel.Information);
+        logger.AddFilter("Yarp.ReverseProxy", LogLevel.Warning);
+#endif
     }
 
     private void ConfigureKestrel(KestrelServerOptions options, IPEndPoint endPoint, string certificate = null, string password = null) {
         try {
-            //Keep proxied connections alive indefinitely
+            limits.Apply(options.Limits);
 
-            //options.Limits.Http2
-            //options.Limits.Http3
-            options.Limits.KeepAliveTimeout = TimeSpan.MaxValue;
-            options.Limits.MaxConcurrentConnections = null;
-            options.Limits.MaxConcurrentUpgradedConnections = null;
-            options.Limits.MaxRequestBodySize = null;
-            options.Limits.MaxRequestBufferSize = null;
-            //options.Limits.MaxRequestHeaderCount
-            //options.Limits.MaxRequestHeadersTotalSize
-            //options.Limits.MaxRequestLineSize
-            options.Limits.MaxResponseBufferSize = null;
-            //options.Limits.RequestHeadersTimeout
-            options.Limits.MinRequestBodyDataRate = null;
-            options.Limits.MinResponseDataRate = null;
+            options.Listen(endPoint, listenOptions => {
+                //registered first, so filtered clients are dropped before the TLS handshake
+                listenOptions.Use(next => connection => {
+                    if (ipFilter.IsAllowed(connection.RemoteEndPoint)) {
+                        return next(connection);
+                    }
 
-            if (String.IsNullOrEmpty(certificate)) {
-                options.Listen(endPoint);
-            }
-            else if (String.IsNullOrEmpty(password)) {
-                options.Listen(endPoint, options => options.UseHttps(certificate));
-            }
-            else {
-                options.Listen(endPoint, options => options.UseHttps(certificate, password));
-            }
+                    connection.Abort();
+                    return Task.CompletedTask;
+                });
+
+                if (String.IsNullOrEmpty(certificate)) return;
+
+                if (String.IsNullOrEmpty(password)) {
+                    listenOptions.UseHttps(certificate);
+                }
+                else {
+                    listenOptions.UseHttps(certificate, password);
+                }
+            });
         }
         catch (Exception ex) {
             Thread.Sleep(50);
@@ -187,6 +188,102 @@ internal sealed class HttpReverseProxy : ReverseProxyAbstract {
         //ctx.ProxyRequest.Headers.Host = ctx.HttpContext.Request.Headers.Host;
 
         return ValueTask.CompletedTask;
+    }
+}
+
+internal sealed class HttpLimits {
+    //Sizes are in bytes, times in seconds, rates in bytes/sec. A null value means unlimited, infinite or disabled
+    //Defaults keep proxied connections alive indefinitely, the rest match Kestrel's defaults
+
+    public double? keepAliveTimeout                 = null;
+    public long?   maxConcurrentConnections         = null;
+    public long?   maxConcurrentUpgradedConnections = null;
+    public long?   maxRequestBodySize               = null;
+    public long?   maxRequestBufferSize             = null;
+    public int     maxRequestHeaderCount            = 100;
+    public int     maxRequestHeadersTotalSize       = 32_768;
+    public int     maxRequestLineSize               = 8_192;
+    public long?   maxResponseBufferSize            = null;
+    public double? requestHeadersTimeout            = 30;
+    public double? minRequestBodyDataRate           = null;
+    public double  minRequestBodyGracePeriod        = 5;
+    public double? minResponseDataRate              = null;
+    public double  minResponseGracePeriod           = 5;
+
+    public int     http2MaxStreamsPerConnection     = 100;
+    public int     http2HeaderTableSize             = 4_096;
+    public int     http2MaxFrameSize                = 16_384;
+    public int     http2MaxRequestHeaderFieldSize   = 32_768;
+    public int     http2InitialConnectionWindowSize = 1_048_576;
+    public int     http2InitialStreamWindowSize     = 786_432;
+    public double? http2KeepAlivePingDelay          = null;
+    public double  http2KeepAlivePingTimeout        = 20;
+
+    public int     http3MaxRequestHeaderFieldSize   = 32_768;
+
+    public void Apply(KestrelServerLimits limits) {
+        Set("Keep-alive timeout",                   ()=> limits.KeepAliveTimeout                 = ToTimeSpan(keepAliveTimeout));
+        Set("Max concurrent connections",           ()=> limits.MaxConcurrentConnections         = maxConcurrentConnections);
+        Set("Max concurrent upgraded connections",  ()=> limits.MaxConcurrentUpgradedConnections = maxConcurrentUpgradedConnections);
+        Set("Max request body size",                ()=> limits.MaxRequestBodySize               = maxRequestBodySize);
+        Set("Max request buffer size",              ()=> limits.MaxRequestBufferSize             = maxRequestBufferSize);
+        Set("Max request header count",             ()=> limits.MaxRequestHeaderCount            = maxRequestHeaderCount);
+        Set("Max request headers total size",       ()=> limits.MaxRequestHeadersTotalSize       = maxRequestHeadersTotalSize);
+        Set("Max request line size",                ()=> limits.MaxRequestLineSize               = maxRequestLineSize);
+        Set("Max response buffer size",             ()=> limits.MaxResponseBufferSize            = maxResponseBufferSize);
+        Set("Request headers timeout",              ()=> limits.RequestHeadersTimeout            = ToTimeSpan(requestHeadersTimeout));
+        Set("Min request body data rate",           ()=> limits.MinRequestBodyDataRate           = ToMinDataRate(minRequestBodyDataRate, minRequestBodyGracePeriod));
+        Set("Min response data rate",               ()=> limits.MinResponseDataRate              = ToMinDataRate(minResponseDataRate, minResponseGracePeriod));
+
+        Set("HTTP/2 max streams per connection",    ()=> limits.Http2.MaxStreamsPerConnection     = http2MaxStreamsPerConnection);
+        Set("HTTP/2 header table size",             ()=> limits.Http2.HeaderTableSize             = http2HeaderTableSize);
+        Set("HTTP/2 max frame size",                ()=> limits.Http2.MaxFrameSize                = http2MaxFrameSize);
+        Set("HTTP/2 max request header field size", ()=> limits.Http2.MaxRequestHeaderFieldSize   = http2MaxRequestHeaderFieldSize);
+        Set("HTTP/2 initial connection window size",()=> limits.Http2.InitialConnectionWindowSize = http2InitialConnectionWindowSize);
+        Set("HTTP/2 initial stream window size",    ()=> limits.Http2.InitialStreamWindowSize     = http2InitialStreamWindowSize);
+        Set("HTTP/2 keep-alive ping delay",         ()=> limits.Http2.KeepAlivePingDelay          = ToTimeSpan(http2KeepAlivePingDelay));
+        Set("HTTP/2 keep-alive ping timeout",       ()=> limits.Http2.KeepAlivePingTimeout        = TimeSpan.FromSeconds(http2KeepAlivePingTimeout));
+
+        Set("HTTP/3 max request header field size", ()=> limits.Http3.MaxRequestHeaderFieldSize   = http3MaxRequestHeaderFieldSize);
+    }
+
+    public string Validate() {
+        try {
+            Apply(new KestrelServerOptions().Limits);
+        }
+        catch (ArgumentException ex) {
+            return ex.Message;
+        }
+
+        //Kestrel checks these on start-up
+        if (maxRequestBufferSize < maxRequestLineSize) {
+            return "Max request buffer size must be greater than or equal to max request line size.";
+        }
+
+        if (maxRequestBufferSize < maxRequestHeadersTotalSize) {
+            return "Max request buffer size must be greater than or equal to max request headers total size.";
+        }
+
+        return null;
+    }
+
+    private static TimeSpan ToTimeSpan(double? seconds) =>
+        seconds.HasValue ? TimeSpan.FromSeconds(seconds.Value) : Timeout.InfiniteTimeSpan;
+
+    private static MinDataRate ToMinDataRate(double? bytesPerSecond, double gracePeriod) =>
+        bytesPerSecond.HasValue ? new MinDataRate(bytesPerSecond.Value, TimeSpan.FromSeconds(gracePeriod)) : null;
+
+    private static void Set(string name, Action action) {
+        //Kestrel's setters throw on out-of-range values, re-throw with the parameter's name
+        try {
+            action();
+        }
+        catch (Exception ex) when (ex is ArgumentException or OverflowException) {
+            string message = ex is ArgumentException { ParamName: not null } argEx
+                ? argEx.Message.Split(" (Parameter")[0]
+                : ex.Message;
+            throw new ArgumentException($"{name}: {message}", ex);
+        }
     }
 }
 
