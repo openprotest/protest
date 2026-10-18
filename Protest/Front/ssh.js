@@ -33,11 +33,11 @@ class Ssh extends PtyHost {
 		const {okButton, cancelButton, innerBox, buttonBox} = dialog;
 
 		const dialogBox = innerBox.parentElement;
-		dialogBox.style.maxWidth = "440px";
+		dialogBox.style.maxWidth = "480px";
 		dialogBox.parentElement.onclick = event=> event.stopPropagation();
 
 		innerBox.style.display = "grid";
-		innerBox.style.gridTemplateColumns = "100px minmax(50px, 250px)";
+		innerBox.style.gridTemplateColumns = "100px auto";
 		innerBox.style.alignItems = "center";
 		innerBox.style.margin = "20px 20px 0 20px";
 

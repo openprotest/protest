@@ -57,7 +57,7 @@ input[type="number"]::placeholder,
 input[type="date"]::placeholder,
 textarea::placeholder,
 select::placeholder {
-	color: rgb(64,64,64);
+	color: rgb(96,96,96);
 }
 
 input[type="text"]:required,
