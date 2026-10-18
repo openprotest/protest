@@ -5,6 +5,39 @@ class ReverseProxy extends List {
 	static GRID = 60;
 	static GAP = 3;
 	static RUNNING = [];
+	static PROTOCOLS = ["TCP", "UDP", "HTTP", "HTTPS"];
+	static IP_FILTER_MODES = [{label: "Blacklist", value: "blacklist"}, {label: "Whitelist", value: "whitelist"}];
+
+	//keep defaults in sync with HttpLimits in HttpReverseProxy.cs, blank: placeholder for a null value
+	//value, min and max are in bytes, kb: shown and edited in KB
+	static HTTP_LIMITS = [
+		{section: "Limits"},
+		{key: "keepAliveTimeout",                 label: "Keep-alive timeout (sec)",    value: null,      blank: "infinite"},
+		{key: "requestHeadersTimeout",            label: "Headers timeout (sec)",       value: 30,        blank: "infinite"},
+		{key: "maxConcurrentConnections",         label: "Max connections",             value: null,      blank: "unlimited", integer: true, min: 1},
+		{key: "maxConcurrentUpgradedConnections", label: "Max upgraded connections",    value: null,      blank: "unlimited", integer: true, min: 0},
+		{key: "maxRequestBodySize",               label: "Max request body (KB)",       value: null,      blank: "unlimited", integer: true, min: 0, kb: true},
+		{key: "maxRequestBufferSize",             label: "Max request buffer (KB)",     value: null,      blank: "unlimited", integer: true, min: 1, kb: true},
+		{key: "maxResponseBufferSize",            label: "Max response buffer (KB)",    value: null,      blank: "unlimited", integer: true, min: 0, kb: true},
+		{key: "maxRequestHeaderCount",            label: "Max header count",            value: 100,       integer: true, min: 1},
+		{key: "maxRequestHeadersTotalSize",       label: "Max headers size (KB)",       value: 32_768,    integer: true, min: 1, kb: true},
+		{key: "maxRequestLineSize",               label: "Max request line (KB)",       value: 8_192,     integer: true, min: 1, kb: true},
+		{key: "minRequestBodyDataRate",           label: "Min request rate (KB/s)",     value: null,      blank: "disabled", min: 0, kb: true},
+		{key: "minRequestBodyGracePeriod",        label: "Request grace period (sec)",  value: 5},
+		{key: "minResponseDataRate",              label: "Min response rate (KB/s)",    value: null,      blank: "disabled", min: 0, kb: true},
+		{key: "minResponseGracePeriod",           label: "Response grace period (sec)", value: 5},
+		{section: "HTTP/2"},
+		{key: "http2MaxStreamsPerConnection",     label: "Max streams",                 value: 100,       integer: true, min: 1},
+		{key: "http2HeaderTableSize",             label: "Header table size (KB)",      value: 4_096,     integer: true, min: 0, kb: true},
+		{key: "http2MaxFrameSize",                label: "Max frame size (KB)",         value: 16_384,    integer: true, min: 16_384, max: 16_777_215, kb: true},
+		{key: "http2MaxRequestHeaderFieldSize",   label: "Max header field (KB)",       value: 32_768,    integer: true, min: 1, kb: true},
+		{key: "http2InitialConnectionWindowSize", label: "Connection window (KB)",      value: 1_048_576, integer: true, min: 65_535, max: 2_147_483_647, kb: true},
+		{key: "http2InitialStreamWindowSize",     label: "Stream window (KB)",          value: 786_432,   integer: true, min: 65_535, max: 2_147_483_647, kb: true},
+		{key: "http2KeepAlivePingDelay",          label: "Ping delay (sec)",            value: null,      blank: "infinite"},
+		{key: "http2KeepAlivePingTimeout",        label: "Ping timeout (sec)",          value: 20},
+		{section: "HTTP/3"},
+		{key: "http3MaxRequestHeaderFieldSize",   label: "Max header field (KB)",       value: 32_768,    integer: true, min: 1, kb: true},
+	];
 
 	constructor(args) {
 		super(args);
@@ -626,6 +659,8 @@ class ReverseProxy extends List {
 					destport    : {v: json.data[key].destport},
 					destination : {v: destination},
 					autostart   : {v: json.data[key].autostart},
+					limits      : {v: json.data[key].limits},
+					ipfilter    : {v: json.data[key].ipfilter},
 				};
 			}
 
@@ -667,24 +702,32 @@ class ReverseProxy extends List {
 
 		okButton.value = entry ? "Save" : "Create";
 
-		innerBox.parentElement.style.maxWidth = "640px";
+		const dialogBox = innerBox.parentElement;
+		dialogBox.style.maxWidth = "640px";
+		dialogBox.style.transition = ".2s";
 
 		innerBox.style.padding = "16px 32px";
 		innerBox.style.display = "grid";
-		innerBox.style.gridTemplateColumns = "auto 175px 275px auto";
-		innerBox.style.gridTemplateRows = "repeat(4, 38px) 16px repeat(2, 38px) 16px repeat(2, 38px) 40px";
+		innerBox.style.gridTemplateColumns = "auto 200px minmax(50px, 250px ) auto";
 		innerBox.style.alignItems = "center";
 
 		let counter = 0;
-		const AddParameter = (name, tag, type, properties)=> {
+		const AddRow = (name, element)=> {
 			counter++;
 
 			const label = document.createElement("div");
 			label.style.gridArea = `${counter} / 2`;
 			label.textContent = `${name}:`;
 
+			element.style.gridArea = `${counter} / 3`;
+
+			innerBox.append(label, element);
+
+			return label;
+		};
+
+		const AddParameter = (name, tag, type, properties)=> {
 			const input = document.createElement(tag);
-			input.style.gridArea = `${counter} / 3`;
 			if (type) {
 				input.type = type;
 			}
@@ -693,21 +736,77 @@ class ReverseProxy extends List {
 				input[param] = properties[param];
 			}
 
-			innerBox.append(label, input);
+			AddRow(name, input);
 
 			return input;
 		};
 
+		//header and box rows, collapsed by default
+		const AddCollapsible = title=> {
+			counter++;
+			const header = document.createElement("div");
+			header.tabIndex = 0;
+			header.textContent = title;
+			header.style.gridArea = `${counter} / 2 / ${counter} / 4`;
+			header.style.position = "relative";
+			header.style.paddingLeft = "24px";
+			header.style.fontWeight = "600";
+			header.style.lineHeight = "28px";
+			header.style.cursor = "pointer";
+			header.style.userSelect = "none";
+			innerBox.appendChild(header);
+
+			const arrow = document.createElement("div");
+			arrow.style.position = "absolute";
+			arrow.style.left = "4px";
+			arrow.style.top = "9px";
+			arrow.style.border = "solid";
+			arrow.style.borderColor = "currentColor transparent";
+			arrow.style.borderWidth = "10px 7px 0 7px";
+			arrow.style.borderRadius = "2px";
+			arrow.style.transition = ".2s";
+			header.prepend(arrow);
+
+			counter++;
+			const box = document.createElement("div");
+			box.style.gridArea = `${counter} / 2 / ${counter} / 4`;
+			box.style.alignSelf = "start";
+			box.style.gridTemplateColumns = "200px 250px";
+			box.style.alignItems = "center";
+			innerBox.appendChild(box);
+
+			const collapsible = {header, arrow, box, expanded: false};
+
+			header.onclick = ()=> {
+				collapsible.expanded = !collapsible.expanded;
+				UpdateLayout();
+			};
+
+			header.onkeydown = event=> {
+				if (event.key === "Enter" || event.key === " ") {
+					event.preventDefault();
+					header.onclick();
+				}
+			};
+
+			return collapsible;
+		};
+
+		const Expand = collapsible=> {
+			if (!collapsible.expanded) collapsible.header.onclick();
+		};
+
+		counter++;
+		const autostartBox = document.createElement("div");
+		autostartBox.style.gridArea = `${counter} / 2 / ${counter} / 4`;
+		innerBox.append(autostartBox);
+
+		const autostartToggle = this.CreateToggle("Auto-start", false, autostartBox);
+
 		const nameInput = AddParameter("Name", "input", "text");
 
-		const protocolInput = AddParameter("Protocol", "select", null);
-		for (const protocol of ["TCP", "UDP", "HTTP", "HTTPS"]) {
-			const option = document.createElement("option");
-			option.value = protocol;
-			option.text = protocol;
-			protocolInput.appendChild(option);
-		}
-		protocolInput.value = "TCP";
+		const protocolBox = new FewBox(ReverseProxy.PROTOCOLS);
+		AddRow("Protocol", protocolBox.container);
 
 		const certsInput = AddParameter("Certificate", "select", null);
 
@@ -739,32 +838,223 @@ class ReverseProxy extends List {
 		counter++; //separator
 
 		const destinationAddressInput = AddParameter("Destination address", "input", "text", {placeholder: "127.0.0.1"});
+		const destinationPortInput = AddParameter("Destination port", "input", "number", {"min":1, "max":65535, value:80});
+		const destinationPortLabel = destinationPortInput.previousSibling;
+
+		const entryFilter = entry?.ipfilter?.v ?? {};
+		let ipEntries = [...(entryFilter.entries ?? [])];
+
+		counter += 2; //separator
+		const ipEnableBox = document.createElement("div");
+		ipEnableBox.style.gridArea = `${counter} / 2 / ${counter} / 4`;
+		innerBox.appendChild(ipEnableBox);
+		const ipEnableToggle = this.CreateToggle("IP filtering", entryFilter.enabled === true, ipEnableBox);
 
 		counter++;
-		const destinationPortLabel = document.createElement("div");
-		destinationPortLabel.style.gridArea = `${counter} / 2`;
-		destinationPortLabel.textContent = `Destination port:`;
+		const ipBox = document.createElement("div");
+		ipBox.style.gridArea = `${counter} / 2 / ${counter} / 4`;
+		ipBox.style.alignSelf = "start";
+		ipBox.style.gridTemplateColumns = "72px auto";
+		const ipBoxRows = ["36px", "36px", "160px"]; //mode, add, list
+		ipBox.style.gridTemplateRows = ipBoxRows.join(" ");
+		ipBox.style.alignItems = "center";
+		innerBox.appendChild(ipBox);
 
-		const destinationPortInput = document.createElement("input");
-		destinationPortInput.type = "number";
-		destinationPortInput.min = 1;
-		destinationPortInput.max = 65535;
-		destinationPortInput.value = 80;
-		destinationPortInput.style.gridArea = `${counter} / 3`;
+		const ipModeLabel = document.createElement("div");
+		ipModeLabel.style.gridArea = "1 / 1";
+		ipModeLabel.textContent = "Mode:";
+		const ipModeBox = new FewBox(ReverseProxy.IP_FILTER_MODES.map(o=> o.label));
+		ipModeBox.container.style.gridArea = "1 / 2";
+		ipModeBox.container.style.maxWidth = "200px";
+		ipModeBox.Select(Math.max(ReverseProxy.IP_FILTER_MODES.findIndex(o=> o.value === entryFilter.mode), 0));
+		ipBox.append(ipModeLabel, ipModeBox.container);
 
-		innerBox.append(destinationPortLabel, destinationPortInput);
+		const ipAddBox = document.createElement("div");
+		ipAddBox.style.gridArea = "2 / 1 / 2 / 3";
+		ipAddBox.style.display = "flex";
+		ipAddBox.style.alignItems = "center";
+		ipBox.appendChild(ipAddBox);
 
+		const ipInput = document.createElement("input");
+		ipInput.type = "text";
+		ipInput.placeholder = "192.168.0.0/24 or 2001:db8::/32";
+		ipInput.style.flex = "1";
 
-		counter++;
-		const autostartBox = document.createElement("div");
-		autostartBox.style.gridArea = `${counter} / 2 / ${counter} / 4`;
-		innerBox.append(autostartBox);
+		const ipAddButton = document.createElement("input");
+		ipAddButton.type = "button";
+		ipAddButton.value = "Add";
+		ipAddButton.style.minWidth = "64px";
+		ipAddBox.append(ipInput, ipAddButton);
 
-		const autostartToggle = this.CreateToggle("Autostart", false, autostartBox);
+		const ipList = document.createElement("div");
+		ipList.style.gridArea = "3 / 1 / 3 / 3";
+		ipList.style.alignSelf = "stretch";
+		ipList.style.margin = "4px";
+		ipList.style.border = "rgb(128,128,128) 1px solid";
+		ipList.style.borderRadius = "4px";
+		ipList.style.overflowY = "auto";
+		ipBox.appendChild(ipList);
+
+		const GetIpMode = ()=> ReverseProxy.IP_FILTER_MODES[ipModeBox.index]?.value ?? "blacklist";
+
+		const RenderIpEntries = ()=> {
+			ipList.textContent = "";
+
+			if (ipEntries.length === 0) {
+				const empty = document.createElement("div");
+				empty.textContent = GetIpMode() === "whitelist" ? "No entries, every client is blocked" : "No entries";
+				empty.style.padding = "8px";
+				empty.style.opacity = ".7";
+				empty.style.fontStyle = "italic";
+				ipList.appendChild(empty);
+				return;
+			}
+
+			for (const ipEntry of ipEntries) {
+				const row = document.createElement("div");
+				row.style.display = "flex";
+				row.style.alignItems = "center";
+				row.style.height = "32px";
+				row.style.paddingLeft = "8px";
+
+				const text = document.createElement("div");
+				text.textContent = ipEntry;
+				text.style.flex = "1";
+				text.style.fontFamily = "monospace";
+				text.style.overflow = "hidden";
+				text.style.textOverflow = "ellipsis";
+				text.style.userSelect = "text";
+
+				const removeButton = document.createElement("input");
+				removeButton.type = "button";
+				removeButton.value = " ";
+				removeButton.title = "Remove";
+				removeButton.disabled = isRunning;
+				removeButton.style.width = "28px";
+				removeButton.style.minWidth = "28px";
+				removeButton.style.height = "28px";
+				removeButton.style.margin = "2px 4px";
+				removeButton.style.backgroundImage = "url(mono/delete.svg?light)";
+				removeButton.style.backgroundSize = "20px 20px";
+				removeButton.style.backgroundPosition = "center";
+				removeButton.style.backgroundRepeat = "no-repeat";
+				removeButton.onclick = ()=> {
+					ipEntries = ipEntries.filter(o=> o !== ipEntry);
+					RenderIpEntries();
+					UpdateLayout();
+				};
+
+				row.append(text, removeButton);
+				ipList.appendChild(row);
+			}
+		};
+
+		//adds the typed entries, comma or space separated. returns false if any is malformed, the server does the strict check
+		const AddIpEntries = ()=> {
+			const items = ipInput.value.split(/[\s,;]+/).filter(o=> o.length > 0);
+			const isValid = items.every(o=> /^[0-9a-fA-F:.]+(\/\d{1,3})?$/.test(o) && /[.:]/.test(o));
+
+			ipInput.required = !isValid;
+			if (!isValid) {
+				ipInput.focus();
+				return false;
+			}
+
+			for (const item of items) {
+				if (!ipEntries.includes(item)) ipEntries.push(item);
+			}
+
+			ipInput.value = "";
+			RenderIpEntries();
+			UpdateLayout();
+			return true;
+		};
+
+		ipAddButton.onclick = ()=> {
+			AddIpEntries();
+			ipInput.focus();
+		};
+
+		ipInput.onkeydown = event=> {
+			if (event.key === "Enter") {
+				event.preventDefault();
+				AddIpEntries();
+			}
+		};
+
+		ipEnableToggle.checkbox.addEventListener("change", ()=> UpdateLayout());
+		ipModeBox.container.onchange = ()=> {
+			RenderIpEntries();
+			UpdateLayout();
+		};
+
+		RenderIpEntries();
+
+		//http limits, only visible for HTTP and HTTPS
+		const limitsInputs = Object.create(null);
+		const limitsOriginal = Object.create(null);
+		const entryLimits = entry?.limits?.v ?? {};
+
+		counter++; //separator
+		const limits = AddCollapsible("Limits");
+
+		const ToDisplayValue = (limit, value)=> {
+			if (value === null || value === undefined) return "";
+			return limit.kb ? parseFloat((value / 1024).toFixed(3)) : value;
+		};
+
+		const FromDisplayValue = (limit, text)=> {
+			if (!limit.kb) return limit.integer ? parseInt(text) : parseFloat(text);
+
+			let bytes = parseFloat(text) * 1024;
+			if (limit.integer) bytes = Math.round(bytes);
+
+			if ("max" in limit && bytes > limit.max && bytes - limit.max < 1024) bytes = limit.max;
+
+			return bytes;
+		};
+
+		const limitsRows = [];
+		for (const limit of ReverseProxy.HTTP_LIMITS) {
+			if (limit.section) {
+				limitsRows.push("32px");
+
+				const section = document.createElement("div");
+				section.textContent = limit.section;
+				section.style.gridArea = `${limitsRows.length} / 1 / ${limitsRows.length} / 3`;
+				section.style.fontWeight = "600";
+				section.style.alignSelf = "end";
+				limits.box.appendChild(section);
+				continue;
+			}
+
+			limitsRows.push("36px");
+
+			const label = document.createElement("div");
+			label.style.gridArea = `${limitsRows.length} / 1`;
+			label.textContent = `${limit.label}:`;
+
+			const value = limit.key in entryLimits ? entryLimits[limit.key] : limit.value;
+
+			const input = document.createElement("input");
+			input.type = "number";
+			input.style.gridArea = `${limitsRows.length} / 2`;
+			input.placeholder = limit.blank ?? "";
+			input.value = ToDisplayValue(limit, value);
+			input.step = limit.integer && !limit.kb ? 1 : "any";
+			if ("min" in limit) input.min = limit.kb ? limit.min / 1024 : limit.min;
+			if ("max" in limit) input.max = limit.kb ? Math.ceil(limit.max / 1024) : limit.max;
+
+			limits.box.append(label, input);
+			limitsInputs[limit.key] = input;
+			limitsOriginal[limit.key] = {text: input.value, value: value ?? null};
+		}
+
+		limits.box.style.gridTemplateRows = limitsRows.join(" ");
+		const limitsHeight = limitsRows.reduce((sum, row)=> sum + parseInt(row), 0);
 
 		if (entry) {
 			nameInput.value = entry.name.v;
-			protocolInput.value = entry.protocol.v;
 			passwordInput.value = "";
 			proxyAddressInput.value = entry.proxyaddr.v;
 			proxyPortInput.value = entry.proxyport.v;
@@ -773,22 +1063,57 @@ class ReverseProxy extends List {
 			autostartToggle.checkbox.checked = entry.autostart.v;
 		}
 
-		protocolInput.onchange = ()=> {
-			certsInput.disabled = protocolInput.value !== "HTTPS";
-			passwordInput.disabled = protocolInput.value !== "HTTPS";
+		protocolBox.Select(Math.max(ReverseProxy.PROTOCOLS.indexOf(entry?.protocol.v), 0));
 
-			const isL3 = protocolInput.value === "TCP" || protocolInput.value === "UDP";
+		const SumRows = rows=> rows.reduce((sum, row)=> sum + parseInt(row), 0);
+
+		const UpdateLayout = ()=> {
+			const protocol = protocolBox.selected;
+			const isL3 = protocol === "TCP" || protocol === "UDP";
+
+			certsInput.disabled = isRunning || protocol !== "HTTPS";
+			passwordInput.disabled = isRunning || protocol !== "HTTPS";
+
 			destinationAddressInput.placeholder = isL3 ? "127.0.0.1" : "https://example.com";
 
 			destinationPortLabel.style.display = isL3 ? "initial" : "none";
 			destinationPortInput.style.display = isL3 ? "initial" : "none";
+
+			//ip filtering
+			const ipEnabled = ipEnableToggle.checkbox.checked;
+			ipBox.style.display = ipEnabled ? "grid" : "none";
+
+			//http limits
+			limits.header.style.display = isL3 ? "none" : "block";
+			limits.box.style.display = isL3 || !limits.expanded ? "none" : "grid";
+			limits.arrow.style.transform = limits.expanded ? "none" : "rotate(-90deg)";
+
+			const rows = [
+				"40px",                                                     //autostart
+				"38px", "38px", "38px", "38px",                             //name, protocol, certificate, password
+				"16px",
+				"38px", "38px",                                             //proxy address and port
+				"16px",
+				"38px", isL3 ? "38px" : "0px",                              //destination address and port
+				"16px",
+				"40px", ipEnabled ? `${SumRows(ipBoxRows)}px` : "0px",      //ip filtering toggle and box
+				isL3 ? "0px" : "8px",
+				isL3 ? "0px" : "32px", !isL3 && limits.expanded ? `${limitsHeight}px` : "0px" //http limits
+			];
+
+			innerBox.style.gridTemplateRows = rows.join(" ");
+
+			//rows, inner padding, buttons and dialog padding
+			dialogBox.style.maxHeight = `${Math.max(SumRows(rows) + 32 + 52 + 48, 480)}px`;
 		};
 
-		protocolInput.onchange();
+		protocolBox.container.onchange = UpdateLayout;
+		UpdateLayout();
 
 		if (isRunning) {
 			nameInput.disabled = true;
-			protocolInput.disabled = true;
+			protocolBox.container.inert = true;
+			protocolBox.container.style.opacity = ".6";
 			certsInput.disabled = true;
 			passwordInput.disabled = true;
 			proxyAddressInput.disabled = true;
@@ -796,6 +1121,16 @@ class ReverseProxy extends List {
 			destinationAddressInput.disabled = true;
 			destinationPortInput.disabled = true;
 			autostartToggle.checkbox.disabled = true;
+
+			ipEnableToggle.checkbox.disabled = true;
+			ipModeBox.container.inert = true;
+			ipModeBox.container.style.opacity = ".6";
+			ipInput.disabled = true;
+			ipAddButton.disabled = true;
+
+			for (const key in limitsInputs) {
+				limitsInputs[key].disabled = true;
+			}
 
 			dialog.okButton.disabled = true;
 			dialog.cancelButton.value = "Close";
@@ -809,6 +1144,38 @@ class ReverseProxy extends List {
 		okButton.onclick = async ()=> {
 			let requiredFieldMissing = false;
 			let requiredFields = [nameInput, proxyAddressInput, proxyPortInput, destinationAddressInput, destinationPortInput];
+
+			//an address typed but not added yet
+			if (ipEnableToggle.checkbox.checked && ipInput.value.trim().length > 0) {
+				if (!AddIpEntries()) return;
+			}
+
+			//limits don't apply to TCP and UDP, keep the previous or default values
+			const isL3 = protocolBox.selected === "TCP" || protocolBox.selected === "UDP";
+			const limitValues = Object.create(null);
+
+			for (const limit of ReverseProxy.HTTP_LIMITS) {
+				if (limit.section) continue;
+
+				const input = limitsInputs[limit.key];
+				if (isL3) {
+					limitValues[limit.key] = limit.key in entryLimits ? entryLimits[limit.key] : limit.value;
+				}
+				else if (input.value.length === 0) {
+					limitValues[limit.key] = null;
+					if (!limit.blank) {
+						requiredFields.push(input);
+						Expand(limits);
+					}
+				}
+				else if (input.value === limitsOriginal[limit.key].text) {
+					//unchanged, keep the exact value in bytes, KB are rounded for display
+					limitValues[limit.key] = limitsOriginal[limit.key].value;
+				}
+				else {
+					limitValues[limit.key] = FromDisplayValue(limit, input.value);
+				}
+			}
 
 			for (let i=0; i<requiredFields.length; i++) {
 				if (requiredFields[i].value.length === 0) {
@@ -830,14 +1197,20 @@ class ReverseProxy extends List {
 					body: JSON.stringify({
 						guid        : entry ? entry.guid.v : null,
 						name        : nameInput.value,
-						protocol    : protocolInput.value,
+						protocol    : protocolBox.selected,
 						certificate : certsInput.value === null || certsInput.value === "none" ? null : certsInput.value,
 						password    : passwordInput.value,
 						proxyaddr   : proxyAddressInput.value,
 						proxyport   : parseInt(proxyPortInput.value),
 						destaddr    : destinationAddressInput.value,
 						destport    : parseInt(destinationPortInput.value),
-						autostart   : autostartToggle.checkbox.checked
+						autostart   : autostartToggle.checkbox.checked,
+						limits      : limitValues,
+						ipfilter    : {
+							enabled : ipEnableToggle.checkbox.checked,
+							mode    : GetIpMode(),
+							entries : ipEntries
+						}
 					})
 				});
 
