@@ -1006,7 +1006,7 @@ class TerminalRecording extends PtyHost {
 		this.controlSocket = null;
 
 		this.SetTitle("Session recording");
-		this.SetIcon("mono/play.svg");
+		this.SetIcon("mono/playback.svg");
 
 		this.content.style.bottom = "72px";
 

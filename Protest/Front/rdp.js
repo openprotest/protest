@@ -72,7 +72,7 @@ class Rdp extends Window {
 		this.pendingRemoteClipboard = 0; //attempts left to copy the remote clipboard locally
 		this.pasteTimeout = null;
 
-		this.SetTitle("Remote desktop");
+		this.SetTitle("RDP");
 		this.SetIcon("mono/rdp.svg");
 
 		this.SetupToolbar();
@@ -144,7 +144,7 @@ class Rdp extends Window {
 
 		//without credentials the dialog asks for them first
 		if (this.args.host && !isRestored && (this.args.credential || this.password !== null)) {
-			this.SetTitle(`Remote desktop - ${this.args.host}`);
+			this.SetTitle(`RDP - ${this.args.host}`);
 			this.Connect();
 		}
 		else {
@@ -272,7 +272,7 @@ class Rdp extends Window {
 
 		this.connected = true;
 		this.HideStatus();
-		this.SetTitle(`Remote desktop - ${host}`);
+		this.SetTitle(`RDP - ${host}`);
 
 		userInteraction.setVisibility(true);
 		this.UpdateScale();
@@ -347,7 +347,7 @@ class Rdp extends Window {
 
 				const canvas = element.shadowRoot.querySelector("canvas");
 				if (canvas) {
-					this.canvasObserver = new MutationObserver(()=> this.UpdateScale());
+					this.canvasObserver = new MutationObserver(()=> this.OnCanvasResized());
 					this.canvasObserver.observe(canvas, { attributes:true, attributeFilter:["width", "height"] });
 				}
 
@@ -662,6 +662,10 @@ class Rdp extends Window {
 		return { width:width, height:height };
 	}
 
+	OnCanvasResized() { //overridable
+		this.UpdateScale();
+	}
+
 	UpdateScale() {
 		const canvas = this.element?.shadowRoot?.querySelector("canvas");
 		if (!canvas || !canvas.width || !canvas.height) return;
@@ -847,7 +851,7 @@ class Rdp extends Window {
 			}
 
 			dialog.Close();
-			this.SetTitle(`Remote desktop - ${this.args.host}`);
+			this.SetTitle(`RDP - ${this.args.host}`);
 			this.Connect();
 		};
 
@@ -1288,7 +1292,7 @@ class RdpRecording extends Rdp {
 		this.controlSocket = null;
 
 		this.SetTitle("RDP recording");
-		this.SetIcon("mono/play.svg");
+		this.SetIcon("mono/playback.svg");
 
 		this.AddToolbarSeparator();
 		this.AddSendToChatButton();
@@ -1417,6 +1421,7 @@ class RdpRecording extends Rdp {
 		let reachedEnd = false;
 
 		//IronRDP resizes its canvas only for resizes it requested, the server announces the recorded ones ahead of time
+		this.recordedSize = null;
 		controlSocket.onmessage = event=> {
 			let message;
 			try { message = JSON.parse(event.data); } catch { return; }
@@ -1428,10 +1433,8 @@ class RdpRecording extends Rdp {
 
 			if (message.event !== "resize") return;
 
-			const canvas = this.element?.shadowRoot?.querySelector("canvas");
-			if (!canvas || (canvas.width === message.width && canvas.height === message.height)) return;
-			canvas.width = message.width;
-			canvas.height = message.height;
+			this.recordedSize = { width:message.width, height:message.height };
+			this.ApplyRecordedSize();
 		};
 
 		if (!this.playing) this.SendControl({ cmd: "pause" });
@@ -1506,6 +1509,29 @@ class RdpRecording extends Rdp {
 
 		this.currentMs = this.durationMs;
 		this.UpdateClockDisplay();
+	}
+
+	OnCanvasResized() { //overrides
+		this.ApplyRecordedSize();
+		this.UpdateScale();
+	}
+
+	//The playback server gives IronRDP the largest desktop of the recording, so its surface never has to be resized.
+	//The canvas shows the part the recorded desktop takes at the moment. IronRDP sizes the canvas when it starts and may
+	//draw right away, resizing clears a canvas, so what is drawn is kept.
+	ApplyRecordedSize() {
+		const canvas = this.element?.shadowRoot?.querySelector("canvas");
+		const size = this.recordedSize;
+		if (!canvas || !size || (canvas.width === size.width && canvas.height === size.height)) return;
+
+		const kept = document.createElement("canvas");
+		kept.width = Math.max(1, Math.min(canvas.width, size.width));
+		kept.height = Math.max(1, Math.min(canvas.height, size.height));
+		kept.getContext("2d").drawImage(canvas, 0, 0);
+
+		canvas.width = size.width;
+		canvas.height = size.height;
+		canvas.getContext("2d").drawImage(kept, 0, 0);
 	}
 
 	TeardownPlayback() {

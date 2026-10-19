@@ -3,7 +3,7 @@ class Ssh extends PtyHost {
 	constructor(args) {
 		super(args);
 
-		this.SetTitle("Secure shell");
+		this.SetTitle("SSH");
 		this.SetIcon("mono/ssh.svg");
 
 		this.resizeAware = true;
@@ -298,7 +298,7 @@ class Ssh extends PtyHost {
 		this.ws.onmessage = e=> {
 			let json = JSON.parse(e.data);
 			if (json.connected) {
-				this.SetTitle(`Secure shell - ${target}`);
+				this.SetTitle(`SSH - ${target}`);
 				this.statusBox.style.display = "none";
 				this.ws.onmessage = event=> this.HandleMessage(event.data);
 

@@ -60,7 +60,7 @@
 	font-family: var(--global-font-family);
 	font-size: 12px;
 	font-weight: 600;
-	color: #f0c040;
+	color: var(--clr-light);
 	background-color: rgba(0,0,0,.65);
 	background-image: url(mono/warning.svg?light);
 	background-size: 16px 16px;

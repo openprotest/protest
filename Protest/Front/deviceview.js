@@ -568,7 +568,7 @@ class DeviceView extends View {
 					return await this.ResolveCredentialGuid(["ssh credentials", "credentials"]);
 				};
 
-				const sshButton = this.CreateSideButton("mono/ssh.svg", "Secure shell");
+				const sshButton = this.CreateSideButton("mono/ssh.svg", "SSH");
 				sshButton.onclick = async ()=> {
 					const credential = await ResolveSshCredential();
 					if (credential === null) return; //picker was cancelled
@@ -674,7 +674,7 @@ class DeviceView extends View {
 			if (overwriteProtocol.rdp || ports.includes(3389)) { //rdp
 				const rdpPort = overwriteProtocol.rdp || 3389;
 
-				const actionButton = this.CreateSideButton("mono/rdp.svg", "Remote desktop");
+				const actionButton = this.CreateSideButton("mono/rdp.svg", "RDP");
 				actionButton.onclick = async ()=> {
 					const credential = await this.ResolveCredentialGuid(["credentials"]);
 					if (credential === null) return; //picker cancelled

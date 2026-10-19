@@ -1,10 +1,81 @@
 #cap {
 	position: absolute;
-	/*background-color: rgba(16,16,16,.05);*/
 	visibility: hidden;
 	z-index: 16777264;
 	width: 100%;
 	height: 100%;
+
+	opacity: 0;
+	backdrop-filter: blur(4px);
+	background-color: rgba(32,32,32,.4);
+	background-image: radial-gradient(rgba(32,32,32,.4) 1px, transparent 0), radial-gradient(rgba(224,224,224,.4) 1px, transparent 0);
+	background-size: 16px 16px, 16px 16px;
+	background-position: 0px 0px, .5px .5px;
+	
+	transition: .2s;
+}
+
+.cap-icon {
+	position: absolute;
+	width: 96px;
+	height: 96px;
+	box-sizing: border-box;
+	padding: 0 4px;
+	border-radius: 4px;
+
+	color: #c0c0c0;
+	font-weight: 600;
+	text-align: center;
+	line-height: 164px;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+
+	background-color: var(--clr-dark);
+	background-size: 56px 56px;
+	background-position: center 10px;
+	background-repeat: no-repeat;
+	box-shadow: #484848 0 0 0 1px inset, rgba(0,0,0,.2) 2px 2px 4px;
+
+	touch-action: none;
+	transition: .2s;
+}
+
+.cap-icon:hover {
+	background-color: color-mix(in srgb, var(--clr-accent) 60%, var(--clr-dark)) !important;
+	box-shadow: var(--clr-transparent) 0 0 0 1px inset, rgba(0,0,0,.2) 2px 2px 4px;
+}
+
+.cap-icon:active {
+	background-color: color-mix(in srgb, var(--clr-accent) 45%, var(--clr-dark)) !important;
+}
+
+.cap-icon.filtered {
+	opacity: 0;
+	transform: scale(.8);
+	pointer-events: none;
+}
+
+#cap.pin-dragging > .cap-icon.filtered { /*show the taken cells while placing a pin*/
+	opacity: .3;
+	transform: none;
+}
+
+.cap-icon.dragging {
+	z-index: 16777267;
+	transform: scale(1.06);
+	box-shadow: var(--clr-transparent) 0 0 0 1px inset, rgba(0,0,0,.4) 4px 4px 12px;
+	transition: transform .2s, box-shadow .2s, background-color .2s;
+}
+
+.cap-placeholder {
+	position: absolute;
+	width: 96px;
+	height: 96px;
+	box-sizing: border-box;
+	border: 2px dashed var(--clr-dark);
+	border-radius: 4px;
+	transition: .1s;
 }
 
 #container {
@@ -436,6 +507,11 @@
 	background-color: #202020D0 !important;
 	backdrop-filter: blur(12px);
 	box-shadow: black 0 0 4px;
+}
+
+.glass .cap-icon {
+	background-color: #202020D0;
+	backdrop-filter: blur(12px);
 }
 
 .glass > #contextmenu,

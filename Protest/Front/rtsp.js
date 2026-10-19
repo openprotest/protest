@@ -64,8 +64,8 @@ class Rtsp extends Window {
 		this.stats = { frames:0, bytes:0, dropped:0, fps:0, bitrate:0 };
 		this.serverStats = { lost:0, dropped:0 }; //packets the camera never delivered, frames the gateway held back
 
-		this.SetTitle("RTSP viewer");
-		this.SetIcon("mono/camera.svg");
+		this.SetTitle("RTSP");
+		this.SetIcon("mono/playback.svg");
 
 		this.SetupToolbar();
 		this.connectButton    = this.AddToolbarButton("Connect", "mono/connect.svg?light");
@@ -136,7 +136,7 @@ class Rtsp extends Window {
 		this.stats.dropped = 0;
 		this.serverStats = { lost:0, dropped:0 };
 		this.connectButton.disabled = true;
-		this.SetTitle(`RTSP viewer - ${Rtsp.HostOf(url)}`);
+		this.SetTitle(`RTSP - ${Rtsp.HostOf(url)}`);
 		this.ShowStatus("mono/connect.svg", "Connecting...");
 
 		let received = false;
@@ -338,7 +338,7 @@ class Rtsp extends Window {
 		this.rejectedData = false;
 
 		if (supported.length === 0) {
-			console.error(`RTSP viewer: no decoder for ${codec}\n${report.join("\n")}`);
+			console.error(`RTSP: no decoder for ${codec}\n${report.join("\n")}`);
 			this.Fail(Rtsp.UnsupportedMessage(codec));
 			return;
 		}
@@ -377,7 +377,7 @@ class Rtsp extends Window {
 			}
 			catch (ex) {
 				try { decoder.close(); } catch {}
-				console.warn(`RTSP viewer: ${Rtsp.DescribeConfiguration(config)} failed to configure, ${ex.message}`);
+				console.warn(`RTSP: ${Rtsp.DescribeConfiguration(config)} failed to configure, ${ex.message}`);
 				this.candidateIndex++;
 				this.decodedFrames = 0;
 				this.submittedFrames = 0;
@@ -389,7 +389,7 @@ class Rtsp extends Window {
 
 	//the configuration doesn't work in this browser after all, the next one starts on the next key frame
 	NextDecoder(reason, rejectedData) {
-		console.warn(`RTSP viewer: ${Rtsp.DescribeConfiguration(this.decoderConfig)} ${reason}`);
+		console.warn(`RTSP: ${Rtsp.DescribeConfiguration(this.decoderConfig)} ${reason}`);
 		if (rejectedData) this.rejectedData = true;
 		this.CloseDecoder();
 		this.waitingForKey = true;

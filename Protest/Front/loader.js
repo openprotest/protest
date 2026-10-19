@@ -215,6 +215,7 @@ const LOADER = {
 			}
 			else if (count === total) { //all done
 				KEEP.Initialize();
+				MENU.LoadPinned();
 
 				setTimeout(()=> {
 					loadingcontainer.style.filter = "opacity(0)";

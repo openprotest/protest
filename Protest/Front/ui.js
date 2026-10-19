@@ -415,7 +415,7 @@ const MENU = {
 		{ t:"Team chat",     i:"mono/chat.svg?light",          g:"documentation", h:false, f:()=> new Chat(),        k:"messages" },
 
 		{ t:"Watchdog",            i:"mono/watchdog.svg?light",     g:"tools", h:false, f:()=> new Watchdog() },
-		{ t:"Lifeline",            i:"mono/lifeline.svg?light",     g:"tools", h:true,  f:args=> new Lifeline(args), k:"history graphs ping roundtrip cpu memory disk traffic" },
+		{ t:"Lifeline",            i:"mono/lifeline.svg?light",     g:"tools", h:true,  f:args=> new Lifeline(args), k:"history graphs" },
 		{ t:"Issues",              i:"mono/issues.svg?light",       g:"tools", h:false, f:()=> new Issues() },
 		{ t:"Reverse proxy",       i:"mono/reverseproxy.svg?light", g:"tools", h:false, f:args=> new ReverseProxy(args) },
 		{ t:"Topology",            i:"mono/topology.svg?light",     g:"tools", h:false, f:()=> new Topology() },
@@ -443,12 +443,12 @@ const MENU = {
 		{ t:"Terminal",           i:"mono/terminal.svg?light",      g:"utilities", h:true,  f:()=> new Terminal({}),         k:"terminal shell console cmd bash" },
 		{ t:"RS-232 console",     i:"mono/serialconsole.svg?light", g:"utilities", h:false, f:()=> new Rs232(),              k:"rs 232 serial console terminal" },
 		{ t:"Remote shell",       i:"mono/remoteshell.svg?light",   g:"utilities", h:false, f:()=> new RemoteShell({host:""}), k:"winrm powershell psremoting windows terminal shell" },
-		{ t:"Secure shell",       i:"mono/ssh.svg?light",           g:"utilities", h:false, f:()=> new Ssh({host:""}),       k:"ssh terminal" },
+		{ t:"SSH",                i:"mono/ssh.svg?light",           g:"utilities", h:false, f:()=> new Ssh({host:""}),       k:"secure shell terminal" },
 		{ t:"SFTP client",        i:"mono/shared.svg?light",        g:"utilities", h:false, f:()=> new Sftp({host:""})},
 		{ t:"Telnet",             i:"mono/telnet.svg?light",        g:"utilities", h:true,  f:()=> new Telnet({host:""}),    k:"terminal" },
 		{ t:"VNC",                i:"mono/vnc.svg?light",           g:"utilities", h:true,  f:()=> new Vnc(),                k:"vnc uvnc remote rfb" },
-		{ t:"Remote desktop",     i:"mono/rdp.svg?light",           g:"utilities", h:true,  f:()=> new Rdp(),                k:"rdp mstsc remote desktop ironrdp" },
-		{ t:"RTSP viewer",        i:"mono/camera.svg?light",        g:"utilities", h:true,  f:()=> new Rtsp(),               k:"real time streaming cctv nvr video h264 h265 hevc mjpeg" },
+		{ t:"RDP",                i:"mono/rdp.svg?light",           g:"utilities", h:true,  f:()=> new Rdp(),                k:"mstsc remote desktop ironrdp" },
+		{ t:"RTSP",               i:"mono/camera.svg?light",        g:"utilities", h:true,  f:()=> new Rtsp(),               k:"real time streaming cctv nvr video h264 h265 hevc mjpeg" },
 		{ t:"Encoder",            i:"mono/encoder.svg?light",       g:"utilities", h:true,  f:args=> new Encoder(args),      k:"binary hex base64 url html decode" },
 		{ t:"Network calculator", i:"mono/netcalc.svg?light",       g:"utilities", h:true,  f:()=> new NetCalc(),            k:"subnet" },
 		{ t:"Password generator", i:"mono/passgen.svg?light",       g:"utilities", h:true,  f:()=> new PassGen(),            k:"code" },
@@ -501,6 +501,13 @@ const MENU = {
 	lastAltPress: 0,
 	filterIndex: -1,
 	lastSearchValue: "",
+	PIN_SIZE: 96,
+	PIN_STEP: 104,
+	PIN_MARGIN: 20,
+	pinned: [],
+	draggedPin: null,
+	isPinMoved: false,
+	paneProbe: null,
 
 	Clear: ()=> {
 		if (searchinput.value.length > 0) {
@@ -621,6 +628,8 @@ const MENU = {
 		const isGrid = normalizedFilter.length === 0;
 		const showHidden = MENU.filterIndex > -1 || keywords.length > 0;
 
+		MENU.FilterPinned(keywords);
+
 		if (MENU.filterIndex === 1) { //recent
 			if (WIN.array.length > 0) {
 				const groupOpen = document.createElement("div");
@@ -690,11 +699,7 @@ const MENU = {
 		for (let i = 0; i < MENU.items.length; i++) { //menu items
 			if (MENU.items[i].h && !showHidden) continue;
 
-			const match = keywords.every(
-				keyword=> MENU.items[i].t.toLowerCase().includes(keyword) || MENU.items[i].g.includes(keyword) || (MENU.items[i].k && MENU.items[i].k.includes(keyword))
-			);
-
-			if (!match) continue;
+			if (!MENU.MatchItem(MENU.items[i], keywords)) continue;
 
 			if (MENU.filterIndex > -1) {
 				if (MENU.filterIndex === 2 && MENU.items[i].g !== "inventory") continue;
@@ -728,6 +733,7 @@ const MENU = {
 
 				MENU.list.push(item);
 				MENU.ItemEvent(item, MENU.items[i].f);
+				MENU.PinEvent(item, MENU.items[i].t);
 
 				if (!isGrid) {
 					cache[MENU.items[i].t] = item;
@@ -740,10 +746,7 @@ const MENU = {
 			let exactMatchDevices = [];
 
 			for (const file in LOADER.devices.data) {
-				const match = keywords.every(
-					keyword=> Object.values(LOADER.devices.data[file]).some(attr=> attr.v.toLowerCase().includes(keyword))
-				);
-				if (!match) continue;
+				if (!MENU.MatchRecord(LOADER.devices.data[file], keywords)) continue;
 
 				const exactMatch = keywords.some(
 					keyword=> Object.values(LOADER.devices.data[file]).some(attr=> attr.v.toLowerCase() === keyword)
@@ -782,6 +785,7 @@ const MENU = {
 					}
 
 					MENU.ItemEvent(item, ()=> LOADER.OpenDeviceByFile(file));
+					MENU.PinEvent(item, `device:${file}`);
 
 					if (!isGrid) {
 						cache[file] = item;
@@ -805,12 +809,7 @@ const MENU = {
 			let exactMatchUsers = [];
 
 			for (const file in LOADER.users.data) {
-				const match = keywords.every(
-					keyword=> Object.values(LOADER.users.data[file]).some(
-						attr=> attr.v.toLowerCase().includes(keyword)
-					)
-				);
-				if (!match) continue;
+				if (!MENU.MatchRecord(LOADER.users.data[file], keywords)) continue;
 
 				const exactMatch = keywords.some(
 					keyword=> Object.values(LOADER.users.data[file]).some(attr=> attr.v.toLowerCase() === keyword)
@@ -849,6 +848,7 @@ const MENU = {
 					}
 
 					MENU.ItemEvent(item, ()=> LOADER.OpenUserByFile(file));
+					MENU.PinEvent(item, `user:${file}`);
 
 					if (!isGrid) {
 						cache[file] = item;
@@ -889,7 +889,7 @@ const MENU = {
 
 	ItemEvent: (element, func)=> {
 		element.onclick = event=> {
-			if (event.ctrlKey) return;
+			if (event.ctrlKey || MENU.isPinMoved) return;
 			event.stopPropagation();
 			MENU.Close();
 			func();
@@ -901,6 +901,357 @@ const MENU = {
 			func();
 			WIN.GridWindows();
 		};
+	},
+
+	MatchItem: (item, keywords)=> {
+		return keywords.every(
+			keyword=> item.t.toLowerCase().includes(keyword) || item.g.includes(keyword) || (item.k && item.k.includes(keyword))
+		);
+	},
+
+	MatchRecord: (record, keywords)=> {
+		return keywords.every(
+			keyword=> Object.values(record).some(attr=> attr.v.toLowerCase().includes(keyword))
+		);
+	},
+
+	MatchPin: (key, keywords)=> {
+		if (keywords.length === 0) return true;
+
+		if (key.startsWith("device:")) {
+			const device = LOADER.devices.data?.[key.substring(7)];
+			return !!device && MENU.MatchRecord(device, keywords);
+		}
+
+		if (key.startsWith("user:")) {
+			const user = LOADER.users.data?.[key.substring(5)];
+			return !!user && MENU.MatchRecord(user, keywords);
+		}
+
+		const item = MENU.items.find(o=> o.t === key);
+		return !!item && MENU.MatchItem(item, keywords);
+	},
+
+	FilterPinned: keywords=> { //fade out the pins that don't match the search, keeping their cells
+		for (let i = 0; i < MENU.pinned.length; i++) {
+			MENU.pinned[i].element.classList.toggle("filtered", !MENU.MatchPin(MENU.pinned[i].key, keywords));
+		}
+	},
+
+	//pin keys: a menu item's title, "device:<file>" or "user:<file>"
+	ResolvePin: key=> {
+		if (key.startsWith("device:")) return MENU.DeviceItem(key.substring(7));
+		if (key.startsWith("user:")) return MENU.UserItem(key.substring(5));
+		return MENU.items.find(o=> o.t === key) ?? null;
+	},
+
+	DeviceItem: file=> {
+		const device = LOADER.devices.data?.[file];
+		if (!device) return null;
+
+		const type = device.type ? device.type.v.toLowerCase() : null;
+		return {
+			t: device.name?.v || device.hostname?.v || device.fqdn?.v || device.ip?.v || "",
+			i: `${type in LOADER.deviceIcons ? LOADER.deviceIcons[type] : "mono/gear.svg"}?light`,
+			f: ()=> LOADER.OpenDeviceByFile(file)
+		};
+	},
+
+	UserItem: file=> {
+		const user = LOADER.users.data?.[file];
+		if (!user) return null;
+
+		const type = user.type ? user.type.v.toLowerCase() : null;
+		return {
+			t: user["display name"]?.v || user.title?.v || user["e-mail"]?.v || user.username?.v || "",
+			i: `${type in LOADER.userIcons ? LOADER.userIcons[type] : "mono/user.svg"}?light`,
+			f: ()=> LOADER.OpenUserByFile(file)
+		};
+	},
+
+	PinEvent: (element, key)=> {
+		element.onpointerdown = event=> {
+			if (event.button !== 0 || event.ctrlKey || event.pointerType === "touch") return; //leave touch to scrolling
+			if (MENU.pinned.some(o=> o.key === key) || !MENU.ResolvePin(key)) return;
+			MENU.PinDrag(event, key, null);
+		};
+	},
+
+	LoadPinned: ()=> { //after the devices and users are loaded
+		let entries;
+		try {
+			entries = JSON.parse(localStorage.getItem("menu_pinned")) ?? [];
+		}
+		catch {
+			entries = [];
+		}
+
+		for (let i = 0; i < entries.length; i++) {
+			const entry = entries[i];
+			if (typeof entry?.k !== "string" || !Number.isInteger(entry.c) || !Number.isInteger(entry.r)) continue;
+			if (entry.c < 0 || entry.r < 0 || MENU.pinned.some(o=> o.key === entry.k)) continue;
+
+			const item = MENU.ResolvePin(entry.k);
+			if (!item) continue;
+			MENU.pinned.push({ key: entry.k, element: MENU.CreatePinnedIcon(entry.k, item), c: entry.c, r: entry.r, cell: null });
+		}
+
+		MENU.ArrangePinned();
+	},
+
+	StorePinned: ()=> { //c,r is the pin's own cell, even while it's displaced
+		localStorage.setItem("menu_pinned", JSON.stringify(MENU.pinned.map(o=> ({ k:o.key, c:o.c, r:o.r }))));
+	},
+
+	CreatePinnedIcon: (key, item)=> {
+		const element = document.createElement("div");
+		element.className = "cap-icon";
+		element.textContent = item.t;
+		element.style.backgroundImage = `url(${item.i})`;
+		cap.appendChild(element);
+
+		MENU.ItemEvent(element, item.f);
+
+		element.onpointerdown = event=> {
+			if (event.button !== 0 || event.ctrlKey) return;
+			MENU.PinDrag(event, key, element);
+		};
+
+		return element;
+	},
+
+	RemovePinnedIcon: element=> {
+		element.style.pointerEvents = "none";
+		element.style.opacity = "0";
+		element.style.transform = "scale(.6)";
+		setTimeout(()=> element.remove(), 200);
+	},
+
+	PinDrag: (event, key, element)=> { //element is null when dragging out of the menu
+		const pointerId = event.pointerId;
+		const x0 = event.clientX;
+		const y0 = event.clientY;
+		const half = MENU.PIN_SIZE / 2;
+		const offsetX = element ? x0 - element.getBoundingClientRect().left : half;
+		const offsetY = element ? y0 - element.getBoundingClientRect().top : half;
+
+		let pin = MENU.pinned.find(o=> o.key === key) ?? null; //null until a new pin is dropped
+		let target = null; //nearest free cell, null when there's none or over the pane
+		let isOverPane = false;
+		let isMoved = false;
+		let placeholder = null;
+
+		const move = e=> {
+			if (e.pointerId !== pointerId) return;
+
+			if (!isMoved) {
+				if (Math.abs(e.clientX - x0) < 6 && Math.abs(e.clientY - y0) < 6) return;
+				isMoved = true;
+				element ??= MENU.CreatePinnedIcon(key, MENU.ResolvePin(key));
+				element.classList.add("dragging");
+				container.appendChild(element); //lift above the menu pane
+				cap.classList.add("pin-dragging");
+				MENU.draggedPin = element;
+			}
+
+			const rect = cap.getBoundingClientRect();
+			const x = e.clientX - rect.left;
+			const y = e.clientY - rect.top;
+			const left = x - offsetX;
+			const top = y - offsetY;
+			element.style.left = `${left}px`;
+			element.style.top = `${top}px`;
+
+			const cells = MENU.PinCells();
+			const pane = cells.pane;
+			isOverPane = x >= pane.x && x <= pane.x + pane.w && y >= pane.y && y <= pane.y + pane.h;
+			target = null;
+
+			if (!isOverPane) {
+				const taken = new Set();
+				for (let i = 0; i < MENU.pinned.length; i++) {
+					const cell = MENU.pinned[i].cell;
+					if (cell && MENU.pinned[i].element !== element) taken.add(`${cell.c},${cell.r}`);
+				}
+				target = MENU.NearestCell(cells, taken, (left - MENU.PIN_MARGIN) / MENU.PIN_STEP, (top - MENU.PIN_MARGIN) / MENU.PIN_STEP);
+			}
+
+			if (target) {
+				const targetLeft = `${MENU.PIN_MARGIN + target.c * MENU.PIN_STEP}px`;
+				const targetTop = `${MENU.PIN_MARGIN + target.r * MENU.PIN_STEP}px`;
+
+				if (!placeholder) {
+					placeholder = document.createElement("div");
+					placeholder.className = "cap-placeholder";
+					placeholder.style.left = targetLeft;
+					placeholder.style.top = targetTop;
+					cap.appendChild(placeholder);
+				}
+
+				placeholder.style.left = targetLeft;
+				placeholder.style.top = targetTop;
+				placeholder.style.opacity = "";
+			}
+			else if (placeholder) {
+				placeholder.style.opacity = "0";
+			}
+		};
+
+		const end = e=> {
+			if (e.pointerId !== pointerId) return;
+
+			window.removeEventListener("pointermove", move);
+			window.removeEventListener("pointerup", end);
+			window.removeEventListener("pointercancel", end);
+
+			if (!isMoved) return;
+
+			MENU.draggedPin = null;
+			cap.classList.remove("pin-dragging");
+			MENU.isPinMoved = true;
+			setTimeout(()=> {MENU.isPinMoved = false;}, 0);
+
+			placeholder?.remove();
+
+			cap.appendChild(element);
+			element.classList.remove("dragging");
+			void element.offsetLeft; //commit the drop point, so it transitions into its cell from there
+
+			if (target) {
+				if (!pin) {
+					pin = { key: key, element: element, cell: null };
+					MENU.pinned.push(pin);
+				}
+				pin.c = target.c;
+				pin.r = target.r;
+			}
+			else if (isOverPane || !pin) { //dropped on the pane, or a new pin with no room for it
+				if (pin) MENU.pinned.splice(MENU.pinned.indexOf(pin), 1);
+				MENU.RemovePinnedIcon(element);
+			}
+
+			MENU.StorePinned();
+			MENU.ArrangePinned();
+		};
+
+		window.addEventListener("pointermove", move);
+		window.addEventListener("pointerup", end);
+		window.addEventListener("pointercancel", end);
+	},
+
+	PaneBounds: ()=> {
+		if (window.matchMedia("(max-width: 540px)").matches) { //the pane fills the screen (ui.css)
+			return { x:0, y:0, w:cap.clientWidth, h:cap.clientHeight };
+		}
+
+		//the pane transitions into place, so measure an untransitioned twin instead
+		if (!MENU.paneProbe) {
+			MENU.paneProbe = document.createElement("div");
+			MENU.paneProbe.style.cssText = "position:absolute; visibility:hidden; pointer-events:none; width:var(--sidemenu-width);";
+			cap.appendChild(MENU.paneProbe);
+		}
+
+		const probe = MENU.paneProbe;
+		probe.style.left = menubox.style.left;
+		probe.style.top = menubox.style.top;
+		probe.style.bottom = menubox.style.bottom;
+
+		return { x:probe.offsetLeft, y:probe.offsetTop, w:probe.offsetWidth, h:probe.offsetHeight };
+	},
+
+	PinCells: ()=> { //a fixed grid from the top-left corner, so stored cells stay put
+		const size = MENU.PIN_SIZE;
+		const step = MENU.PIN_STEP;
+		const margin = MENU.PIN_MARGIN;
+		const gap = step - size;
+
+		const pane = MENU.PaneBounds();
+		const cols = Math.floor((cap.clientWidth - 2 * margin + gap) / step);
+		const rows = Math.floor((cap.clientHeight - 2 * margin + gap) / step);
+
+		return {
+			pane: pane,
+			cols: cols,
+			rows: rows,
+			IsFree: (c, r)=> { //in view and clear of the pane
+				if (c < 0 || r < 0 || c >= cols || r >= rows) return false;
+				const x = margin + c * step;
+				const y = margin + r * step;
+				return x >= pane.x + pane.w + gap || x + size <= pane.x - gap || y >= pane.y + pane.h + gap || y + size <= pane.y - gap;
+			}
+		};
+	},
+
+	NearestCell: (cells, taken, c, r)=> {
+		let nearest = null;
+		let min = Infinity;
+
+		for (let row = 0; row < cells.rows; row++) {
+			for (let col = 0; col < cells.cols; col++) {
+				if (!cells.IsFree(col, row) || taken.has(`${col},${row}`)) continue;
+				const distance = (col - c) ** 2 + (row - r) ** 2;
+				if (distance < min) {
+					min = distance;
+					nearest = { c:col, r:row };
+				}
+			}
+		}
+
+		return nearest;
+	},
+
+	ArrangePinned: ()=> {
+		const cells = MENU.PinCells();
+		const taken = new Set();
+		const displaced = [];
+
+		//pins stay in their own cell while it's in view and clear of the pane
+		for (let i = 0; i < MENU.pinned.length; i++) {
+			const pin = MENU.pinned[i];
+			if (pin.element === MENU.draggedPin) continue;
+
+			const id = `${pin.c},${pin.r}`;
+			if (cells.IsFree(pin.c, pin.r) && !taken.has(id)) {
+				pin.cell = { c:pin.c, r:pin.r };
+				taken.add(id);
+			}
+			else {
+				displaced.push(pin);
+			}
+		}
+
+		//the rest borrow the nearest free cell, until their own frees up again
+		for (let i = 0; i < displaced.length; i++) {
+			const pin = displaced[i];
+			pin.cell = MENU.NearestCell(cells, taken, pin.c, pin.r);
+			if (pin.cell) taken.add(`${pin.cell.c},${pin.cell.r}`);
+		}
+
+		for (let i = 0; i < MENU.pinned.length; i++) {
+			const pin = MENU.pinned[i];
+			const element = pin.element;
+			if (element === MENU.draggedPin) continue;
+
+			if (!pin.cell) { //out of room
+				element.style.visibility = "hidden";
+				element.style.opacity = "0";
+				continue;
+			}
+
+			//place new icons without sliding in from the corner
+			const isPlaced = element.style.left !== "";
+			if (!isPlaced) element.style.transition = "none";
+
+			element.style.visibility = "";
+			element.style.opacity = "";
+			element.style.left = `${MENU.PIN_MARGIN + pin.cell.c * MENU.PIN_STEP}px`;
+			element.style.top = `${MENU.PIN_MARGIN + pin.cell.r * MENU.PIN_STEP}px`;
+
+			if (!isPlaced) {
+				void element.offsetLeft;
+				element.style.transition = "";
+			}
+		}
 	},
 
 	Filter: index=> {
@@ -924,6 +1275,7 @@ const MENU = {
 	UpdatePosition: ()=> {
 		menubox.style.visibility = MENU.isOpen ? "visible" : "hidden";
 		cap.style.visibility = MENU.isOpen ? "visible" : "hidden";
+		cap.style.opacity = MENU.isOpen ? "1" : "0";
 
 		let left;
 		if (MENU.isAttached) {
@@ -960,6 +1312,8 @@ const MENU = {
 				menubox.style.transform = MENU.isOpen ? "none" : "translateY(100%)";
 			}
 		}
+
+		MENU.ArrangePinned();
 	},
 
 	StorePosition: ()=> {
@@ -990,6 +1344,8 @@ window.addEventListener("resize", ()=> {
 	if (UI.onMobile) return;
 	MENU.UpdatePosition();
 });
+
+new ResizeObserver(()=> MENU.ArrangePinned()).observe(cap); //follows the container when the taskbar moves
 
 document.body.addEventListener("mousemove", event=> {
 	if (event.buttons != 1) {
@@ -1309,7 +1665,10 @@ clearmenusearch.onclick = event=> {
 	MENU.Clear();
 };
 
-cap.onclick = ()=> MENU.Close();
+cap.onclick = event=> {
+	if (event.target !== cap || MENU.isPinMoved) return;
+	MENU.Close();
+};
 
 username.onclick = event=> event.stopPropagation();
 usernameLabel.onclick = event=> event.stopPropagation();

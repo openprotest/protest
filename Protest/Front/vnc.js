@@ -586,7 +586,7 @@ class VncRecording extends Vnc {
 		this.controlSocket = null;
 
 		this.SetTitle("VNC recording");
-		this.SetIcon("mono/play.svg");
+		this.SetIcon("mono/playback.svg");
 
 		this.AddToolbarSeparator();
 		this.AddSendToChatButton();
