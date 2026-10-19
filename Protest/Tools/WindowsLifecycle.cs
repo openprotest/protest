@@ -109,8 +109,11 @@ internal static class WindowsLifecycle {
         if (assessment.state == WindowsLifecycle.SupportState.outOfSupport) {
             severity = Issues.SeverityLevel.critical;
         }
+        else if (assessment.daysLeft < 60) {
+            severity = Issues.SeverityLevel.error;
+        }
         else {
-            severity = assessment.daysLeft < 30 ? Issues.SeverityLevel.error : Issues.SeverityLevel.warning;
+            severity = assessment.daysLeft < 120 ? Issues.SeverityLevel.warning: Issues.SeverityLevel.info;
         }
 
         issue = new Issues.Issue {
