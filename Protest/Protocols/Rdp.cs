@@ -954,22 +954,37 @@ internal static class Rdp {
             return sizes;
         }
 
-        //TPKT + X.224 data + MCS send data indication + share control header (no security header past licensing),
-        //then the demand active PDU, whose bitmap capability set holds the desktop size.
         internal static (int width, int height)? GetDemandActiveSize(byte[] pdu) {
-            if (pdu.Length < 20 || pdu[5] != 0xf0 || (pdu[7] & 0xfc) != 0x68) return null;
+            int capability = FindBitmapCapability(pdu);
+            if (capability < 0) return null;
+            return (BitConverter.ToUInt16(pdu, capability + 12), BitConverter.ToUInt16(pdu, capability + 14));
+        }
+
+        //Rewrites the desktop size of a demand active PDU in place, false for any other PDU.
+        internal static bool SetDemandActiveSize(byte[] pdu, int width, int height) {
+            int capability = FindBitmapCapability(pdu);
+            if (capability < 0) return false;
+            BitConverter.TryWriteBytes(pdu.AsSpan(capability + 12, 2), (ushort)width);
+            BitConverter.TryWriteBytes(pdu.AsSpan(capability + 14, 2), (ushort)height);
+            return true;
+        }
+
+        //TPKT + X.224 data + MCS send data indication + share control header (no security header past licensing),
+        //then the demand active PDU, whose bitmap capability set holds the desktop size. Returns its offset, or -1.
+        private static int FindBitmapCapability(byte[] pdu) {
+            if (pdu.Length < 20 || pdu[5] != 0xf0 || (pdu[7] & 0xfc) != 0x68) return -1;
 
             int share = (pdu[13] & 0x80) != 0 ? 15 : 14;
-            if (pdu.Length < share + 6 + 8) return null;
+            if (pdu.Length < share + 6 + 8) return -1;
 
             ushort pduType = BitConverter.ToUInt16(pdu, share + 2);
-            if (pduType != 0x0011) return null; //version 1, demand active
+            if (pduType != 0x0011) return -1; //version 1, demand active
 
             int demandActive = share + 6;
             int sourceDescriptorLength = BitConverter.ToUInt16(pdu, demandActive + 4);
 
             int offset = demandActive + 8 + sourceDescriptorLength;
-            if (offset + 4 > pdu.Length) return null;
+            if (offset + 4 > pdu.Length) return -1;
 
             int count = BitConverter.ToUInt16(pdu, offset);
             offset += 4; //number of capabilities and padding
@@ -977,32 +992,41 @@ internal static class Rdp {
             for (int n = 0; n < count && offset + 4 <= pdu.Length; n++) {
                 ushort type = BitConverter.ToUInt16(pdu, offset);
                 ushort length = BitConverter.ToUInt16(pdu, offset + 2);
-                if (length < 4) return null;
+                if (length < 4) return -1;
 
                 if (type == 0x0002 && length >= 16 && offset + 16 <= pdu.Length) { //bitmap capability set
-                    return (BitConverter.ToUInt16(pdu, offset + 12), BitConverter.ToUInt16(pdu, offset + 14));
+                    return offset;
                 }
 
                 offset += length;
             }
 
-            return null;
+            return -1;
         }
     }
 
-    //A recording holds the server's side of a connection, so the player has to agree with it on the channels. IronRDP
-    //pairs the static virtual channels it requests with the recorded channel IDs by position and fails on traffic for one
-    //it does not have, and what it requests depends on the browser (the clipboard needs a secure context) and on the
-    //features in use. The player needs none of them, graphics come over the I/O channel, so the recorded traffic on the
-    //recorded client's static channels is dropped. Their IDs come from the recorded MCS connect response.
-    internal sealed class ChannelFilter {
+    //Prepares a recorded server stream for the player, which is IronRDP connected to the recording instead of a server.
+    //Channels: the player has to agree with the recording on them. IronRDP pairs the static virtual channels it requests
+    //with the recorded channel IDs by position and fails on traffic for one it does not have, and what it requests depends
+    //on the browser (the clipboard needs a secure context) and on the features in use. The player needs none of them,
+    //graphics come over the I/O channel, so the recorded traffic on the recorded client's static channels is dropped.
+    //Their IDs come from the recorded MCS connect response.
+    //Desktop size: IronRDP resizes its drawing surface only for resizes it asked for. A recorded reactivation to another
+    //size leaves the surface at the old one and the first update past it fails to draw, after which nothing is drawn.
+    //Given a size, every demand active PDU asks for it instead, the largest of the recording, so the surface fits them all.
+    internal sealed class PlaybackFilter {
         private const ushort SC_CORE = 0x0c01;
         private const ushort SC_NET  = 0x0c03;
 
+        private readonly (int width, int height)? desktopSize;
         private readonly List<byte> frame = new List<byte>();
         private int frameLength; //0 while unknown
         private HashSet<int> channels;
         private bool lost;
+
+        public PlaybackFilter((int width, int height)? desktopSize = null) {
+            this.desktopSize = desktopSize;
+        }
 
         //Returns the complete PDUs of the stream so far that the player should get, a PDU split between reads goes out with the later one.
         public byte[] Filter(byte[] data) {
@@ -1051,9 +1075,13 @@ internal static class Rdp {
                 return true;
             }
 
-            if ((pdu[7] & 0xfc) == 0x68 && channels is not null) { //MCS send data indication: initiator, then channel ID
-                int channelId = pdu[10] << 8 | pdu[11];
-                return !channels.Contains(channelId);
+            if ((pdu[7] & 0xfc) != 0x68) return true; //not an MCS send data indication
+
+            int channelId = pdu[10] << 8 | pdu[11]; //after the initiator
+            if (channels is not null && channels.Contains(channelId)) return false;
+
+            if (desktopSize is (int width, int height)) {
+                DesktopSizeScanner.SetDemandActiveSize(pdu, width, height);
             }
 
             return true;

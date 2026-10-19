@@ -499,8 +499,8 @@ public class RdpTests {
     }
 
     [Test]
-    public void ChannelFilter_DropsTrafficOnTheRecordedStaticChannels() {
-        Rdp.ChannelFilter filter = new Rdp.ChannelFilter();
+    public void PlaybackFilter_DropsTrafficOnTheRecordedStaticChannels() {
+        Rdp.PlaybackFilter filter = new Rdp.PlaybackFilter();
 
         byte[] response  = ConnectResponse(1003, 1004, 1005);
         byte[] clipboard = SendDataIndication(new byte[] { 1, 2, 3 }, 1004);
@@ -518,10 +518,44 @@ public class RdpTests {
     }
 
     [Test]
-    public void ChannelFilter_FindsTheStaticChannelIds() {
-        Assert.That(Rdp.ChannelFilter.GetStaticChannels(ConnectResponse(1003, 1004, 1005, 1006)), Is.EquivalentTo(new[] { 1004, 1005, 1006 }));
-        Assert.That(Rdp.ChannelFilter.GetStaticChannels(ConnectResponse(1003)), Is.Empty);
-        Assert.That(Rdp.ChannelFilter.GetStaticChannels(X224Data(new byte[40])), Is.Null);
+    public void PlaybackFilter_FindsTheStaticChannelIds() {
+        Assert.That(Rdp.PlaybackFilter.GetStaticChannels(ConnectResponse(1003, 1004, 1005, 1006)), Is.EquivalentTo(new[] { 1004, 1005, 1006 }));
+        Assert.That(Rdp.PlaybackFilter.GetStaticChannels(ConnectResponse(1003)), Is.Empty);
+        Assert.That(Rdp.PlaybackFilter.GetStaticChannels(X224Data(new byte[40])), Is.Null);
+    }
+
+    [Test]
+    public void PlaybackFilter_GivesEveryDemandActiveTheLargestSize() {
+        Rdp.PlaybackFilter filter = new Rdp.PlaybackFilter((1920, 1200));
+
+        byte[] first  = DemandActivePdu(1024, 768);
+        byte[] update = FastPathOutput(FastPathUpdate(0x1, new byte[40]));
+        byte[] second = DemandActivePdu(1600, 900);
+        byte[] stream = first.Concat(update).Concat(second).ToArray();
+
+        List<byte> output = new List<byte>();
+        foreach (byte[] chunk in stream.Chunk(11)) {
+            output.AddRange(filter.Filter(chunk));
+        }
+
+        Assert.That(output, Has.Count.EqualTo(stream.Length));
+
+        byte[] filtered = output.ToArray();
+        Assert.That(Rdp.DesktopSizeScanner.GetDemandActiveSize(filtered[..first.Length]), Is.EqualTo((1920, 1200)));
+        Assert.That(filtered[first.Length..(first.Length + update.Length)], Is.EqualTo(update), "everything else goes through as it was");
+        Assert.That(Rdp.DesktopSizeScanner.GetDemandActiveSize(filtered[(first.Length + update.Length)..]), Is.EqualTo((1920, 1200)));
+    }
+
+    [Test]
+    public void DesktopSizeScanner_SetsTheDemandActiveSize() {
+        byte[] pdu = DemandActivePdu(1024, 768);
+        Assert.That(Rdp.DesktopSizeScanner.SetDemandActiveSize(pdu, 2560, 1440), Is.True);
+        Assert.That(Rdp.DesktopSizeScanner.GetDemandActiveSize(pdu), Is.EqualTo((2560, 1440)));
+
+        byte[] other = SendDataIndication(new byte[30]);
+        byte[] untouched = other.ToArray();
+        Assert.That(Rdp.DesktopSizeScanner.SetDemandActiveSize(other, 2560, 1440), Is.False);
+        Assert.That(other, Is.EqualTo(untouched));
     }
 
     [Test]

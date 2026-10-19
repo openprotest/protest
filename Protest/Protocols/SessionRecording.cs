@@ -572,7 +572,7 @@ internal sealed class SessionRecording {
 
             //IronRDP resizes its canvas only for resizes it asked for, the player resizes it ahead of a recorded one
             Rdp.DesktopSizeScanner scanner = new Rdp.DesktopSizeScanner();
-            Rdp.ChannelFilter filter = new Rdp.ChannelFilter();
+            Rdp.PlaybackFilter filter = new Rdp.PlaybackFilter(await GetLargestDesktopSize(videoPath, cts.Token));
 
             async Task<byte[]> BeforeSend(byte[] payload) {
                 List<(int width, int height)> sizes = scanner.Scan(payload);
@@ -598,6 +598,34 @@ internal sealed class SessionRecording {
                 }
             }
         }
+    }
+
+    //The widest and the tallest desktop an RDP recording switches to, the player's drawing surface has to fit them all.
+    private static async Task<(int width, int height)?> GetLargestDesktopSize(string videoPath, CancellationToken token) {
+        Rdp.DesktopSizeScanner scanner = new Rdp.DesktopSizeScanner();
+        int width = 0, height = 0;
+
+        using FileStream fs = new FileStream(videoPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+        byte[] header = new byte[12];
+
+        for (int chunk = 0; await ReadExactAsync(fs, header, 12, token) == 12; chunk++) {
+            int length = BitConverter.ToInt32(header, 8);
+            if (length < 0) break;
+
+            byte[] payload = new byte[length];
+            if (await ReadExactAsync(fs, payload, length, token) < length) break;
+            if (chunk == 0) continue; //the RDCleanPath response
+
+            List<(int width, int height)> sizes = scanner.Scan(payload);
+            if (sizes is null) continue;
+
+            foreach ((int w, int h) in sizes) {
+                width = Math.Max(width, w);
+                height = Math.Max(height, h);
+            }
+        }
+
+        return width > 0 && height > 0 ? (width, height) : null;
     }
 
     private static async Task<byte[]> ReadFirstChunk(string videoPath, CancellationToken token) {
