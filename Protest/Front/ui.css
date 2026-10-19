@@ -6,8 +6,8 @@
 	height: 100%;
 
 	opacity: 0;
-	backdrop-filter: blur(4px);
-	background-color: rgba(32,32,32,.4);
+	backdrop-filter: blur(2px);
+	background-color: light-dark(rgba(64,64,64,.4), rgba(32,32,32,.4));
 	background-image: radial-gradient(rgba(32,32,32,.4) 1px, transparent 0), radial-gradient(rgba(224,224,224,.4) 1px, transparent 0);
 	background-size: 16px 16px, 16px 16px;
 	background-position: 0px 0px, .5px .5px;
