@@ -162,7 +162,7 @@
 	width: fit-content;
 	min-width: 300px;
 	height: 34px;
-	margin-left: 50px;
+	margin-left: 20px;
 	border-radius: 2px;
 
 	white-space: nowrap;
@@ -170,6 +170,18 @@
 
 	content-visibility: auto;
 	contain-intrinsic-size: 33px;
+}
+
+.grid-entry > div {
+	display: inline-block;
+	vertical-align: center;
+	width: 24px;
+	height: 24px;
+	margin-left: 2px;
+	margin-right: 2px;
+	background-size: 24px 24px;
+	background-position: 50% 50%;
+	background-repeat: no-repeat;
 }
 
 .grid-entry:focus-within {
@@ -190,6 +202,10 @@
 
 	background-repeat: no-repeat;
 	background-size: 20px 20px;
+}
+
+.grid-entry > input:first {
+	padding-left: 50px !important;
 }
 
 .grid-menu-option {

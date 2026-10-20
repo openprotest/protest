@@ -525,14 +525,16 @@ const MENU = {
 		}
 
 		MENU.Update();
-
+		
+		cap.inert = false;
 		MENU.isOpen = true;
 		MENU.UpdatePosition();
-
+		
 		setTimeout(()=> searchinput.focus(), 150);
 	},
 
 	Close: ()=> {
+		cap.inert = true;
 		MENU.isOpen = false;
 		MENU.UpdatePosition();
 
@@ -547,6 +549,7 @@ const MENU = {
 
 		MENU.Update("");
 
+		cap.inert = MENU.isOpen;
 		MENU.isOpen = !MENU.isOpen;
 		MENU.UpdatePosition();
 
@@ -1021,9 +1024,7 @@ const MENU = {
 	},
 
 	RemovePinnedIcon: element=> {
-		element.style.pointerEvents = "none";
-		element.style.opacity = "0";
-		element.style.transform = "scale(.6)";
+		element.classList.add("removing");
 		setTimeout(()=> element.remove(), 200);
 	},
 
@@ -1113,21 +1114,23 @@ const MENU = {
 
 			placeholder?.remove();
 
-			cap.appendChild(element);
-			element.classList.remove("dragging");
-			void element.offsetLeft; //commit the drop point, so it transitions into its cell from there
-
-			if (target) {
-				if (!pin) {
-					pin = { key: key, element: element, cell: null };
-					MENU.pinned.push(pin);
-				}
-				pin.c = target.c;
-				pin.r = target.r;
-			}
-			else if (isOverPane || !pin) { //dropped on the pane, or a new pin with no room for it
+			if (!target && (isOverPane || !pin)) { //dropped on the pane, or a new pin with no room for it
 				if (pin) MENU.pinned.splice(MENU.pinned.indexOf(pin), 1);
-				MENU.RemovePinnedIcon(element);
+				MENU.RemovePinnedIcon(element); //still lifted above the pane, so the fade-out shows
+			}
+			else {
+				cap.appendChild(element);
+				element.classList.remove("dragging");
+				void element.offsetLeft; //commit the drop point, so it transitions into its cell from there
+
+				if (target) {
+					if (!pin) {
+						pin = { key: key, element: element, cell: null };
+						MENU.pinned.push(pin);
+					}
+					pin.c = target.c;
+					pin.r = target.r;
+				}
 			}
 
 			MENU.StorePinned();
@@ -1159,7 +1162,7 @@ const MENU = {
 		return { x:probe.offsetLeft, y:probe.offsetTop, w:probe.offsetWidth, h:probe.offsetHeight };
 	},
 
-	PinCells: ()=> { //a fixed grid from the top-left corner, so stored cells stay put
+	PinCells: ()=> {
 		const size = MENU.PIN_SIZE;
 		const step = MENU.PIN_STEP;
 		const margin = MENU.PIN_MARGIN;

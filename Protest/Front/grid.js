@@ -13,7 +13,7 @@ class Grid extends Window {
 		this.content.style.overflow = "hidden";
 
 		this.SetupToolbar();
-		const reloadButton = this.AddToolbarButton("Reload", "/mono/update.svg?light");
+		const reloadButton = this.AddToolbarButton("Revert", "/mono/restart.svg?light");
 		const saveButton = this.AddToolbarButton("Save modifications", "/mono/floppy.svg?light");
 		const removeFilterButton = this.AddToolbarButton("Remove all filters", "/mono/nofilter.svg?light");
 
@@ -120,7 +120,6 @@ class Grid extends Window {
 			if (includesA) return -1;
 			return 1;
 		});
-
 
 		this.attributeElements = [];
 		for (let i=0; i < attributes.length; i++) {
@@ -723,6 +722,20 @@ class Grid extends Window {
 	}
 
 	InflateElement(file, columns, element, entry) {
+		const icon = document.createElement("div");
+		element.appendChild(icon);
+
+		if (this instanceof DevicesGrid) {
+			let type = LOADER.devices.data[file].type ? LOADER.devices.data[file].type.v.toLowerCase() : "";
+			icon.style.backgroundImage = `url(${LOADER.deviceIcons[type] ? LOADER.deviceIcons[type] : "mono/gear.svg"})`;
+			icon.ondblclick = ()=> LOADER.OpenDeviceByFile(file);
+		}
+		else {
+			let type = LOADER.users.data[file].type ? LOADER.users.data[file].type.v.toLowerCase() : "";
+			icon.style.backgroundImage = `url(${LOADER.userIcons[type] ? LOADER.userIcons[type] : "mono/user.svg"})`;
+			icon.ondblclick = ()=> LOADER.OpenUserByFile(file);
+		}
+
 		for (let i=0; i<columns.length; i++) {
 			const input = document.createElement("input");
 			input.type = "text";

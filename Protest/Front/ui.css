@@ -23,7 +23,8 @@
 	padding: 0 4px;
 	border-radius: 4px;
 
-	color: #c0c0c0;
+	color: #C0C0C0;
+	font-size: small;
 	font-weight: 600;
 	text-align: center;
 	line-height: 164px;
@@ -56,16 +57,25 @@
 	pointer-events: none;
 }
 
-#cap.pin-dragging > .cap-icon.filtered { /*show the taken cells while placing a pin*/
-	opacity: .3;
-	transform: none;
+#cap.pin-dragging > .cap-icon.filtered {
+	opacity: .4;
+	transform: scale(.9);
 }
 
 .cap-icon.dragging {
 	z-index: 16777267;
 	transform: scale(1.06);
-	box-shadow: var(--clr-transparent) 0 0 0 1px inset, rgba(0,0,0,.4) 4px 4px 12px;
+	box-shadow: var(--clr-transparent) 0 0 0 1px inset, rgba(0,0,0,.4) 0 8px 4px;
 	transition: transform .2s, box-shadow .2s, background-color .2s;
+}
+
+.cap-icon.removing {
+	pointer-events: none;
+	animation: cap-icon-out .2s forwards;
+}
+
+@keyframes cap-icon-out {
+	to { opacity: 0; transform: scale(.8); }
 }
 
 .cap-placeholder {
