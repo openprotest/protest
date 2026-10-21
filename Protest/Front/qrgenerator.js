@@ -204,12 +204,6 @@ class QrGenerator extends Window {
 			return input;
 		};
 
-		//the inputs of the options column share one width, the color buttons keep theirs
-		const SetOptionWidth = input=> {
-			input.style.width = "160px";
-			input.style.boxSizing = "border-box";
-		};
-
 		const CreateColorInput = value=> {
 			const input = document.createElement("input");
 			input.type = "color";
@@ -239,9 +233,8 @@ class QrGenerator extends Window {
 		const transparentBox = document.createElement("div");
 		this.transparentToggle = this.CreateToggle("Transparent", this.args.transparent, transparentBox);
 
-		SetOptionWidth(this.levelInput);
-		SetOptionWidth(this.widthInput);
-		SetOptionWidth(this.heightInput);
+		this.levelInput.style.width     = this.widthInput.style.width     = this.heightInput .style.width     = "160px";
+		this.levelInput.style.boxSizing = this.widthInput.style.boxSizing = this.heightInput .style.boxSizing = "border-box";
 
 		AddOption("Error correction:", this.levelInput);
 		AddOption("Width (px):",       this.widthInput);
@@ -400,7 +393,6 @@ class QrGenerator extends Window {
 		this.UpdateFields();
 	}
 
-	//disables the fields that don't apply to the other values, e.g. the password of an open wi-fi network
 	UpdateFields() {
 		const values = this.Values();
 		for (const field of QrGenerator.TYPES.find(o=> o.name === this.args.type).fields) {
@@ -486,7 +478,7 @@ class QrGenerator extends Window {
 
 		if (text.length > 0) {
 			try {
-				await QrGenerator.LoadLibrary();
+				QrGenerator.LoadLibrary();
 			}
 			catch (ex) {
 				this.ShowMessage(ex.message);

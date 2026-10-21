@@ -698,6 +698,7 @@ internal static class Auth {
                 path.Add("/snmptraps");
                 path.Add("/snmptraps/list");
                 path.Add("/snmptraps/devices");
+                path.Add("/snmptraps/summary");
                 break;
 
             case "snmp traps:write":
@@ -715,6 +716,7 @@ internal static class Auth {
                 path.Add("/syslog");
                 path.Add("/syslog/list");
                 path.Add("/syslog/devices");
+                path.Add("/syslog/summary");
                 break;
 
             case "syslog:write":
@@ -722,6 +724,14 @@ internal static class Auth {
                 path.Add("/syslog/listeners/save");
                 path.Add("/config/smtpprofiles/list");
                 path.Add("/config/cert/list");
+                break;
+
+            case "windows events:read":
+                path.Add("/winevents");
+                path.Add("/winevents/list");
+                path.Add("/winevents/devices");
+                path.Add("/winevents/summary");
+                path.Add("/winevents/fetch");
                 break;
 
             case "scheduler:write":
@@ -795,6 +805,7 @@ internal static class Auth {
                 path.Add("/config/dataretention/logs");
                 path.Add("/config/dataretention/syslog");
                 path.Add("/config/dataretention/snmptraps");
+                path.Add("/config/dataretention/winevents");
                 path.Add("/config/dataretention/devicetimeline");
                 path.Add("/config/dataretention/usertimeline");
                 path.Add("/config/dataretention/settings/save");

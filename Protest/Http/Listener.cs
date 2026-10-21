@@ -122,13 +122,20 @@ internal sealed class Listener {
 
         ["/snmptraps/list"]               = (ctx, username) => Protocols.Snmp.Traps.ListHandler(ctx),
         ["/snmptraps/devices"]            = (ctx, username) => Protocols.Snmp.Traps.ListDevices(),
+        ["/snmptraps/summary"]            = (ctx, username) => Protocols.LogFiles.SummaryHandler(ctx, Data.DIR_SNMP_TRAPS, 6),
         ["/snmptraps/listeners/list"]     = (ctx, username) => Protocols.Snmp.Traps.List(),
         ["/snmptraps/listeners/save"]     = (ctx, username) => Protocols.Snmp.Traps.Save(ctx, username),
 
         ["/syslog/list"]                  = (ctx, username) => Protocols.Syslog.ListHandler(ctx),
         ["/syslog/devices"]               = (ctx, username) => Protocols.Syslog.ListDevices(),
+        ["/syslog/summary"]               = (ctx, username) => Protocols.LogFiles.SummaryHandler(ctx, Data.DIR_SYSLOG, 8),
         ["/syslog/listeners/list"]        = (ctx, username) => Protocols.Syslog.List(),
         ["/syslog/listeners/save"]        = (ctx, username) => Protocols.Syslog.Save(ctx, username),
+
+        ["/winevents/list"]               = (ctx, username) => Protocols.WinEvents.ListHandler(ctx),
+        ["/winevents/devices"]            = (ctx, username) => Protocols.WinEvents.ListDevices(),
+        ["/winevents/summary"]            = (ctx, username) => Protocols.WinEvents.SummaryHandler(ctx),
+        ["/winevents/fetch"]              = (ctx, username) => Protocols.WinEvents.FetchHandler(ctx),
 
         ["/sftp/download"]                = (ctx, username) => Protocols.Sftp.DownloadFileHandler(ctx, username),
         ["/sftp/upload"]                  = (ctx, username) => Protocols.Sftp.UploadFileHandler(ctx, username),
@@ -197,6 +204,7 @@ internal sealed class Listener {
         ["/config/dataretention/logs"]           = (ctx, username) => DataRetention.Handler(ctx, username, "logs"),
         ["/config/dataretention/syslog"]         = (ctx, username) => DataRetention.Handler(ctx, username, "syslog"),
         ["/config/dataretention/snmptraps"]      = (ctx, username) => DataRetention.Handler(ctx, username, "snmptraps"),
+        ["/config/dataretention/winevents"]      = (ctx, username) => DataRetention.Handler(ctx, username, "winevents"),
         ["/config/dataretention/devicetimeline"] = (ctx, username) => DataRetention.Handler(ctx, username, "devicetimeline"),
         ["/config/dataretention/usertimeline"]   = (ctx, username) => DataRetention.Handler(ctx, username, "usertimeline"),
 

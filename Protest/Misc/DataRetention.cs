@@ -29,6 +29,7 @@ internal static class DataRetention {
         new("logs",           "log",                 Logger.DeleteOlderThan, 90),
         new("syslog",         "syslog",              Protocols.Syslog.DeleteOlderThan, 90),
         new("snmptraps",      "SNMP traps",          Protocols.Snmp.Traps.DeleteOlderThan, 90),
+        new("winevents",      "Windows events",      Protocols.WinEvents.DeleteOlderThan, 90),
         new("devicetimeline", "device timeline",     days => DatabaseInstances.devices.DeleteOldTimelineEntries(days), 365),
         new("usertimeline",   "user timeline",       days => DatabaseInstances.users.DeleteOldTimelineEntries(days), 365)
     };

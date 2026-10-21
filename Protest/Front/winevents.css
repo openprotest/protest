@@ -1,0 +1,93 @@
+.winevents-toggle-button {
+	background-size: 22px 22px !important;
+	width: 28px !important;
+	height: 28px !important;
+	margin: 6px !important;
+}
+
+.winevents-list > .list-element {
+	height: 28px;
+	contain-intrinsic-size: 29px;
+}
+
+.winevents-list > .list-element > div {
+	top: 2px;
+	line-height: 24px;
+}
+
+.winevents-list > .list-element > .winevents-severity-dot {
+	left: 8px;
+	top: 9px;
+	width: 10px;
+	height: 10px;
+	padding: 0;
+	border-radius: 5px;
+	box-shadow: rgba(0,0,0,.4) 0 0 0 1px inset;
+}
+
+.winevents-list > .list-element.winevents-marker {
+	text-align: center;
+	line-height: 24px;
+	color: #606060;
+	background-color: transparent !important;
+}
+
+.winevents-details {
+	position: absolute;
+	left: 0;
+	right: 0;
+	bottom: 30px;
+	height: 150px;
+	box-sizing: border-box;
+	padding: 4px 8px;
+	overflow-x: hidden;
+	overflow-y: auto;
+	border-top: 2px solid var(--clr-control);
+	border-radius: 0 0 4px 4px;
+	color: var(--clr-dark);
+	background-color: var(--clr-pane);
+	user-select: text;
+}
+
+.winevents-details-meta {
+	display: flex;
+	flex-wrap: wrap;
+	column-gap: 16px;
+	font-size: 13px;
+}
+
+.winevents-details-meta > span > b {
+	padding-right: 4px;
+}
+
+.winevents-details-message {
+	margin-top: 4px;
+	font-family: monospace;
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.winevents-options {
+	position: absolute;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	height: 26px;
+	overflow: hidden;
+	white-space: nowrap;
+	display: flex;
+	align-items: center;
+	column-gap: 8px;
+}
+
+/* the counter sits in the row */
+.winevents-options > .list-counter {
+	position: static;
+	margin-left: 2px;
+}
+
+.winevents-options > .winevents-status {
+	margin-left: auto;
+	padding-right: 8px;
+	opacity: .8;
+}

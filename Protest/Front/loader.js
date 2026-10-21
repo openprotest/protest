@@ -165,6 +165,7 @@ const LOADER = {
 		"log.js",
 		"syslog.js",
 		"snmptraps.js",
+		"winevents.js",
 		"lifeline.js",
 		"speedtest.js"
 	],
@@ -407,6 +408,7 @@ const LOADER = {
 		case "Log"            : return new Log(command.args);
 		case "Syslog"         : return new Syslog(command.args);
 		case "SnmpTraps"      : return new SnmpTraps(command.args);
+		case "WinEvents"      : return new WinEvents(command.args);
 		case "Lifeline"       : return new Lifeline(command.args);
 		case "SpeedTest"      : return new SpeedTest(command.args);
 		}

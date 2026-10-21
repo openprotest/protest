@@ -440,6 +440,7 @@ const MENU = {
 		{ t:"SNMP polling",       i:"mono/snmp.svg?light",          g:"utilities", h:false, f:args=> new Snmp(args) },
 		{ t:"SNMP traps",         i:"mono/trap.svg?light",          g:"utilities", h:false, f:args=> new SnmpTraps(args),    k:"trap inform notification listener" },
 		{ t:"Syslog",             i:"mono/syslog.svg?light",        g:"utilities", h:false, f:args=> new Syslog(args), k:"rfc5424 rfc3164 events listener" },
+		{ t:"Windows events",     i:"mono/eventlogger.svg?light",   g:"utilities", h:true,  f:args=> new WinEvents(args),    k:"event viewer event log eventlog" },
 		{ t:"Terminal",           i:"mono/terminal.svg?light",      g:"utilities", h:true,  f:()=> new Terminal({}),         k:"terminal shell console cmd bash" },
 		{ t:"RS-232 console",     i:"mono/serialconsole.svg?light", g:"utilities", h:false, f:()=> new Rs232(),              k:"rs 232 serial console terminal" },
 		{ t:"Remote shell",       i:"mono/remoteshell.svg?light",   g:"utilities", h:false, f:()=> new RemoteShell({host:""}), k:"winrm powershell psremoting windows terminal shell" },

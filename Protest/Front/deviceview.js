@@ -42,11 +42,7 @@ class DeviceView extends View {
 
 	static PRINTER_TYPES = ["fax", "multiprinter", "ticket printer", "printer"];
 	static SWITCH_TYPES = ["switch", "router", "firewall"];
-	static LOG_ENTRIES = 10;
-	static LOG_LEVELS = "01234"; //warning and above
-	static LOG_FILTERS = {emergFilter:true, alertFilter:true, critFilter:true, errorFilter:true, warnFilter:true, noticeFilter:false, infoFilter:false, debugFilter:false};
-	static TRAP_LEVELS = "0123"; //critical to warning
-	static TRAP_FILTERS = {criticalFilter:true, majorFilter:true, minorFilter:true, warningFilter:true, indeterminateFilter:false, clearedFilter:false};
+	static LOG_HOURS = 24;
 	static PING_BAR_WIDTH = 9; //pixels, the roundtrip time boxes
 
 	constructor(args) {
@@ -61,10 +57,11 @@ class DeviceView extends View {
 		this.liveStatsWebSockets = null;
 		this.link = LOADER.devices.data[this.args.file];
 
-		//graphs, then the recent syslog messages and snmp traps below them
+		//the last day of syslog, snmp traps and windows events, then the graphs below them
 		this.liveGraphs = document.createElement("div");
 		this.liveLogs = document.createElement("div");
-		this.liveD.append(this.liveGraphs, this.liveLogs);
+		this.liveLogs.style.marginBottom = "8px";
+		this.liveD.append(this.liveLogs, this.liveGraphs);
 		this.order = "group";
 		this.groupSchema = DeviceView.DEVICES_GROUP_SCHEMA;
 		this.dbTarget = "device";
@@ -2454,16 +2451,19 @@ class DeviceView extends View {
 
 	}
 
-	//the most recent syslog messages and snmp traps, warning and above, each section shows only when the device has any
+	//the last day of syslog messages, snmp traps and windows events, counted by severity
+	//syslog and traps show only when the device has ever sent any, windows events for every windows device
 	InitializeLogs() {
-		const syslogBox = this.CreateLogBox("Syslog", "mono/syslog.svg");
-		const trapsBox = this.CreateLogBox("SNMP traps", "mono/trap.svg");
+		const syslogBox = typeof Syslog === "undefined" ? null : this.CreateLogBox("Syslog", "mono/syslog.svg", Syslog, args=> new Syslog(args));
+		const trapsBox  = typeof SnmpTraps === "undefined" ? null : this.CreateLogBox("SNMP traps", "mono/trap.svg", SnmpTraps, args=> new SnmpTraps(args));
+		const eventsBox = typeof WinEvents === "undefined" ? null : this.CreateLogBox("Windows events", "mono/eventlogger.svg", WinEvents, args=> new WinEvents(args));
 
-		this.LoadSyslog(syslogBox);
-		this.LoadSnmpTraps(trapsBox);
+		if (syslogBox) this.LoadLogSummary(syslogBox, "syslog/summary");
+		if (trapsBox)  this.LoadLogSummary(trapsBox, "snmptraps/summary");
+		if (eventsBox) this.LoadWinEvents(eventsBox);
 	}
 
-	CreateLogBox(label, icon) {
+	CreateLogBox(label, icon, type, open) {
 		const box = document.createElement("div");
 		box.className = "view-log-box";
 		box.style.display = "none";
@@ -2471,110 +2471,132 @@ class DeviceView extends View {
 
 		const title = document.createElement("div");
 		title.className = "view-log-title";
-		title.textContent = label.toUpperCase();
 		title.style.backgroundImage = `url(${icon}?light)`;
 
-		const list = document.createElement("div");
-		box.append(title, list);
+		const name = document.createElement("span");
+		name.textContent = label.toUpperCase();
 
-		return {box:box, list:list};
+		const period = document.createElement("span");
+		period.className = "view-log-period";
+		period.textContent = `(${DeviceView.LOG_HOURS}h)`;
+
+		//errors and notes, on the title line
+		const status = document.createElement("div");
+		status.className = "view-log-status";
+
+		title.append(name, period, status);
+
+		const categories = document.createElement("div");
+		categories.className = "view-log-categories";
+
+		box.append(title, categories);
+
+		return {box:box, categories:categories, status:status, type:type, open:open};
 	}
 
-	async FetchLogLines(endpoint, levels) {
+	async FetchLogSummary(endpoint) {
 		try {
-			const response = await fetch(`${endpoint}?device=${encodeURIComponent(this.args.file)}&limit=${DeviceView.LOG_ENTRIES}&levels=${levels}`);
-			if (response.status !== 200) return [];
+			const response = await fetch(`${endpoint}?device=${encodeURIComponent(this.args.file)}&hours=${DeviceView.LOG_HOURS}`);
+			if (response.status !== 200) return null;
 
 			const json = await response.json();
-			return Array.isArray(json?.lines) ? json.lines.reverse() : [];
+			return Array.isArray(json?.counts) ? json : null;
 		}
 		catch {
-			return [];
+			return null;
 		}
 	}
 
-	AddLogEntry(list, entry, onOpen) {
-		const element = document.createElement("div");
-		element.className = "view-log-entry";
-		element.title = entry.source ? `${entry.source}\n${entry.text}` : entry.text;
-		element.ondblclick = onOpen;
+	//a category for each severity that has any: the colored icon, with the count below it
+	RenderLogCounts(logBox, counts) {
+		const type = logBox.type;
+		logBox.categories.textContent = "";
 
-		const dot = document.createElement("div");
-		dot.className = "view-log-dot";
-		dot.style.backgroundColor = entry.color;
+		let total = 0;
+		for (let i=0; i<counts.length; i++) {
+			if (!counts[i]) continue;
+			total += counts[i];
 
-		const time = document.createElement("div");
-		time.className = "view-log-time";
-		time.textContent = entry.time;
+			const category = document.createElement("div");
+			category.className = "view-log-category";
+			category.setAttribute("tip", type.SEVERITY[i]);
 
-		element.append(dot, time);
+			const icon = document.createElement("div");
+			icon.className = "view-log-icon";
+			icon.style.backgroundColor = type.SEVERITY_COLOR[i];
+			icon.style.maskImage = `url(${type.SEVERITY_ICON[i]})`;
 
-		if (entry.source) {
-			const source = document.createElement("div");
-			source.className = "view-log-source";
-			source.textContent = entry.source;
-			element.appendChild(source);
+			const count = document.createElement("div");
+			count.className = "view-log-count";
+			count.textContent = counts[i];
+
+			category.append(icon, count);
+			category.onclick = ()=> logBox.open(this.LogFilterArgs(type, i));
+			logBox.categories.appendChild(category);
 		}
 
-		const text = document.createElement("div");
-		text.className = "view-log-text";
-		text.textContent = entry.text;
-		element.appendChild(text);
-
-		list.appendChild(element);
+		this.SetLogStatus(logBox, total === 0 ? "No entries" : "", false);
 	}
 
-	async LoadSyslog(logBox) {
-		if (typeof Syslog === "undefined") return;
+	SetLogStatus(logBox, text, isError) {
+		logBox.status.textContent = text;
+		logBox.status.title = text; //the whole text, when it does not fit
+		logBox.status.classList.toggle("error", isError);
+	}
 
-		const entries = (await this.FetchLogLines("syslog/list", DeviceView.LOG_LEVELS))
-			.map(o=> Syslog.ParseLine(o))
-			.filter(o=> o);
-
-		if (entries.length === 0) return;
-
-		const Open = ()=> new Syslog({device:this.args.file, ...DeviceView.LOG_FILTERS});
-
-		for (const entry of entries) {
-			this.AddLogEntry(logBox.list, {
-				time : Syslog.LocalTime(entry.time).substring(0, 19),
-				color: Syslog.SEVERITY_COLOR[entry.severity],
-				text : entry.msg
-			}, Open);
+	//this device, only the given severity
+	LogFilterArgs(type, severity) {
+		const args = {device:this.args.file};
+		for (const filter of type.SEVERITY_FILTERS) {
+			args[filter.key] = filter.levels.includes(severity);
 		}
+		return args;
+	}
 
+	async LoadLogSummary(logBox, endpoint) {
+		const summary = await this.FetchLogSummary(endpoint);
+		if (!summary?.known) return;
+
+		this.RenderLogCounts(logBox, summary.counts);
 		logBox.box.style.display = "";
 	}
 
-	async LoadSnmpTraps(logBox) {
-		if (typeof SnmpTraps === "undefined") return;
+	//the stored counts at once, then the entries logged since the last fetch
+	async LoadWinEvents(logBox) {
+		const isWindows = this.link["operating system"]?.v?.toLowerCase().includes("windows") ?? false;
 
-		const entries = (await this.FetchLogLines("snmptraps/list", DeviceView.TRAP_LEVELS))
-			.map(o=> SnmpTraps.ParseLine(o))
-			.filter(o=> o);
+		const summary = await this.FetchLogSummary("winevents/summary");
+		if (!summary || (!summary.known && !isWindows)) return;
 
-		if (entries.length === 0) return;
+		//on failure, the counts are of the entries stored by the last successful fetch
+		const Show = summary=> {
+			this.RenderLogCounts(logBox, summary.counts);
+			if (!summary.error) return;
 
-		const Open = ()=> new SnmpTraps({device:this.args.file, ...DeviceView.TRAP_FILTERS});
-
-		const Render = ()=> {
-			logBox.list.textContent = "";
-			for (const entry of entries) {
-				this.AddLogEntry(logBox.list, {
-					time  : SnmpTraps.LocalTime(entry.time).substring(0, 19),
-					color : SnmpTraps.SEVERITY_COLOR[entry.severity],
-					source: SnmpTraps.OidName(entry.oid),
-					text  : SnmpTraps.VariablesSummary(entry.variables)
-				}, Open);
-			}
+			const cached = summary.updated ? `Showing cached data from ${WinEvents.LocalTime(summary.updated).substring(0, 16)}. ` : "";
+			this.SetLogStatus(logBox, `${cached}${summary.error}`, true);
 		};
 
-		Render();
+		Show(summary);
 		logBox.box.style.display = "";
 
-		//render again once the mib names are loaded
-		const oids = entries.flatMap(o=> [o.oid, ...o.variables.flatMap(v=> v[1] === "ObjectIdentifier" ? [v[0], v[2]] : [v[0]])]);
-		if (await SnmpTraps.LoadMibs(oids)) Render();
+		if (!isWindows) return;
+		if (!summary.error) this.SetLogStatus(logBox, "Fetching...", false);
+
+		try {
+			const response = await fetch(`winevents/fetch?device=${encodeURIComponent(this.args.file)}`);
+			if (response.status !== 200) return;
+
+			const json = await response.json();
+			if (json.status === "pending") {
+				this.SetLogStatus(logBox, "The device is slow to respond, the entries are still being fetched", false);
+				return;
+			}
+
+			const updated = await this.FetchLogSummary("winevents/summary");
+			if (updated) Show(updated);
+		}
+		catch {}
 	}
 
 	RttToColor(rtt) {

@@ -63,6 +63,7 @@ internal static class Data {
     public static readonly string DIR_RECORDINGS     = Path.Join(DIR_DATA, "recordings");
     public static readonly string DIR_SYSLOG         = Path.Join(DIR_DATA, "syslog");
     public static readonly string DIR_SNMP_TRAPS     = Path.Join(DIR_DATA, "snmptraps");
+    public static readonly string DIR_WIN_EVENTS     = Path.Join(DIR_DATA, "winevents");
     public static readonly string DIR_DEBIT          = Path.Join(DIR_DATA, "debit");
     public static readonly string DIR_DEBIT_SHORT    = Path.Join(DIR_DEBIT, "short");
     public static readonly string DIR_DEBIT_LONG     = Path.Join(DIR_DEBIT, "long");

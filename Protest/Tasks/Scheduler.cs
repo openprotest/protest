@@ -59,6 +59,7 @@ internal static class Scheduler {
         jobs.TryAdd("lifeline",      new Job { key = "lifeline",      label = "Lifeline",       enable = true,  intervalHours = 4 });
         jobs.TryAdd("watchdog",      new Job { key = "watchdog",      label = "Watchdog",       enable = true,  intervalHours = 0 });
         jobs.TryAdd("issues",        new Job { key = "issues",        label = "Issues",         enable = false, intervalHours = 4 });
+        jobs.TryAdd("winevents",     new Job { key = "winevents",     label = "Windows events", enable = false, intervalHours = 4 });
         jobs.TryAdd("dataretention", new Job { key = "dataretention", label = "Data retention", enable = false, intervalHours = 24 });
         jobs.TryAdd("backup",        new Job { key = "backup",        label = "Backup",         enable = false, intervalHours = 24 * 30 });
 
@@ -157,6 +158,20 @@ internal static class Scheduler {
             }
         }
 
+        if (jobs.TryGetValue("winevents", out Job winEventsJob) && winEventsJob.enable) {
+            if (IsDue(winEventsJob, nowTicks)) {
+                try {
+                    Protocols.WinEvents.StartFetchAll("system");
+                }
+                catch (Exception ex) {
+                    Logger.Error(ex);
+                }
+
+                winEventsJob.lastRun = nowTicks;
+                SaveJobs();
+            }
+        }
+
         if (jobs.TryGetValue("lastseen", out Job lastseenJob) && lastseenJob.enable) {
             if (IsDue(lastseenJob, nowTicks)) {
                 try {
@@ -215,7 +230,7 @@ internal static class Scheduler {
         return (nowTicks - job.lastRun) >= job.intervalHours * ONE_HOUR_IN_TICKS;
     }
 
-    private static readonly string[] jobOrder = new[] { "lifeline", "watchdog", "issues", "lastseen", "dataretention", "backup" };
+    private static readonly string[] jobOrder = new[] { "lifeline", "watchdog", "issues", "winevents", "lastseen", "dataretention", "backup" };
 
     private static string FormatInterval(int hours) {
         if (hours <= 48) return $"{hours}h";
@@ -238,6 +253,7 @@ internal static class Scheduler {
                 "lifeline" => Lifeline.task?.status.ToString() ?? "Stopped",
                 "watchdog" => Watchdog.task?.status.ToString() ?? "Stopped",
                 "issues"   => Issues.task?.status.ToString() ?? (job.enable ? "Idle" : "Stopped"),
+                "winevents" => Protocols.WinEvents.IsRunning ? "Running" : job.enable ? "Idle" : "Stopped",
                 _ => job.enable ? "Idle" : "Stopped"
             };
 

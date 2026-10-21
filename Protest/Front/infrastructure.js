@@ -170,7 +170,7 @@ class Infrastructure extends Tabs {
 		recordingContainer.appendChild(recordingIcon);
 
 		const recordingLabel = document.createElement("div");
-		recordingLabel.textContent = "Enable Session recording";
+		recordingLabel.textContent = "Enable session recording";
 		recordingLabel.style.fontWeight = "600";
 		recordingContainer.appendChild(recordingLabel);
 
@@ -231,6 +231,7 @@ class Infrastructure extends Tabs {
 			{ key: "watchdog",       label: "Watchdog",           icon: "mono/watchdog.svg",     endpoint: "config/dataretention/watchdog",       defaultDays: 90,  description: "Historical uptime results recorded by watchers." },
 			{ key: "syslog",         label: "Syslog",             icon: "mono/syslog.svg",       endpoint: "config/dataretention/syslog",         defaultDays: 90,  description: "Syslog messages received from devices." },
 			{ key: "snmptraps",      label: "SNMP traps",         icon: "mono/trap.svg",         endpoint: "config/dataretention/snmptraps",      defaultDays: 90,  description: "SNMP traps and informs received from devices." },
+			{ key: "winevents",      label: "Windows events",     icon: "mono/eventlogger.svg",  endpoint: "config/dataretention/winevents",      defaultDays: 90,  description: "Critical, error and warning events fetched from Windows devices." },
 			{ key: "recordings",     label: "Session recordings", icon: "mono/screenrecord.svg", endpoint: "config/dataretention/recordings",     defaultDays: 30,  description: "Recorded VNC, RDP, SSH, telnet, remote shell, serial console, and terminal sessions." },
 			{ key: "logs",           label: "Logs",               icon: "mono/log.svg",          endpoint: "config/dataretention/logs",           defaultDays: 90,  description: "Action log files." },
 		];

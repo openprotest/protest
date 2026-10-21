@@ -5,6 +5,7 @@ class Scheduler extends List {
 		"lastseen"     : "mono/lastseen.svg",
 		"watchdog"     : "mono/watchdog.svg",
 		"issues"       : "mono/issues.svg",
+		"winevents"    : "mono/eventlogger.svg",
 		"dataretention": "mono/dataretention.svg",
 		"backup"       : "mono/backup.svg"
 	};
@@ -16,7 +17,7 @@ class Scheduler extends List {
 
 		Window.AddCssDependencies("list.css");
 
-		const columns = ["name", "status", "enabled", "interval", "lastrun"];
+		const columns = ["name", "status", {label:"enabled", render:d=> Scheduler.EnabledCell(d.enabled?.v)}, "interval", "lastrun"];
 		this.SetupColumns(columns);
 
 		this.columnsOptions.style.display = "none";
@@ -47,11 +48,41 @@ class Scheduler extends List {
 			{ key: "watchdog",       label: "Watchdog",           icon: "mono/watchdog.svg",     defaultDays: 90 },
 			{ key: "syslog",         label: "Syslog",             icon: "mono/syslog.svg",       defaultDays: 90 },
 			{ key: "snmptraps",      label: "SNMP traps",         icon: "mono/trap.svg",         defaultDays: 90 },
+			{ key: "winevents",      label: "Windows events",     icon: "mono/eventlogger.svg",  defaultDays: 90 },
 			{ key: "recordings",     label: "Session recordings", icon: "mono/screenrecord.svg", defaultDays: 30 },
 			{ key: "logs",           label: "Logs",               icon: "mono/log.svg",          defaultDays: 90 },
 		];
 
 		this.ListJobs();
+	}
+
+	//a read-only switch, drawn like the toggle element, next to the text
+	static EnabledCell(value) {
+		const isOn = value === "Enabled";
+
+		const cell = document.createElement("div");
+
+		const track = document.createElement("div");
+		track.style.display = "inline-block";
+		track.style.verticalAlign = "middle";
+		track.style.width = "32px";
+		track.style.height = "18px";
+		track.style.marginRight = "8px";
+		track.style.borderRadius = "4px";
+		track.style.backgroundColor = "rgb(96,96,96)";
+
+		const knob = document.createElement("div");
+		knob.style.width = "16px";
+		knob.style.height = "14px";
+		knob.style.margin = "2px";
+		knob.style.borderRadius = "4px";
+		knob.style.backgroundColor = isOn ? "var(--clr-accent)" : "var(--clr-control)";
+		knob.style.boxShadow = "rgba(0,0,0,.5) 0 1px 1px";
+		knob.style.transform = isOn ? "translateX(12px)" : "none";
+
+		track.appendChild(knob);
+		cell.append(track, document.createTextNode(value ?? ""));
+		return cell;
 	}
 
 	UpdateAuthorization() { //overrides
