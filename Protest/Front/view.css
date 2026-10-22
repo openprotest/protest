@@ -849,21 +849,17 @@ button.view-live-button:active {
 }
 
 .view-log-categories {
-	display: flex;
-	flex-wrap: wrap;
-	gap: 4px;
 	padding: 0 6px;
 }
 
 .view-log-category {
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	row-gap: 2px;
-	min-width: 56px;
-	padding: 4px 4px 2px 4px;
+	position: relative;
+	display: inline-block;
+	vertical-align: top;
+	width: 64px;
+	height: 68px;
+	margin: 0 4px 4px 0;
 	border-radius: 4px;
-	box-sizing: border-box;
 	cursor: pointer;
 }
 
@@ -876,14 +872,23 @@ button.view-live-button:active {
 }
 
 .view-log-category > .view-log-icon {
+	position: absolute;
+	left: 8px;
+	top: 4px;
 	width: 48px;
-	height: 48px;
-	mask-size: 48px 48px;
+	height: 44px;
+	mask-size: 40px 40px;
 	mask-position: center;
 	mask-repeat: no-repeat;
 }
 
 .view-log-category > .view-log-count {
+	position: absolute;
+	left: 0;
+	right: 0;
+	top: 48px;
+	line-height: 18px;
+	text-align: center;
 	font-size: 14px;
 	font-weight: 600;
 	font-variant-numeric: tabular-nums;

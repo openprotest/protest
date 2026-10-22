@@ -175,14 +175,7 @@ internal static class Scheduler {
         if (jobs.TryGetValue("lastseen", out Job lastseenJob) && lastseenJob.enable) {
             if (IsDue(lastseenJob, nowTicks)) {
                 try {
-                    int days = DataRetention.MIN_DAYS;
-                    Dictionary<string, DataRetention.Settings> settings = DataRetention.LoadSettings();
-                    if (settings.TryGetValue("lastseen", out DataRetention.Settings lastseenSettings)) {
-                        days = Math.Max(lastseenSettings.days, DataRetention.MIN_DAYS);
-                    }
-
-                    int deleted = LastSeen.DeleteOlderThan(days);
-                    Logger.Action("system", "Scheduler", $"Last seen cleanup deleted {deleted} item(s) older than {days} day(s)");
+                    LastSeen.StartPingAll();
                 }
                 catch (Exception ex) {
                     Logger.Error(ex);
@@ -197,7 +190,9 @@ internal static class Scheduler {
             if (IsDue(dataRetentionJob, nowTicks)) {
                 try {
                     int deleted = DataRetention.PurgeEnabledCategories();
-                    Logger.Action("system", "Scheduler", $"Data retention job deleted {deleted} item(s)");
+                    if (deleted > 0) {
+                        Logger.Action("system", "Scheduler", $"Data retention job deleted {deleted} item(s)");
+                    }
                 }
                 catch (Exception ex) {
                     Logger.Error(ex);
@@ -250,10 +245,11 @@ internal static class Scheduler {
 
         foreach (Job job in ordered) {
             string status = job.key switch {
-                "lifeline" => Lifeline.task?.status.ToString() ?? "Stopped",
-                "watchdog" => Watchdog.task?.status.ToString() ?? "Stopped",
-                "issues"   => Issues.task?.status.ToString() ?? (job.enable ? "Idle" : "Stopped"),
+                "lifeline"  => Lifeline.task?.status.ToString() ?? "Stopped",
+                "watchdog"  => Watchdog.task?.status.ToString() ?? "Stopped",
+                "issues"    => Issues.task?.status.ToString() ?? (job.enable ? "Idle" : "Stopped"),
                 "winevents" => Protocols.WinEvents.IsRunning ? "Running" : job.enable ? "Idle" : "Stopped",
+                "lastseen"  => LastSeen.IsRunning ? "Running" : job.enable ? "Idle" : "Stopped",
                 _ => job.enable ? "Idle" : "Stopped"
             };
 
@@ -261,20 +257,20 @@ internal static class Scheduler {
             string lastRun = job.lastRun > 0 ? new DateTime(job.lastRun, DateTimeKind.Utc).ToLocalTime().ToString(Data.DATETIME_FORMAT_LONG) : "Never";
 
             data[job.key] = new {
-                name    = new { v = job.label },
-                status  = new { v = status },
-                enabled = new { v = job.enable ? "Enabled" : "Disabled" },
+                name     = new { v = job.label },
+                status   = new { v = status },
+                enabled  = new { v = job.enable ? "Enabled" : "Disabled" },
                 interval = new { v = interval },
-                lastrun = new { v = lastRun }
+                lastrun  = new { v = lastRun }
             };
 
             raw.Add(new {
-                key = job.key,
-                type = job.type,
-                label = job.label,
-                enable = job.enable,
+                key           = job.key,
+                type          = job.type,
+                label         = job.label,
+                enable        = job.enable,
                 intervalHours = job.intervalHours,
-                lastRun = job.lastRun
+                lastRun       = job.lastRun
             });
         }
 

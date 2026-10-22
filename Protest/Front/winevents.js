@@ -45,7 +45,7 @@ class WinEvents extends Window {
 		this.SetIcon("mono/eventlogger.svg");
 
 		this.SetupToolbar();
-		this.fetchButton = this.AddToolbarButton("Fetch the latest entries from the selected device", "mono/fetch.svg?light");
+		this.fetchButton = this.AddToolbarButton("Fetch the latest data", "mono/ball.svg?light");
 		this.reloadButton = this.AddToolbarButton("Reload", "mono/update.svg?light");
 		this.AddToolbarSeparator();
 		this.SetupDeviceFilter();

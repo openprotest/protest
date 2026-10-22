@@ -146,7 +146,9 @@ internal static class DataRetention {
         days = Math.Max(days, MIN_DAYS);
 
         int deleted = category.Purge(days);
-        Logger.Action(origin, "Data retention", $"Deleted {deleted} {category.Label} item(s) older than {days} day(s)");
+        if (deleted > 0) {
+            Logger.Action(origin, "Data retention", $"Deleted {deleted} {category.Label} item(s) older than {days} day(s)");
+        }
 
         return Encoding.UTF8.GetBytes($"{{\"deleted\":{deleted}}}");
     }

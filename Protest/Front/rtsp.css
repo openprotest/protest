@@ -3,7 +3,6 @@
 	inset: 0;
 	display: flex;
 	overflow: auto;
-	background-color: #000;
 }
 
 .rtsp-canvas-box > canvas {

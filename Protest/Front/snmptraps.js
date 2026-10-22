@@ -1029,7 +1029,7 @@ class SnmpTraps extends Window {
 	async ListenersDialog() {
 		if (!await this.ListListeners()) return;
 
-		const dialog = this.DialogBox("660px");
+		const dialog = this.DialogBox("688px");
 		if (dialog === null) return;
 
 		const {okButton, cancelButton, innerBox, buttonBox} = dialog;

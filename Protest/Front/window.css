@@ -133,7 +133,7 @@
 	filter: drop-shadow(rgba(32, 32, 32, .5) 1px 1px 1px);
 }
 
-.win-toolbar>.win-toolbar-button:is(:hover, :focus-visible) {
+.win-toolbar>.win-toolbar-button:is(:hover, :focus-visible, :focus-within) {
 	transition: .2s;
 	background-color: var(--clr-transparent);
 }

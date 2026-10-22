@@ -1,13 +1,51 @@
 ﻿using System.IO;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Net.NetworkInformation;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Protest.Tasks;
 
 internal static class LastSeen {
+    private const int MAX_PARALLEL = 32;
 
     private static readonly ConcurrentDictionary<string, Lock> mutexes = new ConcurrentDictionary<string, Lock>();
+    private static int pingingAll;
+
+    internal static bool IsRunning => Volatile.Read(ref pingingAll) == 1;
+
+    internal static void StartPingAll() {
+        if (Interlocked.Exchange(ref pingingAll, 1) == 1) return;
+
+        _ = Task.Run(() => {
+            try {
+                Parallel.ForEach(DeviceHosts(), new ParallelOptions { MaxDegreeOfParallelism = MAX_PARALLEL }, host => HasBeenSeen(host));
+            }
+            catch (Exception ex) {
+                Logger.Error(ex);
+            }
+            finally {
+                Volatile.Write(ref pingingAll, 0);
+            }
+        });
+    }
+
+    private static HashSet<string> DeviceHosts() {
+        HashSet<string> hosts = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (Database.Entry entry in DatabaseInstances.devices.dictionary.Values) {
+            if (!entry.attributes.TryGetValue("ip", out Database.Attribute attribute) || String.IsNullOrWhiteSpace(attribute?.value)) {
+                if (!entry.attributes.TryGetValue("hostname", out attribute) || String.IsNullOrWhiteSpace(attribute?.value)) continue;
+            }
+
+            foreach (string host in attribute.value.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)) {
+                if (Uri.CheckHostName(host) != UriHostNameType.Unknown) hosts.Add(host);
+            }
+        }
+
+        return hosts;
+    }
 
     public static void Seen(string ip) {
         ip = ip.ToLower().Replace(':', '_');
@@ -28,8 +66,6 @@ internal static class LastSeen {
     public static string HasBeenSeen(string ip, bool recordOnly = false) {
         if (ip is null) return null;
 
-        ip = ip.ToLower().Replace(':', '_');
-
         if (!recordOnly) {
             try {
                 using Ping p = new Ping();
@@ -42,6 +78,8 @@ internal static class LastSeen {
                 Logger.Debug(ex);
             }
         }
+
+        ip = ip.ToLower().Replace(':', '_');
 
         if (!Data.IsValidFilename(ip)) return "Never";
 
