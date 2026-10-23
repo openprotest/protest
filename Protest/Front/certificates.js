@@ -193,7 +193,7 @@ class Certificates extends List {
 
 		innerBox.style.padding = "16px 32px";
 		innerBox.style.display = "grid";
-		innerBox.style.gridTemplateColumns = "auto 150px 275px auto";
+		innerBox.style.gridTemplateColumns = "auto 150px auto auto";
 		innerBox.style.gridTemplateRows = "repeat(6, 38px) 72px";
 		innerBox.style.alignItems = "center";
 
@@ -328,7 +328,7 @@ class Certificates extends List {
 	}
 
 	UploadDialog() {
-		const dialog = this.DialogBox("280px");
+		const dialog = this.DialogBox("200px");
 		if (dialog === null) return;
 
 		const {okButton, cancelButton, innerBox} = dialog;
@@ -439,7 +439,7 @@ class Certificates extends List {
 	InflateElement(element, entry) { //overrides
 		element.style.backgroundImage = "url(mono/certificate.svg)";
 
-		for (let i = 0; i < this.columnsElements.length; i++) {
+		for (let i=0; i<this.columnsElements.length; i++) {
 			if (!(this.columnsElements[i].textContent in entry)) continue;
 
 			const newAttr = document.createElement("div");

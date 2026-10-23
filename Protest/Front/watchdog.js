@@ -244,14 +244,13 @@ class Watchdog extends Window {
 
 		innerBox.style.display = "grid";
 		innerBox.style.margin = "20px";
-		innerBox.style.gridTemplateColumns = "auto 200px 300px auto";
+		innerBox.style.gridTemplateColumns = "auto 200px auto auto";
 		innerBox.style.alignItems = "center";
 
 		let types = ["ICMP", "TCP", "DNS", "HTTP", "HTTP keyword", "TLS"];
 		let methods = ["GET", "POST", "PUT", "PATCH", "DELETE"];
 		let dnsRecordTypes = ["A", "NS", "CNAME", "SOA", "PTR", "MX", "TXT", "AAAA", "SRV"];
 		let errorOptions = ["Acknowledge", "Ignore"];
-
 
 		const enableBox = document.createElement("div");
 		enableBox.style.gridArea = "1 / 2";

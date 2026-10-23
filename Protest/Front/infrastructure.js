@@ -1068,9 +1068,10 @@ class Infrastructure extends Tabs {
 
 		innerBox.style.padding = "16px 32px";
 		innerBox.style.display = "grid";
-		innerBox.style.gridTemplateColumns = "auto 120px 275px auto";
+		innerBox.style.gridTemplateColumns = "auto 120px auto auto";
 		innerBox.style.gridTemplateRows = "repeat(3, 38px) 48px";
 		innerBox.style.alignItems = "center";
+		innerBox.parentElement.style.maxWidth = "640px";
 
 		const nameLabel = document.createElement("div");
 		nameLabel.style.gridArea = "1 / 2";
@@ -1170,9 +1171,10 @@ class Infrastructure extends Tabs {
 
 		innerBox.style.padding = "16px 32px";
 		innerBox.style.display = "grid";
-		innerBox.style.gridTemplateColumns = "auto 120px 275px auto";
+		innerBox.style.gridTemplateColumns = "auto 120px auto auto";
 		innerBox.style.gridTemplateRows = "repeat(2, 38px)";
 		innerBox.style.alignItems = "center";
+		innerBox.parentElement.style.maxWidth = "640px";
 
 		const nameLabel = document.createElement("div");
 		nameLabel.style.gridArea = "1 / 2";
@@ -1249,9 +1251,9 @@ class Infrastructure extends Tabs {
 
 		okButton.value = "Save";
 
-		innerBox.style.display = "grid";
 		innerBox.style.padding = "16px 32px";
-		innerBox.style.gridTemplateColumns = "auto 120px 275px auto";
+		innerBox.style.display = "grid";
+		innerBox.style.gridTemplateColumns = "auto 120px auto auto";
 		innerBox.style.alignItems = "center";
 		innerBox.parentElement.style.maxWidth = "640px";
 

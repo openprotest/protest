@@ -31,6 +31,7 @@ class Ssh extends PtyHost {
 		if (dialog === null) return;
 
 		const {okButton, cancelButton, innerBox, buttonBox} = dialog;
+		okButton.value = "Connect";
 
 		const dialogBox = innerBox.parentElement;
 		dialogBox.style.maxWidth = "480px";
@@ -91,6 +92,8 @@ class Ssh extends PtyHost {
 
 		const rememberPasswordToggle = this.CreateToggle("Remember password", false, innerBox);
 		rememberPasswordToggle.label.style.gridArea = "6 / 2 / 6 / 4";
+		rememberPasswordToggle.label.style.whiteSpace = "nowrap";
+		rememberPasswordToggle.label.style.textOverflow = "ellipsis";
 
 		if ("password" in this.args) {
 			rememberPasswordToggle.checkbox.checked = true;

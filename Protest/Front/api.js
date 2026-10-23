@@ -117,7 +117,7 @@ class Api extends List {
 
 		innerBox.style.padding = "16px 32px";
 		innerBox.style.display = "grid";
-		innerBox.style.gridTemplateColumns = "auto 160px 275px 44px 72px auto";
+		innerBox.style.gridTemplateColumns = "auto 160px auto 44px 72px auto";
 		innerBox.style.gridTemplateRows = "repeat(3, 38px) 12px repeat(4, 32px)";
 		innerBox.style.alignItems = "center";
 

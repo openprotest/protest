@@ -45,7 +45,7 @@ class Rs232 extends PtyHost {
 
 		const {okButton, innerBox} = dialog;
 		innerBox.style.padding = "20px";
-		innerBox.parentElement.style.width = "400px";
+		innerBox.parentElement.style.maxWidth = "400px";
 		dialog.okButton.value = "Connect";
 
 		const CreateSelect = (labelText, values, currentValue)=> {
@@ -54,11 +54,11 @@ class Rs232 extends PtyHost {
 
 			const label = document.createElement("div");
 			label.style.display = "inline-block";
-			label.style.minWidth = "120px";
+			label.style.minWidth = "100px";
 			label.textContent = `${labelText}:`;
 
 			const select = document.createElement("select");
-			select.style.width = "180px";
+			select.style.width = "calc(100% - 116px)";
 
 			for (const value of values) {
 				const option = document.createElement("option");

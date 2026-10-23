@@ -72,26 +72,27 @@ class Backup extends List {
 	}
 
 	CreateDialog() {
-		const dialog = this.DialogBox("108px");
+		const dialog = this.DialogBox("120px");
 		if (dialog === null) return;
 
-		dialog.innerBox.parentElement.style.maxWidth = "400px";
-		dialog.innerBox.style.textAlign = "center";
+		dialog.innerBox.parentElement.style.maxWidth = "480px";
+
+		dialog.innerBox.style.padding = "16px 32px";
+		dialog.innerBox.style.display = "grid";
+		dialog.innerBox.style.gridTemplateColumns = "auto 100px auto auto";
+		dialog.innerBox.style.gridTemplateRows = "repeat(1, 32px)";
+		dialog.innerBox.style.alignItems = "center";
 
 		let now = new Date();
 
 		const nameLabel = document.createElement("div");
 		nameLabel.textContent = "Name:";
-		nameLabel.style.display = "inline-block";
-		nameLabel.style.height = "32px";
-		nameLabel.style.lineHeight = "32px";
-		nameLabel.style.paddingRight = "8px";
+		nameLabel.style.gridArea = "1 / 2";
 
 		const nameInput = document.createElement("input");
 		nameInput.type = "text";
 		nameInput.placeholder = `backup-${now.getFullYear()}${(now.getMonth()+1).toString().padStart(2,"0")}${now.getDate().toString().padStart(2,"0")}`;
-		nameInput.style.marginTop = "20px";
-		nameInput.style.width = "min(calc(100% - 8px), 200px)";
+		nameInput.style.gridArea = "1 / 3";
 
 		dialog.innerBox.append(nameLabel, nameInput);
 

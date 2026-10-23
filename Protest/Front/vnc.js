@@ -15,7 +15,7 @@ class Vnc extends Window {
 
 		const isRestored = this.args.autoconnect === false;
 		delete this.args.autoconnect;
-		if (isRestored) delete this.args.password;
+		if (isRestored || this.args.password === null) delete this.args.password; //a remembered password, as with SSH
 
 		this.password = this.args.password ?? null;
 
@@ -215,7 +215,6 @@ class Vnc extends Window {
 
 		innerBox.style.display = "grid";
 		innerBox.style.gridTemplateColumns = "100px minmax(50px, 250px)";
-		innerBox.style.gridTemplateRows = "36px 8px repeat(3, 36px)";
 		innerBox.style.alignItems = "center";
 		innerBox.style.margin = "20px 20px 0 20px";
 
@@ -253,8 +252,18 @@ class Vnc extends Window {
 		const passwordInput = document.createElement("input");
 		passwordInput.style.gridArea = "5 / 2";
 		passwordInput.type = "password";
-		passwordInput.value = this.args.credential ? "" : this.password ?? "";
 		innerBox.append(passwordLabel, passwordInput);
+
+		const rememberPasswordToggle = this.CreateToggle("Remember password", false, innerBox);
+		rememberPasswordToggle.label.style.gridArea = "6 / 2 / 6 / 4";
+		rememberPasswordToggle.label.style.whiteSpace = "nowrap";
+		rememberPasswordToggle.label.style.overflow = "hidden";
+		rememberPasswordToggle.label.style.textOverflow = "ellipsis";
+
+		if ("password" in this.args) {
+			rememberPasswordToggle.checkbox.checked = true;
+			passwordInput.value = this.args.password ?? "";
+		}
 
 		const credentialsLabel = document.createElement("div");
 		credentialsLabel.style.gridArea = "5 / 1";
@@ -263,17 +272,27 @@ class Vnc extends Window {
 		credentialsInput.style.gridArea = "5 / 2";
 		innerBox.append(credentialsLabel, credentialsInput);
 
+		dialogBox.style.transition = ".2s";
+
 		const UpdateOkState = ()=> {
 			const host = hostInput.value.trim().length > 0;
 			okButton.disabled = !host || (methodBox.index === 1 && !credentialsInput.value);
 		};
 
 		const UpdateSelection = ()=> {
-			passwordLabel.style.display    = methodBox.index === 0 ? "initial" : "none";
-			passwordInput.style.display    = methodBox.index === 0 ? "initial" : "none";
+			const manual = methodBox.index === 0;
 
-			credentialsLabel.style.display = methodBox.index === 1 ? "initial" : "none";
-			credentialsInput.style.display = methodBox.index === 1 ? "initial" : "none";
+			innerBox.style.gridTemplateRows = manual ? "36px 8px repeat(4, 36px)" : "36px 8px repeat(3, 36px)";
+			dialogBox.style.maxHeight = manual ? "280px" : "240px";
+
+			passwordLabel.style.display    = manual ? "initial" : "none";
+			passwordInput.style.display    = manual ? "initial" : "none";
+
+			credentialsLabel.style.display = manual ? "none" : "initial";
+			credentialsInput.style.display = manual ? "none" : "initial";
+
+			rememberPasswordToggle.label.style.opacity = manual ? 1 : 0;
+			rememberPasswordToggle.label.style.display = manual ? "initial" : "none";
 
 			UpdateOkState();
 		};
@@ -325,9 +344,18 @@ class Vnc extends Window {
 
 			if (methodBox.index === 0) {
 				this.password = passwordInput.value.length > 0 ? passwordInput.value : null;
+
+				if (rememberPasswordToggle.checkbox.checked && this.password !== null) {
+					this.args.password = this.password;
+				}
+				else {
+					delete this.args.password;
+				}
+
 				delete this.args.credential;
 			}
 			else {
+				delete this.args.password;
 				this.password = null;
 				this.args.credential = credentialsInput.value;
 			}
@@ -402,6 +430,13 @@ class Vnc extends Window {
 		okButton.onclick = ()=> {
 			this.password = passwordInput.value.length > 0 ? passwordInput.value : null;
 			delete this.args.credential;
+
+			//a remembered password follows the one typed here
+			if ("password" in this.args) {
+				if (this.password !== null) this.args.password = this.password;
+				else delete this.args.password;
+			}
+
 			dialog.Close();
 			this.Connect();
 		};

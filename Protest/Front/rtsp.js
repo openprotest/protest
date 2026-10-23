@@ -20,9 +20,9 @@ class Rtsp extends Window {
 		const isRestored = this.args.autoconnect === false;
 		delete this.args.autoconnect;
 
-		//args are persisted when the session is stored, the password is kept out of them
-		this.password = isRestored ? null : this.args.password ?? null;
-		delete this.args.password;
+		//a remembered password is kept in the args, as with SSH, a restored window drops it
+		if (isRestored) delete this.args.password;
+		this.password = this.args.password ?? null;
 
 		if (this.args.url) {
 			const split = Rtsp.SplitCredentials(this.args.url);
@@ -711,7 +711,6 @@ class Rtsp extends Window {
 
 		innerBox.style.display = "grid";
 		innerBox.style.gridTemplateColumns = "100px minmax(50px, 380px)";
-		innerBox.style.gridTemplateRows = "36px 8px repeat(3, 36px)";
 		innerBox.style.alignItems = "center";
 		innerBox.style.margin = "20px 20px 0 20px";
 
@@ -734,14 +733,13 @@ class Rtsp extends Window {
 		addressInput.value = this.args.url ?? "";
 		innerBox.append(addressLabel, addressInput);
 
-		//without credentials the camera is asked anonymously, it asks for them if it needs them
 		const usernameLabel = document.createElement("div");
 		usernameLabel.style.gridArea = "4 / 1";
 		usernameLabel.textContent = "Username:";
 		const usernameInput = document.createElement("input");
 		usernameInput.style.gridArea = "4 / 2";
 		usernameInput.type = "text";
-		usernameInput.placeholder = "Optional";
+		usernameInput.placeholder = "optional";
 		usernameInput.value = this.args.credential ? "" : this.args.username ?? "";
 		innerBox.append(usernameLabel, usernameInput);
 
@@ -751,9 +749,19 @@ class Rtsp extends Window {
 		const passwordInput = document.createElement("input");
 		passwordInput.style.gridArea = "5 / 2";
 		passwordInput.type = "password";
-		passwordInput.placeholder = "Optional";
-		passwordInput.value = this.args.credential ? "" : this.password ?? "";
+		passwordInput.placeholder = "optional";
 		innerBox.append(passwordLabel, passwordInput);
+
+		const rememberPasswordToggle = this.CreateToggle("Remember password", false, innerBox);
+		rememberPasswordToggle.label.style.gridArea = "6 / 2 / 6 / 4";
+		rememberPasswordToggle.label.style.whiteSpace = "nowrap";
+		rememberPasswordToggle.label.style.overflow = "hidden";
+		rememberPasswordToggle.label.style.textOverflow = "ellipsis";
+
+		if ("password" in this.args) {
+			rememberPasswordToggle.checkbox.checked = true;
+			passwordInput.value = this.args.password;
+		}
 
 		const credentialsLabel = document.createElement("div");
 		credentialsLabel.style.gridArea = "4 / 1";
@@ -761,6 +769,8 @@ class Rtsp extends Window {
 		const credentialsInput = document.createElement("select");
 		credentialsInput.style.gridArea = "4 / 2";
 		innerBox.append(credentialsLabel, credentialsInput);
+
+		dialogBox.style.transition = ".2s";
 
 		const UpdateOkState = ()=> {
 			const address = Rtsp.NormalizeAddress(addressInput.value) !== null;
@@ -770,6 +780,9 @@ class Rtsp extends Window {
 		const UpdateSelection = ()=> {
 			const manual = methodBox.index === 0;
 
+			innerBox.style.gridTemplateRows = manual ? "36px 8px repeat(4, 36px)" : "36px 8px repeat(2, 36px)";
+			dialogBox.style.maxHeight = manual ? "280px" : "200px";
+
 			usernameLabel.style.display    = manual ? "initial" : "none";
 			usernameInput.style.display    = manual ? "initial" : "none";
 			passwordLabel.style.display    = manual ? "initial" : "none";
@@ -777,6 +790,9 @@ class Rtsp extends Window {
 
 			credentialsLabel.style.display = manual ? "none" : "initial";
 			credentialsInput.style.display = manual ? "none" : "initial";
+
+			rememberPasswordToggle.label.style.opacity = manual ? 1 : 0;
+			rememberPasswordToggle.label.style.display = manual ? "initial" : "none";
 
 			UpdateOkState();
 		};
@@ -838,10 +854,19 @@ class Rtsp extends Window {
 			if (methodBox.index === 0) {
 				this.args.username = split.username ?? usernameInput.value.trim();
 				this.password = split.username !== null ? split.password : passwordInput.value.length > 0 ? passwordInput.value : null;
+
+				if (rememberPasswordToggle.checkbox.checked && this.password) {
+					this.args.password = this.password;
+				}
+				else {
+					delete this.args.password;
+				}
+
 				delete this.args.credential;
 			}
 			else {
 				delete this.args.username;
+				delete this.args.password;
 				this.password = null;
 				this.args.credential = credentialsInput.value;
 			}
@@ -921,6 +946,13 @@ class Rtsp extends Window {
 			this.password = passwordInput.value.length > 0 ? passwordInput.value : null;
 			delete this.args.credential;
 			if (!this.args.username) delete this.args.username;
+
+			//a remembered password follows the one typed here
+			if ("password" in this.args) {
+				if (this.password !== null) this.args.password = this.password;
+				else delete this.args.password;
+			}
+
 			dialog.Close();
 			this.Connect();
 		};

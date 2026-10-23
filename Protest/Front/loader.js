@@ -166,7 +166,7 @@ const LOADER = {
 		"syslog.js",
 		"snmptraps.js",
 		"winevents.js",
-		"lifeline.js"
+		"lifeline.js",
 	],
 
 	Initialize: ()=> {
