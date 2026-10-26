@@ -487,7 +487,6 @@ class View extends Window {
 		innerBox.style.margin = "20px 20px 0 20px";
 		innerBox.style.flex = "1 1 auto";
 		innerBox.style.minHeight = "0";
-		innerBox.style.maxHeight = "400px";
 		innerBox.style.overflowY = "auto";
 
 		const errorBox = document.createElement("div");

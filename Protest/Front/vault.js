@@ -98,6 +98,15 @@ class Vault extends Tabs {
 		return box;
 	}
 
+	FocusListItem(listBox, guid) {
+		if (!guid) return;
+		const element = Array.from(listBox.list.childNodes).find(o=> o._data?.guid === guid);
+		if (!element) return;
+
+		listBox.Select(element);
+		listBox.list.focus();
+	}
+
 	CreatePermissionsPanel(innerBox, gridColumn, gridRow, object, onModeChange) {
 		const permissionsPanel = document.createElement("div");
 		permissionsPanel.style.gridColumn = gridColumn;
@@ -398,6 +407,7 @@ class Vault extends Tabs {
 		this.tabsPanel.appendChild(this.credentialsListBox.listTitleOuter);
 
 		this.credentialsList = this.credentialsListBox.list;
+		this.defaultElement = this.credentialsList;
 		this.credentialsList.style.overflowY = "auto";
 		this.credentialsList.style.left = "20px";
 		this.credentialsList.style.right = "20px";
@@ -449,7 +459,7 @@ class Vault extends Tabs {
 		this.AfterResize();
 	}
 
-	async GetCredentials() {
+	async GetCredentials(focusGuid=null) {
 		try {
 			const response = await fetch("vault/credential/list");
 			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
@@ -458,6 +468,7 @@ class Vault extends Tabs {
 			if (json.error) throw json.error;
 			this.credentials = json;
 			this.FilterCredentials();
+			this.FocusListItem(this.credentialsListBox, focusGuid);
 		}
 		catch (ex) {
 			this.ConfirmBox(ex, true, "mono/error.svg");
@@ -485,7 +496,7 @@ class Vault extends Tabs {
 		const dialog = this.DialogBox("280px");
 		if (dialog === null) return;
 
-		const {okButton, innerBox, buttonBox} = dialog;
+		const {okButton, cancelButton, innerBox, buttonBox} = dialog;
 
 		okButton.value = "Save";
 
@@ -640,11 +651,16 @@ class Vault extends Tabs {
 				if (json.error) throw json.error;
 
 				dialog.Close();
-				this.GetCredentials();
+				this.GetCredentials(json.guid);
 			}
 			catch (ex) {
 				this.ConfirmBox(ex, true, "mono/error.svg");
 			}
+		};
+
+		cancelButton.onclick = ()=> {
+			dialog.Close();
+			this.FocusListItem(this.credentialsListBox, object?.guid);
 		};
 
 		setTimeout(()=> { nameInput.focus() }, 200);
@@ -721,6 +737,7 @@ class Vault extends Tabs {
 		this.tabsPanel.appendChild(this.sshKeysListBox.listTitleOuter);
 
 		this.sshKeysList = this.sshKeysListBox.list;
+		this.defaultElement = this.sshKeysList;
 		this.sshKeysList.style.overflowY = "auto";
 		this.sshKeysList.style.left = "20px";
 		this.sshKeysList.style.right = "20px";
@@ -772,7 +789,7 @@ class Vault extends Tabs {
 		this.AfterResize();
 	}
 
-	async GetSshKeys() {
+	async GetSshKeys(focusGuid=null) {
 		try {
 			const response = await fetch("vault/sshkey/list");
 			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
@@ -782,6 +799,7 @@ class Vault extends Tabs {
 
 			this.sshKeys = json;
 			this.FilterSshKeys();
+			this.FocusListItem(this.sshKeysListBox, focusGuid);
 		}
 		catch (ex) {
 			this.ConfirmBox(ex, true, "mono/error.svg");
@@ -809,7 +827,7 @@ class Vault extends Tabs {
 		const dialog = this.DialogBox("365px");
 		if (dialog === null) return;
 
-		const {okButton, innerBox, buttonBox} = dialog;
+		const {okButton, cancelButton, innerBox, buttonBox} = dialog;
 
 		okButton.value = "Save";
 
@@ -969,11 +987,16 @@ class Vault extends Tabs {
 				if (json.error) throw json.error;
 
 				dialog.Close();
-				this.GetSshKeys();
+				this.GetSshKeys(json.guid);
 			}
 			catch (ex) {
 				this.ConfirmBox(ex, true, "mono/error.svg");
 			}
+		};
+
+		cancelButton.onclick = ()=> {
+			dialog.Close();
+			this.FocusListItem(this.sshKeysListBox, object?.guid);
 		};
 
 		if (object && object.uses > 0) {
@@ -995,6 +1018,7 @@ class Vault extends Tabs {
 
 	ShowMaintenance() {
 		this.args = "maintenance";
+		this.defaultElement = null;
 		this.tabsPanel.textContent = "";
 		this.content.style.overflowY = "auto";
 		this.tabsPanel.style.overflowY = "auto";

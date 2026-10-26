@@ -779,7 +779,7 @@ class DeviceView extends View {
 				url = `${secure ? "rtsps" : "rtsp"}://${address}:${port}/`;
 			}
 
-			const rtspButton = this.CreateSideButton("mono/camera.svg", "RTSP");
+			const rtspButton = this.CreateSideButton("mono/playback.svg", "RTSP");
 			rtspButton.onclick = async ()=> {
 				const credential = await this.ResolveCredentialGuid(["rtsp credentials", "credentials"]);
 				if (credential === null) return; //picker cancelled
