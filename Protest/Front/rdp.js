@@ -195,21 +195,14 @@ class Rdp extends Window {
 			return;
 		}
 
+		const serverSideAuth = Boolean(this.args.credential);
+
 		let username = this.args.username ?? "";
 		let password = this.password ?? "";
 
-		if (this.args.credential) {
-			const credential = await this.FetchCredential(this.args.credential);
-			if (connectionId !== this.connectionId) return;
-
-			if (credential.error) {
-				this.ShowStatus("mono/error.svg", credential.error);
-				this.connectButton.disabled = false;
-				return;
-			}
-
-			username = credential.username;
-			password = credential.password;
+		if (serverSideAuth) {
+			username = "protest";
+			password = "";
 		}
 
 		if (username.length === 0) {
@@ -234,11 +227,15 @@ class Rdp extends Window {
 
 		if (connectionId !== this.connectionId) return;
 
-		const fileParam = this.args.file ? `?file=${encodeURIComponent(this.args.file)}` : "";
-		const destination = host.includes(":") ? `[${host}]:${port}` : `${host}:${port}`;
-		const proxyAddress = `${KEEP.isSecure ? "wss" : "ws"}://${window.location.host}/ws/rdp${fileParam}`;
+		const params = new URLSearchParams();
+		if (this.args.file) params.set("file", this.args.file);
+		if (serverSideAuth) params.set("credential", this.args.credential);
+		const query = params.toString();
 
-		const config = userInteraction.configBuilder()
+		const destination = host.includes(":") ? `[${host}]:${port}` : `${host}:${port}`;
+		const proxyAddress = `${KEEP.isSecure ? "wss" : "ws"}://${window.location.host}/ws/rdp${query ? `?${query}` : ""}`;
+
+		let builder = userInteraction.configBuilder()
 			.withDestination(destination)
 			.withProxyAddress(proxyAddress)
 			.withAuthToken("protest") //the gateway authenticates the WebSocket by the session cookie, the token is unused
@@ -246,8 +243,13 @@ class Rdp extends Window {
 			.withPassword(password)
 			.withServerDomain(domain)
 			.withDesktopSize(this.GetDesktopSize())
-			.withExtension(library.displayControl(true)) //lets the resolution follow the window
-			.build();
+			.withExtension(library.displayControl(true)); //lets the resolution follow the window
+
+		if (serverSideAuth) {
+			builder = builder.withExtension(library.enableCredssp(false));
+		}
+
+		const config = builder.build();
 
 		let session;
 		let closeReason = "";
@@ -589,22 +591,6 @@ class Rdp extends Window {
 		if (this.element) {
 			this.element.remove();
 			this.element = null;
-		}
-	}
-
-	async FetchCredential(guid) {
-		try {
-			const response = await fetch(`vault/credential/get?guid=${encodeURIComponent(guid)}`);
-			if (response.status === 401 || response.status === 403) return { error: "Not allowed to read the credentials" };
-			if (response.status !== 200) return { error: "Failed to read the credentials" };
-
-			const json = await response.json();
-			if (json.error) return { error: json.error };
-
-			return { username: json.username ?? "", password: json.password ?? "" };
-		}
-		catch {
-			return { error: "Failed to read the credentials" };
 		}
 	}
 

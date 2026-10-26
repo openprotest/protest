@@ -1,3 +1,4 @@
+using System.Buffers;
 using System.Collections.Generic;
 using System.Formats.Asn1;
 using System.IO;
@@ -8,7 +9,10 @@ using System.Net.WebSockets;
 using System.Numerics;
 using System.Runtime.InteropServices;
 using System.Security.Authentication;
+using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
+using System.Security.Principal;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Protest.Http;
@@ -33,11 +37,16 @@ internal static class Rdp {
 
     private const byte TLS_ALERT_HANDSHAKE_FAILURE = 40;
 
+    private const byte TYPE_RDP_NEG_REQ = 0x01;
     private const byte TYPE_RDP_NEG_RSP = 0x02;
     private const byte TYPE_RDP_NEG_FAILURE = 0x03;
 
     private const uint PROTOCOL_RDP = 0; //standard RDP security, no TLS
     private const uint PROTOCOL_SSL = 1; //TLS without CredSSP
+    private const uint PROTOCOL_HYBRID = 2; //TLS with CredSSP (NLA)
+    private const uint PROTOCOL_HYBRID_EX = 8; //CredSSP with the Early User Authorization Result
+
+    private const int CREDSSP_VERSION = 6; //the gateway's CredSSP version, reduced to the server's
 
     private const ushort SEC_ENCRYPT = 0x0008;
     private const ushort SEC_INFO_PKT = 0x0040;
@@ -58,6 +67,7 @@ internal static class Rdp {
         }
 
         string deviceFile = ctx.Request.QueryString["file"];
+        string credentialGuid = ctx.Request.QueryString["credential"];
 
         WebSocket ws;
         try {
@@ -88,6 +98,12 @@ internal static class Rdp {
         bool established = false;
         SessionRecording recording = null;
 
+        //with a vault credential the gateway authenticates on the client's behalf and the password never reaches the browser
+        bool serverSideAuth = !String.IsNullOrEmpty(credentialGuid);
+        string vaultDomain = null;
+        string vaultUser = null;
+        string vaultPassword = null;
+
         try {
             using CancellationTokenSource handshakeCts = new CancellationTokenSource(HANDSHAKE_TIMEOUT);
 
@@ -98,6 +114,26 @@ internal static class Rdp {
             if (request is null || !TryParseDestination(request.destination, out host, out port)) {
                 await SendPdu(ws, EncodeGeneralError());
                 return;
+            }
+
+            if (serverSideAuth) {
+                if (!Guid.TryParse(credentialGuid, out Guid guid) || !Vault.FromGuid(guid, out Vault.CredentialEntry credential)) {
+                    Logger.Action(origin, "Remote-access", $"RDP connection to {host}:{port} failed: credentials don't exist");
+                    await SendClose(ws, "Credentials don't exist");
+                    return;
+                }
+
+                if (!Vault.IsAllowed(credential, origin)) {
+                    Logger.Action(origin, "Remote-access", $"RDP connection to {host}:{port} failed: access denied for this credential");
+                    await SendClose(ws, "Access denied for this credential");
+                    return;
+                }
+
+                (vaultDomain, vaultUser) = SplitUsername(credential.username);
+                vaultPassword = credential.password ?? String.Empty;
+
+                //the browser asked for TLS only (CredSSP disabled), the server is offered NLA so the gateway can run it
+                RewriteRequestedProtocols(request.x224, PROTOCOL_SSL | PROTOCOL_HYBRID | PROTOCOL_HYBRID_EX);
             }
 
             try {
@@ -132,8 +168,9 @@ internal static class Rdp {
             }
 
             List<byte[]> certificateChain = new List<byte[]>();
+            uint selectedProtocol = GetSelectedProtocol(x224Response);
 
-            if (GetSelectedProtocol(x224Response) != PROTOCOL_RDP) {
+            if (selectedProtocol != PROTOCOL_RDP) {
                 SslStream ssl = new SslStream(network, false);
                 stream = ssl;
 
@@ -171,10 +208,41 @@ internal static class Rdp {
                 }
             }
 
+            //the gateway runs CredSSP with the server over the TLS it terminated, so the vault password stays server-side
+            if (serverSideAuth && (selectedProtocol == PROTOCOL_HYBRID || selectedProtocol == PROTOCOL_HYBRID_EX)) {
+                if (certificateChain.Count == 0) {
+                    Logger.Action(origin, "Remote-access", $"RDP authentication to {host}:{port} failed: the host presented no certificate");
+                    await SendClose(ws, "The host presented no certificate");
+                    return;
+                }
+
+                byte[] publicKey;
+                using (X509Certificate2 leaf = X509CertificateLoader.LoadCertificate(certificateChain[0])) {
+                    publicKey = leaf.PublicKey.ExportSubjectPublicKeyInfo();
+                }
+
+                string credsspError;
+                try {
+                    credsspError = await RunCredSsp(stream, host, vaultDomain, vaultUser, vaultPassword, publicKey, selectedProtocol == PROTOCOL_HYBRID_EX, handshakeCts.Token);
+                }
+                catch (OperationCanceledException) { credsspError = "the server did not respond in time"; }
+                catch (AuthenticationException ex) { credsspError = ex.Message; }
+                catch (IOException) { credsspError = "the connection to the server was lost"; }
+
+                if (credsspError is not null) {
+                    Logger.Action(origin, "Remote-access", $"RDP authentication to {host}:{port} failed: {credsspError}");
+                    await SendClose(ws, "Authentication with the vault credentials failed");
+                    return;
+                }
+            }
+
             FlowControl flow = new FlowControl();
 
             string serverAddress = tcp.Client.RemoteEndPoint?.ToString() ?? $"{host}:{port}";
-            byte[] response = EncodeResponse(x224Response, certificateChain, serverAddress);
+
+            //the browser negotiated TLS only, its X.224 confirm says so even when the server selected NLA
+            byte[] clientConfirm = serverSideAuth ? ToTlsConfirm(x224Response) : x224Response;
+            byte[] response = EncodeResponse(clientConfirm, certificateChain, serverAddress);
             await SendPdu(ws, response);
             flow.Consume(response.Length); //the window counts every message, this one included
 
@@ -195,7 +263,12 @@ internal static class Rdp {
 
             PointerTracker pointer = new PointerTracker();
 
+            //the browser reports the protocol it negotiated (TLS) in its MCS connect initial, the server validates it
+            //against the one it selected, so the field is corrected to the server's choice
+            ConnectInitialRewriter connectRewriter = serverSideAuth ? new ConnectInitialRewriter(selectedProtocol) : null;
+
             if (clientLeftover?.Length > 0) {
+                connectRewriter?.Observe(clientLeftover);
                 recorder?.ObserveClient(clientLeftover);
                 pointer.ObserveClient(clientLeftover);
                 await stream.WriteAsync(clientLeftover);
@@ -204,7 +277,7 @@ internal static class Rdp {
 
             using CancellationTokenSource cts = new CancellationTokenSource();
 
-            Task upstream   = PumpToServer(ctx, ws, stream, cts, recorder, flow, pointer);
+            Task upstream   = PumpToServer(ctx, ws, stream, cts, recorder, flow, pointer, connectRewriter);
             Task downstream = PumpToWs(ws, stream, cts, recorder, flow, pointer);
 
             await Task.WhenAny(upstream, downstream);
@@ -385,6 +458,316 @@ internal static class Rdp {
         return copy;
     }
 
+    internal static (string domain, string user) SplitUsername(string username) {
+        if (String.IsNullOrEmpty(username)) return (String.Empty, String.Empty);
+
+        int backslash = username.IndexOf('\\');
+        if (backslash > 0) return (username[..backslash], username[(backslash + 1)..]);
+
+        return (String.Empty, username); //a UPN (user@domain) stays whole, NTLM accepts it with an empty domain
+    }
+
+    //Rewrites the requestedProtocols in the client's X.224 RDP_NEG_REQ, so the server is offered NLA even though the
+    //browser asked for TLS only. Returns false when the connection request carries no negotiation request.
+    internal static bool RewriteRequestedProtocols(byte[] x224, uint protocols) {
+        int negReq = FindNegotiationRequest(x224);
+        if (negReq < 0) return false;
+        BitConverter.TryWriteBytes(x224.AsSpan(negReq + 4, 4), protocols);
+        return true;
+    }
+
+    //TPKT (4) + X.224 connection request header (7 bytes), then an optional cookie or routing token (ASCII), then the
+    //8-byte RDP_NEG_REQ whose first byte is TYPE_RDP_NEG_REQ and whose length field is 8. Returns its offset, or -1.
+    private static int FindNegotiationRequest(byte[] x224) {
+        if (x224.Length < 19 || x224[0] != 0x03) return -1;
+
+        int length = x224[2] << 8 | x224[3];
+        if (length > x224.Length) return -1;
+
+        for (int i = 11; i + 8 <= length; i++) {
+            if (x224[i] == TYPE_RDP_NEG_REQ && (x224[i + 2] | x224[i + 3] << 8) == 8) {
+                return i;
+            }
+        }
+
+        return -1;
+    }
+
+    private const ushort CS_CORE = 0xC001;
+    private const int SERVER_SELECTED_PROTOCOL_OFFSET = 212; //bytes into the TS_UD_CS_CORE block
+
+    //Rewrites serverSelectedProtocol in the client's MCS connect initial (the GCC client core data block, type 0xC001).
+    //The browser negotiated TLS so it reports PROTOCOL_SSL; the server validates this against the protocol it selected.
+    //Returns false when the PDU is not an MCS connect initial carrying a core data block long enough for the field.
+    internal static bool RewriteServerSelectedProtocol(byte[] pdu, uint protocol) {
+        int core = FindClientCoreData(pdu);
+        if (core < 0) return false;
+        BitConverter.TryWriteBytes(pdu.AsSpan(core + SERVER_SELECTED_PROTOCOL_OFFSET, 4), protocol);
+        return true;
+    }
+
+    //The MCS connect initial (BER application tag 0x7f 0x65) wraps a GCC conference create request whose user data is
+    //the client data blocks, the core data block (type 0xC001) first. Returns its offset when it is long enough.
+    private static int FindClientCoreData(byte[] pdu) {
+        if (pdu.Length < 12 || pdu[0] != 0x03 || pdu[5] != 0xf0 || pdu[7] != 0x7f || pdu[8] != 0x65) return -1;
+
+        for (int i = 9; i + 4 <= pdu.Length; i++) {
+            if ((pdu[i] | pdu[i + 1] << 8) != CS_CORE) continue;
+
+            int length = pdu[i + 2] | pdu[i + 3] << 8;
+            if (length >= SERVER_SELECTED_PROTOCOL_OFFSET + 4 && i + length <= pdu.Length) {
+                return i;
+            }
+        }
+
+        return -1;
+    }
+
+    //Rewrites serverSelectedProtocol in the client's MCS connect initial, the first slow-path PDU the browser sends
+    //once the gateway's CredSSP is over. Nothing past it is inspected, as a later PDU could pass for a connect initial.
+    internal sealed class ConnectInitialRewriter {
+        private readonly uint protocol;
+
+        public bool Done { get; private set; }
+
+        public ConnectInitialRewriter(uint protocol) {
+            this.protocol = protocol;
+        }
+
+        public void Observe(byte[] message) {
+            if (Done || !IsSlowPath(message)) return;
+            RewriteServerSelectedProtocol(message, protocol);
+            Done = true;
+        }
+    }
+
+    //CredSSP (MS-CSSP), run by the gateway over the TLS it terminated. SPNEGO is driven by NegotiateAuthentication, the
+    //server's public key is bound to the context so the host proves it is the one that holds the private key, and the
+    //vault credentials are delegated as an encrypted TSCredentials. Returns an error description, or null on success.
+    private static async Task<string> RunCredSsp(Stream tls, string host, string domain, string user, string password, byte[] publicKey, bool hybridEx, CancellationToken token) {
+        using NegotiateAuthentication auth = new NegotiateAuthentication(new NegotiateAuthenticationClientOptions {
+            Credential = new NetworkCredential(user, password, domain),
+            TargetName = $"TERMSRV/{host}",
+            RequiredProtectionLevel = ProtectionLevel.EncryptAndSign,
+            AllowedImpersonationLevel = TokenImpersonationLevel.Delegation,
+        });
+
+        int version = CREDSSP_VERSION; //reduced to the server's once it answers
+        byte[] nonce = RandomNumberGenerator.GetBytes(32);
+        byte[] incoming = Array.Empty<byte>();
+
+        while (true) {
+            byte[] outgoing = auth.GetOutgoingBlob(incoming, out NegotiateAuthenticationStatusCode status);
+
+            if (status != NegotiateAuthenticationStatusCode.ContinueNeeded && status != NegotiateAuthenticationStatusCode.Completed) {
+                return $"the credentials were rejected ({status})";
+            }
+
+            if (status == NegotiateAuthenticationStatusCode.Completed) {
+                //the last SPNEGO token goes out together with the public key, bound to the TLS session
+                byte[] pubKeyAuth = WrapData(auth, PublicKeyToAuthenticate(version, nonce, publicKey));
+                await WriteDer(tls, EncodeTSRequest(version, negoToken: outgoing, pubKeyAuth: pubKeyAuth, clientNonce: version >= 5 ? nonce : null), token);
+                break;
+            }
+
+            await WriteDer(tls, EncodeTSRequest(version, negoToken: outgoing), token);
+
+            TSRequest response = DecodeTSRequest(await ReadDer(tls, token));
+            if (response.errorCode is long code && code != 0) return $"the server rejected the credentials (0x{(uint)code:x8})";
+            if (response.version > 0) version = Math.Min(version, response.version);
+            incoming = response.negoToken ?? Array.Empty<byte>();
+        }
+
+        //the server returns its own public key binding, which must match the key of the certificate it presented
+        TSRequest confirm = DecodeTSRequest(await ReadDer(tls, token));
+        if (confirm.errorCode is long err && err != 0) return $"the server rejected the credentials (0x{(uint)err:x8})";
+        if (confirm.pubKeyAuth is null) return "the server did not confirm its public key";
+        if (!VerifyServerPublicKey(auth, version, nonce, publicKey, confirm.pubKeyAuth)) return "the server's public key confirmation did not match";
+
+        //the credentials are delegated for the logon, encrypted under the negotiated context
+        byte[] authInfo = WrapData(auth, EncodeTSCredentials(domain, user, password));
+        await WriteDer(tls, EncodeTSRequest(version, authInfo: authInfo), token);
+
+        if (hybridEx) {
+            //HYBRID_EX ends with the 4-byte Early User Authorization Result, sent in the clear over the TLS connection
+            byte[] result = new byte[4];
+            await tls.ReadExactlyAsync(result, token);
+            if (BitConverter.ToUInt32(result, 0) != 0) return "the server denied access to the user"; //AUTHZ_SUCCESS is 0
+        }
+
+        return null;
+    }
+
+    private static readonly byte[] CLIENT_SERVER_HASH_MAGIC = Encoding.ASCII.GetBytes("CredSSP Client-To-Server Binding Hash\0");
+    private static readonly byte[] SERVER_CLIENT_HASH_MAGIC = Encoding.ASCII.GetBytes("CredSSP Server-To-Client Binding Hash\0");
+
+    private static byte[] PublicKeyToAuthenticate(int version, byte[] nonce, byte[] publicKey) =>
+        version >= 5 ? ComputePublicKeyHash(CLIENT_SERVER_HASH_MAGIC, nonce, publicKey) : publicKey;
+
+    internal static byte[] ComputePublicKeyHash(byte[] magic, byte[] nonce, byte[] publicKey) {
+        byte[] input = new byte[magic.Length + nonce.Length + publicKey.Length];
+        magic.CopyTo(input, 0);
+        nonce.CopyTo(input, magic.Length);
+        publicKey.CopyTo(input, magic.Length + nonce.Length);
+        return SHA256.HashData(input);
+    }
+
+    private static bool VerifyServerPublicKey(NegotiateAuthentication auth, int version, byte[] nonce, byte[] publicKey, byte[] wrapped) {
+        ArrayBufferWriter<byte> output = new ArrayBufferWriter<byte>();
+        if (auth.Unwrap(wrapped, output, out _) != NegotiateAuthenticationStatusCode.Completed) return false;
+
+        byte[] actual = output.WrittenSpan.ToArray();
+
+        if (version >= 5) {
+            return CryptographicOperations.FixedTimeEquals(actual, ComputePublicKeyHash(SERVER_CLIENT_HASH_MAGIC, nonce, publicKey));
+        }
+
+        //before version 5 the server returns the public key with its first byte incremented
+        if (actual.Length != publicKey.Length) return false;
+        byte[] expected = publicKey.ToArray();
+        expected[0]++;
+        return CryptographicOperations.FixedTimeEquals(actual, expected);
+    }
+
+    private static byte[] WrapData(NegotiateAuthentication auth, byte[] data) {
+        ArrayBufferWriter<byte> output = new ArrayBufferWriter<byte>();
+        NegotiateAuthenticationStatusCode status = auth.Wrap(data, output, true, out _);
+        if (status != NegotiateAuthenticationStatusCode.Completed) {
+            throw new AuthenticationException($"CredSSP could not protect the credentials ({status})");
+        }
+        return output.WrittenSpan.ToArray();
+    }
+
+    internal sealed class TSRequest {
+        public int version;
+        public byte[] negoToken;
+        public byte[] authInfo;
+        public byte[] pubKeyAuth;
+        public long? errorCode; //an NTSTATUS, often past int range
+        public byte[] clientNonce;
+    }
+
+    internal static byte[] EncodeTSRequest(int version, byte[] negoToken = null, byte[] authInfo = null, byte[] pubKeyAuth = null, byte[] clientNonce = null) {
+        AsnWriter writer = new AsnWriter(AsnEncodingRules.DER);
+
+        using (writer.PushSequence()) {
+            using (writer.PushSequence(ContextTag(0))) {
+                writer.WriteInteger(version);
+            }
+
+            if (negoToken is not null) {
+                using (writer.PushSequence(ContextTag(1)))   //negoTokens
+                using (writer.PushSequence())                //SEQUENCE OF NegoData
+                using (writer.PushSequence())                //NegoData
+                using (writer.PushSequence(ContextTag(0))) { //negoToken
+                    writer.WriteOctetString(negoToken);
+                }
+            }
+
+            if (authInfo is not null) {
+                using (writer.PushSequence(ContextTag(2))) {
+                    writer.WriteOctetString(authInfo);
+                }
+            }
+
+            if (pubKeyAuth is not null) {
+                using (writer.PushSequence(ContextTag(3))) {
+                    writer.WriteOctetString(pubKeyAuth);
+                }
+            }
+
+            if (clientNonce is not null) {
+                using (writer.PushSequence(ContextTag(5))) {
+                    writer.WriteOctetString(clientNonce);
+                }
+            }
+        }
+
+        return writer.Encode();
+    }
+
+    internal static TSRequest DecodeTSRequest(byte[] bytes) {
+        AsnReader sequence = new AsnReader(bytes, AsnEncodingRules.DER).ReadSequence();
+        TSRequest request = new TSRequest();
+
+        while (sequence.HasData) {
+            Asn1Tag tag = sequence.PeekTag();
+            if (tag.TagClass != TagClass.ContextSpecific) {
+                sequence.ReadEncodedValue();
+                continue;
+            }
+
+            AsnReader field = sequence.ReadSequence(tag); //explicit tagging
+
+            switch (tag.TagValue) {
+            case 0:
+                request.version = (int)field.ReadInteger();
+                break;
+
+            case 1:
+                AsnReader negoData = field.ReadSequence(); //SEQUENCE OF NegoData
+                if (negoData.HasData) {
+                    request.negoToken = negoData.ReadSequence().ReadSequence(ContextTag(0)).ReadOctetString();
+                }
+                break;
+
+            case 2:
+                request.authInfo = field.ReadOctetString();
+                break;
+
+            case 3:
+                request.pubKeyAuth = field.ReadOctetString();
+                break;
+
+            case 4:
+                request.errorCode = (long)field.ReadInteger();
+                break;
+
+            case 5:
+                request.clientNonce = field.ReadOctetString();
+                break;
+            }
+        }
+
+        return request;
+    }
+
+    internal static byte[] EncodeTSCredentials(string domain, string user, string password) {
+        AsnWriter passwordCreds = new AsnWriter(AsnEncodingRules.DER);
+        using (passwordCreds.PushSequence()) {
+            using (passwordCreds.PushSequence(ContextTag(0))) passwordCreds.WriteOctetString(Encoding.Unicode.GetBytes(domain ?? String.Empty));
+            using (passwordCreds.PushSequence(ContextTag(1))) passwordCreds.WriteOctetString(Encoding.Unicode.GetBytes(user ?? String.Empty));
+            using (passwordCreds.PushSequence(ContextTag(2))) passwordCreds.WriteOctetString(Encoding.Unicode.GetBytes(password ?? String.Empty));
+        }
+
+        AsnWriter writer = new AsnWriter(AsnEncodingRules.DER);
+        using (writer.PushSequence()) {
+            using (writer.PushSequence(ContextTag(0))) writer.WriteInteger(1); //TSPasswordCreds
+            using (writer.PushSequence(ContextTag(1))) writer.WriteOctetString(passwordCreds.Encode());
+        }
+
+        return writer.Encode();
+    }
+
+    private static async Task WriteDer(Stream stream, byte[] der, CancellationToken token) {
+        await stream.WriteAsync(der, token);
+        await stream.FlushAsync(token);
+    }
+
+    private static async Task<byte[]> ReadDer(Stream stream, CancellationToken token) {
+        List<byte> buffer = new List<byte>(512);
+        byte[] one = new byte[1];
+
+        while (true) {
+            int total = GetDerLength(buffer);
+            if (total < 0) throw new IOException("Invalid CredSSP message");
+            if (total > 0 && buffer.Count >= total) return buffer.GetRange(0, total).ToArray();
+
+            await stream.ReadExactlyAsync(one, token);
+            buffer.Add(one[0]);
+        }
+    }
+
     private static Asn1Tag ContextTag(int value) => new Asn1Tag(TagClass.ContextSpecific, value, true);
 
     private static byte[] EncodePdu(Action<AsnWriter> writeFields) {
@@ -485,7 +868,7 @@ internal static class Rdp {
         }
     }
 
-    private static async Task PumpToServer(HttpListenerContext ctx, WebSocket ws, Stream stream, CancellationTokenSource cts, StreamRecorder recorder, FlowControl flow, PointerTracker pointer) {
+    private static async Task PumpToServer(HttpListenerContext ctx, WebSocket ws, Stream stream, CancellationTokenSource cts, StreamRecorder recorder, FlowControl flow, PointerTracker pointer, ConnectInitialRewriter connectRewriter = null) {
         ClientInfoOptimizer optimizer = new ClientInfoOptimizer();
         byte[] buffer = new byte[2048]; //input events are a few bytes each, larger messages are assembled
 
@@ -513,6 +896,7 @@ internal static class Rdp {
                     return;
                 }
 
+                connectRewriter?.Observe(message);
                 optimizer.Observe(message);
                 recorder?.ObserveClient(message);
                 pointer.ObserveClient(message);

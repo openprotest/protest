@@ -565,4 +565,176 @@ public class RdpTests {
         Assert.That(Rdp.PointerTracker.DecodePointer(8, 2, 2, new byte[4], new byte[4]), Is.Null);
         Assert.That(Rdp.PointerTracker.DecodePointer(32, 0, 0, Array.Empty<byte>(), Array.Empty<byte>()), Is.Empty);
     }
+
+    //----- server-side CredSSP (vault credentials) -----
+
+    //TPKT + X.224 connection request, an optional mstshash cookie, then an 8-byte RDP_NEG_REQ with requestedProtocols
+    private static byte[] X224ConnectionRequest(uint requestedProtocols, bool withCookie) {
+        List<byte> negReq = new List<byte> { 0x01, 0x00, 0x08, 0x00 }; //TYPE_RDP_NEG_REQ, flags, length 8
+        negReq.AddRange(BitConverter.GetBytes(requestedProtocols));
+
+        List<byte> cookie = withCookie
+            ? System.Text.Encoding.ASCII.GetBytes("Cookie: mstshash=test\r\n").ToList()
+            : new List<byte>();
+
+        int li = 6 + cookie.Count + negReq.Count; //bytes after the length indicator
+        List<byte> cr = new List<byte> {
+            0x03, 0x00, 0x00, 0x00,                        //TPKT, length set below
+            (byte)li, 0xe0, 0x00, 0x00, 0x00, 0x00, 0x00   //LI, CR-CDT, DST-REF, SRC-REF, CLASS
+        };
+        cr.AddRange(cookie);
+        cr.AddRange(negReq);
+
+        cr[2] = (byte)(cr.Count >> 8);
+        cr[3] = (byte)cr.Count;
+        return cr.ToArray();
+    }
+
+    //MCS connect initial (BER application tag 0x7f 0x65) whose GCC user data is a client core data block (type 0xC001)
+    //long enough to carry serverSelectedProtocol at offset 212. Returns the PDU and that field's absolute offset.
+    private static (byte[] pdu, int protocolOffset) McsConnectInitial(uint serverSelectedProtocol) {
+        List<byte> core = new List<byte> { 0x01, 0xc0, 0xd8, 0x00 }; //CS_CORE, length 216
+        core.AddRange(new byte[208]);                                //body up to serverSelectedProtocol
+        core.AddRange(BitConverter.GetBytes(serverSelectedProtocol));
+
+        List<byte> pdu = new List<byte> {
+            0x03, 0x00, 0x00, 0x00,       //TPKT
+            0x02, 0xf0, 0x80,             //X.224 data
+            0x7f, 0x65, 0x82, 0x00, 0x00  //MCS connect initial tag, BER length set below
+        };
+        int coreStart = pdu.Count;
+        pdu.AddRange(core);
+
+        int berLength = pdu.Count - 12;
+        pdu[10] = (byte)(berLength >> 8);
+        pdu[11] = (byte)berLength;
+
+        pdu[2] = (byte)(pdu.Count >> 8);
+        pdu[3] = (byte)pdu.Count;
+
+        return (pdu.ToArray(), coreStart + 212);
+    }
+
+    [TestCase("CONTOSO\\alice", "CONTOSO", "alice")]
+    [TestCase("alice@contoso.com", "", "alice@contoso.com")]
+    [TestCase("alice", "", "alice")]
+    [TestCase("", "", "")]
+    public void SplitUsername_SplitsTheDomain(string input, string expectedDomain, string expectedUser) {
+        (string domain, string user) = Rdp.SplitUsername(input);
+        Assert.That(domain, Is.EqualTo(expectedDomain));
+        Assert.That(user, Is.EqualTo(expectedUser));
+    }
+
+    [Test]
+    public void RewriteRequestedProtocols_OffersNlaToTheServer() {
+        byte[] cr = X224ConnectionRequest(1, withCookie: false); //the browser asked for TLS only
+        Assert.That(Rdp.RewriteRequestedProtocols(cr, 1 | 2 | 8), Is.True);
+        Assert.That(BitConverter.ToUInt32(cr, cr.Length - 4), Is.EqualTo(11u));
+    }
+
+    [Test]
+    public void RewriteRequestedProtocols_FindsTheRequestPastACookie() {
+        byte[] cr = X224ConnectionRequest(1, withCookie: true);
+        Assert.That(Rdp.RewriteRequestedProtocols(cr, 1 | 2 | 8), Is.True);
+        Assert.That(BitConverter.ToUInt32(cr, cr.Length - 4), Is.EqualTo(11u));
+    }
+
+    [Test]
+    public void RewriteRequestedProtocols_IgnoresAConnectionRequestWithoutNegotiation() {
+        byte[] bare = { 0x03, 0x00, 0x00, 0x0b, 0x06, 0xe0, 0x00, 0x00, 0x00, 0x00, 0x00 };
+        byte[] untouched = bare.ToArray();
+        Assert.That(Rdp.RewriteRequestedProtocols(bare, 11), Is.False);
+        Assert.That(bare, Is.EqualTo(untouched));
+    }
+
+    [Test]
+    public void RewriteServerSelectedProtocol_RewritesTheCoreDataField() {
+        (byte[] pdu, int offset) = McsConnectInitial(1); //the browser reported PROTOCOL_SSL
+        Assert.That(Rdp.RewriteServerSelectedProtocol(pdu, 2), Is.True);
+        Assert.That(BitConverter.ToUInt32(pdu, offset), Is.EqualTo(2u));
+
+        byte[] other = SendDataIndication(new byte[220]);
+        byte[] untouched = other.ToArray();
+        Assert.That(Rdp.RewriteServerSelectedProtocol(other, 2), Is.False);
+        Assert.That(other, Is.EqualTo(untouched), "only the MCS connect initial carries the field");
+    }
+
+    [Test]
+    public void ConnectInitialRewriter_RewritesTheFirstConnectInitialOnly() {
+        (byte[] pdu, int offset) = McsConnectInitial(1);
+        Rdp.ConnectInitialRewriter rewriter = new Rdp.ConnectInitialRewriter(8); //the server selected HYBRID_EX
+
+        byte[] credssp = { 0x30, 0x05, 0xa0, 0x03, 0x02, 0x01, 0x06 }; //a stray DER PDU is not slow-path, it is ignored
+        rewriter.Observe(credssp);
+        Assert.That(rewriter.Done, Is.False);
+
+        rewriter.Observe(pdu);
+        Assert.That(rewriter.Done, Is.True);
+        Assert.That(BitConverter.ToUInt32(pdu, offset), Is.EqualTo(8u));
+
+        (byte[] later, int laterOffset) = McsConnectInitial(1);
+        rewriter.Observe(later);
+        Assert.That(BitConverter.ToUInt32(later, laterOffset), Is.EqualTo(1u), "nothing is rewritten once done");
+    }
+
+    [Test]
+    public void EncodeTSRequest_RoundTripsNegoTokenPubKeyAuthAndNonce() {
+        byte[] nego = { 1, 2, 3, 4 };
+        byte[] pub = { 5, 6, 7 };
+        byte[] nonce = Enumerable.Range(0, 32).Select(i => (byte)i).ToArray();
+
+        Rdp.TSRequest request = Rdp.DecodeTSRequest(Rdp.EncodeTSRequest(6, negoToken: nego, pubKeyAuth: pub, clientNonce: nonce));
+
+        Assert.That(request.version, Is.EqualTo(6));
+        Assert.That(request.negoToken, Is.EqualTo(nego));
+        Assert.That(request.pubKeyAuth, Is.EqualTo(pub));
+        Assert.That(request.clientNonce, Is.EqualTo(nonce));
+        Assert.That(request.authInfo, Is.Null);
+    }
+
+    [Test]
+    public void EncodeTSRequest_RoundTripsAuthInfo() {
+        byte[] authInfo = { 9, 8, 7, 6 };
+        Rdp.TSRequest request = Rdp.DecodeTSRequest(Rdp.EncodeTSRequest(3, authInfo: authInfo));
+
+        Assert.That(request.version, Is.EqualTo(3));
+        Assert.That(request.authInfo, Is.EqualTo(authInfo));
+        Assert.That(request.negoToken, Is.Null);
+        Assert.That(request.pubKeyAuth, Is.Null);
+    }
+
+    [Test]
+    public void DecodeTSRequest_ReadsAnNtstatusErrorCode() {
+        AsnWriter writer = new AsnWriter(AsnEncodingRules.DER);
+        using (writer.PushSequence()) {
+            using (writer.PushSequence(ContextTag(0))) writer.WriteInteger(6);
+            using (writer.PushSequence(ContextTag(4))) writer.WriteInteger(0xC0000022u); //STATUS_ACCESS_DENIED
+        }
+
+        Rdp.TSRequest request = Rdp.DecodeTSRequest(writer.Encode());
+        Assert.That(request.errorCode, Is.EqualTo(0xC0000022L));
+    }
+
+    [Test]
+    public void EncodeTSCredentials_EncodesPasswordCredsAsUtf16() {
+        AsnReader sequence = new AsnReader(Rdp.EncodeTSCredentials("CONTOSO", "alice", "s3cret"), AsnEncodingRules.DER).ReadSequence();
+
+        Assert.That(sequence.ReadSequence(ContextTag(0)).ReadInteger(), Is.EqualTo(new System.Numerics.BigInteger(1))); //TSPasswordCreds
+
+        AsnReader inner = new AsnReader(sequence.ReadSequence(ContextTag(1)).ReadOctetString(), AsnEncodingRules.DER).ReadSequence();
+        Assert.That(inner.ReadSequence(ContextTag(0)).ReadOctetString(), Is.EqualTo(System.Text.Encoding.Unicode.GetBytes("CONTOSO")));
+        Assert.That(inner.ReadSequence(ContextTag(1)).ReadOctetString(), Is.EqualTo(System.Text.Encoding.Unicode.GetBytes("alice")));
+        Assert.That(inner.ReadSequence(ContextTag(2)).ReadOctetString(), Is.EqualTo(System.Text.Encoding.Unicode.GetBytes("s3cret")));
+        Assert.That(sequence.HasData, Is.False);
+    }
+
+    [Test]
+    public void ComputePublicKeyHash_IsSha256OfMagicNonceAndKey() {
+        byte[] magic = System.Text.Encoding.ASCII.GetBytes("CredSSP Client-To-Server Binding Hash\0");
+        byte[] nonce = Enumerable.Range(0, 32).Select(i => (byte)(i + 1)).ToArray();
+        byte[] key = { 10, 20, 30, 40 };
+
+        byte[] expected = System.Security.Cryptography.SHA256.HashData(magic.Concat(nonce).Concat(key).ToArray());
+        Assert.That(Rdp.ComputePublicKeyHash(magic, nonce, key), Is.EqualTo(expected));
+    }
 }
