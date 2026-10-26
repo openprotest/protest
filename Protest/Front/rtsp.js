@@ -7,6 +7,7 @@ class Rtsp extends Window {
 	static RECONNECT_DELAYS = [2, 5, 10, 20, 30];
 
 	static MESSAGE_FRAME = 1;
+	static MESSAGE_INIT = 2; //an fMP4 initialization segment
 	static FLAG_KEY_FRAME = 0x01;
 	static FRAME_HEADER_LENGTH = 10;
 
@@ -44,6 +45,10 @@ class Rtsp extends Window {
 		this.candidateIndex = 0;
 		this.selectingDecoder = false;
 		this.pendingFrames = [];
+		this.mse = false;       //this connection plays fragmented MP4 through Media Source Extensions
+		this.preferMse = false; //WebCodecs couldn't decode the stream
+		this.player = null;
+		this.mseInit = null;    //the latest initialization segment, for a player that starts over
 		this.codec = null;
 		this.connectionId = 0;
 		this.streamInfo = null;
@@ -85,6 +90,13 @@ class Rtsp extends Window {
 		this.canvas.height = 0;
 		this.canvasBox.appendChild(this.canvas);
 		this.context = this.canvas.getContext("2d");
+
+		this.video = document.createElement("video");
+		this.video.muted = true;
+		this.video.autoplay = true;
+		this.video.playsInline = true;
+		this.video.style.display = "none";
+		this.canvasBox.appendChild(this.video);
 
 		this.statusBox = document.createElement("div");
 		this.statusBox.className = "rtsp-status-box";
@@ -130,6 +142,9 @@ class Rtsp extends Window {
 		this.Disconnect();
 		clearTimeout(this.reconnectTimeout);
 
+		const mse = this.UseMse();
+		this.mse = mse;
+
 		this.error = null;
 		this.failed = false;
 		this.authenticationFailed = false;
@@ -147,6 +162,7 @@ class Rtsp extends Window {
 
 		socket.onopen = ()=> {
 			const request = { url:url };
+			if (mse) request.container = "fmp4";
 			if (this.args.credential) {
 				request.credential = this.args.credential;
 			}
@@ -188,10 +204,18 @@ class Rtsp extends Window {
 		}
 
 		this.CloseDecoder();
+		this.ClosePlayer();
+		this.mseInit = null;
 		this.codec = null;
 		this.streamInfo = null;
 		this.waitingForKey = true;
 		this.certificateWarning.style.display = "none";
+	}
+
+	//WebCodecs comes first, Media Source Extensions plays the stream where it's missing, as over plain HTTP,
+	//or where it couldn't decode the stream
+	UseMse() {
+		return RtspMediaSource.Type() !== null && (this.preferMse || typeof VideoDecoder === "undefined");
 	}
 
 	UpdateCertificateWarning() {
@@ -243,6 +267,7 @@ class Rtsp extends Window {
 		this.socket = null;
 		this.playing = false;
 		this.CloseDecoder();
+		this.ClosePlayer();
 		this.connectButton.disabled = false;
 
 		if (this.closing || this.failed) return;
@@ -283,11 +308,13 @@ class Rtsp extends Window {
 
 		this.playing = false;
 		this.CloseDecoder();
+		this.ClosePlayer();
 		this.connectButton.disabled = false;
 	}
 
 	Configure(codec) {
 		this.CloseDecoder();
+		this.ClosePlayer();
 		this.codec = codec;
 		this.candidates = null;
 		this.candidateIndex = 0;
@@ -295,10 +322,17 @@ class Rtsp extends Window {
 		this.decoderSps = null;
 		this.selectingDecoder = false;
 		this.pendingFrames = [];
+		this.mseInit = null;
 		this.waitingForKey = true;
 		this.UpdateInfo();
 
+		this.ShowVideo(this.mse && codec !== "jpeg");
 		if (codec === "jpeg") return;
+
+		if (this.mse) {
+			this.StartPlayer();
+			return;
+		}
 
 		if (typeof VideoDecoder === "undefined") {
 			this.Fail(window.isSecureContext
@@ -339,7 +373,7 @@ class Rtsp extends Window {
 
 		if (supported.length === 0) {
 			console.error(`RTSP: no decoder for ${codec}\n${report.join("\n")}`);
-			this.Fail(Rtsp.UnsupportedMessage(codec));
+			this.FailDecoder(Rtsp.UnsupportedMessage(codec));
 			return;
 		}
 
@@ -384,7 +418,7 @@ class Rtsp extends Window {
 			}
 		}
 
-		this.Fail(this.DecoderFailureMessage());
+		this.FailDecoder(this.DecoderFailureMessage());
 	}
 
 	//the configuration doesn't work in this browser after all, the next one starts on the next key frame
@@ -396,13 +430,81 @@ class Rtsp extends Window {
 		this.candidateIndex++;
 		this.decodedFrames = 0;
 		this.submittedFrames = 0;
-		if (this.candidateIndex >= this.candidates.length) this.Fail(this.DecoderFailureMessage());
+		if (this.candidateIndex >= this.candidates.length) this.FailDecoder(this.DecoderFailureMessage());
+	}
+
+	//WebCodecs can't decode the stream, Media Source Extensions may, then the stream starts over as fragmented MP4
+	FailDecoder(message) {
+		if (!this.mse && RtspMediaSource.IsSupported(RtspMediaSource.Codec(this.codec))) {
+			console.warn(`RTSP: WebCodecs can't decode ${this.codec}, trying Media Source Extensions`);
+			this.preferMse = true;
+			this.Connect();
+			return;
+		}
+		this.Fail(message);
 	}
 
 	//a decoder that took the configuration and then failed on the frames points at the stream rather than the browser
 	DecoderFailureMessage() {
 		if (this.rejectedData) return `The video can't be decoded (${this.codec}), the stream may be encrypted (SRTP) or damaged`;
 		return Rtsp.UnsupportedMessage(this.codec);
+	}
+
+	StartPlayer() {
+		this.ClosePlayer();
+
+		const player = new RtspMediaSource(this.video, this.codec, {
+			onPicture: ()=> this.OnPlayerPicture(),
+			onResize : ()=> this.UpdateInfo(),
+			onDropped: count=> this.stats.dropped += count,
+			onError  : (message, hadPicture)=> this.OnPlayerError(player, message, hadPicture)
+		});
+
+		this.player = player;
+		if (this.mseInit) player.AppendInit(this.mseInit);
+	}
+
+	//the last picture stays on the video element
+	ClosePlayer() {
+		if (!this.player) return;
+		const player = this.player;
+		this.player = null;
+		player.Close();
+	}
+
+	OnPlayerPicture() {
+		if (!this.hasPicture || this.statusBox.style.display !== "none") {
+			this.hasPicture = true;
+			this.HideStatus();
+		}
+		this.UpdateInfo();
+	}
+
+	//A damaged frame stops the media source, a new one starts on the next key frame. One that never showed a picture
+	//can't play this stream.
+	OnPlayerError(player, message, hadPicture) {
+		if (player !== this.player) return;
+		this.player = null;
+		console.warn(`RTSP: media source for ${this.codec} failed, ${message}`);
+
+		if (hadPicture) {
+			this.StartPlayer();
+			return;
+		}
+
+		//over plain HTTP it may still decode with WebCodecs
+		const insecure = typeof VideoDecoder === "undefined" && !window.isSecureContext && !this.rejectedData;
+		this.Fail(insecure ? `${this.DecoderFailureMessage()}, open Pro-test over HTTPS to decode it with WebCodecs` : this.DecoderFailureMessage());
+	}
+
+	ShowVideo(visible) {
+		this.video.style.display = visible ? "" : "none";
+		this.canvas.style.display = visible ? "none" : "";
+	}
+
+	PictureSize() {
+		if (this.video.style.display !== "none") return { width:this.video.videoWidth, height:this.video.videoHeight };
+		return { width:this.canvas.width, height:this.canvas.height };
 	}
 
 	CloseDecoder() {
@@ -416,11 +518,18 @@ class Rtsp extends Window {
 		if (buffer.byteLength < Rtsp.FRAME_HEADER_LENGTH) return;
 
 		const view = new DataView(buffer);
-		if (view.getUint8(0) !== Rtsp.MESSAGE_FRAME) return;
+		const type = view.getUint8(0);
+		if (type !== Rtsp.MESSAGE_FRAME && type !== Rtsp.MESSAGE_INIT) return;
 
 		const key = (view.getUint8(1) & Rtsp.FLAG_KEY_FRAME) !== 0;
 		const timestamp = Math.round(view.getFloat64(2));
 		const data = new Uint8Array(buffer, Rtsp.FRAME_HEADER_LENGTH);
+
+		if (type === Rtsp.MESSAGE_INIT) {
+			this.mseInit = data;
+			this.player?.AppendInit(data);
+			return;
+		}
 
 		this.stats.frames++;
 		this.stats.bytes += data.byteLength;
@@ -429,6 +538,11 @@ class Rtsp extends Window {
 
 		if (this.codec === "jpeg") {
 			this.DecodeJpeg(data);
+			return;
+		}
+
+		if (this.mse) { //a fragment, the timestamp is where it starts on the media timeline
+			if (!this.player?.AppendFragment(data, key, timestamp)) this.stats.dropped++;
 			return;
 		}
 
@@ -452,7 +566,7 @@ class Rtsp extends Window {
 	}
 
 	DecodeFrame(key, timestamp, data) {
-		if (this.failed) return;
+		if (this.failed || this.mse) return; //or the stream started over for Media Source Extensions
 
 		if (!this.decoder) {
 			if (!key) {
@@ -604,6 +718,8 @@ class Rtsp extends Window {
 		}
 		this.canvas.width = 0;
 		this.canvas.height = 0;
+		this.ClosePlayer();
+		RtspMediaSource.Reset(this.video);
 		this.hasPicture = false;
 	}
 
@@ -641,8 +757,10 @@ class Rtsp extends Window {
 		const info = this.streamInfo;
 
 		if (info) {
+			const size = this.PictureSize();
 			rows.push(["Codec", this.codec && this.codec !== "jpeg" ? `${info.codec} (${this.codec})` : info.codec]);
-			if (this.canvas.width > 0) rows.push(["Resolution", `${this.canvas.width} x ${this.canvas.height}`]);
+			if (this.codec && this.codec !== "jpeg") rows.push(["Playback", this.mse ? "Media Source Extensions" : "WebCodecs"]);
+			if (size.width > 0) rows.push(["Resolution", `${size.width} x ${size.height}`]);
 			if (this.playing) {
 				rows.push(["Frame rate", `${this.stats.fps} fps`]);
 				rows.push(["Bit rate", Rtsp.FormatBitrate(this.stats.bitrate)]);
@@ -674,9 +792,21 @@ class Rtsp extends Window {
 	}
 
 	SaveSnapshot() {
-		if (!this.hasPicture || this.canvas.width === 0) return;
+		if (!this.hasPicture) return;
 
-		this.canvas.toBlob(blob=> {
+		let canvas = this.canvas;
+		if (this.video.style.display !== "none") { //the video's current frame, at its own size
+			if (this.video.videoWidth === 0) return;
+			canvas = document.createElement("canvas");
+			canvas.width = this.video.videoWidth;
+			canvas.height = this.video.videoHeight;
+			canvas.getContext("2d").drawImage(this.video, 0, 0);
+		}
+		else if (this.canvas.width === 0) {
+			return;
+		}
+
+		canvas.toBlob(blob=> {
 			if (!blob) return;
 
 			const url = URL.createObjectURL(blob);
@@ -848,7 +978,11 @@ class Rtsp extends Window {
 
 		okButton.onclick = ()=> {
 			const split = Rtsp.SplitCredentials(Rtsp.NormalizeAddress(addressInput.value));
-			if (split.url !== this.args.url) this.ClearPicture();
+			if (split.url !== this.args.url) { //another camera, WebCodecs may decode its stream
+				this.ClearPicture();
+				this.preferMse = false;
+				this.rejectedData = false;
+			}
 			this.args.url = split.url;
 
 			if (methodBox.index === 0) {
@@ -1127,5 +1261,263 @@ class Rtsp extends Window {
 		this.Disconnect();
 		this.ClearPicture();
 		super.Close();
+	}
+}
+
+//Plays the gateway's fragmented MP4 through Media Source Extensions, for browsers without WebCodecs, as over plain HTTP
+//where VideoDecoder isn't offered. Playback stays near the newest frame, a little faster when it lags and with a jump
+//when it falls behind, and what's behind the playhead is removed up to a key frame.
+class RtspMediaSource {
+	static MAX_LATENCY = 1;        //seconds behind the newest frame, past a frame's own duration, before playback jumps ahead
+	static CATCH_UP_LATENCY = 0.3; //past it playback speeds up a little
+	static TARGET_LATENCY = 0.1;   //where a jump lands
+	static KEEP_BEHIND = 2;        //seconds kept behind the playhead
+	static MAX_PENDING = 120;      //fragments waiting on the source buffer, past it they're dropped up to the next key frame
+	static SILENT_LIMIT = 90;      //fragments taken without a picture before playback is given up
+
+	static Type() {
+		return window.MediaSource ?? window.ManagedMediaSource ?? null;
+	}
+
+	static MimeType(codec) {
+		return `video/mp4; codecs="${codec}"`;
+	}
+
+	//as the gateway names it in fragmented MP4, where H.265 parameter sets are only in the hvcC record
+	static Codec(codec) {
+		return codec?.startsWith("hev1") ? `hvc1${codec.substring(4)}` : codec;
+	}
+
+	static IsSupported(codec) {
+		const type = RtspMediaSource.Type();
+		if (type === null || !codec) return false;
+		try {
+			return type.isTypeSupported(RtspMediaSource.MimeType(codec));
+		}
+		catch {
+			return false;
+		}
+	}
+
+	//drops the picture and whatever source the video element has
+	static Reset(video) {
+		if (!video.getAttribute("src")) return;
+		video.removeAttribute("src");
+		video.load();
+	}
+
+	static Concat(items) {
+		let size = 0;
+		for (const item of items) size += item.data.byteLength;
+
+		const data = new Uint8Array(size);
+		let offset = 0;
+		for (const item of items) {
+			data.set(item.data, offset);
+			offset += item.data.byteLength;
+		}
+		return data;
+	}
+
+	constructor(video, codec, handlers) {
+		this.video = video;
+		this.codec = codec;
+		this.handlers = handlers;
+		this.queue = [];    //segments waiting on the source buffer, in order
+		this.keyTimes = []; //where the appended key frames start, in seconds
+		this.waitingForKey = true;
+		this.frameDuration = 0;
+		this.previousTime = -1;
+		this.appended = 0;
+		this.hasPicture = false;
+		this.playRequested = false;
+		this.closed = false;
+		this.sourceBuffer = null;
+
+		const MediaSourceType = RtspMediaSource.Type();
+		this.mediaSource = new MediaSourceType();
+		this.mediaSource.addEventListener("sourceopen", ()=> this.OnSourceOpen(), { once:true });
+
+		video.onloadeddata = ()=> this.OnPicture();
+		video.onplaying = ()=> this.OnPicture();
+		video.onresize = ()=> this.handlers.onResize();
+		video.onerror = ()=> this.Error(`${video.error?.code} ${video.error?.message ?? ""}`);
+
+		video.disableRemotePlayback = true; //a ManagedMediaSource plays only without AirPlay, or with an alternative source
+		this.url = URL.createObjectURL(this.mediaSource);
+		video.src = this.url;
+	}
+
+	OnSourceOpen() {
+		URL.revokeObjectURL(this.url);
+		if (this.closed) return;
+
+		try {
+			this.sourceBuffer = this.mediaSource.addSourceBuffer(RtspMediaSource.MimeType(this.codec));
+			this.sourceBuffer.mode = "segments";
+		}
+		catch (ex) {
+			this.Error(`${ex.name} ${ex.message}`);
+			return;
+		}
+
+		try {
+			this.mediaSource.duration = Infinity; //live, without an end
+		}
+		catch {}
+
+		this.sourceBuffer.onupdateend = ()=> this.OnUpdateEnd();
+		this.Flush();
+	}
+
+	AppendInit(data) {
+		if (this.closed) return;
+		this.queue.push({ data:data, init:true, key:false, time:0 });
+		this.Flush();
+	}
+
+	//false when the fragment is dropped
+	AppendFragment(data, key, time) {
+		if (this.closed) return false;
+
+		//the source buffer fell behind, the backlog is dropped, but not the configuration it needs
+		if (this.queue.length >= RtspMediaSource.MAX_PENDING) {
+			this.handlers.onDropped(this.queue.filter(o=> !o.init).length);
+			this.queue = this.queue.filter(o=> o.init).slice(-1);
+			this.waitingForKey = true;
+		}
+
+		if (this.waitingForKey && !key) return false;
+		this.waitingForKey = false;
+
+		const seconds = time / 1_000_000;
+		if (this.previousTime >= 0 && seconds > this.previousTime) this.frameDuration = Math.min(seconds - this.previousTime, 5);
+		this.previousTime = seconds;
+
+		this.queue.push({ data:data, init:false, key:key, time:seconds });
+		this.Flush();
+
+		//some browsers take the fragments without a word and never show a picture
+		if (++this.appended >= RtspMediaSource.SILENT_LIMIT && !this.hasPicture) {
+			this.Error(`no picture after ${this.appended} frames`);
+		}
+
+		return true;
+	}
+
+	OnUpdateEnd() {
+		if (this.closed || this.mediaSource.readyState !== "open") return;
+		this.KeepLive();
+		this.Flush();
+	}
+
+	//one append at a time, of everything that queued up meanwhile
+	Flush() {
+		const buffer = this.sourceBuffer;
+		if (!buffer || buffer.updating || this.closed || this.mediaSource.readyState !== "open") return;
+		if (this.Trim(false)) return; //the appends follow on its updateend
+		if (this.queue.length === 0) return;
+
+		const items = this.queue;
+		this.queue = [];
+
+		try {
+			buffer.appendBuffer(items.length === 1 ? items[0].data : RtspMediaSource.Concat(items));
+		}
+		catch (ex) {
+			if (ex.name !== "QuotaExceededError") {
+				this.Error(`${ex.name} ${ex.message}`);
+				return;
+			}
+
+			//the buffer is full, these fragments are dropped and playback resumes on the next key frame
+			const init = items.filter(o=> o.init).at(-1);
+			this.queue = init ? [init] : [];
+			this.handlers.onDropped(items.filter(o=> !o.init).length);
+			this.waitingForKey = true;
+			this.Trim(true);
+			return;
+		}
+
+		for (const item of items) {
+			if (item.key) this.keyTimes.push(item.time);
+		}
+	}
+
+	//What's behind the playhead goes, up to a key frame, so nothing still to be shown loses its reference. A removal
+	//reaches up to the next key frame anyway, it ends just short of one that's in the buffer.
+	Trim(force) {
+		const buffered = this.sourceBuffer.buffered;
+		if (buffered.length === 0) return false;
+
+		const limit = this.video.currentTime - (force ? 0 : RtspMediaSource.KEEP_BEHIND);
+		let index = -1;
+		while (index + 1 < this.keyTimes.length && this.keyTimes[index + 1] <= limit) index++;
+		if (index < 0) return false;
+
+		const start = buffered.start(0);
+		const end = this.keyTimes[index] - 0.001;
+		if (end - start < (force ? 0.001 : 1)) return false; //in steps of a second at least
+
+		this.keyTimes.splice(0, index);
+
+		try {
+			this.sourceBuffer.remove(start, end);
+			return true;
+		}
+		catch {
+			return false;
+		}
+	}
+
+	KeepLive() {
+		const video = this.video;
+		const buffered = this.sourceBuffer.buffered;
+		if (buffered.length === 0 || video.seeking) return;
+
+		const start = buffered.start(buffered.length - 1);
+		const end = buffered.end(buffered.length - 1);
+		const latency = end - video.currentTime;
+
+		//before what's buffered, as a new source with the stream far along, or behind it
+		if (video.currentTime < start || latency > this.frameDuration + RtspMediaSource.MAX_LATENCY) {
+			video.currentTime = Math.max(start, end - this.frameDuration - RtspMediaSource.TARGET_LATENCY);
+			video.playbackRate = 1;
+		}
+		else {
+			video.playbackRate = latency > this.frameDuration + RtspMediaSource.CATCH_UP_LATENCY ? 1.1 : 1;
+		}
+
+		if (video.paused && !this.playRequested) {
+			this.playRequested = true;
+			Promise.resolve(video.play()).catch(()=> {}).finally(()=> this.playRequested = false);
+		}
+	}
+
+	OnPicture() {
+		if (this.closed) return;
+		this.hasPicture = true;
+		this.handlers.onPicture();
+	}
+
+	Error(message) {
+		if (this.closed) return;
+		const hadPicture = this.hasPicture;
+		this.Close();
+		this.handlers.onError(message, hadPicture);
+	}
+
+	//the last picture stays, until another source takes the video element or it's reset
+	Close() {
+		if (this.closed) return;
+		this.closed = true;
+		this.queue = [];
+
+		const video = this.video;
+		video.onloadeddata = null;
+		video.onplaying = null;
+		video.onresize = null;
+		video.onerror = null;
+		if (this.sourceBuffer) this.sourceBuffer.onupdateend = null;
 	}
 }

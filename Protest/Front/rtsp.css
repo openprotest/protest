@@ -5,7 +5,8 @@
 	overflow: auto;
 }
 
-.rtsp-canvas-box > canvas {
+.rtsp-canvas-box > canvas,
+.rtsp-canvas-box > video {
 	flex: none;
 	display: block;
 	margin: auto;
@@ -15,7 +16,8 @@
 	overflow: hidden;
 }
 
-.rtsp-canvas-box.rtsp-fit > canvas {
+.rtsp-canvas-box.rtsp-fit > canvas,
+.rtsp-canvas-box.rtsp-fit > video {
 	width: 100%;
 	height: 100%;
 	object-fit: contain;

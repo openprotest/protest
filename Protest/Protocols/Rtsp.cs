@@ -19,7 +19,8 @@ namespace Protest.Protocols;
 
 //RTSP and RTSPS client for the camera viewer. The gateway sets up the session with the camera, takes the RTP stream
 //interleaved on the RTSP connection, reassembles the video frames and forwards each frame as a single WebSocket message.
-//The browser decodes H.264 and H.265 with WebCodecs, and MJPEG as images.
+//The browser decodes H.264 and H.265 with WebCodecs, and MJPEG as images. Where WebCodecs isn't available, as over plain
+//HTTP, the browser asks for fragmented MP4 instead and plays it through Media Source Extensions.
 internal static partial class Rtsp {
 
     private const string RESOURCE = "/ws/rtsp";
@@ -58,7 +59,11 @@ internal static partial class Rtsp {
         "CSeq", "Content-Length", "Content-Base", "Content-Location", "Content-Type", "Session", "Transport"
     };
 
+    //Binary messages: the type, flags, a timestamp in microseconds as a big endian double, then the data. A frame is an
+    //Annex B access unit, an image, or with fragmented MP4 a moof and mdat, then the timestamp is where the sample starts
+    //on the media timeline. An initialization segment comes before the first fragment and whenever the parameter sets change.
     private const byte MESSAGE_FRAME = 1;
+    private const byte MESSAGE_INIT = 2;
     private const byte FLAG_KEY_FRAME = 0x01;
     private const int FRAME_HEADER_LENGTH = 10;
 
@@ -67,6 +72,7 @@ internal static partial class Rtsp {
         public string username;
         public string password;
         public string credential;
+        public string container; //fmp4 for fragmented MP4, null for frames as they are
     }
 
     internal sealed class Target {
@@ -274,7 +280,7 @@ internal static partial class Rtsp {
             established = true;
 
             await SendText(ws, EncodeStreamInfo(session), cts.Token);
-            endReason = await StreamAsync(ws, session, client, credentialGuid, settings, clientTask, cts.Token);
+            endReason = await StreamAsync(ws, session, client, credentialGuid, settings, clientTask, request.container == "fmp4", cts.Token);
         }
         catch (OperationCanceledException) { }
         catch (WebSocketException) { }
@@ -311,7 +317,7 @@ internal static partial class Rtsp {
         }
     }
 
-    //{"url":"...", and either "username" and "password", or "credential"}, nothing else
+    //{"url":"...", and either "username" and "password", or "credential", and "container":"fmp4" for fragmented MP4}, nothing else
     internal static ConnectRequest ParseConnectRequest(string json, out string error) {
         error = "Invalid request";
         if (String.IsNullOrEmpty(json)) return null;
@@ -338,6 +344,7 @@ internal static partial class Rtsp {
                 case "username"  : request.username = value;   break;
                 case "password"  : request.password = value;   break;
                 case "credential": request.credential = value; break;
+                case "container" : request.container = value;  break;
                 default: return null;
                 }
             }
@@ -347,6 +354,7 @@ internal static partial class Rtsp {
         }
 
         if (String.IsNullOrEmpty(request.url) || request.url.Length > MAX_URL_LENGTH) return null;
+        if (request.container is not (null or "fmp4")) return null;
 
         if (request.credential is not null) {
             if (!Guid.TryParse(request.credential, out _)) return null;
@@ -816,11 +824,16 @@ internal static partial class Rtsp {
     }
 
     //the reason the stream ended, for the audit log
-    private static async Task<string> StreamAsync(WebSocket ws, Session session, Client client, Guid? credentialGuid, Settings settings, Task clientTask, CancellationToken token) {
+    private static async Task<string> StreamAsync(WebSocket ws, Session session, Client client, Guid? credentialGuid, Settings settings, Task clientTask, bool fragmented, CancellationToken token) {
         //stops the camera side and the sender, the browser's receive loop is left to the close handshake
         using CancellationTokenSource streamCts = CancellationTokenSource.CreateLinkedTokenSource(token);
 
-        FrameQueue queue = new FrameQueue(session.track.clockRate);
+        //motion JPEG goes out as images either way
+        Mp4Muxer muxer = fragmented && session.track.codec is "H264" or "H265"
+            ? new Mp4Muxer(session.track.codec == "H265", session.track.clockRate)
+            : null;
+
+        FrameQueue queue = new FrameQueue(session.track.clockRate, muxer);
 
         Task sendTask = SendToClient(ws, queue, streamCts.Token);
         Task<string> receiveTask = ReceiveFromCamera(session, queue, streamCts.Token);
@@ -944,12 +957,13 @@ internal static partial class Rtsp {
         public bool isReserved; //the closing error, in the slot kept for it
     }
 
-    //Hands messages to the sender, within a bound on frames, bytes and text messages. While the browser has fallen behind
-    //frames are dropped, and since a delta frame decodes only on top of the ones before it, once one is dropped every
-    //frame is dropped up to the next key frame. A slot is kept for the error that ends a stream.
+    //Hands messages to the sender, within a bound on frames, bytes and control messages. While the browser has fallen
+    //behind frames are dropped, and since a delta frame decodes only on top of the ones before it, once one is dropped
+    //every frame is dropped up to the next key frame. A slot is kept for the error that ends a stream.
     internal sealed class FrameQueue {
         private readonly Channel<OutgoingMessage> channel;
         private readonly double clockRate;
+        private readonly Mp4Muxer muxer; //null for frames as they are
         private int queuedFrames;
         private int queuedText;
         private long queuedBytes;
@@ -962,12 +976,13 @@ internal static partial class Rtsp {
         private uint lastTimestamp;
         private long extendedTimestamp;
 
-        public FrameQueue(int clockRate) {
+        public FrameQueue(int clockRate, Mp4Muxer muxer = null) {
             channel = Channel.CreateBounded<OutgoingMessage>(new BoundedChannelOptions(MAX_QUEUED_FRAMES + MAX_QUEUED_TEXT + 1) {
                 SingleReader = true,
                 FullMode = BoundedChannelFullMode.Wait //TryWrite fails instead of waiting
             });
             this.clockRate = clockRate > 0 ? clockRate : 90_000;
+            this.muxer = muxer;
         }
 
         public ChannelReader<OutgoingMessage> Reader => channel.Reader;
@@ -997,38 +1012,74 @@ internal static partial class Rtsp {
                 skipping = false;
             }
 
-            if (frame.key && frame.codec is not null && frame.codec != codec) {
-                //without its configuration the key frame can't be decoded, it waits for the next one
-                if (!TryWriteText(EncodeJson("codec", frame.codec))) {
-                    skipping = true;
-                    Interlocked.Increment(ref droppedFrames);
-                    return;
-                }
-                codec = frame.codec;
+            //without its configuration the key frame can't be decoded, it waits for the next one
+            bool configured = muxer is null
+                ? !frame.key || frame.codec is null || frame.codec == codec || TryAnnounceCodec(frame.codec)
+                : frame.key ? TryConfigureMuxer(frame.data) : muxer.configuration is not null;
+
+            if (!configured) {
+                skipping = true;
+                Interlocked.Increment(ref droppedFrames);
+                return;
             }
 
-            byte[] data = new byte[size];
+            byte[] data;
+            long time; //on the clock rate
+            if (muxer is null) {
+                data = new byte[size];
+                frame.data.CopyTo(data, FRAME_HEADER_LENGTH);
+                time = extendedTimestamp;
+            }
+            else {
+                data = muxer.Fragment(frame.data, frame.key, extendedTimestamp, FRAME_HEADER_LENGTH, out time);
+            }
+
             data[0] = MESSAGE_FRAME;
             data[1] = frame.key ? FLAG_KEY_FRAME : (byte)0;
-            BinaryPrimitives.WriteDoubleBigEndian(data.AsSpan(2), extendedTimestamp * 1_000_000d / clockRate); //microseconds
-            frame.data.CopyTo(data, FRAME_HEADER_LENGTH);
+            BinaryPrimitives.WriteDoubleBigEndian(data.AsSpan(2), time * 1_000_000d / clockRate); //microseconds
 
             Interlocked.Increment(ref queuedFrames);
-            Interlocked.Add(ref queuedBytes, size);
+            Interlocked.Add(ref queuedBytes, data.Length);
             if (!channel.Writer.TryWrite(new OutgoingMessage { data = data, isFrame = true })) {
                 Interlocked.Decrement(ref queuedFrames);
-                Interlocked.Add(ref queuedBytes, -size);
+                Interlocked.Add(ref queuedBytes, -data.Length);
                 Interlocked.Increment(ref droppedFrames);
                 skipping = true;
             }
         }
 
-        private bool TryWriteText(byte[] json) {
+        private bool TryAnnounceCodec(string frameCodec) {
+            if (!TryWriteText(EncodeJson("codec", frameCodec))) return false;
+            codec = frameCodec;
+            return true;
+        }
+
+        //A key frame whose parameter sets the browser doesn't have yet is preceded by its codec, when that changed,
+        //and by a new initialization segment.
+        private bool TryConfigureMuxer(byte[] annexB) {
+            Mp4Configuration configuration = ReadConfiguration(annexB, muxer.hevc);
+            if (configuration is null) return false;
+            if (configuration.SameAs(muxer.configuration)) return true;
+
+            if (configuration.codec != codec && !TryAnnounceCodec(configuration.codec)) return false;
+
+            byte[] init = muxer.InitializationSegment(configuration, FRAME_HEADER_LENGTH);
+            init[0] = MESSAGE_INIT;
+            if (!TryWriteControl(new OutgoingMessage { data = init })) return false;
+
+            muxer.configuration = configuration;
+            return true;
+        }
+
+        private bool TryWriteText(byte[] json) => TryWriteControl(new OutgoingMessage { data = json, isText = true });
+
+        //text, and initialization segments
+        private bool TryWriteControl(OutgoingMessage message) {
             if (Interlocked.Increment(ref queuedText) > MAX_QUEUED_TEXT) {
                 Interlocked.Decrement(ref queuedText);
                 return false;
             }
-            if (!channel.Writer.TryWrite(new OutgoingMessage { data = json, isText = true })) {
+            if (!channel.Writer.TryWrite(message)) {
                 Interlocked.Decrement(ref queuedText);
                 return false;
             }

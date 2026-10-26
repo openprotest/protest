@@ -322,7 +322,8 @@ internal sealed class Listener {
 
             //relaxed policy for debit-notes printing
             //wasm-unsafe-eval lets the IronRDP client compile its WebAssembly module
-            ctx.Response.AddHeader("Content-Security-Policy", "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; img-src 'self' data:; style-src 'self' 'unsafe-inline'");
+            //blob: media lets the RTSP viewer play through Media Source Extensions, its object URLs only come from scripts of this origin
+            ctx.Response.AddHeader("Content-Security-Policy", "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; img-src 'self' data:; media-src 'self' blob:; style-src 'self' 'unsafe-inline'");
             //ctx.Response.AddHeader("Content-Security-Policy", "default-src 'self'; img-src 'self' data:");
 
             string path = ctx.Request.Url.PathAndQuery;

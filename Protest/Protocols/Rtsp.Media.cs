@@ -288,6 +288,22 @@ internal static partial class Rtsp {
 
             return data;
         }
+
+        internal static byte[] RemoveEmulationPrevention(byte[] nal, int maxLength) {
+            List<byte> rbsp = new List<byte>(Math.Min(nal.Length, maxLength));
+            int zeros = 0;
+
+            for (int i = 0; i < nal.Length && rbsp.Count < maxLength; i++) {
+                if (zeros >= 2 && nal[i] == 0x03) {
+                    zeros = 0;
+                    continue;
+                }
+                rbsp.Add(nal[i]);
+                zeros = nal[i] == 0 ? zeros + 1 : 0;
+            }
+
+            return rbsp.ToArray();
+        }
     }
 
     //RFC 6184, in single NAL unit and non-interleaved mode
@@ -465,22 +481,6 @@ internal static partial class Rtsp {
             }
 
             return builder.ToString();
-        }
-
-        internal static byte[] RemoveEmulationPrevention(byte[] nal, int maxLength) {
-            List<byte> rbsp = new List<byte>(Math.Min(nal.Length, maxLength));
-            int zeros = 0;
-
-            for (int i = 0; i < nal.Length && rbsp.Count < maxLength; i++) {
-                if (zeros >= 2 && nal[i] == 0x03) {
-                    zeros = 0;
-                    continue;
-                }
-                rbsp.Add(nal[i]);
-                zeros = nal[i] == 0 ? zeros + 1 : 0;
-            }
-
-            return rbsp.ToArray();
         }
 
         protected override void Depacketize(ReadOnlySpan<byte> payload) {
