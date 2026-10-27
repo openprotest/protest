@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Net.Security;
@@ -116,8 +116,10 @@ internal static class WebsiteCheck {
                 domain = keep;
             }
 
-            await DnsCheck(ws, domain);
-            await TcpCheck(ws, domain, port);
+            IPAddress[] addresses = await DnsCheck(ws, domain);
+            if (addresses is null) return;
+
+            await TcpCheck(ws, addresses, port);
             await TlsCheck(ws, uri, protocol);
 
             List<Task> tasks = new List<Task>();
@@ -158,7 +160,8 @@ internal static class WebsiteCheck {
         }
     }
 
-    private static async Task DnsCheck(WebSocket ws, string domain) {
+    //returns the resolved addresses, or null when the name did not resolve or was refused
+    private static async Task<IPAddress[]> DnsCheck(WebSocket ws, string domain) {
         try {
             StringBuilder result = new StringBuilder();
             result.Append("{\"title\":\"DNS\",");
@@ -168,6 +171,9 @@ internal static class WebsiteCheck {
             long starttime = DateTime.UtcNow.Ticks;
             IPAddress[] ips = System.Net.Dns.GetHostAddresses(domain);
             long endtime = DateTime.UtcNow.Ticks;
+
+            IPAddress loopback = ips.FirstOrDefault(IsLoopback);
+            if (loopback is not null) throw new LoopbackRefusedException(loopback);
 
             for (int i = 0; i < ips.Length; i++) {
                 if (i > 0) result.Append(',');
@@ -182,15 +188,18 @@ internal static class WebsiteCheck {
             result.Append('}');
 
             await WebSocketHelper.WsWriteText(ws, result.ToString());
+            return ips;
         }
         catch (Exception ex) {
             string fail = $"{{\"title\":\"DNS\",\"status\":\"failed\",\"error\":\"{Data.EscapeJsonText(ex.Message)}\"}}";
             await WebSocketHelper.WsWriteText(ws, fail);
             await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, null, CancellationToken.None);
+            return null;
         }
     }
 
-    private static async Task TcpCheck(WebSocket ws, string domain, int port) {
+    //connects to the addresses DnsCheck vetted, resolving the name again could give a different answer
+    private static async Task TcpCheck(WebSocket ws, IPAddress[] addresses, int port) {
         try {
             StringBuilder result = new StringBuilder();
             result.Append("{\"title\":\"TCP\",");
@@ -198,7 +207,7 @@ internal static class WebsiteCheck {
             using TcpClient client = new TcpClient();
 
             long starttime = DateTime.UtcNow.Ticks;
-            await client.ConnectAsync(domain, port);
+            await client.ConnectAsync(addresses, port);
             long endtime = DateTime.UtcNow.Ticks;
 
             result.Append($"\"result\":[\"{(client.Connected ? "Established" : "Failed")}\"],");
@@ -226,8 +235,10 @@ internal static class WebsiteCheck {
             if (protocol == "https") {
                 StringBuilder result = new StringBuilder();
                 long starttime = DateTime.UtcNow.Ticks;
-                using HttpClientHandler handler = new HttpClientHandler();
-                handler.ServerCertificateCustomValidationCallback = (HttpRequestMessage request, X509Certificate2 cert, X509Chain chain, SslPolicyErrors errors) => {
+                using SocketsHttpHandler handler = new SocketsHttpHandler {
+                    ConnectCallback = ConnectExceptLoopbackAsync
+                };
+                handler.SslOptions.RemoteCertificateValidationCallback = (object sender, X509Certificate cert, X509Chain chain, SslPolicyErrors errors) => {
                     long endtime = DateTime.UtcNow.Ticks;
 
                     if (result.Length > 0) return errors == SslPolicyErrors.None;
@@ -241,8 +252,8 @@ internal static class WebsiteCheck {
                     result.Append($"\"Expiration date: {Data.EscapeJsonText(cert.GetExpirationDateString())}\",");
                     result.Append($"\"Issuer: {Data.EscapeJsonText(cert.Issuer)}\",");
                     result.Append($"\"Subject: {Data.EscapeJsonText(cert.Subject)}\",");
-                    result.Append($"\"Thumbprint: {Data.EscapeJsonText(cert.Thumbprint)}\",");
-                    result.Append($"\"Serial number: {Data.EscapeJsonText(cert.SerialNumber)}\"");
+                    result.Append($"\"Thumbprint: {Data.EscapeJsonText(cert.GetCertHashString())}\",");
+                    result.Append($"\"Serial number: {Data.EscapeJsonText(cert.GetSerialNumberString())}\"");
 
                     result.Append($"],");
 
@@ -283,7 +294,10 @@ internal static class WebsiteCheck {
                     RemoteCertificateValidationCallback = (sender, cert, chain, errors) => true
                 },
                 EnableMultipleHttp2Connections = true,
-                EnableMultipleHttp3Connections = true
+                EnableMultipleHttp3Connections = true,
+                ConnectCallback = ConnectExceptLoopbackAsync,
+                //QUIC connections bypass ConnectCallback, so HTTP/3 does not follow redirects to unvetted hosts
+                AllowAutoRedirect = version != HttpVersion.Version30
             };
 
             using HttpClient client = new HttpClient(handler);
@@ -321,8 +335,9 @@ internal static class WebsiteCheck {
 
             await WebSocketHelper.WsWriteText(ws, result.ToString());
         }
-        catch (HttpRequestException) {
-            string fail = $"{{\"title\":\"HTTP {version}\",\"status\":\"failed\",\"error\":\"HTTP request failed\"}}";
+        catch (HttpRequestException ex) {
+            string error = ex.InnerException is LoopbackRefusedException refused ? refused.Message : "HTTP request failed";
+            string fail = $"{{\"title\":\"HTTP {version}\",\"status\":\"failed\",\"error\":\"{Data.EscapeJsonText(error)}\"}}";
             await WebSocketHelper.WsWriteText(ws, fail);
         }
         catch (Exception ex) {
@@ -331,4 +346,31 @@ internal static class WebsiteCheck {
         }
     }
 
+    private sealed class LoopbackRefusedException(IPAddress address) : Exception($"Refused, {address} is a loopback address");
+
+    //127.0.0.0/8 and ::1, in any form, and the unspecified 0.0.0.0 and ::, which also connect to this host
+    internal static bool IsLoopback(IPAddress address) {
+        if (address.IsIPv4MappedToIPv6) address = address.MapToIPv4();
+        if (address.AddressFamily == AddressFamily.InterNetworkV6 && address.ScopeId != 0) address = new IPAddress(address.GetAddressBytes());
+        return IPAddress.IsLoopback(address) || address.Equals(IPAddress.Any) || address.Equals(IPAddress.IPv6Any);
+    }
+
+    //every TCP connection the TLS and HTTP checks open goes through here, redirects included,
+    //so neither a redirect nor a name that resolves differently the second time reaches a loopback address
+    internal static async ValueTask<Stream> ConnectExceptLoopbackAsync(SocketsHttpConnectionContext context, CancellationToken token) {
+        IPAddress[] addresses = await System.Net.Dns.GetHostAddressesAsync(context.DnsEndPoint.Host, token);
+
+        IPAddress loopback = addresses.FirstOrDefault(IsLoopback);
+        if (loopback is not null) throw new LoopbackRefusedException(loopback);
+
+        Socket socket = new Socket(SocketType.Stream, ProtocolType.Tcp) { NoDelay = true };
+        try {
+            await socket.ConnectAsync(addresses, context.DnsEndPoint.Port, token);
+            return new NetworkStream(socket, true);
+        }
+        catch {
+            socket.Dispose();
+            throw;
+        }
+    }
 }
