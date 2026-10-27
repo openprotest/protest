@@ -338,7 +338,7 @@ internal static class Auth {
     //Each code is accepted once, a time step that was already used, or an earlier one, is refused.
     internal static bool ValidateTotp(OtpToken token, string userTotp) {
         if (token.secret is null || token.secret.Length == 0) return false;
-        if (Volatile.Read(ref token.failures) >= MAX_OTP_ATTEMPTS) return false;
+        if (token.failures >= MAX_OTP_ATTEMPTS) return false;
 
         Totp totp = new Totp(token.secret);
         if (totp.VerifyTotp(userTotp, out long timeStep, new VerificationWindow(previous: 1, future: 1))) {

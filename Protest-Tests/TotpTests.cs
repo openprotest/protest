@@ -8,9 +8,9 @@ namespace Protest.Tests;
 public class TotpTests {
     private static readonly byte[] SECRET = Enumerable.Range(1, 20).Select(i => (byte)i).ToArray();
 
-    private static Auth.OtpToken NewToken() => new Auth.OtpToken {
+    private static Auth.OtpToken NewToken(string username = null) => new Auth.OtpToken {
         tokenId  = Guid.NewGuid().ToString(),
-        username = $"unit-test-{Guid.NewGuid()}",
+        username = username ?? $"unit-test-{Guid.NewGuid()}",
         secret   = SECRET
     };
 
@@ -28,7 +28,7 @@ public class TotpTests {
 
         Assert.That(Auth.ValidateTotp(token, code), Is.True);
         Assert.That(Auth.ValidateTotp(token, code), Is.False);
-        Assert.That(Auth.ValidateTotp(NewTokenFor(token.username), code), Is.False, "a new token for the same user");
+        Assert.That(Auth.ValidateTotp(NewToken(token.username), code), Is.False, "a new token for the same user");
     }
 
     [Test]
@@ -38,7 +38,7 @@ public class TotpTests {
         string current = Code(DateTime.UtcNow);
 
         Assert.That(Auth.ValidateTotp(token, current), Is.True);
-        Assert.That(Auth.ValidateTotp(NewTokenFor(token.username), previous), Is.False);
+        Assert.That(Auth.ValidateTotp(NewToken(token.username), previous), Is.False);
     }
 
     [Test]
@@ -71,11 +71,5 @@ public class TotpTests {
         }
 
         Assert.That(Auth.ValidateTotp(token, Code(DateTime.UtcNow)), Is.True);
-    }
-
-    private static Auth.OtpToken NewTokenFor(string username) {
-        Auth.OtpToken token = NewToken();
-        token.username = username;
-        return token;
     }
 }
