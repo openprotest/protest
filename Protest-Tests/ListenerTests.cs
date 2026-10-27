@@ -1,5 +1,7 @@
 global using NUnit.Framework;
 using System.Net;
+using System.Net.Sockets;
+using System.Text;
 using Protest.Http;
 
 namespace Protest.Tests;
@@ -7,6 +9,8 @@ namespace Protest.Tests;
 public class ListenerTests {
     private Listener? listener;
     private readonly DirectoryInfo? front;
+    private int port;
+    private string baseUrl = String.Empty;
 
     public ListenerTests() {
         DirectoryInfo baseDir = new DirectoryInfo(AppContext.BaseDirectory);
@@ -26,7 +30,14 @@ public class ListenerTests {
 
     [OneTimeSetUp]
     public void Setup() {
-        listener = new Listener("127.0.0.1", 8080, front?.FullName);
+        //a free port, so a Pro-test instance already running on this machine doesn't fail the fixture
+        using TcpListener probe = new TcpListener(IPAddress.Loopback, 0);
+        probe.Start();
+        port = ((IPEndPoint)probe.LocalEndpoint).Port;
+        probe.Stop();
+
+        baseUrl = $"http://127.0.0.1:{port}";
+        listener = new Listener("127.0.0.1", (ushort)port, front?.FullName);
         listener?.StartAsync();
     }
 
@@ -37,7 +48,7 @@ public class ListenerTests {
 
     [Test]
     public void Listener_RootPage_ReturnOK() {
-        using HttpRequestMessage requestMessage = new HttpRequestMessage(HttpMethod.Get, "http://127.0.0.1:8080/");
+        using HttpRequestMessage requestMessage = new HttpRequestMessage(HttpMethod.Get, $"{baseUrl}/");
 
         using HttpClient httpClient = new HttpClient();
         HttpResponseMessage result = httpClient.Send(requestMessage);
@@ -47,7 +58,7 @@ public class ListenerTests {
 
     [Test]
     public void Listener_NonExistingPageUnauthenticated_ReturnUnauthorized() {
-        using HttpRequestMessage requestMessage = new HttpRequestMessage(HttpMethod.Get, "http://127.0.0.1:8080/i-dont-exists");
+        using HttpRequestMessage requestMessage = new HttpRequestMessage(HttpMethod.Get, $"{baseUrl}/i-dont-exists");
 
         using HttpClient httpClient = new HttpClient();
         HttpResponseMessage result = httpClient.Send(requestMessage);
@@ -57,7 +68,7 @@ public class ListenerTests {
 
     [Test]
     public void CsrfCheck_NoHostInReferrer_ReturnOk() {
-        using HttpRequestMessage requestMessage = new HttpRequestMessage(HttpMethod.Get, "http://127.0.0.1:8080/");
+        using HttpRequestMessage requestMessage = new HttpRequestMessage(HttpMethod.Get, $"{baseUrl}/");
 
         using HttpClient httpClient = new HttpClient();
         HttpResponseMessage result = httpClient.Send(requestMessage);
@@ -67,8 +78,8 @@ public class ListenerTests {
 
     [Test]
     public void CsrfCheck_SameHostInReferrer_ReturnOk() {
-        using HttpRequestMessage requestMessage = new HttpRequestMessage(HttpMethod.Get, "http://127.0.0.1:8080/");
-        requestMessage.Headers.Add("Referer", "http://127.0.0.1:8080/");
+        using HttpRequestMessage requestMessage = new HttpRequestMessage(HttpMethod.Get, $"{baseUrl}/");
+        requestMessage.Headers.Add("Referer", $"{baseUrl}/");
 
         using HttpClient httpClient = new HttpClient();
         HttpResponseMessage result = httpClient.Send(requestMessage);
@@ -89,8 +100,13 @@ public class ListenerTests {
         });
     }
 
+    [TestCase("198.51.100.20")]
     [TestCase("not-an-address, 198.51.100.20")]
     [TestCase("6.6.6.6, 198.51.100.20, 127.0.0.1")]
+    [TestCase("127.0.0.1, 198.51.100.20", Description = "forged loopback on the left")]
+    [TestCase("  198.51.100.20  ,127.0.0.1 ", Description = "whitespace around entries")]
+    [TestCase("2001:db8::20")]
+    [TestCase("[2001:db8::20]:443", Description = "IPAddress drops the port of a bracketed IPv6 address")]
     public void ForwardedFor_ClientEntry_IsAccepted(string header) {
         WithTrustedLoopbackProxy(() => {
             Assert.That(SendWithForwardedFor(HttpMethod.Get, "/", header), Is.EqualTo(HttpStatusCode.OK));
@@ -99,7 +115,15 @@ public class ListenerTests {
 
     [TestCase("198.51.100.30, not-an-address")]
     [TestCase("198.51.100.30,")]
+    [TestCase("198.51.100.30:51234", Description = "IPv4 with a port")]
+    [TestCase(",")]
+    [TestCase("unknown")]
+    [TestCase("not-an-address, 127.0.0.1", Description = "reached while walking past the trusted proxy")]
     [TestCase("::1", Description = "loopback client")]
+    [TestCase("::ffff:127.0.0.1")]
+    [TestCase("127.1")]
+    [TestCase("2130706433")]
+    [TestCase("198.51.100.30, 127.0.0.2", Description = "loopback, but not the trusted proxy")]
     [TestCase("127.0.0.1", Description = "only the trusted proxy, which is loopback")]
     public void ForwardedFor_InvalidClientEntry_ReturnBadRequest(string header) {
         WithTrustedLoopbackProxy(() => {
@@ -112,6 +136,49 @@ public class ListenerTests {
         Assert.That(SendWithForwardedFor(HttpMethod.Get, "/", "198.51.100.40"), Is.EqualTo(HttpStatusCode.BadRequest));
     }
 
+    //On Linux and macOS every request of a keep-alive connection shares one IPEndPoint. The client one request
+    //took from X-Forwarded-For must not become the peer the next request on that connection is checked against.
+    //The backdoor shows the peer here: a trusted loopback proxy that sends no header is refused.
+    [Test]
+    public void ForwardedFor_KeepAliveConnection_StartsEachRequestFromThePeer() {
+        WithTrustedLoopbackProxy(() => WithBackdoor(() => {
+            using TcpClient tcp = new TcpClient();
+            tcp.ReceiveTimeout = 5_000;
+            tcp.Connect(IPAddress.Loopback, port);
+            NetworkStream stream = tcp.GetStream();
+
+            Assert.That(SendOnConnection(stream, "198.51.100.50"), Is.EqualTo(HttpStatusCode.OK), "first client");
+            Assert.That(SendOnConnection(stream, "198.51.100.51"), Is.EqualTo(HttpStatusCode.OK), "the peer is still the trusted proxy");
+            Assert.That(SendOnConnection(stream, null), Is.EqualTo(HttpStatusCode.BadRequest), "the peer is the loopback proxy again");
+        }));
+    }
+
+    //With the backdoor on, a proxy on this host that left the header out would pass it for every client it forwards.
+    [Test]
+    public void ForwardedFor_MissingFromTrustedLoopbackProxyWithBackdoor_ReturnBadRequest() {
+        WithTrustedLoopbackProxy(() => WithBackdoor(() => {
+            Assert.That(SendWithForwardedFor(HttpMethod.Get, "/", null), Is.EqualTo(HttpStatusCode.BadRequest));
+        }));
+    }
+
+    [Test]
+    public void ForwardedFor_MissingFromLoopbackClientWithBackdoor_ReturnOk() {
+        WithBackdoor(() => {
+            Assert.That(SendWithForwardedFor(HttpMethod.Get, "/", null), Is.EqualTo(HttpStatusCode.OK));
+        });
+    }
+
+    private static void WithBackdoor(Action test) {
+        bool backdoor = Configuration.backdoor;
+        Configuration.backdoor = true;
+        try {
+            test();
+        }
+        finally {
+            Configuration.backdoor = backdoor;
+        }
+    }
+
     private static void WithTrustedLoopbackProxy(Action test) {
         bool added = Configuration.trustedProxies.Add(IPAddress.Loopback);
         try {
@@ -122,13 +189,36 @@ public class ListenerTests {
         }
     }
 
-    private static HttpStatusCode SendWithForwardedFor(HttpMethod method, string path, string forwardedFor) {
-        using HttpRequestMessage requestMessage = new HttpRequestMessage(method, $"http://127.0.0.1:8080{path}");
-        requestMessage.Headers.TryAddWithoutValidation("X-Forwarded-For", forwardedFor);
+    private HttpStatusCode SendWithForwardedFor(HttpMethod method, string path, string? forwardedFor) {
+        using HttpRequestMessage requestMessage = new HttpRequestMessage(method, $"{baseUrl}{path}");
+        if (forwardedFor is not null) requestMessage.Headers.TryAddWithoutValidation("X-Forwarded-For", forwardedFor);
         if (method == HttpMethod.Post) requestMessage.Content = new StringContent("x\u007Fnobody\u007Fwrong");
 
         using HttpClient httpClient = new HttpClient();
         using HttpResponseMessage result = httpClient.Send(requestMessage);
         return result.StatusCode;
+    }
+
+    //HttpClient picks its own connections, this writes each request on the given one and reads the whole response off it
+    private HttpStatusCode SendOnConnection(NetworkStream stream, string? forwardedFor) {
+        string request = $"GET / HTTP/1.1\r\nHost: 127.0.0.1:{port}\r\n"
+            + (forwardedFor is null ? String.Empty : $"X-Forwarded-For: {forwardedFor}\r\n")
+            + "\r\n";
+        stream.Write(Encoding.ASCII.GetBytes(request));
+
+        StringBuilder head = new StringBuilder();
+        while (!head.ToString().EndsWith("\r\n\r\n")) {
+            int b = stream.ReadByte();
+            if (b < 0) throw new EndOfStreamException("The listener closed the connection");
+            head.Append((char)b);
+        }
+
+        string[] lines = head.ToString().Split("\r\n");
+        string? contentLength = lines.FirstOrDefault(o => o.StartsWith("Content-Length:", StringComparison.OrdinalIgnoreCase));
+        if (contentLength is not null) {
+            stream.ReadExactly(new byte[int.Parse(contentLength["Content-Length:".Length..].Trim())]);
+        }
+
+        return (HttpStatusCode)int.Parse(lines[0].Split(' ')[1]);
     }
 }

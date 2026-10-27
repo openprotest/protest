@@ -5,14 +5,20 @@
 
 using System.Collections.Generic;
 using System.Net;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace Protest.Http;
 
 internal sealed class Listener {
+    private const long MAX_AUTH_PAYLOAD = 4_096;
+
     private readonly HttpListener listener;
     private readonly Cache cache;
+
+    //the socket peer of each IPEndPoint, before X-Forwarded-For replaced it
+    private static readonly ConditionalWeakTable<IPEndPoint, IPAddress> peerAddresses = new ConditionalWeakTable<IPEndPoint, IPAddress>();
 
     private static readonly Dictionary<string, Func<HttpListenerContext, string, byte[]>> routing = new Dictionary<string, Func<HttpListenerContext, string, byte[]>> {
         ["/logout"]                       = (ctx, username) => Auth.RevokeAccess(ctx, username) ? Data.CODE_OK.Array : Data.CODE_FAILED.Array,
@@ -284,10 +290,23 @@ internal sealed class Listener {
         try
 #endif
         {
-            string xForwardedForHeader = ctx.Request?.Headers?.Get("X-Forwarded-For");
-            if (!String.IsNullOrEmpty(xForwardedForHeader)) {
-                IPAddress remoteIp = ctx.Request.RemoteEndPoint.Address;
+            //the managed listener (Linux, macOS) hands every request of a keep-alive connection the same IPEndPoint,
+            //start from the socket peer, so the client of one request is never carried into the next
+            IPEndPoint remoteEndPoint = ctx.Request.RemoteEndPoint;
+            IPAddress remoteIp = peerAddresses.GetValue(remoteEndPoint, endPoint => endPoint.Address);
+            remoteEndPoint.Address = remoteIp;
 
+            string xForwardedForHeader = ctx.Request?.Headers?.Get("X-Forwarded-For");
+            if (String.IsNullOrEmpty(xForwardedForHeader)) {
+                //a proxy on this host would pass the backdoor for every client it forwards
+                if (Configuration.backdoor && IPAddress.IsLoopback(remoteIp) && Configuration.trustedProxies.Contains(remoteIp)) {
+                    Logger.Action("Unauthenticated", "AAA", $"Rejected request without X-Forwarded-For from trusted proxy {remoteIp}");
+                    ctx.Response.StatusCode = 400;
+                    ctx.Response.Close();
+                    return;
+                }
+            }
+            else {
                 if (!Configuration.trustedProxies.Contains(remoteIp)) {
                     Logger.Action("Unauthenticated", "AAA", $"Rejected X-Forwarded-For from non-trusted peer {remoteIp}");
                     ctx.Response.StatusCode = 400;
@@ -320,7 +339,7 @@ internal sealed class Listener {
                     return;
                 }
 
-                ctx.Request.RemoteEndPoint.Address = xForwardedIp;
+                remoteEndPoint.Address = xForwardedIp;
             }
 
 
@@ -330,12 +349,19 @@ internal sealed class Listener {
             //relaxed policy for debit-notes printing
             //wasm-unsafe-eval lets the IronRDP client compile its WebAssembly module
             //blob: media lets the RTSP viewer play through Media Source Extensions, its object URLs only come from scripts of this origin
-            ctx.Response.AddHeader("Content-Security-Policy", "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; img-src 'self' data:; media-src 'self' blob:; style-src 'self' 'unsafe-inline'");
+            ctx.Response.AddHeader("Content-Security-Policy", "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; img-src 'self' data:; media-src 'self' blob:; style-src 'self' 'unsafe-inline'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'");
             //ctx.Response.AddHeader("Content-Security-Policy", "default-src 'self'; img-src 'self' data:");
 
             string path = ctx.Request.Url.PathAndQuery;
 
             if (String.Equals(path, "/auth", StringComparison.Ordinal)) {
+                //read whole, before anyone is authenticated, a chunked body has no length to check
+                if (ctx.Request.ContentLength64 < 0 || ctx.Request.ContentLength64 > MAX_AUTH_PAYLOAD) {
+                    ctx.Response.StatusCode = (int)HttpStatusCode.RequestEntityTooLarge;
+                    ctx.Response.Close();
+                    return;
+                }
+
                 Auth.AuthHandler(ctx);
                 ctx.Response.Close();
                 return;
@@ -378,6 +404,13 @@ internal sealed class Listener {
                 return;
             }
 
+            if (!IsSameOrigin(ctx)) {
+                Logger.Action(Auth.GetPrincipal(ctx) ?? "Unauthenticated", "AAA", $"Rejected cross-origin request to {ctx.Request.Url.AbsolutePath} from {ctx.Request.Headers.Get("Origin") ?? ctx.Request.Headers.Get("Sec-Fetch-Site")}");
+                ctx.Response.StatusCode = (int)HttpStatusCode.Forbidden;
+                ctx.Response.Close();
+                return;
+            }
+
             if (await WebSocketHandler(ctx)) return;
 
             //streamed, outside the byte[] routing
@@ -396,6 +429,7 @@ internal sealed class Listener {
 #if !DEBUG
         catch (Exception ex) {
             Logger.Debug(ex);
+            ctx.Response.Abort();
         }
 #endif
     }
@@ -504,7 +538,7 @@ internal sealed class Listener {
     }
 
     private static async Task<bool> DynamicHandler(HttpListenerContext ctx, Dictionary<string, string> parameters) {
-        ctx.Response.AddHeader("Cache-Control", "no-cache");
+        ctx.Response.AddHeader("Cache-Control", "no-store");
 
         string path = ctx.Request.Url.AbsolutePath;
         if (routing.TryGetValue(path, out Func<HttpListenerContext, string, byte[]> handler)) {
@@ -531,24 +565,39 @@ internal sealed class Listener {
         }
     }
 
+    //SameSite=Strict still sends the session cookie from pages of the same site: other ports of this host, our own reverse proxies,
+    //sibling subdomains, and links opened from other applications. Only requests from this exact origin may act with it.
+    //Sec-Fetch-Site is set by the browser and also covers GETs, which carry no Origin. With neither header the client is not a browser,
+    //or one too old to send them, and is let through.
+    private static bool IsSameOrigin(HttpListenerContext ctx) {
+        string fetchSite = ctx.Request.Headers.Get("Sec-Fetch-Site");
+        if (fetchSite is not null) {
+            return String.Equals(fetchSite, "same-origin", StringComparison.Ordinal);
+        }
+
+        string origin = ctx.Request.Headers.Get("Origin");
+        return origin is null || IsOwnOrigin(origin, ctx.Request.UserHostName);
+    }
+
+    //host and port must match the Host header, the scheme is not compared, behind a TLS-terminating proxy the listener can't tell it
+    private static bool IsOwnOrigin(string origin, string userHostName) {
+        if (String.IsNullOrEmpty(origin) || String.IsNullOrEmpty(userHostName)) return false;
+        if (!Uri.TryCreate(origin, UriKind.Absolute, out Uri originUri)) return false;
+
+        //browsers leave the default port out of Host
+        return String.Equals(userHostName, $"{originUri.Host}:{originUri.Port}", StringComparison.OrdinalIgnoreCase)
+            || originUri.IsDefaultPort && String.Equals(userHostName, originUri.Host, StringComparison.OrdinalIgnoreCase);
+    }
+
     private static async Task<bool> WebSocketHandler(HttpListenerContext ctx) {
         if (!ctx.Request.IsWebSocketRequest) {
             return false;
         }
 
         string origin = ctx.Request.Headers.Get("Origin");
-
-        if (String.IsNullOrEmpty(origin) || !Uri.TryCreate(origin, UriKind.Absolute, out Uri originUri)) {
-            ctx.Response.StatusCode = 403;
-            ctx.Response.Close();
-            return true;
-        }
-
         string userHostName = ctx.Request.UserHostName;
-        bool isSameHost = String.Equals(originUri.Host, userHostName, StringComparison.Ordinal)
-            || String.Equals($"{originUri.Host}:{originUri.Port}", userHostName, StringComparison.Ordinal);
 
-        if (!isSameHost) {
+        if (!IsOwnOrigin(origin, userHostName)) {
             Logger.Action("Unauthenticated", "AAA", $"Rejected WebSocket from cross-origin {origin} (host {userHostName})");
             ctx.Response.StatusCode = 403;
             ctx.Response.Close();
@@ -556,29 +605,29 @@ internal sealed class Listener {
         }
 
         switch (ctx.Request.Url.AbsolutePath) {
-        case "/ws/keepalive"        : await KeepAlive.WebSocketHandler(ctx);          return true;
-        case "/ws/reverseproxy"     : await Proxy.ReverseProxy.WebSocketHandler(ctx); return true;
-        case "/ws/ping"             : await Protocols.Icmp.WebSocketHandler(ctx);     return true;
-        case "/ws/dhcp"             : await Protocols.Dhcp.WebSocketHandler(ctx);     return true;
-        case "/ws/telnet"           : await Protocols.Telnet.WebSocketHandler(ctx);   return true;
-        case "/ws/ssh"              : await Protocols.Ssh.WebSocketHandler(ctx);      return true;
+        case "/ws/keepalive"        : await KeepAlive.WebSocketHandler(ctx);           return true;
+        case "/ws/reverseproxy"     : await Proxy.ReverseProxy.WebSocketHandler(ctx);  return true;
+        case "/ws/ping"             : await Protocols.Icmp.WebSocketHandler(ctx);      return true;
+        case "/ws/dhcp"             : await Protocols.Dhcp.WebSocketHandler(ctx);      return true;
+        case "/ws/telnet"           : await Protocols.Telnet.WebSocketHandler(ctx);    return true;
+        case "/ws/ssh"              : await Protocols.Ssh.WebSocketHandler(ctx);       return true;
         case "/ws/serial"           : await Protocols.SerialCom.WebSocketHandler(ctx); return true;
-        case "/ws/sftp"             : await Protocols.Sftp.WebSocketHandler(ctx);     return true;
-        case "/ws/vnc"              : await Protocols.Vnc.WebSocketHandler(ctx);      return true;
-        case "/ws/rdp"              : await Protocols.Rdp.WebSocketHandler(ctx);      return true;
-        case "/ws/rtsp"             : await Protocols.Rtsp.WebSocketHandler(ctx);     return true;
-        case "/ws/terminal"         : await Tools.Terminal.WebSocketHandler(ctx);     return true;
-        case "/ws/winrm"            : await Tools.WinRM.WebSocketHandler(ctx);        return true;
-        case "/ws/ipdiscovery"      : await Tools.IpDiscovery.WebSocketHandler(ctx);  return true;
-        case "/ws/portscan"         : await Tools.PortScan.WebSocketHandler(ctx);     return true;
-        case "/ws/traceroute"       : await Tools.TraceRoute.WebSocketHandler(ctx);   return true;
-        case "/ws/websitecheck"     : await Tools.WebsiteCheck.WebSocketHandler(ctx); return true;
-        case "/ws/speedtest"        : await Tools.SpeedTest.WebSocketHandler(ctx);    return true;
-        case "/ws/monitor"          : await Tools.Monitor.WebSocketHandler(ctx);      return true;
-        case "/ws/topology"         : await Tools.Topology.WebSocketHandler(ctx);     return true;
-        case "/ws/livestats/device" : await Tools.LiveStats.DeviceStats(ctx);         return true;
-        case "/ws/livestats/user"   : await Tools.LiveStats.UserStats(ctx);           return true;
-        case "/ws/issues"           : await Tasks.Issues.WebSocketHandler(ctx);       return true;
+        case "/ws/sftp"             : await Protocols.Sftp.WebSocketHandler(ctx);      return true;
+        case "/ws/vnc"              : await Protocols.Vnc.WebSocketHandler(ctx);       return true;
+        case "/ws/rdp"              : await Protocols.Rdp.WebSocketHandler(ctx);       return true;
+        case "/ws/rtsp"             : await Protocols.Rtsp.WebSocketHandler(ctx);      return true;
+        case "/ws/terminal"         : await Tools.Terminal.WebSocketHandler(ctx);      return true;
+        case "/ws/winrm"            : await Tools.WinRM.WebSocketHandler(ctx);         return true;
+        case "/ws/ipdiscovery"      : await Tools.IpDiscovery.WebSocketHandler(ctx);   return true;
+        case "/ws/portscan"         : await Tools.PortScan.WebSocketHandler(ctx);      return true;
+        case "/ws/traceroute"       : await Tools.TraceRoute.WebSocketHandler(ctx);    return true;
+        case "/ws/websitecheck"     : await Tools.WebsiteCheck.WebSocketHandler(ctx);  return true;
+        case "/ws/speedtest"        : await Tools.SpeedTest.WebSocketHandler(ctx);     return true;
+        case "/ws/monitor"          : await Tools.Monitor.WebSocketHandler(ctx);       return true;
+        case "/ws/topology"         : await Tools.Topology.WebSocketHandler(ctx);      return true;
+        case "/ws/livestats/device" : await Tools.LiveStats.DeviceStats(ctx);          return true;
+        case "/ws/livestats/user"   : await Tools.LiveStats.UserStats(ctx);            return true;
+        case "/ws/issues"           : await Tasks.Issues.WebSocketHandler(ctx);        return true;
         case "/ws/recordingplayback": await Protocols.SessionRecording.PlaybackWebSocketHandler(ctx); return true;
         }
 

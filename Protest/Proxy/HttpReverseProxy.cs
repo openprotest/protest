@@ -176,7 +176,28 @@ internal sealed class HttpReverseProxy : ReverseProxyAbstract {
         IReverseProxyBuilder rpBuilder = services.AddReverseProxy();
 
         rpBuilder.LoadFromMemory(routes, clusters);
-        rpBuilder.AddTransforms(builderContext => builderContext.AddRequestTransform(ForwardClientIpTransform));
+        rpBuilder.AddTransforms(builderContext => {
+            builderContext.AddRequestTransform(ForwardClientIpTransform);
+            builderContext.AddRequestTransform(RemoveSessionCookieTransform);
+        });
+    }
+
+    //cookies are not scoped to a port, a browser sends the Pro-test session cookie to a proxy on the same host, keep it from the backend
+    private static ValueTask RemoveSessionCookieTransform(RequestTransformContext ctx) {
+        if (!ctx.ProxyRequest.Headers.TryGetValues("Cookie", out IEnumerable<string> values)) return ValueTask.CompletedTask;
+
+        //the listener looks cookies up by name ignoring case
+        string cookies = String.Join("; ", values
+            .SelectMany(value => value.Split(';'))
+            .Select(cookie => cookie.Trim())
+            .Where(cookie => cookie.Length > 0 && !String.Equals(cookie.Split('=', 2)[0].Trim(), "sessionid", StringComparison.OrdinalIgnoreCase)));
+
+        ctx.ProxyRequest.Headers.Remove("Cookie");
+        if (cookies.Length > 0) {
+            ctx.ProxyRequest.Headers.TryAddWithoutValidation("Cookie", cookies);
+        }
+
+        return ValueTask.CompletedTask;
     }
 
     private static ValueTask ForwardClientIpTransform(RequestTransformContext ctx) {

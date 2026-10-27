@@ -48,7 +48,7 @@ internal static class Api {
             return;
         }
 
-        if (!parameters.TryGetValue("key", out string apiKey) || !Api.links.TryGetValue(apiKey, out Link link)) {
+        if (parameters is null || !parameters.TryGetValue("key", out string apiKey) || !Api.links.TryGetValue(apiKey, out Link link)) {
             ctx.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
             return;
         }
