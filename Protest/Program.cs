@@ -19,12 +19,10 @@
 global using System;
 global using System.Linq;
 
-using System.Threading.Tasks;
-
 namespace Protest;
 
 internal class Program {
-    static async Task Main(string[] args) {
+    static async System.Threading.Tasks.Task Main(string[] args) {
         Console.Title = "Pro-test";
 
         Console.WriteLine(@"   _____");
@@ -71,6 +69,9 @@ internal class Program {
 
         Console.WriteLine();
 
+        Http.Auth.EnsureDefaultAdmin();
+        Http.Auth.PrintAccessWarnings();
+
         //Console.CancelKeyPress += (_, e) => Console.WriteLine("\nProtest shutting down...");
 
         try {
@@ -87,7 +88,7 @@ internal class Program {
         }
     }
 
-    private static async Task StartServer(string[] prefixes) {
+    private static async System.Threading.Tasks.Task StartServer(string[] prefixes) {
         Http.Listener listener = new Http.Listener(prefixes, Configuration.frontPath);
         Console.WriteLine(listener);
         Console.WriteLine();

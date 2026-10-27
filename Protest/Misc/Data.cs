@@ -85,10 +85,11 @@ internal static class Data {
     public static readonly string FILE_VAULT             = Path.Join(DIR_DATA, "vault.json");
     public static readonly string FILE_VAULT_SSHKEYS     = Path.Join(DIR_DATA, "vaultsshkeys.json");
 
-    public static readonly string FILE_CONFIG        = Path.Join(DIR_BASE, "protest.cfg");
+    public static readonly string FILE_CONFIG            = Path.Join(DIR_BASE, "protest.cfg");
 
     public static void InitializeDirectories() {
         DirectoryInfo[] dirs = new DirectoryInfo[] {
+            new DirectoryInfo(DIR_RBAC),
             new DirectoryInfo(DIR_LOG),
             new DirectoryInfo(DIR_LASTSEEN),
             new DirectoryInfo(DIR_WUA_CACHE),

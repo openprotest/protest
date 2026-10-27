@@ -46,13 +46,13 @@ public class ListenerTests {
     }
 
     [Test]
-    public void Listener_NonExistingPage_ReturnNotFound() {
+    public void Listener_NonExistingPageUnauthenticated_ReturnUnauthorized() {
         using HttpRequestMessage requestMessage = new HttpRequestMessage(HttpMethod.Get, "http://127.0.0.1:8080/i-dont-exists");
 
         using HttpClient httpClient = new HttpClient();
         HttpResponseMessage result = httpClient.Send(requestMessage);
 
-        Assert.That(result.StatusCode, Is.EqualTo(HttpStatusCode.NotFound));
+        Assert.That(result.StatusCode, Is.EqualTo(HttpStatusCode.Unauthorized));
     }
 
     [Test]

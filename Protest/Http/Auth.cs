@@ -16,6 +16,8 @@ internal static class Auth {
     private const long SESSION_TIMEOUT = TimeSpan.TicksPerDay * 5;
     private const long OTP_TOKEN_TIMEOUT = TimeSpan.TicksPerMinute * 5;
 
+    internal const string DEFAULT_ADMIN_USERNAME = "admin";
+
     private const long RATE_LIMIT_TIME_WINDOW = TimeSpan.TicksPerMinute * 10;
     private const int MAX_REQUESTS_PER_TIME_WINDOW = 10;
     private static readonly ConcurrentDictionary<IPAddress, ConcurrentQueue<long>> rateLimitLog = new ConcurrentDictionary<IPAddress, ConcurrentQueue<long>>();
@@ -362,23 +364,7 @@ internal static class Auth {
         if (username.Contains("..")) return false;
 
         access.totpSecret = secret;
-
-        byte[] plain = JsonSerializer.SerializeToUtf8Bytes(access, serializerOptions);
-        byte[] cipher = Cryptography.Encrypt(plain, Configuration.DB_KEY, Configuration.DB_KEY_IV);
-
-        try {
-            File.WriteAllBytes(Path.Join(Data.DIR_RBAC, access.username), cipher);
-        }
-        catch (IOException ex) {
-            Logger.Error(ex);
-            return false;
-        }
-        catch (Exception ex) {
-            Logger.Error(ex);
-            return false;
-        }
-
-        return true;
+        return SaveAccessControl(access);
     }
 
     internal static byte[] ResetMfaSecret(HttpListenerContext ctx, string origin) {
@@ -478,7 +464,48 @@ internal static class Auth {
         return null;
     }
 
-    private static HashSet<string> PopulateAccessPath(string[] accessList) {
+    //every permission the RBAC editor offers, keep in sync with PopulateAccessPath and Front/rbac.js
+    internal static readonly string[] ALL_PERMISSIONS = {
+        "devices:read",          "devices:write",
+        "users:read",            "users:write",
+        "vault:read",            "vault:write",
+        "manage hosts:write",
+        "manage users:write",
+        "fetch:write",
+        "documentation:read",    "documentation:write",
+        "debit notes:read",      "debit notes:write",
+        "chat:read",             "chat:write",
+        "watchdog:write",
+        "reverse proxy:write",
+        "issues:write",
+        "network utilities:write",
+        "vnc:write",
+        "rdp:write",
+        "rtsp:write",
+        "session recordings:read",
+        "terminal:write",
+        "serial console:write",
+        "telnet:write",
+        "secure shell:write",
+        "remote shell:write",
+        "wmi:write",
+        "snmp polling:write",
+        "snmp traps:read",       "snmp traps:write",
+        "infrastructure:write",
+        "data retention:read",   "data retention:write",
+        "rbac:write",
+        "scheduler:write",
+        "integration:write",
+        "api links:write",
+        "log:write",
+        "syslog:read",           "syslog:write",
+        "windows events:read",
+        "certificates:write",
+        "backup:write",
+        "update:write"
+    };
+
+    internal static HashSet<string> PopulateAccessPath(string[] accessList) {
         HashSet<string> path = new HashSet<string> {
             "/global",
             "/logout",
@@ -873,6 +900,80 @@ internal static class Auth {
             catch (Exception ex) {
                 Logger.Error(ex);
             }
+        }
+
+        return true;
+    }
+
+    //Until someone signs in, the default admin is the only way in. On every start, while no other RBAC entry exists
+    //and the admin has never completed a sign-in, (re)creates it with every permission and a new random password.
+    //Returns that password, or null when nothing was written.
+    internal static string EnsureDefaultAdmin() {
+        bool unusedAdmin = rbac.Count == 1 && rbac.TryGetValue(DEFAULT_ADMIN_USERNAME, out AccessControl admin) && admin.totpSecret is null;
+        bool hasEntries  = Directory.Exists(Data.DIR_RBAC) && Directory.EnumerateFileSystemEntries(Data.DIR_RBAC).Any(); //entries that failed to load are never overwritten
+        if (hasEntries && !unusedAdmin) return null;
+
+        string password = String.Join('-', Enumerable.Range(0, 4).Select(_ => Cryptography.RandomStringGenerator(4))); //128-bits
+
+        AccessControl access = new AccessControl {
+            username      = DEFAULT_ADMIN_USERNAME,
+            email         = String.Empty,
+            domain        = String.Empty,
+            passwordHash  = Cryptography.HashUsernameAndPassword(DEFAULT_ADMIN_USERNAME, password),
+            totpSecret    = null,
+            alias         = "Administrator",
+            color         = "#0080C0",
+            isDomainUser  = false,
+            authorization = (string[])ALL_PERMISSIONS.Clone()
+        };
+        access.accessPath = PopulateAccessPath(access.authorization);
+
+        if (!SaveAccessControl(access)) return null;
+
+        rbac[DEFAULT_ADMIN_USERNAME] = access;
+
+        Console.ForegroundColor = ConsoleColor.Yellow;
+        Console.WriteLine($"Create accounts for your users, then delete the \"{DEFAULT_ADMIN_USERNAME}\" account.");
+        Console.WriteLine("Default credentials:");
+        Console.ResetColor();
+        Console.WriteLine($"  username: {DEFAULT_ADMIN_USERNAME}");
+        Console.WriteLine($"  password: {password}");
+        Console.WriteLine();
+
+        return password;
+    }
+
+    internal static void PrintAccessWarnings() {
+        //signed in at least once, a freshly generated admin has no TOTP secret yet
+        if (rbac.TryGetValue(DEFAULT_ADMIN_USERNAME, out AccessControl admin) && admin.totpSecret is not null) {
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.WriteLine($"Warning: the default \"{DEFAULT_ADMIN_USERNAME}\" account still exists.");
+            Console.WriteLine("         Create accounts for your users, then delete it.");
+            Console.ResetColor();
+            Console.WriteLine();
+        }
+
+        if (Configuration.backdoor) {
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine("Warning: the backdoor is enabled.");
+            Console.WriteLine("         Requests from the loopback address bypass authentication with full access,");
+            Console.WriteLine("         including every local account on this host and any request the server makes to itself.");
+            Console.WriteLine($"         Set \"backdoor = false\" in {Data.FILE_CONFIG} unless you depend on it.");
+            Console.ResetColor();
+            Console.WriteLine();
+        }
+    }
+
+    private static bool SaveAccessControl(AccessControl access) {
+        byte[] plain = JsonSerializer.SerializeToUtf8Bytes(access, serializerOptions);
+        byte[] cipher = Cryptography.Encrypt(plain, Configuration.DB_KEY, Configuration.DB_KEY_IV);
+
+        try {
+            File.WriteAllBytes(Path.Join(Data.DIR_RBAC, access.username), cipher);
+        }
+        catch (Exception ex) {
+            Logger.Error(ex);
+            return false;
         }
 
         return true;

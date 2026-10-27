@@ -16,7 +16,7 @@ internal static class Configuration {
 
     internal static bool sessionRecording = false;
     internal static bool addressBook = false;
-    internal static bool backdoor = true;
+    internal static bool backdoor = false;
 
     //RTSP viewer destinations and limits, see Protocols.Rtsp.DestinationPolicy
     internal static readonly List<IPNetwork> rtspAllow = new List<IPNetwork>();
@@ -168,6 +168,7 @@ internal static class Configuration {
         builder.AppendLine($"address_book = {addressBook.ToString().ToLower()}");
         builder.AppendLine();
 
+        builder.AppendLine($"# Not recommended!");
         builder.AppendLine($"# When the backdoor flag set to true, requests originating from the loopback address bypass authentication");
         builder.AppendLine($"backdoor = {backdoor.ToString().ToLower()}");
         builder.AppendLine();
