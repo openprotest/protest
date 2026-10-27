@@ -295,11 +295,18 @@ internal sealed class Listener {
                     return;
                 }
 
+                //each proxy appends the address it received the request from, entries to its left came from the client and can be forged,
+                //walk from the right, past our trusted proxies, the first other entry is the client
                 ReadOnlySpan<char> span = xForwardedForHeader.AsSpan();
-                int commaIndex = span.IndexOf(',');
-                ReadOnlySpan<char> clientSpan = (commaIndex >= 0 ? span[..commaIndex] : span).Trim();
+                IPAddress xForwardedIp;
+                while (true) {
+                    int commaIndex = span.LastIndexOf(',');
+                    if (!IPAddress.TryParse(span[(commaIndex + 1)..].Trim(), out xForwardedIp)) break;
+                    if (commaIndex < 0 || !Configuration.trustedProxies.Contains(xForwardedIp)) break;
+                    span = span[..commaIndex];
+                }
 
-                if (!IPAddress.TryParse(clientSpan, out IPAddress xForwardedIp)) {
+                if (xForwardedIp is null) {
                     Logger.Action("Unauthenticated", "AAA", $"Rejected malformed X-Forwarded-For from {remoteIp}");
                     ctx.Response.StatusCode = 400;
                     ctx.Response.Close();
