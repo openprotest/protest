@@ -50,7 +50,7 @@ internal class Sftp {
 
         if (ws is null) return;
 
-        string sessionId = ctx.Request.Cookies["sessionid"]?.Value;
+        string sessionId = ctx.Request.Cookies[Auth.SESSION_COOKIE]?.Value;
         string origin = Auth.GetPrincipal(ctx);
         if (origin is null) {
             ws.Abort();
@@ -197,7 +197,7 @@ internal class Sftp {
             return Data.CODE_UNAUTHORIZED.Array;
         }
 
-        string sessionId = ctx.Request.Cookies["sessionid"]?.Value;
+        string sessionId = ctx.Request.Cookies[Auth.SESSION_COOKIE]?.Value;
         if (origin != "loopback" && (String.IsNullOrEmpty(sessionId) || !String.Equals(token.sessionId, sessionId, StringComparison.Ordinal))) {
             return Data.CODE_UNAUTHORIZED.Array;
         }
@@ -253,7 +253,7 @@ internal class Sftp {
             return Data.CODE_UNAUTHORIZED.Array;
         }
 
-        string sessionId = ctx.Request.Cookies["sessionid"]?.Value;
+        string sessionId = ctx.Request.Cookies[Auth.SESSION_COOKIE]?.Value;
         if (origin != "loopback" && (String.IsNullOrEmpty(sessionId) || !String.Equals(token.sessionId, sessionId, StringComparison.Ordinal))) {
             return Data.CODE_UNAUTHORIZED.Array;
         }

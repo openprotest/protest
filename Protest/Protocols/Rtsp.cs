@@ -121,7 +121,7 @@ internal static partial class Rtsp {
             return;
         }
 
-        string sessionId = ctx.Request.Cookies["sessionid"]?.Value;
+        string sessionId = ctx.Request.Cookies[Auth.SESSION_COOKIE]?.Value;
         string origin = Auth.GetPrincipal(sessionId, ctx.Request.RemoteEndPoint.Address);
         if (origin is null) {
             ctx.Response.StatusCode = 403;

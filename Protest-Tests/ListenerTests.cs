@@ -168,6 +168,62 @@ public class ListenerTests {
         });
     }
 
+    //Behind a proxy the Host header names the backend, the origin is compared against the host the proxy received instead
+    [Test]
+    public void ForwardedHost_FromTrustedProxy_IsTheHostTheOriginIsCheckedAgainst() {
+        WithTrustedLoopbackProxy(() => WithSession("/rbac/list", cookie => {
+            Assert.That(SendWithForwardedHost("/rbac/list", cookie, "https://proxy.test:4443", "proxy.test:4443"), Is.EqualTo(HttpStatusCode.OK));
+            Assert.That(SendWithForwardedHost("/rbac/list", cookie, "https://proxy.test", "proxy.test"), Is.EqualTo(HttpStatusCode.OK), "default port");
+            Assert.That(SendWithForwardedHost("/rbac/list", cookie, "https://evil.test:4443", "proxy.test:4443"), Is.EqualTo(HttpStatusCode.Forbidden));
+            Assert.That(SendWithForwardedHost("/rbac/list", cookie, "https://proxy.test:4443", null), Is.EqualTo(HttpStatusCode.Forbidden), "the backend address is compared");
+        }));
+    }
+
+    [Test]
+    public void ForwardedHost_FromUntrustedPeer_ReturnBadRequest() {
+        Assert.That(SendWithForwardedHost("/", null, null, "proxy.test:4443"), Is.EqualTo(HttpStatusCode.BadRequest));
+    }
+
+    [Test]
+    public void ForwardedHost_WithSeveralEntries_ReturnBadRequest() {
+        WithTrustedLoopbackProxy(() => {
+            Assert.That(SendWithForwardedHost("/", null, null, "evil.test, proxy.test:4443"), Is.EqualTo(HttpStatusCode.BadRequest));
+        });
+    }
+
+#if DEBUG
+    //Without Domain the cookie stays on the host the browser used, never the backend address a proxy puts in Host.
+    //Debug builds skip TOTP, so the password alone signs in.
+    [Test]
+    public void SignIn_SessionCookie_IsHostOnly() {
+        const string username = "unit-test-sign-in";
+        Auth.rbac[username] = new Auth.AccessControl {
+            username      = username,
+            passwordHash  = Cryptography.HashUsernameAndPassword(username, "unit-test-password"),
+            authorization = [],
+            accessPath    = []
+        };
+
+        try {
+            using HttpRequestMessage requestMessage = new HttpRequestMessage(HttpMethod.Post, $"{baseUrl}/auth");
+            requestMessage.Content = new StringContent($"x\u007F{username}\u007Funit-test-password");
+
+            using HttpClient httpClient = new HttpClient(new SocketsHttpHandler { UseCookies = false });
+            using HttpResponseMessage result = httpClient.Send(requestMessage);
+            result.Headers.TryGetValues("Set-Cookie", out IEnumerable<string>? setCookies);
+
+            Assert.That(result.StatusCode, Is.EqualTo(HttpStatusCode.Accepted));
+            Assert.That(setCookies, Has.One.StartsWith($"{Auth.SESSION_COOKIE}=").And.Contains("; Path=/;").And.Not.Contains("Domain"));
+        }
+        finally {
+            Auth.rbac.TryRemove(username, out _);
+            foreach (Auth.Session session in Auth.sessions.Values.Where(o => o.access.username == username)) {
+                Auth.sessions.TryRemove(session.sessionId, out _);
+            }
+        }
+    }
+#endif
+
     private static void WithBackdoor(Action test) {
         bool backdoor = Configuration.backdoor;
         Configuration.backdoor = true;
@@ -187,6 +243,35 @@ public class ListenerTests {
         finally {
             if (added) Configuration.trustedProxies.Remove(IPAddress.Loopback);
         }
+    }
+
+    private static void WithSession(string path, Action<string> test) {
+        string sessionId = Guid.NewGuid().ToString();
+        Auth.sessions[sessionId] = new Auth.Session {
+            access    = new Auth.AccessControl { username = "unit-test-admin", accessPath = [path] },
+            ip        = IPAddress.Loopback,
+            sessionId = sessionId,
+            loginDate = DateTime.UtcNow.Ticks,
+            ttl       = TimeSpan.FromHours(1).Ticks
+        };
+
+        try {
+            test($"{Auth.SESSION_COOKIE}={sessionId}");
+        }
+        finally {
+            Auth.sessions.TryRemove(sessionId, out _);
+        }
+    }
+
+    private HttpStatusCode SendWithForwardedHost(string path, string? cookie, string? origin, string? forwardedHost) {
+        using HttpRequestMessage requestMessage = new HttpRequestMessage(HttpMethod.Get, $"{baseUrl}{path}");
+        if (cookie is not null) requestMessage.Headers.Add("Cookie", cookie);
+        if (origin is not null) requestMessage.Headers.TryAddWithoutValidation("Origin", origin);
+        if (forwardedHost is not null) requestMessage.Headers.TryAddWithoutValidation("X-Forwarded-Host", forwardedHost);
+
+        using HttpClient httpClient = new HttpClient();
+        using HttpResponseMessage result = httpClient.Send(requestMessage);
+        return result.StatusCode;
     }
 
     private HttpStatusCode SendWithForwardedFor(HttpMethod method, string path, string? forwardedFor) {

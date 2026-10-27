@@ -1,4 +1,6 @@
 ﻿using System.Net;
+using System.Net.NetworkInformation;
+using System.Net.Sockets;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -27,6 +29,7 @@ internal sealed class HttpReverseProxy : ReverseProxyAbstract {
 
     public override bool Start(IPEndPoint proxy, string destination, string certificate, string password, string origin) {
         Exception returnStatus = null;
+        bool toListener = IsListener(destination);
 
         try {
             hostBuilder = Host.CreateDefaultBuilder();
@@ -51,7 +54,7 @@ internal sealed class HttpReverseProxy : ReverseProxyAbstract {
                     }
                 };
 
-                webHost.ConfigureServices(services => ConfigureServices(services, routes, new ClusterConfig[] { cluster }));
+                webHost.ConfigureServices(services => ConfigureServices(services, routes, new ClusterConfig[] { cluster }, toListener));
             });
 
             //string destinations = cluster.Destinations.Values
@@ -168,7 +171,7 @@ internal sealed class HttpReverseProxy : ReverseProxyAbstract {
         application.UseEndpoints(endpoints => endpoints.MapReverseProxy());
     }
 
-    private static void ConfigureServices(IServiceCollection services, IReadOnlyList<RouteConfig> routes, IReadOnlyList<ClusterConfig> clusters) {
+    private static void ConfigureServices(IServiceCollection services, IReadOnlyList<RouteConfig> routes, IReadOnlyList<ClusterConfig> clusters, bool toListener) {
         services.AddSingleton<IHostLifetime, CustomHostLifetime>();
         //services.AddSingleton(bytesRx);
         //services.AddSingleton(bytesTx);
@@ -176,11 +179,15 @@ internal sealed class HttpReverseProxy : ReverseProxyAbstract {
         IReverseProxyBuilder rpBuilder = services.AddReverseProxy();
 
         rpBuilder.LoadFromMemory(routes, clusters);
-        rpBuilder.AddTransforms(builderContext => {
-            builderContext.AddRequestTransform(ForwardClientIpTransform);
-            builderContext.AddRequestTransform(RemoveSessionCookieTransform);
-            builderContext.AddResponseTransform(RemoveSessionSetCookieTransform);
-        });
+
+        //YARP sets X-Forwarded-For, -Proto and -Host on its own, replacing any the client sent
+        //the session cookie is kept from every backend but Pro-test itself
+        if (!toListener) {
+            rpBuilder.AddTransforms(builderContext => {
+                builderContext.AddRequestTransform(RemoveSessionCookieTransform);
+                builderContext.AddResponseTransform(RemoveSessionSetCookieTransform);
+            });
+        }
     }
 
     //cookies are not scoped to a port, a browser sends the Pro-test session cookie to a proxy on the same host, keep it from the backend
@@ -200,7 +207,7 @@ internal sealed class HttpReverseProxy : ReverseProxyAbstract {
         return ValueTask.CompletedTask;
     }
 
-    //for the same reason, a cookie the backend sets reaches the listener too, and the last sessionid in a request wins over the user's own
+    //for the same reason, a session cookie the backend sets would reach the listener too, and replace the user's own
     private static ValueTask RemoveSessionSetCookieTransform(ResponseTransformContext ctx) {
         StringValues setCookies = ctx.HttpContext.Response.Headers.SetCookie;
         if (StringValues.IsNullOrEmpty(setCookies)) return ValueTask.CompletedTask;
@@ -211,25 +218,52 @@ internal sealed class HttpReverseProxy : ReverseProxyAbstract {
 
     //the listener looks cookies up by name ignoring case
     private static bool IsSessionCookie(string cookie) =>
-        String.Equals(cookie.Split('=', 2)[0].Trim(), "sessionid", StringComparison.OrdinalIgnoreCase);
+        String.Equals(cookie.Split('=', 2)[0].Trim(), Http.Auth.SESSION_COOKIE, StringComparison.OrdinalIgnoreCase);
 
-    private static ValueTask ForwardClientIpTransform(RequestTransformContext ctx) {
-        string realIp = ctx.HttpContext.Connection.RemoteIpAddress?.ToString();
-        if (realIp is not null) {
-            StringValues existingXff = ctx.HttpContext.Request.Headers["X-Forwarded-For"];
-            string newXff = StringValues.IsNullOrEmpty(existingXff) ? realIp : $"{existingXff}, {realIp}";
-            ctx.ProxyRequest.Headers.Remove("X-Forwarded-For");
-            ctx.ProxyRequest.Headers.Add("X-Forwarded-For", newXff);
+    //the destination is this Pro-test when it is a local address, on the scheme and port of one of the listener's prefixes,
+    //and the host of that prefix is a wildcard or resolves to the same address
+    internal static bool IsListener(string destination) {
+        if (!Uri.TryCreate(destination, UriKind.Absolute, out Uri uri)) return false;
+
+        try {
+            IPAddress[] addresses = Dns.GetHostAddresses(uri.DnsSafeHost).Select(Normalize).ToArray();
+            HashSet<IPAddress> local = NetworkInterface.GetAllNetworkInterfaces()
+                .SelectMany(nic => nic.GetIPProperties().UnicastAddresses)
+                .Select(unicast => Normalize(unicast.Address))
+                .ToHashSet();
+
+            if (!addresses.Any(address => IPAddress.IsLoopback(address) || local.Contains(address))) return false;
+
+            foreach (string prefix in Configuration.httpPrefixes) {
+                //http://host:port/, the host can be + or *, which HttpListener accepts and Uri doesn't
+                int schemeEnd = prefix.IndexOf("://", StringComparison.Ordinal);
+                if (schemeEnd < 0) continue;
+
+                string scheme = prefix[..schemeEnd];
+                string authority = prefix[(schemeEnd + 3)..];
+                int pathStart = authority.IndexOf('/');
+                if (pathStart >= 0) authority = authority[..pathStart];
+
+                int portStart = authority.LastIndexOf(':');
+                bool hasPort = portStart > authority.LastIndexOf(']'); //the colons of an IPv6 address are inside the brackets
+                string host = hasPort ? authority[..portStart] : authority;
+                int port = String.Equals(scheme, "https", StringComparison.OrdinalIgnoreCase) ? 443 : 80;
+                if (hasPort && !Int32.TryParse(authority[(portStart + 1)..], out port)) continue;
+
+                if (!String.Equals(scheme, uri.Scheme, StringComparison.OrdinalIgnoreCase) || port != uri.Port) continue;
+                if (host is "+" or "*") return true;
+                if (Dns.GetHostAddresses(host.Trim('[', ']')).Select(Normalize).Intersect(addresses).Any()) return true;
+            }
+        }
+        catch (Exception ex) when (ex is SocketException or ArgumentException or NetworkInformationException) {
+            //unresolved, treated as any other backend, the session cookie is kept from it
         }
 
-        //ctx.ProxyRequest.Headers.Add("X-Forwarded-Host", ctx.HttpContext.Request.Host.Value);
-        //ctx.ProxyRequest.Headers.Add("X-Forwarded-Proto", ctx.HttpContext.Request.Scheme);
-
-        ctx.HttpContext.Request.Headers.Remove("Host");
-        //ctx.ProxyRequest.Headers.Host = ctx.HttpContext.Request.Headers.Host;
-
-        return ValueTask.CompletedTask;
+        return false;
     }
+
+    private static IPAddress Normalize(IPAddress address) =>
+        address.IsIPv4MappedToIPv6 ? address.MapToIPv4() : address;
 }
 
 internal sealed class HttpLimits {

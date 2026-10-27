@@ -40,7 +40,7 @@ internal static class KeepAlive {
             return;
         }
 
-        string sessionId = ctx.Request.Cookies["sessionid"]?.Value;
+        string sessionId = ctx.Request.Cookies[Auth.SESSION_COOKIE]?.Value;
         string username = Auth.GetPrincipal(ctx);
         if (username is null) {
             ctx.Response.StatusCode = 403;
@@ -295,7 +295,7 @@ internal static class KeepAlive {
             if (!dictionary.TryGetValue("ttl", out string ttl)) return;
 
             if (long.TryParse(ttl, out long ttlLong)) {
-                string sessionId = ctx.Request.Cookies["sessionid"]?.Value;
+                string sessionId = ctx.Request.Cookies[Auth.SESSION_COOKIE]?.Value;
                 if (sessionId is null) return;
                 Auth.UpdateSessionTtl(sessionId, ttlLong);
             }

@@ -19,6 +19,14 @@ internal static class Auth {
 
     internal const string DEFAULT_ADMIN_USERNAME = "admin";
 
+    //a name no other application uses, so the reverse proxy can tell it apart from the cookies of a backend
+#if DEBUG
+    internal const string SESSION_COOKIE = "protest-session";
+#else
+    //the browser keeps a __Host- cookie only when it is Secure, on Path=/ and without Domain, so no other host or plain HTTP page can set it
+    internal const string SESSION_COOKIE = "__Host-protest-session";
+#endif
+
     private const long RATE_LIMIT_TIME_WINDOW = TimeSpan.TicksPerMinute * 10;
     private const int MAX_REQUESTS_PER_TIME_WINDOW = 10;
     private static readonly ConcurrentDictionary<IPAddress, ConcurrentQueue<long>> rateLimitLog = new ConcurrentDictionary<IPAddress, ConcurrentQueue<long>>();
@@ -72,7 +80,7 @@ internal static class Auth {
         IPAddress remoteIp = ctx.Request.RemoteEndPoint.Address;
         if (IPAddress.IsLoopback(remoteIp) && Configuration.backdoor) return true;
 
-        string sessionId = ctx.Request.Cookies["sessionid"]?.Value;
+        string sessionId = ctx.Request.Cookies[SESSION_COOKIE]?.Value;
         if (sessionId is null) return false;
 
         if (!sessions.TryGetValue(sessionId, out Session session)) {
@@ -91,7 +99,7 @@ internal static class Auth {
         IPAddress remoteIp = ctx.Request.RemoteEndPoint.Address;
         if (IPAddress.IsLoopback(remoteIp) && Configuration.backdoor) return true;
 
-        string sessionId = ctx.Request.Cookies["sessionid"]?.Value;
+        string sessionId = ctx.Request.Cookies[SESSION_COOKIE]?.Value;
         if (sessionId is null) return false;
 
         if (!sessions.TryGetValue(sessionId, out Session session)) {
@@ -105,7 +113,7 @@ internal static class Auth {
         IPAddress remoteIp = ctx.Request.RemoteEndPoint.Address;
         if (IPAddress.IsLoopback(remoteIp) && Configuration.backdoor) return true;
 
-        string sessionId = ctx.Request.Cookies["sessionid"]?.Value;
+        string sessionId = ctx.Request.Cookies[SESSION_COOKIE]?.Value;
         if (sessionId is null) return false;
 
         if (!sessions.TryGetValue(sessionId, out Session session)) {
@@ -416,12 +424,12 @@ internal static class Auth {
         if (!rbac.TryGetValue(username, out AccessControl accessValue) || accessValue is null) return;
 
         string sessionId = Cryptography.RandomStringGenerator(72);
-        string userHostName = ctx.Request.UserHostName.Split(':')[0];
 
+        //without Domain the cookie stays on the host the browser used, behind a proxy the Host header names the backend instead
 #if DEBUG
-        ctx.Response.AddHeader("Set-Cookie", $"sessionid={sessionId}; Domain={userHostName}; Max-age=604800; HttpOnly; SameSite=Strict;");
+        ctx.Response.AddHeader("Set-Cookie", $"{SESSION_COOKIE}={sessionId}; Path=/; Max-age=604800; HttpOnly; SameSite=Strict;");
 #else
-        ctx.Response.AddHeader("Set-Cookie", $"sessionid={sessionId}; Domain={userHostName}; Max-age=604800; HttpOnly; SameSite=Strict; Secure;");
+        ctx.Response.AddHeader("Set-Cookie", $"{SESSION_COOKIE}={sessionId}; Path=/; Max-age=604800; HttpOnly; SameSite=Strict; Secure;");
 #endif
 
         Session newSession = new Session() {
@@ -437,7 +445,7 @@ internal static class Auth {
     }
 
     internal static bool RevokeAccess(HttpListenerContext ctx, string origin) {
-        string sessionId = ctx.Request.Cookies["sessionid"]?.Value;
+        string sessionId = ctx.Request.Cookies[SESSION_COOKIE]?.Value;
         if (sessionId is null) return false;
         return RevokeAccess(sessionId, origin);
     }
@@ -476,7 +484,7 @@ internal static class Auth {
     //The acting user is the session's user. "loopback", which vault access lists let through, is only for a loopback
     //request the backdoor admitted without a session, a user signed in on the server itself keeps their own rights.
     internal static string GetPrincipal(HttpListenerContext ctx) =>
-        GetPrincipal(ctx.Request.Cookies["sessionid"]?.Value, ctx.Request.RemoteEndPoint?.Address);
+        GetPrincipal(ctx.Request.Cookies[SESSION_COOKIE]?.Value, ctx.Request.RemoteEndPoint?.Address);
 
     internal static string GetPrincipal(string sessionId, IPAddress remoteIp) {
         string username = GetUsername(sessionId);

@@ -342,6 +342,20 @@ internal sealed class Listener {
                 remoteEndPoint.Address = xForwardedIp;
             }
 
+            //behind a proxy the Host header names the backend, the origin checks need the host the browser used
+            string host = ctx.Request.UserHostName;
+            string xForwardedHostHeader = ctx.Request.Headers.Get("X-Forwarded-Host");
+            if (xForwardedHostHeader is not null) {
+                //a proxy that appends would keep the entries the client sent, only a single value set by the proxy is accepted
+                if (!Configuration.trustedProxies.Contains(remoteIp) || xForwardedHostHeader.Contains(',')) {
+                    Logger.Action("Unauthenticated", "AAA", $"Rejected X-Forwarded-Host from {remoteIp}");
+                    ctx.Response.StatusCode = 400;
+                    ctx.Response.Close();
+                    return;
+                }
+
+                host = xForwardedHostHeader.Trim();
+            }
 
             ctx.Response.AddHeader("X-Frame-Options", "DENY");
             ctx.Response.AddHeader("X-Content-Type-Options", "nosniff");
@@ -404,14 +418,14 @@ internal sealed class Listener {
                 return;
             }
 
-            if (!IsSameOrigin(ctx)) {
+            if (!IsSameOrigin(ctx, host)) {
                 Logger.Action(Auth.GetPrincipal(ctx) ?? "Unauthenticated", "AAA", $"Rejected cross-origin request to {ctx.Request.Url.AbsolutePath} from {ctx.Request.Headers.Get("Origin") ?? ctx.Request.Headers.Get("Sec-Fetch-Site")}");
                 ctx.Response.StatusCode = (int)HttpStatusCode.Forbidden;
                 ctx.Response.Close();
                 return;
             }
 
-            if (await WebSocketHandler(ctx)) return;
+            if (await WebSocketHandler(ctx, host)) return;
 
             //streamed, outside the byte[] routing
             if (String.Equals(ctx.Request.Url.AbsolutePath, "/speedtest", StringComparison.Ordinal)) {
@@ -569,36 +583,35 @@ internal sealed class Listener {
     //sibling subdomains, and links opened from other applications. Only requests from this exact origin may act with it.
     //Sec-Fetch-Site is set by the browser and also covers GETs, which carry no Origin. With neither header the client is not a browser,
     //or one too old to send them, and is let through.
-    private static bool IsSameOrigin(HttpListenerContext ctx) {
+    private static bool IsSameOrigin(HttpListenerContext ctx, string host) {
         string fetchSite = ctx.Request.Headers.Get("Sec-Fetch-Site");
         if (fetchSite is not null) {
             return String.Equals(fetchSite, "same-origin", StringComparison.Ordinal);
         }
 
         string origin = ctx.Request.Headers.Get("Origin");
-        return origin is null || IsOwnOrigin(origin, ctx.Request.UserHostName);
+        return origin is null || IsOwnOrigin(origin, host);
     }
 
-    //host and port must match the Host header, the scheme is not compared, behind a TLS-terminating proxy the listener can't tell it
-    private static bool IsOwnOrigin(string origin, string userHostName) {
-        if (String.IsNullOrEmpty(origin) || String.IsNullOrEmpty(userHostName)) return false;
+    //host and port must match the host the browser used, the scheme is not compared, behind a TLS-terminating proxy the listener can't tell it
+    private static bool IsOwnOrigin(string origin, string host) {
+        if (String.IsNullOrEmpty(origin) || String.IsNullOrEmpty(host)) return false;
         if (!Uri.TryCreate(origin, UriKind.Absolute, out Uri originUri)) return false;
 
         //browsers leave the default port out of Host
-        return String.Equals(userHostName, $"{originUri.Host}:{originUri.Port}", StringComparison.OrdinalIgnoreCase)
-            || originUri.IsDefaultPort && String.Equals(userHostName, originUri.Host, StringComparison.OrdinalIgnoreCase);
+        return String.Equals(host, $"{originUri.Host}:{originUri.Port}", StringComparison.OrdinalIgnoreCase)
+            || originUri.IsDefaultPort && String.Equals(host, originUri.Host, StringComparison.OrdinalIgnoreCase);
     }
 
-    private static async Task<bool> WebSocketHandler(HttpListenerContext ctx) {
+    private static async Task<bool> WebSocketHandler(HttpListenerContext ctx, string host) {
         if (!ctx.Request.IsWebSocketRequest) {
             return false;
         }
 
         string origin = ctx.Request.Headers.Get("Origin");
-        string userHostName = ctx.Request.UserHostName;
 
-        if (!IsOwnOrigin(origin, userHostName)) {
-            Logger.Action("Unauthenticated", "AAA", $"Rejected WebSocket from cross-origin {origin} (host {userHostName})");
+        if (!IsOwnOrigin(origin, host)) {
+            Logger.Action("Unauthenticated", "AAA", $"Rejected WebSocket from cross-origin {origin} (host {host})");
             ctx.Response.StatusCode = 403;
             ctx.Response.Close();
             return true;
