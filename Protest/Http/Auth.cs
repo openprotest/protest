@@ -990,6 +990,7 @@ internal static class Auth {
         byte[] cipher = Cryptography.Encrypt(plain, Configuration.DB_KEY, Configuration.DB_KEY_IV);
 
         try {
+            Directory.CreateDirectory(Data.DIR_RBAC);
             File.WriteAllBytes(Path.Join(Data.DIR_RBAC, access.username), cipher);
         }
         catch (Exception ex) {
@@ -1135,22 +1136,7 @@ internal static class Auth {
             return "{\"error\":\"failed to create user.\"}"u8.ToArray();
         }
 
-        byte[] plain = JsonSerializer.SerializeToUtf8Bytes(access, serializerOptions);
-        byte[] cipher = Cryptography.Encrypt(plain, Configuration.DB_KEY, Configuration.DB_KEY_IV);
-
-        try {
-            if (!Directory.Exists(Data.DIR_RBAC)) {
-                Directory.CreateDirectory(Data.DIR_RBAC);
-            }
-
-            File.WriteAllBytes(Path.Join(Data.DIR_RBAC, $"{access.username}"), cipher);
-        }
-        catch (IOException ex) {
-            Logger.Error(ex);
-            return "{\"error\":\"failed to write user file.\"}"u8.ToArray();
-        }
-        catch (Exception ex) {
-            Logger.Error(ex);
+        if (!SaveAccessControl(access)) {
             return "{\"error\":\"failed to write user file.\"}"u8.ToArray();
         }
 
@@ -1158,7 +1144,7 @@ internal static class Auth {
 
         KeepAlive.Unicast(username, $"{{\"action\":\"update-rbac\",\"authorization\":[{permissionsString}]}}", "/global");
 
-        return plain;
+        return Data.CODE_OK.Array;
     }
 
     internal static byte[] DeleteUser(HttpListenerContext ctx, string origin) {
