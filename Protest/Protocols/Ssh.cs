@@ -133,9 +133,9 @@ internal static class Ssh {
                 }
             }
 
-            using SshClient ssh = authMethods is not null
-                ? new SshClient(new ConnectionInfo(host, port, username, authMethods))
-                : new SshClient(host, port, username, password);
+            authMethods ??= CredentialResolver.FromPassword(username, password);
+
+            using SshClient ssh = new SshClient(new ConnectionInfo(host, port, username, authMethods));
             ssh.Connect();
 
             Logger.Action(origin, "Remote-access", $"Establish SSH connection to {username}@{host}:{port}");

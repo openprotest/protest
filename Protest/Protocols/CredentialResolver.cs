@@ -1,6 +1,7 @@
 using System.IO;
 using System.Text;
 using Renci.SshNet;
+using Renci.SshNet.Common;
 
 namespace Protest.Protocols;
 
@@ -36,9 +37,23 @@ internal static class CredentialResolver {
 
             username = credential.username;
             password = credential.password;
-            return new AuthenticationMethod[] { new PasswordAuthenticationMethod(username, password) };
+            return FromPassword(username, password);
         }
 
         return null;
+    }
+
+    //offer keyboard-interactive alongside password: hosts with "PasswordAuthentication no" often still accept
+    //the same password through keyboard-interactive (PAM). the client only tries methods the host allows
+    public static AuthenticationMethod[] FromPassword(string username, string password) {
+        KeyboardInteractiveAuthenticationMethod keyboardInteractive = new KeyboardInteractiveAuthenticationMethod(username);
+        keyboardInteractive.AuthenticationPrompt += (sender, e) => {
+            foreach (AuthenticationPrompt prompt in e.Prompts) {
+                //hidden prompts are password prompts, echoed ones (OTP, etc.) can't be answered unattended
+                prompt.Response = prompt.IsEchoed ? String.Empty : password;
+            }
+        };
+
+        return new AuthenticationMethod[] { new PasswordAuthenticationMethod(username, password), keyboardInteractive };
     }
 }

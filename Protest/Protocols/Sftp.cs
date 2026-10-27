@@ -102,9 +102,9 @@ internal class Sftp {
                 return;
             }
 
-            using SftpClient sftp = authMethods is not null
-                ? new SftpClient(new ConnectionInfo(host, port, username, authMethods))
-                : new SftpClient(host, port, username, password);
+            authMethods ??= CredentialResolver.FromPassword(username, password);
+
+            using SftpClient sftp = new SftpClient(new ConnectionInfo(host, port, username, authMethods));
             sftp.Connect();
 
             //the control connection is authenticated now - drop the resolved secret rather than holding it in
@@ -214,9 +214,9 @@ internal class Sftp {
 
             (string host, int port) = Ssh.ParseTarget(token.remoteEndpoint);
 
-            using SftpClient sftp = authMethods is not null
-                ? new SftpClient(new ConnectionInfo(host, port, reconnectUsername, authMethods))
-                : new SftpClient(host, port, reconnectUsername, reconnectPassword);
+            authMethods ??= CredentialResolver.FromPassword(reconnectUsername, reconnectPassword);
+
+            using SftpClient sftp = new SftpClient(new ConnectionInfo(host, port, reconnectUsername, authMethods));
             sftp.Connect();
 
             SftpFileAttributes attributes = sftp.GetAttributes(token.path);
@@ -289,9 +289,9 @@ internal class Sftp {
 
             (string host, int port) = Ssh.ParseTarget(token.remoteEndpoint);
 
-            using SftpClient sftp = authMethods is not null
-                ? new SftpClient(new ConnectionInfo(host, port, reconnectUsername, authMethods))
-                : new SftpClient(host, port, reconnectUsername, reconnectPassword);
+            authMethods ??= CredentialResolver.FromPassword(reconnectUsername, reconnectPassword);
+
+            using SftpClient sftp = new SftpClient(new ConnectionInfo(host, port, reconnectUsername, authMethods));
             sftp.Connect();
 
             Action<int> callback = async value => {
