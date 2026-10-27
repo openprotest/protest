@@ -15,6 +15,7 @@ namespace Protest.Http;
 internal static class Auth {
     private const long SESSION_TIMEOUT = TimeSpan.TicksPerDay * 5;
     private const long OTP_TOKEN_TIMEOUT = TimeSpan.TicksPerMinute * 5;
+    private const int MAX_OTP_ATTEMPTS = 5;
 
     internal const string DEFAULT_ADMIN_USERNAME = "admin";
 
@@ -24,17 +25,20 @@ internal static class Auth {
 
     private static readonly JsonSerializerOptions serializerOptions;
     private static readonly ConcurrentDictionary<string, OtpToken> otpTokens = new();
+    private static readonly Dictionary<string, long> lastTotpTimeStep = new();
+    private static readonly Lock totpMutex = new();
 
     internal static readonly ConcurrentDictionary<string, AccessControl> rbac = new();
     internal static readonly ConcurrentDictionary<string, Session> sessions = new();
 
-    private class OtpToken {
+    internal class OtpToken {
         public string tokenId;
         public string username;
         public bool   enrolled;
         public byte[] secret;
         public int    status;
         public long   createdAt;
+        public int    failures;
     }
 
     internal record AccessControl {
@@ -276,7 +280,7 @@ internal static class Auth {
             return false;
         }
 
-        bool isSuccessful = ValidateTotp(token.secret, totp);
+        bool isSuccessful = ValidateTotp(token, totp);
 
         if (isSuccessful) {
             otpTokens.TryRemove(tokenId, out _);
@@ -310,7 +314,7 @@ internal static class Auth {
             return false;
         }
 
-        bool isSuccessful = ValidateTotp(token.secret, totp);
+        bool isSuccessful = ValidateTotp(token, totp);
 
         if (isSuccessful) {
             otpTokens.TryRemove(tokenId, out _);
@@ -330,10 +334,27 @@ internal static class Auth {
         return isSuccessful;
     }
 
-    private static bool ValidateTotp(byte[] secret, string userTotp) {
-        if (secret is null || secret.Length == 0) return false;
-        Totp totp = new Totp(secret);
-        return totp.VerifyTotp(userTotp, out _, new VerificationWindow(previous: 1, future: 1));
+    //A token takes MAX_OTP_ATTEMPTS wrong codes, then the password has to be entered again.
+    //Each code is accepted once, a time step that was already used, or an earlier one, is refused.
+    internal static bool ValidateTotp(OtpToken token, string userTotp) {
+        if (token.secret is null || token.secret.Length == 0) return false;
+        if (Volatile.Read(ref token.failures) >= MAX_OTP_ATTEMPTS) return false;
+
+        Totp totp = new Totp(token.secret);
+        if (totp.VerifyTotp(userTotp, out long timeStep, new VerificationWindow(previous: 1, future: 1))) {
+            lock (totpMutex) {
+                if (!lastTotpTimeStep.TryGetValue(token.username, out long lastTimeStep) || timeStep > lastTimeStep) {
+                    lastTotpTimeStep[token.username] = timeStep;
+                    return true;
+                }
+            }
+        }
+
+        if (Interlocked.Increment(ref token.failures) >= MAX_OTP_ATTEMPTS) {
+            otpTokens.TryRemove(token.tokenId, out _);
+        }
+
+        return false;
     }
 
     private static byte[] GenerateTotpSecret(int sizeBytes = 40) {
