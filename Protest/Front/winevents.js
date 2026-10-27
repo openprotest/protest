@@ -52,6 +52,8 @@ class WinEvents extends Window {
 		this.SetupFind();
 		this.AddToolbarSeparator();
 
+		this.content.style.overflow = "hidden";
+
 		this.severityButtons = WinEvents.SEVERITY_FILTERS.map(o=> {
 			const button = this.AddToolbarButton(o.tip, `${o.icon}?light`);
 			button.classList.add("winevents-toggle-button");

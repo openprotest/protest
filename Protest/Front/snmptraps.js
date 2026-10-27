@@ -81,6 +81,8 @@ class SnmpTraps extends Window {
 		this.SetupFind();
 		this.AddToolbarSeparator();
 
+		this.content.style.overflow = "hidden";
+
 		this.severityButtons = SnmpTraps.SEVERITY_FILTERS.map(o=> {
 			const button = this.AddToolbarButton(o.tip, `${o.icon}?light`);
 			button.classList.add("snmptraps-toggle-button");

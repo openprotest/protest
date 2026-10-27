@@ -516,6 +516,11 @@ class View extends Window {
 		cdRight.appendChild(document.createElement("div"));
 		countdown.appendChild(cdRight);
 
+		const cap = dialogBox.parentElement;
+		cap.onclick = ()=> dialog.Close();
+
+		dialogBox.onclick = event=> event.stopPropagation();
+
 		const MarkDirty = ()=> {
 			countdown.style.display = "none";
 			okButton.style.display = "initial";

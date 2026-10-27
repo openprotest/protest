@@ -67,6 +67,8 @@ class Syslog extends Window {
 		this.SetupFind();
 		this.AddToolbarSeparator();
 
+		this.content.style.overflow = "hidden";
+
 		this.severityButtons = Syslog.SEVERITY_FILTERS.map(o=> {
 			const button = this.AddToolbarButton(o.tip, `${o.icon}?light`);
 			button.classList.add("syslog-toggle-button");
