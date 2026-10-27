@@ -179,6 +179,7 @@ internal sealed class HttpReverseProxy : ReverseProxyAbstract {
         rpBuilder.AddTransforms(builderContext => {
             builderContext.AddRequestTransform(ForwardClientIpTransform);
             builderContext.AddRequestTransform(RemoveSessionCookieTransform);
+            builderContext.AddResponseTransform(RemoveSessionSetCookieTransform);
         });
     }
 
@@ -186,11 +187,10 @@ internal sealed class HttpReverseProxy : ReverseProxyAbstract {
     private static ValueTask RemoveSessionCookieTransform(RequestTransformContext ctx) {
         if (!ctx.ProxyRequest.Headers.TryGetValues("Cookie", out IEnumerable<string> values)) return ValueTask.CompletedTask;
 
-        //the listener looks cookies up by name ignoring case
         string cookies = String.Join("; ", values
             .SelectMany(value => value.Split(';'))
             .Select(cookie => cookie.Trim())
-            .Where(cookie => cookie.Length > 0 && !String.Equals(cookie.Split('=', 2)[0].Trim(), "sessionid", StringComparison.OrdinalIgnoreCase)));
+            .Where(cookie => cookie.Length > 0 && !IsSessionCookie(cookie)));
 
         ctx.ProxyRequest.Headers.Remove("Cookie");
         if (cookies.Length > 0) {
@@ -199,6 +199,19 @@ internal sealed class HttpReverseProxy : ReverseProxyAbstract {
 
         return ValueTask.CompletedTask;
     }
+
+    //for the same reason, a cookie the backend sets reaches the listener too, and the last sessionid in a request wins over the user's own
+    private static ValueTask RemoveSessionSetCookieTransform(ResponseTransformContext ctx) {
+        StringValues setCookies = ctx.HttpContext.Response.Headers.SetCookie;
+        if (StringValues.IsNullOrEmpty(setCookies)) return ValueTask.CompletedTask;
+
+        ctx.HttpContext.Response.Headers.SetCookie = setCookies.Where(cookie => !IsSessionCookie(cookie)).ToArray();
+        return ValueTask.CompletedTask;
+    }
+
+    //the listener looks cookies up by name ignoring case
+    private static bool IsSessionCookie(string cookie) =>
+        String.Equals(cookie.Split('=', 2)[0].Trim(), "sessionid", StringComparison.OrdinalIgnoreCase);
 
     private static ValueTask ForwardClientIpTransform(RequestTransformContext ctx) {
         string realIp = ctx.HttpContext.Connection.RemoteIpAddress?.ToString();

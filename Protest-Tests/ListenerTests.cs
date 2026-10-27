@@ -164,7 +164,7 @@ public class ListenerTests {
     [Test]
     public void ForwardedFor_MissingFromLoopbackClientWithBackdoor_ReturnOk() {
         WithBackdoor(() => {
-            Assert.That(SendWithForwardedFor(HttpMethod.Get, "/", null), Is.EqualTo(HttpStatusCode.OK));
+            Assert.That(SendWithForwardedFor(HttpMethod.Get, "/version", null), Is.EqualTo(HttpStatusCode.OK));
         });
     }
 
