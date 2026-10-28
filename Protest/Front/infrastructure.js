@@ -175,7 +175,7 @@ class Infrastructure extends Tabs {
 		recordingContainer.appendChild(recordingLabel);
 
 		const recordingDescription = document.createElement("div");
-		recordingDescription.textContent = "Record VNC, RDP, SSH, telnet, remote shell, serial console, and terminal sessions.";
+		recordingDescription.textContent = "Record VNC, RDP, RustDesk, SSH, telnet, remote shell, serial console, and terminal sessions.";
 		recordingDescription.style.fontSize = "smaller";
 		recordingDescription.style.opacity = "0.8";
 		recordingContainer.appendChild(recordingDescription);
@@ -232,7 +232,7 @@ class Infrastructure extends Tabs {
 			{ key: "syslog",         label: "Syslog",             icon: "mono/syslog.svg",       endpoint: "config/dataretention/syslog",         defaultDays: 90,  description: "Syslog messages received from devices." },
 			{ key: "snmptraps",      label: "SNMP traps",         icon: "mono/trap.svg",         endpoint: "config/dataretention/snmptraps",      defaultDays: 90,  description: "SNMP traps and informs received from devices." },
 			{ key: "winevents",      label: "Windows events",     icon: "mono/eventlogger.svg",  endpoint: "config/dataretention/winevents",      defaultDays: 90,  description: "Critical, error and warning events fetched from Windows devices." },
-			{ key: "recordings",     label: "Session recordings", icon: "mono/screenrecord.svg", endpoint: "config/dataretention/recordings",     defaultDays: 30,  description: "Recorded VNC, RDP, SSH, telnet, remote shell, serial console, and terminal sessions." },
+			{ key: "recordings",     label: "Session recordings", icon: "mono/screenrecord.svg", endpoint: "config/dataretention/recordings",     defaultDays: 30,  description: "Recorded VNC, RDP, RustDesk, SSH, telnet, remote shell, serial console, and terminal sessions." },
 			{ key: "logs",           label: "Logs",               icon: "mono/log.svg",          endpoint: "config/dataretention/logs",           defaultDays: 90,  description: "Action log files." },
 		];
 

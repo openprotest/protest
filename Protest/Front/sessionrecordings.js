@@ -63,6 +63,7 @@ class SessionRecordings extends List {
 		switch (type) {
 		case "vnc":      return "mono/vnc.svg";
 		case "rdp":      return "mono/rdp.svg";
+		case "rustdesk": return "mono/rustdesk.svg";
 		case "ssh":      return "mono/ssh.svg";
 		case "telnet":   return "mono/telnet.svg";
 		case "winrm":    return "mono/remoteshell.svg";
@@ -140,6 +141,9 @@ class SessionRecordings extends List {
 			break;
 		case "rdp":
 			new RdpRecording({ recordingId: id });
+			break;
+		case "rustdesk":
+			new RustDeskRecording({ recordingId: id });
 			break;
 		case "ssh":
 		case "telnet":

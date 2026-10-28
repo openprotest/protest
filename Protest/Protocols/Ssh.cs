@@ -17,27 +17,27 @@ internal static class Ssh {
     private const int DEFAULT_PORT = 22;
 
     //"host", "host:port", "[ipv6]" or "[ipv6]:port", a bare ipv6 address has no port
-    internal static (string host, int port) ParseTarget(string target) {
+    internal static (string host, int port) ParseTarget(string target, int defaultPort = DEFAULT_PORT) {
         target = target?.Trim() ?? String.Empty;
 
         if (target.StartsWith('[')) {
             int end = target.IndexOf(']');
             if (end > 0) {
                 string rest = target[(end + 1)..];
-                return (target[1..end], rest.StartsWith(':') ? ParsePort(rest[1..]) : DEFAULT_PORT);
+                return (target[1..end], rest.StartsWith(':') ? ParsePort(rest[1..], defaultPort) : defaultPort);
             }
         }
 
         int colon = target.IndexOf(':');
         if (colon > 0 && colon == target.LastIndexOf(':')) {
-            return (target[..colon], ParsePort(target[(colon + 1)..]));
+            return (target[..colon], ParsePort(target[(colon + 1)..], defaultPort));
         }
 
-        return (target, DEFAULT_PORT);
+        return (target, defaultPort);
     }
 
-    private static int ParsePort(string value) =>
-        int.TryParse(value, out int port) && port is > 0 and <= 65535 ? port : DEFAULT_PORT;
+    private static int ParsePort(string value, int defaultPort) =>
+        int.TryParse(value, out int port) && port is > 0 and <= 65535 ? port : defaultPort;
 
     public static async Task WebSocketHandler(HttpListenerContext ctx) {
         if (!Auth.IsAuthenticatedAndAuthorized(ctx, ctx.Request.Url.AbsolutePath)) {

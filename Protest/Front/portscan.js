@@ -137,7 +137,8 @@ class PortScan extends Console {
 		8729: "Mikrotik RouterOS API over SSL/TSL",
 		9100: "Print Server",
 		10000: "NDMP	Network Data Management Protocol",
-		10001: "UniFi Discovery Service"
+		10001: "UniFi Discovery Service",
+		21118: "RustDesk	Direct IP access"
 	};
 
 	constructor(args) {

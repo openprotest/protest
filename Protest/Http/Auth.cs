@@ -504,6 +504,7 @@ internal static class Auth {
         "network utilities:write",
         "vnc:write",
         "rdp:write",
+        "rustdesk:write",
         "rtsp:write",
         "session recordings:read",
         "terminal:write",
@@ -719,6 +720,10 @@ internal static class Auth {
 
             case "rdp:write":
                 path.Add("/ws/rdp");
+                break;
+
+            case "rustdesk:write":
+                path.Add("/ws/rustdesk");
                 break;
 
             case "rtsp:write":

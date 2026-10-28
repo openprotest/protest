@@ -36,7 +36,7 @@ class DeviceView extends View {
 		"object guid", "distinguished name", "dns hostname", "created on dc",
 
 		["mono/lock.svg", "credentials"],
-		"domain", "credentials", "ssh key", "ssh credentials", "vnc credentials", "uvnc credentials", "rtsp credentials", "anydesk credentials", "snmp profile",
+		"domain", "credentials", "ssh key", "ssh credentials", "vnc credentials", "uvnc credentials", "rustdesk credentials", "rtsp credentials", "anydesk credentials", "snmp profile",
 		"username", "password", "ssh username", "ssh password", "vnc password", "uvnc password", "anydesk id", "anydesk password"
 	];
 
@@ -738,6 +738,16 @@ class DeviceView extends View {
 						const relayTarget = overwriteProtocol.uvnc ? `${host}:${overwriteProtocol.uvnc}` : host;
 						UI.PromptRelay(this, "uvnc", relayTarget, uvncPassword);
 					}
+				};
+			}
+
+			if (overwriteProtocol.rustdesk || ports.includes(21118) || "rustdesk credentials" in this.link) { //rustdesk, direct ip access
+				const rustdeskPort = overwriteProtocol.rustdesk || 21118;
+				const actionButton = this.CreateSideButton("mono/rustdesk.svg", "RustDesk");
+				actionButton.onclick = async ()=> {
+					const credential = await this.ResolveCredentialGuid(["rustdesk credentials"]);
+					if (credential === null) return; //picker cancelled
+					new RustDesk({ host: host, port: rustdeskPort, credential: credential, file: this.args.file });
 				};
 			}
 
