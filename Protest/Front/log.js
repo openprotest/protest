@@ -262,6 +262,7 @@ class Log extends Window {
 				"Backup"        : "url(mono/backup.svg)",
 				"Certificate"   : "url(mono/certificate.svg)",
 				"Database"      : "url(mono/database.svg)",
+				"Vault"         : "url(mono/vault.svg)",
 				"Debit-notes"   : "url(mono/notes.svg)",
 				"Documentation" : "url(mono/documentation.svg)",
 				"Infrastructure": "url(mono/infrastructure.svg)",

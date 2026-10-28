@@ -19,12 +19,10 @@ internal static class Auth {
 
     internal const string DEFAULT_ADMIN_USERNAME = "admin";
 
-    //a name no other application uses, so the reverse proxy can tell it apart from the cookies of a backend
 #if DEBUG
     internal const string SESSION_COOKIE = "protest-session";
 #else
-    //the browser keeps a __Host- cookie only when it is Secure, on Path=/ and without Domain, so no other host or plain HTTP page can set it
-    internal const string SESSION_COOKIE = "__Host-protest-session";
+    internal const string SESSION_COOKIE = "__protest-session";
 #endif
 
     private const long RATE_LIMIT_TIME_WINDOW = TimeSpan.TicksPerMinute * 10;
@@ -150,10 +148,6 @@ internal static class Auth {
             ctx.Response.StatusCode = (int)HttpStatusCode.BadRequest;
             return false;
         }
-
-#if !DEBUG
-        Thread.Sleep(RandomNumberGenerator.GetInt32(250));
-#endif
 
         IPAddress clientIP = ctx.Request.RemoteEndPoint?.Address;
         if (clientIP is null) {
@@ -984,10 +978,8 @@ internal static class Auth {
 
         if (Configuration.backdoor) {
             Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine("Warning: the backdoor is enabled.");
-            Console.WriteLine("         Requests from the loopback address bypass authentication with full access,");
-            Console.WriteLine("         including every local account on this host and any request the server makes to itself.");
-            Console.WriteLine($"         Set \"backdoor = false\" in {Data.FILE_CONFIG} unless you depend on it.");
+            Console.WriteLine("The backdoor access is enabled: Requests from the loopback address bypass authentication with full access.");
+            Console.WriteLine($"Set \"backdoor = false\" in {Data.FILE_CONFIG} unless you depend on it.");
             Console.ResetColor();
             Console.WriteLine();
         }
