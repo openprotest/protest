@@ -8,6 +8,8 @@ namespace Protest.Tests;
 
 public class ListenerTests {
     private Listener? listener;
+    private Listener? wildcardListener;
+    private int wildcardPort;
     private readonly DirectoryInfo? front;
     private int port;
     private string baseUrl = String.Empty;
@@ -31,10 +33,7 @@ public class ListenerTests {
     [OneTimeSetUp]
     public void Setup() {
         //a free port, so a Pro-test instance already running on this machine doesn't fail the fixture
-        using TcpListener probe = new TcpListener(IPAddress.Loopback, 0);
-        probe.Start();
-        port = ((IPEndPoint)probe.LocalEndpoint).Port;
-        probe.Stop();
+        port = FreePort();
 
         baseUrl = $"http://127.0.0.1:{port}";
         listener = new Listener("127.0.0.1", (ushort)port, front?.FullName);
@@ -44,6 +43,7 @@ public class ListenerTests {
     [OneTimeTearDown]
     public void TearDown() {
         listener?.Stop();
+        wildcardListener?.Stop();
     }
 
     [Test]
@@ -224,6 +224,65 @@ public class ListenerTests {
     }
 #endif
 
+    //Sign-in runs before the session checks, from another origin it is refused before the rate limit counts it
+    [TestCase("cross-site")]
+    [TestCase("same-site", Description = "another port of this host")]
+    [TestCase("none", Description = "typed, bookmarked, or opened from another application")]
+    public void Auth_FromAnotherOrigin_ReturnForbidden(string fetchSite) {
+        Assert.That(SendAuth(fetchSite), Is.EqualTo(HttpStatusCode.Forbidden));
+    }
+
+    [Test]
+    public void Auth_FromSameOrigin_IsHandled() {
+        Assert.That(SendAuth("same-origin"), Is.EqualTo(HttpStatusCode.Unauthorized));
+    }
+
+    //DNS rebinding: a page whose name now points to 127.0.0.1 is same-origin to itself, only a listener on a wildcard prefix
+    //takes a Host it doesn't know, with the backdoor on it must refuse it
+    [TestCase("evil.test", true,  HttpStatusCode.BadRequest)]
+    [TestCase("localhost", true,  HttpStatusCode.OK)]
+    [TestCase("127.0.0.1", true,  HttpStatusCode.OK)]
+    [TestCase("evil.test", false, HttpStatusCode.Unauthorized, Description = "without the backdoor it has no session")]
+    public void Backdoor_LoopbackClientNamingAnotherHost(string hostName, bool backdoor, HttpStatusCode expected) {
+        StartWildcardListener();
+
+        bool original = Configuration.backdoor;
+        Configuration.backdoor = backdoor;
+        try {
+            using HttpRequestMessage requestMessage = new HttpRequestMessage(HttpMethod.Get, $"http://127.0.0.1:{wildcardPort}/rbac/list");
+            requestMessage.Headers.Host = $"{hostName}:{wildcardPort}";
+            requestMessage.Headers.TryAddWithoutValidation("Sec-Fetch-Site", "same-origin");
+
+            using HttpClient httpClient = new HttpClient();
+            using HttpResponseMessage result = httpClient.Send(requestMessage);
+            Assert.That(result.StatusCode, Is.EqualTo(expected));
+        }
+        finally {
+            Configuration.backdoor = original;
+        }
+    }
+
+    //built once, the listener takes seconds to load the front-end
+    private void StartWildcardListener() {
+        if (wildcardListener is not null) return;
+
+        wildcardPort = FreePort();
+        try {
+            wildcardListener = new Listener([$"http://+:{wildcardPort}/"], front?.FullName);
+        }
+        catch (HttpListenerException) {
+            Assert.Ignore("A wildcard prefix needs a URL reservation on this platform");
+        }
+
+        _ = wildcardListener.StartAsync();
+    }
+
+    private static int FreePort() {
+        using TcpListener probe = new TcpListener(IPAddress.Loopback, 0);
+        probe.Start();
+        return ((IPEndPoint)probe.LocalEndpoint).Port;
+    }
+
     private static void WithBackdoor(Action test) {
         bool backdoor = Configuration.backdoor;
         Configuration.backdoor = true;
@@ -268,6 +327,16 @@ public class ListenerTests {
         if (cookie is not null) requestMessage.Headers.Add("Cookie", cookie);
         if (origin is not null) requestMessage.Headers.TryAddWithoutValidation("Origin", origin);
         if (forwardedHost is not null) requestMessage.Headers.TryAddWithoutValidation("X-Forwarded-Host", forwardedHost);
+
+        using HttpClient httpClient = new HttpClient();
+        using HttpResponseMessage result = httpClient.Send(requestMessage);
+        return result.StatusCode;
+    }
+
+    private HttpStatusCode SendAuth(string fetchSite) {
+        using HttpRequestMessage requestMessage = new HttpRequestMessage(HttpMethod.Post, $"{baseUrl}/auth");
+        requestMessage.Headers.TryAddWithoutValidation("Sec-Fetch-Site", fetchSite);
+        requestMessage.Content = new StringContent("x\u007Fnobody\u007Fwrong");
 
         using HttpClient httpClient = new HttpClient();
         using HttpResponseMessage result = httpClient.Send(requestMessage);

@@ -342,6 +342,15 @@ internal sealed class Listener {
                 remoteEndPoint.Address = xForwardedIp;
             }
 
+            //DNS rebinding: a page whose name now points to 127.0.0.1 is same-origin to itself, the backdoor would let it in,
+            //with the backdoor on, a loopback client has to name a loopback host
+            if (Configuration.backdoor && IPAddress.IsLoopback(remoteEndPoint.Address) && !ctx.Request.Url.IsLoopback) {
+                Logger.Action("Unauthenticated", "AAA", $"Rejected loopback request for host {ctx.Request.UserHostName}");
+                ctx.Response.StatusCode = 400;
+                ctx.Response.Close();
+                return;
+            }
+
             //behind a proxy the Host header names the backend, the origin checks need the host the browser used
             string host = ctx.Request.UserHostName;
             string xForwardedHostHeader = ctx.Request.Headers.Get("X-Forwarded-Host");
@@ -369,6 +378,14 @@ internal sealed class Listener {
             string path = ctx.Request.Url.PathAndQuery;
 
             if (String.Equals(path, "/auth", StringComparison.Ordinal)) {
+                //before the rate limit, or any site could have the user's browser use it up and lock them out
+                if (!IsSameOrigin(ctx, host)) {
+                    Logger.Action("Unauthenticated", "AAA", $"Rejected cross-origin request to /auth from {ctx.Request.Headers.Get("Origin") ?? ctx.Request.Headers.Get("Sec-Fetch-Site")}");
+                    ctx.Response.StatusCode = (int)HttpStatusCode.Forbidden;
+                    ctx.Response.Close();
+                    return;
+                }
+
                 //read whole, before anyone is authenticated, a chunked body has no length to check
                 if (ctx.Request.ContentLength64 < 0 || ctx.Request.ContentLength64 > MAX_AUTH_PAYLOAD) {
                     ctx.Response.StatusCode = (int)HttpStatusCode.RequestEntityTooLarge;
