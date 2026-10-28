@@ -698,62 +698,62 @@ const MENU = {
 
 		const cache = Object.create(null);
 
-		let lastGroup = null;
-		for (let i = 0; i < MENU.items.length; i++) { //menu items
-			if (MENU.items[i].h && !showHidden) continue;
+		const items = MENU.items.filter(o=> MENU.MatchItem(o, keywords));
+		if (keywords.length > 0) { //best matches first, ties keep the default order
+			items.sort((a, b)=> MENU.RankItem(b, keywords) - MENU.RankItem(a, keywords));
+		}
 
-			if (!MENU.MatchItem(MENU.items[i], keywords)) continue;
+		let lastGroup = null;
+		for (let i = 0; i < items.length; i++) { //menu items
+			if (items[i].h && !showHidden) continue;
 
 			if (MENU.filterIndex > -1) {
-				if (MENU.filterIndex === 2 && MENU.items[i].g !== "inventory") continue;
-				if (MENU.filterIndex === 3 && MENU.items[i].g !== "documentation") continue;
-				if (MENU.filterIndex === 4 && MENU.items[i].g !== "tools" && MENU.items[i].g !== "utilities") continue;
+				if (MENU.filterIndex === 2 && items[i].g !== "inventory") continue;
+				if (MENU.filterIndex === 3 && items[i].g !== "documentation") continue;
+				if (MENU.filterIndex === 4 && items[i].g !== "tools" && items[i].g !== "utilities") continue;
 			}
 
-			if (isGrid && lastGroup !== MENU.items[i].g) { //group label
+			if (isGrid && lastGroup !== items[i].g) { //group label
 				const newGroup = document.createElement("div");
 				newGroup.className = "menu-group";
-				newGroup.textContent = MENU.items[i].g;
+				newGroup.textContent = items[i].g;
 				menulist.appendChild(newGroup);
-				lastGroup = MENU.items[i].g;
+				lastGroup = items[i].g;
 			}
 
 			let item;
-			if (MENU.items[i].t in MENU.cache && !isGrid) {
-				item = MENU.cache[MENU.items[i].t];
+			if (items[i].t in MENU.cache && !isGrid) {
+				item = MENU.cache[items[i].t];
 				item.style.backgroundColor = "";
 				item.style.animation = "unset";
-				cache[MENU.items[i].t] = item;
+				cache[items[i].t] = item;
 				MENU.list.push(item);
 				menulist.appendChild(item);
 			}
 			else {
 				item = document.createElement("div");
 				item.className = isGrid ? "menu-grid-item" : "menu-list-item";
-				item.textContent = MENU.items[i].t;
-				item.style.backgroundImage = `url(${MENU.items[i].i})`;
+				item.textContent = items[i].t;
+				item.style.backgroundImage = `url(${items[i].i})`;
 				menulist.appendChild(item);
 
 				MENU.list.push(item);
-				MENU.ItemEvent(item, MENU.items[i].f);
-				MENU.PinEvent(item, MENU.items[i].t);
+				MENU.ItemEvent(item, items[i].f);
+				MENU.PinEvent(item, items[i].t);
 
 				if (!isGrid) {
-					cache[MENU.items[i].t] = item;
+					cache[items[i].t] = item;
 				}
 			}
 		}
 
 		if (keywords.length > 0) { //inventory
-			let count = 0;
+			const devices = MENU.RankRecords(LOADER.devices.data, keywords);
 			let exactMatchDevices = [];
 
-			for (const file in LOADER.devices.data) {
-				if (!MENU.MatchRecord(LOADER.devices.data[file], keywords)) continue;
-
-				const exactMatch = keywords.some(
-					keyword=> Object.values(LOADER.devices.data[file]).some(attr=> attr.v.toLowerCase() === keyword)
-				);
+			for (let i = 0; i < devices.files.length; i++) {
+				const file = devices.files[i];
+				const exactMatch = i < devices.exact;
 
 				let type = LOADER.devices.data[file].type ? LOADER.devices.data[file].type.v.toLowerCase() : null;
 
@@ -804,19 +804,14 @@ const MENU = {
 					MENU.list.push(item);
 					menulist.appendChild(item);
 				}
-
-				if (++count > 32) break;
 			}
 
-			count = 0;
+			const users = MENU.RankRecords(LOADER.users.data, keywords);
 			let exactMatchUsers = [];
 
-			for (const file in LOADER.users.data) {
-				if (!MENU.MatchRecord(LOADER.users.data[file], keywords)) continue;
-
-				const exactMatch = keywords.some(
-					keyword=> Object.values(LOADER.users.data[file]).some(attr=> attr.v.toLowerCase() === keyword)
-				);
+			for (let i = 0; i < users.files.length; i++) {
+				const file = users.files[i];
+				const exactMatch = i < users.exact;
 
 				let type = LOADER.users.data[file].type ? LOADER.users.data[file].type.v.toLowerCase()  : null;
 
@@ -867,8 +862,6 @@ const MENU = {
 					MENU.list.push(item);
 					menulist.appendChild(item);
 				}
-
-				if (++count > 32) break;
 			}
 
 			for (let i=exactMatchUsers.length-1; i>=0; i--) {
@@ -912,10 +905,43 @@ const MENU = {
 		);
 	},
 
+	RankItem: (item, keywords)=> {
+		const title = item.t.toLowerCase();
+		const words = title.split(" ");
+
+		let rank = title === keywords.join(" ") ? 1 : 0;
+		for (let i = 0; i < keywords.length; i++) {
+			if (words.includes(keywords[i])) rank += 3;
+			else if (words.some(o=> o.startsWith(keywords[i]))) rank += 2;
+			else if (title.includes(keywords[i])) rank += 1;
+		}
+		return rank;
+	},
+
 	MatchRecord: (record, keywords)=> {
 		return keywords.every(
 			keyword=> Object.values(record).some(attr=> attr.v.toLowerCase().includes(keyword))
 		);
+	},
+
+	RankRecords: (data, keywords)=> { //exact matches first, cap after ranking
+		const exact = [];
+		const partial = [];
+
+		for (const file in data) {
+			if (!MENU.MatchRecord(data[file], keywords)) continue;
+
+			const values = Object.values(data[file]);
+			if (keywords.some(keyword=> values.some(attr=> attr.v.toLowerCase() === keyword))) {
+				exact.push(file);
+				if (exact.length === 33) break;
+			}
+			else if (partial.length < 33) {
+				partial.push(file);
+			}
+		}
+
+		return { files: exact.concat(partial).slice(0, 33), exact: exact.length };
 	},
 
 	MatchPin: (key, keywords)=> {
