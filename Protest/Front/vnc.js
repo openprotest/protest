@@ -36,6 +36,7 @@ class Vnc extends Window {
 			this.refreshButton    = this.AddToolbarButton("Refresh screen", "mono/update.svg?light");
 		}
 
+		this.screenDropDown   = this.AddToolbarDropdown("mono/monitor.svg?light");
 		this.fitButton        = this.AddToolbarButton("Fit to window", "mono/fittoscreen.svg?light");
 		this.fullScreenButton = this.AddToolbarButton("Full screen", "mono/fullscreen.svg?light");
 		this.screenshotButton = this.AddToolbarButton("Save screenshot", "mono/download.svg?light");
@@ -65,6 +66,12 @@ class Vnc extends Window {
 		this.scaleViewport = true;
 		this.viewOnly      = false;
 		this.clipboardSync = false;
+
+		this.screens     = [];
+		this.screenIndex = Number.isInteger(this.args.screen) ? this.args.screen : null;
+
+		this.screenDropDown.button.setAttribute("aria-label", "Select screen");
+		this.UpdateScreenMenu();
 
 		this.fitButton.style.borderBottom = "3px solid rgb(192,192,192)";
 
@@ -143,6 +150,8 @@ class Vnc extends Window {
 			this.connectButton.disabled = false;
 			return;
 		}
+
+		this.HookScreens(this.rfb);
 
 		this.rfb.scaleViewport = this.scaleViewport;
 		this.rfb.clipViewport = false;
@@ -524,6 +533,118 @@ class Vnc extends Window {
 		catch {}
 	}
 
+	//noVNC reads only the first screen of the layout and always shows the whole framebuffer, so the layout is
+	//peeked before noVNC consumes it, and the selected screen is cropped with the display's clip viewport
+	HookScreens(rfb) {
+		this.screens = [];
+		this.UpdateScreenMenu();
+
+		const handleExtendedDesktopSize = rfb._handleExtendedDesktopSize.bind(rfb);
+		rfb._handleExtendedDesktopSize = ()=> {
+			const screens = Vnc.PeekScreenLayout(rfb._sock);
+			const done = handleExtendedDesktopSize();
+			if (done && screens && this.rfb === rfb) {
+				this.screens = screens;
+				this.UpdateScreenMenu();
+				this.ApplyScreen();
+			}
+			return done;
+		};
+
+		const updateClip = rfb._updateClip.bind(rfb);
+		rfb._updateClip = ()=> {
+			const screen = this.SelectedScreen();
+			if (!screen) {
+				updateClip();
+				return;
+			}
+
+			const display = rfb._display;
+			const wasClipping = display.clipViewport;
+
+			display.clipViewport = true;
+			display.viewportChangeSize(screen.width, screen.height);
+			const viewport = display._viewportLoc;
+			display.viewportChangePos(screen.x - viewport.x, screen.y - viewport.y);
+
+			//clipping can show or hide the scrollbars, as in noVNC
+			if (!wasClipping) rfb._saveExpectedClientSize();
+		};
+	}
+
+	//ExtendedDesktopSize: count, padding, then 16 bytes per screen (id, x, y, width, height, flags)
+	static PeekScreenLayout(sock) {
+		if (sock.rQwait("ExtendedDesktopSize", 4)) return null;
+		const count = sock.rQpeek8();
+		const length = 4 + count * 16;
+		if (sock.rQwait("ExtendedDesktopSize", length)) return null;
+
+		const bytes = sock.rQpeekBytes(length, false);
+		const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+
+		const screens = [];
+		for (let i = 0; i < count; i++) {
+			const offset = 4 + i * 16;
+			screens.push({
+				x     : view.getUint16(offset + 4),
+				y     : view.getUint16(offset + 6),
+				width : view.getUint16(offset + 8),
+				height: view.getUint16(offset + 10)
+			});
+		}
+
+		return screens.sort((a, b)=> a.x - b.x || a.y - b.y); //numbered left to right
+	}
+
+	SelectedScreen() {
+		if (this.screenIndex === null) return null;
+		return this.screens[this.screenIndex] ?? null;
+	}
+
+	//rebuilt whenever the server reports its layout, a single screen leaves nothing to choose
+	UpdateScreenMenu() {
+		const dropdown = this.screenDropDown;
+		dropdown.list.textContent = "";
+		dropdown.menu.style.height = `${(this.screens.length + 1) * 32 + 4}px`;
+		dropdown.button.disabled = this.screens.length < 2;
+
+		const selected = this.SelectedScreen();
+
+		const AddOption = (text, index, isSelected)=> {
+			const option = document.createElement("div");
+			option.style.paddingLeft = "8px"; //no icons
+			option.style.backgroundColor = isSelected ? "var(--clr-select)" : "";
+			option.textContent = text;
+			option.onclick = ()=> {
+				dropdown.button.blur(); //closes the menu
+				this.SelectScreen(index);
+			};
+			dropdown.list.append(option);
+		};
+
+		AddOption("All screens", null, selected === null);
+		for (let i = 0; i < this.screens.length; i++) {
+			const screen = this.screens[i];
+			AddOption(`Screen ${i + 1} (${screen.width} x ${screen.height})`, i, screen === selected);
+		}
+	}
+
+	//null shows all screens, the choice is kept in the args so a restored window keeps it
+	SelectScreen(index) {
+		this.screenIndex = index;
+		if (index === null) delete this.args.screen;
+		else this.args.screen = index;
+
+		this.UpdateScreenMenu();
+		this.ApplyScreen();
+	}
+
+	ApplyScreen() {
+		if (!this.rfb) return;
+		this.rfb._updateClip();
+		this.rfb._updateScale();
+	}
+
 	ToggleScaling() {
 		this.scaleViewport = !this.scaleViewport;
 		this.fitButton.style.borderBottom = this.scaleViewport ? "3px solid rgb(192,192,192)" : "none";
@@ -570,7 +691,7 @@ class Vnc extends Window {
 	SaveScreenshot() {
 		if (!this.rfb) return;
 
-		this.rfb.toBlob(blob=> {
+		const Save = blob=> {
 			if (!blob) return;
 
 			const url = URL.createObjectURL(blob);
@@ -586,7 +707,20 @@ class Vnc extends Window {
 			link.remove();
 
 			setTimeout(()=> URL.revokeObjectURL(url), 1000);
-		});
+		};
+
+		//only the selected screen, as it is shown
+		const screen = this.SelectedScreen();
+		if (screen) {
+			const canvas = document.createElement("canvas");
+			canvas.width = screen.width;
+			canvas.height = screen.height;
+			canvas.getContext("2d").drawImage(this.rfb._display._backbuffer, screen.x, screen.y, screen.width, screen.height, 0, 0, screen.width, screen.height);
+			canvas.toBlob(Save);
+		}
+		else {
+			this.rfb.toBlob(Save);
+		}
 	}
 
 	Close() { //overrides
@@ -756,6 +890,8 @@ class VncRecording extends Vnc {
 			return;
 		}
 		this.rfb = rfb;
+
+		this.HookScreens(rfb);
 
 		rfb.viewOnly = true;
 		rfb.scaleViewport = this.scaleViewport;
