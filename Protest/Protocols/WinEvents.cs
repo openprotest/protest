@@ -79,13 +79,13 @@ internal static class WinEvents {
         if (!OperatingSystem.IsWindows()) return;
         if (Interlocked.Exchange(ref fetchingAll, 1) == 1) return;
 
-        _ = Task.Run(() => {
+        _ = Task.Run(async () => {
             try {
                 List<(string file, string host)> list = WindowsDevices();
                 int failed = 0;
 
-                Parallel.ForEach(list, new ParallelOptions { MaxDegreeOfParallelism = MAX_PARALLEL }, device => {
-                    string error = FetchAsync(device.file, device.host).GetAwaiter().GetResult();
+                await Parallel.ForEachAsync(list, new ParallelOptions { MaxDegreeOfParallelism = MAX_PARALLEL }, async (device, _) => {
+                    string error = await FetchAsync(device.file, device.host);
                     if (error is not null) Interlocked.Increment(ref failed);
                 });
 
@@ -138,7 +138,7 @@ internal static class WinEvents {
             if (device.task is not null && now - device.lastStart < MIN_INTERVAL * 1000L) return device.task;
 
             device.lastStart = now;
-            device.task = Task.Run(() => Fetch(file, host));
+            device.task = Task.Factory.StartNew(() => Fetch(file, host), CancellationToken.None, TaskCreationOptions.LongRunning, TaskScheduler.Default);
             return device.task;
         }
     }
@@ -349,7 +349,7 @@ internal static class WinEvents {
 
     //fetches one device, waits for a while and then lets it go on in the background
     //{"status":"done|pending|skipped", "error":"..."}
-    internal static byte[] FetchHandler(HttpListenerContext ctx) {
+    internal static async Task<byte[]> FetchHandlerAsync(HttpListenerContext ctx) {
         Dictionary<string, string> parameters = Listener.ParseQuery(ctx);
         if (parameters is null || !parameters.TryGetValue("device", out string file) || !LogFiles.IsValidFile(file)) {
             return Data.CODE_INVALID_ARGUMENT.Array;
@@ -365,12 +365,11 @@ internal static class WinEvents {
             status = "skipped";
         }
         else {
-            Task<string> task = FetchAsync(file, host);
-            if (task.Wait(TimeSpan.FromSeconds(REQUEST_WAIT))) {
+            try {
+                error = await FetchAsync(file, host).WaitAsync(TimeSpan.FromSeconds(REQUEST_WAIT));
                 status = "done";
-                error = task.Result;
             }
-            else {
+            catch (TimeoutException) {
                 status = "pending";
             }
         }

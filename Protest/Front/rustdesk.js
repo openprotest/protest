@@ -196,6 +196,8 @@ class RustDesk extends Window {
 	static DEFAULT_PORT = 21118; //direct IP access
 	static MAX_CURSOR_SIZE = 32; //browsers drop a bigger cursor near the viewport's edge, as with RDP
 	static MAX_CLIPBOARD_LENGTH = 8 * 1024 * 1024;
+	static SESSION_SWITCH_RETRIES = 5;
+	static SESSION_SWITCH_DELAY = 3000;
 
 	static zstd = null;
 	static zstdPromise = null;
@@ -403,6 +405,10 @@ class RustDesk extends Window {
 		this.closeReason = null;
 		this.loginDialog = null;
 		this.loginDialogTimeout = null;
+
+		this.selectedSid = null;  //the host's user session picked here, picked again without asking once the host runs in it
+		this.sessionRetries = 0;
+		this.sessionRetryTimeout = null;
 
 		this.peerInfo = null;
 		this.displays = [];
@@ -646,6 +652,7 @@ class RustDesk extends Window {
 		this.EndSession();
 		this.connectButton.disabled = false;
 
+		if (this.RetrySessionSwitch()) return;
 		if (this.failed) return; //the reason is on screen already
 
 		const text = this.closeReason || reason || (wasConnected ? "Connection closed" : "Connection lost");
@@ -663,6 +670,7 @@ class RustDesk extends Window {
 		}
 
 		if (message.error && !message.login) { //a prompt's error is the reason it asks again
+			if (this.sessionRetries > 0) return; //the host is still restarting, the close that follows tries again
 			this.failed = true;
 			this.CloseLoginDialog();
 			this.ShowStatus("mono/error.svg", message.error);
@@ -671,6 +679,7 @@ class RustDesk extends Window {
 		}
 
 		if ("encrypted" in message) {
+			this.sessionRetries = 0; //the host answers again
 			this.encrypted = message.encrypted === true;
 			this.ShowStatus("mono/connect.svg", "Logging in...");
 			return;
@@ -752,6 +761,61 @@ class RustDesk extends Window {
 		this.connectButton.disabled = true;
 		this.ShowToast("This session is being recorded");
 		this.canvas.focus();
+
+		//a Windows host with more than one user session holds the screen back until one is picked
+		const windows = RustDesk.ReadWindowsSessions(peerInfo);
+		if (windows) this.SelectWindowsSession(windows);
+	}
+
+	//The user sessions a Windows host offers, null when it asks for no choice.
+	static ReadWindowsSessions(peerInfo) {
+		const P = RustDeskProto;
+		const field = P.Get(P.Read(peerInfo), 13, null);
+		if (!(field instanceof Uint8Array)) return null;
+
+		const message = P.Read(field);
+		const sessions = (message[1] ?? []).map(bytes=> {
+			const session = P.Read(bytes);
+			return {
+				sid : Number(P.Get(session, 1)),
+				name: P.String(P.Get(session, 2, null))
+			};
+		});
+
+		return sessions.length > 0 ? { current:Number(P.Get(message, 2)), sessions:sessions } : null;
+	}
+
+	SelectWindowsSession(windows) {
+		//back from a switch, the host now runs in the session picked before
+		if (this.selectedSid === windows.current) {
+			this.SendSelectedSession(windows.current, windows.current);
+			return;
+		}
+
+		this.ShowStatus("mono/users.svg", "Waiting for a user session to be selected...");
+		this.SessionDialog(windows);
+	}
+
+	//The host starts the screen once a session is picked. For another session than its own, it restarts in that one
+	//and drops the connection, which is then made again.
+	SendSelectedSession(sid, current) {
+		this.selectedSid = sid;
+		this.sessionRetries = sid === current ? 0 : RustDesk.SESSION_SWITCH_RETRIES;
+		this.Send(RustDesk.MiscMessage(new RustDeskProto().OneofVarint(35, sid))); //selected_sid
+		this.ShowStatus("mono/connect.svg", sid === current ? "Waiting for the screen..." : "Switching to the selected session...");
+	}
+
+	//true when another attempt is on its way, while the host restarts in the picked session
+	RetrySessionSwitch() {
+		if (this.sessionRetries <= 0) return false;
+		this.sessionRetries--;
+
+		this.ShowStatus("mono/connect.svg", "Switching to the selected session...");
+		this.connectButton.disabled = true;
+
+		clearTimeout(this.sessionRetryTimeout);
+		this.sessionRetryTimeout = setTimeout(()=> this.Connect(), RustDesk.SESSION_SWITCH_DELAY);
+		return true;
 	}
 
 	OnPeerInfo(bytes) {
@@ -979,6 +1043,7 @@ class RustDesk extends Window {
 
 		if (!this.hasFrame) {
 			this.hasFrame = true;
+			this.sessionRetries = 0; //the host stayed in its session, a close from here on is no switch
 			this.HideStatus();
 			if (this.encrypted === false && !this.args.isRecording) {
 				this.ShowNotice("mono/warning.svg", "The connection to the host is not encrypted");
@@ -1639,6 +1704,10 @@ class RustDesk extends Window {
 				this.args.credential = credentialsInput.value;
 			}
 
+			this.selectedSid = null; //a session picked on the previous host means nothing to this one
+			this.sessionRetries = 0;
+			clearTimeout(this.sessionRetryTimeout);
+
 			dialog.Close();
 			this.SetTitle(`RustDesk - ${this.args.host}`);
 			this.Connect();
@@ -1665,13 +1734,13 @@ class RustDesk extends Window {
 		setTimeout(()=> methodBox.container.focus(), 200);
 	}
 
-	//a dialog that is still closing holds the window a moment longer, the prompt waits for it
-	DeferLoginDialog(open, attempt) {
+	//a dialog that is still closing holds the window a moment longer, the prompt waits for it while it is still due
+	DeferLoginDialog(open, attempt, due=()=> !this.connected) {
 		if (attempt >= 20) return;
 
 		clearTimeout(this.loginDialogTimeout);
 		this.loginDialogTimeout = setTimeout(()=> {
-			if (!this.socket || this.connected) return;
+			if (!this.socket || !due()) return;
 			open(attempt + 1);
 		}, WIN.ANIME_DURATION + 50);
 	}
@@ -1807,6 +1876,64 @@ class RustDesk extends Window {
 		setTimeout(()=> codeInput.focus(), 200);
 	}
 
+	//The host has more than one user session, the one it runs in comes first.
+	SessionDialog(windows, attempt=0) {
+		this.CloseLoginDialog();
+
+		const dialog = this.DialogBox("180px");
+		if (dialog === null) {
+			this.DeferLoginDialog(next=> this.SessionDialog(windows, next), attempt, ()=> this.connected && !this.hasFrame);
+			return;
+		}
+		this.loginDialog = dialog;
+
+		const {okButton, cancelButton, innerBox} = dialog;
+		okButton.value = "Connect";
+
+		innerBox.style.padding = "20px";
+		innerBox.parentElement.style.maxWidth = "400px";
+		innerBox.parentElement.parentElement.onclick = event=> event.stopPropagation();
+
+		const message = document.createElement("div");
+		message.textContent = "The host has more than one user session. Select the one to connect to.";
+		message.style.paddingBottom = "16px";
+		message.style.fontWeight = "600";
+
+		const sessionLabel = document.createElement("div");
+		sessionLabel.style.display = "inline-block";
+		sessionLabel.style.minWidth = "88px";
+		sessionLabel.textContent = "Session:";
+		const sessionInput = document.createElement("select");
+		sessionInput.style.width = "calc(100% - 120px)";
+		innerBox.append(message, sessionLabel, sessionInput);
+
+		const sessions = [...windows.sessions].sort((a, b)=> (b.sid === windows.current) - (a.sid === windows.current));
+		for (const session of sessions) {
+			sessionInput.append(new Option(session.name || `Session ${session.sid}`, session.sid));
+		}
+		sessionInput.value = windows.current;
+
+		sessionInput.onkeydown = event=> {
+			if (event.key === "Enter") okButton.click();
+		};
+
+		okButton.onclick = ()=> {
+			const sid = parseInt(sessionInput.value);
+			this.CloseLoginDialog();
+			this.SendSelectedSession(sid, windows.current);
+		};
+
+		cancelButton.onclick = ()=> {
+			this.loginDialog = null;
+			dialog.Close();
+			this.Disconnect();
+			this.connectButton.disabled = false;
+			this.ShowStatus("mono/disconnect.svg", "Connection closed");
+		};
+
+		setTimeout(()=> sessionInput.focus(), 200);
+	}
+
 	SendTextDialog() {
 		if (!this.connected) return;
 
@@ -1877,6 +2004,8 @@ class RustDesk extends Window {
 
 		this.resizeObserver.disconnect();
 		clearTimeout(this.noticeTimeout);
+		this.sessionRetries = 0;
+		clearTimeout(this.sessionRetryTimeout);
 		if (this.moveFrame !== null) cancelAnimationFrame(this.moveFrame);
 
 		this.Disconnect();

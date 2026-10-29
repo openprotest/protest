@@ -849,7 +849,7 @@ button.view-live-button:active {
 }
 
 .view-log-categories {
-	padding: 0 6px;
+	padding: 12px 4px 4px 4px;
 }
 
 .view-log-category {

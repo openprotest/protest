@@ -2,8 +2,11 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
+using System.Text;
 using System.Text.Json;
 using System.Threading;
+using System.Threading.Tasks;
+using Protest.Http;
 
 namespace Protest.Tasks;
 
@@ -22,6 +25,7 @@ internal static class Scheduler {
     public static TaskWrapper task;
 
     private static readonly ConcurrentDictionary<string, Job> jobs = new ConcurrentDictionary<string, Job>();
+    private static readonly ConcurrentDictionary<string, byte> runningJobs = new ConcurrentDictionary<string, byte>();
     private static readonly Lock fileMutex = new Lock();
 
     public static void Initialize() {
@@ -144,79 +148,84 @@ internal static class Scheduler {
     private static void RunDueJobs() {
         long nowTicks = DateTime.UtcNow.Ticks;
 
-        if (jobs.TryGetValue("issues", out Job issuesJob) && issuesJob.enable) {
-            if (IsDue(issuesJob, nowTicks)) {
-                try {
-                    Issues.Start("system");
-                }
-                catch (Exception ex) {
-                    Logger.Error(ex);
-                }
-
-                issuesJob.lastRun = nowTicks;
-                SaveJobs();
+        foreach (string key in runnableJobs) {
+            if (jobs.TryGetValue(key, out Job job) && job.enable && IsDue(job, nowTicks) && runningJobs.TryAdd(key, 0)) {
+                RunJob(job, "system", nowTicks);
             }
         }
+    }
 
-        if (jobs.TryGetValue("winevents", out Job winEventsJob) && winEventsJob.enable) {
-            if (IsDue(winEventsJob, nowTicks)) {
-                try {
-                    Protocols.WinEvents.StartFetchAll("system");
-                }
-                catch (Exception ex) {
-                    Logger.Error(ex);
-                }
+    //runs a job's action once and records the run, the caller claims the job in runningJobs
+    private static void RunJob(Job job, string origin, long nowTicks) {
+        try {
+            switch (job.key) {
+            case "issues":
+                Issues.Start(origin);
+                break;
 
-                winEventsJob.lastRun = nowTicks;
-                SaveJobs();
+            case "winevents":
+                Protocols.WinEvents.StartFetchAll(origin);
+                break;
+
+            case "lastseen":
+                LastSeen.StartPingAll();
+                break;
+
+            case "dataretention":
+                int deleted = DataRetention.PurgeEnabledCategories();
+                if (deleted > 0) {
+                    Logger.Action(origin, "Scheduler", $"Data retention job deleted {deleted} item(s)");
+                }
+                break;
+
+            case "backup":
+                Backup.Create(origin, null);
+                Logger.Action(origin, "Scheduler", "Backup job created a new backup");
+                break;
             }
         }
+        catch (Exception ex) {
+            Logger.Error(ex);
+        }
+        finally {
+            job.lastRun = nowTicks;
+            SaveJobs();
+            runningJobs.TryRemove(job.key, out _);
+        }
+    }
 
-        if (jobs.TryGetValue("lastseen", out Job lastseenJob) && lastseenJob.enable) {
-            if (IsDue(lastseenJob, nowTicks)) {
-                try {
-                    LastSeen.StartPingAll();
-                }
-                catch (Exception ex) {
-                    Logger.Error(ex);
-                }
+    private static bool IsRunning(string key) {
+        if (runningJobs.ContainsKey(key)) return true;
 
-                lastseenJob.lastRun = nowTicks;
-                SaveJobs();
-            }
+        return key switch {
+            "issues"    => Issues.task is not null,
+            "winevents" => Protocols.WinEvents.IsRunning,
+            "lastseen"  => LastSeen.IsRunning,
+            _ => false
+        };
+    }
+
+    public static byte[] Run(HttpListenerContext ctx, string origin) {
+        Dictionary<string, string> parameters = Listener.ParseQuery(ctx);
+        if (parameters is null || !parameters.TryGetValue("key", out string key) || !jobs.TryGetValue(key, out Job job)) {
+            return Data.CODE_INVALID_ARGUMENT.Array;
         }
 
-        if (jobs.TryGetValue("dataretention", out Job dataRetentionJob) && dataRetentionJob.enable) {
-            if (IsDue(dataRetentionJob, nowTicks)) {
-                try {
-                    int deleted = DataRetention.PurgeEnabledCategories();
-                    if (deleted > 0) {
-                        Logger.Action("system", "Scheduler", $"Data retention job deleted {deleted} item(s)");
-                    }
-                }
-                catch (Exception ex) {
-                    Logger.Error(ex);
-                }
-
-                dataRetentionJob.lastRun = nowTicks;
-                SaveJobs();
-            }
+        if (!runnableJobs.Contains(key)) {
+            return Encoding.UTF8.GetBytes($"{{\"error\":\"{Data.EscapeJsonText(job.label)} runs continuously and cannot be run on demand\"}}");
         }
 
-        if (jobs.TryGetValue("backup", out Job backupJob) && backupJob.enable) {
-            if (IsDue(backupJob, nowTicks)) {
-                try {
-                    Backup.Create("system", null);
-                    Logger.Action("system", "Scheduler", "Backup job created a new backup");
-                }
-                catch (Exception ex) {
-                    Logger.Error(ex);
-                }
-
-                backupJob.lastRun = nowTicks;
-                SaveJobs();
-            }
+        //IsRunning also covers the job's own engine, the claim in runningJobs stops a second request racing this one
+        if (IsRunning(key) || !runningJobs.TryAdd(key, 0)) {
+            return Data.CODE_OTHER_TASK_IN_PROGRESS.Array;
         }
+
+        Logger.Action(origin, "Scheduler", $"Run job: {job.label}");
+
+        long nowTicks = DateTime.UtcNow.Ticks;
+        _ = Task.Run(() => RunJob(job, origin, nowTicks));
+
+        return Data.CODE_OK.Array;
     }
 
     private static bool IsDue(Job job, long nowTicks) {
@@ -226,6 +235,9 @@ internal static class Scheduler {
     }
 
     private static readonly string[] jobOrder = new[] { "lifeline", "watchdog", "issues", "winevents", "lastseen", "dataretention", "backup" };
+
+    //jobs the scheduler starts, in run order, lifeline and watchdog run continuously on their own
+    private static readonly string[] runnableJobs = new[] { "issues", "winevents", "lastseen", "dataretention", "backup" };
 
     private static string FormatInterval(int hours) {
         if (hours <= 48) return $"{hours}h";
@@ -248,9 +260,7 @@ internal static class Scheduler {
                 "lifeline"  => Lifeline.task?.status.ToString() ?? "Stopped",
                 "watchdog"  => Watchdog.task?.status.ToString() ?? "Stopped",
                 "issues"    => Issues.task?.status.ToString() ?? (job.enable ? "Idle" : "Stopped"),
-                "winevents" => Protocols.WinEvents.IsRunning ? "Running" : job.enable ? "Idle" : "Stopped",
-                "lastseen"  => LastSeen.IsRunning ? "Running" : job.enable ? "Idle" : "Stopped",
-                _ => job.enable ? "Idle" : "Stopped"
+                _           => IsRunning(job.key) ? "Running" : job.enable ? "Idle" : "Stopped"
             };
 
             string interval = job.key == "watchdog" ? "-" : $"Every {FormatInterval(job.intervalHours)}";
@@ -270,7 +280,8 @@ internal static class Scheduler {
                 label         = job.label,
                 enable        = job.enable,
                 intervalHours = job.intervalHours,
-                lastRun       = job.lastRun
+                lastRun       = job.lastRun,
+                runnable      = runnableJobs.Contains(job.key)
             });
         }
 

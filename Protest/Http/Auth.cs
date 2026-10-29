@@ -792,6 +792,7 @@ internal static class Auth {
             case "scheduler:write":
                 path.Add("/scheduler/list");
                 path.Add("/scheduler/save");
+                path.Add("/scheduler/run");
                 break;
 
             case "integration:write":

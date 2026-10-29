@@ -29,16 +29,24 @@ class Scheduler extends List {
 
 		this.SetupToolbar();
 		this.editButton = this.AddToolbarButton("Edit", "mono/edit.svg?light");
+		this.runButton = this.AddToolbarButton("Run now", "mono/play.svg?light");
 		this.toolbar.appendChild(this.AddToolbarSeparator());
 		this.createButton = this.AddToolbarButton("Create task", "mono/add.svg?light");
 		this.createButton.title = "Custom script jobs coming soon";
 
 		this.editButton.onclick = ()=> this.EditDialog();
+		this.runButton.onclick = ()=> this.RunSelectedJob();
+
+		//clicks and keyboard navigation both select through the list box
+		const onSelect = this.listBox.onSelect;
+		this.listBox.onSelect = (id, element)=> {
+			onSelect(id, element);
+			this.UpdateButtons();
+		};
 
 		this.UpdateAuthorization();
 
 		this.createButton.disabled = true;
-		this.editButton.disabled = true;
 
 		this.dataRetentionCategories = [
 			{ key: "devicetimeline", label: "Device timeline",    icon: "mono/timeline.svg",     defaultDays: 365 },
@@ -87,8 +95,14 @@ class Scheduler extends List {
 
 	UpdateAuthorization() { //overrides
 		this.canWrite = KEEP.authorization.includes("*") || KEEP.authorization.includes("scheduler:write");
-		this.editButton.disabled = !this.canWrite;
+		this.UpdateButtons();
 		super.UpdateAuthorization();
+	}
+
+	UpdateButtons() {
+		const job = this.GetSelectedJob();
+		this.editButton.disabled = !this.canWrite || !job;
+		this.runButton.disabled = !this.canWrite || !job?.runnable;
 	}
 
 	async ListJobs() {
@@ -110,13 +124,13 @@ class Scheduler extends List {
 
 				this.InflateElement(element, this.link.data[key]);
 
-				element.addEventListener("click", event=>this.Entry_onclick(event));
-
 				if (this.args.select && this.args.select === key) {
 					this.selected = element;
 					element.style.backgroundColor = "var(--clr-select)";
 				}
 			}
+
+			this.UpdateButtons();
 		}
 		catch (ex) {
 			this.ConfirmBox(ex, true, "mono/error.svg");
@@ -141,17 +155,56 @@ class Scheduler extends List {
 		}
 	}
 
-	Entry_onclick(event) {
-		this.editButton.disabled = !this.canWrite || !(this.args.select in this.link.data);
-	}
-
 	Entry_ondblclick(event) {
 		this.EditDialog();
 	}
 
 	GetSelectedJob() {
 		if (!this.args.select) return null;
-		return this.jobs.find(j=> j.key === this.args.select) ?? null;
+		return this.jobs?.find(j=> j.key === this.args.select) ?? null;
+	}
+
+	async RunSelectedJob() {
+		const job = this.GetSelectedJob();
+		if (!job?.runnable) return;
+
+		this.runButton.disabled = true;
+
+		try {
+			const response = await fetch(`scheduler/run?key=${encodeURIComponent(job.key)}`);
+			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
+
+			const json = await response.json();
+			if (json.error) throw json.error;
+		}
+		catch (ex) {
+			this.UpdateButtons();
+			this.ConfirmBox(ex, true, "mono/error.svg");
+			return;
+		}
+
+		this.RefreshJobs(job.key);
+		this.WatchJob(job.key);
+	}
+
+	//refreshes the list once the job is no longer running
+	async WatchJob(key) {
+		for (let i=0; i<900; i++) {
+			await new Promise(resolve=> setTimeout(resolve, 2000));
+			if (!this.win.isConnected) return;
+
+			try {
+				const response = await fetch("scheduler/list");
+				const json = await response.json();
+				if (json.data?.[key]?.status?.v === "Running") continue;
+			}
+			catch {
+				return;
+			}
+
+			this.RefreshJobs(this.args.select);
+			return;
+		}
 	}
 
 	async EditDialog() {
@@ -397,11 +450,11 @@ class Scheduler extends List {
 		setTimeout(()=>enableToggle.label.focus(), Window.ANIME_DURATION);
 	}
 
-	RefreshJobs() {
+	RefreshJobs(select=null) {
 		this.list.textContent = "";
 		this.selected = null;
-		this.args.select = null;
-		this.editButton.disabled = true;
+		this.args.select = select;
+		this.UpdateButtons();
 		this.ListJobs();
 	}
 }

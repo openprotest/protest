@@ -485,6 +485,21 @@ internal static class RustDesk {
             return null;
         }
 
+        case TEST_DELAY: {
+            //the host probes the latency from the start and sends the next probe only once this one comes back,
+            //left unanswered it takes the connection for a stalled one and holds the video down for the session
+            ProtoReader delay = reader.Nested();
+            bool fromClient = false;
+            while (delay.Next()) {
+                if (delay.Field == 2) fromClient = delay.Value != 0;
+            }
+
+            if (!fromClient) {
+                await connection.SendAsync(message, token);
+            }
+            return null;
+        }
+
         case MESSAGE_BOX: {
             ProtoReader box = reader.Nested();
             string type = String.Empty, text = String.Empty;
