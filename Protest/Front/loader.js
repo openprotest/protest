@@ -217,6 +217,7 @@ const LOADER = {
 			else if (count === total) { //all done
 				KEEP.Initialize();
 				MENU.LoadPinned();
+				LOADER.RegisterServiceWorker();
 
 				setTimeout(()=> {
 					loadingcontainer.style.filter = "opacity(0)";
@@ -226,11 +227,11 @@ const LOADER = {
 			}
 		};
 
-		for (let i = 0; i < LOADER.baseStyles.length; i++) {
+		for (let i=0; i<LOADER.baseStyles.length; i++) {
 			LOADER.LoadStyle(LOADER.baseStyles[i], callbackHandle);
 		}
 
-		for (let i = 0; i < LOADER.baseScripts.length; i++) {
+		for (let i=0; i<LOADER.baseScripts.length; i++) {
 			LOADER.LoadScript(LOADER.baseScripts[i], callbackHandle);
 		}
 	},
@@ -435,6 +436,11 @@ const LOADER = {
 		}
 
 		return new UserView({ file: file });
+	},
+
+	RegisterServiceWorker: ()=> {
+		if (!("serviceWorker" in navigator)) return;
+		navigator.serviceWorker.register("/sw.js").catch(ex=> console.warn("Service worker registration failed", ex));
 	},
 
 	HttpErrorHandler: statusCode=> {
