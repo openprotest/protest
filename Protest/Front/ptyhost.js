@@ -240,6 +240,7 @@ class PtyHost extends Window {
 		this.AddToolbarSeparator();
 
 		this.sendKeyButton = this.AddToolbarButton("Send key", "mono/keyboard.svg?light");
+		this.copyButton = this.AddToolbarButton("Copy", "mono/copy.svg?light");
 		this.pasteButton = this.AddToolbarButton("Paste", "mono/clipboard.svg?light");
 		this.AddToolbarSeparator();
 		this.SetupFind();
@@ -249,6 +250,8 @@ class PtyHost extends Window {
 
 		this.darkModeButton.style.display = "none";
 		this.bellSoundButton.style.display = "none";
+
+		this.copyButton.disabled = true;
 
 		this.defaultElement = this.content;
 
@@ -269,6 +272,7 @@ class PtyHost extends Window {
 		this.bellSoundButton.onclick = ()=> this.ToggleBell();
 		this.optionsButton.onclick   = ()=> this.OptionsDialog();
 		this.sendKeyButton.onclick   = ()=> this.CustomKeyDialog();
+		this.copyButton.onclick      = ()=> this.TextToClipboard();
 		this.pasteButton.onclick     = ()=> this.TextFromClipboard();
 
 		this.minimap = document.createElement("div");
@@ -438,7 +442,8 @@ class PtyHost extends Window {
 			cursorStyle: "bar",
 			cursorBlink: true,
 			convertEol: true,
-			theme: this.BuildTheme()
+			theme: this.BuildTheme(),
+			linkHandler: { activate: (event, uri)=> this.ConfirmOpenLink(uri) }
 		});
 
 		const FitCtor = window.FitAddon && (window.FitAddon.FitAddon || window.FitAddon);
@@ -449,7 +454,7 @@ class PtyHost extends Window {
 
 		const LinksCtor = window.WebLinksAddon && (window.WebLinksAddon.WebLinksAddon || window.WebLinksAddon);
 		if (LinksCtor) {
-			this.term.loadAddon(new LinksCtor());
+			this.term.loadAddon(new LinksCtor((event, uri)=> this.ConfirmOpenLink(uri)));
 		}
 
 		this.term.onData(data=> this.SendToWs(data));
@@ -475,6 +480,10 @@ class PtyHost extends Window {
 		});
 		this.term.onScroll(()=> this.UpdateMinimap());
 		this.term.onRender(()=> this.UpdateMinimap());
+
+		this.term.onSelectionChange(()=> {
+			this.copyButton.disabled = !this.term?.hasSelection();
+		});
 
 		this.term.attachCustomKeyEventHandler(event=> {
 			if (event.ctrlKey && event.shiftKey && (event.code === "KeyC" || event.code === "KeyV")) {
@@ -520,6 +529,24 @@ class PtyHost extends Window {
 		const resolved = getComputedStyle(probe).color;
 		probe.style.color = previous;
 		return resolved;
+	}
+
+	ConfirmOpenLink(uri) {
+		let url;
+		try {
+			url = new URL(uri);
+		}
+		catch {
+			return;
+		}
+		if (url.protocol !== "http:" && url.protocol !== "https:") return;
+
+		const okButton = this.ConfirmBox(`Do you want to open this link?\n${url.href}`, false, "mono/link.svg");
+		if (!okButton) return;
+
+		okButton.addEventListener("click", ()=> {
+			(this.popOutWindow ?? window).open(url.href, "_blank", "noopener,noreferrer");
+		});
 	}
 
 	FitTerminal() {
@@ -761,6 +788,20 @@ class PtyHost extends Window {
 
 		ListKeys();
 		setTimeout(()=>keyInput.focus(), 200);
+	}
+
+	async TextToClipboard() {
+		if (!this.term || !this.term.hasSelection()) return;
+
+		try {
+			await navigator.clipboard.writeText(this.term.getSelection());
+		}
+		catch (ex) {
+			this.ConfirmBox(ex, true, "mono/error.svg");
+			return;
+		}
+
+		this.term.focus();
 	}
 
 	async TextFromClipboard() {

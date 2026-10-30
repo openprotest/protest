@@ -10,7 +10,7 @@ const KEEP = {
 	zones: [],
 	reconnectCount: 0,
 	redDot: document.createElement("div"),
-	sessionTtlMapping: { 1:1, 2:2, 3:3, 4:4, 5:5, 6:6, 7:7, 8:14, 9:21, 10:28, 11:60, 12:90 },
+	sessionTtlMapping: { 1:1, 2:2, 3:3, 4:4, 5:5, 6:6, 7:7, 8:14, 9:21, 10:28 },
 	ipv4Regex: /^(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)(?:\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)){3}$/,
 
 	Initialize: ()=> {
@@ -330,16 +330,8 @@ const KEEP = {
 		case "chat-image":
 		case "chat-emoji":
 		case "chat-command": {
-			if (!KEEP.chatNotificationSound) {
-				UI.PlayNotificationSound();
-			}
-
-			if (document.hidden
-				&& localStorage.getItem("enable_notification_sound") !== "false") {
-				KEEP.chatNotificationSound.play();
-			}
-
 			let chatCount = 0;
+			let isChatFocused = false;
 			for (let i=0; i<WIN.array.length; i++) {
 				if (!(WIN.array[i] instanceof Chat)) continue;
 
@@ -351,13 +343,8 @@ const KEEP = {
 				}
 
 				WIN.array[i].HandleMessage(message);
+				if (WIN.focused === WIN.array[i]) isChatFocused = true;
 				chatCount++;
-
-				if (WIN.focused !== WIN.array[i]
-					&& message.sender !== KEEP.username
-					&& localStorage.getItem("enable_notification_sound") !== "false") {
-					KEEP.chatNotificationSound.play();
-				}
 			}
 
 			if (chatCount === 0) {
@@ -368,21 +355,24 @@ const KEEP = {
 				}
 
 				setTimeout(()=>{newChat.win.style.display = "initial";}, WIN.ANIME_DURATION);
-				if (localStorage.getItem("enable_notification_sound") !== "false") {
-					KEEP.chatNotificationSound.play();
-				}
+			}
+
+			if (message.sender !== KEEP.username
+				&& (document.hidden || !isChatFocused)
+				&& localStorage.getItem("enable_notification_sound") !== "false") {
+				UI.PlayNotificationSound();
 			}
 
 			break;
 		}
 
 		case "chat-join":
+		case "chat-join-refused":
 		case "chat-presence":
 		case "chat-leave":
 		case "chat-offer":
 		case "chat-answer":
 		case "chat-ice":
-		case "chat-stream":
 			for (let i=0; i<WIN.array.length; i++) {
 				if (!(WIN.array[i] instanceof Chat)) continue;
 				WIN.array[i].HandleMessage(message, true);

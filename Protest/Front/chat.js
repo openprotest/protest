@@ -18,6 +18,38 @@ class Chat extends Window {
 		]
 	};
 
+	//emoji and command icons are loaded as css url(), a path to an api route would run it with the reader's session
+	static ICON_PATH = /^mono\/[a-z0-9]+\.svg$/;
+
+	//same as the server, base64 has no ( ) quotes or spaces to break out of a css url()
+	static IMAGE_DATA_URL = /^data:image\/(?:png|jpeg|gif|webp);base64,[A-Za-z0-9+/]+={0,2}$/;
+
+	//the windows with a "Send to chat" button, by class, and their real names
+	//a command bubble opens nothing else, so a crafted one can't open a terminal or a remote shell that connects on open
+	static COMMANDS = {
+		DevicesList       : "Devices",
+		UsersList         : "Users",
+		DeviceView        : "Device",
+		UserView          : "User",
+		DnsLookup         : "DNS lookup",
+		MacLookup         : "MAC lookup",
+		Mdns              : "mDNS discovery",
+		Monitor           : "Resource monitor",
+		Ping              : "Ping",
+		PortScan          : "TCP port scan",
+		Snmp              : "SNMP polling",
+		TraceRoute        : "Trace route",
+		Wmi               : "WMI client",
+		TerminalRecording : "Session recording",
+		RdpRecording      : "RDP recording",
+		RustDeskRecording : "RustDesk recording",
+		VncRecording      : "VNC recording"
+	};
+
+	//same limits as the server, a longer text is dropped and a larger message closes the keep-alive socket
+	static MAX_TEXT_LENGTH = 8_192;
+	static MAX_IMAGE_LENGTH = 8 * 1024 * 1024 - 1024; //leaves room for the json around the data url
+
 	constructor() {
 		super();
 
@@ -28,13 +60,14 @@ class Chat extends Window {
 		this.content.classList.add("chat-window");
 
 		this.lastBubble = null;
-		this.outdoing = Object.create(null);
+		this.outgoing = Object.create(null);
 
 		this.peerId = UI.GenerateUuid();
 
 		this.userStream = null;
 		this.displayStreams = [];
 		this.peers = Object.create(null);
+		this.teamIcons = new Map(); //sender -> {icon, info}
 
 		this.remoteStreamOrder = [];
 		this.primaryStreamKey = null;
@@ -60,15 +93,16 @@ class Chat extends Window {
 		this.blinkingDot.style.animation = "blink 1.5s infinite";
 		this.task.appendChild(this.blinkingDot);
 
+		this.team = document.createElement("div");
+		this.team.className = "chat-team";
+		this.content.appendChild(this.team);
+
 		this.localStreamsBox = document.createElement("div");
 		this.localStreamsBox.className = "local-streams-box";
 		this.content.appendChild(this.localStreamsBox);
 
 		this.remoteStreamsBox = document.createElement("div");
 		this.remoteStreamsBox.className = "remote-streams-box";
-		this.remoteStreamsBox.style.display = "block";
-		this.remoteStreamsBox.style.padding = "0";
-		this.remoteStreamsBox.style.overflow = "hidden";
 		this.content.appendChild(this.remoteStreamsBox);
 
 		this.chatBox = document.createElement("div");
@@ -119,9 +153,9 @@ class Chat extends Window {
 			emojiBox.appendChild(emojiIcon);
 
 			emojiIcon.onclick = ()=> {
-				let nowString = new Date().toLocaleTimeString(UI.regionalFormat, {});
+				const nowString = new Date().toLocaleTimeString(UI.regionalFormat, {});
 
-				const id = `${KEEP.username}${Date.now()}`;
+				const id = `${KEEP.username}${UI.GenerateUuid()}`;
 				const bubble = this.CreateEmojiBubble(Chat.EMOJIS[i], "out", KEEP.username, "", KEEP.color, nowString, id);
 				bubble.style.color = "var(--clr-pane)";
 				bubble.style.backgroundColor = "transparent";
@@ -143,6 +177,8 @@ class Chat extends Window {
 		}
 
 		this.input.onkeydown = event=> this.Input_onkeydown(event);
+		this.input.onpaste = event=> this.Input_onpaste(event);
+		this.input.ondrop = event=> this.Input_ondrop(event);
 
 		this.sendButton.onclick = ()=> this.Send();
 		this.micButton.onclick = ()=> this.Mic_onclick();
@@ -187,31 +223,12 @@ class Chat extends Window {
 		for (const peerId in this.peers) {
 			this.RemovePeer(peerId);
 		}
-		this.peers = Object.create(null);
 
-		if (this.userStream) {
-			try {
-				this.userStream.stream.getTracks().forEach(t=>t.stop());
-			}
-			catch {}
+		this.StopUserStream();
 
-			if (this.userStream.element && this.userStream.element.container.parentElement) {
-				this.localStreamsBox.removeChild(this.userStream.element.container);
-			}
-			this.userStream = null;
+		for (const displayStream of [...this.displayStreams]) {
+			this.StopDisplayStream(displayStream);
 		}
-
-		for (const ds of this.displayStreams) {
-			try {
-				ds.stream.getTracks().forEach(t=>t.stop());
-			}
-			catch {}
-
-			if (ds.element && ds.element.container.parentElement) {
-				this.localStreamsBox.removeChild(ds.element.container);
-			}
-		}
-		this.displayStreams = [];
 
 		if (this.hasJoined) {
 			try {
@@ -230,23 +247,15 @@ class Chat extends Window {
 		const wantVideo = this.isCamEnable;
 
 		if (!wantAudio && !wantVideo) {
-			if (this.userStream) this.StopUserStream();
+			this.StopUserStream();
 			return;
 		}
 
-		const haveAudio = !!(this.userStream && this.userStream.stream.getAudioTracks().length > 0);
-		const haveVideo = !!(this.userStream && this.userStream.stream.getVideoTracks().length > 0);
+		const haveAudio = this.userStream?.stream.getAudioTracks().length > 0;
+		const haveVideo = this.userStream?.stream.getVideoTracks().length > 0;
 
-		if (this.userStream && haveAudio === wantAudio && haveVideo === wantVideo) {
-			const audioTrack = this.userStream.stream.getAudioTracks()[0];
-			const videoTrack = this.userStream.stream.getVideoTracks()[0];
-			if (audioTrack) audioTrack.enabled = wantAudio;
-			if (videoTrack) videoTrack.enabled = wantVideo;
-			this.UpdateLocalAudioVisualizer();
-			return;
-		}
-
-		if (this.userStream && (haveAudio || haveVideo) && !(wantAudio && !haveAudio) && haveVideo === wantVideo) {
+		//same camera state and no new mic track needed, toggle the tracks in place
+		if (this.userStream && haveVideo === wantVideo && (haveAudio || !wantAudio)) {
 			const audioTrack = this.userStream.stream.getAudioTracks()[0];
 			const videoTrack = this.userStream.stream.getVideoTracks()[0];
 			if (audioTrack) audioTrack.enabled = wantAudio;
@@ -287,15 +296,13 @@ class Chat extends Window {
 			return;
 		}
 
-		const element = this.CreateLocalStreamElement(stream, true);
+		const element = this.CreateLocalStreamElement();
 		this.localStreamsBox.appendChild(element.container);
 		element.video.srcObject = stream;
-		element.video.muted = true;
 
 		this.userStream = {
 			stream: stream,
-			element: element,
-			kind: "user"
+			element: element
 		};
 
 		const audioTrack = stream.getAudioTracks()[0];
@@ -348,7 +355,6 @@ class Chat extends Window {
 
 		const analyser = audioCtx.createAnalyser();
 		analyser.fftSize = 256;
-		analyser.smoothingTimeConstant = 1;
 		source.connect(analyser);
 
 		const canvas = document.createElement("canvas");
@@ -362,6 +368,7 @@ class Chat extends Window {
 		canvas.style.zIndex = "1";
 		container.appendChild(canvas);
 
+		const ctx = canvas.getContext("2d");
 		const data = new Uint8Array(analyser.frequencyBinCount);
 		const handle = {
 			canvas: canvas,
@@ -405,12 +412,11 @@ class Chat extends Window {
 			if (canvas.width !== targetW) canvas.width = targetW;
 			if (canvas.height !== targetH) canvas.height = targetH;
 
-			const ctx = canvas.getContext("2d");
 			ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 			ctx.clearRect(0, 0, w, h);
 			ctx.fillStyle = handle.color;
 			ctx.strokeStyle = handle.color;
-			ctx.lineWidth  = Math.max(2, Math.min(w, h) * 0.0075);
+			ctx.lineWidth = Math.max(2, Math.min(w, h) * 0.0075);
 
 			const cx = w / 2;
 			const cy = h / 2;
@@ -442,23 +448,6 @@ class Chat extends Window {
 				ctx.globalAlpha = .4;
 				ctx.fill();
 			}
-
-/*
-			ctx.globalAlpha = 0.15;
-			ctx.beginPath();
-			ctx.arc(cx, cy, r * 1.85 + amplitude * 18, 0, Math.PI * 2);
-			ctx.fill();
-
-			ctx.globalAlpha = 0.30;
-			ctx.beginPath();
-			ctx.arc(cx, cy, r * 1.35 + amplitude * 10, 0, Math.PI * 2);
-			ctx.fill();
-
-			ctx.globalAlpha = 1.0;
-			ctx.beginPath();
-			ctx.arc(cx, cy, r, 0, Math.PI * 2);
-			ctx.fill();
-*/
 
 			handle.raf = requestAnimationFrame(draw);
 		};
@@ -720,6 +709,8 @@ class Chat extends Window {
 			this.AddStreamToPeer(peer, stream);
 		}
 
+		this.UpdateTeam();
+
 		return peer;
 	}
 
@@ -779,7 +770,6 @@ class Chat extends Window {
 				stream: stream,
 				container: element.container,
 				video: element.video,
-				label: element.label,
 				peerId: peer.peerId,
 				streamId: stream.id,
 				key: key
@@ -893,19 +883,12 @@ class Chat extends Window {
 		}
 	}
 
-	async HandleMessage(message, ignoreDot=false) {
-		if (message.peerId && message.peerId === this.peerId
-			&& (message.action === "chat-offer" || message.action === "chat-answer"
-				|| message.action === "chat-ice" || message.action === "chat-join"
-				|| message.action === "chat-presence" || message.action === "chat-leave")) {
-			return;
-		}
-
-		if (message.id in this.outdoing) {
-			this.outdoing[message.id].style.color = "var(--clr-dark)";
-			this.outdoing[message.id].style.backgroundColor = "var(--clr-pane)";
-			this.outdoing[message.id].style.boxShadow = "none";
-			delete this.outdoing[message.id];
+	HandleMessage(message, ignoreDot=false) {
+		if (message.id in this.outgoing) {
+			this.outgoing[message.id].style.color = "var(--clr-dark)";
+			this.outgoing[message.id].style.backgroundColor = "var(--clr-pane)";
+			this.outgoing[message.id].style.boxShadow = "none";
+			delete this.outgoing[message.id];
 		}
 		else {
 			const time = new Date(message.time);
@@ -933,6 +916,12 @@ class Chat extends Window {
 				this.HandleJoin(message);
 				break;
 
+			case "chat-join-refused":
+				if (message.peerId !== this.peerId) break;
+				this.hasJoined = false;
+				this.CreateNotice("This window can't join calls, too many chat windows were opened. Close some, then reopen the chat.");
+				break;
+
 			case "chat-presence":
 				this.HandlePresence(message);
 				break;
@@ -952,9 +941,6 @@ class Chat extends Window {
 			case "chat-ice":
 				this.HandleIce(message);
 				break;
-
-			case "chat-stream":
-				break;
 			}
 		}
 
@@ -967,11 +953,19 @@ class Chat extends Window {
 	HandleJoin(message) {
 		if (!message.peerId || message.peerId === this.peerId) return;
 
+		//presence replies come from people already here, only a join is someone arriving
+		const isArrival = message.sender !== KEEP.username && !this.teamIcons.has(message.sender);
+
 		this.EnsurePeer(message.peerId, {
 			sender: message.sender,
 			alias: message.alias,
 			color: message.color
 		});
+
+		//while sharing, UpdateTeam has already announced it with a burst bubble
+		if (isArrival && this.GetAllLocalStreams().length === 0) {
+			this.CreateNotice(`${message.alias || message.sender} joined the chat`);
+		}
 
 		try {
 			KEEP.socket.send(JSON.stringify({
@@ -1119,7 +1113,48 @@ class Chat extends Window {
 		return false;
 	}
 
+	//everyone with a chat window open receives what this window shares, so they are shown like the team of a view
+	UpdateTeam() {
+		const team = new Map(); //sender -> info, a user can have more than one chat window open
+		for (const peerId in this.peers) {
+			const info = this.peers[peerId].info;
+			if (!team.has(info.sender)) team.set(info.sender, info);
+		}
+
+		//while sharing, arrivals and departures are announced, joining starts the media at once and should not go unnoticed
+		const isSharing = this.GetAllLocalStreams().length > 0;
+		const nowString = new Date().toLocaleTimeString(UI.regionalFormat, {});
+		const announce = (text, sender, info)=> {
+			if (!isSharing) return;
+			this.CreateBurstedBubble(text, sender === KEEP.username ? "out" : "in", sender, info.alias, info.color, nowString);
+		};
+
+		for (const [sender, member] of this.teamIcons) {
+			if (team.has(sender)) continue;
+			this.team.removeChild(member.icon);
+			this.teamIcons.delete(sender);
+			announce("Left the chat", sender, member.info);
+		}
+
+		for (const [sender, info] of team) {
+			if (this.teamIcons.has(sender)) continue;
+
+			const icon = document.createElement("div");
+			icon.setAttribute("tip-below", sender === KEEP.username ? `${info.alias || sender} (another window)` : info.alias || sender);
+			this.team.appendChild(icon);
+
+			const innerIcon = document.createElement("div");
+			innerIcon.style.backgroundColor = info.color || "#888";
+			icon.appendChild(innerIcon);
+
+			this.teamIcons.set(sender, {icon, info});
+			announce("Joined the chat, receives what you share", sender, info);
+		}
+	}
+
 	AdjustUI() {
+		this.UpdateTeam();
+
 		const hasUserStream = this.userStream !== null;
 		const hasDisplayStreams = this.displayStreams.length > 0;
 		const hasLocalStreams = hasUserStream || hasDisplayStreams;
@@ -1175,63 +1210,72 @@ class Chat extends Window {
 
 	ClearInput() {
 		this.input.textContent = "";
-		while (this.input.childNodes.length > 0) {
-			this.input.removeChild(this.input.childNodes[0]);
-		}
 	}
 
 	Send() {
 		if (this.input.innerHTML.length === 0) return;
 
-		if (this.input.innerHTML.length === 4 && this.input.innerHTML === "<br>") {
+		if (this.input.innerHTML === "<br>") {
 			this.ClearInput();
 			return;
 		}
-
-		const id = `${KEEP.username}${UI.GenerateUuid()}`;
 
 		const normalizedHtml = this.input.innerHTML
 			.replaceAll(/<br\s*\/?>/gi, "\n")
 			.replaceAll(/<\/div>/gi, "\n");
 
-		const sanitizer = document.createElement("div");
-		sanitizer.innerHTML = normalizedHtml;
-
-		let text = sanitizer.textContent
+		//an inert document, unlike a detached div nothing in it loads
+		const text = new DOMParser().parseFromString(normalizedHtml, "text/html").body.textContent
 			.replaceAll(" ", "\n")
 			.trim();
 
-		try {
-			KEEP.socket.send(JSON.stringify({
-				id: id,
-				type: "chat-text",
-				text: text
-			}));
-		}
-		catch (ex) {
-			this.ConfirmBox(ex, true, "mono/chat.svg");
+		const images = this.input.querySelectorAll("img[src^='data:image/']");
+
+		//checked before anything is sent, so nothing goes out half
+		if (text.length > Chat.MAX_TEXT_LENGTH) {
+			this.ConfirmBox(`The message is too long, the limit is ${Chat.MAX_TEXT_LENGTH} characters.`, true, "mono/chat.svg");
+			return;
 		}
 
-		const nowString = new Date().toLocaleTimeString(UI.regionalFormat, {});
+		for (const image of images) {
+			if (image.src.length > Chat.MAX_IMAGE_LENGTH) {
+				this.ConfirmBox("The image is too large to send.", true, "mono/chat.svg");
+				return;
+			}
+			if (!Chat.IMAGE_DATA_URL.test(image.src)) {
+				this.ConfirmBox("Only PNG, JPEG, GIF and WebP images can be sent.", true, "mono/chat.svg");
+				return;
+			}
+		}
 
-		const bubble = this.CreateTextBubble(text, "out", KEEP.username, "", KEEP.color, nowString, id);
-		if (bubble) {
+		if (text.length > 0) {
+			const id = `${KEEP.username}${UI.GenerateUuid()}`;
+
+			try {
+				KEEP.socket.send(JSON.stringify({
+					id: id,
+					type: "chat-text",
+					text: text
+				}));
+			}
+			catch (ex) {
+				this.ConfirmBox(ex, true, "mono/chat.svg");
+			}
+
+			const nowString = new Date().toLocaleTimeString(UI.regionalFormat, {});
+
+			const bubble = this.CreateTextBubble(text, "out", KEEP.username, "", KEEP.color, nowString, id);
 			bubble.style.color = "var(--clr-pane)";
 			bubble.style.backgroundColor = "transparent";
 			bubble.style.boxShadow = "var(--clr-pane) 0 0 0 2px inset";
 		}
 
-		const images = [];
-		this.FindImgTags(this.input, images);
-
-		for (let i=0; i<images.length; i++) {
-			if (!images[i].src.startsWith("data:image/")) continue;
-
+		for (const image of images) {
 			try {
 				KEEP.socket.send(JSON.stringify({
 					id: `${KEEP.username}${UI.GenerateUuid()}`,
 					type: "chat-image",
-					src: images[i].src
+					src: image.src
 				}));
 			}
 			catch (ex) {
@@ -1243,19 +1287,6 @@ class Chat extends Window {
 		this.ClearInput();
 	}
 
-	FindImgTags(element, images) {
-		const childNodes = element.childNodes;
-		for (let i=0; i<childNodes.length; i++) {
-			const node = childNodes[i];
-			if (node.tagName === "IMG" && node.src.startsWith("data:image/")) {
-				images.push(node);
-			}
-			else {
-				this.FindImgTags(node, images);
-			}
-		}
-	}
-
 	Input_onkeydown(event) {
 		if (event.key === "Enter" && !event.shiftKey) {
 			event.preventDefault();
@@ -1264,6 +1295,69 @@ class Chat extends Window {
 		else if (event.key === "Escape") {
 			this.ClearInput();
 		}
+	}
+
+	//pasted or dropped html can carry an <img> to any url, loaded with the session the moment it lands in the input,
+	//so only plain text and image files get in
+	Input_onpaste(event) {
+		event.preventDefault();
+		this.InsertTransfer(event.clipboardData);
+	}
+
+	Input_ondrop(event) {
+		event.preventDefault();
+		this.input.focus();
+		this.InsertTransfer(event.dataTransfer);
+	}
+
+	InsertTransfer(data) {
+		if (!data) return;
+
+		const files = [...data.files].filter(o=> o.type.startsWith("image/"));
+
+		if (files.length === 0) {
+			const text = data.getData("text/plain");
+			if (text) document.execCommand("insertText", false, text);
+			return;
+		}
+
+		for (const file of files) {
+			if (file.size * 4 / 3 > Chat.MAX_IMAGE_LENGTH) {
+				this.ConfirmBox("The image is too large to send.", true, "mono/chat.svg");
+				continue;
+			}
+
+			const reader = new FileReader();
+			reader.onload = ()=> {
+				if (!Chat.IMAGE_DATA_URL.test(reader.result)) {
+					this.ConfirmBox("Only PNG, JPEG, GIF and WebP images can be sent.", true, "mono/chat.svg");
+					return;
+				}
+
+				const image = document.createElement("img");
+				image.src = reader.result;
+				this.InsertNode(image);
+			};
+			reader.readAsDataURL(file);
+		}
+	}
+
+	InsertNode(node) {
+		const selection = window.getSelection();
+
+		//the file is read asynchronously, by then the caret may have left the input
+		if (selection.rangeCount === 0 || !this.input.contains(selection.anchorNode)) {
+			this.input.appendChild(node);
+			return;
+		}
+
+		const range = selection.getRangeAt(0);
+		range.deleteContents();
+		range.insertNode(node);
+		range.setStartAfter(node);
+		range.collapse(true);
+		selection.removeAllRanges();
+		selection.addRange(range);
 	}
 
 	async Mic_onclick() {
@@ -1285,15 +1379,13 @@ class Chat extends Window {
 				audio: true
 			});
 
-			const element = this.CreateLocalStreamElement(stream, false);
+			const element = this.CreateLocalStreamElement();
 			this.localStreamsBox.appendChild(element.container);
 			element.video.srcObject = stream;
-			element.video.muted = true;
 
 			const displayStream = {
 				stream: stream,
-				element: element,
-				kind: "display"
+				element: element
 			};
 
 			this.displayStreams.push(displayStream);
@@ -1377,7 +1469,7 @@ class Chat extends Window {
 			sender: sender
 		};
 
-		const isScrolledToBottom = this.chatBox.scrollTop + this.chatBox.clientHeight - this.chatBox.scrollHeight >= -96;
+		const isScrolledToBottom = this.IsScrolledToBottom();
 
 		group.appendChild(wrapper);
 
@@ -1388,6 +1480,33 @@ class Chat extends Window {
 		return bubble;
 	}
 
+	//close enough to the bottom that what is added next should scroll into view
+	IsScrolledToBottom() {
+		return this.chatBox.scrollTop + this.chatBox.clientHeight - this.chatBox.scrollHeight >= -96;
+	}
+
+	CreateNotice(text) {
+		const notice = document.createElement("div");
+		notice.className = "chat-notice";
+		notice.textContent = text;
+
+		const isScrolledToBottom = this.IsScrolledToBottom();
+
+		this.chatBox.appendChild(notice);
+		this.lastBubble = null; //the next bubble starts its own group below the notice
+
+		if (isScrolledToBottom) {
+			setTimeout(()=> notice.scrollIntoView({behavior:"smooth"}), 50);
+		}
+	}
+
+	CreateBurstedBubble(text, direction, sender, alias, color, time) {
+		const bubble = this.CreateBubble(direction, sender, alias, color, time);
+		bubble.classList.add("chat-burst-bubble");
+		bubble.textContent = text;
+		return bubble;
+	}
+
 	CreateTextBubble(text, direction, sender, alias, color, time, id=null) {
 		if (text.length === 0) return;
 
@@ -1395,8 +1514,8 @@ class Chat extends Window {
 		bubble.textContent = text;
 
 		if (direction === "out") {
-			if (id && !(id in this.outdoing)) {
-				this.outdoing[id] = bubble;
+			if (id && !(id in this.outgoing)) {
+				this.outgoing[id] = bubble;
 			}
 		}
 
@@ -1404,7 +1523,7 @@ class Chat extends Window {
 	}
 
 	CreateImageBubble(src, direction, sender, alias, color, time, id=null) {
-		if (!src.startsWith("data:image/")) return null;
+		if (!Chat.IMAGE_DATA_URL.test(src)) return null;
 
 		const bubble = this.CreateBubble(direction, sender, alias, color, time);
 
@@ -1414,38 +1533,44 @@ class Chat extends Window {
 		bubble.appendChild(image);
 
 		if (direction === "out") {
-			if (id && !(id in this.outdoing)) {
-				this.outdoing[id] = bubble;
+			if (id && !(id in this.outgoing)) {
+				this.outgoing[id] = bubble;
 			}
 		}
 
 		image.onclick = ()=> {
-				const dialog = this.DialogBox("80%");
-				if (dialog === null) return;
+			const dialog = this.DialogBox("80%");
+			if (dialog === null) return;
 
-				const {okButton, cancelButton, innerBox} = dialog;
+			const {okButton, cancelButton, innerBox} = dialog;
 
-				innerBox.style.margin = "20px 20px 0 20px";
-				innerBox.style.userSelect = "text";
-				innerBox.parentElement.style.top = "10%";
-				innerBox.parentElement.style.maxWidth = "80%";
+			innerBox.style.margin = "20px 20px 0 20px";
+			innerBox.style.userSelect = "text";
+			innerBox.parentElement.style.top = "10%";
+			innerBox.parentElement.style.maxWidth = "80%";
 
-				innerBox.style.backgroundImage = `url(${src})`;
-				innerBox.style.backgroundSize = "contain";
-				innerBox.style.backgroundPosition = "center";
-				innerBox.style.backgroundRepeat = "no-repeat";
+			//an img, not a css url(), so the src can never be read as css
+			const fullImage = document.createElement("img");
+			fullImage.src = src;
+			fullImage.style.display = "block";
+			fullImage.style.width = "100%";
+			fullImage.style.height = "100%";
+			fullImage.style.objectFit = "contain";
+			innerBox.appendChild(fullImage);
 
-				okButton.style.display = "none";
-				cancelButton.value = "Close";
+			okButton.style.display = "none";
+			cancelButton.value = "Close";
 
-				innerBox.parentElement.onclick = event=> event.stopPropagation();
-				innerBox.parentElement.parentElement.onclick = ()=> dialog.Close();
-			};
+			innerBox.parentElement.onclick = event=> event.stopPropagation();
+			innerBox.parentElement.parentElement.onclick = ()=> dialog.Close();
+		};
 
 		return bubble;
 	}
 
 	CreateEmojiBubble(url, direction, sender, alias, color, time, id=null) {
+		if (!Chat.ICON_PATH.test(url)) return;
+
 		const bubble = this.CreateBubble(direction, sender, alias, color, time);
 
 		const emojiBox = document.createElement("div");
@@ -1460,8 +1585,8 @@ class Chat extends Window {
 		emojiBox.appendChild(emoji);
 
 		if (direction === "out") {
-			if (id && !(id in this.outdoing)) {
-				this.outdoing[id] = bubble;
+			if (id && !(id in this.outgoing)) {
+				this.outgoing[id] = bubble;
 			}
 		}
 
@@ -1469,33 +1594,32 @@ class Chat extends Window {
 	}
 
 	CreateCommandBubble(command, args, icon, title, direction, sender, alias, color, time) {
+		if (!Chat.ICON_PATH.test(icon)) return;
+		if (!Object.hasOwn(Chat.COMMANDS, command)) return;
+
 		const bubble = this.CreateBubble(direction, sender, alias, color, time);
+
+		//the title is the sender's to choose, so the real tool name leads unless the title already starts with it
+		const name = Chat.COMMANDS[command];
 
 		const commandBox = document.createElement("div");
 		commandBox.className = "chat-command-box";
 		commandBox.style.backgroundImage = `url(${icon})`;
-		commandBox.textContent = title;
+		commandBox.textContent = title.startsWith(name) ? title : `${name}: ${title}`;
 		bubble.appendChild(commandBox);
 
 		commandBox.onclick = ()=> {
-			const window = LOADER.Invoke({
+			const win = LOADER.Invoke({
 				class: command,
 				args: JSON.parse(args)
 			});
-			window.Pop();
+			win?.Pop();
 		};
 
 		return bubble;
 	}
 
-	CreateBurstedBubble(text, direction, sender, alias, color, time) {
-		const bubble = this.CreateBubble(direction, sender, alias, color, time);
-		bubble.classList.add("chat-burst-bubble");
-		bubble.textContent = text;
-		return bubble;
-	}
-
-	CreateLocalStreamElement(stream, isUserMedia=false) {
+	CreateLocalStreamElement() {
 		const container = document.createElement("div");
 		container.className = "local-stream";
 
@@ -1515,7 +1639,6 @@ class Chat extends Window {
 		return {
 			container: container,
 			video: video,
-			videoFeedback: video,
 			stopButton: stopButton
 		};
 	}
@@ -1523,15 +1646,6 @@ class Chat extends Window {
 	CreateRemoteStreamElement(info) {
 		const container = document.createElement("div");
 		container.className = "remote-stream";
-		container.style.position = "absolute";
-		container.style.top = "0%";
-		container.style.left = "0%";
-		container.style.width = "100%";
-		container.style.height = "100%";
-		container.style.minHeight = "0";
-		container.style.boxSizing = "border-box";
-		container.style.overflow = "hidden";
-		container.style.transition = ".2s";
 
 		const video = document.createElement("video");
 		video.autoplay = true;
@@ -1547,6 +1661,6 @@ class Chat extends Window {
 		}
 		container.appendChild(label);
 
-		return {container, video, label};
+		return {container, video};
 	}
 }

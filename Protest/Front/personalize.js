@@ -610,7 +610,7 @@ class Personalize extends Tabs {
 		this.cookieLife.setAttribute("aria-label", "Cookie lifetime");
 		this.cookieLife.type = "range";
 		this.cookieLife.min = "1";
-		this.cookieLife.max = "12";
+		this.cookieLife.max = "10";
 		this.cookieLife.style.width = "200px";
 		this.tabsPanel.appendChild(this.cookieLife);
 
@@ -656,7 +656,7 @@ class Personalize extends Tabs {
 					WIN.array[i].cookieLife.value = this.cookieLife.value;
 
 					if (timeMapping[this.sessionTimeout.value] == Infinity) {
-						WIN.array[i].sessionTimeoutValueLabel.textContent = timeMapping[this.sessionTimeout.value];
+						WIN.array[i].sessionTimeoutValueLabel.textContent = "Unlimited";
 					}
 					else {
 						let value = timeMapping[this.sessionTimeout.value];

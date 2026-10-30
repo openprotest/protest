@@ -1,5 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.IO;
 using System.Net;
 using System.Net.WebSockets;
 using System.Text;
@@ -14,6 +15,10 @@ namespace Protest.Http;
 internal static class KeepAlive {
     public static readonly ArraySegment<byte> MSG_FORCE_RELOAD = new(Encoding.UTF8.GetBytes(@"{""action"":""force-reload""}"));
 
+    private const int MAX_MESSAGE_SIZE = 8 * 1024 * 1024; //the largest message is a pasted chat image, as a base64 data url
+    private const int MAX_CHAT_PEERS_PER_USER = 8; //chat windows open at once, across all of a user's tabs and browsers
+    private const int MAX_CHAT_JOINS_PER_MINUTE = 20;
+
     private sealed class Entry {
         public WebSocket ws;
         public HttpListenerContext ctx;
@@ -25,7 +30,9 @@ internal static class KeepAlive {
     private static readonly ConcurrentDictionary<WebSocket, Entry> connections = new();
     private static readonly ConcurrentDictionary<WebSocket, ConcurrentDictionary<string, int>> deviceViewCounter = new();
     private static readonly ConcurrentDictionary<WebSocket, ConcurrentDictionary<string, int>> userViewCounter = new();
-    private static readonly ConcurrentDictionary<WebSocket, string> chatPeerIds = new();
+    private static readonly ConcurrentDictionary<string, WebSocket> chatPeers = new(); //peerId -> owner, a socket can own one per chat window
+    private static readonly Dictionary<string, (long windowStart, int count)> chatJoinRate = new(); //username -> joins this minute, guarded by chatJoinMutex
+    private static readonly Lock chatJoinMutex = new();
 
     private static readonly JsonSerializerOptions messageSerializerOptions;
 
@@ -92,7 +99,7 @@ internal static class KeepAlive {
             ArraySegment<byte> dhcpSegment = new(Encoding.UTF8.GetBytes($"{{\"action\":\"dhcp-range\",\"list\":{DhcpRange.ListRangeString()}}}"));
             await ws.SendAsync(dhcpSegment, WebSocketMessageType.Text, true, CancellationToken.None);
 
-            StringBuilder messageBuilder = new StringBuilder();
+            MemoryStream message = new MemoryStream();
 
             while (ws.State == WebSocketState.Open) {
                 if (!Auth.IsAuthenticated(ctx)) {
@@ -108,11 +115,19 @@ internal static class KeepAlive {
                     break;
                 }
 
-                messageBuilder.Append(Encoding.UTF8.GetString(buff, 0, receive.Count));
+                //otherwise one endless message would buffer until the server runs out of memory
+                if (message.Length + receive.Count > MAX_MESSAGE_SIZE) {
+                    Logger.Action(username, "Keep-alive", $"Disconnected, a message exceeded {MAX_MESSAGE_SIZE} bytes");
+                    await ws.CloseOutputAsync(WebSocketCloseStatus.MessageTooBig, null, CancellationToken.None); //not CloseAsync, it would wait on a client that keeps sending
+                    break;
+                }
+
+                message.Write(buff, 0, receive.Count);
 
                 if (receive.EndOfMessage) {
-                    HandleMessage(messageBuilder.ToString(), ctx, keepAliveEntry, username);
-                    messageBuilder.Clear();
+                    //decoded once whole, a chunk can end in the middle of a multi-byte character
+                    HandleMessage(Encoding.UTF8.GetString(message.GetBuffer(), 0, (int)message.Length), ctx, keepAliveEntry, username);
+                    message = new MemoryStream(); //a fresh one, so an image's buffer is not held for the life of the socket
                 }
             }
         }
@@ -128,8 +143,11 @@ internal static class KeepAlive {
         finally {
             connections.TryRemove(ws, out _);
 
-            if (chatPeerIds.TryRemove(ws, out string leftPeerId)) {
-                Chat.LeaveHandler(leftPeerId, username);
+            foreach (KeyValuePair<string, WebSocket> pair in chatPeers) {
+                if (pair.Value != ws) continue;
+                if (chatPeers.TryRemove(pair)) {
+                    Chat.LeaveHandler(pair.Key, username);
+                }
             }
 
             if (deviceViewCounter.TryRemove(ws, out ConcurrentDictionary<string, int> devicesCount)) {
@@ -204,18 +222,7 @@ internal static class KeepAlive {
             if (!isAuthorized) continue;
 
             if (entry.ws.State == WebSocketState.Open) {
-                _ = Task.Run(async () => {
-                    try {
-                        await entry.semaphore.WaitAsync();
-                        await entry.ws.SendAsync(new ArraySegment<byte>(message), WebSocketMessageType.Text, true, CancellationToken.None);
-                    }
-                    catch (Exception ex) {
-                        Logger.Debug(ex);
-                    }
-                    finally {
-                        entry.semaphore.Release();
-                    }
-                });
+                Send(entry, message);
             }
             else {
                 remove.Add(entry.ws);
@@ -236,18 +243,7 @@ internal static class KeepAlive {
             if (!Auth.IsAuthorized(entry.ctx, accessPath)) continue;
 
             if (entry.ws.State == WebSocketState.Open) {
-                _ = Task.Run(async () => {
-                    try {
-                        await entry.semaphore.WaitAsync();
-                        await entry.ws.SendAsync(new ArraySegment<byte>(message), WebSocketMessageType.Text, true, CancellationToken.None);
-                    }
-                    catch (Exception ex) {
-                        Logger.Debug(ex);
-                    }
-                    finally {
-                        entry.semaphore.Release();
-                    }
-                });
+                Send(entry, message);
             }
         }
     }
@@ -261,19 +257,67 @@ internal static class KeepAlive {
             if (!Auth.IsAuthorized(entry.ctx, accessPath)) continue;
 
             if (entry.ws.State == WebSocketState.Open) {
-                _ = Task.Run(async ()=> {
-                    try {
-                        await entry.semaphore.WaitAsync();
-                        await entry.ws.SendAsync(new ArraySegment<byte>(message), WebSocketMessageType.Text, true, CancellationToken.None);
-                    }
-                    catch (Exception ex) {
-                        Logger.Debug(ex);
-                    }
-                    finally {
-                        entry.semaphore.Release();
-                    }
-                });
+                Send(entry, message);
             }
+        }
+    }
+
+    internal static void UnicastChatPeer(string peerId, byte[] message, string accessPath) {
+        if (!chatPeers.TryGetValue(peerId, out WebSocket ws)) return;
+        if (!connections.TryGetValue(ws, out Entry entry)) return;
+        if (!Auth.IsAuthorized(entry.ctx, accessPath)) return;
+
+        if (entry.ws.State == WebSocketState.Open) {
+            Send(entry, message);
+        }
+    }
+
+    private static void Send(Entry entry, byte[] message) {
+        _ = Task.Run(async ()=> {
+            try {
+                await entry.semaphore.WaitAsync();
+                await entry.ws.SendAsync(new ArraySegment<byte>(message), WebSocketMessageType.Text, true, CancellationToken.None);
+            }
+            catch (Exception ex) {
+                Logger.Debug(ex);
+            }
+            finally {
+                entry.semaphore.Release();
+            }
+        });
+    }
+
+    //signaling is only accepted under a peerId this socket joined with, otherwise anyone could pose as another peer
+    private static bool IsChatPeerOwner(ConcurrentDictionary<string, string> dictionary, WebSocket ws) =>
+        dictionary.TryGetValue("peerId", out string peerId)
+        && chatPeers.TryGetValue(peerId, out WebSocket owner)
+        && owner == ws;
+
+    //every join is broadcast, and every chat window answers it with a peer and a presence reply,
+    //so joins are capped per user, in windows open at once and in joins a minute, repeated joins of an owned peerId included
+    private static bool TryClaimChatPeer(string peerId, Entry entry) {
+        long now = Environment.TickCount64;
+
+        lock (chatJoinMutex) {
+            if (!chatJoinRate.TryGetValue(entry.username, out (long windowStart, int count) rate) || now - rate.windowStart > 60_000) {
+                rate = (now, 0);
+            }
+            if (rate.count >= MAX_CHAT_JOINS_PER_MINUTE) return false;
+            chatJoinRate[entry.username] = (rate.windowStart, rate.count + 1);
+
+            if (chatPeers.TryGetValue(peerId, out WebSocket owner)) {
+                return owner == entry.ws;
+            }
+
+            int owned = 0;
+            foreach (WebSocket ws in chatPeers.Values) {
+                if (connections.TryGetValue(ws, out Entry ownerEntry) && ownerEntry.username == entry.username) {
+                    owned++;
+                }
+            }
+            if (owned >= MAX_CHAT_PEERS_PER_USER) return false;
+
+            return chatPeers.TryAdd(peerId, entry.ws);
         }
     }
 
@@ -297,7 +341,7 @@ internal static class KeepAlive {
             if (long.TryParse(ttl, out long ttlLong)) {
                 string sessionId = ctx.Request.Cookies[Auth.SESSION_COOKIE]?.Value;
                 if (sessionId is null) return;
-                Auth.UpdateSessionTtl(sessionId, ttlLong);
+                Auth.UpdateSessionTtl(sessionId, Math.Min(ttlLong, 28));
             }
 
             return;
@@ -327,47 +371,44 @@ internal static class KeepAlive {
             return;
 
         case "chat-sdp-offer":
-            if (Auth.IsAuthorized(ctx, "/chat/write")) {
-                Chat.SdpHandler(dictionary, origin);
-            }
-            return;
-
         case "chat-sdp-answer":
-            if (Auth.IsAuthorized(ctx, "/chat/write")) {
+            if (Auth.IsAuthorized(ctx, "/chat/write") && IsChatPeerOwner(dictionary, keepAliveEntry.ws)) {
                 Chat.SdpHandler(dictionary, origin);
             }
             return;
 
         case "chat-join":
-            if (Auth.IsAuthorized(ctx, "/chat/write")) {
-                if (dictionary.TryGetValue("peerId", out string joinPeerId) && !String.IsNullOrEmpty(joinPeerId)) {
-                    chatPeerIds[keepAliveEntry.ws] = joinPeerId;
-                }
+            if (!Auth.IsAuthorized(ctx, "/chat/write")
+                || !dictionary.TryGetValue("peerId", out string joinPeerId)
+                || !Guid.TryParse(joinPeerId, out _)) {
+                return;
+            }
+
+            if (TryClaimChatPeer(joinPeerId, keepAliveEntry)) {
                 Chat.JoinHandler(dictionary, origin);
+            }
+            else {
+                //otherwise the window would wait for peers that never answer
+                Send(keepAliveEntry, JsonSerializer.SerializeToUtf8Bytes(new { action = "chat-join-refused", peerId = joinPeerId }));
             }
             return;
 
         case "chat-presence":
-            if (Auth.IsAuthorized(ctx, "/chat/write")) {
+            if (Auth.IsAuthorized(ctx, "/chat/write") && IsChatPeerOwner(dictionary, keepAliveEntry.ws)) {
                 Chat.PresenceHandler(dictionary, origin);
             }
             return;
 
         case "chat-leave":
             if (Auth.IsAuthorized(ctx, "/chat/write")
-                && chatPeerIds.TryRemove(keepAliveEntry.ws, out string leavePeerId)) {
+                && dictionary.TryGetValue("peerId", out string leavePeerId)
+                && chatPeers.TryRemove(new KeyValuePair<string, WebSocket>(leavePeerId, keepAliveEntry.ws))) {
                 Chat.LeaveHandler(leavePeerId, origin);
             }
             return;
 
-        case "chat-stream":
-            if (Auth.IsAuthorized(ctx, "/chat/write")) {
-                Chat.StreamHandler(dictionary, origin);
-            }
-            return;
-
         case "chat-ice":
-            if (Auth.IsAuthorized(ctx, "/chat/write")) {
+            if (Auth.IsAuthorized(ctx, "/chat/write") && IsChatPeerOwner(dictionary, keepAliveEntry.ws)) {
                 Chat.IceHandler(dictionary, origin);
             }
             return;

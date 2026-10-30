@@ -74,6 +74,9 @@ internal static class LastSeen {
                     return "Just now";
                 }
             }
+            catch (PingException) {
+                //do nothing
+            }
             catch (Exception ex) {
                 Logger.Debug(ex);
             }

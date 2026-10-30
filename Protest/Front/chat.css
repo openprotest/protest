@@ -3,11 +3,60 @@
 	container-type: inline-size;
 }
 
+.chat-team {
+	position: absolute;
+	z-index: 3;
+	top: 0;
+	left: 0;
+	width: 36px;
+	height: 36px;
+	margin: 0 4px 0 8px;
+	transition: .2s;
+	counter-reset: chat-team-count;
+}
+
+.chat-team > div {
+	display: inline-block;
+	position: absolute;
+	left: 0px;
+	width: 28px;
+	height: 28px;
+	margin: 4px;
+	filter: drop-shadow(#777 -1px 1px 0);
+	transition: .2s;
+	animation: team-join .4s forwards;
+	counter-increment: chat-team-count;
+}
+
+.chat-team > div > div {
+	width: 28px;
+	height: 28px;
+	mask-image: url(mono/user.svg);
+	mask-size: 28px 28px;
+	mask-repeat: no-repeat;
+}
+
+.chat-team:has(> :nth-child(2))::after {
+	content: counter(chat-team-count);
+	position: absolute;
+	right: 0px;
+	bottom: 0;
+	padding: 0 4px;
+	font-size: x-small;
+	font-weight: bold;
+	color: var(--clr-dark);
+	background-color: var(--clr-pane);
+	border-left: 1px solid #777;
+	border-bottom: 1px solid #777;
+	border-radius: 4px;
+	transition: .2s;
+}
+
 .chat-box {
 	position: absolute;
 	left: 8px;
 	right: 8px;
-	top: 8px;
+	top: 32px;
 	bottom: 64px;
 	color: var(--clr-light);
 	border: 2px solid color-mix(in srgb, var(--clr-contrast) 80%, transparent);
@@ -128,6 +177,9 @@
 	background-position: 8px center;
 	background-repeat: no-repeat;
 	border-radius: 8px;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
 	-webkit-user-select: none; user-select: none;
 }
 
@@ -155,9 +207,18 @@
 	content: none !important;
 }
 
+.chat-notice {
+	padding: 4px 8px;
+	text-align: center;
+	font-size: small;
+	color: var(--clr-contrast);
+	opacity: .8;
+	animation: rise-in 1 .2s;
+}
+
 .local-streams-box {
 	position: absolute;
-	top: 8px;
+	top: 32px;
 	bottom: 64px;
 	left: 4px;
 	width: 142px;
@@ -185,27 +246,27 @@
 
 .remote-streams-box {
 	position: absolute;
-	top: 8px;
+	top: 32px;
 	bottom: 64px;
 	left: 156px;
 	right: 8px;
-	padding: 4px;
 	margin: 4px;
-	overflow-y: auto;
-	display: grid;
-	grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-	grid-auto-rows: minmax(160px, 1fr);
-	gap: 8px;
+	overflow: hidden;
 	transition: .2s;
 	visibility: hidden;
 	opacity: 0;
 }
 
 .remote-stream {
-	position: relative;
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	box-sizing: border-box;
 	overflow: hidden;
-	min-height: 140px;
 	padding: 8px;
+	transition: .2s;
 }
 
 .remote-stream:not(.primary):hover {
@@ -373,6 +434,26 @@
 	background-size: 40px 40px;
 	background-position: center;
 	background-repeat: no-repeat;
+}
+
+@container chat-container (min-width: 800px) {
+	.chat-team > div:nth-child(1) {left:0px;}
+	.chat-team > div:nth-child(2) {left:32px;}
+	.chat-team > div:nth-child(3) {left:64px;}
+	.chat-team > div:nth-child(4) {left:96px;}
+	.chat-team > div:nth-child(5) {left:128px;}
+
+	.chat-team:has(> :nth-child(6)) > div {
+		left: 0px;
+	}
+
+	.chat-team::after {
+		opacity: 0;
+	}
+
+	.chat-team {
+		width: 192px;
+	}
 }
 
 @container chat-container (max-width: 520px) {
