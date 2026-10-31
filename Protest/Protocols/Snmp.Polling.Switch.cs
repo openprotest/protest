@@ -76,10 +76,13 @@ internal static partial class Polling {
         PortDir untagged   = new PortDir();
         PortDir tagged     = new PortDir();
 
+        Dictionary<int, int> bridgePorts = ParseBridgePorts(parsed);
+
         PortDir macTable = new PortDir();
         foreach (KeyValuePair<string, string> pair in parsed) {
             if (!pair.Key.StartsWith(Oid.DOT_1D_TP_FDB)) continue;
             if (!int.TryParse(pair.Value, out int port)) continue;
+            if (bridgePorts.Count > 0 && !bridgePorts.TryGetValue(port, out port)) continue; //bridge port to ifIndex
             string mac = String.Join(String.Empty, pair.Key.Split('.').TakeLast(6).Select(o=>int.Parse(o).ToString("x2")));
 
             if (macTable.ContainsKey(port)) {
@@ -158,6 +161,18 @@ internal static partial class Polling {
         }
 
         return new PortDir[] { type, descriptor, speed, untagged, tagged, alias, macTable };
+    }
+
+    //bridge port to ifIndex, empty when the agent has no dot1dBasePortTable
+    internal static Dictionary<int, int> ParseBridgePorts(Dictionary<string, string> parsed) {
+        Dictionary<int, int> bridgePorts = new Dictionary<int, int>();
+        foreach (KeyValuePair<string, string> pair in parsed) {
+            if (!pair.Key.StartsWith(Oid.DOT_1D_BASE_PORT_IFINDEX)) continue;
+            if (!int.TryParse(pair.Key.Split('.')[^1], out int bridgePort)) continue;
+            if (!int.TryParse(pair.Value, out int ifIndex)) continue;
+            bridgePorts[bridgePort] = ifIndex;
+        }
+        return bridgePorts;
     }
 
     private static byte[] SwitchInterfaces_LiveStatFormat(PortDir type, PortDir descriptor, PortDir speed, PortDir untagged, PortDir tagged, PortDir alias, PortDir macTable) =>
