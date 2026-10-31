@@ -705,12 +705,12 @@ class Snmp extends Window {
 				url = `snmp/get?target=${encodeURIComponent(this.targetInput.value)}&ver=3&cred=${this.credentialsProfileInput.value}`;
 			}
 			else {
-				url = `snmp/get?target=${encodeURIComponent(this.targetInput.value)}&ver=${this.versionInput.value}&community=${encodeURIComponent(this.communityInput.value)}`;
+				url = `snmp/get?target=${encodeURIComponent(this.targetInput.value)}&ver=${this.versionInput.value}`;
 			}
 
 			const response = await fetch(url, {
 				method: "POST",
-				body: oid
+				body: JSON.stringify({community: this.communityInput.value, oid: oid})
 			});
 
 			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
@@ -758,12 +758,12 @@ class Snmp extends Window {
 				url = `snmp/set?target=${encodeURIComponent(this.targetInput.value)}&ver=3&cred=${this.credentialsProfileInput.value}&value=${encodeURIComponent(value)}`;
 			}
 			else {
-				url = `snmp/set?target=${encodeURIComponent(this.targetInput.value)}&ver=${this.versionInput.value}&community=${encodeURIComponent(this.communityInput.value)}&value=${encodeURIComponent(value)}`;
+				url = `snmp/set?target=${encodeURIComponent(this.targetInput.value)}&ver=${this.versionInput.value}&value=${encodeURIComponent(value)}`;
 			}
 
 			const response = await fetch(url, {
 				method: "POST",
-				body: this.oidInput.value.trim()
+				body: JSON.stringify({community: this.communityInput.value, oid: this.oidInput.value.trim()})
 			});
 
 			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
@@ -857,12 +857,12 @@ class Snmp extends Window {
 				url = `snmp/walk?target=${encodeURIComponent(this.targetInput.value)}&ver=3&cred=${this.credentialsProfileInput.value}`;
 			}
 			else {
-				url = `snmp/walk?target=${encodeURIComponent(this.targetInput.value)}&ver=${this.versionInput.value}&community=${encodeURIComponent(this.communityInput.value)}`;
+				url = `snmp/walk?target=${encodeURIComponent(this.targetInput.value)}&ver=${this.versionInput.value}`;
 			}
 
 			const response = await fetch(url, {
 				method: "POST",
-				body: oid
+				body: JSON.stringify({community: this.communityInput.value, oid: oid})
 			});
 
 			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);

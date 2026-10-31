@@ -27,7 +27,8 @@ internal static class Auth {
 
     private const long RATE_LIMIT_TIME_WINDOW = TimeSpan.TicksPerMinute * 10;
     private const int MAX_REQUESTS_PER_TIME_WINDOW = 10;
-    private static readonly ConcurrentDictionary<IPAddress, ConcurrentQueue<long>> rateLimitLog = new ConcurrentDictionary<IPAddress, ConcurrentQueue<long>>();
+    internal static readonly ConcurrentDictionary<IPAddress, ConcurrentQueue<long>> rateLimitLog = new ConcurrentDictionary<IPAddress, ConcurrentQueue<long>>();
+    private static long lastRateLimitSweep;
 
     private static readonly JsonSerializerOptions serializerOptions;
     private static readonly ConcurrentDictionary<string, OtpToken> otpTokens = new();
@@ -127,9 +128,15 @@ internal static class Auth {
     }
 
     private static bool IsRateLimited(IPAddress clientIP) {
-        ConcurrentQueue<long> timestamps = rateLimitLog.GetOrAdd(clientIP, _ => new ConcurrentQueue<long>());
-        
         long currentTime = DateTime.UtcNow.Ticks;
+
+        long lastSweep = Interlocked.Read(ref lastRateLimitSweep);
+        if (currentTime - lastSweep > RATE_LIMIT_TIME_WINDOW && Interlocked.CompareExchange(ref lastRateLimitSweep, currentTime, lastSweep) == lastSweep) {
+            EvictIdleRateLimits(currentTime);
+        }
+
+        ConcurrentQueue<long> timestamps = rateLimitLog.GetOrAdd(clientIP, _ => new ConcurrentQueue<long>());
+
         while (timestamps.TryPeek(out long timestamp) && currentTime - timestamp > RATE_LIMIT_TIME_WINDOW) {
             timestamps.TryDequeue(out _);
         }
@@ -141,6 +148,19 @@ internal static class Auth {
 
         timestamps.Enqueue(currentTime);
         return false;
+    }
+
+    //every host that ever signed in keeps an entry, drop the ones with no attempt left in the time window
+    internal static void EvictIdleRateLimits(long now) {
+        foreach (KeyValuePair<IPAddress, ConcurrentQueue<long>> pair in rateLimitLog) {
+            while (pair.Value.TryPeek(out long timestamp) && now - timestamp > RATE_LIMIT_TIME_WINDOW) {
+                pair.Value.TryDequeue(out _);
+            }
+
+            if (pair.Value.IsEmpty) {
+                rateLimitLog.TryRemove(pair);
+            }
+        }
     }
 
     internal static bool AuthHandler(HttpListenerContext ctx) {
@@ -209,6 +229,8 @@ internal static class Auth {
         }
 
         if (!rbac.TryGetValue(username, out AccessControl access)) {
+            //hashed all the same, so the response time doesn't tell which usernames exist
+            Cryptography.HashUsernameAndPassword(username, password);
             ctx.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
             return false;
         }
@@ -1083,12 +1105,21 @@ internal static class Auth {
             return Data.CODE_INVALID_ARGUMENT.Array;
         }
 
-        using StreamReader reader = new StreamReader(ctx.Request.InputStream, ctx.Request.ContentEncoding);
-        string permissionsString = reader.ReadToEnd();
+        string password;
+        string[] authorization;
+        try {
+            using JsonDocument body = JsonDocument.Parse(ctx.Request.InputStream);
+            password = body.RootElement.TryGetProperty("password", out JsonElement passwordElement) ? passwordElement.GetString() : null;
+            authorization = body.RootElement.TryGetProperty("authorization", out JsonElement authorizationElement)
+                ? authorizationElement.EnumerateArray().Select(o => o.GetString()).ToArray()
+                : Array.Empty<string>();
+        }
+        catch (Exception ex) when (ex is JsonException or InvalidOperationException) {
+            return Data.CODE_INVALID_ARGUMENT.Array;
+        }
 
         parameters.TryGetValue("domain", out string domain);
         parameters.TryGetValue("email", out string email);
-        parameters.TryGetValue("password", out string password);
 
         parameters.TryGetValue("alias", out string alias);
         parameters.TryGetValue("color", out string color);
@@ -1096,7 +1127,7 @@ internal static class Auth {
 
         username = Uri.UnescapeDataString(username).ToLower();
         email    = Uri.UnescapeDataString(email ?? String.Empty);
-        password = Uri.UnescapeDataString(password ?? String.Empty);
+        password ??= String.Empty;
         alias    = Uri.UnescapeDataString(alias ?? String.Empty);
         color    = Uri.UnescapeDataString(color ?? String.Empty);
         bool isDomainUser = Uri.UnescapeDataString(isDomainString ?? String.Empty) == "true";
@@ -1131,11 +1162,7 @@ internal static class Auth {
                 isDomainUser = isDomainUser
             };
         }
-        if (permissionsString == "[]") permissionsString = String.Empty;
-        if (permissionsString.Length >= 1 && permissionsString.StartsWith('[')) permissionsString = permissionsString[1..];
-        if (permissionsString.Length >= 1 && permissionsString.EndsWith(']')) permissionsString = permissionsString[..^1];
-
-        access.authorization = permissionsString.Length == 0 ? Array.Empty<string>() : permissionsString.Split(',').Select(o => o.Trim()[1..^1]).ToArray();
+        access.authorization = authorization;
         access.accessPath = PopulateAccessPath(access.authorization);
 
         if (!rbac.TryAdd(username, access)) {
@@ -1148,7 +1175,7 @@ internal static class Auth {
 
         Logger.Action(origin, "AAA", $"Save RBAC entry for {username}");
 
-        KeepAlive.Unicast(username, $"{{\"action\":\"update-rbac\",\"authorization\":[{permissionsString}]}}", "/global");
+        KeepAlive.Unicast(username, $"{{\"action\":\"update-rbac\",\"authorization\":{JsonSerializer.Serialize(authorization)}}}", "/global");
 
         return Data.CODE_OK.Array;
     }

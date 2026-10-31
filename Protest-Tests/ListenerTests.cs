@@ -1,4 +1,5 @@
 global using NUnit.Framework;
+using System.Collections.Concurrent;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -237,6 +238,52 @@ public class ListenerTests {
         Assert.That(SendAuth("same-origin"), Is.EqualTo(HttpStatusCode.Unauthorized));
     }
 
+    //An unknown username is hashed like a wrong password, so the response time doesn't tell which usernames exist
+    [Test]
+    public void Auth_UnknownUsername_TakesAsLongAsAWrongPassword() {
+        const string username = "unit-test-timing";
+        Auth.rbac[username] = new Auth.AccessControl {
+            username      = username,
+            passwordHash  = Cryptography.HashUsernameAndPassword(username, "unit-test-password"),
+            authorization = [],
+            accessPath    = []
+        };
+
+        try {
+            WithTrustedLoopbackProxy(() => {
+                TimeSpan wrongPassword   = TimeAuth($"x\u007F{username}\u007Fwrong-password");
+                TimeSpan unknownUsername = TimeAuth("x\u007Funit-test-nobody\u007Fwrong-password");
+
+                //the hash takes far longer than the rest of the request, without it the unknown username answers almost at once
+                Assert.That(unknownUsername, Is.GreaterThan(wrongPassword / 2));
+            });
+        }
+        finally {
+            Auth.rbac.TryRemove(username, out _);
+        }
+    }
+
+    [Test]
+    public void RateLimit_HostsWithNoAttemptInTheWindow_AreEvicted() {
+        IPAddress idle   = IPAddress.Parse("203.0.113.70");
+        IPAddress active = IPAddress.Parse("203.0.113.71");
+        long now = DateTime.UtcNow.Ticks;
+
+        Auth.rateLimitLog[idle]   = new ConcurrentQueue<long>([now - TimeSpan.TicksPerMinute * 11]);
+        Auth.rateLimitLog[active] = new ConcurrentQueue<long>([now - TimeSpan.TicksPerMinute * 11, now - TimeSpan.TicksPerMinute]);
+
+        try {
+            Auth.EvictIdleRateLimits(now);
+
+            Assert.That(Auth.rateLimitLog.ContainsKey(idle), Is.False);
+            Assert.That(Auth.rateLimitLog.TryGetValue(active, out ConcurrentQueue<long>? timestamps) ? timestamps.Count : 0, Is.EqualTo(1), "the attempt still in the window is kept");
+        }
+        finally {
+            Auth.rateLimitLog.TryRemove(idle, out _);
+            Auth.rateLimitLog.TryRemove(active, out _);
+        }
+    }
+
     //DNS rebinding: a page whose name now points to 127.0.0.1 is same-origin to itself, only a listener on a wildcard prefix
     //takes a Host it doesn't know, with the backdoor on it must refuse it
     [TestCase("evil.test", true,  HttpStatusCode.BadRequest)]
@@ -260,6 +307,43 @@ public class ListenerTests {
         finally {
             Configuration.backdoor = original;
         }
+    }
+
+    [Test]
+    public void CreateUser_PasswordFromTheBody_IsKeptAsTyped() {
+        const string username = "unit-test-body-password";
+        WithSession("/rbac/create", cookie => {
+            try {
+                string response = SendCreateUser(cookie, $"username={username}", "{\"password\":\"pa%41ss\",\"authorization\":[\"devices:read\"]}");
+
+                Assert.That(response, Is.EqualTo("{\"status\":\"ok\"}"));
+                Assert.That(Auth.rbac[username].passwordHash, Is.EqualTo(Cryptography.HashUsernameAndPassword(username, "pa%41ss")));
+                Assert.That(Auth.rbac[username].authorization, Is.EqualTo(new[] { "devices:read" }));
+            }
+            finally {
+                Auth.rbac.TryRemove(username, out _);
+                File.Delete(Path.Join(Data.DIR_RBAC, username));
+            }
+        });
+    }
+
+    [Test]
+    public void CreateUser_PasswordInTheUrl_IsIgnored() {
+        WithSession("/rbac/create", cookie => {
+            string response = SendCreateUser(cookie, "username=unit-test-url-password&password=from-the-url", "{\"authorization\":[]}");
+            Assert.That(response, Does.Contain("please enter password"));
+            Assert.That(Auth.rbac.ContainsKey("unit-test-url-password"), Is.False);
+        });
+    }
+
+    [TestCase("[\"devices:read\"]", Description = "the former body, only the permissions")]
+    [TestCase("not json")]
+    public void CreateUser_BodyThatIsNotTheJsonObject_IsInvalid(string body) {
+        WithSession("/rbac/create", cookie => {
+            string response = SendCreateUser(cookie, "username=unit-test-invalid-body", body);
+            Assert.That(response, Is.EqualTo(Encoding.UTF8.GetString(Data.CODE_INVALID_ARGUMENT)));
+            Assert.That(Auth.rbac.ContainsKey("unit-test-invalid-body"), Is.False);
+        });
     }
 
     //built once, the listener takes seconds to load the front-end
@@ -341,6 +425,31 @@ public class ListenerTests {
         using HttpClient httpClient = new HttpClient();
         using HttpResponseMessage result = httpClient.Send(requestMessage);
         return result.StatusCode;
+    }
+
+    //from a client of its own behind the trusted loopback proxy, so it has its own rate limit
+    private TimeSpan TimeAuth(string body) {
+        using HttpRequestMessage requestMessage = new HttpRequestMessage(HttpMethod.Post, $"{baseUrl}/auth");
+        requestMessage.Headers.TryAddWithoutValidation("X-Forwarded-For", "198.51.100.60");
+        requestMessage.Content = new StringContent(body);
+
+        using HttpClient httpClient = new HttpClient();
+        System.Diagnostics.Stopwatch stopwatch = System.Diagnostics.Stopwatch.StartNew();
+        using HttpResponseMessage result = httpClient.Send(requestMessage);
+        stopwatch.Stop();
+
+        Assert.That(result.StatusCode, Is.EqualTo(HttpStatusCode.Unauthorized));
+        return stopwatch.Elapsed;
+    }
+
+    private string SendCreateUser(string cookie, string query, string body) {
+        using HttpRequestMessage requestMessage = new HttpRequestMessage(HttpMethod.Post, $"{baseUrl}/rbac/create?{query}");
+        requestMessage.Headers.Add("Cookie", cookie);
+        requestMessage.Content = new StringContent(body);
+
+        using HttpClient httpClient = new HttpClient();
+        using HttpResponseMessage result = httpClient.Send(requestMessage);
+        return result.Content.ReadAsStringAsync().Result;
     }
 
     private HttpStatusCode SendWithForwardedFor(HttpMethod method, string path, string? forwardedFor) {

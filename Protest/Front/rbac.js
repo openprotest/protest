@@ -273,7 +273,7 @@ class AccessControl extends Tabs {
 			this.username.removeAttribute("required");
 
 			try {
-				let url = `rbac/create?username=${encodeURIComponent(this.username.value)}&email=${encodeURIComponent(this.email.value)}&domain=${encodeURIComponent(this.domain.value)}&password=${encodeURIComponent(this.password.value)}&alias=${encodeURIComponent(this.alias.value)}&color=${encodeURIComponent(this.color.value)}&isdomain=${this.domainUserToggle.checkbox.checked}`;
+				let url = `rbac/create?username=${encodeURIComponent(this.username.value)}&email=${encodeURIComponent(this.email.value)}&domain=${encodeURIComponent(this.domain.value)}&alias=${encodeURIComponent(this.alias.value)}&color=${encodeURIComponent(this.color.value)}&isdomain=${this.domainUserToggle.checkbox.checked}`;
 				let authorization = [];
 
 				for (let i=0; i<this.permissionsList.length; i++) {
@@ -287,7 +287,7 @@ class AccessControl extends Tabs {
 
 				const response = await fetch(url, {
 					method: "POST",
-					body: JSON.stringify(authorization)
+					body: JSON.stringify({password: this.password.value, authorization: authorization})
 				});
 
 				if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
