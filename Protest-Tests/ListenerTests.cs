@@ -391,7 +391,7 @@ public class ListenerTests {
     private static void WithSession(string path, Action<string> test) {
         string sessionId = Guid.NewGuid().ToString();
         Auth.sessions[sessionId] = new Auth.Session {
-            access    = new Auth.AccessControl { username = "unit-test-admin", accessPath = [path] },
+            access    = new Auth.AccessControl { username = "unit-test-admin", authorization = [], accessPath = [path] },
             ip        = IPAddress.Loopback,
             sessionId = sessionId,
             loginDate = DateTime.UtcNow.Ticks,

@@ -105,8 +105,12 @@ internal static class Auth {
             return false;
         }
 
-        return session.access.accessPath.Contains(path);
+        return IsAuthorized(session.access, path);
     }
+
+    //"*" grants every path, including the ones no permission maps to
+    internal static bool IsAuthorized(AccessControl access, string path) =>
+        access.accessPath.Contains(path) || access.authorization.Contains("*");
 
     internal static bool IsAuthenticatedAndAuthorized(HttpListenerContext ctx, string path) {
         IPAddress remoteIp = ctx.Request.RemoteEndPoint.Address;
@@ -124,7 +128,7 @@ internal static class Auth {
             return false;
         }
 
-        return session.access.accessPath.Contains(path);
+        return IsAuthorized(session.access, path);
     }
 
     private static bool IsRateLimited(IPAddress clientIP) {
@@ -509,48 +513,6 @@ internal static class Auth {
         return null;
     }
 
-    //every permission the RBAC editor offers, keep in sync with PopulateAccessPath and Front/rbac.js
-    internal static readonly string[] ALL_PERMISSIONS = {
-        "devices:read",          "devices:write",
-        "users:read",            "users:write",
-        "vault:read",            "vault:write",
-        "manage hosts:write",
-        "manage users:write",
-        "fetch:write",
-        "documentation:read",    "documentation:write",
-        "debit notes:read",      "debit notes:write",
-        "chat:read",             "chat:write",
-        "watchdog:write",
-        "reverse proxy:write",
-        "issues:write",
-        "network utilities:write",
-        "vnc:write",
-        "rdp:write",
-        "rustdesk:write",
-        "rtsp:write",
-        "session recordings:read",
-        "terminal:write",
-        "serial console:write",
-        "telnet:write",
-        "secure shell:write",
-        "remote shell:write",
-        "wmi:write",
-        "snmp polling:write",
-        "snmp traps:read",       "snmp traps:write",
-        "infrastructure:write",
-        "data retention:read",   "data retention:write",
-        "rbac:write",
-        "scheduler:write",
-        "integration:write",
-        "api links:write",
-        "log:write",
-        "syslog:read",           "syslog:write",
-        "windows events:read",
-        "certificates:write",
-        "backup:write",
-        "update:write"
-    };
-
     internal static HashSet<string> PopulateAccessPath(string[] accessList) {
         HashSet<string> path = new HashSet<string> {
             "/global",
@@ -705,6 +667,7 @@ internal static class Auth {
                 path.Add("/tools/nics/list");
                 path.Add("/tools/bulkping");
                 path.Add("/tools/dnslookup");
+                path.Add("/tools/mdnslookup");
                 path.Add("/tools/ntp");
                 path.Add("/tools/locateip");
                 path.Add("/tools/maclookup");
@@ -752,7 +715,7 @@ internal static class Auth {
                 path.Add("/ws/rtsp");
                 break;
 
-            case "session recordings:read":
+            case "session recordings:write":
                 path.Add("/recordings/list");
                 path.Add("/recordings/meta");
                 path.Add("/ws/recordingplayback");
@@ -771,14 +734,11 @@ internal static class Auth {
                 path.Add("/snmp/switchinterface");
                 break;
 
-            case "snmp traps:read":
+            case "snmp traps:write":
                 path.Add("/snmptraps");
                 path.Add("/snmptraps/list");
                 path.Add("/snmptraps/devices");
                 path.Add("/snmptraps/summary");
-                break;
-
-            case "snmp traps:write":
                 path.Add("/snmptraps/listeners/list");
                 path.Add("/snmptraps/listeners/save");
                 path.Add("/config/smtpprofiles/list");
@@ -789,21 +749,18 @@ internal static class Auth {
                 path.Add("");
                 break;*/
 
-            case "syslog:read":
+            case "syslog:write":
                 path.Add("/syslog");
                 path.Add("/syslog/list");
                 path.Add("/syslog/devices");
                 path.Add("/syslog/summary");
-                break;
-
-            case "syslog:write":
                 path.Add("/syslog/listeners/list");
                 path.Add("/syslog/listeners/save");
                 path.Add("/config/smtpprofiles/list");
                 path.Add("/config/cert/list");
                 break;
 
-            case "windows events:read":
+            case "windows events:write":
                 path.Add("/winevents");
                 path.Add("/winevents/list");
                 path.Add("/winevents/devices");
@@ -870,12 +827,9 @@ internal static class Auth {
                 path.Add("/config/checkupdate");
                 break;
 
-            case "data retention:read":
+            case "data retention:write":
                 path.Add("/config/dataretention/settings/list");
                 path.Add("/config/sessionrecording/get");
-                break;
-
-            case "data retention:write":
                 path.Add("/config/dataretention/lifeline");
                 path.Add("/config/dataretention/lastseen");
                 path.Add("/config/dataretention/watchdog");
@@ -939,6 +893,13 @@ internal static class Auth {
                     access.authorization = access.authorization.Append("vault:read").ToArray();
                 }
 
+                //read only permissions became single "allow access" toggles, stored as write
+                access.authorization = access.authorization?.Select(o => o switch {
+                    "session recordings:read" => "session recordings:write",
+                    "windows events:read"     => "windows events:write",
+                    _ => o
+                }).ToArray();
+
                 access.accessPath = PopulateAccessPath(access.authorization);
                 rbac.TryAdd(access.username, access);
             }
@@ -975,7 +936,7 @@ internal static class Auth {
             alias         = "Administrator",
             color         = "#0080C0",
             isDomainUser  = false,
-            authorization = (string[])ALL_PERMISSIONS.Clone()
+            authorization = new string[] { "*" }
         };
         access.accessPath = PopulateAccessPath(access.authorization);
 
@@ -1013,7 +974,7 @@ internal static class Auth {
         }
     }
 
-    private static bool SaveAccessControl(AccessControl access) {
+    internal static bool SaveAccessControl(AccessControl access) {
         byte[] plain = JsonSerializer.SerializeToUtf8Bytes(access, serializerOptions);
         byte[] cipher = Cryptography.Encrypt(plain, Configuration.DB_KEY, Configuration.DB_KEY_IV);
 

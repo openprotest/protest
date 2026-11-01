@@ -215,6 +215,9 @@ class AccessControl extends Tabs {
 
 		this.InitializePermissionList();
 
+		//the selected user's permissions, the dialog's toggles only show and edit them, saving sends this
+		this.authorization = [];
+
 		this.username.onchange = ()=> {
 			this.alias.placeholder = this.username.value;
 		};
@@ -243,6 +246,7 @@ class AccessControl extends Tabs {
 			this.color.value = "#0080C0";
 			this.password.placeholder = "";
 			this.alias.placeholder = "";
+			this.authorization = [];
 
 			this.newButton.disabled = true;
 			this.removeButton.disabled = true;
@@ -274,20 +278,10 @@ class AccessControl extends Tabs {
 
 			try {
 				let url = `rbac/create?username=${encodeURIComponent(this.username.value)}&email=${encodeURIComponent(this.email.value)}&domain=${encodeURIComponent(this.domain.value)}&alias=${encodeURIComponent(this.alias.value)}&color=${encodeURIComponent(this.color.value)}&isdomain=${this.domainUserToggle.checkbox.checked}`;
-				let authorization = [];
-
-				for (let i=0; i<this.permissionsList.length; i++) {
-					if (this.permissionsList[i].read.checked) {
-						authorization.push(`${this.permissionsList[i].key}:read`);
-					}
-					if (this.permissionsList[i].write.checked) {
-						authorization.push(`${this.permissionsList[i].key}:write`);
-					}
-				}
 
 				const response = await fetch(url, {
 					method: "POST",
-					body: JSON.stringify({password: this.password.value, authorization: authorization})
+					body: JSON.stringify({password: this.password.value, authorization: this.authorization})
 				});
 
 				if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
@@ -302,7 +296,7 @@ class AccessControl extends Tabs {
 					}
 				}
 
-				let newUser = this.AddUser(this.username.value, this.email.value, this.domain.value, this.password.value, this.alias.value, this.color.value, this.domainUserToggle.checkbox.checked, authorization);
+				let newUser = this.AddUser(this.username.value, this.email.value, this.domain.value, this.password.value, this.alias.value, this.color.value, this.domainUserToggle.checkbox.checked, this.authorization);
 				newUser.onclick();
 			}
 			catch (ex) {
@@ -348,9 +342,11 @@ class AccessControl extends Tabs {
 
 			innerBox.append(this.inventoryGroup, this.documentationGroup, this.toolsGroup, this.manageGroup);
 
+			//"*" grants everything, show it as every box checked, OK then writes the explicit list
+			const fullAccess = this.authorization.includes("*");
 			for (let i=0; i<this.permissionsList.length; i++) {
-				this.permissionsList[i].read.checked = false;
-				this.permissionsList[i].write.checked = false;
+				this.permissionsList[i].read.checked = fullAccess;
+				this.permissionsList[i].write.checked = fullAccess;
 			}
 
 			for (let i=0; i<this.authorization.length; i++) {
@@ -367,6 +363,19 @@ class AccessControl extends Tabs {
 			}
 
 			okButton.onclick = ()=> {
+				let authorization = [];
+
+				//a disabled toggle is not offered, a stored entry for it is dropped instead of written back
+				for (let i=0; i<this.permissionsList.length; i++) {
+					if (this.permissionsList[i].read.checked && !this.permissionsList[i].read.disabled) {
+						authorization.push(`${this.permissionsList[i].key}:read`);
+					}
+					if (this.permissionsList[i].write.checked && !this.permissionsList[i].write.disabled) {
+						authorization.push(`${this.permissionsList[i].key}:write`);
+					}
+				}
+
+				this.authorization = authorization;
 				this.saveButton.onclick();
 				dialog.Close();
 			};
@@ -457,7 +466,7 @@ class AccessControl extends Tabs {
 		this.permissionsList.push(this.AddPermissionObject("RDP",               "url(mono/rdp.svg)",           this.toolsGroup, false, true, false));
 		this.permissionsList.push(this.AddPermissionObject("RustDesk",          "url(mono/rustdesk.svg)",      this.toolsGroup, false, true, false));
 		this.permissionsList.push(this.AddPermissionObject("RTSP",              "url(mono/camera.svg)",        this.toolsGroup, false, true, false));
-		this.permissionsList.push(this.AddPermissionObject("Session recordings","url(mono/screenrecord.svg)",  this.toolsGroup, true, false, false));
+		this.permissionsList.push(this.AddPermissionObject("Session recordings","url(mono/screenrecord.svg)",  this.toolsGroup, false, true, false));
 		this.permissionsList.push(this.AddPermissionObject("Terminal",          "url(mono/terminal.svg)",      this.toolsGroup, false, true, false));
 		this.permissionsList.push(this.AddPermissionObject("Serial console",    "url(mono/serialconsole.svg)", this.toolsGroup, false, true, false));
 		this.permissionsList.push(this.AddPermissionObject("Telnet",            "url(mono/telnet.svg)",        this.toolsGroup, false, true, false));
@@ -465,18 +474,18 @@ class AccessControl extends Tabs {
 		this.permissionsList.push(this.AddPermissionObject("Remote shell",      "url(mono/terminal.svg)",      this.toolsGroup, false, true, false));
 		this.permissionsList.push(this.AddPermissionObject("WMI",               "url(mono/wmi.svg)",           this.toolsGroup, false, true, false));
 		this.permissionsList.push(this.AddPermissionObject("SNMP polling",      "url(mono/snmp.svg)",          this.toolsGroup, false, true, false));
-		this.permissionsList.push(this.AddPermissionObject("SNMP traps",        "url(mono/trap.svg)",          this.toolsGroup, true, true, true));
+		this.permissionsList.push(this.AddPermissionObject("SNMP traps",        "url(mono/trap.svg)",          this.toolsGroup, false, true, false));
 
 		this.manageGroup = this.AddPermissionGroup("Manage", "url(mono/logo.svg)");
 		this.permissionsList.push(this.AddPermissionObject("Infrastructure",  "url(mono/infrastructure.svg)", this.manageGroup, false, true, false));
-		this.permissionsList.push(this.AddPermissionObject("Data retention", "url(mono/dataretention.svg)",  this.manageGroup, true, true, true));
+		this.permissionsList.push(this.AddPermissionObject("Data retention", "url(mono/dataretention.svg)",  this.manageGroup, false, true, false));
 		this.permissionsList.push(this.AddPermissionObject("RBAC",           "url(mono/rbac.svg)",        this.manageGroup, false, true, false));
 		this.permissionsList.push(this.AddPermissionObject("Scheduler",      "url(mono/timeline.svg)",    this.manageGroup, false, true, false));
 		this.permissionsList.push(this.AddPermissionObject("Integration",    "url(mono/integration.svg)", this.manageGroup, false, true, false));
 		this.permissionsList.push(this.AddPermissionObject("API links",      "url(mono/carabiner.svg)",   this.manageGroup, false, true, false));
 		this.permissionsList.push(this.AddPermissionObject("Log",            "url(mono/log.svg)",         this.manageGroup, false, true, false));
-		this.permissionsList.push(this.AddPermissionObject("Syslog",         "url(mono/syslog.svg)",      this.manageGroup, true, true, true));
-		this.permissionsList.push(this.AddPermissionObject("Windows events", "url(mono/eventlogger.svg)", this.manageGroup, true, false, false));
+		this.permissionsList.push(this.AddPermissionObject("Syslog",         "url(mono/syslog.svg)",      this.manageGroup, false, true, false));
+		this.permissionsList.push(this.AddPermissionObject("Windows events", "url(mono/eventlogger.svg)", this.manageGroup, false, true, false));
 		this.permissionsList.push(this.AddPermissionObject("Certificates",   "url(mono/certificate.svg)", this.manageGroup, false, true, false));
 		this.permissionsList.push(this.AddPermissionObject("Backup",         "url(mono/backup.svg)",      this.manageGroup, false, true, false));
 		this.permissionsList.push(this.AddPermissionObject("Update",         "url(mono/update.svg)",      this.manageGroup, false, true, false));

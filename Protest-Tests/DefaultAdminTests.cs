@@ -28,10 +28,10 @@ public class DefaultAdminTests {
         Assert.That(password, Is.Not.Null);
         Assert.That(File.Exists(AdminFile), Is.True);
         Assert.That(Auth.rbac.TryGetValue(Auth.DEFAULT_ADMIN_USERNAME, out Auth.AccessControl access), Is.True);
-        Assert.That(access.authorization, Is.EquivalentTo(Auth.ALL_PERMISSIONS));
-        Assert.That(access.accessPath, Does.Contain("/rbac/create"));
-        Assert.That(access.accessPath, Does.Contain("/ws/terminal"));
-        Assert.That(access.accessPath, Does.Contain("/config/backup/download"));
+        Assert.That(access.authorization, Is.EqualTo(new[] { "*" }));
+        Assert.That(Auth.IsAuthorized(access, "/rbac/create"), Is.True);
+        Assert.That(Auth.IsAuthorized(access, "/ws/terminal"), Is.True);
+        Assert.That(Auth.IsAuthorized(access, "/config/backup/download"), Is.True);
         Assert.That(access.passwordHash, Is.EqualTo(Cryptography.HashUsernameAndPassword(Auth.DEFAULT_ADMIN_USERNAME, password)));
     }
 
@@ -81,14 +81,41 @@ public class DefaultAdminTests {
         Assert.That(Auth.rbac.ContainsKey(Auth.DEFAULT_ADMIN_USERNAME), Is.False);
     }
 
-    //catches a typo in ALL_PERMISSIONS, which would silently grant nothing
+    //"*" is stored as is, an admin reloaded on the next start must keep full access
     [Test]
-    public void EveryPermissionGrantsAccess() {
-        int baseline = Auth.PopulateAccessPath(Array.Empty<string>()).Count;
+    public void FullAccessSurvivesReload() {
+        Auth.EnsureDefaultAdmin();
 
-        foreach (string permission in Auth.ALL_PERMISSIONS) {
-            if (permission == "update:write") continue; //offered by the RBAC editor, no server routes yet
-            Assert.That(Auth.PopulateAccessPath(new[] { permission }).Count, Is.GreaterThan(baseline), permission);
-        }
+        Assert.That(Auth.LoadRbac(), Is.True);
+        Assert.That(Auth.rbac.TryGetValue(Auth.DEFAULT_ADMIN_USERNAME, out Auth.AccessControl access), Is.True);
+        Assert.That(access.authorization, Is.EqualTo(new[] { "*" }));
+        Assert.That(Auth.IsAuthorized(access, "/rbac/create"), Is.True);
+    }
+
+    //session recordings and windows events used to be read only, now single toggles stored as write, existing entries keep their access
+    [Test]
+    public void ReadOnlyPermissionsAreRenamedOnLoad() {
+        Auth.SaveAccessControl(new Auth.AccessControl {
+            username      = "bob",
+            passwordHash  = Cryptography.HashUsernameAndPassword("bob", "unit-test"),
+            authorization = new[] { "session recordings:read", "windows events:read", "devices:read" }
+        });
+
+        Assert.That(Auth.LoadRbac(), Is.True);
+        Assert.That(Auth.rbac["bob"].authorization, Is.EqualTo(new[] { "session recordings:write", "windows events:write", "devices:read" }));
+        Assert.That(Auth.IsAuthorized(Auth.rbac["bob"], "/recordings/list"), Is.True);
+        Assert.That(Auth.IsAuthorized(Auth.rbac["bob"], "/winevents/list"), Is.True);
+    }
+
+    //only "*" skips the path check, an explicit list grants its own paths and nothing else
+    [Test]
+    public void ExplicitPermissionsDoNotGrantEverything() {
+        Auth.AccessControl access = new Auth.AccessControl {
+            authorization = new[] { "devices:read" },
+            accessPath    = Auth.PopulateAccessPath(new[] { "devices:read" })
+        };
+
+        Assert.That(Auth.IsAuthorized(access, "/db/device/list"), Is.True);
+        Assert.That(Auth.IsAuthorized(access, "/rbac/create"), Is.False);
     }
 }
