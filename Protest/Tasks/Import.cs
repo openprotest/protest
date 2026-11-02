@@ -24,10 +24,18 @@ internal class Import {
         parameters.TryGetValue("port",       out string port);
         parameters.TryGetValue("protocol",   out string protocol);
         parameters.TryGetValue("username",   out string username);
-        parameters.TryGetValue("password",   out string password);
         parameters.TryGetValue("devices",    out string importDevices);
         parameters.TryGetValue("users",      out string importUsers);
         parameters.TryGetValue("debitnotes", out string importDebitNotes);
+
+        string password;
+        try {
+            using JsonDocument body = JsonDocument.Parse(ctx.Request.InputStream);
+            password = body.RootElement.TryGetProperty("password", out JsonElement passwordElement) ? passwordElement.GetString() : null;
+        }
+        catch (Exception ex) when (ex is JsonException or InvalidOperationException) {
+            return Data.CODE_INVALID_ARGUMENT.ToArray();
+        }
 
         IPAddress ipAddress = IPAddress.Parse(ip);
         if (!IPAddress.IsLoopback(ipAddress)) {

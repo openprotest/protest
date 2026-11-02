@@ -4,7 +4,6 @@ using System.Security.Cryptography.X509Certificates;
 using System.IO;
 using System.Net;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Text.Json;
 using Protest.Http;
 
@@ -188,7 +187,16 @@ internal static class Cert {
         Dictionary<string, string> parameters = Listener.ParseQuery(ctx);
 
         parameters.TryGetValue("name", out string name);
-        parameters.TryGetValue("password", out string password);
+
+        string password;
+        try {
+            using JsonDocument body = JsonDocument.Parse(ctx.Request.InputStream);
+            password = body.RootElement.TryGetProperty("password", out JsonElement passwordElement) ? passwordElement.GetString() : null;
+        }
+        catch (Exception ex) when (ex is JsonException or InvalidOperationException) {
+            return Data.CODE_INVALID_ARGUMENT.Array;
+        }
+
         return GetCertInfo(name, password);
     }
 

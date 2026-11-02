@@ -1022,8 +1022,11 @@ class Fetch extends Tabs {
 				status.style.animation = "delayed-fade-in 1.5s ease-in 1";
 				dialog.innerBox.appendChild(status);
 
-				let uri = `fetch/import?ip=${targetInput.GetIpString()}&port=${portInput.value}&protocol=${protocolInput.value}&username=${encodeURIComponent(usernameInput.value)}&password=${encodeURIComponent(passwordInput.value)}&devices=${deviceToggle.checkbox.checked}&users=${usersToggle.checkbox.checked}&debitnotes=${debitNotesToggle.checkbox.checked}`;
-				const response = await fetch(uri);
+				let uri = `fetch/import?ip=${targetInput.GetIpString()}&port=${portInput.value}&protocol=${protocolInput.value}&username=${encodeURIComponent(usernameInput.value)}&devices=${deviceToggle.checkbox.checked}&users=${usersToggle.checkbox.checked}&debitnotes=${debitNotesToggle.checkbox.checked}`;
+				const response = await fetch(uri, {
+					method: "POST",
+					body: JSON.stringify({password: passwordInput.value})
+				});
 
 				dialog.Close();
 

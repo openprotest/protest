@@ -22,6 +22,7 @@ internal static class Oid {
         DOT_1Q_PVLAN,
         DOT_1Q_VLAN_EGRESS,
         DOT_1D_TP_FDB,
+        DOT_1D_BASE_PORT_IFINDEX,
     };
 
     public static readonly string[] LIVEVIEW_SWITCH_OID = new string[] {
@@ -35,6 +36,7 @@ internal static class Oid {
         IF_IN_ERROR,
         IF_OUT_ERROR,
         DOT_1D_TP_FDB,
+        DOT_1D_BASE_PORT_IFINDEX,
     };
 
     public static readonly string[] LIVESTATS_OID = new string[] {
@@ -115,6 +117,7 @@ internal static class Oid {
     //public const string IF_OUT_OCTETS  = "1.3.6.1.2.1.2.2.1.16";
     public const string IF_OUT_ERROR   = "1.3.6.1.2.1.2.2.1.20";
 
+    public const string DOT_1D_BASE_PORT_IFINDEX    = "1.3.6.1.2.1.17.1.4.1.2";
     public const string DOT_1D_TP_FDB               = "1.3.6.1.2.1.17.4.3.1.2";
     public const string DOT_1Q_VLAN_EGRESS          = "1.3.6.1.2.1.17.7.1.4.2.1.4";
     public const string DOT_1Q_VLAN_STATIC_NAME     = "1.3.6.1.2.1.17.7.1.4.3.1.1";

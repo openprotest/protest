@@ -14,7 +14,7 @@ internal static class DatabaseInstances {
     internal static string FindDeviceByMac(string mac) {
         if (mac is null) return null;
 
-        mac = mac.Replace(":", String.Empty).Replace("-", String.Empty).ToLowerInvariant();
+        mac = mac.Replace(":", String.Empty).Replace("-", String.Empty).Replace(".", String.Empty).ToLowerInvariant();
 
         foreach (KeyValuePair<string, Database.Entry> entry in devices.dictionary) {
             if (!entry.Value.attributes.TryGetValue("mac address", out Database.Attribute macAttr)) continue;
@@ -22,6 +22,7 @@ internal static class DatabaseInstances {
             string[] entryMac = macAttr.value.
                 Replace(":", String.Empty)
                 .Replace("-", String.Empty)
+                .Replace(".", String.Empty)
                 .ToLowerInvariant()
                 .Split(';')
                 .Select(o=>o.Trim())

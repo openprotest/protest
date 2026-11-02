@@ -537,10 +537,13 @@ internal static class LiveStats {
         Dictionary<int, int>    errorInDic    = new Dictionary<int, int>();
         Dictionary<int, int>    errorOutDic   = new Dictionary<int, int>();
 
+        Dictionary<int, int> bridgePorts = Protocols.Snmp.Polling.ParseBridgePorts(parsedResult);
+
         Dictionary<int, string> macTable = new Dictionary<int, string>();
         foreach (KeyValuePair<string, string> pair in parsedResult) {
             if (!pair.Key.StartsWith(Oid.DOT_1D_TP_FDB)) continue;
             if (!int.TryParse(pair.Value, out int port)) continue;
+            if (bridgePorts.Count > 0 && !bridgePorts.TryGetValue(port, out port)) continue; //bridge port to ifIndex
 
             string[] oidSplit = pair.Key.Split('.');
             if (oidSplit.Length < 6) continue;

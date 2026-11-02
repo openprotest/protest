@@ -40,7 +40,7 @@ class Rs232 extends PtyHost {
 	}
 
 	ConnectDialog() { //overrides
-		const dialog = this.DialogBox("380px");
+		const dialog = this.DialogBox("385px");
 		if (dialog === null) return;
 
 		const {okButton, innerBox} = dialog;

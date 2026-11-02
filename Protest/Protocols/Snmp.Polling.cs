@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Text;
+using System.Text.Json;
 using Lextm.SharpSnmpLib;
 using Lextm.SharpSnmpLib.Messaging;
 using Lextm.SharpSnmpLib.Security;
@@ -33,8 +34,17 @@ internal static partial class Polling {
 
         parameters.TryGetValue("target",    out string target);
         parameters.TryGetValue("ver",       out string versionString);
-        parameters.TryGetValue("community", out string communityString);
         parameters.TryGetValue("timeout",   out string timeoutString);
+
+        string communityString, oidString;
+        try {
+            using JsonDocument body = JsonDocument.Parse(ctx.Request.InputStream);
+            communityString = body.RootElement.TryGetProperty("community", out JsonElement communityElement) ? communityElement.GetString() : null;
+            oidString       = body.RootElement.TryGetProperty("oid", out JsonElement oidElement) ? oidElement.GetString() : null;
+        }
+        catch (Exception ex) when (ex is JsonException or InvalidOperationException) {
+            return Data.CODE_INVALID_ARGUMENT.Array;
+        }
 
         if (!IPAddress.TryParse(target, out IPAddress targetIp)) {
             try {
@@ -58,10 +68,7 @@ internal static partial class Polling {
             timeout = 5_000;
         }
 
-        using StreamReader reader = new StreamReader(ctx.Request.InputStream, ctx.Request.ContentEncoding);
-        string payload = reader.ReadToEnd().Trim();
-
-        string[] oidArray = payload.Split(new char[] { ' ', ',', ';', '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
+        string[] oidArray = (oidString ?? String.Empty).Split(new char[] { ' ', ',', ';', '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
         if (oidArray.Length == 0) return Data.CODE_INVALID_ARGUMENT.Array;
 
         try {

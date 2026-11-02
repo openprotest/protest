@@ -119,7 +119,10 @@ class Certificates extends List {
 	}
 
 	async CertInto(name, password) {
-		const response = await fetch(`config/cert/info?name=${name}&password=${password}`);
+		const response = await fetch(`config/cert/info?name=${encodeURIComponent(name)}`, {
+			method: "POST",
+			body: JSON.stringify({password: password})
+		});
 		if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
 
 		const json = await response.json();
