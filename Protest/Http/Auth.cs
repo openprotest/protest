@@ -845,6 +845,8 @@ internal static class Auth {
                 path.Add("/config/smtpprofiles/oauth/complete");
                 path.Add("/config/snmpprofiles/list");
                 path.Add("/config/snmpprofiles/save");
+                path.Add("/config/rustdesk/get");
+                path.Add("/config/rustdesk/save");
                 path.Add("/config/checkupdate");
                 break;
 

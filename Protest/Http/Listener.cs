@@ -223,6 +223,9 @@ internal sealed class Listener {
         ["/config/sessionrecording/get"]  = (ctx, username) => new(Protocols.SessionRecording.GetSettings()),
         ["/config/sessionrecording/save"] = (ctx, username) => new(Protocols.SessionRecording.SaveSettings(ctx, username)),
 
+        ["/config/rustdesk/get"]          = (ctx, username) => new(Protocols.RustDesk.GetServerSettings()),
+        ["/config/rustdesk/save"]         = (ctx, username) => new(Protocols.RustDesk.SaveServerSettings(ctx, username)),
+
         ["/api/list"]                     = (ctx, username) => new(Tools.Api.List()),
         ["/api/save"]                     = (ctx, username) => new(Tools.Api.Save(ctx, username)),
 

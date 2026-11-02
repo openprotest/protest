@@ -194,6 +194,7 @@ class RustDeskProto {
 
 class RustDesk extends Window {
 	static DEFAULT_PORT = 21118; //direct IP access
+	static VIA = ["host", "selfhosted", "public"]; //by address, or by ID through the self-hosted or the public servers
 	static MAX_CURSOR_SIZE = 32; //browsers drop a bigger cursor near the viewport's edge, as with RDP
 	static MAX_CLIPBOARD_LENGTH = 8 * 1024 * 1024;
 	static SESSION_SWITCH_RETRIES = 5;
@@ -573,9 +574,15 @@ class RustDesk extends Window {
 			return;
 		}
 
-		const query = new URLSearchParams({ target: host.includes(":") ? `[${host}]:${port}` : `${host}:${port}` });
+		//by ID the gateway picks the server from its own settings, the browser only says which kind
+		const via = RustDesk.VIA.includes(this.args.via) ? this.args.via : "host";
+		const query = new URLSearchParams(via === "host"
+			? { target: host.includes(":") ? `[${host}]:${port}` : `${host}:${port}` }
+			: { target: host, via: via });
 		if (this.args.file) query.set("file", this.args.file);
-		if (this.args.credential) query.set("credential", this.args.credential);
+
+		const credential = via === "host" ? this.args.credential : null; //by ID the password is typed
+		if (credential) query.set("credential", credential);
 
 		let socket;
 		try {
@@ -599,7 +606,7 @@ class RustDesk extends Window {
 				codecs   : Object.keys(codecs).filter(o=> codecs[o]),
 				clipboard: this.clipboardSync
 			};
-			if (this.password && !this.args.credential) hello.password = this.password;
+			if (this.password && !credential) hello.password = this.password;
 			socket.send(JSON.stringify(hello));
 		};
 
@@ -1564,28 +1571,31 @@ class RustDesk extends Window {
 		innerBox.style.alignItems = "center";
 		innerBox.style.margin = "20px 20px 0 20px";
 
+		const viaLabel = document.createElement("div");
+		viaLabel.style.gridArea = "1 / 1";
+		viaLabel.textContent = "Connect via:";
+		const viaBox = new FewBox(["Host", "Self-hosted", "Public"]);
+		viaBox.Select(Math.max(0, RustDesk.VIA.indexOf(this.args.via)));
+		viaBox.container.style.gridArea = "1 / 2";
+		innerBox.append(viaLabel, viaBox.container);
+
 		const methodLabel = document.createElement("div");
-		methodLabel.style.gridArea = "1 / 1";
+		methodLabel.style.gridArea = "2 / 1";
 		methodLabel.textContent = "Method:";
 		const methodBox = new FewBox(["Manual", "Credentials"]);
 		methodBox.Select(0);
-		methodBox.container.style.gridArea = "1 / 2";
+		methodBox.container.style.gridArea = "2 / 2";
 		innerBox.append(methodLabel, methodBox.container);
 
 		const hostLabel = document.createElement("div");
-		hostLabel.style.gridArea = "3 / 1";
-		hostLabel.textContent = "Host:";
 		const hostInput = document.createElement("input");
-		hostInput.style.gridArea = "3 / 2";
 		hostInput.type = "text";
 		hostInput.value = target ?? "";
 		innerBox.append(hostLabel, hostInput);
 
 		const portLabel = document.createElement("div");
-		portLabel.style.gridArea = "4 / 1";
 		portLabel.textContent = "Port:";
 		const portInput = document.createElement("input");
-		portInput.style.gridArea = "4 / 2";
 		portInput.type = "number";
 		portInput.min = "1";
 		portInput.max = "65535";
@@ -1593,16 +1603,13 @@ class RustDesk extends Window {
 		innerBox.append(portLabel, portInput);
 
 		const passwordLabel = document.createElement("div");
-		passwordLabel.style.gridArea = "5 / 1";
 		passwordLabel.textContent = "Password:";
 		const passwordInput = document.createElement("input");
-		passwordInput.style.gridArea = "5 / 2";
 		passwordInput.type = "password";
 		passwordInput.placeholder = "or let the remote user accept";
 		innerBox.append(passwordLabel, passwordInput);
 
 		const rememberPasswordToggle = this.CreateToggle("Remember password", false, innerBox);
-		rememberPasswordToggle.label.style.gridArea = "6 / 2 / 6 / 4";
 		rememberPasswordToggle.label.style.whiteSpace = "nowrap";
 		rememberPasswordToggle.label.style.overflow = "hidden";
 		rememberPasswordToggle.label.style.textOverflow = "ellipsis";
@@ -1613,24 +1620,58 @@ class RustDesk extends Window {
 		}
 
 		const credentialsLabel = document.createElement("div");
-		credentialsLabel.style.gridArea = "5 / 1";
 		credentialsLabel.textContent = "Credentials:";
 		const credentialsInput = document.createElement("select");
-		credentialsInput.style.gridArea = "5 / 2";
 		innerBox.append(credentialsLabel, credentialsInput);
 
 		dialogBox.style.transition = ".2s";
 
+		//an ID as RustDesk shows it, grouped by spaces
+		const ReadId = ()=> hostInput.value.replace(/\s+/g, "");
+
 		const UpdateOkState = ()=> {
-			const host = hostInput.value.trim().length > 0;
-			okButton.disabled = !host || (methodBox.index === 1 && !credentialsInput.value);
+			const direct = viaBox.index === 0;
+			const target = direct
+				? hostInput.value.trim().length > 0
+				: /^[A-Za-z0-9_-]{1,64}$/.test(ReadId());
+			okButton.disabled = !target || (direct && methodBox.index === 1 && !credentialsInput.value);
 		};
 
 		const UpdateSelection = ()=> {
-			const manual = methodBox.index === 0;
+			//by ID the password is typed, a one-time code changes with every session and has no place in the vault
+			const direct = viaBox.index === 0;
+			const manual = !direct || methodBox.index === 0;
 
-			innerBox.style.gridTemplateRows = manual ? "36px 8px repeat(4, 36px)" : "36px 8px repeat(3, 36px)";
-			dialogBox.style.maxHeight = manual ? "280px" : "240px";
+			methodLabel.style.display = direct ? "initial" : "none";
+			methodBox.container.style.display = direct ? "" : "none";
+
+			//the rows below the selectors follow each other, the method and the port only by address
+			const top = direct ? 4 : 3;
+			let row = top;
+			const Place = (label, input)=> {
+				label.style.gridArea = `${row} / 1`;
+				input.style.gridArea = `${row} / 2`;
+				row++;
+			};
+
+			Place(hostLabel, hostInput);
+			if (direct) Place(portLabel, portInput);
+			if (manual) Place(passwordLabel, passwordInput);
+			else Place(credentialsLabel, credentialsInput);
+			if (manual) {
+				rememberPasswordToggle.label.style.gridArea = `${row} / 2 / ${row} / 4`;
+				row++;
+			}
+
+			const rows = row - top;
+			innerBox.style.gridTemplateRows = `${direct ? "36px 36px" : "36px"} 8px repeat(${rows}, 36px)`;
+			dialogBox.style.maxHeight = `${(direct ? 172 : 136) + rows * 36}px`;
+
+			hostLabel.textContent = direct ? "Host:" : "ID:";
+			hostInput.placeholder = direct ? "" : "123 456 789";
+
+			portLabel.style.display = direct ? "initial" : "none";
+			portInput.style.display = direct ? "initial" : "none";
 
 			passwordLabel.style.display    = manual ? "initial" : "none";
 			passwordInput.style.display    = manual ? "initial" : "none";
@@ -1645,8 +1686,11 @@ class RustDesk extends Window {
 		};
 
 		methodBox.container.onchange = UpdateSelection;
+		viaBox.container.onchange = UpdateSelection;
 
+		//vault credentials log in by address only
 		const SelectVaultEntry = guid=> {
+			viaBox.Select(0);
 			methodBox.Select(1);
 			credentialsInput.value = guid;
 			UpdateOkState();
@@ -1664,7 +1708,7 @@ class RustDesk extends Window {
 			}
 			catch {}
 
-			if (this.args.credential) {
+			if (this.args.credential && viaBox.index === 0) {
 				SelectVaultEntry(this.args.credential);
 			}
 
@@ -1683,10 +1727,11 @@ class RustDesk extends Window {
 		});
 
 		okButton.onclick = ()=> {
-			this.args.host = hostInput.value.trim();
+			this.args.via = RustDesk.VIA[viaBox.index];
+			this.args.host = this.args.via === "host" ? hostInput.value.trim() : ReadId();
 			this.args.port = parseInt(portInput.value) || RustDesk.DEFAULT_PORT;
 
-			if (methodBox.index === 0) {
+			if (this.args.via !== "host" || methodBox.index === 0) {
 				this.password = passwordInput.value.length > 0 ? passwordInput.value : null;
 
 				if (rememberPasswordToggle.checkbox.checked && this.password !== null) {
@@ -1731,7 +1776,7 @@ class RustDesk extends Window {
 		credentialsInput.onchange = UpdateOkState;
 
 		UpdateSelection();
-		setTimeout(()=> methodBox.container.focus(), 200);
+		setTimeout(()=> viaBox.container.focus(), 200);
 	}
 
 	//a dialog that is still closing holds the window a moment longer, the prompt waits for it while it is still due

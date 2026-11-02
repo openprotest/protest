@@ -28,6 +28,7 @@ class Infrastructure extends Tabs {
 		this.adTab          = this.AddTab("Active directory", "mono/directory.svg");
 		this.smtpTab        = this.AddTab("SMTP", "mono/email.svg");
 		this.snmpTab        = this.AddTab("SNMP", "mono/snmp.svg");
+		this.rustDeskTab    = this.AddTab("RustDesk", "mono/rustdesk.svg");
 		this.integrationTab = this.AddTab("Integration", "mono/integration.svg");
 		this.dataRetention  = this.AddTab("Data retention", "mono/dataretention.svg");
 
@@ -36,6 +37,7 @@ class Infrastructure extends Tabs {
 		this.adTab.onclick          = ()=> this.ShowActiveDirectory();
 		this.smtpTab.onclick        = ()=> this.ShowSmtp();
 		this.snmpTab.onclick        = ()=> this.ShowSnmp();
+		this.rustDeskTab.onclick    = ()=> this.ShowRustDesk();
 		this.dataRetention.onclick  = ()=> this.ShowDataRetention();
 		this.integrationTab.onclick = ()=> this.ShowIntegration();
 
@@ -62,6 +64,11 @@ class Infrastructure extends Tabs {
 		case "snmp":
 			this.snmpTab.className = "v-tab-selected";
 			this.ShowSnmp();
+			break;
+
+		case "rustdesk":
+			this.rustDeskTab.className = "v-tab-selected";
+			this.ShowRustDesk();
 			break;
 
 		case "integration":
@@ -564,6 +571,141 @@ class Infrastructure extends Tabs {
 			this.tabsPanel.appendChild(warningBox);
 		}
 		catch {}
+	}
+
+	//the servers the RustDesk client reaches a host through by its ID
+	async ShowRustDesk() {
+		this.args = "rustdesk";
+		this.tabsPanel.textContent = "";
+
+		const CreateSection = (title, icon, description)=> {
+			const container = document.createElement("div");
+			container.style.padding = "20px";
+			container.style.marginBottom = "20px";
+			container.style.maxWidth = "640px";
+			container.style.border = "2px solid var(--clr-control)";
+			container.style.borderRadius = "8px";
+			this.tabsPanel.appendChild(container);
+
+			const titleBox = document.createElement("div");
+			titleBox.textContent = title;
+			titleBox.style.fontWeight = "700";
+			titleBox.style.fontSize = "1.05em";
+			titleBox.style.lineHeight = "28px";
+			titleBox.style.paddingLeft = "40px";
+			titleBox.style.backgroundImage = `url(${icon})`;
+			titleBox.style.backgroundSize = "28px 28px";
+			titleBox.style.backgroundRepeat = "no-repeat";
+			container.appendChild(titleBox);
+
+			const descriptionBox = document.createElement("div");
+			descriptionBox.textContent = description;
+			descriptionBox.style.fontSize = "smaller";
+			descriptionBox.style.opacity = "0.8";
+			descriptionBox.style.padding = "4px 0 16px 40px";
+			container.appendChild(descriptionBox);
+
+			const grid = document.createElement("div");
+			grid.style.display = "grid";
+			grid.style.gridTemplateColumns = "120px minmax(80px, 400px)";
+			grid.style.alignItems = "center";
+			grid.style.rowGap = "8px";
+			grid.style.paddingLeft = "40px";
+			container.appendChild(grid);
+
+			const AddField = (label, placeholder)=> {
+				const labelBox = document.createElement("div");
+				labelBox.textContent = label;
+				const input = document.createElement("input");
+				input.type = "text";
+				input.placeholder = placeholder;
+				input.spellcheck = false;
+				input.disabled = true; //until the settings are in
+				grid.append(labelBox, input);
+				return input;
+			};
+
+			return {
+				idServer   : AddField("ID server:", "host, or host:21116"),
+				relayServer: AddField("Relay server:", "the one the ID server names"),
+				key        : AddField("Key:", "the content of id_ed25519.pub")
+			};
+		};
+
+		const selfHosted = CreateSection("Self-hosted server", "mono/server.svg",
+			"Your own ID server (hbbs) and relay server (hbbr), the ones the hosts are set to. With the key set, each host's identity is checked against the ID server's word for it.");
+
+		const publicServers = CreateSection("RustDesk public servers", "mono/earth.svg",
+			"RustDesk's own servers. A blank ID server or key falls back to the ones RustDesk's client ships with.");
+
+		const footer = document.createElement("div");
+		footer.style.maxWidth = "684px";
+		footer.style.textAlign = "right";
+		this.tabsPanel.appendChild(footer);
+
+		const saveButton = document.createElement("input");
+		saveButton.type = "button";
+		saveButton.value = "Save";
+		saveButton.className = "with-icon";
+		saveButton.style.backgroundImage = "url(mono/floppy.svg?light)";
+		saveButton.disabled = true;
+		footer.appendChild(saveButton);
+
+		const sections = { selfhosted:selfHosted, public:publicServers };
+		const inputs = Object.values(sections).flatMap(o=> Object.values(o));
+
+		for (const input of inputs) {
+			input.oninput = ()=> saveButton.disabled = false;
+		}
+
+		saveButton.onclick = async ()=> {
+			saveButton.disabled = true;
+
+			const settings = {};
+			for (const [name, section] of Object.entries(sections)) {
+				settings[name] = {
+					idServer   : section.idServer.value.trim(),
+					relayServer: section.relayServer.value.trim(),
+					key        : section.key.value.trim()
+				};
+			}
+
+			try {
+				const response = await fetch("config/rustdesk/save", {
+					method: "POST",
+					body: JSON.stringify(settings)
+				});
+
+				if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
+
+				const json = await response.json();
+				if (json.error) throw json.error;
+			}
+			catch (ex) {
+				saveButton.disabled = false;
+				this.ConfirmBox(ex, true, "mono/error.svg");
+			}
+		};
+
+		try {
+			const response = await fetch("config/rustdesk/get");
+			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
+
+			const json = await response.json();
+			if (json.error) throw json.error;
+
+			for (const [name, section] of Object.entries(sections)) {
+				section.idServer.value    = json[name]?.idServer ?? "";
+				section.relayServer.value = json[name]?.relayServer ?? "";
+				section.key.value         = json[name]?.key ?? "";
+			}
+		}
+		catch (ex) {
+			this.ConfirmBox(ex, true, "mono/error.svg");
+		}
+		finally {
+			for (const input of inputs) input.disabled = false;
+		}
 	}
 
 	ShowSmtp() {

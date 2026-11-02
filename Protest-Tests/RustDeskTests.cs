@@ -1,7 +1,9 @@
+using System.Buffers.Binary;
 using System.Net;
 using System.Security.Cryptography;
 using System.Text;
 using Org.BouncyCastle.Math.EC.Rfc7748;
+using Org.BouncyCastle.Math.EC.Rfc8032;
 using Protest.Protocols;
 
 namespace Protest.Tests;
@@ -360,5 +362,104 @@ public class RustDeskTests {
 
         Assert.That(RustDesk.ParseHello("not json"), Is.Null);
         Assert.That(RustDesk.ParseHello("{\"codecs\":[1]}"), Is.Null);
+    }
+
+    //AddrMangle::encode of hbb_common, with the timestamp it folds in fixed
+    private static byte[] MangleV4(IPEndPoint endPoint, uint tm) {
+        UInt128 ip = BinaryPrimitives.ReadUInt32LittleEndian(endPoint.Address.GetAddressBytes());
+        UInt128 port = (uint)endPoint.Port;
+        UInt128 value = ((ip + tm) << 49) | ((UInt128)tm << 17) | (port + (tm & 0xFFFFu));
+
+        byte[] bytes = new byte[16];
+        BinaryPrimitives.WriteUInt128LittleEndian(bytes, value);
+        int length = 16;
+        while (length > 0 && bytes[length - 1] == 0) length--;
+        return bytes[..length];
+    }
+
+    [TestCase("192.168.1.20", 21118, 0u)]
+    [TestCase("10.0.0.5", 65535, 0xFFFF_FFFFu)]
+    [TestCase("203.0.113.7", 1, 0x1234_5678u)]
+    public void DecodeAddress_UndoesAddrMangle(string address, int port, uint tm) {
+        IPEndPoint endPoint = new IPEndPoint(IPAddress.Parse(address), port);
+        Assert.That(RustDesk.DecodeAddress(MangleV4(endPoint, tm)), Is.EqualTo(endPoint));
+    }
+
+    [Test]
+    public void DecodeAddress_ReadsIpv6AndRefusesOtherLengths() {
+        byte[] bytes = new byte[18];
+        IPAddress.Parse("2001:db8::7").GetAddressBytes().CopyTo(bytes, 0);
+        BinaryPrimitives.WriteUInt16LittleEndian(bytes.AsSpan(16), 21118);
+
+        Assert.That(RustDesk.DecodeAddress(bytes), Is.EqualTo(new IPEndPoint(IPAddress.Parse("2001:db8::7"), 21118)));
+        Assert.That(RustDesk.DecodeAddress(new byte[17]), Is.Null);
+        Assert.That(RustDesk.DecodeAddress(Array.Empty<byte>()), Is.Null);
+    }
+
+    private static (byte[] sk, byte[] pk) Ed25519KeyPair(byte seed) {
+        byte[] sk = Fill(seed, 32);
+        byte[] pk = new byte[32];
+        Ed25519.GeneratePublicKey(sk, 0, pk, 0);
+        return (sk, pk);
+    }
+
+    //libsodium's combined form, the signature ahead of the message
+    private static byte[] Sign(byte[] message, byte[] sk) {
+        byte[] signed = new byte[64 + message.Length];
+        Ed25519.Sign(sk, 0, message, 0, message.Length, signed, 0);
+        message.CopyTo(signed, 64);
+        return signed;
+    }
+
+    private static byte[] IdPk(string id, byte[] pk) => new RustDesk.ProtoWriter().String(1, id).Bytes(2, pk).ToArray();
+
+    [Test]
+    public void GetVouchedKey_TakesOnlyTheServersWordForThatId() {
+        (byte[] serverSk, byte[] serverPk) = Ed25519KeyPair(1);
+        (_, byte[] hostPk) = Ed25519KeyPair(2);
+        (_, byte[] otherPk) = Ed25519KeyPair(3);
+
+        byte[] vouched = Sign(IdPk("123456789", hostPk), serverSk);
+        Assert.That(RustDesk.GetVouchedKey(vouched, serverPk, "123456789"), Is.EqualTo(hostPk));
+        Assert.That(RustDesk.GetVouchedKey(vouched, serverPk, "987654321"), Is.Null); //another host's record
+        Assert.That(RustDesk.GetVouchedKey(vouched, otherPk, "123456789"), Is.Null);  //another server's key
+
+        byte[] tampered = (byte[])vouched.Clone();
+        tampered[^1] ^= 1;
+        Assert.That(RustDesk.GetVouchedKey(tampered, serverPk, "123456789"), Is.Null);
+        Assert.That(RustDesk.GetVouchedKey(Array.Empty<byte>(), serverPk, "123456789"), Is.Null); //nothing vouched
+    }
+
+    [Test]
+    public void VerifySignedId_NeedsTheHostsKeyAndId() {
+        (byte[] hostSk, byte[] hostPk) = Ed25519KeyPair(2);
+        (byte[] otherSk, _) = Ed25519KeyPair(3);
+        byte[] ephemeral = Fill(9, 32);
+
+        Assert.That(RustDesk.VerifySignedId(Sign(IdPk("123456789", ephemeral), hostSk), hostPk, "123456789"), Is.True);
+        Assert.That(RustDesk.VerifySignedId(Sign(IdPk("123456789", ephemeral), otherSk), hostPk, "123456789"), Is.False);
+        Assert.That(RustDesk.VerifySignedId(Sign(IdPk("111111111", ephemeral), hostSk), hostPk, "123456789"), Is.False);
+    }
+
+    [TestCase("123 456 789", "123456789")]
+    [TestCase(" my-host_1 ", "my-host_1")]
+    [TestCase("10.0.0.5", null)]
+    [TestCase("id@server", null)]
+    [TestCase("", null)]
+    public void NormalizePeerId_TakesIdsAsRustDeskShowsThem(string value, string? expected) {
+        Assert.That(RustDesk.NormalizePeerId(value), Is.EqualTo(expected));
+    }
+
+    [Test]
+    public void ValidateServer_TakesHostsAndServerKeys() {
+        Assert.That(RustDesk.ValidateServer(new RustDesk.ServerProfile(), "test"), Is.Null); //not set up
+        Assert.That(RustDesk.ValidateServer(new RustDesk.ServerProfile {
+            idServer = "rd.example.com:21116", relayServer = "[2001:db8::1]:21117", key = RustDesk.PUBLIC_SERVER_KEY
+        }, "test"), Is.Null);
+
+        Assert.That(RustDesk.ValidateServer(new RustDesk.ServerProfile { idServer = "http://rd.example.com" }, "test"), Is.Not.Null);
+        Assert.That(RustDesk.ValidateServer(new RustDesk.ServerProfile { idServer = "rd example" }, "test"), Is.Not.Null);
+        Assert.That(RustDesk.ValidateServer(new RustDesk.ServerProfile { relayServer = "relay.example.com" }, "test"), Is.Not.Null);
+        Assert.That(RustDesk.ValidateServer(new RustDesk.ServerProfile { idServer = "rd.example.com", key = "c2hvcnQ=" }, "test"), Is.Not.Null);
     }
 }

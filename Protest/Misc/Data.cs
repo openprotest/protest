@@ -82,6 +82,7 @@ internal static class Data {
     public static readonly string FILE_SCHEDULER         = Path.Join(DIR_DATA, "scheduler.json");
     public static readonly string FILE_DATA_RETENTION    = Path.Join(DIR_DATA, "dataretention.json");
     public static readonly string FILE_SESSION_RECORDING = Path.Join(DIR_DATA, "sessionrecording.json");
+    public static readonly string FILE_RUSTDESK_SERVERS  = Path.Join(DIR_DATA, "rustdeskservers.json");
     public static readonly string FILE_VAULT             = Path.Join(DIR_DATA, "vault.json");
     public static readonly string FILE_VAULT_SSHKEYS     = Path.Join(DIR_DATA, "vaultsshkeys.json");
 

@@ -20,12 +20,13 @@ using Protest.Http;
 namespace Protest.Protocols;
 
 //Gateway for the RustDesk web client. The gateway is the controlling side of the connection: it connects to the host's
-//direct IP access port, runs the key exchange when the host offers one, and logs in with the vault credentials or the
-//password the user typed, so a vault password never reaches the browser. Once logged in, the host's protobuf messages go
-//over the WebSocket as they are, one per binary message, and the browser decodes the video with WebCodecs.
+//direct IP access port, or reaches the host by its ID through an ID server (RustDesk.Rendezvous.cs), runs the key
+//exchange when the host offers one, and logs in with the vault credentials or the password the user typed, so a vault
+//password never reaches the browser. Once logged in, the host's protobuf messages go over the WebSocket as they are,
+//one per binary message, and the browser decodes the video with WebCodecs.
 //Text messages carry the login: the browser's opening message with the codecs it decodes, the gateway's prompts for a
 //password or a 2FA code, and the browser's answers.
-internal static class RustDesk {
+internal static partial class RustDesk {
 
     internal const int DEFAULT_PORT = 21118; //direct IP access
     private const int HANDSHAKE_TIMEOUT = 20_000;
@@ -93,10 +94,11 @@ internal static class RustDesk {
 
     private sealed class Session {
         public readonly object sync = new object();
-        public string host;
-        public int port;
+        public string host;       //the address, or the ID through an ID server
+        public int port;          //0 through an ID server
+        public string label;      //how the logs name the host
         public string origin;
-        public string username;   //the host's address, what the host expects to be called with direct IP access
+        public string username;   //what the host expects to be called: its address with direct IP access, else its ID
         public string password;   //null without one
         public bool serverSideAuth;
         public ulong sessionId;
@@ -119,7 +121,26 @@ internal static class RustDesk {
             return;
         }
 
-        (string host, int port) = Ssh.ParseTarget(target, DEFAULT_PORT);
+        //through an ID server the target is the host's ID, the server itself comes from the gateway's settings
+        string via = ctx.Request.QueryString["via"];
+        bool byId = via is "selfhosted" or "public";
+
+        string host, label;
+        int port;
+        if (byId) {
+            host = NormalizePeerId(target);
+            if (host is null) {
+                ctx.Response.StatusCode = 400;
+                ctx.Response.Close();
+                return;
+            }
+            port = 0;
+            label = $"ID {host} ({(via == "public" ? "public" : "self-hosted")} server)";
+        }
+        else {
+            (host, port) = Ssh.ParseTarget(target, DEFAULT_PORT);
+            label = $"{host}:{port}";
+        }
 
         string deviceFile = ctx.Request.QueryString["file"];
         string credentialGuid = ctx.Request.QueryString["credential"];
@@ -143,13 +164,12 @@ internal static class RustDesk {
             return;
         }
 
-        TcpClient tcp = new TcpClient() {
-            NoDelay = true //input events are small and latency bound, Nagle would hold them back
-        };
+        TcpClient tcp = null;
 
         Session session = new Session {
             host = host,
             port = port,
+            label = label,
             origin = origin,
             serverSideAuth = !String.IsNullOrEmpty(credentialGuid),
             sessionId = BinaryPrimitives.ReadUInt64LittleEndian(RandomNumberGenerator.GetBytes(8)) | 1
@@ -168,13 +188,13 @@ internal static class RustDesk {
             //with a vault credential the gateway logs in on the client's behalf and the password never reaches the browser
             if (session.serverSideAuth) {
                 if (!Guid.TryParse(credentialGuid, out Guid guid) || !Vault.FromGuid(guid, out Vault.CredentialEntry credential)) {
-                    Logger.Action(origin, "Remote-access", $"RustDesk connection to {host}:{port} failed: credentials don't exist");
+                    Logger.Action(origin, "Remote-access", $"RustDesk connection to {label} failed: credentials don't exist");
                     await SendError(ws, "Credentials don't exist");
                     return;
                 }
 
                 if (!Vault.IsAllowed(credential, origin)) {
-                    Logger.Action(origin, "Remote-access", $"RustDesk connection to {host}:{port} failed: access denied for this credential");
+                    Logger.Action(origin, "Remote-access", $"RustDesk connection to {label} failed: access denied for this credential");
                     await SendError(ws, "Access denied for this credential");
                     return;
                 }
@@ -182,23 +202,69 @@ internal static class RustDesk {
                 session.password = String.IsNullOrEmpty(credential.password) ? null : credential.password;
             }
 
-            try {
-                await tcp.ConnectAsync(host, port, handshakeCts.Token);
-            }
-            catch (SocketException ex) {
-                Logger.Action(origin, "Remote-access", $"RustDesk connection to {host}:{port} failed: {ex.Message}");
-                await SendError(ws, ex.SocketErrorCode == SocketError.ConnectionRefused
-                    ? "The host refused the connection. Is direct IP access enabled in RustDesk's security settings?"
-                    : ex.Message);
-                return;
-            }
-            catch (OperationCanceledException) {
-                Logger.Action(origin, "Remote-access", $"RustDesk connection to {host}:{port} timed out");
-                await SendError(ws, "The host did not respond in time");
-                return;
-            }
+            byte[] hostKey = null; //the host's identity key as the ID server vouches for it, null when nothing vouches
 
-            session.username = GetDirectAccessName(tcp.Client.RemoteEndPoint as IPEndPoint) ?? host;
+            if (byId) {
+                ServerProfile server = GetServer(via == "public");
+                if (server is null) {
+                    Logger.Action(origin, "Remote-access", $"RustDesk connection to {label} failed: no self-hosted server is set up");
+                    await SendError(ws, "No self-hosted RustDesk server is set up. Set one up in Infrastructure, under RustDesk.");
+                    return;
+                }
+
+                byte[] signedIdPk;
+                bool relayed;
+                try {
+                    using CancellationTokenSource rendezvousCts = new CancellationTokenSource(RENDEZVOUS_TIMEOUT);
+                    (tcp, signedIdPk, relayed) = await ConnectByIdAsync(host, server, rendezvousCts.Token);
+                }
+                catch (Exception ex) when (ex is RendezvousException or OperationCanceledException or IOException or InvalidDataException) {
+                    string reason = ex is RendezvousException ? ex.Message
+                        : ex is OperationCanceledException ? "The host could not be reached in time"
+                        : "The connection to the ID server was lost";
+                    Logger.Action(origin, "Remote-access", $"RustDesk connection to {label} failed: {reason}");
+                    await SendError(ws, reason);
+                    return;
+                }
+
+                //with the server's key nothing goes on without its word for the host, else whoever answered would do
+                if (server.key.Length > 0) {
+                    hostKey = GetVouchedKey(signedIdPk, DecodeServerKey(server.key), host);
+                    if (hostKey is null) {
+                        Logger.Action(origin, "Remote-access", $"RustDesk connection to {label} failed: the ID server did not vouch for the host");
+                        await SendError(ws, "The ID server did not vouch for the host's identity");
+                        return;
+                    }
+                }
+
+                Logger.Action(origin, "Remote-access", $"RustDesk {label} reached {(relayed ? "through the relay" : "on the local network")}");
+
+                session.username = host;
+                handshakeCts.CancelAfter(HANDSHAKE_TIMEOUT); //the handshake gets its own time once the host is reached
+            }
+            else {
+                tcp = new TcpClient() {
+                    NoDelay = true //input events are small and latency bound, Nagle would hold them back
+                };
+
+                try {
+                    await tcp.ConnectAsync(host, port, handshakeCts.Token);
+                }
+                catch (SocketException ex) {
+                    Logger.Action(origin, "Remote-access", $"RustDesk connection to {label} failed: {ex.Message}");
+                    await SendError(ws, ex.SocketErrorCode == SocketError.ConnectionRefused
+                        ? "The host refused the connection. Is direct IP access enabled in RustDesk's security settings?"
+                        : ex.Message);
+                    return;
+                }
+                catch (OperationCanceledException) {
+                    Logger.Action(origin, "Remote-access", $"RustDesk connection to {label} timed out");
+                    await SendError(ws, "The host did not respond in time");
+                    return;
+                }
+
+                session.username = GetDirectAccessName(tcp.Client.RemoteEndPoint as IPEndPoint) ?? host;
+            }
 
             Connection connection = new Connection(tcp.GetStream());
 
@@ -208,8 +274,16 @@ internal static class RustDesk {
                 first = await connection.ReceiveAsync(handshakeCts.Token);
 
                 if (GetUnionField(first) == SIGNED_ID) {
-                    if (!TryCreateKeyExchange(GetSignedId(first), out string peerId, out byte[] reply, out Cipher cipher)) {
-                        Logger.Action(origin, "Remote-access", $"RustDesk connection to {host}:{port} failed: invalid key exchange");
+                    byte[] signedId = GetSignedId(first);
+
+                    if (hostKey is not null && !VerifySignedId(signedId, hostKey, host)) {
+                        Logger.Action(origin, "Remote-access", $"RustDesk connection to {label} failed: the host's identity doesn't match the ID server's");
+                        await SendError(ws, "The host's identity doesn't match the one the ID server vouches for");
+                        return;
+                    }
+
+                    if (!TryCreateKeyExchange(signedId, out string peerId, out byte[] reply, out Cipher cipher)) {
+                        Logger.Action(origin, "Remote-access", $"RustDesk connection to {label} failed: invalid key exchange");
                         await SendError(ws, "The host's key exchange is invalid");
                         return;
                     }
@@ -217,9 +291,15 @@ internal static class RustDesk {
                     await connection.SendAsync(reply, handshakeCts.Token);
                     connection.SetCipher(cipher);
 
-                    Logger.Action(origin, "Remote-access", $"RustDesk host {host}:{port} identifies as {peerId}");
+                    Logger.Action(origin, "Remote-access", $"RustDesk host {label} identifies as {peerId}");
 
                     first = await connection.ReceiveAsync(handshakeCts.Token);
+                }
+                else if (hostKey is not null) {
+                    //a host reached by its ID signs its identity, one that doesn't may be anyone the relay paired with
+                    Logger.Action(origin, "Remote-access", $"RustDesk connection to {label} failed: the host did not prove its identity");
+                    await SendError(ws, "The host did not prove its identity");
+                    return;
                 }
             }
             catch (Exception ex) when (ex is OperationCanceledException or IOException or InvalidDataException) {
@@ -227,13 +307,13 @@ internal static class RustDesk {
                     : ex is EndOfStreamException ? "The host closed the connection"
                     : ex is InvalidDataException ? ex.Message
                     : "The connection to the host was lost";
-                Logger.Action(origin, "Remote-access", $"RustDesk connection to {host}:{port} failed: {reason}");
+                Logger.Action(origin, "Remote-access", $"RustDesk connection to {label} failed: {reason}");
                 await SendError(ws, reason);
                 return;
             }
 
             if (GetUnionField(first) is not (HASH or LOGIN_RESPONSE or MISC or MESSAGE_BOX)) {
-                Logger.Action(origin, "Remote-access", $"RustDesk connection to {host}:{port} failed: not a RustDesk host");
+                Logger.Action(origin, "Remote-access", $"RustDesk connection to {label} failed: not a RustDesk host");
                 await SendError(ws, "Not a RustDesk host");
                 return;
             }
@@ -268,12 +348,12 @@ internal static class RustDesk {
         }
         finally {
             if (session.authorized) {
-                Logger.Action(origin, "Remote-access", $"Close RustDesk connection to {host}:{port}");
+                Logger.Action(origin, "Remote-access", $"Close RustDesk connection to {label}");
             }
 
             session.recording?.Stop();
 
-            tcp.Close();
+            tcp?.Close();
 
             if (ws.State == WebSocketState.Open) {
                 try {
@@ -358,7 +438,7 @@ internal static class RustDesk {
                     }
 
                     if (session.authorized) {
-                        Logger.Action(session.origin, "Remote-access", $"Establish RustDesk connection to {session.host}:{session.port}{(session.serverSideAuth ? " with vault credentials" : "")}{(connection.IsEncrypted ? "" : ", unencrypted")}");
+                        Logger.Action(session.origin, "Remote-access", $"Establish RustDesk connection to {session.label}{(session.serverSideAuth ? " with vault credentials" : "")}{(connection.IsEncrypted ? "" : ", unencrypted")}");
 
                         //the login response opens the recording, it holds the displays a player starts with
                         SessionRecording recording = SessionRecording.Start("rustdesk", session.host, session.port, deviceFile, session.origin);
@@ -445,7 +525,7 @@ internal static class RustDesk {
                     session.serverSideAuth = false; //what's typed next is the user's own
                     session.password = null;
                 }
-                Logger.Action(session.origin, "Remote-access", $"RustDesk authentication to {session.host}:{session.port} failed: wrong password{(vault ? " (vault credentials)" : "")}");
+                Logger.Action(session.origin, "Remote-access", $"RustDesk authentication to {session.label} failed: wrong password{(vault ? " (vault credentials)" : "")}");
                 await WebSocketHelper.WsWriteText(ws, $"{{\"login\":\"password\",\"error\":\"Wrong password\"{(vault ? ",\"vault\":true" : "")}}}");
                 return null;
 
@@ -462,13 +542,13 @@ internal static class RustDesk {
                 return null;
 
             case LOGIN_MSG_2FA_WRONG:
-                Logger.Action(session.origin, "Remote-access", $"RustDesk authentication to {session.host}:{session.port} failed: wrong 2FA code");
+                Logger.Action(session.origin, "Remote-access", $"RustDesk authentication to {session.label} failed: wrong 2FA code");
                 await WebSocketHelper.WsWriteText(ws, "{\"login\":\"2fa\",\"error\":\"Wrong 2FA code\"}");
                 return null;
 
             default:
                 error = String.IsNullOrEmpty(error) ? "The host refused the login" : error;
-                Logger.Action(session.origin, "Remote-access", $"RustDesk connection to {session.host}:{session.port} failed: {error}");
+                Logger.Action(session.origin, "Remote-access", $"RustDesk connection to {session.label} failed: {error}");
                 return error;
             }
         }
@@ -478,7 +558,7 @@ internal static class RustDesk {
             while (misc.Next()) {
                 if (misc.Field == MISC_CLOSE_REASON) {
                     string closeReason = misc.String();
-                    Logger.Action(session.origin, "Remote-access", $"RustDesk connection to {session.host}:{session.port} closed by the host: {closeReason}");
+                    Logger.Action(session.origin, "Remote-access", $"RustDesk connection to {session.label} closed by the host: {closeReason}");
                     return String.IsNullOrEmpty(closeReason) ? "The host closed the connection" : closeReason;
                 }
             }
@@ -509,7 +589,7 @@ internal static class RustDesk {
             }
 
             if (type.Contains("error", StringComparison.OrdinalIgnoreCase) && text.Length > 0) {
-                Logger.Action(session.origin, "Remote-access", $"RustDesk connection to {session.host}:{session.port} failed: {text}");
+                Logger.Action(session.origin, "Remote-access", $"RustDesk connection to {session.label} failed: {text}");
                 return text;
             }
             return null;
