@@ -230,6 +230,12 @@ class PtyHost extends Window {
 	}
 
 	InitializeComponents() {
+		const preload = document.createElement("link");
+		preload.rel = "preload";
+		preload.href = "mono/disconnect.svg";
+		preload.as = "image";
+		this.win.appendChild(preload);
+
 		this.SetupToolbar();
 		this.connectButton = this.AddToolbarButton("Connect", "mono/connect.svg?light");
 		this.AddToolbarSeparator();
