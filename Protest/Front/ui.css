@@ -8,9 +8,9 @@
 	opacity: 0;
 	background-color: light-dark(rgba(64,64,64,.4), rgba(32,32,32,.4));
 	background-image: radial-gradient(rgba(32,32,32,.4) 1px, transparent 0), radial-gradient(rgba(224,224,224,.4) 1px, transparent 0);
-	background-size: 16px 16px, 16px 16px;
+	background-size: 12px 12px, 12px 12px;
 	background-position: 0px 0px, .5px .5px;
-	
+
 	transition: .2s;
 }
 

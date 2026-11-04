@@ -434,6 +434,12 @@ class RustDesk extends Window {
 		this.clipboardSync = false;
 		this._lastClipboard = null;
 
+		const preload = document.createElement("link");
+		preload.rel = "preload";
+		preload.href = "mono/disconnect.svg";
+		preload.as = "image";
+		this.win.appendChild(preload);
+
 		this.SetTitle("RustDesk");
 		this.SetIcon("mono/rustdesk.svg");
 

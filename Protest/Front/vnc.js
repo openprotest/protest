@@ -19,6 +19,12 @@ class Vnc extends Window {
 
 		this.password = this.args.password ?? null;
 
+		const preload = document.createElement("link");
+		preload.rel = "preload";
+		preload.href = "mono/disconnect.svg";
+		preload.as = "image";
+		this.win.appendChild(preload);
+
 		this.SetTitle("VNC");
 		this.SetIcon("mono/vnc.svg");
 

@@ -3280,7 +3280,7 @@ class Topology extends Window {
 				sshButton.style.backgroundImage = "url(mono/ssh.svg)";
 				optionsBox.appendChild(sshButton);
 
-				sshButton.onclick = ()=> {
+				sshButton.onclick = async ()=> {
 					let sshHost = null;
 					if (overwriteProtocol.ssh) {
 						sshHost = `${host}:${overwriteProtocol.ssh}`;
@@ -3297,7 +3297,20 @@ class Topology extends Window {
 						username = dbEntry.username.v;
 					}
 
-					new Ssh({ host: sshHost, username: username, file: device.initial.file });
+					let file = null;
+					if ("ssh password" in dbEntry || "password" in dbEntry) {
+						file = device.initial.file;
+					}
+
+					const credentialContext = {link:dbEntry, DialogBox:this.DialogBox.bind(this)};
+					const ResolveCredentialGuid = attrNames=> DeviceView.prototype.ResolveCredentialGuid.call(credentialContext, attrNames);
+					let credential = await ResolveCredentialGuid(["ssh key"]);
+					if (credential === undefined) {
+						credential = await ResolveCredentialGuid(["ssh credentials", "credentials"]);
+					}
+					if (credential === null) return;
+					if (credential) new Ssh({host:sshHost, credential:credential});
+					else new Ssh({host:sshHost, username:username, file:file});
 				};
 			}
 

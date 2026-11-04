@@ -69,6 +69,12 @@ class Rtsp extends Window {
 		this.stats = { frames:0, bytes:0, dropped:0, fps:0, bitrate:0 };
 		this.serverStats = { lost:0, dropped:0 }; //packets the camera never delivered, frames the gateway held back
 
+		const preload = document.createElement("link");
+		preload.rel = "preload";
+		preload.href = "mono/disconnect.svg";
+		preload.as = "image";
+		this.win.appendChild(preload);
+
 		this.SetTitle("RTSP");
 		this.SetIcon("mono/playback.svg");
 

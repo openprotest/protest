@@ -558,17 +558,16 @@ class DeviceView extends View {
 					file = this.args.file;
 				}
 
-				//an ssh key takes priority over username/password credentials
 				const ResolveSshCredential = async ()=> {
 					const key = await this.ResolveCredentialGuid(["ssh key"]);
-					if (key !== undefined) return key; //a key, or null if the picker was cancelled
+					if (key !== undefined) return key; //cancelled
 					return await this.ResolveCredentialGuid(["ssh credentials", "credentials"]);
 				};
 
 				const sshButton = this.CreateSideButton("mono/ssh.svg", "SSH");
 				sshButton.onclick = async ()=> {
 					const credential = await ResolveSshCredential();
-					if (credential === null) return; //picker was cancelled
+					if (credential === null) return; //cancelled
 					if (credential) new Ssh({host:sshHost, credential:credential});
 					else new Ssh({host:sshHost, username:username, file:file});
 				};
@@ -576,7 +575,7 @@ class DeviceView extends View {
 				const sftpButton = this.CreateSideButton("mono/shared.svg", "SFTP");
 				sftpButton.onclick = async ()=> {
 					const credential = await ResolveSshCredential();
-					if (credential === null) return; //picker was cancelled
+					if (credential === null) return; //cancelled
 					if (credential) new Sftp({host:sshHost, credential:credential});
 					else new Sftp({host:sshHost, username:username, file:file});
 				};
@@ -586,7 +585,7 @@ class DeviceView extends View {
 				const actionButton = this.CreateSideButton("mono/shared.svg", "FTP");
 				actionButton.onclick = ()=> {
 					const link = document.createElement("a");
-					link.href = "ftp://" + host + ":" + overwriteProtocol.ftp;
+					link.href = `ftp://${host}:${overwriteProtocol.ftp}`;
 					link.target = "_blank";
 					link.click();
 				};
@@ -595,7 +594,7 @@ class DeviceView extends View {
 				const actionButton = this.CreateSideButton("mono/shared.svg", "FTP");
 				actionButton.onclick = ()=> {
 					const link = document.createElement("a");
-					link.href = "ftp://" + host;
+					link.href = `ftp://${host}`;
 					link.target = "_blank";
 					link.click();
 				};
@@ -605,7 +604,7 @@ class DeviceView extends View {
 				const actionButton = this.CreateSideButton("mono/shared.svg", "FTP");
 				actionButton.onclick = ()=> {
 					const link = document.createElement("a");
-					link.href = "ftps://" + host + ":" + overwriteProtocol.ftps;
+					link.href = `ftps://${host}:${overwriteProtocol.ftps}`;
 					link.target = "_blank";
 					link.click();
 				};
@@ -614,7 +613,7 @@ class DeviceView extends View {
 				const actionButton = this.CreateSideButton("mono/shared.svg", "FTPs");
 				actionButton.onclick = ()=> {
 					const link = document.createElement("a");
-					link.href = "ftps://" + host;
+					link.href = `ftps://${host}`;
 					link.target = "_blank";
 					link.click();
 				};
@@ -3863,10 +3862,6 @@ class DeviceView extends View {
 		});
 	}
 
-	//Resolves a "<prefix> credentials" attribute (";"-joined GUIDs) to a single Vault GUID.
-	//Returns: undefined if none of the given attribute names exist on this device (caller should fall back to
-	//legacy attributes); a GUID string once resolved (immediately if there's only one, otherwise after the user
-	//picks one via a dialog); or null if the user cancelled the picker.
 	async ResolveCredentialGuid(attrNames) {
 		let guids = [];
 
@@ -3908,6 +3903,9 @@ class DeviceView extends View {
 			const {okButton, cancelButton, innerBox} = dialog;
 			okButton.value = "Connect";
 
+			const dialogBox = innerBox.parentElement;
+			dialogBox.style.maxWidth = "520px";
+			
 			innerBox.style.padding = "20px 32px";
 
 			const label = document.createElement("div");
@@ -3916,7 +3914,7 @@ class DeviceView extends View {
 			innerBox.appendChild(label);
 
 			const select = document.createElement("select");
-			select.style.width = "100%";
+			select.style.width = "calc(100% - 8px)";
 			for (const option of options) {
 				const optionElement = document.createElement("option");
 				optionElement.value = option.guid;

@@ -72,6 +72,12 @@ class Rdp extends Window {
 		this.pendingRemoteClipboard = 0; //attempts left to copy the remote clipboard locally
 		this.pasteTimeout = null;
 
+		const preload = document.createElement("link");
+		preload.rel = "preload";
+		preload.href = "mono/disconnect.svg";
+		preload.as = "image";
+		this.win.appendChild(preload);
+
 		this.SetTitle("RDP");
 		this.SetIcon("mono/rdp.svg");
 
