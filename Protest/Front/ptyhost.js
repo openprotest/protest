@@ -492,10 +492,24 @@ class PtyHost extends Window {
 		});
 
 		this.term.attachCustomKeyEventHandler(event=> {
-			if (event.ctrlKey && event.shiftKey && (event.code === "KeyC" || event.code === "KeyV")) {
-				return false;
+			if (!event.ctrlKey || !event.shiftKey || event.altKey || event.metaKey) return true;
+			if (event.code !== "KeyC" && event.code !== "KeyV" && event.code !== "KeyF") return true;
+
+			event.preventDefault();
+			if (event.type === "keydown" && !event.repeat) {
+				switch (event.code) {
+				case "KeyC":
+					this.TextToClipboard();
+					break;
+				case "KeyV":
+					if (!this.pasteButton.disabled) this.TextFromClipboard();
+					break;
+				case "KeyF":
+					this.findInput.focus();
+					break;
+				}
 			}
-			return true;
+			return false;
 		});
 
 		requestAnimationFrame(()=> {
