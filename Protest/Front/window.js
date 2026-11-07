@@ -1312,8 +1312,6 @@ class Window {
 	}
 
 	ShowToast(text) {
-		if (!KEEP.sessionRecording) return;
-
 		const toast = document.createElement("div");
 		toast.className = "win-toast";
 

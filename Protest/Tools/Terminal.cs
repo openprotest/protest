@@ -95,11 +95,11 @@ internal static partial class Terminal {
             };
 
             Logger.Action(origin, "Remote-access", logMessage);
-            await WebSocketHelper.WsWriteText(ws, "{\"connected\":true}"u8.ToArray());
 
             Protocols.SessionRecording recording = recordingProtocol is null
                 ? null
                 : Protocols.SessionRecording.Start(recordingProtocol, recordingHost, recordingPort, recordingDevice, origin);
+            await WebSocketHelper.WsWriteText(ws, $"{{\"connected\":true,\"sessionRecording\":{(recording is not null ? "true" : "false")}}}");
 
             Task readTask = PumpStreamToWebSocket(ctx, ws, pty.ReaderStream, cts.Token, recording);
             Task writeTask = PumpWebSocketToPty(ctx, ws, pty, wsPath, cts.Token, recording);

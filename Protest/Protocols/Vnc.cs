@@ -121,6 +121,9 @@ internal static class Vnc {
             established = true;
 
             recording = SessionRecording.Start("vnc", host, port, deviceFile, origin);
+            if (recording is not null) {
+                await WebSocketHelper.WsWriteText(ws, "{\"sessionRecording\":true}"u8.ToArray());
+            }
 
             if (serverSideAuth && recording is not null) {
                 recording.WriteVideo(RFB_VERSION_38, RFB_VERSION_38.Length);

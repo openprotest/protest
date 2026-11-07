@@ -252,7 +252,7 @@ class Rs232 extends PtyHost {
 				this.statusBox.style.display = "none";
 				this.ws.onmessage = event=> this.HandleMessage(event.data);
 				this.content.focus();
-				this.ShowToast("This session is being recorded");
+				if (json.sessionRecording === true) this.ShowToast("This session is being recorded");
 			}
 			else if (json.error) {
 				setTimeout(()=> { this.ConfirmBox(json.error, true, "mono/error.svg"); }, 200);

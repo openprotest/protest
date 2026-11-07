@@ -145,16 +145,45 @@ class Vnc extends Window {
 			options.credentials = { password: this.password };
 		}
 
+		const fileParam = this.args.file ? `&file=${encodeURIComponent(this.args.file)}` : "";
+		const credentialParam = this.args.credential ? `&credential=${encodeURIComponent(this.args.credential)}` : "";
+		const url = `${KEEP.isSecure ? "wss" : "ws"}://${window.location.host}/ws/vnc?target=${encodeURIComponent(target)}${fileParam}${credentialParam}`;
+
+		const NativeWebSocket = window.WebSocket;
+		let sessionRecording = false;
+		//noVNC owns the socket; capture the gateway's text metadata without passing it into the binary RFB stream.
+		function CapturingWebSocket(address, protocols) {
+			const socket = protocols === undefined ? new NativeWebSocket(address) : new NativeWebSocket(address, protocols);
+			if (String(address) === url) {
+				socket.addEventListener("message", event=> {
+					if (typeof event.data !== "string") return;
+					try {
+						const message = JSON.parse(event.data);
+						if (message.sessionRecording === true) {
+							sessionRecording = true;
+							event.stopImmediatePropagation();
+						}
+					}
+					catch {}
+				});
+			}
+			return socket;
+		}
+
+		CapturingWebSocket.prototype = NativeWebSocket.prototype;
+		Object.assign(CapturingWebSocket, { CONNECTING:0, OPEN:1, CLOSING:2, CLOSED:3 });
+
 		try {
-			const fileParam = this.args.file ? `&file=${encodeURIComponent(this.args.file)}` : "";
-			const credentialParam = this.args.credential ? `&credential=${encodeURIComponent(this.args.credential)}` : "";
-			const url = `${KEEP.isSecure ? "wss" : "ws"}://${window.location.host}/ws/vnc?target=${encodeURIComponent(target)}${fileParam}${credentialParam}`;
+			window.WebSocket = CapturingWebSocket;
 			this.rfb = new RFB(this.canvasBox, url, options);
 		}
 		catch (ex) {
 			this.statusBox.textContent = ex.message;
 			this.connectButton.disabled = false;
 			return;
+		}
+		finally {
+			window.WebSocket = NativeWebSocket;
 		}
 
 		this.HookScreens(this.rfb);
@@ -177,7 +206,7 @@ class Vnc extends Window {
 			this.SetTitle(`VNC - ${host}`);
 			this.statusBox.style.display = "none";
 			this.connectButton.disabled = true;
-			this.ShowToast("This session is being recorded");
+			if (sessionRecording) this.ShowToast("This session is being recorded");
 		});
 
 		this.rfb.addEventListener("disconnect", e=> {

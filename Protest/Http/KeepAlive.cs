@@ -88,8 +88,7 @@ internal static class KeepAlive {
                 version          = Data.VersionToString(),
                 username         = username,
                 color            = accessControl?.color ?? "#606060",
-                authorization    = accessArray,
-                sessionRecording = Configuration.sessionRecording
+                authorization    = accessArray
             });
             await ws.SendAsync(initPayload, WebSocketMessageType.Text, true, CancellationToken.None);
 

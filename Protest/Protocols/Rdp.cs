@@ -250,6 +250,9 @@ internal static class Rdp {
             established = true;
 
             recording = SessionRecording.Start("rdp", host, port, deviceFile, origin);
+            if (recording is not null) {
+                await WebSocketHelper.WsWriteText(ws, "{\"sessionRecording\":true}"u8.ToArray());
+            }
             StreamRecorder recorder = null;
 
             if (recording is not null) {

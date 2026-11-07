@@ -62,6 +62,7 @@ class Rdp extends Window {
 		this.canvasObserver = null;
 		this.connectionId = 0;
 		this.connected = false;
+		this.sessionRecording = false;
 
 		this.scaleToFit = true;
 		this.resolution = Rdp.ParseResolution(this.args.resolution); //null matches the window
@@ -186,6 +187,7 @@ class Rdp extends Window {
 		const connectionId = ++this.connectionId;
 
 		this.Disconnect();
+		this.sessionRecording = false;
 		this.connectButton.disabled = true;
 		this.ShowStatus("mono/connect.svg", "Connecting...");
 
@@ -261,7 +263,7 @@ class Rdp extends Window {
 		let closeReason = "";
 		try {
 			this.pointerCache.clear();
-			Rdp.CaptureWebSocket(proxyAddress, text=> this.OnGatewayMessage(text), reason=> closeReason = reason);
+			Rdp.CaptureWebSocket(proxyAddress, text=> this.OnGatewayMessage(text, connectionId), reason=> closeReason = reason);
 			session = await userInteraction.connect(config);
 		}
 		catch (ex) {
@@ -285,7 +287,7 @@ class Rdp extends Window {
 		userInteraction.setVisibility(true);
 		this.UpdateScale();
 		this.FocusCanvas();
-		this.ShowToast("This session is being recorded");
+		if (this.sessionRecording) this.ShowToast("This session is being recorded");
 		this.ScheduleResize(); //the window may have been resized while connecting
 
 		let reason;
@@ -503,7 +505,9 @@ class Rdp extends Window {
 		};
 	}
 
-	OnGatewayMessage(text) {
+	OnGatewayMessage(text, connectionId) {
+		if (connectionId !== this.connectionId) return;
+
 		let message;
 		try {
 			message = JSON.parse(text);
@@ -512,6 +516,7 @@ class Rdp extends Window {
 			return;
 		}
 
+		if (message.sessionRecording === true) this.sessionRecording = true;
 		if (message.pointer) this.SetPointer(message);
 	}
 

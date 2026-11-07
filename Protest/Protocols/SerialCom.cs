@@ -107,11 +107,11 @@ internal static class SerialCom {
             port.Open();
 
             Logger.Action(origin, "Remote-access", $"Open serial port {portName} ({baudRate},{dataBits}{parity.ToString()[0]}{(stopBits == StopBits.Two ? 2 : 1)})");
-            await WebSocketHelper.WsWriteText(ws, "{\"connected\":true}"u8.ToArray());
-
-            using CancellationTokenSource cts = new();
 
             SessionRecording recording = SessionRecording.Start("serial", portName, baudRate, null, origin);
+            await WebSocketHelper.WsWriteText(ws, $"{{\"connected\":true,\"sessionRecording\":{(recording is not null ? "true" : "false")}}}");
+
+            using CancellationTokenSource cts = new();
 
             Task readTask = Tools.Terminal.PumpStreamToWebSocket(ctx, ws, port.BaseStream, cts.Token, recording);
             Task writeTask = PumpWebSocketToSerial(ctx, ws, port, cts.Token, recording);

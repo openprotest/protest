@@ -68,9 +68,8 @@ internal static class Telnet {
 
             Logger.Action(origin, "Remote-access", $"Establish telnet connection to {host}:{port}");
 
-            await WebSocketHelper.WsWriteText(ws, "{\"connected\":true}"u8.ToArray());
-
             recording = SessionRecording.Start("telnet", host, port, null, origin);
+            await WebSocketHelper.WsWriteText(ws, $"{{\"connected\":true,\"sessionRecording\":{(recording is not null ? "true" : "false")}}}");
 
             _ = Task.Run(() => HandleDownstream(ctx, ws, telnet, stream, recording));
 

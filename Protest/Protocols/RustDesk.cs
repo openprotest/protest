@@ -444,6 +444,9 @@ internal static partial class RustDesk {
                         SessionRecording recording = SessionRecording.Start("rustdesk", session.host, session.port, deviceFile, session.origin);
                         recording?.WriteVideo(message, message.Length);
                         session.recording = recording;
+                        if (recording is not null) {
+                            await WebSocketHelper.WsWriteText(ws, "{\"sessionRecording\":true}"u8.ToArray());
+                        }
 
                         await ws.SendAsync(new ArraySegment<byte>(message), WebSocketMessageType.Binary, true, cts.Token);
                     }

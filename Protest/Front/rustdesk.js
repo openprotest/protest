@@ -401,6 +401,7 @@ class RustDesk extends Window {
 		this.socket = null;
 		this.connectionId = 0;
 		this.connected = false;  //logged in
+		this.sessionRecording = false;
 		this.failed = false;     //the gateway gave a reason, the close that follows says nothing more
 		this.encrypted = null;
 		this.closeReason = null;
@@ -556,6 +557,7 @@ class RustDesk extends Window {
 		const connectionId = ++this.connectionId;
 
 		this.Disconnect();
+		this.sessionRecording = false;
 		this.connectButton.disabled = true;
 		this.ShowStatus("mono/connect.svg", "Connecting...");
 
@@ -691,6 +693,11 @@ class RustDesk extends Window {
 			return;
 		}
 
+		if (message.sessionRecording === true) {
+			this.sessionRecording = true;
+			return;
+		}
+
 		if ("encrypted" in message) {
 			this.sessionRetries = 0; //the host answers again
 			this.encrypted = message.encrypted === true;
@@ -772,7 +779,7 @@ class RustDesk extends Window {
 
 		this.SetTitle(`RustDesk - ${this.args.host}`);
 		this.connectButton.disabled = true;
-		this.ShowToast("This session is being recorded");
+		if (this.sessionRecording) this.ShowToast("This session is being recorded");
 		this.canvas.focus();
 
 		//a Windows host with more than one user session holds the screen back until one is picked

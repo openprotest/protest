@@ -129,12 +129,7 @@ const KEEP = {
 			KEEP.username = message.username;
 			KEEP.color = message.color;
 			KEEP.authorization = message.authorization;
-			KEEP.sessionRecording = message.sessionRecording;
 			usernameLabel.textContent = KEEP.username;
-			break;
-
-		case "sessionrecording":
-			KEEP.sessionRecording = message.enable;
 			break;
 
 		case "log":

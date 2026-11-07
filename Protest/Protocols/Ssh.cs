@@ -140,9 +140,8 @@ internal static class Ssh {
 
             Logger.Action(origin, "Remote-access", $"Establish SSH connection to {username}@{host}:{port}");
 
-            await WebSocketHelper.WsWriteText(ws, "{\"connected\":true}"u8.ToArray());
-
             recording = SessionRecording.Start("ssh", host, port, file, origin);
+            await WebSocketHelper.WsWriteText(ws, $"{{\"connected\":true,\"sessionRecording\":{(recording is not null ? "true" : "false")}}}");
 
             ShellStream shellStream = ssh.CreateShellStream("xterm", 80, 24, 800, 600, 1024);
 
