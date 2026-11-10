@@ -329,8 +329,8 @@ public class RtspSecurityTests {
     private static readonly IPNetwork[] LOOPBACK_ALLOWED = { IPNetwork.Parse("127.0.0.1/32") };
 
     private static Rtsp.Settings TestSettings(Func<string, CancellationToken, Task<IPAddress[]>>? resolve = null, Rtsp.SessionLimits? limits = null) => new Rtsp.Settings {
-        policy = new Rtsp.DestinationPolicy(LOOPBACK_ALLOWED, null), //the narrow exception for a camera on this host
-        limits = limits ?? new Rtsp.SessionLimits(() => 64, () => 16, () => 1000),
+        policy = new Rtsp.DestinationPolicy(LOOPBACK_ALLOWED), //the narrow exception for a camera on this host
+        limits = limits ?? new Rtsp.SessionLimits(64, 16, 1000),
         resolve = resolve ?? ((host, token) => Task.FromResult(new[] { IPAddress.Loopback })),
         handshakeTimeout = 5000,
         idleTimeout = 3000,
@@ -373,11 +373,20 @@ public class RtspSecurityTests {
     [TestCase("::ffff:169.254.169.254")]
     [TestCase("64:ff9b::7f00:1")]           //NAT64 of 127.0.0.1
     [TestCase("64:ff9b::a9fe:a9fe")]        //NAT64 of 169.254.169.254
+    [TestCase("64:ff9b:1::7f00:1")]         //local-use translation prefix
+    [TestCase("64:ff9b:1::a9fe:a9fe")]
     [TestCase("2002:7f00:1::1")]            //6to4 of 127.0.0.1
     public void DestinationPolicy_RefusesProhibitedAddresses(string address) {
-        Rtsp.DestinationPolicy policy = new Rtsp.DestinationPolicy(null, null);
+        Rtsp.DestinationPolicy policy = new Rtsp.DestinationPolicy(null);
         Assert.That(policy.IsAllowed(IPAddress.Parse(address), out string reason), Is.False);
         Assert.That(reason, Is.Not.Null);
+    }
+
+    [Test]
+    public void DefaultSettings_HaveNoDestinationExceptions() {
+        Rtsp.DestinationPolicy policy = Rtsp.Settings.Default().policy;
+        Assert.That(policy.IsAllowed(IPAddress.Loopback, out _), Is.False);
+        Assert.That(policy.IsAllowed(IPAddress.Parse("64:ff9b:1::7f00:1"), out _), Is.False);
     }
 
     [TestCase("10.1.5.224")]
@@ -390,43 +399,20 @@ public class RtspSecurityTests {
     [TestCase("2001:db8::1")]
     [TestCase("64:ff9b::a01:5e0")]          //NAT64 of 10.1.5.224
     public void DestinationPolicy_AllowsCameraAddresses(string address) {
-        Rtsp.DestinationPolicy policy = new Rtsp.DestinationPolicy(null, null);
+        Rtsp.DestinationPolicy policy = new Rtsp.DestinationPolicy(null);
         Assert.That(policy.IsAllowed(IPAddress.Parse(address), out _), Is.True);
     }
 
     [Test]
-    public void DestinationPolicy_AllowListExcepts_DenyListTakesPrecedence() {
-        Rtsp.DestinationPolicy policy = new Rtsp.DestinationPolicy(
-            new[] { IPNetwork.Parse("127.0.0.1/32"), IPNetwork.Parse("10.0.0.0/8") },
-            new[] { IPNetwork.Parse("10.66.0.0/16") });
-
-        Assert.That(policy.IsAllowed(IPAddress.Parse("127.0.0.1"), out _), Is.True);
-        Assert.That(policy.IsAllowed(IPAddress.Parse("::ffff:127.0.0.1"), out _), Is.True);
-        Assert.That(policy.IsAllowed(IPAddress.Parse("127.0.0.2"), out _), Is.False);
-        Assert.That(policy.IsAllowed(IPAddress.Parse("10.66.1.1"), out string reason), Is.False);
-        Assert.That(reason, Does.Contain("rtsp_deny"));
-        Assert.That(policy.IsAllowed(IPAddress.Parse("64:ff9b::a42:101"), out _), Is.False); //NAT64 of 10.66.1.1
-    }
-
-    [Test]
     public void DestinationPolicy_RefusesDirectedBroadcasts() {
-        Rtsp.DestinationPolicy policy = new Rtsp.DestinationPolicy(null, null, () => new[] { IPAddress.Parse("192.168.1.255") });
+        Rtsp.DestinationPolicy policy = new Rtsp.DestinationPolicy(null, () => new[] { IPAddress.Parse("192.168.1.255") });
         Assert.That(policy.IsAllowed(IPAddress.Parse("192.168.1.255"), out _), Is.False);
         Assert.That(policy.IsAllowed(IPAddress.Parse("192.168.1.254"), out _), Is.True);
     }
 
-    [TestCase("10.0.0.0/8, 192.168.1.10", true, 2)]
-    [TestCase("fd00::/8", true, 1)]
-    [TestCase("10.0.0.0/8, not-a-range", false, 1)]
-    public void DestinationPolicy_ParsesConfiguredRanges(string value, bool valid, int count) {
-        List<IPNetwork> networks = new List<IPNetwork>();
-        Assert.That(Rtsp.DestinationPolicy.TryParseNetworks(value, networks), Is.EqualTo(valid));
-        Assert.That(networks, Has.Count.EqualTo(count));
-    }
-
     [Test]
     public void DestinationPolicy_MixedAnswers_AreRefusedAsAWhole() {
-        Rtsp.DestinationPolicy policy = new Rtsp.DestinationPolicy(null, null);
+        Rtsp.DestinationPolicy policy = new Rtsp.DestinationPolicy(null);
         Task<IPAddress[]> Resolve(string host, CancellationToken token) => Task.FromResult(new[] { IPAddress.Parse("10.1.5.224"), IPAddress.Parse("127.0.0.1") });
 
         Rtsp.DestinationException? ex = Assert.ThrowsAsync<Rtsp.DestinationException>(() => policy.ResolveAsync("camera.test", Resolve, CancellationToken.None));
@@ -436,14 +422,14 @@ public class RtspSecurityTests {
 
     [Test]
     public void DestinationPolicy_NoAnswer_IsHostNotFound() {
-        Rtsp.DestinationPolicy policy = new Rtsp.DestinationPolicy(null, null);
+        Rtsp.DestinationPolicy policy = new Rtsp.DestinationPolicy(null);
         Assert.ThrowsAsync<Rtsp.DestinationException>(() => policy.ResolveAsync("camera.test", (h, t) => Task.FromResult(Array.Empty<IPAddress>()), CancellationToken.None));
         Assert.ThrowsAsync<Rtsp.DestinationException>(() => policy.ResolveAsync("camera.test", (h, t) => throw new SocketException((int)SocketError.HostNotFound), CancellationToken.None));
     }
 
     [Test]
     public async Task DestinationPolicy_Literals_AreNotResolved() {
-        Rtsp.DestinationPolicy policy = new Rtsp.DestinationPolicy(null, null);
+        Rtsp.DestinationPolicy policy = new Rtsp.DestinationPolicy(null);
         IPAddress[] addresses = await policy.ResolveAsync("10.1.5.224", (h, t) => throw new InvalidOperationException("resolved a literal"), CancellationToken.None);
         Assert.That(addresses, Is.EqualTo(new[] { IPAddress.Parse("10.1.5.224") }));
     }
@@ -460,7 +446,7 @@ public class RtspSecurityTests {
         Rtsp.Target? target = Rtsp.ParseUrl(url);
         Assert.That(target, Is.Not.Null);
 
-        Rtsp.DestinationPolicy policy = new Rtsp.DestinationPolicy(null, null);
+        Rtsp.DestinationPolicy policy = new Rtsp.DestinationPolicy(null);
         Assert.ThrowsAsync<Rtsp.DestinationException>(() => policy.ResolveAsync(target!.host, (h, t) => Task.FromResult(new[] { IPAddress.Loopback }), CancellationToken.None));
     }
 
@@ -542,7 +528,7 @@ public class RtspSecurityTests {
 
         //127.0.0.2 is allowed here but nothing listens there, the second validated address takes the connection
         Rtsp.Settings settings = TestSettings((host, token) => Task.FromResult(new[] { IPAddress.Parse("127.0.0.2"), IPAddress.Loopback }));
-        settings.policy = new Rtsp.DestinationPolicy(new[] { IPNetwork.Parse("127.0.0.0/30") }, null);
+        settings.policy = new Rtsp.DestinationPolicy(new[] { IPNetwork.Parse("127.0.0.0/30") });
 
         await using Rtsp.Session session = await StartSessionAsync(camera, $"rtsp://camera.test:{camera.Port}/live", settings: settings);
         Assert.That(session.failureDetail, Is.Null);
@@ -553,7 +539,7 @@ public class RtspSecurityTests {
     public async Task Session_LoopbackWithoutAnException_IsRefused() {
         await using MockCamera camera = new MockCamera().Start();
         Rtsp.Settings settings = TestSettings();
-        settings.policy = new Rtsp.DestinationPolicy(null, null);
+        settings.policy = new Rtsp.DestinationPolicy(null);
 
         Rtsp.Session session = new Rtsp.Session(Rtsp.ParseUrl(camera.Url())!, "", "", settings);
         Assert.ThrowsAsync<Rtsp.DestinationException>(() => session.StartAsync(CancellationToken.None));
@@ -1128,7 +1114,7 @@ public class RtspSecurityTests {
     public async Task Run_CancellationDuringPlayback_ReleasesEverything() {
         await using MockCamera camera = new MockCamera().Start();
         using Browser browser = await Browser.ConnectAsync();
-        Rtsp.SessionLimits limits = new Rtsp.SessionLimits(() => 64, () => 16, () => 1000);
+        Rtsp.SessionLimits limits = new Rtsp.SessionLimits(64, 16, 1000);
         using CancellationTokenSource cts = new CancellationTokenSource();
 
         Task run = Rtsp.RunAsync(browser.Server, TestClient(new ConcurrentQueue<string>()), TestSettings(limits: limits), cts.Token);
@@ -1172,7 +1158,7 @@ public class RtspSecurityTests {
 
     [Test]
     public void SessionLimits_PerUserTotalAndRate() {
-        Rtsp.SessionLimits limits = new Rtsp.SessionLimits(() => 3, () => 2, () => 5);
+        Rtsp.SessionLimits limits = new Rtsp.SessionLimits(3, 2, 5);
 
         Rtsp.SessionLimits.Lease? a1 = limits.TryAcquire("alice", out _);
         Rtsp.SessionLimits.Lease? a2 = limits.TryAcquire("alice", out _);
@@ -1205,7 +1191,7 @@ public class RtspSecurityTests {
     [Test]
     public async Task Run_PerUserLimit_RefusesBeforeConnecting() {
         await using MockCamera camera = new MockCamera().Start();
-        Rtsp.SessionLimits limits = new Rtsp.SessionLimits(() => 64, () => 1, () => 1000);
+        Rtsp.SessionLimits limits = new Rtsp.SessionLimits(64, 1, 1000);
 
         using Browser first = await Browser.ConnectAsync();
         Task firstRun = Rtsp.RunAsync(first.Server, TestClient(new ConcurrentQueue<string>()), TestSettings(limits: limits), CancellationToken.None);

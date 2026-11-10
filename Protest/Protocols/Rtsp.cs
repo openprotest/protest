@@ -154,7 +154,7 @@ internal static partial class Rtsp {
             audit = action => Logger.Action(origin, "Remote-access", action)
         };
 
-        await RunAsync(ws, client, Settings.FromConfiguration(), CancellationToken.None);
+        await RunAsync(ws, client, Settings.Default(), CancellationToken.None);
     }
 
     private static CredentialLookup LookupVaultCredential(Guid guid, string origin) {

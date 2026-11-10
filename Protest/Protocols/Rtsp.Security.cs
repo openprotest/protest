@@ -20,8 +20,8 @@ internal static partial class Rtsp {
         public int sendTimeout = 30_000;           //for a single message to the browser
         public int authorizationInterval = 5_000;
 
-        public static Settings FromConfiguration() => new Settings {
-            policy = DestinationPolicy.FromConfiguration(),
+        public static Settings Default() => new Settings {
+            policy = DestinationPolicy.Default(),
             limits = SessionLimits.shared
         };
     }
@@ -49,10 +49,10 @@ internal static partial class Rtsp {
         }
     }
 
-    //Which camera addresses the gateway connects to. Loopback, unspecified, link-local (with the cloud metadata service at
-    //169.254.169.254), multicast and broadcast addresses are refused. rtsp_allow excepts addresses from that, rtsp_deny
-    //refuses more and takes precedence. A name is resolved once and every address it resolves to has to be allowed,
-    //the connection then goes to those addresses only, so a second lookup can't lead it elsewhere.
+    //Which camera addresses the gateway connects to. Loopback, unspecified, link-local (including APIPA and the cloud
+    //metadata service at 169.254.169.254), multicast and broadcast addresses are always refused. A name is resolved once
+    //and every address it resolves to has to be allowed. The connection then goes to those addresses only, so a second
+    //lookup can't lead it elsewhere.
     internal sealed class DestinationPolicy {
         private static readonly (IPNetwork network, string description)[] PROHIBITED = {
             (IPNetwork.Parse("0.0.0.0/8"),          "an unspecified address"),
@@ -62,6 +62,7 @@ internal static partial class Rtsp {
             (IPNetwork.Parse("240.0.0.0/4"),        "a reserved or broadcast address"),
             (IPNetwork.Parse("100.100.100.200/32"), "a cloud metadata address"),
             (IPNetwork.Parse("::/96"),              "an unspecified, loopback or IPv4-compatible address"),
+            (IPNetwork.Parse("64:ff9b:1::/48"),     "a local-use IPv4/IPv6 translation address"),
             (IPNetwork.Parse("fe80::/10"),          "a link-local address"),
             (IPNetwork.Parse("ff00::/8"),           "a multicast address"),
             (IPNetwork.Parse("fd00:ec2::254/128"),  "a cloud metadata address")
@@ -70,29 +71,22 @@ internal static partial class Rtsp {
         private static readonly IPNetwork NAT64 = IPNetwork.Parse("64:ff9b::/96");
         private static readonly IPNetwork SIX_TO_FOUR = IPNetwork.Parse("2002::/16");
 
-        private readonly IPNetwork[] allow;
-        private readonly IPNetwork[] deny;
+        private readonly IPNetwork[] testExceptions;
         private readonly Func<IEnumerable<IPAddress>> broadcasts;
 
-        public DestinationPolicy(IEnumerable<IPNetwork> allow, IEnumerable<IPNetwork> deny, Func<IEnumerable<IPAddress>> broadcasts = null) {
-            this.allow = allow?.ToArray() ?? Array.Empty<IPNetwork>();
-            this.deny = deny?.ToArray() ?? Array.Empty<IPNetwork>();
+        //Narrow exceptions let the integration tests use their loopback camera and are never set by the application.
+        public DestinationPolicy(IEnumerable<IPNetwork> testExceptions, Func<IEnumerable<IPAddress>> broadcasts = null) {
+            this.testExceptions = testExceptions?.ToArray() ?? Array.Empty<IPNetwork>();
             this.broadcasts = broadcasts;
         }
 
-        public static DestinationPolicy FromConfiguration() =>
-            new DestinationPolicy(Configuration.rtspAllow, Configuration.rtspDeny, LocalBroadcasts);
+        public static DestinationPolicy Default() => new DestinationPolicy(null, LocalBroadcasts);
 
         public bool IsAllowed(IPAddress address, out string reason) {
             address = Normalize(address);
             IPAddress embedded = EmbeddedIPv4(address);
 
-            if (Matches(deny, address) || embedded is not null && Matches(deny, embedded)) {
-                reason = "listed in rtsp_deny";
-                return false;
-            }
-
-            if (Matches(allow, address)) {
+            if (Matches(testExceptions, address)) {
                 reason = null;
                 return true;
             }
@@ -105,7 +99,7 @@ internal static partial class Rtsp {
             }
 
             //NAT64 and 6to4 carry an IPv4 address, which has to be allowed too
-            if (embedded is not null && !Matches(allow, embedded) && !IsAllowed(embedded, out reason)) {
+            if (embedded is not null && !Matches(testExceptions, embedded) && !IsAllowed(embedded, out reason)) {
                 return false;
             }
 
@@ -186,37 +180,23 @@ internal static partial class Rtsp {
             catch (PlatformNotSupportedException) { }
             return addresses;
         }
-
-        //addresses or ranges, separated by commas, as protest.cfg lists them
-        internal static bool TryParseNetworks(string value, List<IPNetwork> networks) {
-            bool valid = true;
-            foreach (string item in value.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)) {
-                if (IPNetwork.TryParse(item, out IPNetwork network)) {
-                    networks.Add(network);
-                }
-                else if (IPAddress.TryParse(item, out IPAddress address)) {
-                    address = Normalize(address);
-                    networks.Add(new IPNetwork(address, address.AddressFamily == AddressFamily.InterNetwork ? 32 : 128));
-                }
-                else {
-                    valid = false;
-                }
-            }
-            return valid;
-        }
     }
 
     //Concurrent streams per user and in total, and connection attempts per user and minute.
     internal sealed class SessionLimits {
-        public static readonly SessionLimits shared = new SessionLimits(() => Configuration.rtspMaxSessions, () => Configuration.rtspMaxUserSessions, () => 60);
+        private const int MAX_SESSIONS = 64;
+        private const int MAX_USER_SESSIONS = 16;
+        private const int MAX_ATTEMPTS_PER_MINUTE = 60;
+
+        public static readonly SessionLimits shared = new SessionLimits(MAX_SESSIONS, MAX_USER_SESSIONS, MAX_ATTEMPTS_PER_MINUTE);
 
         private readonly object sync = new object();
         private readonly Dictionary<string, int> sessions = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<string, Queue<long>> attempts = new Dictionary<string, Queue<long>>(StringComparer.OrdinalIgnoreCase);
-        private readonly Func<int> maxSessions, maxUserSessions, maxAttemptsPerMinute;
+        private readonly int maxSessions, maxUserSessions, maxAttemptsPerMinute;
         private int total;
 
-        public SessionLimits(Func<int> maxSessions, Func<int> maxUserSessions, Func<int> maxAttemptsPerMinute) {
+        public SessionLimits(int maxSessions, int maxUserSessions, int maxAttemptsPerMinute) {
             this.maxSessions = maxSessions;
             this.maxUserSessions = maxUserSessions;
             this.maxAttemptsPerMinute = maxAttemptsPerMinute;
@@ -236,18 +216,18 @@ internal static partial class Rtsp {
                 }
                 while (recent.Count > 0 && now - recent.Peek() > 60_000) recent.Dequeue();
 
-                if (recent.Count >= maxAttemptsPerMinute()) {
+                if (recent.Count >= maxAttemptsPerMinute) {
                     error = "Too many connection attempts, try again in a minute";
                     return null;
                 }
                 recent.Enqueue(now);
 
                 sessions.TryGetValue(user, out int count);
-                if (count >= maxUserSessions()) {
+                if (count >= maxUserSessions) {
                     error = "Too many open camera streams";
                     return null;
                 }
-                if (total >= maxSessions()) {
+                if (total >= maxSessions) {
                     error = "The server has reached its limit of camera streams";
                     return null;
                 }
