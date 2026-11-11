@@ -1,4 +1,4 @@
-﻿using System.Collections;
+﻿using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.NetworkInformation;
@@ -75,10 +75,9 @@ internal static class Icmp {
             return;
         }
 
-        WebSocket ws;
+        HttpListenerWebSocketContext wsc;
         try {
-            HttpListenerWebSocketContext wsc = await ctx.AcceptWebSocketAsync(null);
-            ws = wsc.WebSocket;
+            wsc = await ctx.AcceptWebSocketAsync(null);
         }
         catch (WebSocketException ex) {
             ctx.Response.Close();
@@ -86,18 +85,42 @@ internal static class Icmp {
             return;
         }
 
+        using WebSocket ws = wsc.WebSocket;
         if (ws is null) return;
 
-        Hashtable hostnames = new Hashtable();
-        Lock mutex = new Lock();
+        Dictionary<string, string> hostsById = new Dictionary<string, string>();
+        ConcurrentDictionary<string, Ping> pings = new ConcurrentDictionary<string, Ping>();
+
+        byte[] buffer = new byte[2048];
+        Task<WebSocketReceiveResult> receiveTask = null;
+        Task<string> pingRound = null;
         Method method = Method.ICMP;
         int timeout = 1000;
-        //int interval = 1000;
+
+        Task SendAsync(ArraySegment<byte> payload) =>
+            ws.SendAsync(payload, WebSocketMessageType.Text, true, CancellationToken.None);
+
+        async Task SendRoundAsync(Task<string> round) {
+            string result = await round;
+            if (ws.State == WebSocketState.Open) {
+                await SendAsync(new ArraySegment<byte>(Encoding.ASCII.GetBytes(result)));
+            }
+        }
 
         try {
-            while (ws.State == WebSocketState.Open) {
-                byte[] buff = new byte[2048];
-                WebSocketReceiveResult receiveResult = await ws.ReceiveAsync(new ArraySegment<byte>(buff), CancellationToken.None);
+            while (ws.State == WebSocketState.Open || receiveTask is not null) {
+                receiveTask ??= ws.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
+
+                //keep receiving commands during probes and send all replies from this loop.
+                if (pingRound is not null &&
+                    (pingRound.IsCompleted || await Task.WhenAny(receiveTask, pingRound) == pingRound)) {
+                    await SendRoundAsync(pingRound);
+                    pingRound = null;
+                    if (!receiveTask.IsCompleted) continue;
+                }
+
+                WebSocketReceiveResult receiveResult = await receiveTask;
+                receiveTask = null;
 
                 if (!Auth.IsAuthenticatedAndAuthorized(ctx, ctx.Request.Url.AbsolutePath)) {
                     await ws.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, null, CancellationToken.None);
@@ -109,153 +132,150 @@ internal static class Icmp {
                     break;
                 }
 
-                string[] msg = Encoding.UTF8.GetString(buff, 0, receiveResult.Count).Split('=');
+                string[] msg = Encoding.UTF8.GetString(buffer, 0, receiveResult.Count).Split('=');
                 if (msg.Length < 2) continue;
 
                 switch (msg[0]) {
-                case "add":
-                    string[] h = msg[1].Split(';');
-                    if (h.Length > 1) {
-                        for (int i = 0; i < h.Length - 1; i += 2) {
-                            h[i] = h[i].Trim();
-                            h[i + 1] = h[i + 1].Trim();
-                            if (h[i].Length > 0 && h[i + 1].Length > 0 && !hostnames.ContainsKey(h[i]))
-                                hostnames.Add(h[i], h[i + 1]);
-                            else
-                                await ws.SendAsync(Data.CODE_INVALID_ARGUMENT, WebSocketMessageType.Text, true, CancellationToken.None);
+                case "add": {
+                    string[] entries = msg[1].Split(';');
+                    if (entries.Length < 2) {
+                        await SendAsync(Data.CODE_INVALID_ARGUMENT);
+                        break;
+                    }
+
+                    for (int i = 0; i < entries.Length - 1; i += 2) {
+                        string id = entries[i].Trim();
+                        string hostname = entries[i + 1].Trim();
+                        if (id.Length == 0 || hostname.Length == 0 || !hostsById.TryAdd(id, hostname)) {
+                            await SendAsync(Data.CODE_INVALID_ARGUMENT);
                         }
-                        await ws.SendAsync(Data.CODE_ACK, WebSocketMessageType.Text, true, CancellationToken.None);
                     }
-                    else {
-                        await ws.SendAsync(Data.CODE_INVALID_ARGUMENT, WebSocketMessageType.Text, true, CancellationToken.None);
-                    }
+                    await SendAsync(Data.CODE_ACK);
                     break;
+                }
 
-                case "remove":
-                    string value = msg[1].Trim();
-                    if (hostnames.Contains(value)) {
-                        hostnames.Remove(value);
-                        await ws.SendAsync(Data.CODE_ACK, WebSocketMessageType.Text, true, CancellationToken.None);
-                    }
-                    else {
-                        await ws.SendAsync(Data.CODE_INVALID_ARGUMENT, WebSocketMessageType.Text, true, CancellationToken.None);
+                case "remove": {
+                    if (!hostsById.Remove(msg[1].Trim(), out string hostname)) {
+                        await SendAsync(Data.CODE_INVALID_ARGUMENT);
+                        break;
                     }
 
+                    if (!hostsById.ContainsValue(hostname) && pings.TryRemove(hostname, out Ping removed)) {
+                        removed.Dispose();
+                    }
+                    await SendAsync(Data.CODE_ACK);
                     break;
+                }
 
                 case "timeout":
                     _ = int.TryParse(msg[1], out timeout);
                     break;
-
-                /*case "interval":
-                    _ = int.TryParse(msg[1], out interval);
-                    break;*/
 
                 case "method":
                     method = msg[1] == "arp" ? Method.ARP : Method.ICMP;
                     break;
 
                 case "ping":
-                    new Thread(() => {
-                        int i = 0;
-                        string[] name = new string[hostnames.Count];
-                        string[] id = new string[hostnames.Count];
-
-                        foreach (DictionaryEntry o in hostnames) {
-                            id[i] = o.Key.ToString();
-                            name[i] = o.Value.ToString();
-                            i++;
-                        }
-
-                        Task<string> s = method == Method.ICMP ? PingArrayAsync(name, id, timeout) : ArpPingArrayAsync(name, id);
-                        s.Wait();
-
-                        lock (mutex) { //one send per socket
-                            ws.SendAsync(new ArraySegment<byte>(Encoding.ASCII.GetBytes(s.Result), 0, s.Result.Length), WebSocketMessageType.Text, true, CancellationToken.None);
-                        }
-                    }).Start();
+                    //finish an overlapping request before reusing its Ping instances.
+                    if (pingRound is not null) await SendRoundAsync(pingRound);
+                    if (method == Method.ICMP) {
+                        pingRound = PingHostsAsync(hostsById, pings, timeout);
+                    }
+                    else {
+                        KeyValuePair<string, string>[] hosts = hostsById.ToArray();
+                        pingRound = Task.Run(() => ArpPingHostsAsync(hosts));
+                    }
                     break;
                 }
             }
         }
-        catch (WebSocketException ex) when (ex.WebSocketErrorCode == WebSocketError.ConnectionClosedPrematurely) {
-            return;
-        }
-        catch (WebSocketException ex) when (ex.WebSocketErrorCode != WebSocketError.ConnectionClosedPrematurely) {
-            //do nothing
-        }
+        catch (WebSocketException) { }
         catch (Exception ex) {
             Logger.Error(ex);
+        }
+        finally {
+            foreach (Ping ping in pings.Values) {
+                ping.Dispose();
+            }
+
+            if (receiveTask is not null) {
+                ws.Abort();
+                await ((Task)receiveTask).ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing);
+            }
         }
 
         if (ws.State == WebSocketState.Open) {
             try {
-                await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
+                await ws.CloseOutputAsync(WebSocketCloseStatus.InternalServerError, null, CancellationToken.None);
             }
             catch (Exception ex) {
                 Logger.Debug(ex);
             }
         }
     }
-    private static async Task<string> PingArrayAsync(string[] name, string[] id, int timeout) {
-        List<Task<string>> tasks = new List<Task<string>>(name.Length);
-        for (int i = 0; i < name.Length; i++) tasks.Add(PingAsync(name[i], id[i], timeout));
-        string[] result = await Task.WhenAll(tasks);
-        return String.Join((char)127, result);
+
+    private static async Task<string> PingHostsAsync(Dictionary<string, string> hostsById, ConcurrentDictionary<string, Ping> pings, int timeout) {
+        IEnumerable<Task<string>> probes = hostsById.GroupBy(entry => entry.Value)
+            .Select(rows => PingHostAsync(pings.GetOrAdd(rows.Key, static _ => new Ping()), rows, timeout));
+        return String.Join((char)127, await Task.WhenAll(probes));
     }
-    private static async Task<string> PingAsync(string hostname, string id, int timeout) {
-        using Ping p = new Ping();
 
+    private static async Task<string> PingHostAsync(Ping ping, IGrouping<string, KeyValuePair<string, string>> rows, int timeout) {
+        string status;
         try {
-            PingReply reply = await p.SendPingAsync(hostname, timeout, ICMP_PAYLOAD);
+            PingReply reply = await ping.SendPingAsync(rows.Key, timeout, ICMP_PAYLOAD);
 
-            return (int)reply.Status switch {
+            status = (int)reply.Status switch {
                 (int)IPStatus.DestinationUnreachable or
                 (int)IPStatus.DestinationHostUnreachable or
-                (int)IPStatus.DestinationNetworkUnreachable => id + ((char)127) + "Unreachable",
+                (int)IPStatus.DestinationNetworkUnreachable => "Unreachable",
 
-                (int)IPStatus.Success  => id + ((char)127) + reply.RoundtripTime,
-                (int)IPStatus.TimedOut => id + ((char)127) + "Timed out",
-                11050                  => id + ((char)127) + "General failure",
-                _                      => id + ((char)127) + reply.Status,
+                (int)IPStatus.Success  => reply.RoundtripTime.ToString(),
+                (int)IPStatus.TimedOut => "Timed out",
+                11050                  => "General failure",
+                _                      => reply.Status.ToString(),
             };
         }
         catch (ArgumentException) {
-            return id + ((char)127) + "Invalid address";
+            status = "Invalid address";
         }
         catch (PingException) {
-            return id + ((char)127) + "Ping error";
+            status = "Ping error";
         }
         catch (Exception) {
-            return id + ((char)127) + "Unknown error";
+            status = "Unknown error";
         }
+
+        return String.Join((char)127, rows.Select(row => row.Key + (char)127 + status));
     }
 
-    private static async Task<string> ArpPingArrayAsync(string[] name, string[] id) {
-        List<Task<string>> tasks = new List<Task<string>>(name.Length);
-        for (int i = 0; i < name.Length; i++) tasks.Add(ArpPingAsync(name[i], id[i]));
+    private static async Task<string> ArpPingHostsAsync(KeyValuePair<string, string>[] hosts) {
+        List<Task<string>> tasks = new List<Task<string>>(hosts.Length);
+        foreach ((string id, string hostname) in hosts) {
+            tasks.Add(ArpPingAsync(hostname, id));
+        }
         string[] result = await Task.WhenAll(tasks);
-        return String.Join(((char)127), result);
+        return String.Join((char)127, result);
     }
 
     private static async Task<string> ArpPingAsync(string name, string id) {
         try {
             IPAddress[] ips = await System.Net.Dns.GetHostAddressesAsync(name);
-            if (ips.Length == 0) return id + ((char)127) + "Unknown host";
+            if (ips.Length == 0) return id + (char)127 + "Unknown host";
 
             IPAddress ip = ips.First(o => o.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork);
-            if (!ips[0].OnSameBroadcastDomain()) return id + ((char)127) + "Unknown net.";
+            if (!ips[0].OnSameBroadcastDomain()) return id + (char)127 + "Unknown net.";
 
             string response = Arp.ArpRequest(ip.ToString());
 
             if (response is not null && response.Length > 0) {
-                return id + ((char)127) + "0";
+                return id + (char)127 + "0";
             }
 
-            return id + ((char)127) + "Unreachable";
+            return id + (char)127 + "Unreachable";
         }
         catch (Exception) {
-            return id + ((char)127) + "Unknown error";
+            return id + (char)127 + "Unknown error";
         }
     }
 }
