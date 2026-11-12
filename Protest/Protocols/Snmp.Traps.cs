@@ -1251,26 +1251,17 @@ internal static partial class Traps {
         static string Encode(string value) => WebUtility.HtmlEncode(value ?? String.Empty);
 
         StringBuilder body = new StringBuilder();
-        body.Append("<html>");
-        body.Append("<table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\">");
-        body.Append("<tr><td>&nbsp;</td></tr>");
-        body.Append("<tr><td align=\"center\">");
-
-        body.Append("<table width=\"800\" bgcolor=\"#e0e0e0\" style=\"text-align:left\">");
-        body.Append("<tr><td style=\"padding:10px\"></td></tr>");
-        body.Append($"<tr><td style=\"height:40px;color:#202020;font-size:20px;text-align:center\"><b>SNMP traps - {Encode(listenerName)}</b></td></tr>");
-
         body.Append("<tr><td style=\"padding:10px\">");
         body.Append("<table width=\"100%\" cellpadding=\"4\" cellspacing=\"0\" style=\"font-family:monospace;font-size:13px;color:#202020\">");
-        body.Append("<tr style=\"background-color:#c0c0c0\"><th align=\"left\">Time</th><th align=\"left\">Device</th><th align=\"left\">Severity</th><th align=\"left\">Trap</th><th align=\"left\">Variables</th></tr>");
+        body.Append("<tr style=\"background-color:#a8a8a8\"><th align=\"left\">Time</th><th align=\"left\">Device</th><th align=\"left\">Severity</th><th align=\"left\">Trap</th><th align=\"left\">Variables</th></tr>");
 
         for (int i = 0; i < items.Count; i++) {
             EmailItem item = items[i];
             string color = (Severity)item.trap.severity switch {
-                Severity.Critical => "#c00000",
-                Severity.Major    => "#e06000",
-                Severity.Minor    => "#a08000",
-                Severity.Warning  => "#1070a0",
+                Severity.Critical => "#820000",
+                Severity.Major    => "#773000",
+                Severity.Minor    => "#594300",
+                Severity.Warning  => "#104866",
                 _                 => "#202020"
             };
 
@@ -1287,20 +1278,12 @@ internal static partial class Traps {
         body.Append("</td></tr>");
 
         if (overflow > 0) {
-            body.Append($"<tr><td style=\"padding:10px;color:#606060\">and {overflow} more trap{(overflow == 1 ? "" : "s")} not included.</td></tr>");
+            body.Append($"<tr><td style=\"padding:10px;color:#202020\">and {overflow} more trap{(overflow == 1 ? "" : "s")} not included.</td></tr>");
         }
 
         body.Append("<tr><td style=\"padding:10px\"></td></tr>");
-        body.Append("</table>");
 
-        body.Append("</td></tr>");
-        body.Append("<tr><td>&nbsp;</td></tr>");
-        body.Append("<tr><td style=\"text-align:center;color:#808080\">Sent from <a href=\"https://github.com/openprotest/protest\" style=\"color:#e67624\">Pro-test</a></td></tr>");
-        body.Append("<tr><td>&nbsp;</td></tr>");
-        body.Append("</table>");
-        body.Append("</html>");
-
-        return body.ToString();
+        return EmailTemplate.Render($"SNMP traps - {listenerName}", 800, "left", body.ToString());
     }
 
     private static string GetDeviceName(string file, IPAddress remote) {

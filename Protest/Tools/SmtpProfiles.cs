@@ -211,32 +211,13 @@ internal static class SmtpProfiles {
             return Encoding.UTF8.GetBytes("{\"error\":\"Invalid recipient\"}");
         }
 
-        string body = """
-            <html>
-            <table width="100%" cellpadding="0" cellspacing="0" border="0">
-
-            <tr><td>&nbsp;</td></tr>
-            <tr><td align="center">
-
-            <table width="640" bgcolor="#e0e0e0">
+        string body = EmailTemplate.Render("SMTP test", 640, "center", """
             <tr><td style="padding:10px"></td></tr>
-
-            <tr><td style="height:28px;font-size:18;text-align:center">
+            <tr><td style="height:28px;font-size:18px">
             You have successfully configured this SMTP profile.
             </td></tr>
-
             <tr><td style="padding:10px"></td></tr>
-            </table>
-
-            </td></tr>
-            <tr><td>&nbsp;</td></tr>
-            <tr><td style="text-align:center;color:#808080">Sent from <a href="https://github.com/openprotest/protest" style="color:#e67624">Pro-test</a></td></tr>
-            <tr><td>&nbsp;</td></tr>
-            </td></tr>
-
-            </table>
-            </html>
-            """;
+            """);
 
         try {
             string reply = Send(profile, new string[] { recipient }, "E-mail test from Pro-test", body);

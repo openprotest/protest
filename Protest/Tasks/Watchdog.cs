@@ -715,18 +715,9 @@ internal static class Watchdog {
         };*/
 
         StringBuilder body = new StringBuilder();
-        body.Append("<html>");
-        body.Append("<table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\">");
-
-        body.Append("<tr><td>&nbsp;</td></tr>");
-
-        body.Append("<tr><td align=\"center\">");
-
-
-        body.Append("<table width=\"640\" bgcolor=\"#e0e0e0\" style=\"text-align:center\">");
         body.Append("<tr><td style=\"padding:10px\"></td></tr>");
 
-        body.Append("<tr><td style=\"height:40px;color:#202020;font-size:20px\"><b>");
+        body.Append("<tr><td style=\"height:40px;font-size:20px\"><b>");
 
         switch (status) {
         case 0 : body.Append(greenDot);  break; //ok
@@ -764,7 +755,7 @@ internal static class Watchdog {
         body.Append("</b></td></tr>");
 
 
-        body.Append("<tr><td style=\"height:28px;font-size:18\">");
+        body.Append("<tr><td style=\"height:28px;font-size:18px\">");
         switch (watcher.type) {
         case WatcherType.icmp:
             if (status < 0) {
@@ -840,25 +831,13 @@ internal static class Watchdog {
         //body.Append("</td></tr>");
 
         body.Append("<tr><td style=\"padding:10px\"></td></tr>");
-        body.Append("</table>");
-
-        body.Append("</td></tr>");
-
-        body.Append("<tr><td>&nbsp;</td></tr>");
-        body.Append("<tr><td style=\"text-align:center;color:#808080\">Sent from <a href=\"https://github.com/openprotest/protest\" style=\"color:#e67624\">Pro-test</a></td></tr>");
-        body.Append("<tr><td>&nbsp;</td></tr>");
-
-        body.Append("</td></tr>");
-
-        body.Append("</table>");
-        body.Append("</html>");
 
 #if !DEBUG
         try
 #endif
         {
             string subject = $"Watchdog notification - {target} - {DateTime.Now.ToString(Data.DATETIME_FORMAT_TIMEZONE)}";
-            SmtpProfiles.Send(profile, notification.recipients, subject, body.ToString());
+            SmtpProfiles.Send(profile, notification.recipients, subject, EmailTemplate.Render("Watchdog", 640, "center", body.ToString()));
         }
 #if !DEBUG
         catch (Exception ex) { Logger.Error(ex); }

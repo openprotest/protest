@@ -974,25 +974,16 @@ internal static partial class Syslog {
         static string Encode(string value) => WebUtility.HtmlEncode(value ?? String.Empty);
 
         StringBuilder body = new StringBuilder();
-        body.Append("<html>");
-        body.Append("<table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\">");
-        body.Append("<tr><td>&nbsp;</td></tr>");
-        body.Append("<tr><td align=\"center\">");
-
-        body.Append("<table width=\"800\" bgcolor=\"#e0e0e0\" style=\"text-align:left\">");
-        body.Append("<tr><td style=\"padding:10px\"></td></tr>");
-        body.Append($"<tr><td style=\"height:40px;color:#202020;font-size:20px;text-align:center\"><b>Syslog - {Encode(listenerName)}</b></td></tr>");
-
         body.Append("<tr><td style=\"padding:10px\">");
         body.Append("<table width=\"100%\" cellpadding=\"4\" cellspacing=\"0\" style=\"font-family:monospace;font-size:13px;color:#202020\">");
-        body.Append("<tr style=\"background-color:#c0c0c0\"><th align=\"left\">Time</th><th align=\"left\">Device</th><th align=\"left\">Severity</th><th align=\"left\">App</th><th align=\"left\">Message</th></tr>");
+        body.Append("<tr style=\"background-color:#a8a8a8\"><th align=\"left\">Time</th><th align=\"left\">Device</th><th align=\"left\">Severity</th><th align=\"left\">App</th><th align=\"left\">Message</th></tr>");
 
         for (int i = 0; i < items.Count; i++) {
             EmailItem item = items[i];
             string color = item.message.severity switch {
-                <= 2 => "#c00000",
-                3    => "#e06000",
-                4    => "#a08000",
+                <= 2 => "#820000",
+                3    => "#773000",
+                4    => "#594300",
                 _    => "#202020"
             };
 
@@ -1009,20 +1000,12 @@ internal static partial class Syslog {
         body.Append("</td></tr>");
 
         if (overflow > 0) {
-            body.Append($"<tr><td style=\"padding:10px;color:#606060\">and {overflow} more message{(overflow == 1 ? "" : "s")} not included.</td></tr>");
+            body.Append($"<tr><td style=\"padding:10px;color:#202020\">and {overflow} more message{(overflow == 1 ? "" : "s")} not included.</td></tr>");
         }
 
         body.Append("<tr><td style=\"padding:10px\"></td></tr>");
-        body.Append("</table>");
 
-        body.Append("</td></tr>");
-        body.Append("<tr><td>&nbsp;</td></tr>");
-        body.Append("<tr><td style=\"text-align:center;color:#808080\">Sent from <a href=\"https://github.com/openprotest/protest\" style=\"color:#e67624\">Pro-test</a></td></tr>");
-        body.Append("<tr><td>&nbsp;</td></tr>");
-        body.Append("</table>");
-        body.Append("</html>");
-
-        return body.ToString();
+        return EmailTemplate.Render($"Syslog - {listenerName}", 800, "left", body.ToString());
     }
 
     private static string GetDeviceName(string file, IPAddress remote) {
