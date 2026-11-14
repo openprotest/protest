@@ -53,16 +53,16 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.Diagnostics.EventLog" Version="10.0.14" />
-    <PackageReference Include="System.DirectoryServices" Version="10.0.14" />
-    <PackageReference Include="System.Management" Version="10.0.14" />
-    <PackageReference Include="System.IO.Ports" Version="10.0.14" />
+    <PackageReference Include="System.Diagnostics.EventLog" Version="11.0.0" />
+    <PackageReference Include="System.DirectoryServices" Version="11.0.0" />
+    <PackageReference Include="System.Management" Version="11.0.0" />
+    <PackageReference Include="System.IO.Ports" Version="11.0.0" />
     <PackageReference Include="Yarp.ReverseProxy" Version="2.3.0" />
     <PackageReference Include="SSH.NET" Version="2026.0.0" />
     <PackageReference Include="Lextm.SharpSnmpLib" Version="12.5.7" />
     <PackageReference Include="Otp.NET" Version="1.4.1" />
-    <PackageReference Include="Porta.Pty" Version="2.2.3" />
-    <PackageReference Include="MailKit" Version="4.18.2" />
+    <PackageReference Include="Porta.Pty" Version="2.2.4" />
+    <PackageReference Include="MailKit" Version="5.0.0" />
   </ItemGroup>
 
 </Project>

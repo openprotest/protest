@@ -5,11 +5,11 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
+using MailKit;
 using MailKit.Net.Smtp;
 using MailKit.Security;
 using MimeKit;
 using MimeKit.Text;
-using Protest.Http;
 
 namespace Protest.Tools;
 internal static class SmtpProfiles {
@@ -182,7 +182,7 @@ internal static class SmtpProfiles {
     }
 
     public static byte[] SendTest(HttpListenerContext ctx) {
-        Dictionary<string, string> parameters = Listener.ParseQuery(ctx);
+        Dictionary<string, string> parameters = Protest.Http.Listener.ParseQuery(ctx);
 
         if (parameters is null) {
             return Data.CODE_INVALID_ARGUMENT.Array;
@@ -284,7 +284,7 @@ internal static class SmtpProfiles {
             }
         }
         else if (!String.IsNullOrEmpty(profile.username)) {
-            if (!smtp.Capabilities.HasFlag(SmtpCapabilities.Authentication)) {
+            if (!smtp.Capabilities.Contains(SmtpCapability.Authentication)) {
                 throw new InvalidOperationException(security == SecureSocketOptions.None
                     ? $"{profile.server} does not offer authentication without encryption. Turn on SSL, or clear the username to send without logging in."
                     : $"{profile.server} does not offer authentication. Clear the username to send without logging in.");
@@ -292,9 +292,9 @@ internal static class SmtpProfiles {
             smtp.Authenticate(profile.username, profile.password ?? String.Empty);
         }
 
-        string reply = smtp.Send(message);
+        SendResult result = smtp.Send(new SendRequest(message));
         smtp.Disconnect(true);
-        return reply;
+        return result.ResponseText;
     }
 }
 
