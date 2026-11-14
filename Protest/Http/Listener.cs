@@ -83,6 +83,8 @@ internal sealed class Listener {
         try
 #endif
         {
+            //if (ctx.Request.HasEntityBody) ctx.Response.KeepAlive = false;
+
             //the managed listener (Linux, macOS) hands every request of a keep-alive connection the same IPEndPoint,
             //start from the socket peer, so the client of one request is never carried into the next
             IPEndPoint remoteEndPoint = ctx.Request.RemoteEndPoint;
@@ -185,6 +187,8 @@ internal sealed class Listener {
             string path = ctx.Request.Url.PathAndQuery;
 
             if (String.Equals(path, "/auth", StringComparison.Ordinal)) {
+                ctx.Response.AddHeader("Cache-Control", "no-store");
+
                 //before the rate limit, or any site could have the user's browser use it up and lock them out
                 if (!IsSameOrigin(ctx, host, scheme)) {
                     Logger.Action("Unauthenticated", "AAA", $"Rejected cross-origin request to /auth from {ctx.Request.Headers.Get("Origin") ?? ctx.Request.Headers.Get("Sec-Fetch-Site")}");
@@ -202,18 +206,20 @@ internal sealed class Listener {
                     return;
                 }
 
-                Auth.AuthHandler(ctx);
+                await Auth.AuthHandlerAsync(ctx);
                 ctx.Response.Close();
                 return;
             }
 
             if (String.Equals(ctx.Request.Url?.LocalPath, "/api", StringComparison.Ordinal)) {
+                ctx.Response.AddHeader("Cache-Control", "no-store");
                 Tools.Api.HandleApiCall(ctx);
                 ctx.Response.Close();
                 return;
             }
 
             if (String.Equals(path, "/contacts", StringComparison.Ordinal)) {
+                ctx.Response.AddHeader("Cache-Control", "no-store");
                 if (Configuration.addressBook || Auth.IsAuthenticated(ctx)) {
                     byte[] buffer = DatabaseInstances.users.SerializeContacts();
                     ctx.Response.StatusCode = (int)HttpStatusCode.OK;

@@ -67,6 +67,52 @@ public class ListenerTests {
         Assert.That(result.StatusCode, Is.EqualTo(HttpStatusCode.Unauthorized));
     }
 
+    [TestCase("GET", "/", HttpStatusCode.OK)]
+    [TestCase("POST", "/db/device/save", HttpStatusCode.Unauthorized)]
+    public void Listener_UnreadRequestBody_ClosesConnection(string method, string path, HttpStatusCode statusCode) {
+        using TcpClient tcp = new TcpClient { ReceiveTimeout = 5_000 };
+        tcp.Connect(IPAddress.Loopback, port);
+        using NetworkStream stream = tcp.GetStream();
+        stream.Write(Encoding.ASCII.GetBytes($"{method} {path} HTTP/1.1\r\nHost: 127.0.0.1:{port}\r\nContent-Length: 32\r\n\r\nx"));
+
+        string head = ReadResponseHead(stream);
+        Assert.Multiple(() => {
+            Assert.That(head, Does.StartWith($"HTTP/1.1 {(int)statusCode} "));
+            Assert.That(head, Does.Contain("\r\nConnection: close\r\n").IgnoreCase);
+        });
+    }
+
+    [Test]
+    public void Contacts_PrivateResponse_IsNotCached() {
+        Database? previous = DatabaseInstances.users;
+        bool addressBook = Configuration.addressBook;
+        DirectoryInfo directory = Directory.CreateTempSubdirectory("protest-contacts-");
+        try {
+            DatabaseInstances.users = new Database("user", directory.FullName);
+            Configuration.addressBook = false;
+            using HttpClient client = new HttpClient();
+
+            WithSession("/contacts", cookie => {
+                using HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, $"{baseUrl}/contacts");
+                request.Headers.Add("Cookie", cookie);
+                using HttpResponseMessage response = client.Send(request);
+                Assert.Multiple(() => {
+                    Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+                    Assert.That(response.Headers.CacheControl?.NoStore, Is.True);
+                });
+            });
+
+            using HttpRequestMessage anonymousRequest = new HttpRequestMessage(HttpMethod.Get, $"{baseUrl}/contacts");
+            using HttpResponseMessage anonymous = client.Send(anonymousRequest);
+            Assert.That(anonymous.StatusCode, Is.EqualTo(HttpStatusCode.Forbidden));
+        }
+        finally {
+            Configuration.addressBook = addressBook;
+            DatabaseInstances.users = previous;
+            directory.Delete();
+        }
+    }
+
     [TestCase("loader.js")]
     [TestCase("ui.js")]
     public async Task Listener_VersionedScript_ReturnsTheStaticAsset(string file) {
@@ -280,6 +326,28 @@ public class ListenerTests {
     [Test]
     public void Auth_FromSameOrigin_IsHandled() {
         Assert.That(SendAuth("same-origin"), Is.EqualTo(HttpStatusCode.Unauthorized));
+    }
+
+    [Test]
+    public void Auth_IncompleteBody_TimesOutAndClosesConnection() {
+        IPAddress clientIp = IPAddress.Parse("198.51.100.90");
+        WithTrustedLoopbackProxy(() => {
+            using TcpClient tcp = new TcpClient { ReceiveTimeout = 10_000 };
+            tcp.Connect(IPAddress.Loopback, port);
+            using NetworkStream stream = tcp.GetStream();
+            stream.Write(Encoding.ASCII.GetBytes($"POST /auth HTTP/1.1\r\nHost: 127.0.0.1:{port}\r\nOrigin: {baseUrl}\r\nX-Forwarded-For: {clientIp}\r\nContent-Length: 32\r\n\r\nx"));
+
+            try {
+                //the managed listener can send 408, http.sys can reset before sending a response
+                int first = stream.ReadByte();
+                if (first >= 0) {
+                    Assert.That(ReadResponseHead(stream, ((char)first).ToString()), Does.StartWith("HTTP/1.1 408 "));
+                }
+            }
+            catch (IOException ex) when (ex.InnerException is SocketException { SocketErrorCode: SocketError.ConnectionReset }) { }
+
+            Assert.That(Auth.rateLimitLog.TryRemove(clientIp, out _), Is.True);
+        });
     }
 
     [Test]
@@ -663,19 +731,23 @@ public class ListenerTests {
             + "\r\n";
         stream.Write(Encoding.ASCII.GetBytes(request));
 
-        StringBuilder head = new StringBuilder();
-        while (!head.ToString().EndsWith("\r\n\r\n")) {
-            int b = stream.ReadByte();
-            if (b < 0) throw new EndOfStreamException("The listener closed the connection");
-            head.Append((char)b);
-        }
-
-        string[] lines = head.ToString().Split("\r\n");
+        string[] lines = ReadResponseHead(stream).Split("\r\n");
         string? contentLength = lines.FirstOrDefault(o => o.StartsWith("Content-Length:", StringComparison.OrdinalIgnoreCase));
         if (contentLength is not null) {
             stream.ReadExactly(new byte[int.Parse(contentLength["Content-Length:".Length..].Trim())]);
         }
 
         return (HttpStatusCode)int.Parse(lines[0].Split(' ')[1]);
+    }
+
+    private static string ReadResponseHead(NetworkStream stream, string prefix = "") {
+        StringBuilder head = new StringBuilder(prefix);
+        while (!head.ToString().EndsWith("\r\n\r\n")) {
+            int b = stream.ReadByte();
+            if (b < 0) throw new EndOfStreamException("The listener closed the connection");
+            head.Append((char)b);
+        }
+
+        return head.ToString();
     }
 }

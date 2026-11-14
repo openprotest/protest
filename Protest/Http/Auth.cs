@@ -13,6 +13,7 @@ using OtpNet;
 namespace Protest.Http;
 
 internal static class Auth {
+    private const int AUTH_BODY_TIMEOUT = 5_000; //milliseconds
     private const long SESSION_TIMEOUT = TimeSpan.TicksPerDay * 5;
     private const long OTP_TOKEN_TIMEOUT = TimeSpan.TicksPerMinute * 5;
     private const int MAX_OTP_ATTEMPTS = 5;
@@ -167,7 +168,7 @@ internal static class Auth {
         }
     }
 
-    internal static bool AuthHandler(HttpListenerContext ctx) {
+    internal static async Task<bool> AuthHandlerAsync(HttpListenerContext ctx) {
         IPAddress clientIP = ctx.Request.RemoteEndPoint?.Address;
         if (clientIP is null) {
             ctx.Response.StatusCode = (int)HttpStatusCode.BadRequest;
@@ -179,8 +180,9 @@ internal static class Auth {
             return false;
         }
 
-        using StreamReader streamReader = new StreamReader(ctx.Request.InputStream);
-        string payload = streamReader.ReadToEnd();
+        string payload = await ReadAuthBodyAsync(ctx);
+        if (payload is null) return false;
+
         string[] array = payload.Split((char)127);
 
         if (array.Length < 3) {
@@ -211,6 +213,39 @@ internal static class Auth {
             ctx.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
             return false;
         }
+    }
+
+    private static async Task<string> ReadAuthBodyAsync(HttpListenerContext ctx) {
+        byte[] buffer = new byte[(int)ctx.Request.ContentLength64];
+        using CancellationTokenSource cts = new CancellationTokenSource(AUTH_BODY_TIMEOUT);
+
+        //pending reads can ignore cancellation, abort the response to close the connection
+        using CancellationTokenRegistration abort = cts.Token.Register(() => {
+            try {
+                ctx.Response.StatusCode = (int)HttpStatusCode.RequestTimeout;
+                ctx.Response.Abort();
+            }
+            catch { }
+        });
+
+        bool complete = false;
+        try {
+            await ctx.Request.InputStream.ReadExactlyAsync(buffer, cts.Token);
+            complete = true;
+        }
+        catch (OperationCanceledException) { }
+        catch (HttpListenerException) { }
+        catch (IOException) { }
+        catch (ObjectDisposedException) { }
+
+        if (!abort.Unregister()) return null;
+        if (cts.IsCancellationRequested || !complete) {
+            ctx.Response.StatusCode = (int)(cts.IsCancellationRequested ? HttpStatusCode.RequestTimeout : HttpStatusCode.BadRequest);
+            return null;
+        }
+
+        using StreamReader streamReader = new StreamReader(new MemoryStream(buffer));
+        return streamReader.ReadToEnd();
     }
 
     private static bool PrimaryFactorAuthentication(HttpListenerContext ctx, string[] array) {
