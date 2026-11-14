@@ -36,15 +36,16 @@ internal static class Auth {
     private static readonly Dictionary<string, long> lastTotpTimeStep = new();
     private static readonly Lock totpMutex = new();
 
+    //Account changes and session creation must agree on which credentials were verified.
+    private static readonly Lock rbacMutex = new();
     internal static readonly ConcurrentDictionary<string, AccessControl> rbac = new();
     internal static readonly ConcurrentDictionary<string, Session> sessions = new();
 
     internal class OtpToken {
         public string tokenId;
         public string username;
-        public bool   enrolled;
+        public object credentialRevision;
         public byte[] secret;
-        public int    status;
         public long   createdAt;
         public int    failures;
     }
@@ -60,6 +61,8 @@ internal static class Auth {
         public bool            isDomainUser;
         public string[]        authorization;
         public HashSet<string> accessPath;
+        //This is only used for pending sign-ins and is never persisted.
+        public object          credentialRevision = new();
     }
 
     internal record Session {
@@ -191,28 +194,10 @@ internal static class Auth {
         }
 
         if (array.Length == 3) {
-            return PrimaryFactorAuthentication(ctx, array);
+            return PrimaryFactorAuthentication(ctx, array[1].ToLower(), array[2]);
         }
 
-        string tokenId = array[2];
-        if (!otpTokens.TryGetValue(tokenId, out OtpToken token)) {
-            ctx.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
-            return false;
-        }
-
-        if (DateTime.UtcNow.Ticks - token.createdAt > OTP_TOKEN_TIMEOUT) {
-            otpTokens.TryRemove(tokenId, out _);
-            ctx.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
-            return false;
-        }
-
-        switch (token.status) {
-        case -1: return TotpEnrollment(ctx, array);
-        case  2: return TotpAuthentication(ctx, array);
-        default:
-            ctx.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
-            return false;
-        }
+        return CompleteTotpAuthentication(ctx, array[1].ToLower(), array[2], array[3]);
     }
 
     private static async Task<string> ReadAuthBodyAsync(HttpListenerContext ctx) {
@@ -248,148 +233,121 @@ internal static class Auth {
         return streamReader.ReadToEnd();
     }
 
-    private static bool PrimaryFactorAuthentication(HttpListenerContext ctx, string[] array) {
-        if (array.Length < 3) {
+    private static bool PrimaryFactorAuthentication(HttpListenerContext ctx, string username, string password) {
+        if (password.Length == 0) {
             ctx.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
             return false;
         }
 
-        string username = array[1]?.ToLower() ?? null;
-        string password = array[2];
+        AccessControl access;
+        object credentialRevision;
+        byte[] passwordHash;
+        bool isDomainUser;
+        lock (rbacMutex) {
+            rbac.TryGetValue(username, out access);
+            credentialRevision = access?.credentialRevision;
+            passwordHash       = access?.passwordHash;
+            isDomainUser       = access?.isDomainUser ?? false;
+        }
 
-        if (username is null) {
+        bool isSuccessful;
+        if (isDomainUser && OperatingSystem.IsWindows()) {
+            isSuccessful = Protocols.Ldap.TryDirectoryAuthentication(username, password);
+        }
+        else {
+            //Hash unknown users and unsupported domain logins too, to hide their shorter response time.
+            byte[] hash = Cryptography.HashUsernameAndPassword(username, password);
+            isSuccessful = !isDomainUser && passwordHash is not null && CryptographicOperations.FixedTimeEquals(hash, passwordHash);
+        }
+
+        if (!isSuccessful) {
+            if (access is not null) {
+                Logger.Action(username, "AAA", $"Primary factor authentication failed from {ctx.Request.RemoteEndPoint?.Address}");
+            }
             ctx.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
             return false;
         }
 
-        if (!rbac.TryGetValue(username, out AccessControl access)) {
-            //hashed all the same, so the response time doesn't tell which usernames exist
-            Cryptography.HashUsernameAndPassword(username, password);
-            ctx.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
-            return false;
-        }
-
-        bool isSuccessful = access.isDomainUser && OperatingSystem.IsWindows()
-            ? Protocols.Ldap.TryDirectoryAuthentication(username, password)
-            : Cryptography.HashUsernameAndPassword(username, password).SequenceEqual(access.passwordHash);
-
-#if DEBUG
-        if (isSuccessful) {
-            Logger.Action(username, "AAA", $"Primary factor authentication succeeded from {ctx.Request.RemoteEndPoint?.Address}");
-            Logger.Action(username, "AAA", $"Skipping TOTP");
-
-            GrantAccess(ctx, username);
-            ctx.Response.StatusCode = (int)HttpStatusCode.Accepted;
-            byte[] buffer = System.Text.Encoding.UTF8.GetBytes("{\"status\":0}");
-            ctx.Response.OutputStream.Write(buffer);
-            return true;
-        }
+#if !DEBUG
+        string tokenId = Cryptography.RandomStringGenerator(32);
+        bool isEnrolled;
+        byte[] secret;
+        EvictExpiredOtpTokens();
 #endif
 
-        if (isSuccessful) {
-            Logger.Action(username, "AAA", $"Primary factor authentication succeeded from {ctx.Request.RemoteEndPoint?.Address}");
-            ctx.Response.StatusCode = (int)HttpStatusCode.Accepted;
+        lock (rbacMutex) {
+            if (!rbac.TryGetValue(username, out access) || access.credentialRevision != credentialRevision) {
+                ctx.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
+                return false;
+            }
 
-            string tokenId      = Cryptography.RandomStringGenerator(32);
-            bool isEnrolled     = access.totpSecret is not null;
-            byte[] secret       = isEnrolled ? access.totpSecret : GenerateTotpSecret(40);
-            string secretString = OtpNet.Base32Encoding.ToString(secret);
-
-            EvictExpiredOtpTokens();
-
+#if DEBUG
+            GrantAccess(ctx, access);
+#else
+            isEnrolled = access.totpSecret is not null;
+            secret     = isEnrolled ? access.totpSecret : GenerateTotpSecret(40);
             otpTokens[tokenId] = new OtpToken() {
-                tokenId   = tokenId,
-                username  = username,
-                enrolled  = isEnrolled,
-                secret    = secret,
-                status    = isEnrolled ? 2 : -1,
-                createdAt = DateTime.UtcNow.Ticks
+                tokenId            = tokenId,
+                username           = username,
+                credentialRevision = credentialRevision,
+                secret             = secret,
+                createdAt          = DateTime.UtcNow.Ticks
             };
-
-            if (isEnrolled) {
-                byte[] buffer = System.Text.Encoding.UTF8.GetBytes($"{{\"status\":2,\"token\":\"{tokenId}\"}}");
-                ctx.Response.OutputStream.Write(buffer, 0, buffer.Length);
-            }
-            else {
-                byte[] buffer = System.Text.Encoding.UTF8.GetBytes($"{{\"status\":-1,\"secret\":\"{secretString}\",\"token\":\"{tokenId}\"}}");
-                ctx.Response.OutputStream.Write(buffer, 0, buffer.Length);
-            }
-
-            return true;
+#endif
         }
 
-        Logger.Action(username, "AAA", $"Primary factor authentication failed from {ctx.Request.RemoteEndPoint?.Address}");
-        ctx.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
-        return false;
+        Logger.Action(username, "AAA", $"Primary factor authentication succeeded from {ctx.Request.RemoteEndPoint?.Address}");
+        ctx.Response.StatusCode = (int)HttpStatusCode.Accepted;
+#if DEBUG
+        Logger.Action(username, "AAA", $"Skipping TOTP");
+        ctx.Response.OutputStream.Write("{\"status\":0}"u8);
+#else
+        byte[] buffer = Encoding.UTF8.GetBytes(isEnrolled
+            ? $"{{\"status\":2,\"token\":\"{tokenId}\"}}"
+            : $"{{\"status\":-1,\"secret\":\"{Base32Encoding.ToString(secret)}\",\"token\":\"{tokenId}\"}}");
+        ctx.Response.OutputStream.Write(buffer);
+#endif
+
+        return true;
     }
 
-    private static bool TotpAuthentication(HttpListenerContext ctx, string[] array) {
-        if (array.Length < 4) {
-            ctx.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
-            return false;
-        }
+    private static bool CompleteTotpAuthentication(HttpListenerContext ctx, string username, string tokenId, string totp) {
+        string action;
+        lock (rbacMutex) {
+            if (!otpTokens.TryGetValue(tokenId, out OtpToken token) || token.username != username) {
+                ctx.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
+                return false;
+            }
 
-        string username = array[1].ToLower();
-        string tokenId  = array[2];
-        string totp     = array[3];
+            if (DateTime.UtcNow.Ticks - token.createdAt > OTP_TOKEN_TIMEOUT ||
+                !rbac.TryGetValue(username, out AccessControl access) ||
+                access.credentialRevision != token.credentialRevision) {
+                otpTokens.TryRemove(tokenId, out _);
+                ctx.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
+                return false;
+            }
 
-        if (!otpTokens.TryGetValue(tokenId, out OtpToken token) || username != token.username || !token.enrolled) {
-            ctx.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
-            return false;
-        }
+            bool enroll = access.totpSecret is null;
+            action = enroll ? "TOTP enrollment" : "Secondary factor authentication";
+            if (!ValidateTotp(token, totp)) {
+                Logger.Action(username, "AAA", $"{action} failed from {ctx.Request.RemoteEndPoint?.Address}");
+                ctx.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
+                return false;
+            }
 
-        bool isSuccessful = ValidateTotp(token, totp);
-
-        if (isSuccessful) {
             otpTokens.TryRemove(tokenId, out _);
-            GrantAccess(ctx, token.username);
+            if (enroll && !SetUserTotpSecret(access, token.secret)) {
+                ctx.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
+                return false;
+            }
 
-            Logger.Action(token.username, "AAA", $"Secondary factor authentication succeeded from {ctx.Request.RemoteEndPoint?.Address}");
-            ctx.Response.StatusCode = (int)HttpStatusCode.Accepted;
-            byte[] buffer = System.Text.Encoding.UTF8.GetBytes("{\"status\":0}");
-            ctx.Response.OutputStream.Write(buffer, 0, buffer.Length);
-        }
-        else {
-            Logger.Action(token.username, "AAA", $"Secondary factor authentication failed from {ctx.Request.RemoteEndPoint?.Address}");
-            ctx.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
+            GrantAccess(ctx, access);
         }
 
-        return isSuccessful;
-    }
-
-    private static bool TotpEnrollment(HttpListenerContext ctx, string[] array) {
-        if (array.Length < 4) {
-            ctx.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
-            return false;
-        }
-
-        string username = array[1].ToLower();
-        string tokenId  = array[2];
-        string totp     = array[3];
-
-        if (!otpTokens.TryGetValue(tokenId, out OtpToken token) || token.enrolled || token.username != username) {
-            ctx.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
-            return false;
-        }
-
-        bool isSuccessful = ValidateTotp(token, totp);
-
-        if (isSuccessful) {
-            otpTokens.TryRemove(tokenId, out _);
-            GrantAccess(ctx, token.username);
-            SetUserTotpSecret(token.username, token.secret);
-
-            Logger.Action(token.username, "AAA", $"TOTP enrollment succeeded from {ctx.Request.RemoteEndPoint?.Address}");
-            ctx.Response.StatusCode = (int)HttpStatusCode.Accepted;
-            byte[] buffer = System.Text.Encoding.UTF8.GetBytes("{\"status\":0}");
-            ctx.Response.OutputStream.Write(buffer, 0, buffer.Length);
-        }
-        else {
-            Logger.Action(token.username, "AAA", $"TOTP enrollment failed from {ctx.Request.RemoteEndPoint?.Address}");
-            ctx.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
-        }
-
-        return isSuccessful;
+        Logger.Action(username, "AAA", $"{action} succeeded from {ctx.Request.RemoteEndPoint?.Address}");
+        ctx.Response.StatusCode = (int)HttpStatusCode.Accepted;
+        ctx.Response.OutputStream.Write("{\"status\":0}"u8);
+        return true;
     }
 
     //A token takes MAX_OTP_ATTEMPTS wrong codes, then the password has to be entered again.
@@ -435,15 +393,14 @@ internal static class Auth {
         }
     }
 
-    private static bool SetUserTotpSecret(string username, byte[] secret) {
-        if (username is null) return false;
+    //Called under rbacMutex, so no sign-in can use the old revision after the secret changes.
+    private static bool SetUserTotpSecret(AccessControl access, byte[] secret) {
+        if (access.username.Contains("..")) return false;
+        if (!SaveAccessControl(access with { totpSecret = secret })) return false;
 
-        if (!rbac.TryGetValue(username, out AccessControl access)) return false;
-
-        if (username.Contains("..")) return false;
-
-        access.totpSecret = secret;
-        return SaveAccessControl(access);
+        access.totpSecret        = secret;
+        access.credentialRevision = new();
+        return true;
     }
 
     internal static byte[] ResetMfaSecret(HttpListenerContext ctx, string origin) {
@@ -453,26 +410,29 @@ internal static class Auth {
             return Data.CODE_INVALID_ARGUMENT.Array;
         }
 
-        if (!parameters.TryGetValue("username", out string username)) {
+        if (!parameters.TryGetValue("username", out string username) || username is null) {
             return Data.CODE_INVALID_ARGUMENT.Array;
         }
 
-        if (username is null) {
-            return Data.CODE_INVALID_ARGUMENT.Array;
+        username = username.ToLower();
+        lock (rbacMutex) {
+            if (!rbac.TryGetValue(username, out AccessControl access) || !SetUserTotpSecret(access, null)) {
+                return "{\"status\":\"failed\"}"u8.ToArray();
+            }
+            ClearTotpTimeStep(username);
         }
 
-        if (SetUserTotpSecret(username, null)) {
-            Logger.Action(origin, "AAA", $"Re-register MFA for {username}");
-            return "{\"status\":\"ok\"}"u8.ToArray();
-        }
-        else {
-            return "{\"status\":\"failed\"}"u8.ToArray();
+        Logger.Action(origin, "AAA", $"Re-register MFA for {username}");
+        return "{\"status\":\"ok\"}"u8.ToArray();
+    }
+
+    private static void ClearTotpTimeStep(string username) {
+        lock (totpMutex) {
+            lastTotpTimeStep.Remove(username);
         }
     }
 
-    private static void GrantAccess(HttpListenerContext ctx, string username) {
-        if (!rbac.TryGetValue(username, out AccessControl accessValue) || accessValue is null) return;
-
+    private static void GrantAccess(HttpListenerContext ctx, AccessControl access) {
         string sessionId = Cryptography.RandomStringGenerator(72);
 
         //without Domain the cookie stays on the host the browser used, behind a proxy the Host header names the backend instead
@@ -483,7 +443,7 @@ internal static class Auth {
 #endif
 
         Session newSession = new Session() {
-            access    = accessValue,
+            access    = access,
             ip        = ctx.Request.RemoteEndPoint.Address,
             sessionId = sessionId,
             guid      = Guid.NewGuid(),
@@ -1120,7 +1080,6 @@ internal static class Auth {
 
         username = Uri.UnescapeDataString(username).ToLower();
         email    = Uri.UnescapeDataString(email ?? String.Empty);
-        password ??= String.Empty;
         alias    = Uri.UnescapeDataString(alias ?? String.Empty);
         color    = Uri.UnescapeDataString(color ?? String.Empty);
         bool isDomainUser = Uri.UnescapeDataString(isDomainString ?? String.Empty) == "true";
@@ -1128,42 +1087,51 @@ internal static class Auth {
         if (!Data.IsValidFilename(username)) return Data.CODE_INVALID_ARGUMENT.Array; //unescaped twice, so check again
         if (username == "loopback") return Data.CODE_INVALID_ARGUMENT.Array;
 
-        AccessControl access;
-        if (rbac.TryRemove(username, out AccessControl exists)) {
-            access = exists;
-            access.username     = username;
-            access.email        = email;
-            access.domain       = domain;
-            access.passwordHash = String.IsNullOrEmpty(password) ? access.passwordHash : Cryptography.HashUsernameAndPassword(username, password);
-            access.totpSecret   = exists.totpSecret;
-            access.alias        = alias;
-            access.color        = color;
-            access.isDomainUser = isDomainUser;
-        }
-        else {
-            if (String.IsNullOrEmpty(password) && !isDomainUser) {
+        byte[] passwordHash = isDomainUser || String.IsNullOrEmpty(password) ? null : Cryptography.HashUsernameAndPassword(username, password);
+        HashSet<string> accessPath = PopulateAccessPath(authorization);
+
+        lock (rbacMutex) {
+            rbac.TryGetValue(username, out AccessControl existing);
+            if (passwordHash is null && !isDomainUser && (existing is null || existing.isDomainUser)) {
                 return "{\"error\":\"please enter password\"}"u8.ToArray();
             }
 
-            access = new AccessControl {
-                username     = username,
-                domain       = domain,
-                passwordHash = Cryptography.HashUsernameAndPassword(username, password),
-                totpSecret   = null,
-                alias        = alias,
-                color        = color,
-                isDomainUser = isDomainUser
+            AccessControl access = new AccessControl {
+                username      = username,
+                email         = email,
+                domain        = domain,
+                passwordHash  = isDomainUser ? Array.Empty<byte>() : passwordHash ?? existing?.passwordHash,
+                totpSecret    = existing?.totpSecret,
+                alias         = alias,
+                color         = color,
+                isDomainUser  = isDomainUser,
+                authorization = authorization,
+                accessPath    = accessPath
             };
-        }
-        access.authorization = authorization;
-        access.accessPath = PopulateAccessPath(access.authorization);
 
-        if (!rbac.TryAdd(username, access)) {
-            return "{\"error\":\"failed to create user.\"}"u8.ToArray();
-        }
+            if (!SaveAccessControl(access)) {
+                return "{\"error\":\"failed to write user file.\"}"u8.ToArray();
+            }
 
-        if (!SaveAccessControl(access)) {
-            return "{\"error\":\"failed to write user file.\"}"u8.ToArray();
+            if (existing is null) {
+                rbac[username] = access;
+            }
+            else {
+                if (passwordHash is not null || existing.isDomainUser != isDomainUser ||
+                    (isDomainUser && existing.domain != domain)) {
+                    existing.credentialRevision = new();
+                }
+
+                //Sessions share the RBAC entry so that permission changes take effect immediately.
+                existing.email         = access.email;
+                existing.domain        = access.domain;
+                existing.passwordHash  = access.passwordHash;
+                existing.alias         = access.alias;
+                existing.color         = access.color;
+                existing.isDomainUser  = access.isDomainUser;
+                existing.authorization = access.authorization;
+                existing.accessPath    = access.accessPath;
+            }
         }
 
         Logger.Action(origin, "AAA", $"Save RBAC entry for {username}");
@@ -1188,24 +1156,28 @@ internal static class Auth {
             return Data.CODE_INVALID_ARGUMENT.Array;
         }
 
-        rbac.TryRemove(username, out _);
+        username = username.ToLower();
+        lock (rbacMutex) {
+            rbac.TryRemove(username, out _);
+            ClearTotpTimeStep(username);
 
-        foreach (KeyValuePair<string, Session> pair in sessions) {
-            if (pair.Value.access.username == username) {
-                RevokeAccess(pair.Value.sessionId);
+            foreach (KeyValuePair<string, Session> pair in sessions) {
+                if (pair.Value.access.username == username) {
+                    RevokeAccess(pair.Value.sessionId);
+                }
             }
-        }
 
-        try {
-            File.Delete(Path.Join(Data.DIR_RBAC, username));
-        }
-        catch (IOException ex) {
-            Logger.Error(ex);
-            return "{\"error\":\"failed to write user file.\"}"u8.ToArray();
-        }
-        catch (Exception ex) {
-            Logger.Error(ex);
-            return "{\"error\":\"failed to write user file.\"}"u8.ToArray();
+            try {
+                File.Delete(Path.Join(Data.DIR_RBAC, username));
+            }
+            catch (IOException ex) {
+                Logger.Error(ex);
+                return "{\"error\":\"failed to write user file.\"}"u8.ToArray();
+            }
+            catch (Exception ex) {
+                Logger.Error(ex);
+                return "{\"error\":\"failed to write user file.\"}"u8.ToArray();
+            }
         }
 
         Logger.Action(origin, "AAA", $"Delete RBAC entry for {username}");
