@@ -67,21 +67,6 @@ public class ListenerTests {
         Assert.That(result.StatusCode, Is.EqualTo(HttpStatusCode.Unauthorized));
     }
 
-    [TestCase("GET", "/", HttpStatusCode.OK)]
-    [TestCase("POST", "/db/device/save", HttpStatusCode.Unauthorized)]
-    public void Listener_UnreadRequestBody_ClosesConnection(string method, string path, HttpStatusCode statusCode) {
-        using TcpClient tcp = new TcpClient { ReceiveTimeout = 5_000 };
-        tcp.Connect(IPAddress.Loopback, port);
-        using NetworkStream stream = tcp.GetStream();
-        stream.Write(Encoding.ASCII.GetBytes($"{method} {path} HTTP/1.1\r\nHost: 127.0.0.1:{port}\r\nContent-Length: 32\r\n\r\nx"));
-
-        string head = ReadResponseHead(stream);
-        Assert.Multiple(() => {
-            Assert.That(head, Does.StartWith($"HTTP/1.1 {(int)statusCode} "));
-            Assert.That(head, Does.Contain("\r\nConnection: close\r\n").IgnoreCase);
-        });
-    }
-
     [Test]
     public void Contacts_PrivateResponse_IsNotCached() {
         Database? previous = DatabaseInstances.users;

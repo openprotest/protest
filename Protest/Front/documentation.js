@@ -317,7 +317,6 @@ class Documentation extends Window {
 	}
 
 	static SanitizeContent(html) {
-		//Template contents are inert while the elements and attributes are checked.
 		const template = document.createElement("template");
 		template.innerHTML = html;
 
