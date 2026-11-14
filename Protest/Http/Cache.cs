@@ -379,7 +379,7 @@ internal sealed class Cache {
         }
 
         headers.Add(new KeyValuePair<string, string>("Last-Modified", birthdate));
-        headers.Add(new KeyValuePair<string, string>("Referrer-Policy", "no-referrer"));
+        headers.Add(new KeyValuePair<string, string>("Referrer-Policy", "same-origin"));
 
         if (name == "/" || name == "/login") {
             headers.Add(new KeyValuePair<string, string>("Cache-Control", "no-store"));

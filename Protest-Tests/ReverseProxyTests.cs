@@ -83,13 +83,16 @@ public class ReverseProxyTests {
             using HttpClient client = new HttpClient(new SocketsHttpHandler { UseCookies = false });
 
             using HttpRequestMessage signIn = new HttpRequestMessage(HttpMethod.Post, $"http://{lan}:{proxyPort}/auth");
+            signIn.Headers.Add("Origin", $"http://{lan}:{proxyPort}");
             signIn.Content = new StringContent($"x\u007F{username}\u007Funit-test-password");
             using HttpResponseMessage signedIn = await client.SendAsync(signIn);
             signedIn.Headers.TryGetValues("Set-Cookie", out IEnumerable<string>? setCookies);
             string? cookie = setCookies?.FirstOrDefault(o => o.StartsWith($"{Auth.SESSION_COOKIE}="))?.Split(';')[0];
 
-            Assert.That(signedIn.StatusCode, Is.EqualTo(HttpStatusCode.Accepted));
-            Assert.That(cookie, Is.Not.Null, "the session cookie reached the browser");
+            Assert.Multiple(() => {
+                Assert.That(signedIn.StatusCode, Is.EqualTo(HttpStatusCode.Accepted));
+                Assert.That(cookie, Is.Not.Null, "the session cookie reached the browser");
+            });
 
             using HttpRequestMessage list = new HttpRequestMessage(HttpMethod.Get, $"http://{lan}:{proxyPort}/rbac/list");
             list.Headers.TryAddWithoutValidation("Cookie", cookie);

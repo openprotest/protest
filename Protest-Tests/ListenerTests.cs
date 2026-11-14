@@ -85,7 +85,10 @@ public class ListenerTests {
         using HttpClient httpClient = new HttpClient();
         HttpResponseMessage result = httpClient.Send(requestMessage);
 
-        Assert.That(result.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+        Assert.Multiple(() => {
+            Assert.That(result.Headers.GetValues("Referrer-Policy"), Is.EqualTo(new[] { "same-origin" }));
+            Assert.That(result.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+        });
     }
 
     //Behind a trusted proxy the client is the rightmost address our proxies did not add,
@@ -169,15 +172,43 @@ public class ListenerTests {
         });
     }
 
-    //Behind a proxy the Host header names the backend, the origin is compared against the host the proxy received instead
+    //A trusted proxy supplies the browser-facing host and scheme for the origin check.
     [Test]
     public void ForwardedHost_FromTrustedProxy_IsTheHostTheOriginIsCheckedAgainst() {
         WithTrustedLoopbackProxy(() => WithSession("/rbac/list", cookie => {
-            Assert.That(SendWithForwardedHost("/rbac/list", cookie, "https://proxy.test:4443", "proxy.test:4443"), Is.EqualTo(HttpStatusCode.OK));
-            Assert.That(SendWithForwardedHost("/rbac/list", cookie, "https://proxy.test", "proxy.test"), Is.EqualTo(HttpStatusCode.OK), "default port");
-            Assert.That(SendWithForwardedHost("/rbac/list", cookie, "https://evil.test:4443", "proxy.test:4443"), Is.EqualTo(HttpStatusCode.Forbidden));
-            Assert.That(SendWithForwardedHost("/rbac/list", cookie, "https://proxy.test:4443", null), Is.EqualTo(HttpStatusCode.Forbidden), "the backend address is compared");
+            HttpStatusCode Send(string origin, string? forwardedHost) =>
+                SendWithForwardedHost("/rbac/list", cookie, origin, forwardedHost, "https");
+
+            Assert.Multiple(() => {
+                Assert.That(Send("https://proxy.test:4443", "proxy.test:4443"), Is.EqualTo(HttpStatusCode.OK));
+                Assert.That(Send("https://proxy.test", "proxy.test"), Is.EqualTo(HttpStatusCode.OK), "default port");
+                Assert.That(Send("https://PROXY.TEST:443", "proxy.test"), Is.EqualTo(HttpStatusCode.OK), "explicit default port and case");
+                Assert.That(Send("https://proxy.test:8443", "proxy.test"), Is.EqualTo(HttpStatusCode.Forbidden), "different port");
+                Assert.That(Send("http://proxy.test", "proxy.test"), Is.EqualTo(HttpStatusCode.Forbidden), "different scheme");
+                Assert.That(Send("https://evil.test:4443", "proxy.test:4443"), Is.EqualTo(HttpStatusCode.Forbidden));
+                Assert.That(Send("https://proxy.test:4443", null), Is.EqualTo(HttpStatusCode.Forbidden), "the backend address is compared");
+            });
         }));
+    }
+
+    [TestCase("https", false)]
+    [TestCase("ftp", true)]
+    [TestCase("https,http", true)]
+    public void ForwardedProto_InvalidOrUntrusted_ReturnBadRequest(string proto, bool trusted) {
+        void Send() {
+            using HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, $"{baseUrl}/");
+            request.Headers.TryAddWithoutValidation("X-Forwarded-Proto", proto);
+            using HttpClient client = new HttpClient();
+            using HttpResponseMessage response = client.Send(request);
+            Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.BadRequest));
+        }
+
+        if (trusted) {
+            WithTrustedLoopbackProxy(Send);
+        }
+        else {
+            Send();
+        }
     }
 
     [Test]
@@ -207,6 +238,7 @@ public class ListenerTests {
 
         try {
             using HttpRequestMessage requestMessage = new HttpRequestMessage(HttpMethod.Post, $"{baseUrl}/auth");
+            requestMessage.Headers.Add("Origin", baseUrl);
             requestMessage.Content = new StringContent($"x\u007F{username}\u007Funit-test-password");
 
             using HttpClient httpClient = new HttpClient(new SocketsHttpHandler { UseCookies = false });
@@ -236,6 +268,64 @@ public class ListenerTests {
     [Test]
     public void Auth_FromSameOrigin_IsHandled() {
         Assert.That(SendAuth("same-origin"), Is.EqualTo(HttpStatusCode.Unauthorized));
+    }
+
+    [TestCase(null, null, HttpStatusCode.Forbidden)]
+    [TestCase(null, "https://evil.test/", HttpStatusCode.Forbidden)]
+    [TestCase("null", null, HttpStatusCode.Forbidden)]
+    [TestCase("null", "self", HttpStatusCode.Forbidden)]
+    [TestCase(null, "self", HttpStatusCode.OK)]
+    [TestCase("self", null, HttpStatusCode.OK)]
+    [TestCase(null, "wrong-port", HttpStatusCode.Forbidden)]
+    [TestCase(null, "wrong-scheme", HttpStatusCode.Forbidden)]
+    public void Csrf_LogoutWithoutFetchMetadata_RequiresOwnOrigin(string? origin, string? referer, HttpStatusCode expected) {
+        WithSession("/logout", cookie => {
+            using HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, $"{baseUrl}/logout");
+            request.Headers.Add("Cookie", cookie);
+            if (origin is not null) request.Headers.TryAddWithoutValidation("Origin", origin == "self" ? baseUrl : origin);
+            if (referer is not null) request.Headers.TryAddWithoutValidation("Referer", referer switch {
+                "self" => $"{baseUrl}/",
+                "wrong-port" => "http://127.0.0.1/",
+                "wrong-scheme" => $"https://127.0.0.1:{port}/",
+                _ => referer
+            });
+
+            using HttpClient client = new HttpClient();
+            using HttpResponseMessage response = client.Send(request);
+            Assert.Multiple(() => {
+                Assert.That(response.StatusCode, Is.EqualTo(expected));
+                Assert.That(Auth.sessions.ContainsKey(cookie[(cookie.IndexOf('=') + 1)..]), Is.EqualTo(expected != HttpStatusCode.OK));
+            });
+        });
+    }
+
+    [TestCase(true, HttpStatusCode.NotFound)]
+    [TestCase(false, HttpStatusCode.Forbidden)]
+    public void WebSocket_OriginMustMatchEvenWithSameOriginFetchMetadata(bool sameOrigin, HttpStatusCode expected) {
+        WithSession("/ws/test", cookie => {
+            using HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, $"{baseUrl}/ws/test");
+            request.Headers.Add("Cookie", cookie);
+            request.Headers.Add("Sec-Fetch-Site", "same-origin");
+            request.Headers.Add("Origin", sameOrigin ? baseUrl : $"https://127.0.0.1:{port}");
+            request.Headers.Add("Connection", "Upgrade");
+            request.Headers.Add("Upgrade", "websocket");
+            request.Headers.Add("Sec-WebSocket-Version", "13");
+            request.Headers.Add("Sec-WebSocket-Key", "dGhlIHNhbXBsZSBub25jZQ==");
+            using HttpClient client = new HttpClient();
+            using HttpResponseMessage response = client.Send(request);
+            Assert.That(response.StatusCode, Is.EqualTo(expected));
+        });
+    }
+
+    [Test]
+    public void Auth_WithoutOriginMetadata_IsRejectedBeforeRateLimit() {
+        int before = Auth.rateLimitLog.TryGetValue(IPAddress.Loopback, out ConcurrentQueue<long>? attempts) ? attempts.Count : 0;
+        using HttpClient client = new HttpClient();
+        using HttpResponseMessage response = client.PostAsync($"{baseUrl}/auth", new StringContent("x\u007Fnobody\u007Fwrong")).Result;
+        Assert.Multiple(() => {
+            Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.Forbidden));
+            Assert.That(Auth.rateLimitLog.TryGetValue(IPAddress.Loopback, out attempts) ? attempts.Count : 0, Is.EqualTo(before));
+        });
     }
 
     //An unknown username is hashed like a wrong password, so the response time doesn't tell which usernames exist
@@ -406,11 +496,12 @@ public class ListenerTests {
         }
     }
 
-    private HttpStatusCode SendWithForwardedHost(string path, string? cookie, string? origin, string? forwardedHost) {
+    private HttpStatusCode SendWithForwardedHost(string path, string? cookie, string? origin, string? forwardedHost, string? forwardedProto = null) {
         using HttpRequestMessage requestMessage = new HttpRequestMessage(HttpMethod.Get, $"{baseUrl}{path}");
         if (cookie is not null) requestMessage.Headers.Add("Cookie", cookie);
         if (origin is not null) requestMessage.Headers.TryAddWithoutValidation("Origin", origin);
         if (forwardedHost is not null) requestMessage.Headers.TryAddWithoutValidation("X-Forwarded-Host", forwardedHost);
+        if (forwardedProto is not null) requestMessage.Headers.TryAddWithoutValidation("X-Forwarded-Proto", forwardedProto);
 
         using HttpClient httpClient = new HttpClient();
         using HttpResponseMessage result = httpClient.Send(requestMessage);
@@ -431,6 +522,7 @@ public class ListenerTests {
     private TimeSpan TimeAuth(string body) {
         using HttpRequestMessage requestMessage = new HttpRequestMessage(HttpMethod.Post, $"{baseUrl}/auth");
         requestMessage.Headers.TryAddWithoutValidation("X-Forwarded-For", "198.51.100.60");
+        requestMessage.Headers.Add("Origin", baseUrl);
         requestMessage.Content = new StringContent(body);
 
         using HttpClient httpClient = new HttpClient();
@@ -445,6 +537,7 @@ public class ListenerTests {
     private string SendCreateUser(string cookie, string query, string body) {
         using HttpRequestMessage requestMessage = new HttpRequestMessage(HttpMethod.Post, $"{baseUrl}/rbac/create?{query}");
         requestMessage.Headers.Add("Cookie", cookie);
+        requestMessage.Headers.Add("Origin", baseUrl);
         requestMessage.Content = new StringContent(body);
 
         using HttpClient httpClient = new HttpClient();
@@ -455,6 +548,7 @@ public class ListenerTests {
     private HttpStatusCode SendWithForwardedFor(HttpMethod method, string path, string? forwardedFor) {
         using HttpRequestMessage requestMessage = new HttpRequestMessage(method, $"{baseUrl}{path}");
         if (forwardedFor is not null) requestMessage.Headers.TryAddWithoutValidation("X-Forwarded-For", forwardedFor);
+        requestMessage.Headers.Add("Origin", baseUrl);
         if (method == HttpMethod.Post) requestMessage.Content = new StringContent("x\u007Fnobody\u007Fwrong");
 
         using HttpClient httpClient = new HttpClient();
