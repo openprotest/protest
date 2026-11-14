@@ -412,7 +412,7 @@ class DeviceView extends View {
 				if (wolButton.hasAttribute("busy")) return;
 				try {
 					wolButton.setAttribute("busy", true);
-					const response = await fetch(`manage/device/wol?file=${this.args.file}`);
+					const response = await fetch(`manage/device/wol?file=${this.args.file}`, { method: "POST" });
 					const json = await response.json();
 					if (json.error) throw(json.error);
 
@@ -434,7 +434,7 @@ class DeviceView extends View {
 						if (powerOffButton.hasAttribute("busy")) return;
 						try {
 							powerOffButton.setAttribute("busy", true);
-							const response = await fetch(`manage/device/shutdown?file=${this.args.file}`);
+							const response = await fetch(`manage/device/shutdown?file=${this.args.file}`, { method: "POST" });
 							const json = await response.json();
 							if (json.error) throw(json.error);
 						}
@@ -449,7 +449,7 @@ class DeviceView extends View {
 						if (rebootButton.hasAttribute("busy")) return;
 						try {
 							rebootButton.setAttribute("busy", true);
-							const response = await fetch(`manage/device/reboot?file=${this.args.file}`);
+							const response = await fetch(`manage/device/reboot?file=${this.args.file}`, { method: "POST" });
 							const json = await response.json();
 							if (json.error) throw(json.error);
 						}
@@ -464,7 +464,7 @@ class DeviceView extends View {
 						if (logOffButton.hasAttribute("busy")) return;
 						try {
 							logOffButton.setAttribute("busy", true);
-							const response = await fetch(`manage/device/logoff?file=${this.args.file}`);
+							const response = await fetch(`manage/device/logoff?file=${this.args.file}`, { method: "POST" });
 							const json = await response.json();
 							if (json.error) throw(json.error);
 						}
@@ -765,7 +765,7 @@ class DeviceView extends View {
 					if (printTestButton.hasAttribute("busy")) return;
 					try {
 						printTestButton.setAttribute("busy", true);
-						const response = await fetch(`manage/device/printtest?host=${host}`);
+						const response = await fetch(`manage/device/printtest?host=${host}`, { method: "POST" });
 						const json = await response.json();
 						if (json.error) throw (json.error);
 					}
@@ -2593,7 +2593,7 @@ class DeviceView extends View {
 		if (!summary.error) this.SetLogStatus(logBox, "Fetching...", false);
 
 		try {
-			const response = await fetch(`winevents/fetch?device=${encodeURIComponent(this.args.file)}`);
+			const response = await fetch(`winevents/fetch?device=${encodeURIComponent(this.args.file)}`, { method: "POST" });
 			if (response.status !== 200) return;
 
 			const json = await response.json();
@@ -3836,7 +3836,7 @@ class DeviceView extends View {
 	Delete() { //overrides
 		this.ConfirmBox("Are you sure you want to delete this device?", false, "mono/delete.svg").addEventListener("click", async ()=> {
 			try {
-				const response = await fetch(`db/device/delete?file=${this.args.file}`);
+				const response = await fetch(`db/device/delete?file=${encodeURIComponent(this.args.file)}`, { method: "DELETE" });
 
 				if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
 				const json = await response.json();

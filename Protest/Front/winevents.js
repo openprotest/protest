@@ -523,7 +523,7 @@ class WinEvents extends Window {
 		this.statusLabel.textContent = "Fetching...";
 
 		try {
-			const response = await fetch(`winevents/fetch?device=${encodeURIComponent(device)}`);
+			const response = await fetch(`winevents/fetch?device=${encodeURIComponent(device)}`, { method: "POST" });
 			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
 
 			const json = await response.json();

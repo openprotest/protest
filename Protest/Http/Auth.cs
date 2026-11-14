@@ -168,11 +168,6 @@ internal static class Auth {
     }
 
     internal static bool AuthHandler(HttpListenerContext ctx) {
-        if (!String.Equals(ctx.Request.HttpMethod, "POST", StringComparison.Ordinal)) {
-            ctx.Response.StatusCode = (int)HttpStatusCode.BadRequest;
-            return false;
-        }
-
         IPAddress clientIP = ctx.Request.RemoteEndPoint?.Address;
         if (clientIP is null) {
             ctx.Response.StatusCode = (int)HttpStatusCode.BadRequest;

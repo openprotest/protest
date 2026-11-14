@@ -1199,7 +1199,7 @@ class ReverseProxy extends List {
 		if (this.args.select === null) return;
 		this.ConfirmBox("Are you sure you want delete this reverse proxy?").addEventListener("click", async()=> {
 			try {
-				const response = await fetch(`/rproxy/delete?guid=${this.args.select}`);
+				const response = await fetch(`/rproxy/delete?guid=${this.args.select}`, { method: "POST" });
 				if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
 
 				const json = await response.json();
@@ -1227,7 +1227,7 @@ class ReverseProxy extends List {
 		this.startButton.disabled = true;
 
 		try {
-			const response = await fetch(`/rproxy/start?guid=${guid}`);
+			const response = await fetch(`/rproxy/start?guid=${guid}`, { method: "POST" });
 			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
 
 			const json = await response.json();
@@ -1269,7 +1269,7 @@ class ReverseProxy extends List {
 		this.stopButton.disabled = true;
 
 		try {
-			const response = await fetch(`/rproxy/stop?guid=${guid}`);
+			const response = await fetch(`/rproxy/stop?guid=${guid}`, { method: "POST" });
 			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
 
 			const json = await response.json();

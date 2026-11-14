@@ -527,7 +527,7 @@ class Wmi extends Window {
 							let pid = event.target.getAttribute("pid");
 
 							try {
-								const response = await fetch(`wmi/killprocess?target=${encodeURIComponent(targetHost)}&pid=${pid}`);
+								const response = await fetch(`wmi/killprocess?target=${encodeURIComponent(targetHost)}&pid=${pid}`, { method: "POST" });
 								if (response.status !== 200) return;
 
 								const json = await response.json();

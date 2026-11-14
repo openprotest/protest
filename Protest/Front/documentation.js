@@ -680,7 +680,7 @@ class Documentation extends Window {
 
 		this.ConfirmBox("Are you sure you want to delete this document?").addEventListener("click", async ()=> {
 			try {
-				const response = await fetch(`docs/delete?name=${this.selected}`);
+				const response = await fetch(`docs/delete?name=${encodeURIComponent(this.selected)}`, { method: "POST" });
 
 				if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
 

@@ -1707,7 +1707,7 @@ logoutButton.onclick = async event=> {
 	event?.stopPropagation();
 
 	try {
-		const response = await fetch("/logout");
+		const response = await fetch("/logout", { method: "POST" });
 		if (response.status === 200) {
 			location.replace("/");
 		}
@@ -1823,7 +1823,7 @@ for (let i=0; i<filters.length; i++) {
 	const index = localStorage.getItem("session_timeout") == null ? 1 : parseInt(localStorage.getItem("session_timeout"));
 
 	if ((Date.now() - UI.lastActivity) > 60 * 1000 * timeMapping[index]) {
-		fetch("/logout")
+		fetch("/logout", { method: "POST" })
 			.then(response=> { if (response.status === 200) location.reload(); });
 	}
 

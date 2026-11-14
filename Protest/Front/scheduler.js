@@ -171,7 +171,7 @@ class Scheduler extends List {
 		this.runButton.disabled = true;
 
 		try {
-			const response = await fetch(`scheduler/run?key=${encodeURIComponent(job.key)}`);
+			const response = await fetch(`scheduler/run?key=${encodeURIComponent(job.key)}`, { method: "POST" });
 			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
 
 			const json = await response.json();

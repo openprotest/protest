@@ -340,7 +340,7 @@ class Infrastructure extends Tabs {
 					const days = parseInt(r.daysInput.value);
 
 					try {
-						const response = await fetch(`${r.category.endpoint}?days=${days}`);
+						const response = await fetch(`${r.category.endpoint}?days=${days}`, { method: "POST" });
 						if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
 
 						const json = await response.json();
@@ -836,7 +836,7 @@ class Infrastructure extends Tabs {
 				dialog.innerBox.appendChild(status);
 
 				try {
-					const response = await fetch(`config/smtpprofiles/test?guid=${this.selectedSmtpProfile.guid}&recipient=${encodeURIComponent(recipientInput.value)}`);
+					const response = await fetch(`config/smtpprofiles/test?guid=${this.selectedSmtpProfile.guid}&recipient=${encodeURIComponent(recipientInput.value)}`, { method: "POST" });
 					if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
 
 					const json = await response.json();
@@ -1051,7 +1051,7 @@ class Infrastructure extends Tabs {
 
 			this.ConfirmBox(`Are you sure you want to remove "${target.name}"?`, false, "mono/delete.svg").addEventListener("click", async ()=> {
 				try {
-					const response = await fetch(`config/integration/delete?id=${encodeURIComponent(target.id)}`);
+					const response = await fetch(`config/integration/delete?id=${encodeURIComponent(target.id)}`, { method: "POST" });
 					if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
 
 					const json = await response.json();
@@ -1072,7 +1072,7 @@ class Infrastructure extends Tabs {
 			this.integrationTestButton.disabled = true;
 
 			try {
-				const response = await fetch(`config/integration/test?id=${encodeURIComponent(target.id)}`);
+				const response = await fetch(`config/integration/test?id=${encodeURIComponent(target.id)}`, { method: "POST" });
 				if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
 
 				const json = await response.json();
@@ -1672,7 +1672,7 @@ class Infrastructure extends Tabs {
 					if (!innerBox.isConnected || signInId !== id) return;
 
 					try {
-						const response = await fetch(`config/smtpprofiles/oauth/poll?id=${encodeURIComponent(id)}`);
+						const response = await fetch(`config/smtpprofiles/oauth/poll?id=${encodeURIComponent(id)}`, { method: "POST" });
 						if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
 
 						const result = await response.json();

@@ -984,7 +984,7 @@ class Watchdog extends Window {
 
 		this.ConfirmBox("Are you sure you want to delete this watcher?", false, "mono/delete.svg").addEventListener("click", async ()=> {
 			try {
-				const response = await fetch(`watchdog/delete?file=${this.selected.file}`);
+				const response = await fetch(`watchdog/delete?file=${this.selected.file}`, { method: "POST" });
 
 				if (response.status !== 200) return;
 

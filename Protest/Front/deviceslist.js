@@ -203,7 +203,7 @@ class DevicesList extends List {
 			let file = this.args.select;
 
 			try {
-				const response = await fetch(`db/device/delete?file=${file}`);
+				const response = await fetch(`db/device/delete?file=${encodeURIComponent(file)}`, { method: "DELETE" });
 
 				if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
 

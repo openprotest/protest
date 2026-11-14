@@ -312,7 +312,7 @@ class Certificates extends List {
 
 		this.ConfirmBox("Are you sure you want delete this certificate?").addEventListener("click", async()=> {
 			try {
-				const response = await fetch(`config/cert/delete?name=${encodeURIComponent(this.args.select)}`);
+				const response = await fetch(`config/cert/delete?name=${encodeURIComponent(this.args.select)}`, { method: "POST" });
 				if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
 
 				const json = await response.json();

@@ -193,6 +193,8 @@ internal sealed class Listener {
                     return;
                 }
 
+                if (!CheckMethod(ctx, "POST")) return;
+
                 //read whole, before anyone is authenticated, a chunked body has no length to check
                 if (ctx.Request.ContentLength64 < 0 || ctx.Request.ContentLength64 > MAX_AUTH_PAYLOAD) {
                     ctx.Response.StatusCode = (int)HttpStatusCode.RequestEntityTooLarge;
@@ -257,9 +259,7 @@ internal sealed class Listener {
                 return;
             }
 
-            Dictionary<string, string> parameters = ParseQuery(ctx);
-
-            if (await DynamicHandler(ctx, parameters)) return;
+            if (await DynamicHandler(ctx)) return;
 
             ctx.Response.StatusCode = (int)HttpStatusCode.NotFound;
             ctx.Response.Close();
@@ -311,6 +311,11 @@ internal sealed class Listener {
     }
 
     private async Task<bool> CacheHandler(HttpListenerContext ctx, string path) {
+        string filePath = ctx.Request.Url.AbsolutePath;
+        if (filePath.EndsWith(".js", StringComparison.Ordinal) && ctx.Request.Url.Query.StartsWith("?v=", StringComparison.Ordinal)) {
+            path = filePath;
+        }
+
         if (!cache.cache.TryGetValue(path, out Cache.Entry entry)) return false;
 
         if (String.Equals(path, "/", StringComparison.Ordinal)) {
@@ -375,13 +380,15 @@ internal sealed class Listener {
         return true;
     }
 
-    private static async Task<bool> DynamicHandler(HttpListenerContext ctx, Dictionary<string, string> parameters) {
+    private static async Task<bool> DynamicHandler(HttpListenerContext ctx) {
         ctx.Response.AddHeader("Cache-Control", "no-store");
 
         string path = ctx.Request.Url.AbsolutePath;
-        if (!Router.routes.TryGetValue(path, out Func<HttpListenerContext, string, ValueTask<byte[]>> handler)) {
+        if (!Router.routes.TryGetValue(path, out Router.Route route)) {
             return false;
         }
+
+        if (route.RequiredMethod is not null && !CheckMethod(ctx, route.RequiredMethod)) return true;
 
         string username = Auth.GetPrincipal(ctx);
         if (username is null) {
@@ -390,7 +397,7 @@ internal sealed class Listener {
             return true;
         }
 
-        byte[] buffer = await handler(ctx, username);
+        byte[] buffer = await route.Handler(ctx, username);
         ctx.Response.StatusCode = (int)HttpStatusCode.OK;
         ctx.Response.ContentLength64 = buffer?.Length ?? 0;
 
@@ -400,6 +407,15 @@ internal sealed class Listener {
 
         ctx.Response.Close();
         return true;
+    }
+
+    private static bool CheckMethod(HttpListenerContext ctx, string requiredMethod) {
+        if (String.Equals(ctx.Request.HttpMethod, requiredMethod, StringComparison.Ordinal)) return true;
+
+        ctx.Response.StatusCode = (int)HttpStatusCode.MethodNotAllowed;
+        ctx.Response.AddHeader("Allow", requiredMethod);
+        ctx.Response.Close();
+        return false;
     }
 
     //SameSite=Strict still allows requests from other ports and same-site subdomains.

@@ -1156,7 +1156,7 @@ class Fetch extends Tabs {
 		abortButton.onclick = ()=> {
 			this.ConfirmBox("Are you sure you want to abort this task?").addEventListener("click", async()=> {
 				try {
-					const response = await fetch("fetch/abort");
+					const response = await fetch("fetch/abort", { method: "POST" });
 
 					if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
 
@@ -1351,7 +1351,7 @@ class Fetch extends Tabs {
 				try {
 					let uri = `fetch/approve?condition=${conflictConditionInput.value}&action=${conflictInput.value}`;
 
-					const response = await fetch(uri);
+					const response = await fetch(uri, { method: "POST" });
 
 					if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
 
@@ -1375,7 +1375,7 @@ class Fetch extends Tabs {
 		discardButton.onclick = ()=> {
 			this.ConfirmBox("Are you sure you want to discard the fetched dataset?").addEventListener("click", async()=> {
 				try {
-					const response = await fetch("fetch/discard");
+					const response = await fetch("fetch/discard", { method: "POST" });
 
 					if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
 

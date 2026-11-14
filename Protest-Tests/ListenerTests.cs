@@ -67,6 +67,18 @@ public class ListenerTests {
         Assert.That(result.StatusCode, Is.EqualTo(HttpStatusCode.Unauthorized));
     }
 
+    [TestCase("loader.js")]
+    [TestCase("ui.js")]
+    public async Task Listener_VersionedScript_ReturnsTheStaticAsset(string file) {
+        using HttpClient client = new HttpClient();
+        using HttpResponseMessage response = await client.GetAsync($"{baseUrl}/{file}?v=2");
+
+        Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+        byte[] expected = await client.GetByteArrayAsync($"{baseUrl}/{file}");
+        byte[] actual = await response.Content.ReadAsByteArrayAsync();
+        Assert.That(actual, Is.EqualTo(expected));
+    }
+
     [Test]
     public void CsrfCheck_NoHostInReferrer_ReturnOk() {
         using HttpRequestMessage requestMessage = new HttpRequestMessage(HttpMethod.Get, $"{baseUrl}/");
@@ -270,6 +282,94 @@ public class ListenerTests {
         Assert.That(SendAuth("same-origin"), Is.EqualTo(HttpStatusCode.Unauthorized));
     }
 
+    [Test]
+    public void Auth_FromSameOrigin_RejectsGet() {
+        using HttpClient client = new HttpClient();
+        using HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, $"{baseUrl}/auth");
+        request.Headers.Add("Sec-Fetch-Site", "same-origin");
+
+        using HttpResponseMessage response = client.Send(request);
+        Assert.Multiple(() => {
+            Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.MethodNotAllowed));
+            Assert.That(response.Content.Headers.Allow, Is.EqualTo(new[] { "POST" }));
+        });
+    }
+
+    [Test]
+    public void Logout_GetDoesNotRevokeSession() {
+        WithSession("/logout", cookie => {
+            using HttpClient client = new HttpClient();
+            using HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, $"{baseUrl}/logout");
+            request.Headers.Add("Cookie", cookie);
+            request.Headers.Referrer = new Uri(baseUrl);
+
+            using HttpResponseMessage response = client.Send(request);
+            Assert.Multiple(() => {
+                Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.MethodNotAllowed));
+                Assert.That(response.Content.Headers.Allow, Is.EqualTo(new[] { "POST" }));
+                Assert.That(Auth.sessions.ContainsKey(cookie[(cookie.IndexOf('=') + 1)..]), Is.True);
+            });
+        });
+    }
+
+    [TestCase("device")]
+    [TestCase("user")]
+    public void DatabaseWrites_RequirePostForSaveAndDeleteForRemoval(string kind) {
+        DirectoryInfo directory = Directory.CreateTempSubdirectory("protest-methods-");
+        Database? previous = kind == "device" ? DatabaseInstances.devices : DatabaseInstances.users;
+        Database database = new Database(kind, directory.FullName);
+        if (kind == "device") DatabaseInstances.devices = database;
+        else DatabaseInstances.users = database;
+
+        string file = Database.GenerateFilename();
+        string savePath = $"/db/{kind}/save";
+        string deletePath = $"/db/{kind}/delete";
+
+        try {
+            using HttpClient client = new HttpClient();
+            HttpResponseMessage Send(HttpMethod method, string path, string cookie, string origin, string? body = null) {
+                using HttpRequestMessage request = new HttpRequestMessage(method, $"{baseUrl}{path}?file={file}");
+                request.Headers.Add("Cookie", cookie);
+                request.Headers.Add("Origin", origin);
+                if (body is not null) request.Content = new StringContent(body);
+                return client.Send(request);
+            }
+
+            WithSession(savePath, cookie => {
+                const string body = "{\"name\":{\"v\":\"test entry\"}}";
+                using HttpResponseMessage rejected = Send(HttpMethod.Get, savePath, cookie, baseUrl, body);
+                Assert.That(rejected.StatusCode, Is.EqualTo(HttpStatusCode.MethodNotAllowed));
+                Assert.That(database.GetEntry(file), Is.Null);
+
+                using HttpResponseMessage saved = Send(HttpMethod.Post, savePath, cookie, baseUrl, body);
+                Assert.That(saved.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+                Assert.That(database.GetEntry(file), Is.Not.Null);
+            });
+
+            WithSession(deletePath, cookie => {
+                foreach (HttpMethod method in new[] { HttpMethod.Get, HttpMethod.Head, HttpMethod.Post }) {
+                    using HttpResponseMessage rejected = Send(method, deletePath, cookie, baseUrl);
+                    Assert.That(rejected.StatusCode, Is.EqualTo(HttpStatusCode.MethodNotAllowed));
+                    Assert.That(rejected.Content.Headers.Allow, Is.EqualTo(new[] { "DELETE" }));
+                }
+
+                using HttpResponseMessage crossOrigin = Send(HttpMethod.Delete, deletePath, cookie, "http://evil.test");
+                Assert.That(crossOrigin.StatusCode, Is.EqualTo(HttpStatusCode.Forbidden));
+                Assert.That(database.GetEntry(file), Is.Not.Null);
+
+                using HttpResponseMessage deleted = Send(HttpMethod.Delete, deletePath, cookie, baseUrl);
+                Assert.That(deleted.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+                Assert.That(database.GetEntry(file), Is.Null);
+            });
+        }
+        finally {
+            if (kind == "device") DatabaseInstances.devices = previous;
+            else DatabaseInstances.users = previous;
+            File.Delete(Path.Join(directory.FullName, file));
+            directory.Delete();
+        }
+    }
+
     [TestCase(null, null, HttpStatusCode.Forbidden)]
     [TestCase(null, "https://evil.test/", HttpStatusCode.Forbidden)]
     [TestCase("null", null, HttpStatusCode.Forbidden)]
@@ -280,7 +380,7 @@ public class ListenerTests {
     [TestCase(null, "wrong-scheme", HttpStatusCode.Forbidden)]
     public void Csrf_LogoutWithoutFetchMetadata_RequiresOwnOrigin(string? origin, string? referer, HttpStatusCode expected) {
         WithSession("/logout", cookie => {
-            using HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, $"{baseUrl}/logout");
+            using HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, $"{baseUrl}/logout");
             request.Headers.Add("Cookie", cookie);
             if (origin is not null) request.Headers.TryAddWithoutValidation("Origin", origin == "self" ? baseUrl : origin);
             if (referer is not null) request.Headers.TryAddWithoutValidation("Referer", referer switch {

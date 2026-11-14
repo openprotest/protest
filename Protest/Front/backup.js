@@ -102,7 +102,7 @@ class Backup extends List {
 			dialog.cancelButton.onclick();
 
 			try {
-				const response = await fetch(`config/backup/create?name=${encodeURIComponent(nameInput.value)}`);
+				const response = await fetch(`config/backup/create?name=${encodeURIComponent(nameInput.value)}`, { method: "POST" });
 				if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
 
 				const json = await response.json();
@@ -128,7 +128,7 @@ class Backup extends List {
 
 		this.ConfirmBox("Are you sure you want delete this backup?").addEventListener("click", async()=> {
 			try {
-				const response = await fetch(`config/backup/delete?name=${encodeURIComponent(this.args.select)}`);
+				const response = await fetch(`config/backup/delete?name=${encodeURIComponent(this.args.select)}`, { method: "POST" });
 				if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
 
 				const json = await response.json();

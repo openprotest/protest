@@ -440,7 +440,7 @@ class Vault extends Tabs {
 
 			this.ConfirmBox(`Are you sure you want to remove "${this.selectedCredential.name || this.selectedCredential.username}"?`, false, "mono/delete.svg").addEventListener("click", async ()=>{
 				try {
-					const response = await fetch(`vault/credential/delete?guid=${this.selectedCredential.guid}`);
+					const response = await fetch(`vault/credential/delete?guid=${this.selectedCredential.guid}`, { method: "POST" });
 					if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
 
 					const json = await response.json();
@@ -770,7 +770,7 @@ class Vault extends Tabs {
 
 			this.ConfirmBox(`Are you sure you want to remove "${this.selectedSshKey.name || this.selectedSshKey.username}"?`, false, "mono/delete.svg").addEventListener("click", async ()=>{
 				try {
-					const response = await fetch(`vault/sshkey/delete?guid=${this.selectedSshKey.guid}`);
+					const response = await fetch(`vault/sshkey/delete?guid=${this.selectedSshKey.guid}`, { method: "POST" });
 					if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
 
 					const json = await response.json();
@@ -1057,7 +1057,7 @@ class Vault extends Tabs {
 				result.textContent = "Scanning...";
 
 				try {
-					const response = await fetch("vault/scan");
+					const response = await fetch("vault/scan", { method: "POST" });
 					if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
 
 					const json = await response.json();
@@ -1403,7 +1403,7 @@ class Vault extends Tabs {
 				const endpoint = type === "sshkey" ? "vault/sshkey/delete" : "vault/credential/delete";
 
 				try {
-					const response = await fetch(`${endpoint}?guid=${guid}`);
+					const response = await fetch(`${endpoint}?guid=${guid}`, { method: "POST" });
 					if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
 
 					const json = await response.json();

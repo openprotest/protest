@@ -100,7 +100,7 @@ class UserView extends View {
 				if (unlockButton.hasAttribute("busy")) return;
 				try {
 					unlockButton.setAttribute("busy", true);
-					const response = await fetch(`manage/user/unlock?file=${this.args.file}`);
+					const response = await fetch(`manage/user/unlock?file=${this.args.file}`, { method: "POST" });
 					const json = await response.json();
 					if (json.error) throw(json.error);
 					this.InitializeLiveStats();
@@ -114,7 +114,7 @@ class UserView extends View {
 				if (enableButton.hasAttribute("busy")) return;
 				try {
 					enableButton.setAttribute("busy", true);
-					const response = await fetch(`manage/user/enable?file=${this.args.file}`);
+					const response = await fetch(`manage/user/enable?file=${this.args.file}`, { method: "POST" });
 					const json = await response.json();
 					if (json.error) throw(json.error);
 				}
@@ -127,7 +127,7 @@ class UserView extends View {
 				if (disableButton.hasAttribute("busy")) return;
 				try {
 					disableButton.setAttribute("busy", true);
-					const response = await fetch(`manage/user/disable?file=${this.args.file}`);
+					const response = await fetch(`manage/user/disable?file=${this.args.file}`, { method: "POST" });
 					const json = await response.json();
 					if (json.error) throw(json.error);
 				}
@@ -445,7 +445,7 @@ class UserView extends View {
 	Delete() { //overrides
 		this.ConfirmBox("Are you sure you want to delete this user?", false, "mono/delete.svg").addEventListener("click", async ()=> {
 			try {
-				const response = await fetch(`db/user/delete?file=${this.args.file}`);
+				const response = await fetch(`db/user/delete?file=${encodeURIComponent(this.args.file)}`, { method: "DELETE" });
 
 				if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
 

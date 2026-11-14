@@ -426,7 +426,7 @@ class Issues extends List {
 
 		okButton.addEventListener("click", async ()=> {
 			try {
-				const response = await fetch("issues/start");
+				const response = await fetch("issues/start", { method: "POST" });
 				if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
 
 				const json = await response.json();

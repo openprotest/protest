@@ -307,7 +307,7 @@ class AccessControl extends Tabs {
 		this.removeButton.onclick = ()=> {
 			this.ConfirmBox("Are you sure you want to remove this user?").addEventListener("click", async()=>{
 				try {
-					const response = await fetch(`rbac/delete?username=${encodeURIComponent(this.username.value)}`);
+					const response = await fetch(`rbac/delete?username=${encodeURIComponent(this.username.value)}`, { method: "POST" });
 
 					if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
 
@@ -384,7 +384,7 @@ class AccessControl extends Tabs {
 		this.mfa.onclick = ()=> {
 			this.ConfirmBox("Are you sure? This will void the previous registration and re-register the OTP app.", false, "mono/mfa.svg").addEventListener("click", async ()=>{
 				try {
-					const response = await fetch(`rbac/reregistermfa?username=${this.username.value}`);
+					const response = await fetch(`rbac/reregistermfa?username=${encodeURIComponent(this.username.value)}`, { method: "POST" });
 					if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
 					const json = await response.json();
 					if (json.status !== "ok") throw ("Failed to reset MFA registration.");
@@ -776,7 +776,7 @@ class AccessControl extends Tabs {
 				kickButton.onclick = ()=> {
 					this.ConfirmBox(`Are you sure you want to kick ${json[i].username}?`).addEventListener("click", async ()=>{
 						try {
-							const response = await fetch(`rbac/kickuser?username=${encodeURIComponent(json[i].username)}&guid=${encodeURIComponent(json[i].guid)}`);
+							const response = await fetch(`rbac/kickuser?username=${encodeURIComponent(json[i].username)}&guid=${encodeURIComponent(json[i].guid)}`, { method: "POST" });
 
 							if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
 

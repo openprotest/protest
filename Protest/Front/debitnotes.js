@@ -1065,7 +1065,7 @@ class DebitNotes extends Window {
 
 		this.ConfirmBox("Are you sure you want to mark this debit note as returned?").addEventListener("click", async()=> {
 			try {
-				const response = await fetch(`debit/return?status=${this.selectedDebit.status}&file=${this.args.selected}`);
+				const response = await fetch(`debit/return?status=${this.selectedDebit.status}&file=${this.args.selected}`, { method: "POST" });
 
 				if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
 
@@ -1098,7 +1098,7 @@ class DebitNotes extends Window {
 
 		this.ConfirmBox("Are you sure you want to delete this debit note?").addEventListener("click", async ()=> {
 			try {
-				const response = await fetch(`debit/delete?status=${this.selectedDebit.status}&file=${this.args.selected}`);
+				const response = await fetch(`debit/delete?status=${this.selectedDebit.status}&file=${this.args.selected}`, { method: "POST" });
 
 				if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
 

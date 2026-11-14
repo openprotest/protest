@@ -278,7 +278,7 @@ document.body.onkeydown = event=> {
 
 document.body.onbeforeunload = ()=> {
 	/*if (localStorage.getItem("alive_after_close") != "true") {
-		fetch("/logout");
+		fetch("/logout", { method: "POST" });
 	}*/
 
 	LOADER.StoreSession();
