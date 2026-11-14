@@ -30,12 +30,12 @@ internal static class Router {
         ["/db/device/attribute"]                 = new Route((ctx, username) => new(DatabaseInstances.devices.AttributeValue(ctx))),
 
         ["/vault/credential/list"]               = new Route((ctx, username) => new(Vault.List())),
-        ["/vault/credential/get"]                = new Route((ctx, username) => new(Vault.GetSecret(ctx, username))),
+        ["/vault/credential/get"]                = new Route((ctx, username) => new(Vault.GetSecret(ctx))),
         ["/vault/credential/save"]               = new Route((ctx, username) => new(Vault.Save(ctx, username)), "POST"),
         ["/vault/credential/delete"]             = new Route((ctx, username) => new(Vault.Delete(ctx, username)), "POST"),
 
         ["/vault/sshkey/list"]                   = new Route((ctx, username) => new(VaultSshKeys.List())),
-        ["/vault/sshkey/get"]                    = new Route((ctx, username) => new(VaultSshKeys.GetSecret(ctx, username))),
+        ["/vault/sshkey/get"]                    = new Route((ctx, username) => new(VaultSshKeys.GetSecret(ctx))),
         ["/vault/sshkey/save"]                   = new Route((ctx, username) => new(VaultSshKeys.Save(ctx, username)), "POST"),
         ["/vault/sshkey/delete"]                 = new Route((ctx, username) => new(VaultSshKeys.Delete(ctx, username)), "POST"),
 
@@ -43,7 +43,6 @@ internal static class Router {
         ["/vault/orphans"]                       = new Route((ctx, username) => new(VaultMigration.FindOrphans())),
         ["/vault/duplicates"]                    = new Route((ctx, username) => new(VaultMigration.FindDuplicates())),
         ["/vault/deduplicate"]                   = new Route((ctx, username) => new(VaultMigration.Deduplicate(ctx, username)), "POST"),
-        ["/vault/users"]                         = new Route((ctx, username) => new(Auth.ListUsernames())),
 
         ["/fetch/networkinfo"]                   = new Route((ctx, username) => new(Protocols.Ldap.NetworkInfo())),
         ["/fetch/integrations"]                  = new Route((ctx, username) => new(Integration.Integration.ListEnabled())),

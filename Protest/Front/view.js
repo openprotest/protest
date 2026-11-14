@@ -779,9 +779,7 @@ class View extends Window {
 						guid: "00000000-0000-0000-0000-000000000000",
 						name: nameInput.value,
 						username: usernameInput.value,
-						password: passwordInput.value,
-						permissionMode: "none",
-						permissionList: []
+						password: passwordInput.value
 					})
 				});
 
@@ -814,7 +812,7 @@ class View extends Window {
 
 		const editButton = document.createElement("button");
 		editButton.tabIndex = -1;
-		editButton.setAttribute("tip-below", "Edit");
+		editButton.setAttribute("tip-below", "Open in Vault");
 		editButton.style.position = "absolute";
 		editButton.style.left = "4px";
 		editButton.style.top = "4px";

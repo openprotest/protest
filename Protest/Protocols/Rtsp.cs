@@ -150,18 +150,19 @@ internal static partial class Rtsp {
             //the same resource, and the same user behind the same session, for as long as the stream runs
             isAuthorized = () => Auth.IsAuthenticatedAndAuthorized(ctx, RESOURCE)
                 && (sessionId is null || String.Equals(Auth.GetUsername(sessionId), origin, StringComparison.Ordinal)),
-            lookupCredential = LookupVaultCredential,
+            lookupCredential = (guid, _) => LookupVaultCredential(ctx, guid),
             audit = action => Logger.Action(origin, "Remote-access", action)
         };
 
         await RunAsync(ws, client, Settings.Default(), CancellationToken.None);
     }
 
-    private static CredentialLookup LookupVaultCredential(Guid guid, string origin) {
-        if (!Vault.FromGuid(guid, out Vault.CredentialEntry credential)) return new CredentialLookup { found = false };
+    private static CredentialLookup LookupVaultCredential(HttpListenerContext ctx, Guid guid) {
+        if (!Vault.CanRead(ctx)) return new CredentialLookup { allowed = false };
+        if (!Vault.FromGuid(guid, out Vault.CredentialEntry credential)) return new CredentialLookup();
+
         return new CredentialLookup {
             found    = true,
-            allowed  = Vault.IsAllowed(credential, origin),
             username = credential.username ?? String.Empty,
             password = credential.password ?? String.Empty
         };
@@ -206,14 +207,14 @@ internal static partial class Rtsp {
                 Guid guid = Guid.Parse(request.credential); //validated with the request
                 CredentialLookup credential = client.lookupCredential(guid, client.origin);
 
-                if (!credential.found) {
-                    await SendError(ws, "Credentials don't exist", false);
-                    return;
-                }
-
                 if (!credential.allowed) {
                     client.audit($"RTSP connection to {target.host}:{target.port} refused: access denied for the credential");
                     await SendError(ws, "Access denied for this credential", false);
+                    return;
+                }
+
+                if (!credential.found) {
+                    await SendError(ws, "Credentials don't exist", false);
                     return;
                 }
 
@@ -884,7 +885,7 @@ internal static partial class Rtsp {
     }
 
     //Keep-alives for the camera, statistics for the browser, and the checks that end a stream: the user's access,
-    //the credential's access list, video that stopped and a browser that stopped reading.
+    //vault access if a saved credential is in use, video that stopped and a browser that stopped reading.
     private static async Task<string> Watch(Session session, Client client, Guid? credentialGuid, Settings settings, FrameQueue queue, CancellationTokenSource streamCts) {
         CancellationToken token = streamCts.Token;
         long now = Environment.TickCount64;
@@ -917,7 +918,7 @@ internal static partial class Rtsp {
                     if (!client.isAuthorized()) {
                         return Stop("Access denied", "the user's access was revoked or expired");
                     }
-                    if (credentialGuid is Guid guid && !client.lookupCredential(guid, client.origin).allowed) {
+                    if (credentialGuid is Guid guid && client.lookupCredential(guid, client.origin) is not { allowed: true, found: true }) {
                         return Stop("Access denied for this credential", "access to the credential was revoked");
                     }
                     nextAuthorization = now + settings.authorizationInterval;

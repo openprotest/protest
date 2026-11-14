@@ -117,15 +117,15 @@ internal static class Rdp {
             }
 
             if (serverSideAuth) {
-                if (!Guid.TryParse(credentialGuid, out Guid guid) || !Vault.FromGuid(guid, out Vault.CredentialEntry credential)) {
-                    Logger.Action(origin, "Remote-access", $"RDP connection to {host}:{port} failed: credentials don't exist");
-                    await SendClose(ws, "Credentials don't exist");
+                if (!Vault.CanRead(ctx)) {
+                    Logger.Action(origin, "Remote-access", $"RDP connection to {host}:{port} failed: access denied for this credential");
+                    await SendClose(ws, "Access denied for this credential");
                     return;
                 }
 
-                if (!Vault.IsAllowed(credential, origin)) {
-                    Logger.Action(origin, "Remote-access", $"RDP connection to {host}:{port} failed: access denied for this credential");
-                    await SendClose(ws, "Access denied for this credential");
+                if (!Guid.TryParse(credentialGuid, out Guid guid) || !Vault.FromGuid(guid, out Vault.CredentialEntry credential)) {
+                    Logger.Action(origin, "Remote-access", $"RDP connection to {host}:{port} failed: credentials don't exist");
+                    await SendClose(ws, "Credentials don't exist");
                     return;
                 }
 

@@ -187,15 +187,15 @@ internal static partial class RustDesk {
 
             //with a vault credential the gateway logs in on the client's behalf and the password never reaches the browser
             if (session.serverSideAuth) {
-                if (!Guid.TryParse(credentialGuid, out Guid guid) || !Vault.FromGuid(guid, out Vault.CredentialEntry credential)) {
-                    Logger.Action(origin, "Remote-access", $"RustDesk connection to {label} failed: credentials don't exist");
-                    await SendError(ws, "Credentials don't exist");
+                if (!Vault.CanRead(ctx)) {
+                    Logger.Action(origin, "Remote-access", $"RustDesk connection to {label} failed: access denied for this credential");
+                    await SendError(ws, "Access denied for this credential");
                     return;
                 }
 
-                if (!Vault.IsAllowed(credential, origin)) {
-                    Logger.Action(origin, "Remote-access", $"RustDesk connection to {label} failed: access denied for this credential");
-                    await SendError(ws, "Access denied for this credential");
+                if (!Guid.TryParse(credentialGuid, out Guid guid) || !Vault.FromGuid(guid, out Vault.CredentialEntry credential)) {
+                    Logger.Action(origin, "Remote-access", $"RustDesk connection to {label} failed: credentials don't exist");
+                    await SendError(ws, "Credentials don't exist");
                     return;
                 }
 

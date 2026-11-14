@@ -115,7 +115,7 @@ internal static class Ssh {
             AuthenticationMethod[] authMethods;
             bool permissionDenied;
             try {
-                authMethods = CredentialResolver.Resolve(credentialGuid, ref username, ref password, origin, out permissionDenied);
+                authMethods = CredentialResolver.Resolve(ctx, credentialGuid, ref username, ref password, out permissionDenied);
             }
             catch (SshException ex) { //invalid private key or wrong passphrase
                 await WebSocketHelper.WsWriteText(ws, $"{{\"error\":\"Unable to load the SSH key: {Data.EscapeJsonText(ex.Message)}\"}}");
@@ -130,7 +130,7 @@ internal static class Ssh {
             }
 
             if (authMethods is null && !String.IsNullOrEmpty(file)) {
-                if (!Auth.IsAuthenticatedAndAuthorized(ctx, "/db/device/attribute")) {
+                if (!Vault.CanRead(ctx)) {
                     await WebSocketHelper.WsWriteText(ws, "{\"error\":\"Access denied for this credential\"}"u8.ToArray());
                     await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
                     return;
@@ -153,16 +153,14 @@ internal static class Ssh {
 
                 (host, port) = (deviceHost, devicePort);
 
-                Database.Attribute usernameAttribute;
-                if (attributes.TryGetValue("ssh username", out usernameAttribute)) {
+                if (attributes.TryGetValue("ssh username", out Database.Attribute usernameAttribute)) {
                     username = usernameAttribute.value;
                 }
                 else if (attributes.TryGetValue("username", out usernameAttribute)) {
                     username = usernameAttribute.value;
                 }
 
-                Database.Attribute passwordAttribute;
-                if (attributes.TryGetValue("ssh password", out passwordAttribute)) {
+                if (attributes.TryGetValue("ssh password", out Database.Attribute passwordAttribute)) {
                     password = passwordAttribute.value;
                 }
                 else if (attributes.TryGetValue("password", out passwordAttribute)) {

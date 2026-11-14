@@ -66,13 +66,11 @@ internal static class VaultMigration {
 
     //a credential or an ssh key, reduced to what deduplication needs
     private sealed class VaultItem {
-        public string                            type;     //"credential" or "sshkey"
-        public Guid                              guid;
-        public string                            name;
-        public string                            username;
-        public string                            identity; //equal identities are interchangeable secrets
-        public VaultAccessControl.PermissionMode permissionMode;
-        public string[]                          permissionList;
+        public string type;     //"credential" or "sshkey"
+        public Guid   guid;
+        public string name;
+        public string username;
+        public string identity; //equal identities are interchangeable secrets
     }
 
     private static List<VaultItem> LoadVaultItems(List<Vault.CredentialEntry> credentials, List<VaultSshKeys.SshKeyEntry> sshKeys) {
@@ -80,25 +78,21 @@ internal static class VaultMigration {
 
         foreach (Vault.CredentialEntry entry in credentials) {
             items.Add(new VaultItem {
-                type           = "credential",
-                guid           = entry.guid,
-                name           = entry.name,
-                username       = entry.username,
-                identity       = $"{entry.username}\0{entry.password}",
-                permissionMode = entry.permissionMode,
-                permissionList = entry.permissionList
+                type     = "credential",
+                guid     = entry.guid,
+                name     = entry.name,
+                username = entry.username,
+                identity = $"{entry.username}\0{entry.password}"
             });
         }
 
         foreach (VaultSshKeys.SshKeyEntry entry in sshKeys) {
             items.Add(new VaultItem {
-                type           = "sshkey",
-                guid           = entry.guid,
-                name           = entry.name,
-                username       = entry.username,
-                identity       = $"{entry.username}\0{NormalizeKey(entry.privateKey)}\0{entry.passphrase}",
-                permissionMode = entry.permissionMode,
-                permissionList = entry.permissionList
+                type     = "sshkey",
+                guid     = entry.guid,
+                name     = entry.name,
+                username = entry.username,
+                identity = $"{entry.username}\0{NormalizeKey(entry.privateKey)}\0{entry.passphrase}"
             });
         }
 
@@ -129,12 +123,10 @@ internal static class VaultMigration {
             if (i > 0) builder.Append(',');
 
             List<VaultItem> group = groups[i];
-            bool permissionsDiffer = group.Any(o => !SamePermissions(o, group[0]));
 
             builder.Append('{');
             builder.Append($"\"type\":\"{group[0].type}\",");
             builder.Append($"\"keep\":\"{group[0].guid}\",");
-            builder.Append($"\"permissionsDiffer\":{(permissionsDiffer ? "true" : "false")},");
             builder.Append("\"entries\":[");
             for (int j = 0; j < group.Count; j++) {
                 if (j > 0) builder.Append(',');
@@ -152,17 +144,8 @@ internal static class VaultMigration {
         return Encoding.UTF8.GetBytes(builder.ToString());
     }
 
-    private static bool SamePermissions(VaultItem a, VaultItem b) {
-        if (a.permissionMode != b.permissionMode) return false;
-        if (a.permissionMode == VaultAccessControl.PermissionMode.None) return true;
-
-        HashSet<string> listA = new HashSet<string>(a.permissionList ?? Array.Empty<string>(), StringComparer.OrdinalIgnoreCase);
-        return listA.SetEquals(b.permissionList ?? Array.Empty<string>());
-    }
-
     //payload: [{"keep":guid, "remove":[guid, ...]}, ...], credentials and ssh keys alike
     //every device/user reference to a removed entry is pointed to the kept one, then the removed entries are deleted.
-    //the kept entry's name and permissions are the ones that remain.
     public static byte[] Deduplicate(HttpListenerContext ctx, string origin) {
         using StreamReader reader = new StreamReader(ctx.Request.InputStream, ctx.Request.ContentEncoding);
         string payload = reader.ReadToEnd();

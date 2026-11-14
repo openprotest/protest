@@ -82,7 +82,7 @@ internal class Sftp {
             AuthenticationMethod[] authMethods;
             bool permissionDenied;
             try {
-                authMethods = CredentialResolver.Resolve(credentialGuid, ref username, ref password, origin, out permissionDenied);
+                authMethods = CredentialResolver.Resolve(ctx, credentialGuid, ref username, ref password, out permissionDenied);
             }
             catch (SshException ex) { //invalid private key or wrong passphrase
                 await WebSocketHelper.WsWriteText(ws, $"{{\"error\":\"Unable to load the SSH key: {Data.EscapeJsonText(ex.Message)}\"}}");
@@ -206,7 +206,7 @@ internal class Sftp {
             //re-resolve the secret now, from the vault, rather than trusting anything cached on the token
             string reconnectUsername = token.username;
             string reconnectPassword = token.password;
-            AuthenticationMethod[] authMethods = CredentialResolver.Resolve(token.credentialGuid, ref reconnectUsername, ref reconnectPassword, origin, out bool permissionDenied);
+            AuthenticationMethod[] authMethods = CredentialResolver.Resolve(ctx, token.credentialGuid, ref reconnectUsername, ref reconnectPassword, out bool permissionDenied);
 
             if (permissionDenied) {
                 return "{\"error\":\"Access denied for this credential\"}"u8.ToArray();
@@ -281,7 +281,7 @@ internal class Sftp {
             //re-resolve the secret now, from the vault, rather than trusting anything cached on the token
             string reconnectUsername = token.username;
             string reconnectPassword = token.password;
-            AuthenticationMethod[] authMethods = CredentialResolver.Resolve(token.credentialGuid, ref reconnectUsername, ref reconnectPassword, origin, out bool permissionDenied);
+            AuthenticationMethod[] authMethods = CredentialResolver.Resolve(ctx, token.credentialGuid, ref reconnectUsername, ref reconnectPassword, out bool permissionDenied);
 
             if (permissionDenied) {
                 return "{\"error\":\"Access denied for this credential\"}"u8.ToArray();

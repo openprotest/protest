@@ -124,13 +124,21 @@ const KEEP = {
 
 	MessageHandler: message=> {
 		switch (message.action) {
-		case "init":
+		case "init": {
 			KEEP.version = message.version;
 			KEEP.username = message.username;
 			KEEP.color = message.color;
+			const authorizationChanged = KEEP.authorization.length !== message.authorization.length
+				|| KEEP.authorization.some((permission, index)=> permission !== message.authorization[index]);
 			KEEP.authorization = message.authorization;
 			usernameLabel.textContent = KEEP.username;
+			if (authorizationChanged) {
+				for (let i=0; i<WIN.array.length; i++) {
+					WIN.array[i].UpdateAuthorization();
+				}
+			}
 			break;
+		}
 
 		case "log":
 			WIN.array.filter(win=> win instanceof Log).forEach(log=> log.Add(message.msg));

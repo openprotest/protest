@@ -491,8 +491,7 @@ internal static class Auth {
         return null;
     }
 
-    //The acting user is the session's user. "loopback", which vault access lists let through, is only for a loopback
-    //request the backdoor admitted without a session, a user signed in on the server itself keeps their own rights.
+    //A signed-in request acts as its session user. The backdoor uses "loopback" when there is no valid session.
     internal static string GetPrincipal(HttpListenerContext ctx) =>
         GetPrincipal(ctx.Request.Cookies[SESSION_COOKIE]?.Value, ctx.Request.RemoteEndPoint?.Address);
 
@@ -551,7 +550,6 @@ internal static class Auth {
                 path.Add("/vault/sshkey/get");
                 path.Add("/vault/orphans");
                 path.Add("/vault/duplicates");
-                path.Add("/vault/users");
                 break;
 
             case "vault:write":
@@ -1010,29 +1008,6 @@ internal static class Auth {
             }
             builder.Append(']');
 
-            builder.Append('}');
-
-            first = false;
-        }
-
-        builder.Append(']');
-
-        return Encoding.UTF8.GetBytes(builder.ToString());
-    }
-
-    //minimal, non-sensitive username listing - used to populate per-entry access lists (e.g. Vault SSH key whitelist/blacklist)
-    internal static byte[] ListUsernames() {
-        StringBuilder builder = new StringBuilder();
-        builder.Append('[');
-
-        bool first = true;
-        foreach (KeyValuePair<string, AccessControl> access in rbac) {
-            if (!first) builder.Append(',');
-
-            builder.Append('{');
-            builder.Append($"\"username\":\"{Data.EscapeJsonText(access.Value.username)}\",");
-            builder.Append($"\"alias\":\"{Data.EscapeJsonText(access.Value.alias)}\",");
-            builder.Append($"\"color\":\"{Data.EscapeJsonText(access.Value.color)}\"");
             builder.Append('}');
 
             first = false;

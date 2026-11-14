@@ -2,8 +2,7 @@
 class Vault extends Tabs {
 	static ErrorMessage(error) {
 		return {
-			"not found"   : "Credentials don't exist",
-			"unauthorized": "Access denied for this credential"
+			"not found": "Credentials don't exist"
 		}[error] ?? error;
 	}
 
@@ -67,6 +66,15 @@ class Vault extends Tabs {
 		this.activeColumnsListBoxes.forEach(o=> o.FinalizeColumns());
 	}
 
+	get canWrite() {
+		return KEEP.authorization.includes("*") || KEEP.authorization.includes("vault:write");
+	}
+
+	UpdateAuthorization() { //overrides
+		super.UpdateAuthorization();
+		this.UpdateTabAuthorization?.();
+	}
+
 	RenderStrength(strength, hasPassword) {
 		const box = document.createElement("div");
 		box.style.display = "flex";
@@ -105,111 +113,6 @@ class Vault extends Tabs {
 
 		listBox.Select(element);
 		listBox.list.focus();
-	}
-
-	CreatePermissionsPanel(innerBox, gridColumn, gridRow, object, onModeChange) {
-		const permissionsPanel = document.createElement("div");
-		permissionsPanel.style.gridColumn = gridColumn;
-		permissionsPanel.style.gridRow = gridRow;
-		permissionsPanel.style.height = "100%";
-		permissionsPanel.style.paddingLeft = "8px";
-		permissionsPanel.style.marginLeft = "8px";
-		permissionsPanel.style.borderLeft = "2px solid var(--clr-control)";
-		permissionsPanel.style.display = "flex";
-		permissionsPanel.style.flexDirection = "column";
-		innerBox.appendChild(permissionsPanel);
-
-		const PERMISSION_MODES = ["none", "whitelist", "blacklist"];
-		const permissionModeBox = new FewBox(["Everyone", "Whitelist", "Blacklist"]);
-		permissionModeBox.Select(Math.max(PERMISSION_MODES.indexOf(object?.permissionMode), 0));
-		permissionModeBox.container.style.margin = "0";
-		permissionModeBox.container.style.maxWidth = "none";
-		permissionModeBox.container.inert = true;
-		permissionModeBox.container.style.opacity = ".5";
-		permissionsPanel.appendChild(permissionModeBox.container);
-
-		const GetPermissionMode = ()=> PERMISSION_MODES[permissionModeBox.index] ?? "none";
-
-		const permissionUsersContainer = document.createElement("div");
-		permissionUsersContainer.style.position = "relative";
-		permissionUsersContainer.style.flex = "1";
-		permissionUsersContainer.style.marginTop = "8px";
-		permissionUsersContainer.style.display = GetPermissionMode() === "none" ? "none" : "block";
-		permissionsPanel.appendChild(permissionUsersContainer);
-
-		let selectedUsers = new Set(object?.permissionList ?? []);
-		let previousPermissionMode = GetPermissionMode();
-
-		const permissionsListBox = new ListBox({firstColumnOffset: "48px"});
-		permissionsListBox.SetupTitleBar();
-		permissionsListBox.SetupBuiltInSort();
-		permissionsListBox.list.style.border = "rgb(82,82,82) solid 2px";
-		permissionsListBox.list.addEventListener("keydown", event=> permissionsListBox.Keydown(event));
-		permissionUsersContainer.append(permissionsListBox.listTitleOuter, permissionsListBox.list);
-
-		permissionsListBox.inflate = (element, entry, type)=> {
-			element.appendChild(this.RenderSelectionToggle(selectedUsers.has(entry.username), checked=> {
-				if (checked) {
-					selectedUsers.add(entry.username);
-				}
-				else {
-					selectedUsers.delete(entry.username);
-				}
-			}));
-			permissionsListBox.InflateElement(element, entry, type);
-		};
-
-		permissionsListBox.SetupColumns([
-			{label:"Username", value:d=> d.username}
-		]);
-
-		permissionModeBox.container.onchange = ()=> {
-			const newMode = GetPermissionMode();
-
-			const isSwitchBetweenLists = (previousPermissionMode === "whitelist" && newMode === "blacklist")
-				|| (previousPermissionMode === "blacklist" && newMode === "whitelist");
-
-			if (isSwitchBetweenLists) {
-				const inverted = new Set();
-				for (const user of permissionsListBox.items) {
-					if (!selectedUsers.has(user.username)) inverted.add(user.username);
-				}
-				selectedUsers = inverted;
-
-				for (const checkbox of permissionsListBox.list.querySelectorAll('input[type="checkbox"]')) {
-					checkbox.checked = !checkbox.checked;
-				}
-			}
-
-			previousPermissionMode = newMode;
-			permissionUsersContainer.style.display = newMode === "none" ? "none" : "block";
-
-			onModeChange?.(newMode);
-		};
-
-		(async ()=> {
-			try {
-				const response = await fetch("vault/users");
-				if (response.status !== 200) return;
-
-				const json = await response.json();
-				if (json.error) return;
-
-				permissionsListBox.SetItems(json);
-			}
-			catch (ex) {}
-			finally {
-				permissionModeBox.container.inert = false;
-				permissionModeBox.container.style.opacity = "";
-			}
-		})();
-
-		onModeChange?.(GetPermissionMode());
-
-		return {
-			getMode: GetPermissionMode,
-			getList: ()=> [...selectedUsers]
-		};
 	}
 
 	FindUsages(guid) {
@@ -363,6 +266,12 @@ class Vault extends Tabs {
 		this.credentialsRemoveButton.value = "Remove";
 		this.credentialsRemoveButton.className = "with-icon";
 		this.credentialsRemoveButton.style.backgroundImage = "url(mono/delete.svg?light)";
+		this.selectedCredential = null;
+
+		this.UpdateTabAuthorization = ()=> {
+			this.credentialsNewButton.disabled = !this.canWrite;
+			this.credentialsRemoveButton.disabled = !this.canWrite || !this.selectedCredential;
+		};
 
 		this.credentialsFindInput = document.createElement("input");
 		this.credentialsFindInput.type = "text";
@@ -381,6 +290,7 @@ class Vault extends Tabs {
 			firstColumnOffset: "4px",
 			onSelect: (id, element)=> {
 				this.selectedCredential = element._data;
+				this.credentialsRemoveButton.disabled = !this.canWrite;
 				this.selectedCredentialElement?.classList.remove("list-element-selected");
 				this.selectedCredentialElement = element;
 				element.classList.add("list-element-selected");
@@ -436,7 +346,7 @@ class Vault extends Tabs {
 		this.credentialsNewButton.onclick = ()=> this.CredentialDialog(null);
 
 		this.credentialsRemoveButton.onclick = ()=> {
-			if (!this.selectedCredential) return;
+			if (!this.canWrite || !this.selectedCredential) return;
 
 			this.ConfirmBox(`Are you sure you want to remove "${this.selectedCredential.name || this.selectedCredential.username}"?`, false, "mono/delete.svg").addEventListener("click", async ()=>{
 				try {
@@ -446,7 +356,6 @@ class Vault extends Tabs {
 					const json = await response.json();
 					if (json.error) throw json.error;
 
-					this.selectedCredential = null;
 					this.GetCredentials();
 				}
 				catch (ex) {
@@ -455,6 +364,7 @@ class Vault extends Tabs {
 			});
 		};
 
+		this.UpdateAuthorization();
 		await this.GetCredentials();
 		this.AfterResize();
 	}
@@ -477,6 +387,8 @@ class Vault extends Tabs {
 
 	FilterCredentials() {
 		const query = (this.credentialsFindInput?.value ?? "").trim().toLowerCase();
+		this.selectedCredential = null;
+		this.credentialsRemoveButton.disabled = true;
 
 		if (query.length === 0) {
 			this.credentialsListBox.SetItems(this.credentials);
@@ -493,15 +405,22 @@ class Vault extends Tabs {
 	}
 
 	CredentialDialog(object=null) {
-		const dialog = this.DialogBox("280px");
+		const canWrite = this.canWrite;
+		if (!object && !canWrite) return;
+
+		const dialog = this.DialogBox("240px");
 		if (dialog === null) return;
 
 		const {okButton, cancelButton, innerBox, buttonBox} = dialog;
 
 		okButton.value = "Save";
+		okButton.hidden = !canWrite;
+		if (!canWrite) cancelButton.value = "Close";
 
+		innerBox.parentElement.style.maxWidth = "560px";
 		innerBox.style.padding = "16px 32px";
 		innerBox.style.display = "grid";
+		innerBox.style.gridTemplateColumns = "100px minmax(0, 1fr) 72px";
 		innerBox.style.gridTemplateRows = "repeat(4, 38px)";
 		innerBox.style.alignItems = "center";
 		innerBox.style.transition = ".4s";
@@ -513,6 +432,7 @@ class Vault extends Tabs {
 		nameInput.style.gridArea = "1 / 2 / 1 / 4";
 		nameInput.style.maxWidth = "350px";
 		nameInput.type = "text";
+		nameInput.readOnly = !canWrite;
 		innerBox.append(nameLabel, nameInput);
 
 		const usernameLabel = document.createElement("div");
@@ -522,6 +442,7 @@ class Vault extends Tabs {
 		usernameInput.style.gridArea = "2 / 2 / 2 / 4";
 		usernameInput.style.maxWidth = "350px";
 		usernameInput.type = "text";
+		usernameInput.readOnly = !canWrite;
 		innerBox.append(usernameLabel, usernameInput);
 
 		const passwordLabel = document.createElement("div");
@@ -531,7 +452,8 @@ class Vault extends Tabs {
 		passwordInput.style.gridArea = "3 / 2";
 		passwordInput.style.maxWidth = "350px";
 		passwordInput.type = "password";
-		passwordInput.placeholder = object ? "unchanged" : "";
+		passwordInput.readOnly = !canWrite;
+		passwordInput.placeholder = object && canWrite ? "unchanged" : "";
 		innerBox.append(passwordLabel, passwordInput);
 
 		const showButton = document.createElement("input");
@@ -563,12 +485,6 @@ class Vault extends Tabs {
 
 			draggable.ondragstart = event=> Window.SetDragPayload(event, Window.DRAG_CREDENTIALS, object.guid);
 		}
-
-		const permissions = this.CreatePermissionsPanel(innerBox, "4", "1 / 6", object, newMode=> {
-			innerBox.style.gridTemplateColumns = newMode === "none"
-				? "100px minmax(140px, 1fr) 72px minmax(160px, .8fr)"
-				: "100px minmax(140px, 1fr) 72px minmax(200px, 1fr)";
-		});
 
 		showButton.onclick = async ()=> {
 			if (showButton.value === "Show") {
@@ -625,14 +541,14 @@ class Vault extends Tabs {
 		}
 
 		okButton.onclick = async ()=> {
+			if (!this.canWrite) return;
+
 			try {
 				const payload = {
 					guid: object ? object.guid : "00000000-0000-0000-0000-000000000000",
 					name: nameInput.value,
 					username: usernameInput.value,
-					password: passwordInput.value,
-					permissionMode: permissions.getMode(),
-					permissionList: permissions.getList()
+					password: passwordInput.value
 				};
 
 				if (usernameInput.value.trim().length === 0 && passwordInput.value.trim().length === 0 && !object) {
@@ -693,6 +609,12 @@ class Vault extends Tabs {
 		this.sshKeysRemoveButton.value = "Remove";
 		this.sshKeysRemoveButton.className = "with-icon";
 		this.sshKeysRemoveButton.style.backgroundImage = "url(mono/delete.svg?light)";
+		this.selectedSshKey = null;
+
+		this.UpdateTabAuthorization = ()=> {
+			this.sshKeysNewButton.disabled = !this.canWrite;
+			this.sshKeysRemoveButton.disabled = !this.canWrite || !this.selectedSshKey;
+		};
 
 		this.sshKeysFindInput = document.createElement("input");
 		this.sshKeysFindInput.type = "text";
@@ -711,6 +633,7 @@ class Vault extends Tabs {
 			firstColumnOffset: "4px",
 			onSelect: (id, element)=> {
 				this.selectedSshKey = element._data;
+				this.sshKeysRemoveButton.disabled = !this.canWrite;
 				this.selectedSshKeyElement?.classList.remove("list-element-selected");
 				this.selectedSshKeyElement = element;
 				element.classList.add("list-element-selected");
@@ -766,7 +689,7 @@ class Vault extends Tabs {
 		this.sshKeysNewButton.onclick = ()=> this.SshKeyDialog(null);
 
 		this.sshKeysRemoveButton.onclick = ()=> {
-			if (!this.selectedSshKey) return;
+			if (!this.canWrite || !this.selectedSshKey) return;
 
 			this.ConfirmBox(`Are you sure you want to remove "${this.selectedSshKey.name || this.selectedSshKey.username}"?`, false, "mono/delete.svg").addEventListener("click", async ()=>{
 				try {
@@ -776,7 +699,6 @@ class Vault extends Tabs {
 					const json = await response.json();
 					if (json.error) throw json.error;
 
-					this.selectedSshKey = null;
 					this.GetSshKeys();
 				}
 				catch (ex) {
@@ -785,6 +707,7 @@ class Vault extends Tabs {
 			});
 		};
 
+		this.UpdateAuthorization();
 		this.GetSshKeys();
 		this.AfterResize();
 	}
@@ -808,6 +731,8 @@ class Vault extends Tabs {
 
 	FilterSshKeys() {
 		const query = (this.sshKeysFindInput?.value ?? "").trim().toLowerCase();
+		this.selectedSshKey = null;
+		this.sshKeysRemoveButton.disabled = true;
 
 		if (query.length === 0) {
 			this.sshKeysListBox.SetItems(this.sshKeys);
@@ -824,15 +749,22 @@ class Vault extends Tabs {
 	}
 
 	SshKeyDialog(object=null) {
+		const canWrite = this.canWrite;
+		if (!object && !canWrite) return;
+
 		const dialog = this.DialogBox("365px");
 		if (dialog === null) return;
 
 		const {okButton, cancelButton, innerBox, buttonBox} = dialog;
 
 		okButton.value = "Save";
+		okButton.hidden = !canWrite;
+		if (!canWrite) cancelButton.value = "Close";
 
+		innerBox.parentElement.style.maxWidth = "560px";
 		innerBox.style.padding = "16px 32px";
 		innerBox.style.display = "grid";
+		innerBox.style.gridTemplateColumns = "100px minmax(0, 1fr) 72px";
 		innerBox.style.gridTemplateRows = "repeat(2, 38px) 64px 38px 64px 38px";
 		innerBox.style.alignItems = "center";
 		innerBox.style.transition = ".4s";
@@ -843,6 +775,7 @@ class Vault extends Tabs {
 		const nameInput = document.createElement("input");
 		nameInput.style.gridArea = "1 / 2 / 1 / 4";
 		nameInput.type = "text";
+		nameInput.readOnly = !canWrite;
 		innerBox.append(nameLabel, nameInput);
 
 		const usernameLabel = document.createElement("div");
@@ -851,6 +784,7 @@ class Vault extends Tabs {
 		const usernameInput = document.createElement("input");
 		usernameInput.style.gridArea = "2 / 2 / 2 / 4";
 		usernameInput.type = "text";
+		usernameInput.readOnly = !canWrite;
 		innerBox.append(usernameLabel, usernameInput);
 
 		const keyLabel = document.createElement("div");
@@ -862,7 +796,8 @@ class Vault extends Tabs {
 		keyInput.style.gridArea = "3 / 2 / 3 / 4";
 		keyInput.style.resize = "none";
 		keyInput.style.fontFamily = "monospace";
-		keyInput.placeholder = object ? "unchanged" : "-----BEGIN PRIVATE KEY-----";
+		keyInput.readOnly = !canWrite;
+		keyInput.placeholder = !object ? "-----BEGIN PRIVATE KEY-----" : canWrite ? "unchanged" : "";
 		innerBox.append(keyLabel, keyInput);
 
 		const passphraseLabel = document.createElement("div");
@@ -871,7 +806,8 @@ class Vault extends Tabs {
 		const passphraseInput = document.createElement("input");
 		passphraseInput.style.gridArea = "4 / 2";
 		passphraseInput.type = "password";
-		passphraseInput.placeholder = object ? "unchanged" : "optional";
+		passphraseInput.readOnly = !canWrite;
+		passphraseInput.placeholder = !object ? "optional" : canWrite ? "unchanged" : "";
 		innerBox.append(passphraseLabel, passphraseInput);
 
 		const showButton = document.createElement("input");
@@ -888,6 +824,7 @@ class Vault extends Tabs {
 		publicKeyLabel.style.marginTop = "8px";
 		publicKeyLabel.textContent = "Public key:";
 		const publicKeyInput = document.createElement("textarea");
+		publicKeyInput.readOnly = !canWrite;
 		publicKeyInput.style.gridArea = "5 / 2 / 5 / 4";
 		publicKeyInput.style.resize = "none";
 		publicKeyInput.style.fontFamily = "monospace";
@@ -906,12 +843,6 @@ class Vault extends Tabs {
 			guidInput.style.gridArea = "6 / 2 / 6 / 4";
 			innerBox.append(guidLabel, guidInput);
 		}
-
-		const permissions = this.CreatePermissionsPanel(innerBox, "4", "1 / 6", object, newMode=> {
-			innerBox.style.gridTemplateColumns = newMode === "none"
-				? "100px minmax(140px, 1fr) 72px minmax(160px, .8fr)"
-				: "100px minmax(140px, 1fr) 72px minmax(200px, 1fr)";
-		});
 
 		const draggable = document.createElement("div");
 		if (object) {
@@ -959,6 +890,8 @@ class Vault extends Tabs {
 		}
 
 		okButton.onclick = async ()=> {
+			if (!this.canWrite) return;
+
 			try {
 				if (keyInput.value.trim().length === 0 && !object) {
 					this.ConfirmBox("A private key is required.", true, "mono/warning.svg");
@@ -971,9 +904,7 @@ class Vault extends Tabs {
 					username: usernameInput.value,
 					privateKey: keyInput.value,
 					passphrase: passphraseInput.value,
-					publicKey: publicKeyInput.value,
-					permissionMode: permissions.getMode(),
-					permissionList: permissions.getList()
+					publicKey: publicKeyInput.value
 				};
 
 				const response = await fetch("vault/sshkey/save", {
@@ -1052,6 +983,8 @@ class Vault extends Tabs {
 		consolidateSection.appendChild(result);
 
 		scanButton.onclick = ()=> {
+			if (!this.canWrite) return;
+
 			this.ConfirmBox("This will create Vault entries for every legacy credential found, and delete the original plaintext attributes from the device/user entries. Continue?", false, "mono/consolidate.svg").addEventListener("click", async ()=>{
 				scanButton.disabled = true;
 				result.textContent = "Scanning...";
@@ -1070,7 +1003,7 @@ class Vault extends Tabs {
 					this.ConfirmBox(ex, true, "mono/error.svg");
 				}
 				finally {
-					scanButton.disabled = false;
+					scanButton.disabled = !this.canWrite;
 				}
 			});
 		};
@@ -1088,7 +1021,7 @@ class Vault extends Tabs {
 		this.tabsPanel.appendChild(duplicatesTitle);
 
 		const duplicatesIntro = document.createElement("div");
-		duplicatesIntro.textContent = "Credentials that share the same username and password, and SSH keys that share the same username, private key and passphrase. Each group is merged into the kept entry: every device and user referencing a duplicate is pointed to it, then the duplicates are deleted. The kept entry's name and permissions remain, double-click a group to choose a different one. Groups with different permissions are not selected by default.";
+		duplicatesIntro.textContent = "Credentials match by username and password. SSH keys match by username, private key and passphrase. Merging updates device and user references to the kept entry. Double-click a group to choose which entry to keep.";
 		duplicatesIntro.style.maxWidth = "800px";
 		this.tabsPanel.appendChild(duplicatesIntro);
 
@@ -1122,7 +1055,7 @@ class Vault extends Tabs {
 				else {
 					this.selectedDuplicates.delete(entry.keep);
 				}
-				this.duplicatesMergeButton.disabled = this.selectedDuplicates.size === 0;
+				this.duplicatesMergeButton.disabled = !this.canWrite || this.selectedDuplicates.size === 0;
 			}));
 			this.duplicatesListBox.InflateElement(element, entry, type);
 		};
@@ -1134,8 +1067,7 @@ class Vault extends Tabs {
 			{label:"Keep",        value:d=> Keeper(d).name},
 			{label:"Username",    value:d=> Keeper(d).username},
 			{label:"Duplicates",  value:d=> d.entries.filter(o=> o.guid !== d.keep).map(o=> o.name).join(", ")},
-			{label:"Usage",       sortValue:d=> d.entries.reduce((sum, o)=> sum + o.uses, 0), value:d=> d.entries.reduce((sum, o)=> sum + o.uses, 0)},
-			{label:"Permissions", value:d=> d.permissionsDiffer ? "Differ" : "Same"}
+			{label:"Usage",       sortValue:d=> d.entries.reduce((sum, o)=> sum + o.uses, 0), value:d=> d.entries.reduce((sum, o)=> sum + o.uses, 0)}
 		]);
 
 		this.duplicatesMergeButton = document.createElement("input");
@@ -1152,7 +1084,7 @@ class Vault extends Tabs {
 
 		duplicateSelection.bind(this.duplicatesList, selectAll=> {
 			this.selectedDuplicates = new Set(selectAll ? this.duplicates.map(d=> d.keep) : []);
-			this.duplicatesMergeButton.disabled = this.selectedDuplicates.size === 0;
+			this.duplicatesMergeButton.disabled = !this.canWrite || this.selectedDuplicates.size === 0;
 		});
 
 		this.duplicatesMergeButton.onclick = ()=> this.MergeSelectedDuplicates();
@@ -1202,7 +1134,7 @@ class Vault extends Tabs {
 				else {
 					this.selectedOrphans.delete(key);
 				}
-				this.orphansRemoveButton.disabled = this.selectedOrphans.size === 0;
+				this.orphansRemoveButton.disabled = !this.canWrite || this.selectedOrphans.size === 0;
 			}));
 			this.orphansListBox.InflateElement(element, entry, type);
 		};
@@ -1223,11 +1155,18 @@ class Vault extends Tabs {
 
 		orphanSelection.bind(this.orphansList, selectAll=> {
 			this.selectedOrphans = new Set(selectAll ? this.orphans.map(d=> `${d.type}:${d.guid}`) : []);
-			this.orphansRemoveButton.disabled = this.selectedOrphans.size === 0;
+			this.orphansRemoveButton.disabled = !this.canWrite || this.selectedOrphans.size === 0;
 		});
 
 		this.orphansRemoveButton.onclick = ()=> this.RemoveSelectedOrphans();
 
+		this.UpdateTabAuthorization = ()=> {
+			const canWrite = this.canWrite;
+			scanButton.disabled = !canWrite;
+			this.duplicatesMergeButton.disabled = !canWrite || this.selectedDuplicates.size === 0;
+			this.orphansRemoveButton.disabled = !canWrite || this.selectedOrphans.size === 0;
+		};
+		this.UpdateAuthorization();
 		this.GetDuplicates();
 		this.GetOrphans();
 		this.AfterResize();
@@ -1291,9 +1230,9 @@ class Vault extends Tabs {
 
 			this.duplicates = json;
 
-			this.selectedDuplicates = new Set(this.duplicates.filter(d=> !d.permissionsDiffer).map(d=> d.keep));
+			this.selectedDuplicates = new Set(this.duplicates.map(d=> d.keep));
 			this.duplicatesListBox.SetItems(this.duplicates);
-			this.duplicatesMergeButton.disabled = this.selectedDuplicates.size === 0;
+			this.duplicatesMergeButton.disabled = !this.canWrite || this.selectedDuplicates.size === 0;
 		}
 		catch (ex) {
 			this.ConfirmBox(ex, true, "mono/error.svg");
@@ -1336,6 +1275,8 @@ class Vault extends Tabs {
 	}
 
 	MergeSelectedDuplicates() {
+		if (!this.canWrite) return;
+
 		const groups = this.duplicates.filter(d=> this.selectedDuplicates.has(d.keep));
 		if (groups.length === 0) return;
 
@@ -1384,7 +1325,7 @@ class Vault extends Tabs {
 			this.orphans = json;
 			this.selectedOrphans = new Set(this.orphans.map(d=> `${d.type}:${d.guid}`));
 			this.orphansListBox.SetItems(this.orphans);
-			this.orphansRemoveButton.disabled = this.selectedOrphans.size === 0;
+			this.orphansRemoveButton.disabled = !this.canWrite || this.selectedOrphans.size === 0;
 		}
 		catch (ex) {
 			this.ConfirmBox(ex, true, "mono/error.svg");
@@ -1392,7 +1333,7 @@ class Vault extends Tabs {
 	}
 
 	RemoveSelectedOrphans() {
-		if (this.selectedOrphans.size === 0) return;
+		if (!this.canWrite || this.selectedOrphans.size === 0) return;
 
 		const count = this.selectedOrphans.size;
 		this.ConfirmBox(`Are you sure you want to remove ${count} orphaned entr${count === 1 ? "y" : "ies"}?`, false, "mono/delete.svg").addEventListener("click", async ()=>{

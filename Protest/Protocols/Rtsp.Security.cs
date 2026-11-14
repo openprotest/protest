@@ -36,7 +36,7 @@ internal static partial class Rtsp {
 
     internal sealed class CredentialLookup {
         public bool found;
-        public bool allowed;
+        public bool allowed = true;
         public string username;
         public string password;
     }

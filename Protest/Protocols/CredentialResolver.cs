@@ -1,4 +1,5 @@
 using System.IO;
+using System.Net;
 using System.Text;
 using Renci.SshNet;
 using Renci.SshNet.Common;
@@ -6,19 +7,18 @@ using Renci.SshNet.Common;
 namespace Protest.Protocols;
 
 internal static class CredentialResolver {
-    public static AuthenticationMethod[] Resolve(string credentialGuid, ref string username, ref string password, string requestingUser, out bool permissionDenied) {
+    public static AuthenticationMethod[] Resolve(HttpListenerContext ctx, string credentialGuid, ref string username, ref string password, out bool permissionDenied) {
         permissionDenied = false;
+        if (String.IsNullOrEmpty(credentialGuid)) return null;
 
-        if (String.IsNullOrEmpty(credentialGuid) || !Guid.TryParse(credentialGuid, out Guid guid)) {
+        if (!Vault.CanRead(ctx)) {
+            permissionDenied = true;
             return null;
         }
 
-        if (VaultSshKeys.FromGuid(guid, out VaultSshKeys.SshKeyEntry key)) {
-            if (!VaultSshKeys.IsAllowed(key, requestingUser)) {
-                permissionDenied = true;
-                return null;
-            }
+        if (!Guid.TryParse(credentialGuid, out Guid guid)) return null;
 
+        if (VaultSshKeys.FromGuid(guid, out VaultSshKeys.SshKeyEntry key)) {
             using MemoryStream stream = new MemoryStream(Encoding.UTF8.GetBytes(key.privateKey));
             PrivateKeyFile privateKeyFile = String.IsNullOrEmpty(key.passphrase)
                 ? new PrivateKeyFile(stream)
@@ -30,11 +30,6 @@ internal static class CredentialResolver {
         }
 
         if (Vault.FromGuid(guid, out Vault.CredentialEntry credential)) {
-            if (!Vault.IsAllowed(credential, requestingUser)) {
-                permissionDenied = true;
-                return null;
-            }
-
             username = credential.username;
             password = credential.password;
             return FromPassword(username, password);
