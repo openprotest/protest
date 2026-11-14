@@ -8,7 +8,7 @@
 	min-width: 240px;
 	min-height: 160px;
 	transition-timing-function: cubic-bezier(.2, .6, .36, 1);
-	animation: win-open .2s;
+	animation: win-open .15s;
 }
 
 .disable-window-dropshadows>.window {
@@ -724,7 +724,7 @@
 }
 
 @keyframes win-open {
-	0%   { transform: scale(1.1); filter: opacity(0); }
+	0%   { transform: scale(.9); filter: opacity(0); }
 	100% { transform: scale(1); filter: opacity(1); }
 }
 

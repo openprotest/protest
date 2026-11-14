@@ -613,9 +613,9 @@ class Window {
 
 		document.getSelection().removeAllRanges();
 
-		this.win.style.transition = `${WIN.ANIME_DURATION / 1333}s`;
+		this.win.style.transition = `${WIN.ANIME_DURATION / 2000}s`;
 		this.win.style.opacity = "0";
-		this.win.style.transform = "scale(.85)";
+		this.win.style.transform = "scale(.9)";
 
 		this.task.style.transition = `${WIN.ANIME_DURATION / 2000}s`;
 		this.task.style.opacity = "0";
