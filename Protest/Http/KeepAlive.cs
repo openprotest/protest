@@ -55,10 +55,9 @@ internal static class KeepAlive {
             return;
         }
 
-        WebSocket ws;
+        HttpListenerWebSocketContext wsc;
         try {
-            HttpListenerWebSocketContext wsc = await ctx.AcceptWebSocketAsync(null);
-            ws = wsc.WebSocket;
+            wsc = await ctx.AcceptWebSocketAsync(null);
         }
         catch (WebSocketException ex) {
             ctx.Response.Close();
@@ -66,6 +65,7 @@ internal static class KeepAlive {
             return;
         }
 
+        using WebSocket ws = wsc.WebSocket;
         if (ws is null) return;
 
         string[] accessArray = Auth.rbac.TryGetValue(username, out Auth.AccessControl accessControl) && accessControl is not null ? accessControl.authorization : new string[] { "*" };
@@ -78,11 +78,14 @@ internal static class KeepAlive {
             semaphore   = new SemaphoreSlim(1, 1)
         };
 
-        connections.TryAdd(ws, keepAliveEntry);
-
         byte[] buff = new byte[2048];
 
         try {
+            if (!Auth.IsAuthenticated(ctx)) {
+                await CloseConnection(keepAliveEntry);
+                return;
+            }
+
             byte[] initPayload = JsonSerializer.SerializeToUtf8Bytes(new {
                 action           = "init",
                 version          = Data.VersionToString(),
@@ -98,20 +101,25 @@ internal static class KeepAlive {
             ArraySegment<byte> dhcpSegment = new(Encoding.UTF8.GetBytes($"{{\"action\":\"dhcp-range\",\"list\":{DhcpRange.ListRangeString()}}}"));
             await ws.SendAsync(dhcpSegment, WebSocketMessageType.Text, true, CancellationToken.None);
 
+            connections.TryAdd(ws, keepAliveEntry);
             MemoryStream message = new MemoryStream();
 
             while (ws.State == WebSocketState.Open) {
                 if (!Auth.IsAuthenticated(ctx)) {
-                    await ws.SendAsync(MSG_FORCE_RELOAD, WebSocketMessageType.Text, true, CancellationToken.None);
-                    await ws.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, null, CancellationToken.None);
+                    await CloseConnection(keepAliveEntry);
                     return;
                 }
 
                 WebSocketReceiveResult receive = await ws.ReceiveAsync(new ArraySegment<byte>(buff), CancellationToken.None);
 
                 if (receive.MessageType == WebSocketMessageType.Close) {
-                    await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, null, CancellationToken.None);
+                    await CloseConnection(keepAliveEntry);
                     break;
+                }
+
+                if (!Auth.IsAuthenticated(ctx)) {
+                    await CloseConnection(keepAliveEntry);
+                    return;
                 }
 
                 //otherwise one endless message would buffer until the server runs out of memory
@@ -186,25 +194,22 @@ internal static class KeepAlive {
         }
     }
 
-    internal static async Task CloseConnection(string sessionId) {
-        foreach (KeyValuePair<WebSocket, Entry> pair in connections) {
-            if (pair.Value.sessionId != sessionId) continue;
+    internal static Task CloseConnection(string sessionId) =>
+        Task.WhenAll(connections.Values.Where(entry => entry.sessionId == sessionId).Select(CloseConnection));
 
-            if (pair.Value.ws.State == WebSocketState.Open) {
-                try {
-                    await pair.Value.semaphore.WaitAsync();
-                    await pair.Value.ws.SendAsync(MSG_FORCE_RELOAD, WebSocketMessageType.Text, true, CancellationToken.None);
-                }
-                finally {
-                    pair.Value.semaphore.Release();
-                }
-
-                await pair.Value.ws.CloseAsync(WebSocketCloseStatus.NormalClosure, null, CancellationToken.None);
-                pair.Value.ws?.Dispose();
+    private static async Task CloseConnection(Entry entry) {
+        await entry.semaphore.WaitAsync();
+        try {
+            WebSocketState state = entry.ws.State;
+            if (state == WebSocketState.Open) {
+                await entry.ws.SendAsync(MSG_FORCE_RELOAD, WebSocketMessageType.Text, true, CancellationToken.None);
             }
+            else if (state != WebSocketState.CloseReceived) return;
 
-            connections.TryRemove(pair.Key, out _);
-            return;
+            await entry.ws.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, null, CancellationToken.None);
+        }
+        finally {
+            entry.semaphore.Release();
         }
     }
 
@@ -217,11 +222,8 @@ internal static class KeepAlive {
         foreach (Entry entry in connections.Values) {
             if (!includeOrigin && entry.username == origin) continue;
 
-            bool isAuthorized = Auth.IsAuthorized(entry.ctx, accessPath);
-            if (!isAuthorized) continue;
-
             if (entry.ws.State == WebSocketState.Open) {
-                Send(entry, message);
+                Send(entry, message, accessPath);
             }
             else {
                 remove.Add(entry.ws);
@@ -239,11 +241,7 @@ internal static class KeepAlive {
     internal static void Unicast(string username, byte[] message, string accessPath) {
         foreach (Entry entry in connections.Values) {
             if (entry.username != username) continue;
-            if (!Auth.IsAuthorized(entry.ctx, accessPath)) continue;
-
-            if (entry.ws.State == WebSocketState.Open) {
-                Send(entry, message);
-            }
+            Send(entry, message, accessPath);
         }
     }
 
@@ -253,28 +251,24 @@ internal static class KeepAlive {
     internal static void Unicast(Auth.Session session, byte[] message, string accessPath) {
         foreach (Entry entry in connections.Values) {
             if (entry.sessionId != session.sessionId) continue;
-            if (!Auth.IsAuthorized(entry.ctx, accessPath)) continue;
-
-            if (entry.ws.State == WebSocketState.Open) {
-                Send(entry, message);
-            }
+            Send(entry, message, accessPath);
         }
     }
 
     internal static void UnicastChatPeer(string peerId, byte[] message, string accessPath) {
         if (!chatPeers.TryGetValue(peerId, out WebSocket ws)) return;
         if (!connections.TryGetValue(ws, out Entry entry)) return;
-        if (!Auth.IsAuthorized(entry.ctx, accessPath)) return;
-
-        if (entry.ws.State == WebSocketState.Open) {
-            Send(entry, message);
-        }
+        Send(entry, message, accessPath);
     }
 
-    private static void Send(Entry entry, byte[] message) {
+    private static void Send(Entry entry, byte[] message, string accessPath) {
+        if (entry.ws.State != WebSocketState.Open || !Auth.IsAuthorized(entry.ctx, accessPath)) return;
+
         _ = Task.Run(async ()=> {
+            await entry.semaphore.WaitAsync();
             try {
-                await entry.semaphore.WaitAsync();
+                if (entry.ws.State != WebSocketState.Open || !Auth.IsAuthorized(entry.ctx, accessPath)) return;
+
                 await entry.ws.SendAsync(new ArraySegment<byte>(message), WebSocketMessageType.Text, true, CancellationToken.None);
             }
             catch (Exception ex) {
@@ -338,9 +332,7 @@ internal static class KeepAlive {
             if (!dictionary.TryGetValue("ttl", out string ttl)) return;
 
             if (long.TryParse(ttl, out long ttlLong)) {
-                string sessionId = ctx.Request.Cookies[Auth.SESSION_COOKIE]?.Value;
-                if (sessionId is null) return;
-                Auth.UpdateSessionTtl(sessionId, Math.Min(ttlLong, 28));
+                Auth.UpdateSessionTtl(keepAliveEntry.sessionId, ttlLong);
             }
 
             return;
@@ -388,7 +380,7 @@ internal static class KeepAlive {
             }
             else {
                 //otherwise the window would wait for peers that never answer
-                Send(keepAliveEntry, JsonSerializer.SerializeToUtf8Bytes(new { action = "chat-join-refused", peerId = joinPeerId }));
+                Send(keepAliveEntry, JsonSerializer.SerializeToUtf8Bytes(new { action = "chat-join-refused", peerId = joinPeerId }), "/chat/write");
             }
             return;
 

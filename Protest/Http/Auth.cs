@@ -83,34 +83,10 @@ internal static class Auth {
         IPAddress remoteIp = ctx.Request.RemoteEndPoint.Address;
         if (IPAddress.IsLoopback(remoteIp) && Configuration.backdoor) return true;
 
-        string sessionId = ctx.Request.Cookies[SESSION_COOKIE]?.Value;
-        if (sessionId is null) return false;
-
-        if (!sessions.TryGetValue(sessionId, out Session session)) {
-            return false;
-        }
-
-        if (DateTime.UtcNow.Ticks - session.loginDate > session.ttl) { //expired
-            RevokeAccess(sessionId);
-            return false;
-        }
-
-        return true;
+        return TryGetActiveSession(ctx.Request.Cookies[SESSION_COOKIE]?.Value, out _);
     }
 
-    internal static bool IsAuthorized(HttpListenerContext ctx, string path) {
-        IPAddress remoteIp = ctx.Request.RemoteEndPoint.Address;
-        if (IPAddress.IsLoopback(remoteIp) && Configuration.backdoor) return true;
-
-        string sessionId = ctx.Request.Cookies[SESSION_COOKIE]?.Value;
-        if (sessionId is null) return false;
-
-        if (!sessions.TryGetValue(sessionId, out Session session)) {
-            return false;
-        }
-
-        return IsAuthorized(session.access, path);
-    }
+    internal static bool IsAuthorized(HttpListenerContext ctx, string path) => IsAuthenticatedAndAuthorized(ctx, path);
 
     //"*" grants every path, including the ones no permission maps to
     internal static bool IsAuthorized(AccessControl access, string path) =>
@@ -120,19 +96,24 @@ internal static class Auth {
         IPAddress remoteIp = ctx.Request.RemoteEndPoint.Address;
         if (IPAddress.IsLoopback(remoteIp) && Configuration.backdoor) return true;
 
-        string sessionId = ctx.Request.Cookies[SESSION_COOKIE]?.Value;
-        if (sessionId is null) return false;
+        return TryGetActiveSession(ctx.Request.Cookies[SESSION_COOKIE]?.Value, out Session session) && IsAuthorized(session.access, path);
+    }
 
-        if (!sessions.TryGetValue(sessionId, out Session session)) {
-            return false;
+    private static bool TryGetActiveSession(string sessionId, out Session session) {
+        session = null;
+        if (sessionId is null || !sessions.TryGetValue(sessionId, out session)) return false;
+
+        lock (session) {
+            return CheckSessionExpiry(session);
         }
+    }
 
-        if (DateTime.UtcNow.Ticks - session.loginDate > session.ttl) { //expired
-            RevokeAccess(sessionId);
-            return false;
-        }
+    //Check expiry under the same lock that protects TTL changes.
+    private static bool CheckSessionExpiry(Session session) {
+        if (DateTime.UtcNow.Ticks - session.loginDate <= session.ttl) return true;
 
-        return IsAuthorized(session.access, path);
+        RevokeAccess(session.sessionId);
+        return false;
     }
 
     private static bool IsRateLimited(IPAddress clientIP) {
@@ -1209,9 +1190,12 @@ internal static class Auth {
     }
 
     internal static void UpdateSessionTtl(string sessionId, long ttl) {
-        if (!sessions.TryGetValue(sessionId, out Session session)) return;
-        session.ttl = ttl * 24 * TimeSpan.TicksPerHour; //in ticks
-        sessions[sessionId] = session;
+        if (sessionId is null || ttl < 0 || !sessions.TryGetValue(sessionId, out Session session)) return;
+
+        lock (session) {
+            if (!CheckSessionExpiry(session)) return;
+            session.ttl = Math.Min(ttl, 28) * TimeSpan.TicksPerDay;
+        }
     }
 }
 
