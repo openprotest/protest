@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System.Collections.Concurrent;
+using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Net.WebSockets;
@@ -38,6 +39,27 @@ internal static class Ssh {
 
     private static int ParsePort(string value, int defaultPort) =>
         int.TryParse(value, out int port) && port is > 0 and <= 65535 ? port : defaultPort;
+
+    private static (string host, int port) GetDeviceTarget(ConcurrentDictionary<string, Database.Attribute> attributes) {
+        if (!attributes.TryGetValue("ip", out Database.Attribute address)) {
+            attributes.TryGetValue("hostname", out address);
+        }
+
+        (string host, int port) = ParseTarget(address?.value?.Split(';', 2)[0]);
+
+        //match the device view: the public override takes precedence over the legacy one
+        string sshPort = null;
+        foreach (string name in new string[] { ".overwriteprotocol", "overwriteprotocol" }) {
+            if (!attributes.TryGetValue(name, out Database.Attribute attribute) || String.IsNullOrEmpty(attribute.value)) continue;
+
+            foreach (string item in attribute.value.Split(';', StringSplitOptions.TrimEntries)) {
+                string[] parts = item.Split(':');
+                if (parts.Length == 2 && parts[0] == "ssh") sshPort = parts[1];
+            }
+        }
+
+        return (host, String.IsNullOrEmpty(sshPort) ? port : ParsePort(sshPort, DEFAULT_PORT));
+    }
 
     public static async Task WebSocketHandler(HttpListenerContext ctx) {
         if (!Auth.IsAuthenticatedAndAuthorized(ctx, ctx.Request.Url.AbsolutePath)) {
@@ -107,30 +129,51 @@ internal static class Ssh {
                 return;
             }
 
-            if (authMethods is null) {
-                if (!String.IsNullOrEmpty(file) && DatabaseInstances.devices.dictionary.TryGetValue(file, out Database.Entry entry)) {
-                    Database.Attribute usernameAttribute;
-                    if (entry.attributes.TryGetValue("ssh username", out usernameAttribute)) {
-                        username = usernameAttribute.value;
-                    }
-                    else if (entry.attributes.TryGetValue("username", out usernameAttribute)) {
-                        username = usernameAttribute.value;
-                    }
-
-                    Database.Attribute passwordAttribute;
-                    if (entry.attributes.TryGetValue("ssh password", out passwordAttribute)) {
-                        password = passwordAttribute.value;
-                    }
-                    else if (entry.attributes.TryGetValue("password", out passwordAttribute)) {
-                        password = passwordAttribute.value;
-                    }
-                }
-
-                if (String.IsNullOrEmpty(username) || String.IsNullOrEmpty(password)) {
-                    await WebSocketHelper.WsWriteText(ws, "{\"error\":\"Invalid username or password\"}"u8.ToArray());
+            if (authMethods is null && !String.IsNullOrEmpty(file)) {
+                if (!Auth.IsAuthenticatedAndAuthorized(ctx, "/db/device/attribute")) {
+                    await WebSocketHelper.WsWriteText(ws, "{\"error\":\"Access denied for this credential\"}"u8.ToArray());
                     await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
                     return;
                 }
+
+                Database.Entry entry = DatabaseInstances.devices.GetEntry(file);
+                if (entry is null) {
+                    await WebSocketHelper.WsWriteText(ws, "{\"error\":\"Device not found\"}"u8.ToArray());
+                    await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
+                    return;
+                }
+
+                ConcurrentDictionary<string, Database.Attribute> attributes = entry.attributes;
+                (string deviceHost, int devicePort) = GetDeviceTarget(attributes);
+                if (deviceHost.Length == 0 || !String.Equals(host, deviceHost, StringComparison.OrdinalIgnoreCase) || port != devicePort) {
+                    await WebSocketHelper.WsWriteText(ws, "{\"error\":\"SSH target does not match the saved device\"}"u8.ToArray());
+                    await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
+                    return;
+                }
+
+                (host, port) = (deviceHost, devicePort);
+
+                Database.Attribute usernameAttribute;
+                if (attributes.TryGetValue("ssh username", out usernameAttribute)) {
+                    username = usernameAttribute.value;
+                }
+                else if (attributes.TryGetValue("username", out usernameAttribute)) {
+                    username = usernameAttribute.value;
+                }
+
+                Database.Attribute passwordAttribute;
+                if (attributes.TryGetValue("ssh password", out passwordAttribute)) {
+                    password = passwordAttribute.value;
+                }
+                else if (attributes.TryGetValue("password", out passwordAttribute)) {
+                    password = passwordAttribute.value;
+                }
+            }
+
+            if (authMethods is null && (String.IsNullOrEmpty(username) || String.IsNullOrEmpty(password))) {
+                await WebSocketHelper.WsWriteText(ws, "{\"error\":\"Invalid username or password\"}"u8.ToArray());
+                await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, String.Empty, CancellationToken.None);
+                return;
             }
 
             authMethods ??= CredentialResolver.FromPassword(username, password);
