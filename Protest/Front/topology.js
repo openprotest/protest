@@ -3298,7 +3298,7 @@ class Topology extends Window {
 					}
 
 					let file = null;
-					if ("ssh password" in dbEntry || "password" in dbEntry) {
+					if (Vault.CanRead() && ("ssh password" in dbEntry || "password" in dbEntry)) {
 						file = device.initial.file;
 					}
 

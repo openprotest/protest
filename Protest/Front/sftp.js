@@ -33,9 +33,6 @@ class Sftp extends Window {
 		else if (this.args.credential) {
 			this.ConnectViaCredential(this.args.host, this.args.credential);
 		}
-		else if (this.args.file) {
-			this.ConnectViaFile(this.args.host, this.args.file);
-		}
 		else {
 			this.ConnectDialog(this.args.host, true);
 		}
@@ -326,11 +323,6 @@ class Sftp extends Window {
 
 	ConnectViaCredentials(target, username, password) {
 		const connectionString = `target=${target}\nun=${username}\npw=${password}`;
-		this.Connect(target, connectionString);
-	}
-
-	ConnectViaFile(target, file) {
-		const connectionString = `target=${target}\nfile=${file}`;
 		this.Connect(target, connectionString);
 	}
 

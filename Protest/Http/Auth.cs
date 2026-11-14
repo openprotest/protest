@@ -491,7 +491,7 @@ internal static class Auth {
         return null;
     }
 
-    //A signed-in request acts as its session user. The backdoor uses "loopback" when there is no valid session.
+    //Prefer the session's username for attribution. The backdoor uses "loopback" when no session is found.
     internal static string GetPrincipal(HttpListenerContext ctx) =>
         GetPrincipal(ctx.Request.Cookies[SESSION_COOKIE]?.Value, ctx.Request.RemoteEndPoint?.Address);
 

@@ -122,6 +122,13 @@ const KEEP = {
 		return KEEP.zones.find(o => n >= o.first && n <= o.last)?.color;
 	},
 
+	UpdateAuthorization: authorization=> {
+		KEEP.authorization = authorization;
+		for (let i=0; i<WIN.array.length; i++) {
+			WIN.array[i].UpdateAuthorization();
+		}
+	},
+
 	MessageHandler: message=> {
 		switch (message.action) {
 		case "init": {
@@ -130,13 +137,8 @@ const KEEP = {
 			KEEP.color = message.color;
 			const authorizationChanged = KEEP.authorization.length !== message.authorization.length
 				|| KEEP.authorization.some((permission, index)=> permission !== message.authorization[index]);
-			KEEP.authorization = message.authorization;
 			usernameLabel.textContent = KEEP.username;
-			if (authorizationChanged) {
-				for (let i=0; i<WIN.array.length; i++) {
-					WIN.array[i].UpdateAuthorization();
-				}
-			}
+			if (authorizationChanged) KEEP.UpdateAuthorization(message.authorization);
 			break;
 		}
 
@@ -169,10 +171,7 @@ const KEEP = {
 			break;
 
 		case "update-rbac":
-			KEEP.authorization = message.authorization;
-			for (let i=0; i<WIN.array.length; i++) {
-				WIN.array[i].UpdateAuthorization();
-			}
+			KEEP.UpdateAuthorization(message.authorization);
 			break;
 
 		case "zones":

@@ -87,8 +87,7 @@ internal static class Vault {
             return Data.CODE_INVALID_ARGUMENT.Array;
         }
 
-        CredentialEntry entry = Load().Find(e => e.guid == guid);
-        if (entry is null) return Data.CODE_NOT_FOUND.Array;
+        if (!FromGuid(guid, out CredentialEntry entry)) return Data.CODE_NOT_FOUND.Array;
 
         return Encoding.UTF8.GetBytes($"{{\"name\":\"{Data.EscapeJsonText(entry.name)}\",\"username\":\"{Data.EscapeJsonText(entry.username)}\",\"password\":\"{Data.EscapeJsonText(entry.password)}\"}}");
     }

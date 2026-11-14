@@ -85,8 +85,7 @@ internal static class VaultSshKeys {
             return Data.CODE_INVALID_ARGUMENT.Array;
         }
 
-        SshKeyEntry entry = Load().Find(e => e.guid == guid);
-        if (entry is null) return Data.CODE_NOT_FOUND.Array;
+        if (!FromGuid(guid, out SshKeyEntry entry)) return Data.CODE_NOT_FOUND.Array;
 
         StringBuilder builder = new StringBuilder();
         builder.Append('{');

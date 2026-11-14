@@ -375,7 +375,7 @@ class View extends Window {
 			showButton.className = "with-icon";
 			showButton.style.height = "36px";
 			showButton.style.backgroundImage = "url(mono/key.svg?light)";
-			showButton.disabled = !KEEP.authorization.includes("*") && !KEEP.authorization.includes("vault:read");
+			showButton.disabled = !Vault.CanRead();
 			valueContainer.append(showButton);
 
 			showButton.onclick = async ()=> {

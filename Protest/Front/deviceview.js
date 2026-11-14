@@ -553,10 +553,7 @@ class DeviceView extends View {
 					username = this.link.username.v;
 				}
 
-				let file = null;
-				if ("ssh password" in this.link || "password" in this.link) {
-					file = this.args.file;
-				}
+				const hasSavedPassword = "ssh password" in this.link || "password" in this.link;
 
 				const ResolveSshCredential = async ()=> {
 					const key = await this.ResolveCredentialGuid(["ssh key"]);
@@ -569,7 +566,7 @@ class DeviceView extends View {
 					const credential = await ResolveSshCredential();
 					if (credential === null) return; //cancelled
 					if (credential) new Ssh({host:sshHost, credential:credential});
-					else new Ssh({host:sshHost, username:username, file:file});
+					else new Ssh({host:sshHost, username:username, file:Vault.CanRead() && hasSavedPassword ? this.args.file : null});
 				};
 
 				const sftpButton = this.CreateSideButton("mono/shared.svg", "SFTP");
@@ -577,7 +574,7 @@ class DeviceView extends View {
 					const credential = await ResolveSshCredential();
 					if (credential === null) return; //cancelled
 					if (credential) new Sftp({host:sshHost, credential:credential});
-					else new Sftp({host:sshHost, username:username, file:file});
+					else new Sftp({host:sshHost, username:username});
 				};
 			}
 
@@ -698,6 +695,7 @@ class DeviceView extends View {
 				const actionButton = this.CreateSideButton("mono/vnc.svg", "VNC");
 				actionButton.onclick = async ()=> {
 					const credential = await this.ResolveCredentialGuid(["vnc credentials", "uvnc credentials"]);
+					if (credential === null) return;
 					if (credential) {
 						new Vnc({ host: host, port: vncPort, credential: credential, file: this.args.file });
 						return;
@@ -708,7 +706,7 @@ class DeviceView extends View {
 						: "uvnc password" in this.link ? "uvnc password"
 						: null;
 
-					if (attribute) {
+					if (attribute && Vault.CanRead()) {
 						const response = await fetch(`/db/${this.dbTarget}/attribute?file=${this.args.file}&attribute=${attribute}`);
 						if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
 						vncPassword = await response.text();
@@ -728,7 +726,7 @@ class DeviceView extends View {
 					else {
 						let uvncPassword = await this.ResolveCredentialPassword(["uvnc credentials"]);
 
-						if (uvncPassword === null && "uvnc password" in this.link) {
+						if (uvncPassword === null && Vault.CanRead() && "uvnc password" in this.link) {
 							const response = await fetch(`/db/${this.dbTarget}/attribute?file=${this.args.file}&attribute=uvnc password`);
 							if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
 							uvncPassword = await response.text();
@@ -3863,6 +3861,8 @@ class DeviceView extends View {
 	}
 
 	async ResolveCredentialGuid(attrNames) {
+		if (!Vault.CanRead()) return undefined;
+
 		let guids = [];
 
 		for (const attrName of attrNames) {
@@ -3925,7 +3925,7 @@ class DeviceView extends View {
 
 			okButton.onclick = ()=> {
 				dialog.Close();
-				resolve(select.value);
+				resolve(Vault.CanRead() ? select.value : undefined);
 			};
 
 			cancelButton.onclick = ()=> {

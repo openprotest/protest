@@ -1,9 +1,11 @@
 "use strict";
 class Vault extends Tabs {
 	static ErrorMessage(error) {
-		return {
-			"not found": "Credentials don't exist"
-		}[error] ?? error;
+		return error === "not found" ? "Credentials don't exist" : error;
+	}
+
+	static CanRead() {
+		return KEEP.authorization.includes("*") || KEEP.authorization.includes("vault:read");
 	}
 
 	//attributes that reference vault entries by guid: "<prefix> credentials" and "ssh key"
@@ -73,6 +75,33 @@ class Vault extends Tabs {
 	UpdateAuthorization() { //overrides
 		super.UpdateAuthorization();
 		this.UpdateTabAuthorization?.();
+
+		const root = this.popOutWindow?.document.body ?? this.win;
+		root.querySelector(".vault-entry-form")?.UpdateAuthorization();
+	}
+
+	SetEntryForm(dialog, fields, secrets, showButton, object) {
+		const {okButton, cancelButton, innerBox} = dialog;
+		innerBox.classList.add("vault-entry-form");
+		innerBox.UpdateAuthorization = ()=> {
+			const canWrite = this.canWrite;
+			okButton.hidden = !canWrite;
+			cancelButton.value = canWrite ? "Cancel" : "Close";
+			for (const input of fields) input.readOnly = !canWrite;
+			const canRead = Vault.CanRead();
+			showButton.disabled = !object || !canRead || showButton.hasAttribute("busy");
+
+			if (!canRead && showButton.hasAttribute("loaded")) {
+				for (const input of secrets) {
+					input.value = "";
+					if (input.type === "text") input.type = "password";
+				}
+				showButton.value = "Show";
+				showButton.removeAttribute("loaded");
+			}
+		};
+
+		innerBox.UpdateAuthorization();
 	}
 
 	RenderStrength(strength, hasPassword) {
@@ -149,6 +178,9 @@ class Vault extends Tabs {
 
 	ShowUsage(guid, dialog, usageButton) {
 		const {okButton, cancelButton, innerBox} = dialog;
+
+		innerBox.classList.remove("vault-entry-form");
+		delete innerBox.UpdateAuthorization;
 
 		const dialogBox = innerBox.parentElement;
 		dialogBox.style.transition = ".4s";
@@ -346,11 +378,14 @@ class Vault extends Tabs {
 		this.credentialsNewButton.onclick = ()=> this.CredentialDialog(null);
 
 		this.credentialsRemoveButton.onclick = ()=> {
-			if (!this.canWrite || !this.selectedCredential) return;
+			const credential = this.selectedCredential;
+			if (!this.canWrite || !credential) return;
 
-			this.ConfirmBox(`Are you sure you want to remove "${this.selectedCredential.name || this.selectedCredential.username}"?`, false, "mono/delete.svg").addEventListener("click", async ()=>{
+			this.ConfirmBox(`Are you sure you want to remove "${credential.name || credential.username}"?`, false, "mono/delete.svg").addEventListener("click", async ()=>{
+				if (!this.canWrite) return;
+
 				try {
-					const response = await fetch(`vault/credential/delete?guid=${this.selectedCredential.guid}`, { method: "POST" });
+					const response = await fetch(`vault/credential/delete?guid=${credential.guid}`, { method: "POST" });
 					if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
 
 					const json = await response.json();
@@ -414,8 +449,6 @@ class Vault extends Tabs {
 		const {okButton, cancelButton, innerBox, buttonBox} = dialog;
 
 		okButton.value = "Save";
-		okButton.hidden = !canWrite;
-		if (!canWrite) cancelButton.value = "Close";
 
 		innerBox.parentElement.style.maxWidth = "560px";
 		innerBox.style.padding = "16px 32px";
@@ -432,7 +465,6 @@ class Vault extends Tabs {
 		nameInput.style.gridArea = "1 / 2 / 1 / 4";
 		nameInput.style.maxWidth = "350px";
 		nameInput.type = "text";
-		nameInput.readOnly = !canWrite;
 		innerBox.append(nameLabel, nameInput);
 
 		const usernameLabel = document.createElement("div");
@@ -442,7 +474,6 @@ class Vault extends Tabs {
 		usernameInput.style.gridArea = "2 / 2 / 2 / 4";
 		usernameInput.style.maxWidth = "350px";
 		usernameInput.type = "text";
-		usernameInput.readOnly = !canWrite;
 		innerBox.append(usernameLabel, usernameInput);
 
 		const passwordLabel = document.createElement("div");
@@ -452,7 +483,6 @@ class Vault extends Tabs {
 		passwordInput.style.gridArea = "3 / 2";
 		passwordInput.style.maxWidth = "350px";
 		passwordInput.type = "password";
-		passwordInput.readOnly = !canWrite;
 		passwordInput.placeholder = object && canWrite ? "unchanged" : "";
 		innerBox.append(passwordLabel, passwordInput);
 
@@ -461,7 +491,6 @@ class Vault extends Tabs {
 		showButton.value = "Show";
 		showButton.style.gridArea = "3 / 3";
 		showButton.style.minWidth = "64px";
-		showButton.disabled = !object;
 		innerBox.appendChild(showButton);
 
 		if (object) {
@@ -487,32 +516,33 @@ class Vault extends Tabs {
 		}
 
 		showButton.onclick = async ()=> {
+			if (!object || !Vault.CanRead()) return;
+
 			if (showButton.value === "Show") {
+				showButton.setAttribute("busy", "");
 				showButton.disabled = true;
 
-				let statusCode = 0;
 				try {
 					const response = await fetch(`vault/credential/get?guid=${object.guid}`);
-					statusCode = response.status;
 					if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
 
 					const json = await response.json();
-					if (json.error) throw json.error;
+					if (json.error) throw Vault.ErrorMessage(json.error);
+					if (!Vault.CanRead() || !innerBox.isConnected) return;
 
 					passwordInput.value = json.password;
+					passwordInput.type = "text";
+					showButton.setAttribute("loaded", "");
+					showButton.value = "Hide";
+					passwordInput.focus();
 				}
 				catch (ex) {
 					dialog.Close();
-					setTimeout(()=> {
-						const message = `${ex}\nstatus code: ${statusCode}`;
-						this.ConfirmBox(message, true, "mono/error.svg");
-					}, WIN.ANIME_DURATION);
+					setTimeout(()=> this.ConfirmBox(ex, true, "mono/error.svg"), WIN.ANIME_DURATION);
 				}
 				finally {
-					passwordInput.type = "text";
-					showButton.value = "Hide";
-					showButton.disabled = false;
-					passwordInput.focus();
+					showButton.removeAttribute("busy");
+					showButton.disabled = !Vault.CanRead();
 				}
 			}
 			else {
@@ -525,6 +555,8 @@ class Vault extends Tabs {
 			nameInput.value = object.name;
 			usernameInput.value = object.username;
 		}
+
+		this.SetEntryForm(dialog, [nameInput, usernameInput, passwordInput], [passwordInput], showButton, object);
 
 		if (object && object.uses > 0) {
 			const usageButton = document.createElement("input");
@@ -689,11 +721,14 @@ class Vault extends Tabs {
 		this.sshKeysNewButton.onclick = ()=> this.SshKeyDialog(null);
 
 		this.sshKeysRemoveButton.onclick = ()=> {
-			if (!this.canWrite || !this.selectedSshKey) return;
+			const key = this.selectedSshKey;
+			if (!this.canWrite || !key) return;
 
-			this.ConfirmBox(`Are you sure you want to remove "${this.selectedSshKey.name || this.selectedSshKey.username}"?`, false, "mono/delete.svg").addEventListener("click", async ()=>{
+			this.ConfirmBox(`Are you sure you want to remove "${key.name || key.username}"?`, false, "mono/delete.svg").addEventListener("click", async ()=>{
+				if (!this.canWrite) return;
+
 				try {
-					const response = await fetch(`vault/sshkey/delete?guid=${this.selectedSshKey.guid}`, { method: "POST" });
+					const response = await fetch(`vault/sshkey/delete?guid=${key.guid}`, { method: "POST" });
 					if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
 
 					const json = await response.json();
@@ -758,8 +793,6 @@ class Vault extends Tabs {
 		const {okButton, cancelButton, innerBox, buttonBox} = dialog;
 
 		okButton.value = "Save";
-		okButton.hidden = !canWrite;
-		if (!canWrite) cancelButton.value = "Close";
 
 		innerBox.parentElement.style.maxWidth = "560px";
 		innerBox.style.padding = "16px 32px";
@@ -775,7 +808,6 @@ class Vault extends Tabs {
 		const nameInput = document.createElement("input");
 		nameInput.style.gridArea = "1 / 2 / 1 / 4";
 		nameInput.type = "text";
-		nameInput.readOnly = !canWrite;
 		innerBox.append(nameLabel, nameInput);
 
 		const usernameLabel = document.createElement("div");
@@ -784,7 +816,6 @@ class Vault extends Tabs {
 		const usernameInput = document.createElement("input");
 		usernameInput.style.gridArea = "2 / 2 / 2 / 4";
 		usernameInput.type = "text";
-		usernameInput.readOnly = !canWrite;
 		innerBox.append(usernameLabel, usernameInput);
 
 		const keyLabel = document.createElement("div");
@@ -796,7 +827,6 @@ class Vault extends Tabs {
 		keyInput.style.gridArea = "3 / 2 / 3 / 4";
 		keyInput.style.resize = "none";
 		keyInput.style.fontFamily = "monospace";
-		keyInput.readOnly = !canWrite;
 		keyInput.placeholder = !object ? "-----BEGIN PRIVATE KEY-----" : canWrite ? "unchanged" : "";
 		innerBox.append(keyLabel, keyInput);
 
@@ -806,7 +836,6 @@ class Vault extends Tabs {
 		const passphraseInput = document.createElement("input");
 		passphraseInput.style.gridArea = "4 / 2";
 		passphraseInput.type = "password";
-		passphraseInput.readOnly = !canWrite;
 		passphraseInput.placeholder = !object ? "optional" : canWrite ? "unchanged" : "";
 		innerBox.append(passphraseLabel, passphraseInput);
 
@@ -815,7 +844,6 @@ class Vault extends Tabs {
 		showButton.value = "Show";
 		showButton.style.gridArea = "4 / 3";
 		showButton.style.minWidth = "64px";
-		showButton.disabled = !object;
 		innerBox.appendChild(showButton);
 
 		const publicKeyLabel = document.createElement("div");
@@ -824,7 +852,6 @@ class Vault extends Tabs {
 		publicKeyLabel.style.marginTop = "8px";
 		publicKeyLabel.textContent = "Public key:";
 		const publicKeyInput = document.createElement("textarea");
-		publicKeyInput.readOnly = !canWrite;
 		publicKeyInput.style.gridArea = "5 / 2 / 5 / 4";
 		publicKeyInput.style.resize = "none";
 		publicKeyInput.style.fontFamily = "monospace";
@@ -854,7 +881,10 @@ class Vault extends Tabs {
 		}
 
 		showButton.onclick = async ()=> {
+			if (!object || !Vault.CanRead()) return;
+
 			if (showButton.value === "Show") {
+				showButton.setAttribute("busy", "");
 				showButton.disabled = true;
 
 				try {
@@ -862,22 +892,27 @@ class Vault extends Tabs {
 					if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
 
 					const json = await response.json();
-					if (json.error) throw json.error;
+					if (json.error) throw Vault.ErrorMessage(json.error);
+					if (!Vault.CanRead() || !innerBox.isConnected) return;
 
 					keyInput.value = json.privateKey;
 					passphraseInput.value = json.passphrase;
+					passphraseInput.type = "text";
+					showButton.setAttribute("loaded", "");
+					showButton.value = "Hide";
+					passphraseInput.focus();
 				}
 				catch (ex) {
-					this.ConfirmBox(ex, true, "mono/error.svg");
+					dialog.Close();
+					setTimeout(()=> this.ConfirmBox(ex, true, "mono/error.svg"), WIN.ANIME_DURATION);
 				}
 				finally {
-					passphraseInput.type = "text";
-					showButton.value = "Hide";
-					showButton.disabled = false;
-					passphraseInput.focus();
+					showButton.removeAttribute("busy");
+					showButton.disabled = !Vault.CanRead();
 				}
 			}
 			else {
+				keyInput.value = "";
 				showButton.value = "Show";
 				passphraseInput.type = "password";
 			}
@@ -888,6 +923,8 @@ class Vault extends Tabs {
 			usernameInput.value = object.username;
 			publicKeyInput.value = object.publicKey;
 		}
+
+		this.SetEntryForm(dialog, [nameInput, usernameInput, keyInput, passphraseInput, publicKeyInput], [keyInput, passphraseInput], showButton, object);
 
 		okButton.onclick = async ()=> {
 			if (!this.canWrite) return;
