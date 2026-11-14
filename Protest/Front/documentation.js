@@ -1,5 +1,13 @@
 "use strict";
 class Documentation extends Window {
+	static IMAGE_DATA_URL = /^data:image\/(?:png|jpeg|gif|webp);base64,[A-Za-z0-9+/]+={0,2}$/;
+	static CONTENT_TAGS = new Set([
+		"A", "ARTICLE", "B", "BLOCKQUOTE", "BR", "CAPTION", "CODE", "DD", "DEL", "DIV", "DL", "DT", "FONT",
+		"EM", "H1", "H2", "H3", "H4", "H5", "H6", "HR", "I", "IMG", "LI", "OL", "P",
+		"PRE", "S", "SECTION", "SPAN", "STRIKE", "STRONG", "SUB", "SUP", "TABLE", "TBODY", "TD", "TH",
+		"THEAD", "TFOOT", "TR", "U", "UL"
+	]);
+
 	constructor(args) {
 		super();
 
@@ -134,6 +142,26 @@ class Documentation extends Window {
 		this.contentBox.style.minHeight = "100%";
 		this.contentContainer.appendChild(this.contentBox);
 
+		this.contentBox.onpaste = event=> {
+			event.preventDefault();
+			this.InsertTransfer(event.clipboardData);
+		};
+		this.contentBox.ondragover = event=> event.preventDefault();
+		this.contentBox.ondrop = event=> {
+			event.preventDefault();
+			if (!this.contentBox.isContentEditable) return;
+			this.contentBox.focus();
+
+			const doc = this.contentBox.ownerDocument;
+			const caret = doc.caretPositionFromPoint?.(event.clientX, event.clientY);
+			const range = caret ? null : doc.caretRangeFromPoint?.(event.clientX, event.clientY);
+			const node = caret?.offsetNode ?? range?.startContainer;
+			if (node && this.contentBox.contains(node)) {
+				doc.getSelection().collapse(node, caret?.offset ?? range.startOffset);
+			}
+			this.InsertTransfer(event.dataTransfer);
+		};
+
 		this.boldButton = document.createElement("button");
 		this.boldButton.style.backgroundImage = "url(mono/bold.svg?light)";
 		this.boldButton.style.left = "0px";
@@ -209,8 +237,11 @@ class Documentation extends Window {
 		};
 
 		this.linkButton.onclick = ()=> {
-			let sel = window.getSelection();
-			let range = sel.getRangeAt(0);
+			const doc = this.contentBox.ownerDocument;
+			const sel = doc.getSelection();
+			if (sel.rangeCount === 0) return;
+			const range = sel.getRangeAt(0).cloneRange();
+			if (!this.contentBox.contains(range.commonAncestorContainer)) return;
 
 			const dialog = this.DialogBox("125px");
 			if (dialog === null) return;
@@ -230,16 +261,27 @@ class Documentation extends Window {
 			linkInput.type = "text";
 			linkInput.placeholder = "https://github.com/openprotest";
 			linkInput.style.width = "calc(80% - 64px)";
+			linkInput.oninput = ()=> linkInput.setCustomValidity("");
 			innerBox.appendChild(linkInput);
 
 			const Ok_onclick = okButton.onclick;
 			okButton.onclick = ()=> {
-				if (linkInput.value.length > 0) {
-					sel.removeAllRanges();
-					sel.addRange(range);
-					document.execCommand("createLink", false, linkInput.value);
-					document.getSelection().anchorNode.parentElement.target = "_blank";
-					Ok_onclick();
+				const href = Documentation.LinkUrl(linkInput.value);
+				if (href === null) {
+					linkInput.setCustomValidity("Enter an HTTP or HTTPS URL on another site.");
+					linkInput.reportValidity();
+					return;
+				}
+
+				Ok_onclick();
+				if (!this.contentBox.contains(range.commonAncestorContainer)) return;
+				this.contentBox.focus();
+				sel.removeAllRanges();
+				sel.addRange(range);
+				doc.execCommand("createLink", false, href);
+				for (const link of this.contentBox.querySelectorAll("a[href]")) {
+					link.target = "_blank";
+					link.rel = "noopener noreferrer";
 				}
 			};
 
@@ -259,6 +301,93 @@ class Documentation extends Window {
 		this.OnUiReady();
 
 		setTimeout(()=> this.AfterResize(), 250);
+	}
+
+	static LinkUrl(value) {
+		if (!value) return null;
+
+		try {
+			const url = new URL(value);
+			if ((url.protocol === "https:" || url.protocol === "http:") && url.origin !== location.origin) {
+				return url.href;
+			}
+		}
+		catch {}
+		return null;
+	}
+
+	static SanitizeContent(html) {
+		//Template contents are inert while the elements and attributes are checked.
+		const template = document.createElement("template");
+		template.innerHTML = html;
+
+		const nodes = document.createNodeIterator(template.content, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_COMMENT);
+		for (let element = nodes.nextNode(); element; element = nodes.nextNode()) {
+			const tag = element.tagName;
+			if (element.namespaceURI !== "http://www.w3.org/1999/xhtml" || !Documentation.CONTENT_TAGS.has(tag) || element.hasAttribute("is")) {
+				element.remove();
+				continue;
+			}
+			if (tag === "IMG" && !Documentation.IMAGE_DATA_URL.test(element.getAttribute("src"))) {
+				element.remove();
+				continue;
+			}
+
+			const href = tag === "A" ? Documentation.LinkUrl(element.getAttribute("href")) : null;
+			const {fontWeight, fontStyle, textDecorationLine} = element.style;
+			for (const name of element.getAttributeNames()) {
+				if (tag === "IMG" && ["src", "alt", "width", "height"].includes(name)) continue;
+				if ((tag === "TD" || tag === "TH") && (name === "colspan" || name === "rowspan")) continue;
+				if (tag === "DIV" && name === "class" && element.className === "doc-code") continue;
+				element.removeAttribute(name);
+			}
+
+			if (href !== null) {
+				element.href = href;
+				element.target = "_blank";
+				element.rel = "noopener noreferrer";
+			}
+			if (/^(?:bold|[1-9]00)$/.test(fontWeight)) element.style.fontWeight = fontWeight;
+			if (fontStyle === "italic") element.style.fontStyle = fontStyle;
+			if (textDecorationLine === "underline" || textDecorationLine === "line-through") {
+				element.style.textDecorationLine = textDecorationLine;
+			}
+		}
+
+		return template;
+	}
+
+	InsertTransfer(data) {
+		if (!data || !this.contentBox.isContentEditable) return;
+
+		const doc = this.contentBox.ownerDocument;
+		const files = [...data.files].filter(file=> /^image\/(?:png|jpeg|gif|webp)$/.test(file.type));
+		if (files.length > 0) {
+			const selected = this.selected;
+			for (const file of files) {
+				const reader = new FileReader();
+				reader.onload = ()=> {
+					if (selected !== this.selected || !this.contentBox.isContentEditable || doc.activeElement !== this.contentBox) return;
+					if (Documentation.IMAGE_DATA_URL.test(reader.result)) {
+						doc.execCommand("insertImage", false, reader.result);
+					}
+				};
+				reader.readAsDataURL(file);
+			}
+			return;
+		}
+
+		const html = data.getData("text/html");
+		if (html) {
+			const clean = Documentation.SanitizeContent(html).innerHTML;
+			if (clean) {
+				doc.execCommand("insertHTML", false, clean);
+				return;
+			}
+		}
+
+		const text = data.getData("text/plain");
+		if (text) doc.execCommand("insertText", false, text);
 	}
 
 	OnUiReady(count = 0) {
@@ -384,16 +513,22 @@ class Documentation extends Window {
 			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
 
 			const text = await response.text();
+			const firstLineEnd = text.indexOf("\n");
+			const header = firstLineEnd === -1 ? "" : text.slice(0, firstLineEnd).trimEnd();
+			const hasMetadata = header.startsWith("<!--[") && header.endsWith("]-->");
+			const html = hasMetadata ? text.slice(firstLineEnd + 1) : text;
 			this.relatedBox.textContent = "";
-			this.contentBox.innerHTML = text;
+			this.contentBox.replaceChildren(Documentation.SanitizeContent(html).content);
 
-			let commentStop = text.indexOf("-->", 0);
-			if (text.startsWith("<!--") && commentStop > -1) {
-				let comment = text.substring(4, commentStop);
-				let related = JSON.parse(comment);
-
-				for (let i = 0; i < related.length - 3; i+=4)
-					this.AddRelated(related[i], related[i+1], related[i+2], related[i+3]);
+			if (!hasMetadata) return;
+			const related = JSON.parse(header.slice(4, -3));
+			for (let i = 0; i + 3 < related.length; i += 4) {
+				const filename = related[i];
+				const label1 = related[i + 2];
+				const label2 = related[i + 3];
+				if (typeof filename !== "string" || !filename) continue;
+				if (typeof label1 !== "string" || typeof label2 !== "string") continue;
+				this.AddRelated(filename, label1, label2);
 			}
 		}
 		catch (ex) {
@@ -577,21 +712,22 @@ class Documentation extends Window {
 			}
 		}
 
-		let payload = "";
-		payload += this.titleInput.value + String.fromCharCode(127);
-		payload += this.contentBox.innerHTML + String.fromCharCode(127);
-
-		for (let i = 0; i < this.relatedBox.childNodes.length; i++) {
-			payload += this.relatedBox.childNodes[i].getAttribute("file") + String.fromCharCode(127);
-			payload += this.relatedBox.childNodes[i].style.backgroundImage + String.fromCharCode(127);
-			payload += this.relatedBox.childNodes[i].getAttribute("label1") + String.fromCharCode(127);
-			payload += this.relatedBox.childNodes[i].getAttribute("label2") + String.fromCharCode(127);
+		const html = Documentation.SanitizeContent(this.contentBox.innerHTML).innerHTML;
+		const fields = [this.titleInput.value, html];
+		for (const related of this.relatedBox.children) {
+			fields.push(
+				related.getAttribute("file"),
+				"", //legacy icon field
+				related.getAttribute("label1"),
+				related.getAttribute("label2")
+			);
 		}
+		fields.push(""); //trailing delimiter
 
 		try {
 			const response = await fetch("docs/create", {
 				method: "POST",
-				body: payload,
+				body: fields.join("\x7f"),
 			});
 
 			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
@@ -697,16 +833,13 @@ class Documentation extends Window {
 
 				if (name.length === 0 && unique.length === 0) continue;
 
-				let type = LOADER.devices.data[key]["type"];
-				let iconUrl = `url(${LOADER.deviceIcons[type] ?? "mono/gear.svg"})`;
-
 				const element = document.createElement("div");
 				element.className = "list-element";
 				devicesList.appendChild(element);
 
 				const icon = document.createElement("div");
 				icon.className = "list-element-icon";
-				icon.style.backgroundImage = iconUrl;
+				icon.style.backgroundImage = `url(${Documentation.DeviceIcon(key)})`;
 				element.appendChild(icon);
 
 				for (let i=0; i<devicesColumns.length; i++) {
@@ -721,7 +854,7 @@ class Documentation extends Window {
 				}
 
 				element.ondblclick = ()=> {
-					this.AddRelated(key, iconUrl, name, unique);
+					this.AddRelated(key, name, unique);
 					cancelButton.onclick();
 				};
 
@@ -733,12 +866,20 @@ class Documentation extends Window {
 		findInput.onchange();
 	}
 
-	AddRelated(filename, icon, label1, label2) {
+	static DeviceIcon(filename) {
+		const type = LOADER.devices.data?.[filename]?.type?.v;
+		if (typeof type === "string" && Object.hasOwn(LOADER.deviceIcons, type)) {
+			return LOADER.deviceIcons[type];
+		}
+		return "mono/gear.svg";
+	}
+
+	AddRelated(filename, label1, label2) {
 		const related = document.createElement("div");
 		related.setAttribute("file", filename);
 		related.setAttribute("label1", label1);
 		related.setAttribute("label2", label2);
-		related.style.backgroundImage = icon;
+		related.style.backgroundImage = `url(${Documentation.DeviceIcon(filename)})`;
 		this.relatedBox.appendChild(related);
 
 		const removeButton = document.createElement("div");

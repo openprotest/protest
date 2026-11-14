@@ -1,7 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Net;
+using System.Net.Http.Headers;
 using System.Text;
+using System.Text.Json;
 using System.Threading;
 using Protest.Http;
 
@@ -64,21 +66,12 @@ internal static class Documentation {
         return Encoding.UTF8.GetBytes(builder.ToString());
     }
 
-    public static byte[] View(HttpListenerContext ctx, bool serveGZip = false) {
+    public static byte[] View(HttpListenerContext ctx) {
+        ctx.Response.ContentType = "text/plain; charset=utf-8";
         Dictionary<string, string> parameters = Listener.ParseQuery(ctx);
 
-        string acceptEncoding = ctx.Request.Headers.Get("Accept-Encoding")?.ToLower() ?? String.Empty;
-        bool acceptGZip = acceptEncoding.Contains("gzip");
-
-        if (acceptGZip) {
-            ctx.Response.AddHeader("Content-Encoding", "gzip");
-        }
-
-        return View(parameters, acceptGZip);
-    }
-
-    public static byte[] View(Dictionary<string, string> parameters, bool serveGZip = false) {
-        parameters.TryGetValue("name", out string name);
+        string name = null;
+        parameters?.TryGetValue("name", out name);
         if (!Data.IsValidFilename(name)) {
             return Data.CODE_INVALID_ARGUMENT.Array;
         }
@@ -89,7 +82,15 @@ internal static class Documentation {
                 return Data.CODE_FILE_NOT_FOUND.Array;
 
             byte[] bytes = File.ReadAllBytes(file.FullName);
-            if (serveGZip) return bytes;
+            string encodings = ctx.Request.Headers.Get("Accept-Encoding") ?? String.Empty;
+            foreach (string value in encodings.Split(',')) {
+                if (StringWithQualityHeaderValue.TryParse(value, out StringWithQualityHeaderValue encoding)
+                    && String.Equals(encoding.Value, "gzip", StringComparison.OrdinalIgnoreCase)
+                    && (encoding.Quality ?? 1) > 0) {
+                    ctx.Response.AddHeader("Content-Encoding", "gzip");
+                    return bytes;
+                }
+            }
             return Http.Cache.UnGZip(bytes);
         }
         catch {
@@ -101,13 +102,14 @@ internal static class Documentation {
         using StreamReader reader = new StreamReader(ctx.Request.InputStream, ctx.Request.ContentEncoding);
         string[] payload = reader.ReadToEnd().Split((char)127);
 
-        if (payload.Length < 3)
+        if (payload.Length < 3 || payload[0].Length == 0) {
             return Data.CODE_NOT_ENOUGH_INFO.Array;
-        if (payload[0].Length == 0)
-            return Data.CODE_NOT_ENOUGH_INFO.Array;
+        }
 
-        if (payload[1].IndexOf("<script") > -1)
-            return Encoding.UTF8.GetBytes("unsafe content: scripts are not allowed");
+        string html = payload[1];
+        if (html.Contains("<script", StringComparison.Ordinal)) {
+            return "{\"error\":\"Unsafe content. Scripts are not allowed.\"}"u8.ToArray();
+        }
 
         string filename = payload[0];
         foreach (char c in Path.GetInvalidFileNameChars()) {
@@ -118,19 +120,13 @@ internal static class Documentation {
         }
 
         List<string> keywords = new List<string>();
+        List<string> related = new List<string>();
 
-        StringBuilder builder = new StringBuilder();
-        builder.Append("<!--");
-        builder.Append('[');
         for (int i = 2; i < payload.Length - 3; i += 4) {
-            if (i != 2) {
-                builder.Append(',');
-            }
-
-            builder.Append($"\"{Data.EscapeJsonText(payload[i])}\",");
-            builder.Append($"\"{Data.EscapeJsonText(payload[i+1])}\",");
-            builder.Append($"\"{Data.EscapeJsonText(payload[i+2])}\",");
-            builder.Append($"\"{Data.EscapeJsonText(payload[i+3])}\"");
+            related.Add(payload[i]);
+            related.Add(String.Empty); //legacy icon field
+            related.Add(payload[i + 2]);
+            related.Add(payload[i + 3]);
 
             if (!keywords.Contains(payload[i])) {
                 keywords.Add(payload[i]); //filename
@@ -144,22 +140,21 @@ internal static class Documentation {
                 keywords.Add(payload[i + 3]); //label2
             }
         }
-        builder.Append(']');
+        StringBuilder builder = new StringBuilder();
+        builder.Append("<!--");
+        builder.Append(JsonSerializer.Serialize(related));
         builder.AppendLine("-->");
 
-        int commentStop = payload[1].IndexOf("-->");
-        if (payload[1].StartsWith("<!--") && commentStop > -1)
-            builder.Append(payload[1][(commentStop + 3)..].Trim());
-        else
-            builder.Append(payload[1]);
-
-        if (payload[1].IndexOf("<script") > -1)
-            return "{\"error\":\"Unsafe content. Scripts are not allowed.\"}"u8.ToArray();
+        int commentStop = html.IndexOf("-->", StringComparison.Ordinal);
+        if (html.StartsWith("<!--", StringComparison.Ordinal) && commentStop >= 0) {
+            html = html[(commentStop + 3)..].Trim();
+        }
+        builder.Append(html);
 
         int idx = 0;
         StringBuilder textBuilder = new StringBuilder();
-        while (idx < payload[1].Length) {
-            if (payload[1][idx] == '<') {
+        while (idx < html.Length) {
+            if (html[idx] == '<') {
                 string text = textBuilder.ToString();
                 if (text.Length > 0) {
                     string[] split = text.ToLower().Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
@@ -170,14 +165,14 @@ internal static class Documentation {
                     textBuilder.Clear();
                 }
 
-                int tagStop = payload[1].IndexOf('>', idx);
+                int tagStop = html.IndexOf('>', idx);
                 if (tagStop == -1) break;
                 idx = tagStop + 1;
 
                 continue;
             }
 
-            textBuilder.Append(payload[1][idx++]);
+            textBuilder.Append(html[idx++]);
         }
 
         keywords.Sort();
@@ -201,9 +196,9 @@ internal static class Documentation {
                     dir.Create();
                 }
 
-                FileInfo html = new FileInfo($"{Data.DIR_DOCUMENTATION}\\{filename}.html.gz");
+                FileInfo documentFile = new FileInfo($"{Data.DIR_DOCUMENTATION}\\{filename}.html.gz");
 
-                File.WriteAllBytes(html.FullName, Http.Cache.GZip(Encoding.UTF8.GetBytes(builder.ToString())));
+                File.WriteAllBytes(documentFile.FullName, Http.Cache.GZip(Encoding.UTF8.GetBytes(builder.ToString())));
 
                 FileInfo words = new FileInfo($"{Data.DIR_DOCUMENTATION}\\{filename}");
                 File.WriteAllText(words.FullName, String.Join("\n", keywords.ToArray()));

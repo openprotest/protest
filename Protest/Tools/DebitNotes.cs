@@ -185,6 +185,7 @@ internal static class DebitNotes {
     }
 
     public static byte[] View(HttpListenerContext ctx) {
+        ctx.Response.ContentType = "application/json; charset=utf-8";
         Dictionary<string, string> parameters = Listener.ParseQuery(ctx);
 
         string file = null;

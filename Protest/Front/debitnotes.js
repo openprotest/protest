@@ -414,8 +414,13 @@ class DebitNotes extends Window {
 		logoBox.style.webkitUserDrag = "none";
 		grid.appendChild(logoBox);
 
+		//The banner must stay under custom/, even when the record came from the API or an import.
+		let banner = "default.svg";
+		if (typeof content.banner === "string" && /^[^/\\%?#\u0000-\u001f\u007f]+\.(?:svgz?|png|jpe?g|jpe|gif|webp|ico|bmp|avif)$/i.test(content.banner)) {
+			banner = content.banner;
+		}
 		const imgLogo = document.createElement("img");
-		imgLogo.src = content.banner ? `custom/${content.banner}` : "custom/default.svg";
+		imgLogo.src = `custom/${banner}`;
 		logoBox.appendChild(imgLogo);
 
 		const debitNoteTitleLabel = document.createElement("div");
@@ -558,7 +563,7 @@ class DebitNotes extends Window {
 		const templateBox = document.createElement("div");
 		templateBox.style.margin = "40px 20px";
 		templateBox.style.whiteSpace = "pre-line";
-		templateBox.innerHTML = content.template;
+		templateBox.appendChild(Documentation.SanitizeContent(content.template ?? "").content);
 		page.append(templateBox);
 
 		const signatureBox = document.createElement("div");
@@ -1115,18 +1120,24 @@ class DebitNotes extends Window {
 		});
 	}
 
-	Print() {
+	async Print() {
 		if (this.selectedDebit === null) {
 			this.UpdateAuthorization();
 			return;
 		}
 
+		const page = this.preview.firstElementChild;
+		if (!page) return;
+
 		const newPrint = window.open();
-		newPrint.document.write("<html><body>" + this.preview.innerHTML + "</body></html>");
+		if (!newPrint) return;
+		const printPage = page.cloneNode(true);
+		printPage.style.backgroundColor = "white";
+		newPrint.document.body.appendChild(printPage);
 		newPrint.document.title = "Debit note";
-		newPrint.document.body.childNodes[0].style.backgroundColor = "white";
-		newPrint.onload = ()=> newPrint.print();
-		newPrint.document.close();
-		setTimeout(()=> newPrint.close(), 99);
+		await Promise.allSettled(Array.from(newPrint.document.images, image=> image.decode()));
+		if (newPrint.closed) return;
+		newPrint.onafterprint = ()=> newPrint.close();
+		newPrint.print();
 	}
 }
