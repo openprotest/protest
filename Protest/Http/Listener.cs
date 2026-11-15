@@ -83,7 +83,7 @@ internal sealed class Listener {
         try
 #endif
         {
-            //if (ctx.Request.HasEntityBody) ctx.Response.KeepAlive = false;
+            if (ctx.Request.HasEntityBody) ctx.Response.KeepAlive = false;
 
             //the managed listener (Linux, macOS) hands every request of a keep-alive connection the same IPEndPoint,
             //start from the socket peer, so the client of one request is never carried into the next
