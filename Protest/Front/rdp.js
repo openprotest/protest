@@ -63,6 +63,8 @@ class Rdp extends Window {
 		this.connectionId = 0;
 		this.connected = false;
 		this.sessionRecording = false;
+		this.closeCertificatePrompt = null;
+		this.certificateWarning = null;
 
 		this.scaleToFit = true;
 		this.resolution = Rdp.ParseResolution(this.args.resolution); //null matches the window
@@ -263,7 +265,7 @@ class Rdp extends Window {
 		let closeReason = "";
 		try {
 			this.pointerCache.clear();
-			Rdp.CaptureWebSocket(proxyAddress, text=> this.OnGatewayMessage(text, connectionId), reason=> closeReason = reason);
+			Rdp.CaptureWebSocket(proxyAddress, (text, socket)=> this.OnGatewayMessage(text, connectionId, socket), reason=> closeReason = reason);
 			session = await userInteraction.connect(config);
 		}
 		catch (ex) {
@@ -272,6 +274,7 @@ class Rdp extends Window {
 			return;
 		}
 		finally {
+			if (connectionId === this.connectionId) this.closeCertificatePrompt?.();
 			Rdp.ReleaseWebSocketCapture();
 		}
 
@@ -287,7 +290,8 @@ class Rdp extends Window {
 		userInteraction.setVisibility(true);
 		this.UpdateScale();
 		this.FocusCanvas();
-		if (this.sessionRecording) this.ShowToast("This session is being recorded");
+		const notices = [this.certificateWarning, this.sessionRecording ? "This session is being recorded." : null].filter(Boolean);
+		if (notices.length > 0) this.ShowToast(notices.join(" "));
 		this.ScheduleResize(); //the window may have been resized while connecting
 
 		let reason;
@@ -476,7 +480,7 @@ class Rdp extends Window {
 		};
 
 		addEventListener.call(socket, "message", event=> {
-			if (typeof event.data === "string") onText?.(event.data);
+			if (typeof event.data === "string") onText?.(event.data, socket);
 		});
 
 		socket.addEventListener = function(type, listener, options) {
@@ -505,7 +509,7 @@ class Rdp extends Window {
 		};
 	}
 
-	OnGatewayMessage(text, connectionId) {
+	OnGatewayMessage(text, connectionId, socket) {
 		if (connectionId !== this.connectionId) return;
 
 		let message;
@@ -518,6 +522,78 @@ class Rdp extends Window {
 
 		if (message.sessionRecording === true) this.sessionRecording = true;
 		if (message.pointer) this.SetPointer(message);
+		if (message.certificateConfirmation) this.PromptCertificate(message.certificateConfirmation, socket, connectionId);
+	}
+
+	PromptCertificate(certificate, socket, connectionId, retry=true) {
+		if (socket.readyState !== socket.OPEN) return;
+		if (connectionId !== this.connectionId) {
+			socket.close();
+			return;
+		}
+
+		const dialog = this.DialogBox("240px");
+		if (dialog === null) {
+			//The credentials dialog may still be closing when the gateway answers.
+			if (retry) setTimeout(()=> this.PromptCertificate(certificate, socket, connectionId, false), WIN.ANIME_DURATION);
+			else socket.send("");
+			return;
+		}
+
+		const {okButton, cancelButton, innerBox} = dialog;
+		const hasCertificate = Boolean(certificate.fingerprint);
+		const warning = hasCertificate ? "This RDP connection uses an untrusted certificate." : "This RDP connection has no TLS certificate.";
+		okButton.value = "Connect anyway";
+		innerBox.style.padding = "20px";
+		innerBox.style.overflowWrap = "anywhere";
+		innerBox.parentElement.style.maxWidth = "460px";
+
+		const title = document.createElement("strong");
+		title.textContent = warning;
+		const details = document.createElement("div");
+		details.style.whiteSpace = "pre-line";
+		details.style.margin = "8px 0";
+		details.textContent = certificate.destination;
+		if (certificate.nameMismatch) details.textContent += "\nThe certificate name does not match the host.";
+		if (certificate.chainError) details.textContent += "\nThe certificate chain could not be verified.";
+		innerBox.append(title, details);
+
+		if (hasCertificate) {
+			const fingerprint = document.createElement("div");
+			fingerprint.textContent = `SHA-256 fingerprint\n${certificate.fingerprint}`;
+			fingerprint.style.whiteSpace = "pre-line";
+			fingerprint.style.userSelect = "text";
+			innerBox.appendChild(fingerprint);
+		}
+
+		const instruction = document.createElement("div");
+		instruction.style.marginTop = "8px";
+		instruction.textContent = "Verify the host before sending credentials.";
+		innerBox.appendChild(instruction);
+
+		const Finish = approve=> {
+			if (this.closeCertificatePrompt !== Dismiss) return;
+			this.closeCertificatePrompt = null;
+			socket.removeEventListener("close", Dismiss);
+			dialog.Close();
+
+			if (socket.readyState !== socket.OPEN) return;
+			if (approve === undefined || connectionId !== this.connectionId) {
+				socket.close();
+				return;
+			}
+			if (approve) this.certificateWarning = warning;
+			socket.send(approve ? certificate.id : "");
+		};
+		const Dismiss = ()=> Finish();
+		this.closeCertificatePrompt = Dismiss;
+		socket.addEventListener("close", Dismiss);
+		okButton.onclick = ()=> Finish(true);
+		cancelButton.onclick = ()=> Finish(false);
+		innerBox.parentElement.addEventListener("keydown", event=> {
+			if (event.key === "Escape") cancelButton.onclick();
+		});
+		cancelButton.focus();
 	}
 
 	//IronRDP 0.7.0 leaves the server's pointer updates unhandled, the gateway decodes them and they become the canvas cursor
@@ -588,6 +664,8 @@ class Rdp extends Window {
 
 	Disconnect() {
 		this.connected = false;
+		this.closeCertificatePrompt?.();
+		this.certificateWarning = null;
 
 		if (this.userInteraction) {
 			try { this.userInteraction.shutdown(); } catch {}

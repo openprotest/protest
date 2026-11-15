@@ -13,6 +13,7 @@ using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Security.Principal;
 using System.Text;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Protest.Http;
@@ -27,6 +28,7 @@ internal static class Rdp {
 
     private const int DEFAULT_PORT = 3389;
     private const int HANDSHAKE_TIMEOUT = 20_000;
+    private const int CERTIFICATE_CONFIRMATION_TIMEOUT = 60_000;
     private const int CLOSE_GRACE = 2_000;
     private const int MAX_PDU_LENGTH = 65_536;
 
@@ -69,10 +71,9 @@ internal static class Rdp {
         string deviceFile = ctx.Request.QueryString["file"];
         string credentialGuid = ctx.Request.QueryString["credential"];
 
-        WebSocket ws;
+        HttpListenerWebSocketContext wsc;
         try {
-            HttpListenerWebSocketContext wsc = await ctx.AcceptWebSocketAsync(null);
-            ws = wsc.WebSocket;
+            wsc = await ctx.AcceptWebSocketAsync(null);
         }
         catch (WebSocketException ex) {
             ctx.Response.Close();
@@ -80,6 +81,7 @@ internal static class Rdp {
             return;
         }
 
+        using WebSocket ws = wsc.WebSocket;
         if (ws is null) return;
 
         string origin = Auth.GetPrincipal(ctx);
@@ -100,9 +102,8 @@ internal static class Rdp {
 
         //with a vault credential the gateway authenticates on the client's behalf and the password never reaches the browser
         bool serverSideAuth = !String.IsNullOrEmpty(credentialGuid);
-        string vaultDomain = null;
-        string vaultUser = null;
-        string vaultPassword = null;
+        Guid credentialId = Guid.Empty;
+        Vault.CredentialEntry credential = null;
 
         try {
             using CancellationTokenSource handshakeCts = new CancellationTokenSource(HANDSHAKE_TIMEOUT);
@@ -116,6 +117,12 @@ internal static class Rdp {
                 return;
             }
 
+            request.x224 = RemoveUsernameCookie(request.x224);
+            if (request.x224 is null) {
+                await SendPdu(ws, EncodeGeneralError());
+                return;
+            }
+
             if (serverSideAuth) {
                 if (!Vault.CanRead(ctx)) {
                     Logger.Action(origin, "Remote-access", $"RDP connection to {host}:{port} failed: access denied for this credential");
@@ -123,14 +130,11 @@ internal static class Rdp {
                     return;
                 }
 
-                if (!Guid.TryParse(credentialGuid, out Guid guid) || !Vault.FromGuid(guid, out Vault.CredentialEntry credential)) {
+                if (!Guid.TryParse(credentialGuid, out credentialId) || !Vault.FromGuid(credentialId, out credential)) {
                     Logger.Action(origin, "Remote-access", $"RDP connection to {host}:{port} failed: credentials don't exist");
                     await SendClose(ws, "Credentials don't exist");
                     return;
                 }
-
-                (vaultDomain, vaultUser) = SplitUsername(credential.username);
-                vaultPassword = credential.password ?? String.Empty;
 
                 //the browser asked for TLS only (CredSSP disabled), the server is offered NLA so the gateway can run it
                 RewriteRequestedProtocols(request.x224, PROTOCOL_SSL | PROTOCOL_HYBRID | PROTOCOL_HYBRID_EX);
@@ -168,6 +172,7 @@ internal static class Rdp {
             }
 
             List<byte[]> certificateChain = new List<byte[]>();
+            SslPolicyErrors certificateErrors = SslPolicyErrors.RemoteCertificateNotAvailable;
             uint selectedProtocol = GetSelectedProtocol(x224Response);
 
             if (selectedProtocol != PROTOCOL_RDP) {
@@ -177,11 +182,13 @@ internal static class Rdp {
                 //RDP hosts present self-signed certificates most of the time, the chain is passed on to the client for CredSSP
                 SslClientAuthenticationOptions options = new SslClientAuthenticationOptions {
                     TargetHost = host,
+                    AllowRenegotiation = false, //Keep the certificate fixed after the trust decision.
                     AllowTlsResume = false, //CredSSP doesn't support resumed sessions [MS-CSSP], the host drops the connection
                     CertificateRevocationCheckMode = X509RevocationMode.NoCheck,
                     RemoteCertificateValidationCallback = (sender, certificate, chain, errors) => {
                         if (certificate is null) return false;
 
+                        certificateErrors = errors;
                         certificateChain.Add(certificate.GetRawCertData());
                         if (chain is not null) {
                             for (int i = 1; i < chain.ChainElements.Count; i++) {
@@ -208,6 +215,32 @@ internal static class Rdp {
                 }
             }
 
+            bool needsConfirmation = certificateErrors != SslPolicyErrors.None;
+            if (needsConfirmation) {
+                //Pause the network handshake deadline during the user's decision. Keep this TLS connection open
+                //so the approved certificate belongs to the same connection that will carry credentials.
+                handshakeCts.CancelAfter(Timeout.Infinite);
+                handshakeCts.Token.ThrowIfCancellationRequested();
+                string destination = host.Contains(':') ? $"[{host}]:{port}" : $"{host}:{port}";
+                byte[] certificate = certificateChain.Count > 0 ? certificateChain[0] : null;
+                if (!await ConfirmCertificate(ws, destination, certificate, certificateErrors)) {
+                    Logger.Action(origin, "Remote-access", $"RDP connection to {destination} canceled: certificate confirmation was not received");
+                    await SendClose(ws, "The RDP host certificate was not approved");
+                    return;
+                }
+                handshakeCts.CancelAfter(HANDSHAKE_TIMEOUT);
+            }
+
+            if (!Auth.IsAuthenticatedAndAuthorized(ctx, ctx.Request.Url.AbsolutePath) || (serverSideAuth && !Vault.CanRead(ctx))) {
+                await SendClose(ws, "Access denied");
+                return;
+            }
+
+            if (serverSideAuth && needsConfirmation && !Vault.FromGuid(credentialId, out credential)) {
+                await SendClose(ws, "Credentials don't exist");
+                return;
+            }
+
             //the gateway runs CredSSP with the server over the TLS it terminated, so the vault password stays server-side
             if (serverSideAuth && (selectedProtocol == PROTOCOL_HYBRID || selectedProtocol == PROTOCOL_HYBRID_EX)) {
                 if (certificateChain.Count == 0) {
@@ -223,7 +256,8 @@ internal static class Rdp {
 
                 string credsspError;
                 try {
-                    credsspError = await RunCredSsp(stream, host, vaultDomain, vaultUser, vaultPassword, publicKey, selectedProtocol == PROTOCOL_HYBRID_EX, handshakeCts.Token);
+                    (string domain, string user) = SplitUsername(credential.username);
+                    credsspError = await RunCredSsp(stream, host, domain, user, credential.password ?? String.Empty, publicKey, selectedProtocol == PROTOCOL_HYBRID_EX, handshakeCts.Token);
                 }
                 catch (OperationCanceledException) { credsspError = "the server did not respond in time"; }
                 catch (AuthenticationException ex) { credsspError = ex.Message; }
@@ -477,6 +511,26 @@ internal static class Rdp {
         if (negReq < 0) return false;
         BitConverter.TryWriteBytes(x224.AsSpan(negReq + 4, 4), protocols);
         return true;
+    }
+
+    //IronRDP uses the username as an optional routing cookie, before TLS and certificate confirmation.
+    private static byte[] RemoveUsernameCookie(byte[] x224) {
+        const int cookieOffset = 11;
+        ReadOnlySpan<byte> payload = x224.AsSpan(cookieOffset);
+        if (!payload.StartsWith("Cookie: mstshash="u8)) return x224;
+
+        int end = payload.IndexOf("\r\n"u8);
+        int cookieLength = end + 2;
+        int packetLength = x224[2] << 8 | x224[3];
+        if (end < 0 || packetLength != x224.Length || x224[4] < 6 + cookieLength) return null;
+
+        byte[] request = new byte[packetLength - cookieLength];
+        x224.AsSpan(0, cookieOffset).CopyTo(request);
+        payload[cookieLength..].CopyTo(request.AsSpan(cookieOffset));
+        request[2] = (byte)(request.Length >> 8);
+        request[3] = (byte)request.Length;
+        request[4] -= (byte)cookieLength;
+        return request;
     }
 
     //TPKT (4) + X.224 connection request header (7 bytes), then an optional cookie or routing token (ASCII), then the
@@ -858,7 +912,7 @@ internal static class Rdp {
 
     //Sends a close frame without waiting for the reply, returns false if it didn't go out.
     private static async Task<bool> SendClose(WebSocket ws, string reason) {
-        if (ws.State != WebSocketState.Open) return false;
+        if (ws.State != WebSocketState.Open && ws.State != WebSocketState.CloseReceived) return false;
 
         try {
             using CancellationTokenSource cts = new CancellationTokenSource(5_000);
@@ -871,6 +925,36 @@ internal static class Rdp {
         }
     }
 
+    private static async Task<bool> ConfirmCertificate(WebSocket ws, string destination, byte[] certificate, SslPolicyErrors errors) {
+        string id = Guid.NewGuid().ToString("N");
+        byte[] expected = Encoding.ASCII.GetBytes(id);
+        byte[] buffer = new byte[expected.Length + 1];
+        byte[] request = JsonSerializer.SerializeToUtf8Bytes(new {
+            certificateConfirmation = new {
+                id,
+                destination,
+                fingerprint = certificate is null ? null : Convert.ToHexString(SHA256.HashData(certificate)),
+                nameMismatch = errors.HasFlag(SslPolicyErrors.RemoteCertificateNameMismatch),
+                chainError = errors.HasFlag(SslPolicyErrors.RemoteCertificateChainErrors)
+            }
+        });
+
+        using CancellationTokenSource cts = new CancellationTokenSource(CERTIFICATE_CONFIRMATION_TIMEOUT);
+        try {
+            await ws.SendAsync(request.AsMemory(), WebSocketMessageType.Text, true, cts.Token);
+            int received = 0;
+            do {
+                ValueWebSocketReceiveResult result = await ws.ReceiveAsync(buffer.AsMemory(received), cts.Token);
+                if (result.MessageType != WebSocketMessageType.Text) return false;
+                received += result.Count;
+                if (result.EndOfMessage) return buffer.AsSpan(0, received).SequenceEqual(expected);
+            } while (received < buffer.Length);
+        }
+        catch (OperationCanceledException) { }
+
+        return false;
+    }
+
     private static async Task PumpToServer(HttpListenerContext ctx, WebSocket ws, Stream stream, CancellationTokenSource cts, StreamRecorder recorder, FlowControl flow, PointerTracker pointer, ConnectInitialRewriter connectRewriter = null) {
         ClientInfoOptimizer optimizer = new ClientInfoOptimizer();
         byte[] buffer = new byte[2048]; //input events are a few bytes each, larger messages are assembled
@@ -878,9 +962,7 @@ internal static class Rdp {
         try {
             while ((ws.State == WebSocketState.Open || ws.State == WebSocketState.CloseSent) && !cts.IsCancelled()) {
                 (byte[] message, bool isText)? received = await ReceiveMessage(ws, buffer, cts.Token);
-                if (received is null) {
-                    return; //close frame received
-                }
+                if (received is null) return; //close frame received
 
                 //the gateway is closing, what the client sends before its reply has nowhere to go
                 if (ws.State == WebSocketState.CloseSent) continue;
@@ -895,9 +977,7 @@ internal static class Rdp {
 
                 byte[] message = received.Value.message;
 
-                if (!Auth.IsAuthenticatedAndAuthorized(ctx, "/ws/rdp")) {
-                    return;
-                }
+                if (!Auth.IsAuthenticatedAndAuthorized(ctx, "/ws/rdp")) return;
 
                 connectRewriter?.Observe(message);
                 optimizer.Observe(message);
