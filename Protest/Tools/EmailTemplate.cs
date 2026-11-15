@@ -12,7 +12,7 @@ internal static class EmailTemplate {
         <tr><td>&nbsp;</td></tr>
         <tr><td align="center">
         <table role="presentation" width="{width + 16}" cellpadding="0" cellspacing="0" border="0" bgcolor="#a8a8a8" style="border-collapse:separate;border-radius:8px 8px 0 0;box-shadow:#808080 0 0 8px">
-        <tr><td align="center" valign="middle" height="32" style="height:32px;padding:0 8px;color:#202020;font-family:Arial,sans-serif;font-size:14px;font-weight:bold">{WebUtility.HtmlEncode(title)}</td></tr>
+        <tr><td align="center" valign="middle" height="32" style="height:32px;padding:0 8px;color:#202020;font-family:sans-serif;font-size:14px;font-weight:bold">{WebUtility.HtmlEncode(title)}</td></tr>
         <tr><td style="padding:0 8px 8px">
         <table role="presentation" width="{width}" cellpadding="0" cellspacing="0" border="0" bgcolor="#c0c0c0" style="border-collapse:separate;border-radius:4px;color:#202020;text-align:{alignment}">
         {rows}
