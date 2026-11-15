@@ -37,6 +37,19 @@
 		animation-name: login;
 		animation-timing-function: ease-out;
 	}
+
+	:root.color-mode-transition::view-transition-old(root),
+	:root.color-mode-transition::view-transition-new(root) {
+		animation: none;
+		mix-blend-mode: normal;
+	}
+
+	:root.color-mode-transition::view-transition-new(root) {
+		mask-image: linear-gradient(135deg, transparent 46%, black 54%);
+		mask-size: 200% 200%;
+		mask-repeat: no-repeat;
+		animation: color-mode-wipe .35s ease-in-out both;
+	}
 }
 
 :root {
@@ -221,4 +234,9 @@ div, svg {
 @keyframes login {
 	0%   { opacity:0; transform:scale(1.2);}
 	100% { opacity:1; transform:scale(1); }
+}
+
+@keyframes color-mode-wipe {
+	from { mask-position: 0% 0%; }
+	to { mask-position: 100% 100%; }
 }

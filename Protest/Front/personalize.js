@@ -1,5 +1,7 @@
 "use strict";
 class Personalize extends Tabs {
+	static cancelColorModeTransition = null;
+
 	constructor(args) {
 		super();
 
@@ -324,8 +326,6 @@ class Personalize extends Tabs {
 
 			UI.SetTaskbarPosition(this.taskbarPositionInput.value);
 
-			document.documentElement.style.colorScheme = [this.modeInput.value];
-
 			document.body.className = this.animationsCheckbox.checked ? "" : "disable-animations";
 
 			localStorage.setItem("w_always_maxed", this.winMaxedCheckbox.checked);
@@ -337,8 +337,6 @@ class Personalize extends Tabs {
 			localStorage.setItem("glass", this.glassCheckbox.checked);
 			localStorage.setItem("scrollbar_style", this.scrollBarInput.value);
 			localStorage.setItem("taskbar_position", this.taskbarPositionInput.value);
-			localStorage.setItem("color_mode", this.modeInput.value);
-
 			localStorage.setItem("accent_saturation", this.saturation.value);
 
 			for (let i = 0; i < WIN.array.length; i++) { //update other setting windows
@@ -378,7 +376,6 @@ class Personalize extends Tabs {
 					let hsl = UI.RgbToHsl(accent);
 					WIN.array[i].popOutWindow.document.querySelector(":root").style.setProperty("--clr-select", `hsl(${hsl[0]+7},${hsl[1]*this.saturation.value/100}%,${hsl[2]*.9}%)`);
 					WIN.array[i].popOutWindow.document.querySelector(":root").style.setProperty("--clr-accent", `hsl(${hsl[0]},${hsl[1]*this.saturation.value/100}%,${hsl[2]}%)`);
-					WIN.array[i].popOutWindow.document.body.style.colorScheme = localStorage.getItem("color_mode") ?? "light dark";
 				}
 			}
 
@@ -428,10 +425,61 @@ class Personalize extends Tabs {
 		this.glassCheckbox.onchange = Apply;
 		this.scrollBarInput.onchange = Apply;
 		this.taskbarPositionInput.onchange = Apply;
-		this.modeInput.onchange = Apply;
+		this.modeInput.onchange = ()=> this.SetColorMode(this.modeInput.value);
 		this.saturation.oninput = Apply;
 
 		Apply();
+	}
+
+	SetColorMode(mode) {
+		const viewDocument = this.modeInput.ownerDocument;
+		const viewRoot = viewDocument.documentElement;
+		const appRoot = document.documentElement;
+		const previousMode = appRoot.style.colorScheme || "light dark";
+		const systemMode = viewDocument.defaultView.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+		const ResolveMode = value=> value === "light dark" ? systemMode : value;
+
+		const Apply = ()=> {
+			appRoot.style.colorScheme = mode;
+			localStorage.setItem("color_mode", mode);
+
+			for (const win of WIN.array) {
+				if (win instanceof Personalize && win.args === "appearance") {
+					win.modeInput.value = mode;
+				}
+				if (win.popOutWindow && !win.popOutWindow.closed) {
+					win.popOutWindow.document.body.style.colorScheme = mode;
+				}
+			}
+		};
+
+		Personalize.cancelColorModeTransition?.();
+
+		if (typeof viewDocument.startViewTransition !== "function" ||
+			!this.animationsCheckbox.checked ||
+			viewDocument.defaultView.matchMedia("(prefers-reduced-motion: reduce)").matches ||
+			ResolveMode(previousMode) === ResolveMode(mode)) {
+			Apply();
+			return;
+		}
+
+		viewRoot.classList.add("color-mode-transition");
+		const transition = viewDocument.startViewTransition(()=> {
+			if (Personalize.cancelColorModeTransition === Cancel) Apply();
+		});
+		const Finish = ()=> {
+			if (Personalize.cancelColorModeTransition !== Cancel) return;
+			Personalize.cancelColorModeTransition = null;
+			viewRoot.classList.remove("color-mode-transition");
+		};
+		const Cancel = ()=> {
+			Finish();
+			transition.skipTransition();
+		};
+		Personalize.cancelColorModeTransition = Cancel;
+
+		transition.ready.catch(()=> {}); // The browser may skip the animation.
+		transition.finished.then(Finish, Finish);
 	}
 
 	ShowRegion() {
