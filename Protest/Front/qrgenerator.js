@@ -210,7 +210,6 @@ class QrGenerator extends Window {
 			input.value = value;
 			input.style.width = "48px";
 			input.style.height = "28px";
-			input.style.padding = "4px 8px";
 			return input;
 		};
 

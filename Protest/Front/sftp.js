@@ -27,7 +27,6 @@ class Sftp extends Window {
 		delete this.args.autoconnect;
 
 		if (isRestored) {
-			delete this.args.password;
 			this.ConnectDialog(this.args.host, true);
 		}
 		else if (this.args.credential) {
@@ -295,6 +294,7 @@ class Sftp extends Window {
 			}
 			else {
 				const guid = methodBox.index === 1 ? credentialsInput.value : sshKeyInput.value;
+				delete this.args.password;
 				this.args.credential = guid;
 
 				dialog.Close();

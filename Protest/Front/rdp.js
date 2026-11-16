@@ -53,8 +53,6 @@ class Rdp extends Window {
 		const isRestored = this.args.autoconnect === false;
 		delete this.args.autoconnect;
 
-		//a remembered password is kept in the args, as with SSH, a restored window drops it
-		if (isRestored) delete this.args.password;
 		this.password = this.args.password ?? null;
 
 		this.element = null;
@@ -532,9 +530,8 @@ class Rdp extends Window {
 			return;
 		}
 
-		const dialog = this.DialogBox("240px");
+		const dialog = this.DialogBox("310px");
 		if (dialog === null) {
-			//The credentials dialog may still be closing when the gateway answers.
 			if (retry) setTimeout(()=> this.PromptCertificate(certificate, socket, connectionId, false), WIN.ANIME_DURATION);
 			else socket.send("");
 			return;
@@ -542,18 +539,27 @@ class Rdp extends Window {
 
 		const {okButton, cancelButton, innerBox} = dialog;
 		const hasCertificate = Boolean(certificate.fingerprint);
-		const warning = hasCertificate ? "This RDP connection uses an untrusted certificate." : "This RDP connection has no TLS certificate.";
+		const warning = hasCertificate ? "This RDP connection uses an unverified TLS certificate" : "This RDP connection has no TLS certificate";
 		okButton.value = "Connect anyway";
 		innerBox.style.padding = "20px";
 		innerBox.style.overflowWrap = "anywhere";
-		innerBox.parentElement.style.maxWidth = "460px";
+		innerBox.parentElement.style.maxWidth = "480px";
 
 		const title = document.createElement("strong");
-		title.textContent = warning;
+		title.style.display = "flex";
+		title.style.alignItems = "center";
+		title.style.gap = "8px";
+
+		const icon = document.createElement("span");
+		icon.style.flex = "0 0 48px";
+		icon.style.width = "48px";
+		icon.style.height = "48px";
+		icon.style.backgroundImage = "url(mono/certificate.svg)";
+		title.append(icon, warning);
+
 		const details = document.createElement("div");
 		details.style.whiteSpace = "pre-line";
 		details.style.margin = "8px 0";
-		details.textContent = certificate.destination;
 		if (certificate.nameMismatch) details.textContent += "\nThe certificate name does not match the host.";
 		if (certificate.chainError) details.textContent += "\nThe certificate chain could not be verified.";
 		innerBox.append(title, details);
@@ -593,7 +599,8 @@ class Rdp extends Window {
 		innerBox.parentElement.addEventListener("keydown", event=> {
 			if (event.key === "Escape") cancelButton.onclick();
 		});
-		cancelButton.focus();
+
+		okButton.focus();
 	}
 
 	//IronRDP 0.7.0 leaves the server's pointer updates unhandled, the gateway decodes them and they become the canvas cursor

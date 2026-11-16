@@ -15,7 +15,7 @@ class Vnc extends Window {
 
 		const isRestored = this.args.autoconnect === false;
 		delete this.args.autoconnect;
-		if (isRestored || this.args.password === null) delete this.args.password; //a remembered password, as with SSH
+		if (this.args.password === null) delete this.args.password;
 
 		this.password = this.args.password ?? null;
 

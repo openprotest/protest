@@ -12,7 +12,6 @@ class Ssh extends PtyHost {
 		delete this.args.autoconnect;
 
 		if (isRestored) {
-			delete this.args.password;
 			this.ConnectDialog(this.args.host, true);
 		}
 		else if (this.args.credential) {
@@ -221,6 +220,7 @@ class Ssh extends PtyHost {
 			}
 			else {
 				const guid = methodBox.index === 1 ? credentialsInput.value : sshKeyInput.value;
+				delete this.args.password;
 				this.args.credential = guid;
 
 				dialog.Close();

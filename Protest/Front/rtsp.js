@@ -21,8 +21,6 @@ class Rtsp extends Window {
 		const isRestored = this.args.autoconnect === false;
 		delete this.args.autoconnect;
 
-		//a remembered password is kept in the args, as with SSH, a restored window drops it
-		if (isRestored) delete this.args.password;
 		this.password = this.args.password ?? null;
 
 		if (this.args.url) {

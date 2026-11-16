@@ -45,10 +45,10 @@
 	}
 
 	:root.color-mode-transition::view-transition-new(root) {
-		mask-image: linear-gradient(135deg, transparent 46%, black 54%);
+		mask-image: linear-gradient(135deg, transparent 47.5%, black 57.5%);
 		mask-size: 200% 200%;
 		mask-repeat: no-repeat;
-		animation: color-mode-wipe .35s ease-in-out both;
+		animation: color-mode-wipe .3s ease-in-out both;
 	}
 }
 
