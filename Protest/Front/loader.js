@@ -110,6 +110,7 @@ const LOADER = {
 		"chat.js",
 		"documentation.js",
 		"debitnotes.js",
+		"ares.js",
 		"watchdog.js",
 		"personalize.js",
 		"infrastructure.js",
@@ -350,16 +351,17 @@ const LOADER = {
 		case "Fetch"       : return new Fetch(command.args);
 		case "Monitor"     : return new Monitor(command.args);
 
-		case "AddressBook"   : return new AddressBook(command.args);
-		case "Chat"          : return new Chat();
-		case "Documentation" : return new Documentation(command.args);
-		case "DebitNotes"    : return new DebitNotes(command.args);
+		case "AddressBook"  : return new AddressBook(command.args);
+		case "Chat"         : return new Chat();
+		case "Documentation": return new Documentation(command.args);
+		case "DebitNotes"   : return new DebitNotes(command.args);
 
-		case "Watchdog"      : return new Watchdog();
-		case "Topology"      : return new Topology(command.args);
-		case "Issues"        : return new Issues(command.args);
-		case "ReverseProxy"  : return new ReverseProxy(command.args);
-		case "Packages"      : return new Packages(command.args);
+		case "Ares"         : return new Ares(command.args);
+		case "Watchdog"     : return new Watchdog();
+		case "Topology"     : return new Topology(command.args);
+		case "Issues"       : return new Issues(command.args);
+		case "ReverseProxy" : return new ReverseProxy(command.args);
+		case "Packages"     : return new Packages(command.args);
 
 		case "HexViewer" : return new HexViewer(command.args);
 

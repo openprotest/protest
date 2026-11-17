@@ -414,11 +414,12 @@ const MENU = {
 		{ t:"Address book",  i:"mono/addressbook.svg?light",   g:"documentation", h:false, f:()=> new AddressBook(), k:"phone email" },
 		{ t:"Team chat",     i:"mono/chat.svg?light",          g:"documentation", h:false, f:()=> new Chat(),        k:"messages" },
 
+		{ t:"A.R.E.S.",            i:"mono/ares.svg?light",         g:"tools", h:false, f:()=> new Ares(), k:"ai assistant agent ares" },
 		{ t:"Watchdog",            i:"mono/watchdog.svg?light",     g:"tools", h:false, f:()=> new Watchdog() },
 		{ t:"Lifeline",            i:"mono/lifeline.svg?light",     g:"tools", h:true,  f:args=> new Lifeline(args), k:"history graphs" },
-		{ t:"Issues",              i:"mono/issues.svg?light",       g:"tools", h:false, f:()=> new Issues() },
 		{ t:"Reverse proxy",       i:"mono/reverseproxy.svg?light", g:"tools", h:false, f:args=> new ReverseProxy(args) },
 		{ t:"Topology",            i:"mono/topology.svg?light",     g:"tools", h:false, f:()=> new Topology() },
+		{ t:"Issues",              i:"mono/issues.svg?light",       g:"tools", h:true,  f:()=> new Issues() },
 		{ t:"IP discovery",        i:"mono/ipdiscovery.svg?light",  g:"tools", h:true,  f:()=> new IpDiscovery() },
 		//{ t:"Software deployment", i:"mono/package.svg?light",       g:"tools", h:true,  f:args=> new Packages(args), k:"packages" },
 		//{ t:"Scripts",             i:"mono/scripts.svg?light",       g:"tools", h:false, f:args=> {} },

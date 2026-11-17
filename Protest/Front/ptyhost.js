@@ -259,8 +259,6 @@ class PtyHost extends Window {
 
 		this.copyButton.disabled = true;
 
-		this.defaultElement = this.content;
-
 		this.win.style.containerType = "inline-size";
 
 		this.content.classList.add("pty-content");
@@ -501,9 +499,11 @@ class PtyHost extends Window {
 				case "KeyC":
 					this.TextToClipboard();
 					break;
+
 				case "KeyV":
 					if (!this.pasteButton.disabled) this.TextFromClipboard();
 					break;
+
 				case "KeyF":
 					this.findInput.focus();
 					break;
@@ -515,8 +515,12 @@ class PtyHost extends Window {
 		requestAnimationFrame(()=> {
 			if (!this.term) return;
 			this.term.open(this.content);
+			this.defaultElement = this.term.textarea;
+			if (WIN.focused === this && !this.content.inert) this.term.focus();
+
 			this.FitTerminal();
 			this.ResizeMinimap();
+
 			setTimeout(()=> {
 				this.FitTerminal();
 				this.ResizeMinimap();
