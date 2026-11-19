@@ -743,6 +743,11 @@ internal static class Auth {
                 path.Add("/scheduler/run");
                 break;
 
+            case "ares:write":
+                path.Add("/ares/agents");
+                path.Add("/ares/models");
+                break;
+
             case "integration:write":
                 path.Add("/config/integration/types");
                 path.Add("/config/integration/list");
@@ -781,6 +786,12 @@ internal static class Auth {
                 break;
 
             case "infrastructure:write":
+                path.Add("/config/ares/types");
+                path.Add("/config/ares/list");
+                path.Add("/config/ares/get");
+                path.Add("/config/ares/save");
+                path.Add("/config/ares/delete");
+                path.Add("/config/ares/test");
                 path.Add("/config/zones/list");
                 path.Add("/config/zones/save");
                 path.Add("/config/dhcprange/list");

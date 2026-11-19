@@ -346,6 +346,7 @@
 }
 
 .chat-input:empty::before {
+	pointer-events: none;
 	content: "Aa";
 	color: rgb(96,96,96);
 }

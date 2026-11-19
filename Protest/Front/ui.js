@@ -461,13 +461,15 @@ const MENU = {
 		{ t:"Keyboard tester",    i:"mono/keyboard.svg?light",      g:"utilities", h:true,  f:()=> new KeyboardTester(),     k:"keys" },
 		{ t:"Gamepad tester",     i:"mono/gamepad.svg?light",       g:"utilities", h:true,  f:()=> new KeyboardTester("gamepad"), k:"joystick" },
 
-		{ t:"Infrastructure",  i:"mono/infrastructure.svg?light", g:"manage", h:false, f:()=> new Infrastructure(), k:"settings environment" },
-		{ t:"Data retention",  i:"mono/dataretention.svg?light",  g:"manage", h:false, f:()=> new Infrastructure("dataretention"), k:"cleanup compliance" },
-		{ t:"Zones",           i:"mono/router.svg?light",         g:"manage", h:true,  f:()=> new Infrastructure("zones"), k:"sites" },
-		{ t:"DHCP range",      i:"mono/dhcp.svg?light",           g:"manage", h:true,  f:()=> new Infrastructure("dhcp"), k:"ip addresses" },
-		{ t:"SMTP settings",   i:"mono/email.svg?light",          g:"manage", h:true,  f:()=> new Infrastructure("smtp profiles") },
-		{ t:"SNMP settings",   i:"mono/snmp.svg?light",           g:"manage", h:true,  f:()=> new Infrastructure("snmp profiles") },
-		{ t:"Integration",     i:"mono/integration.svg?light",    g:"manage", h:false, f:()=> new Infrastructure("integration") },
+		{ t:"Infrastructure",    i:"mono/infrastructure.svg?light", g:"manage", h:false, f:()=> new Infrastructure(), k:"settings environment" },
+		{ t:"Zones",             i:"mono/router.svg?light",         g:"manage", h:true,  f:()=> new Infrastructure("zones"), k:"sites" },
+		{ t:"DHCP range",        i:"mono/dhcp.svg?light",           g:"manage", h:true,  f:()=> new Infrastructure("dhcp"), k:"ip addresses" },
+		{ t:"SMTP settings",     i:"mono/email.svg?light",          g:"manage", h:true,  f:()=> new Infrastructure("smtp") },
+		{ t:"SNMP settings",     i:"mono/snmp.svg?light",           g:"manage", h:true,  f:()=> new Infrastructure("snmp") },
+		{ t:"RustDesk settings", i:"mono/rustdesk.svg?light",       g:"manage", h:true,  f:()=> new Infrastructure("rustdesk") },
+		{ t:"Integration",       i:"mono/integration.svg?light",    g:"manage", h:false, f:()=> new Infrastructure("integration") },
+		{ t:"A.R.E.S. settings", i:"mono/ares.svg?light",           g:"manage", h:true,  f:()=> new Infrastructure("ares"), k:"ares ai agents models" },
+		{ t:"Data retention",    i:"mono/dataretention.svg?light",  g:"manage", h:false, f:()=> new Infrastructure("dataretention"), k:"cleanup compliance" },
 
 		{ t:"Personalize",     i:"mono/personalize.svg?light", g:"manage", h:false, f:()=> new Personalize() },
 		{ t:"Appearance",      i:"mono/tv.svg?light",          g:"manage", h:true,  f:()=> new Personalize("appearance") },
@@ -1306,7 +1308,7 @@ const MENU = {
 	UpdatePosition: ()=> {
 		menubox.style.visibility = MENU.isOpen ? "visible" : "hidden";
 		cap.style.visibility = MENU.isOpen ? "visible" : "hidden";
-		cap.style.opacity = MENU.isOpen ? "1" : "0";
+		cap.style.opacity = MENU.isOpen ? ".85" : "0";
 
 		let left;
 		if (MENU.isAttached) {
@@ -1386,8 +1388,7 @@ document.body.addEventListener("mousemove", event=> {
 
 	if (!MENU.isDragging) return;
 
-	//ignore if move is less than 2px
-	if (Math.abs(MENU.position[0] - event.clientX) > 2 || Math.abs(MENU.position[1] - event.clientY) > 2) {
+	if (Math.abs(MENU.position[0] - event.clientX) > 2 || Math.abs(MENU.position[1] - event.clientY) > 2) { //ignore if move is less than 2px
 		MENU.isMoved = true;
 	}
 

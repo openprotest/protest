@@ -184,6 +184,16 @@ internal static class Router {
         ["/config/integration/delete"]           = new Route((ctx, username) => new(Integration.Integration.Delete(ctx, username)), "POST"),
         ["/config/integration/test"]             = new Route((ctx, username) => new(Integration.Integration.Test(ctx, username)), "POST"),
 
+        ["/config/ares/types"]                   = new Route((ctx, username) => new(Tools.Ares.GetTypes())),
+        ["/config/ares/list"]                    = new Route((ctx, username) => new(Tools.Ares.List())),
+        ["/config/ares/get"]                     = new Route((ctx, username) => new(Tools.Ares.Get(ctx))),
+        ["/config/ares/save"]                    = new Route((ctx, username) => new(Tools.Ares.Save(ctx, username)), "POST"),
+        ["/config/ares/delete"]                  = new Route((ctx, username) => new(Tools.Ares.Delete(ctx, username)), "POST"),
+        ["/config/ares/test"]                    = new Route(async (ctx, username) => await Tools.Ares.TestAsync(ctx, username), "POST"),
+
+        ["/ares/agents"]                         = new Route((ctx, username) => new(Tools.Ares.List(true))),
+        ["/ares/models"]                         = new Route(async (ctx, username) => await Tools.Ares.GetModelsAsync(ctx, username)),
+
         ["/config/cert/list"]                    = new Route((ctx, username) => new(Tools.Cert.List())),
         ["/config/cert/create"]                  = new Route((ctx, username) => new(Tools.Cert.Create(ctx, username)), "POST"),
         ["/config/cert/delete"]                  = new Route((ctx, username) => new(Tools.Cert.Delete(ctx, username)), "POST"),

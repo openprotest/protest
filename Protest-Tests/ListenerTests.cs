@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Text.Json;
 using Protest.Http;
 
 namespace Protest.Tests;
@@ -628,6 +629,105 @@ public class ListenerTests {
         }
         finally {
             if (added) Configuration.trustedProxies.Remove(IPAddress.Loopback);
+        }
+    }
+
+    [Test, NonParallelizable]
+    public void AresAgentsPreserveKeysAndDiscardLegacyDescriptions() {
+        byte[]? originalKey = Configuration.DB_KEY;
+        byte[]? originalIv = Configuration.DB_KEY_IV;
+        Configuration.DB_KEY = System.Security.Cryptography.RandomNumberGenerator.GetBytes(32);
+        Configuration.DB_KEY_IV = System.Security.Cryptography.RandomNumberGenerator.GetBytes(16);
+        string apiKey = $"test-key-{Guid.NewGuid()}";
+        string name = $"Ares test {Guid.NewGuid()}";
+        string? agentId = null;
+        using HttpClient client = new HttpClient();
+
+        string Send(string path, HttpMethod method, string? body = null) {
+            string result = String.Empty;
+            WithSession(path.Split('?')[0], cookie => {
+                using HttpRequestMessage request = new HttpRequestMessage(method, $"{baseUrl}{path}");
+                request.Headers.Add("Cookie", cookie);
+                request.Headers.Add("Origin", baseUrl);
+                if (body is not null) request.Content = new StringContent(body);
+                using HttpResponseMessage response = client.Send(request);
+                Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+                result = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+            });
+            return result;
+        }
+
+        try {
+            using JsonDocument created = JsonDocument.Parse(Send("/config/ares/save", HttpMethod.Post,
+                JsonSerializer.Serialize(new { type = "openai", name, key = apiKey, enabled = true })));
+            agentId = created.RootElement.GetProperty("id").GetString();
+            string path = Path.Join(Data.DIR_ARES_AGENTS, $"{agentId}.json");
+            string envelope = File.ReadAllText(path);
+            Assert.That(envelope, Does.Not.Contain(apiKey));
+            using JsonDocument stored = JsonDocument.Parse(envelope);
+            Assert.That(stored.RootElement.TryGetProperty("description", out _), Is.False);
+            Assert.That(File.Exists(Path.Join(Data.DIR_INTEGRATION, $"{agentId}.json")), Is.False);
+
+            string secret = stored.RootElement.GetProperty("secret").GetString()!;
+            string decrypted = Encoding.UTF8.GetString(Cryptography.Decrypt(Convert.FromBase64String(secret), Configuration.DB_KEY, Configuration.DB_KEY_IV));
+            Assert.That(decrypted, Is.EqualTo(apiKey));
+
+            //Entries saved before descriptions were removed still open and can be updated.
+            File.WriteAllBytes(path, JsonSerializer.SerializeToUtf8Bytes(new {
+                id = agentId, type = "openai", name, enabled = true, secret, description = "legacy description"
+            }));
+
+            string fetched = Send($"/config/ares/get?id={agentId}", HttpMethod.Get);
+            Assert.That(fetched, Does.Not.Contain(apiKey).And.Not.Contain("secret"));
+            using JsonDocument opened = JsonDocument.Parse(fetched);
+            Assert.That(opened.RootElement.GetProperty("name").GetString(), Is.EqualTo(name));
+            Assert.That(opened.RootElement.TryGetProperty("description", out _), Is.False);
+
+            using JsonDocument available = JsonDocument.Parse(Send("/ares/agents", HttpMethod.Get));
+            JsonElement enabledAgent = available.RootElement.EnumerateArray().Single(entry => entry.GetProperty("id").GetString() == agentId);
+            Assert.That(enabledAgent.GetProperty("name").GetString(), Is.EqualTo(name));
+            Assert.That(enabledAgent.TryGetProperty("secret", out _), Is.False);
+
+            using JsonDocument legacyList = JsonDocument.Parse(Send("/config/ares/list", HttpMethod.Get));
+            JsonElement legacyAgent = legacyList.RootElement.EnumerateArray().Single(entry => entry.GetProperty("id").GetString() == agentId);
+            Assert.That(legacyAgent.TryGetProperty("description", out _), Is.False);
+
+            string beforeInvalidUpdate = File.ReadAllText(path);
+            using JsonDocument invalidFlag = JsonDocument.Parse(Send("/config/ares/save", HttpMethod.Post,
+                JsonSerializer.Serialize(new { id = agentId, name, enabled = "false" })));
+            Assert.That(invalidFlag.RootElement.GetProperty("error").GetString(), Is.EqualTo("invalid argument"));
+            using JsonDocument invalidKey = JsonDocument.Parse(Send("/config/ares/save", HttpMethod.Post,
+                JsonSerializer.Serialize(new { id = agentId, name, key = 123 })));
+            Assert.That(invalidKey.RootElement.GetProperty("error").GetString(), Is.EqualTo("invalid argument"));
+            Assert.That(File.ReadAllText(path), Is.EqualTo(beforeInvalidUpdate));
+
+            string updated = Send("/config/ares/save", HttpMethod.Post, JsonSerializer.Serialize(new {
+                id = agentId, name, key = "", enabled = false
+            }));
+            Assert.That(updated, Does.Contain("\"status\":\"ok\""));
+            using JsonDocument edited = JsonDocument.Parse(File.ReadAllText(path));
+            Assert.That(edited.RootElement.GetProperty("secret").GetString(), Is.EqualTo(secret));
+            Assert.That(edited.RootElement.TryGetProperty("description", out _), Is.False);
+
+            using JsonDocument listed = JsonDocument.Parse(Send("/config/ares/list", HttpMethod.Get));
+            JsonElement agent = listed.RootElement.EnumerateArray().Single(entry => entry.GetProperty("id").GetString() == agentId);
+            Assert.That(agent.GetProperty("enabled").GetBoolean(), Is.False);
+            using JsonDocument disabled = JsonDocument.Parse(Send("/ares/agents", HttpMethod.Get));
+            Assert.That(disabled.RootElement.EnumerateArray().Any(entry => entry.GetProperty("id").GetString() == agentId), Is.False);
+            string models = Send($"/ares/models?id={agentId}", HttpMethod.Get);
+            Assert.That(models, Does.Contain("disabled"));
+            string integration = Send($"/config/integration/get?id={agentId}", HttpMethod.Get);
+            Assert.That(integration, Does.Contain("not found"));
+
+            Send($"/config/ares/delete?id={agentId}", HttpMethod.Post);
+            Assert.That(File.Exists(path), Is.False);
+            using JsonDocument deleted = JsonDocument.Parse(Send($"/config/ares/get?id={agentId}", HttpMethod.Get));
+            Assert.That(deleted.RootElement.GetProperty("error").GetString(), Is.EqualTo("not found"));
+        }
+        finally {
+            Configuration.DB_KEY = originalKey;
+            Configuration.DB_KEY_IV = originalIv;
+            if (agentId is not null) File.Delete(Path.Join(Data.DIR_ARES_AGENTS, $"{agentId}.json"));
         }
     }
 

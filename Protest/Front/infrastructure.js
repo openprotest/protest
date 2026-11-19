@@ -19,6 +19,10 @@ class Infrastructure extends Tabs {
 		this.integrations = [];
 		this.integrationTypes = null;
 		this.selectedIntegration = null;
+		this.aresAgents = [];
+		this.aresAgentsRequest = 0;
+		this.aresAgentTypes = null;
+		this.selectedAresAgent = null;
 
 		this.tabsPanel.style.padding = "24px";
 		this.tabsPanel.style.overflowY = "auto";
@@ -30,6 +34,7 @@ class Infrastructure extends Tabs {
 		this.snmpTab        = this.AddTab("SNMP", "mono/snmp.svg");
 		this.rustDeskTab    = this.AddTab("RustDesk", "mono/rustdesk.svg");
 		this.integrationTab = this.AddTab("Integration", "mono/integration.svg");
+		this.aresTab        = this.AddTab("A.R.E.S.", "mono/ares.svg");
 		this.dataRetention  = this.AddTab("Data retention", "mono/dataretention.svg");
 
 		this.zonesTab.onclick       = ()=> this.ShowZones();
@@ -40,6 +45,7 @@ class Infrastructure extends Tabs {
 		this.rustDeskTab.onclick    = ()=> this.ShowRustDesk();
 		this.dataRetention.onclick  = ()=> this.ShowDataRetention();
 		this.integrationTab.onclick = ()=> this.ShowIntegration();
+		this.aresTab.onclick        = ()=> this.ShowAres();
 
 		this.activeColumnsListBox = null;
 		this.win.addEventListener("mouseup", event=> this.activeColumnsListBox?.HandleMouseUp(event));
@@ -76,6 +82,11 @@ class Infrastructure extends Tabs {
 			this.ShowIntegration();
 			break;
 
+		case "ares":
+			this.aresTab.className = "v-tab-selected";
+			this.ShowAres();
+			break;
+
 		case "dataretention":
 			this.dataRetention.className = "v-tab-selected";
 			this.ShowDataRetention();
@@ -88,6 +99,15 @@ class Infrastructure extends Tabs {
 		}
 
 		setTimeout(()=> this.AfterResize(), 250);
+	}
+
+	UpdateAuthorization() { //overrides
+		super.UpdateAuthorization();
+		if (!this.aresAgentAddButton?.isConnected) return;
+		const canWrite = KEEP.authorization.includes("*") || KEEP.authorization.includes("infrastructure:write");
+		this.aresAgentAddButton.disabled = !canWrite;
+		this.aresAgentRemoveButton.disabled = !canWrite || !this.selectedAresAgent;
+		this.aresAgentTestButton.disabled = !canWrite || !this.selectedAresAgent || this.aresTesting;
 	}
 
 	AfterResize() { //overrides
@@ -1089,6 +1109,375 @@ class Infrastructure extends Tabs {
 
 		this.GetIntegrations();
 		this.AfterResize();
+	}
+
+	ShowAres() {
+		this.args = "ares";
+		this.tabsPanel.textContent = "";
+
+		this.selectedAresAgent = null;
+		this.aresTesting = false;
+
+		this.options = document.createElement("div");
+		this.options.className = "rbac-options";
+		this.options.style.position = "absolute";
+		this.options.style.left = "20px";
+		this.options.style.right = "8px";
+		this.options.style.top = "8px";
+		this.options.style.overflow = "hidden";
+		this.options.style.whiteSpace = "nowrap";
+		this.tabsPanel.appendChild(this.options);
+
+		this.aresAgentAddButton = document.createElement("input");
+		this.aresAgentAddButton.type = "button";
+		this.aresAgentAddButton.value = "Add";
+		this.aresAgentAddButton.className = "with-icon";
+		this.aresAgentAddButton.style.backgroundImage = "url(mono/add.svg?light)";
+
+		this.aresAgentRemoveButton = document.createElement("input");
+		this.aresAgentRemoveButton.type = "button";
+		this.aresAgentRemoveButton.value = "Remove";
+		this.aresAgentRemoveButton.className = "with-icon";
+		this.aresAgentRemoveButton.style.backgroundImage = "url(mono/delete.svg?light)";
+
+		this.aresAgentTestButton = document.createElement("input");
+		this.aresAgentTestButton.type = "button";
+		this.aresAgentTestButton.value = "Test";
+		this.aresAgentTestButton.disabled = true;
+		this.aresAgentTestButton.className = "with-icon";
+		this.aresAgentTestButton.style.backgroundImage = "url(mono/checked.svg?light)";
+
+		this.options.append(this.aresAgentAddButton, this.aresAgentRemoveButton, this.aresAgentTestButton);
+
+		this.aresAgentListBox = new ListBox({
+			firstColumnOffset: "4px",
+			onSelect: (id, element)=> {
+				this.selectedAresAgent = element._data;
+				this.UpdateAuthorization();
+			},
+			onDoubleClick: data=> this.AresAgentDialog(data)
+		});
+		this.aresAgentListBox.SetupTitleBar();
+		this.aresAgentListBox.SetupBuiltInSort();
+
+		this.activeColumnsListBox = this.aresAgentListBox;
+
+		this.aresAgentListBox.listTitleOuter.style.left = "20px";
+		this.aresAgentListBox.listTitleOuter.style.right = "20px";
+		this.aresAgentListBox.listTitleOuter.style.top = "50px";
+		this.tabsPanel.appendChild(this.aresAgentListBox.listTitleOuter);
+
+		this.aresAgentList = this.aresAgentListBox.list;
+		this.aresAgentList.style.overflowY = "auto";
+		this.aresAgentList.style.left = "20px";
+		this.aresAgentList.style.right = "20px";
+		this.aresAgentList.style.top = "80px";
+		this.aresAgentList.style.bottom = "20px";
+		this.aresAgentList.style.border = "rgb(82,82,82) solid 2px";
+		this.aresAgentList.addEventListener("keydown", event=> this.aresAgentListBox.Keydown(event));
+		this.tabsPanel.appendChild(this.aresAgentList);
+
+		this.aresAgentListBox.SetupColumns([
+			{label:"Name",
+			 sortValue:d=> d.name,
+			 render:d=> {
+				const cell = document.createElement("div");
+				cell.textContent = d.name;
+				cell.style.paddingLeft = "32px";
+				cell.style.backgroundImage = d.enabled && !d.error ? "url(mono/connect.svg)" : "url(mono/disconnect.svg)";
+				cell.style.backgroundSize = "20px 20px";
+				cell.style.backgroundPosition = "4px 50%";
+				cell.style.backgroundRepeat = "no-repeat";
+				return cell;
+			}},
+			{label:"Type", value:d=> d.label},
+			{label:"Status", value:d=> d.enabled ? (d.error ? d.error : "Enabled") : "Disabled"}
+		]);
+
+		this.aresAgentAddButton.onclick = ()=> this.AresAgentTypeDialog();
+
+		this.aresAgentRemoveButton.onclick = ()=> {
+			const target = this.selectedAresAgent;
+			if (!target) return;
+
+			this.ConfirmBox(`Are you sure you want to remove "${target.name}"?`, false, "mono/delete.svg").addEventListener("click", async ()=> {
+				try {
+					const response = await fetch(`config/ares/delete?id=${encodeURIComponent(target.id)}`, { method: "POST" });
+					if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
+
+					const json = await response.json();
+					if (json.error) throw(json.error);
+				}
+				catch (ex) {
+					this.ConfirmBox(ex, true, "mono/error.svg");
+				}
+
+				this.GetAresAgents();
+			});
+		};
+
+		this.aresAgentTestButton.onclick = async ()=> {
+			const target = this.selectedAresAgent;
+			if (!target) return;
+			const listBox = this.aresAgentListBox;
+
+			this.aresTesting = true;
+			this.UpdateAuthorization();
+
+			try {
+				const response = await fetch(`config/ares/test?id=${encodeURIComponent(target.id)}`, { method: "POST" });
+				if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
+
+				const json = await response.json();
+				if (json.error) throw(json.error);
+				if (this.isClosed || this.args !== "ares" || this.aresAgentListBox !== listBox) return;
+
+				this.ConfirmBox(`Successfully connected to "${target.name}".`, true, "mono/checked.svg");
+			}
+			catch (ex) {
+				if (!this.isClosed && this.args === "ares" && this.aresAgentListBox === listBox) this.ConfirmBox(ex, true, "mono/error.svg");
+			}
+			finally {
+				if (!this.isClosed && this.args === "ares" && this.aresAgentListBox === listBox) {
+					this.aresTesting = false;
+					this.GetAresAgents();
+				}
+			}
+		};
+
+		this.UpdateAuthorization();
+		this.GetAresAgents();
+		this.AfterResize();
+	}
+
+	async GetAresAgents() {
+		if (this.isClosed || this.args !== "ares") return;
+		const listBox = this.aresAgentListBox;
+		const request = ++this.aresAgentsRequest;
+		try {
+			const response = await fetch("config/ares/list");
+
+			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
+
+			const json = await response.json();
+			if (json.error) throw(json.error);
+			if (this.isClosed || this.args !== "ares" || this.aresAgentListBox !== listBox || request !== this.aresAgentsRequest) return;
+
+			this.aresAgents = json;
+			this.selectedAresAgent = null;
+			this.UpdateAuthorization();
+			this.aresAgentListBox.SetItems(this.aresAgents);
+		}
+		catch (ex) {
+			if (this.isClosed || this.args !== "ares" || request !== this.aresAgentsRequest) return;
+			this.ConfirmBox(ex, true, "mono/error.svg");
+		}
+	}
+
+	async GetAresAgentTypes() {
+		if (this.aresAgentTypes) return this.aresAgentTypes;
+
+		try {
+			const response = await fetch("config/ares/types");
+
+			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
+
+			const json = await response.json();
+			if (json.error) throw(json.error);
+
+			this.aresAgentTypes = json;
+			return json;
+		}
+		catch (ex) {
+			this.ConfirmBox(ex, true, "mono/error.svg");
+			return null;
+		}
+	}
+
+	async AresAgentTypeDialog() {
+		const types = await this.GetAresAgentTypes();
+		if (this.isClosed || this.args !== "ares" || !types || types.length === 0) return;
+
+		const dialog = this.DialogBox("300px");
+		if (dialog === null) return;
+
+		const {okButton, innerBox} = dialog;
+
+		const dialogBox = innerBox.parentElement;
+		dialogBox.style.maxWidth = "480px";
+
+		okButton.value = "Next";
+		innerBox.style.padding = "20px";
+
+		const caption = document.createElement("div");
+		caption.textContent = "Select agent provider:";
+		caption.style.paddingBottom = "12px";
+		innerBox.appendChild(caption);
+
+		const container = document.createElement("div");
+		container.style.position = "relative";
+		container.style.height = "160px";
+		innerBox.appendChild(container);
+
+		let selectedType = null;
+
+		const Proceed = type=> {
+			dialog.Close();
+			setTimeout(()=> {
+				if (!this.isClosed && this.args === "ares") this.AresAgentDialog(null, type);
+			}, 250);
+		};
+
+		const listBox = new ListBox({ onSelect: (id, element)=> { selectedType = element._data; } });
+		listBox.list.style.top = "0";
+		listBox.list.style.border = "rgb(82,82,82) solid 2px";
+		listBox.list.style.overflowY = "auto";
+		listBox.list.addEventListener("keydown", event=> listBox.Keydown(event));
+		container.appendChild(listBox.list);
+
+		listBox.inflate = (element, entry)=> {
+			const label = document.createElement("div");
+			label.textContent = entry.label;
+			label.style.left = "8px";
+			label.style.right = "0";
+			element.appendChild(label);
+
+			element.onclick = ()=> listBox.Select(element);
+			element.ondblclick = ()=> Proceed(entry);
+		};
+
+		listBox.SetItems(types);
+
+		okButton.onclick = ()=> {
+			if (selectedType) Proceed(selectedType);
+		};
+
+		setTimeout(()=> {
+			listBox.UpdateViewport(true);
+			listBox.Select(listBox.list.firstChild);
+			listBox.list.focus();
+		}, 200);
+	}
+
+	async AresAgentDialog(object=null, type=null) {
+		const canWrite = KEEP.authorization.includes("*") || KEEP.authorization.includes("infrastructure:write");
+		if (!canWrite) return;
+		const types = await this.GetAresAgentTypes();
+		const provider = object ? types?.find(entry=> entry.type === object.type) : type;
+		if (this.isClosed || this.args !== "ares" || !provider) return;
+
+		let current = null;
+		if (object) {
+			try {
+				const response = await fetch(`config/ares/get?id=${encodeURIComponent(object.id)}`);
+				if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
+				current = await response.json();
+				if (current.error) throw current.error;
+			}
+			catch (ex) {
+				this.ConfirmBox(ex, true, "mono/error.svg");
+				return;
+			}
+		}
+
+		if (this.isClosed || this.args !== "ares") return;
+		const dialog = this.DialogBox("300px");
+		if (dialog === null) return;
+		const {okButton, innerBox} = dialog;
+		okButton.value = "Save";
+		innerBox.style.padding = "20px";
+		innerBox.parentElement.style.maxWidth = "560px";
+
+		const CreateRow = (label, control)=> {
+			const container = document.createElement("div");
+			container.style.padding = "4px 0";
+			container.style.whiteSpace = "nowrap";
+			innerBox.appendChild(container);
+
+			const labelBox = document.createElement("div");
+			labelBox.textContent = `${label}: `;
+			labelBox.style.display = "inline-block";
+			labelBox.style.verticalAlign = "top";
+			labelBox.style.minWidth = "170px";
+			container.appendChild(labelBox);
+
+			control.style.width = "calc(100% - 180px)";
+			control.style.minWidth = "100px";
+			container.appendChild(control);
+		};
+
+		const enableBox = document.createElement("div");
+		enableBox.style.padding = "8px 0 12px 0";
+		innerBox.appendChild(enableBox);
+		const enableToggle = this.CreateToggle("Enabled", current?.enabled ?? true, enableBox);
+		enableToggle.label.style.minWidth = "38px";
+		enableToggle.label.style.margin = "2px";
+
+		const typeInput = document.createElement("input");
+		typeInput.type = "text";
+		typeInput.value = provider.label;
+		typeInput.disabled = true;
+		CreateRow("Type", typeInput);
+
+		const nameInput = document.createElement("input");
+		nameInput.type = "text";
+		nameInput.maxLength = 64;
+		nameInput.value = current?.name ?? "";
+		CreateRow("Name", nameInput);
+
+		const keyInput = document.createElement("input");
+		keyInput.type = "password";
+		keyInput.maxLength = 512;
+		keyInput.autocomplete = "new-password";
+		keyInput.placeholder = current ? "unchanged" : "";
+		CreateRow("API key", keyInput);
+
+		const errorBox = document.createElement("div");
+		errorBox.style.minHeight = "20px";
+		errorBox.style.paddingTop = "8px";
+		errorBox.style.color = "var(--clr-error)";
+		innerBox.appendChild(errorBox);
+
+		okButton.onclick = async ()=> {
+			errorBox.textContent = "";
+			if (nameInput.value.trim().length === 0) {
+				nameInput.required = true;
+				nameInput.focus();
+				return;
+			}
+			nameInput.required = false;
+			if (!current && keyInput.value.trim().length === 0) {
+				keyInput.required = true;
+				keyInput.focus();
+				return;
+			}
+			keyInput.required = false;
+			okButton.disabled = true;
+			try {
+				const response = await fetch("config/ares/save", {
+					method: "POST",
+					body: JSON.stringify({
+						id: current?.id,
+						type: provider.type,
+						name: nameInput.value,
+						enabled: enableToggle.checkbox.checked,
+						key: keyInput.value
+					})
+				});
+				if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
+				const json = await response.json();
+				if (json.error) throw json.error;
+				keyInput.value = "";
+				dialog.Close();
+				this.GetAresAgents();
+			}
+			catch (ex) {
+				errorBox.textContent = ex;
+				okButton.disabled = false;
+			}
+		};
+
+		setTimeout(()=> nameInput.focus(), 200);
 	}
 
 	async GetZones() {
@@ -2321,6 +2710,7 @@ class Infrastructure extends Tabs {
 		const listBox = new ListBox({ onSelect: (id, element)=> { selectedType = element._data; } });
 		listBox.list.style.top = "0";
 		listBox.list.style.border = "rgb(82,82,82) solid 2px";
+		listBox.list.style.overflowY = "auto";
 		listBox.list.addEventListener("keydown", event=> listBox.Keydown(event));
 		container.appendChild(listBox.list);
 
@@ -2397,6 +2787,14 @@ class Infrastructure extends Tabs {
 			container.appendChild(control);
 		};
 
+		const enableBox = document.createElement("div");
+		enableBox.style.padding = "8px 0 12px 0";
+		innerBox.appendChild(enableBox);
+
+		const enableToggle = this.CreateToggle("Enabled", current ? current.enabled : true, enableBox);
+		enableToggle.label.style.minWidth = "38px";
+		enableToggle.label.style.margin = "2px";
+
 		const typeInput = document.createElement("input");
 		typeInput.type = "text";
 		typeInput.value = typeInfo.label;
@@ -2415,14 +2813,6 @@ class Infrastructure extends Tabs {
 		descriptionInput.placeholder = "optional";
 		descriptionInput.style.resize = "none";
 		CreateRow("Description", descriptionInput);
-
-		const enableBox = document.createElement("div");
-		enableBox.style.padding = "8px 0 12px 0";
-		innerBox.appendChild(enableBox);
-
-		const enableToggle = this.CreateToggle("Enabled", current ? current.enabled : true, enableBox);
-		enableToggle.label.style.minWidth = "38px";
-		enableToggle.label.style.margin = "2px";
 
 		const fieldInputs = [];
 
