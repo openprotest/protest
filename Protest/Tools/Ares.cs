@@ -12,7 +12,7 @@ using Protest.Http;
 
 namespace Protest.Tools;
 
-internal static class Ares {
+internal static partial class Ares {
     private sealed record Agent(string Id, string Type, string Name, bool Enabled, string Secret, string Endpoint = null);
     internal sealed record Model(string Id, string Name);
     internal sealed record Message(string Role, string Content);
@@ -159,10 +159,19 @@ internal static class Ares {
 
         string error = null;
         Model[] models = [];
+        string[] reasoning = [];
         try {
             using CancellationTokenSource timeout = new CancellationTokenSource(TimeSpan.FromSeconds(30));
             models = await FetchModelsAsync(agent.Type, ReadKey(agent), httpClient, timeout.Token, agent.Endpoint);
             if (models.Length == 0) error = "The provider returned no available models";
+            string selectedModel = ctx.Request.QueryString["model"];
+            if (!test && models.Any(model => model.Id == selectedModel)) {
+                try {
+                    reasoning = await FetchReasoningOptionsAsync(agent.Type, ReadKey(agent), selectedModel, httpClient, timeout.Token, agent.Endpoint);
+                }
+                catch (HttpRequestException) { /*Optional metadata is unavailable; retain provider defaults.*/ }
+                catch (JsonException) { /*Unknown metadata must not enable unsupported controls.*/ }
+            }
         }
         catch (HttpRequestException ex) {
             error = ex.StatusCode is null
@@ -192,6 +201,7 @@ internal static class Ares {
         return JsonSerializer.SerializeToUtf8Bytes(new {
             agent = new { id = agent.Id, type = agent.Type, name = agent.Name, label = ProviderLabel(agent.Type) },
             revision = Revision(agent),
+            reasoning,
             models = models.Select(model => new { id = model.Id, name = model.Name }).ToArray()
         });
     }
@@ -214,6 +224,10 @@ internal static class Ares {
         if (!agent.Enabled) return Error("The selected agent is disabled. Reopen A.R.E.S. and select an enabled agent.");
         if (GetString(root, "revision") != Revision(agent)) return Error("The agent settings changed. Reopen A.R.E.S. and confirm your selection.");
 
+        string reasoning = GetString(root, "reasoning");
+        if (root.TryGetProperty("reasoning", out JsonElement effort) && effort.ValueKind is not (JsonValueKind.String or JsonValueKind.Null)) return Data.CODE_INVALID_ARGUMENT.Array;
+        if (reasoning?.Length > 64 || reasoning?.Any(Char.IsControl) == true) return Data.CODE_INVALID_ARGUMENT.Array;
+
         ctx.Response.ContentType = "application/x-ndjson; charset=utf-8";
         ctx.Response.SendChunked = true;
         ctx.Response.AddHeader("X-Accel-Buffering", "no");
@@ -222,8 +236,30 @@ internal static class Ares {
         try {
             //Acknowledge receipt before waiting for the provider, including its response headers.
             await WriteChatEventAsync(ctx, new { type = "accepted" }, timeout.Token);
+            if (!String.IsNullOrEmpty(reasoning)) {
+                string validationError = null;
+                try {
+                    using CancellationTokenSource validation = CancellationTokenSource.CreateLinkedTokenSource(timeout.Token);
+                    validation.CancelAfter(TimeSpan.FromSeconds(30));
+                    string[] options = await FetchReasoningOptionsAsync(agent.Type, ReadKey(agent), model, httpClient, validation.Token, agent.Endpoint);
+                    if (!options.Contains(reasoning)) validationError = "The selected reasoning setting is not supported by this model. Select Default or reopen A.R.E.S.";
+                }
+                catch (Exception ex) when (ex is HttpRequestException or JsonException or OperationCanceledException) {
+                    validationError = "Unable to verify this model's reasoning settings. Select Default or try again.";
+                }
+                if (validationError is not null) {
+                    await WriteChatEventAsync(ctx, new { type = "error", error = validationError }, timeout.Token);
+                    return null;
+                }
+            }
+            bool current;
+            lock (mutex) { current = ReadAgent(agent.Id) == agent; }
+            if (!current || !Auth.IsAuthorized(ctx, "/ares/chat")) {
+                await WriteChatEventAsync(ctx, new { type = "error", error = "The agent settings or your access changed. Reopen A.R.E.S." }, timeout.Token);
+                return null;
+            }
             await FetchReplyAsync(agent.Type, ReadKey(agent), model, messages, httpClient, timeout.Token, agent.Endpoint,
-                delta => WriteChatEventAsync(ctx, new { type = "delta", text = delta }, timeout.Token));
+                delta => WriteChatEventAsync(ctx, new { type = "delta", text = delta }, timeout.Token), reasoning);
             bool changed;
             lock (mutex) {
                 changed = ReadAgent(agent.Id) != agent;
@@ -289,18 +325,28 @@ internal static class Ares {
         return messages.ToArray();
     }
 
-    internal static async Task<string> FetchReplyAsync(string type, string key, string model, Message[] messages, HttpClient client, CancellationToken token = default, string endpoint = null, Func<string, Task> onText = null) {
+    internal static async Task<string> FetchReplyAsync(string type, string key, string model, Message[] messages, HttpClient client, CancellationToken token = default, string endpoint = null, Func<string, Task> onText = null, string reasoning = null) {
         string address = type switch {
             "openai" => "https://api.openai.com/v1/chat/completions",
             "anthropic" => "https://api.anthropic.com/v1/messages",
             "ollama" => $"{NormalizeEndpoint(endpoint ?? "http://localhost:11434") ?? throw new ArgumentException("Invalid Ollama server URL")}/api/chat",
             _ => throw new ArgumentException("Unsupported agent provider", nameof(type))
         };
-        object payload = type switch {
-            "openai" => new { model, messages, store = false, max_completion_tokens = 4096, stream = onText is not null },
-            "ollama" => new { model, messages, stream = onText is not null },
-            _ => new { model, messages, max_tokens = 4096, stream = onText is not null }
+        Dictionary<string, object> payload = new Dictionary<string, object> {
+            ["model"] = model, ["messages"] = messages, ["stream"] = onText is not null
         };
+        if (type == "openai") {
+            payload["store"] = false;
+            payload["max_completion_tokens"] = 4096;
+            if (!String.IsNullOrEmpty(reasoning)) payload["reasoning_effort"] = reasoning;
+        }
+        else if (type == "anthropic") {
+            payload["max_tokens"] = 4096;
+            if (!String.IsNullOrEmpty(reasoning)) payload["output_config"] = new { effort = reasoning };
+        }
+        else if (!String.IsNullOrEmpty(reasoning)) {
+            payload["think"] = reasoning switch { "true" => (object)true, "false" => false, _ => reasoning };
+        }
         using HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, address);
         if (!String.IsNullOrEmpty(key)) request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", key);
         if (type == "anthropic") request.Headers.Add("anthropic-version", "2026-10-21");

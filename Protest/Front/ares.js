@@ -5,9 +5,21 @@ class Ares extends Window {
 
 	constructor(args) {
 		super();
+
 		this.args = args ?? {agent:null, model:null};
 		this.connection = null;
-		this.connectionDialog = null;
+		this.settingsController = null;
+		this.settingsBusy = false;
+		this.agents = [];
+		this.modelCatalog = null;
+		this.effortPreferences = new Map();
+		this.modelPreferences = new Map();
+
+		if (this.args.agent && this.args.model) {
+			this.effortPreferences.set(JSON.stringify([this.args.agent, this.args.model]), this.args.reasoning ?? "");
+			this.modelPreferences.set(this.args.agent, this.args.model);
+		}
+
 		this.canUse = false;
 		this.messages = [];
 		this.requestController = null;
@@ -24,15 +36,13 @@ class Ares extends Window {
 
 		this.InitializeComponents();
 		this.UpdateAuthorization();
-		this.ConnectDialog();
 	}
 
 	Close() { //overrides
 		this.StopSpeech();
 		this.requestController?.abort();
-		this.connectionDialog?.listController?.abort();
-		this.connectionDialog?.modelsController?.abort();
-		this.connectionDialog = null;
+		this.settingsController?.abort();
+		this.layoutObserver?.disconnect();
 		super.Close();
 	}
 
@@ -42,27 +52,13 @@ class Ares extends Window {
 		this.canUse = KEEP.authorization.includes("*") || KEEP.authorization.includes("ares:write");
 		if (!this.canUse) {
 			this.requestController?.abort();
+			this.settingsController?.abort();
 			this.StopSpeech();
 		}
 		if (!this.input) return;
-
-		if (this.connection) {
-			//TODO: create a status box
-		}
-
-		const state = this.connectionDialog;
-		if (!state) return;
-		if (!this.canUse) {
-			state.listController?.abort();
-			state.modelsController?.abort();
-			state.agentSelect.disabled = true;
-			state.modelSelect.disabled = true;
-			state.okButton.disabled = true;
-			state.status.textContent = "A.R.E.S. access is required. Contact your administrator.";
-		}
-		else if (!previouslyAllowed) {
-			state.loadAgents();
-		}
+		this.UpdateSettingsControls();
+		if (!this.canUse) this.SetSettingsError("A.R.E.S. access is required. Contact your administrator.");
+		else if (!previouslyAllowed && this.settingsInitialized) this.LoadAgents();
 	}
 
 	InitializeComponents() {
@@ -79,6 +75,12 @@ class Ares extends Window {
 		this.content.appendChild(this.input);
 		this.defaultElement = this.input;
 
+		this.InitializeSettings();
+		this.layoutObserver = new ResizeObserver(()=> this.LayoutComposer());
+		this.layoutObserver.observe(this.content);
+		this.layoutObserver.observe(this.input);
+		this.layoutObserver.observe(this.settingsMenu);
+
 		this.input.onkeydown = event=> this.Input_onkeydown(event);
 		this.input.onpaste = event=> {
 			event.preventDefault();
@@ -88,185 +90,229 @@ class Ares extends Window {
 		this.input.ondrop = event=> event.preventDefault();
 	}
 
-	ConnectDialog() {
-		if (this.isClosed || this.connection || this.connectionDialog) return;
-		const dialog = this.DialogBox("210px");
-		if (dialog === null) return;
-		const {okButton, cancelButton, innerBox} = dialog;
-		okButton.value = "Connect";
-		okButton.disabled = true;
-		innerBox.parentElement.style.maxWidth = "560px";
-		innerBox.style.display = "grid";
-		innerBox.style.gridTemplateColumns = "72px minmax(0, 1fr)";
-		innerBox.style.gridAutoRows = "min-content";
-		innerBox.style.alignItems = "center";
-		innerBox.style.gap = "12px 8px";
-		innerBox.style.padding = "24px 20px";
+	InitializeSettings() {
+		const doc = this.content.ownerDocument;
+		this.settingsMenu = doc.createElement("details");
+		this.settingsMenu.className = "ares-settings";
+		this.settingsMenu.open = !this.args.agent || !this.args.model;
 
-		const agentLabel = document.createElement("div");
-		agentLabel.textContent = "Agent:";
-		const agentSelect = document.createElement("select");
-		agentSelect.setAttribute("aria-label", "Agent");
-		agentSelect.style.minWidth = "0";
-		agentSelect.disabled = true;
+		this.settingsSummary = doc.createElement("summary");
+		this.settingsPanel = doc.createElement("div");
+		this.settingsPanel.className = "ares-settings-panel";
+		this.settingsPanel.tabIndex = -1;
 
-		const modelLabel = document.createElement("div");
-		modelLabel.textContent = "Model:";
-		const modelSelect = document.createElement("select");
-		modelSelect.setAttribute("aria-label", "Model");
-		modelSelect.style.minWidth = "0";
-		modelSelect.disabled = true;
+		const AddSelect = name=> {
+			const row = doc.createElement("label");
+			row.className = "ares-setting";
+			const caption = doc.createElement("span");
+			caption.textContent = name;
+			const select = doc.createElement("select");
+			select.setAttribute("aria-label", name);
+			row.append(caption, select);
+			this.settingsPanel.appendChild(row);
+			return select;
+		};
+		this.agentSelect = AddSelect("Agent");
+		this.modelSelect = AddSelect("Model");
 
-		const status = document.createElement("div");
-		status.style.gridColumn = "1 / -1";
-		status.style.fontSize = "smaller";
-		status.setAttribute("role", "status");
-		innerBox.append(agentLabel, agentSelect, modelLabel, modelSelect, status);
+		const effort = doc.createElement("label");
+		effort.className = "ares-setting ares-effort";
+		effort.textContent = "Effort";
+		this.effortRange = doc.createElement("input");
+		this.effortRange.type = "range";
+		this.effortRange.min = "0";
+		this.effortRange.step = "1";
+		this.effortRange.setAttribute("aria-label", "Effort");
+		this.effortValue = doc.createElement("output");
+		effort.append(this.effortRange, this.effortValue);
+		this.settingsPanel.appendChild(effort);
 
-		const state = {agentSelect, modelSelect, okButton, status, agents:[], selection:null};
-		this.connectionDialog = state;
-		const IsCurrent = controller=> this.connectionDialog === state && !this.isClosed && !controller.signal.aborted;
-		const UpdateConnectState = ()=> {
-			okButton.disabled = !this.canUse || agentSelect.options.length === 0 || modelSelect.options.length === 0;
+		this.settingsError = doc.createElement("div");
+		this.settingsError.className = "ares-error";
+		this.settingsError.setAttribute("role", "alert");
+		this.settingsError.hidden = true;
+		this.settingsPanel.appendChild(this.settingsError);
+		this.settingsMenu.append(this.settingsSummary, this.settingsPanel);
+		this.content.appendChild(this.settingsMenu);
+
+		this.agentSelect.onchange = ()=> this.LoadModels(this.agentSelect.value);
+		this.modelSelect.onchange = ()=> this.SelectModel(this.modelSelect.value);
+		this.effortRange.oninput = ()=> {
+			this.UpdateEffortLabel();
+			if (!this.connection) return;
+			const value = this.GetEffort();
+			this.args.reasoning = value;
+			this.effortPreferences.set(this.ConnectionKey(), value);
 		};
 
-		const ResetModels = ()=> {
-			state.selection = null;
-			modelSelect.replaceChildren();
-			modelSelect.disabled = true;
-			UpdateConnectState();
+		this.settingsMenu.addEventListener("focusout", event=> {
+			if (!this.settingsMenu.contains(event.relatedTarget)) this.settingsMenu.open = false;
+		});
+		let expanded = this.settingsMenu.open;
+		this.settingsMenu.ontoggle = ()=> {
+			if (this.settingsMenu.open) this.settingsSummary.focus({preventScroll:true});
+			this.LayoutComposer();
+			const opening = this.settingsMenu.open && !expanded;
+			expanded = this.settingsMenu.open;
+			if (opening) this.LoadAgents();
 		};
+		this.ConfigureEffort();
+		this.settingsInitialized = true;
+	}
 
-		agentSelect.onchange = async ()=> {
-			state.modelsController?.abort();
-			ResetModels();
-			status.textContent = "";
-			const agent = state.agents.find(entry=> entry.id === agentSelect.value);
-			if (!agent || !this.canUse) return;
-			const controller = new AbortController();
-			state.modelsController = controller;
-			status.style.textAlign = "center";
-			status.textContent = "Loading models…";
-			try {
-				const response = await fetch(`ares/models?id=${encodeURIComponent(agent.id)}`, {signal:controller.signal});
-				if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
-				const selection = await response.json();
-				if (selection.error) throw selection.error;
-				if (!IsCurrent(controller)) return;
-				if (selection.agent.id !== agent.id || selection.agent.name !== agent.name || selection.agent.type !== agent.type) {
-					throw new Error("The agent settings changed. Reopen A.R.E.S. to load the current agents.");
-				}
-				for (const model of selection.models) {
-					modelSelect.add(new Option(model.name === model.id ? model.id : `${model.name} (${model.id})`, model.id));
-				}
-				if (selection.models.length === 0) throw new Error("No models are available for this agent");
-				modelSelect.selectedIndex = 0;
-				state.selection = selection;
-				modelSelect.disabled = false;
-				status.textContent = "";
-				UpdateConnectState();
-			}
-			catch (ex) {
-				if (!IsCurrent(controller)) return;
-				ResetModels();
-				status.textContent = ex.message ?? String(ex);
-			}
-		};
+	LayoutComposer() {
+		this.settingsPanel.style.maxHeight = `${Math.max(48, Math.min(240, this.content.clientHeight - 160))}px`;
+		const height = this.settingsMenu.offsetHeight;
+		this.input.style.bottom = `${height + 16}px`;
+		this.input.style.maxHeight = `${Math.max(60, this.content.clientHeight - height - 56)}px`;
+		this.chatBox.style.bottom = `${height + this.input.offsetHeight + 24}px`;
+	}
 
-		state.loadAgents = async ()=> {
-			if (!this.canUse || this.isClosed) return;
-			state.listController?.abort();
-			state.modelsController?.abort();
-			
-			const controller = new AbortController();
-			state.listController = controller;
-			agentSelect.replaceChildren();
-			agentSelect.disabled = true;
-			ResetModels();
-			status.textContent = "Loading agents…";
-			try {
-				const response = await fetch("ares/agents", {signal:controller.signal});
-				if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
-				const agents = await response.json();
-				if (agents.error) throw agents.error;
-				if (!IsCurrent(controller)) return;
-				state.agents = agents;
-				for (const agent of agents) {
-					agentSelect.add(new Option(`${agent.name} (${agent.label})`, agent.id));
-				}
-				agentSelect.disabled = agents.length === 0;
-				status.textContent = "";
-				if (agents.length === 0) status.textContent = "No enabled agents. Add an agent in Infrastructure → A.R.E.S., then reopen A.R.E.S.";
-				if (agents.length > 0) await agentSelect.onchange();
-			}
-			catch (ex) {
-				if (!IsCurrent(controller)) return;
-				agentSelect.replaceChildren();
-				status.textContent = ex.message ?? String(ex);
-			}
-		};
+	ConnectionKey() { return JSON.stringify([this.connection.agent, this.connection.model]); }
 
-		okButton.onclick = async ()=> {
-			const selection = state.selection;
-			const model = selection?.models.find(entry=> entry.id === modelSelect.value);
-			if (!this.canUse || !selection || !model || selection.agent.id !== agentSelect.value || okButton.disabled) return;
-			const controller = new AbortController();
-			state.modelsController = controller;
-			agentSelect.disabled = modelSelect.disabled = okButton.disabled = true;
-			status.textContent = "Checking the selected agent and model…";
-			try {
-				const response = await fetch(`ares/models?id=${encodeURIComponent(selection.agent.id)}`, {signal:controller.signal});
-				if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
-				const current = await response.json();
-				if (current.error) throw current.error;
-				if (!IsCurrent(controller)) return;
-				if (current.revision !== selection.revision) throw new Error("The agent settings changed. Reopen A.R.E.S. and confirm your selection.");
-				if (!current.models.some(entry=> entry.id === model.id)) throw new Error("The selected model is no longer available. Reopen A.R.E.S. to load its models.");
+	ConfigureEffort() {
+		const supported = this.connection?.reasoning ?? [];
+		this.effortValues = ["", ...new Set(supported)];
+		//Boolean thinking controls run from Off to On, regardless of discovery order.
+		if (supported.length && supported.every(value=> value === "false" || value === "true")) this.effortValues = ["", ...new Set(supported.slice().sort())];
+		const saved = this.connection ? this.effortPreferences.get(this.ConnectionKey()) ?? "" : "";
+		this.effortRange.max = String(this.effortValues.length - 1);
+		this.effortRange.value = String(Math.max(0, this.effortValues.indexOf(saved)));
+		this.UpdateEffortLabel();
+		this.UpdateSettingsControls();
+	}
 
-				this.connection = Object.freeze({
-					agent:selection.agent.id,
-					agentName:selection.agent.name,
-					provider:selection.agent.type,
-					model:model.id,
-					modelName:model.name,
-					revision:selection.revision
-				});
-				this.args.agent = this.connection.agent;
-				this.args.model = this.connection.model;
-				this.connectionDialog = null;
-				this.UpdateAuthorization();
-				dialog.Close();
-				this.input.focus();
-			}
-			catch (ex) {
-				if (!IsCurrent(controller)) return;
-				ResetModels();
-				status.textContent = ex.message ?? String(ex);
-			}
-			finally {
-				if (IsCurrent(controller)) {
-					agentSelect.disabled = !this.canUse;
-					modelSelect.disabled = !this.canUse || !state.selection;
-					UpdateConnectState();
-				}
-			}
-		};
+	GetEffort() { return this.effortValues[Number(this.effortRange.value)] ?? ""; }
 
-		cancelButton.onclick = ()=> {
-			dialog.Close();
-			this.Close();
-		};
-		innerBox.parentElement.addEventListener("keydown", event=> {
-			if (event.key !== "Escape") return;
-			event.preventDefault();
-			event.stopPropagation();
-			cancelButton.click();
-		}, true);
+	UpdateEffortLabel() {
+		const value = this.GetEffort();
+		const names = {"":"Default", false:"Off", true:"On", xhigh:"Extra high"};
+		const label = Object.hasOwn(names, value) ? names[value] : value.charAt(0).toUpperCase() + value.slice(1);
+		this.effortValue.textContent = label;
+		this.effortRange.setAttribute("aria-valuetext", label);
+		const model = this.connection?.modelName ?? this.connection?.model;
+		this.settingsSummary.textContent = model ? `${model} · ${label}` : "Select model";
+	}
 
-		if (this.canUse) state.loadAgents();
-		else this.UpdateAuthorization();
+	UpdateSettingsControls() {
+		const disabled = !this.canUse || this.settingsBusy;
+		if (disabled && this.settingsPanel.contains(this.content.ownerDocument.activeElement)) this.settingsSummary.focus({preventScroll:true});
+		this.agentSelect.disabled = disabled || this.agents.length === 0;
+		this.modelSelect.disabled = disabled || !this.modelCatalog || this.modelCatalog.agent.id !== this.agentSelect.value;
+		this.effortRange.disabled = disabled || !this.connection || this.effortValues.length <= 1;
+		this.settingsMenu.setAttribute("aria-busy", String(this.settingsBusy));
+	}
 
-		setTimeout(()=>{agentSelect.focus()}, 200);
+	SetSettingsError(text = "") {
+		this.settingsError.textContent = text;
+		this.settingsError.hidden = !text;
+	}
+
+	BeginSettingsRequest() {
+		this.settingsController?.abort();
+		const controller = new AbortController();
+		this.settingsController = controller;
+		this.settingsBusy = true;
+		this.connection = null;
+		this.ConfigureEffort();
+		this.SetSettingsError();
+		return controller;
+	}
+
+	IsCurrentSettings(controller) {
+		return !this.isClosed && this.canUse && this.settingsController === controller && !controller.signal.aborted;
+	}
+
+	FinishSettingsRequest(controller) {
+		if (this.settingsController !== controller) return;
+		this.settingsController = null;
+		this.settingsBusy = false;
+		this.UpdateSettingsControls();
+	}
+
+	async LoadAgents() {
+		if (!this.canUse || this.isClosed) return;
+		const controller = this.BeginSettingsRequest();
+		this.agents = [];
+		this.modelCatalog = null;
+		this.agentSelect.replaceChildren();
+		this.modelSelect.replaceChildren();
+		this.UpdateSettingsControls();
+		try {
+			const response = await fetch("ares/agents", {signal:controller.signal});
+			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
+			const agents = await response.json();
+			if (agents.error) throw new Error(agents.error);
+			if (!this.IsCurrentSettings(controller)) return;
+			this.agents = agents;
+			for (const agent of agents) this.agentSelect.add(new Option(`${agent.name} (${agent.label})`, agent.id));
+			if (!agents.length) throw new Error("No enabled agents. Add an agent in Infrastructure → A.R.E.S., then reopen this menu.");
+			this.agentSelect.value = agents.some(agent=> agent.id === this.args.agent) ? this.args.agent : agents[0].id;
+			await this.LoadModels(this.agentSelect.value);
+		}
+		catch (ex) {
+			if (this.IsCurrentSettings(controller)) this.SetSettingsError(ex.message ?? String(ex));
+		}
+		finally { this.FinishSettingsRequest(controller); }
+	}
+
+	async LoadModels(agentId) {
+		if (!this.canUse || this.isClosed) return;
+		const agent = this.agents.find(entry=> entry.id === agentId);
+		if (!agent) return;
+		const controller = this.BeginSettingsRequest();
+		this.modelCatalog = null;
+		this.modelSelect.replaceChildren();
+		this.UpdateSettingsControls();
+		try {
+			const response = await fetch(`ares/models?id=${encodeURIComponent(agentId)}`, {signal:controller.signal});
+			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
+			const catalog = await response.json();
+			if (catalog.error) throw new Error(catalog.error);
+			if (!this.IsCurrentSettings(controller)) return;
+			if (catalog.agent.id !== agent.id || catalog.agent.name !== agent.name || catalog.agent.type !== agent.type) throw new Error("The agent settings changed. Close and reopen this menu to refresh the options.");
+			this.modelCatalog = catalog;
+			for (const model of catalog.models) this.modelSelect.add(new Option(model.name === model.id ? model.id : `${model.name} (${model.id})`, model.id));
+			if (!catalog.models.length) throw new Error("No models are available for this agent.");
+			const preferred = this.modelPreferences.get(agentId) ?? (this.args.agent === agentId ? this.args.model : null);
+			this.modelSelect.value = catalog.models.some(model=> model.id === preferred) ? preferred : catalog.models[0].id;
+			await this.SelectModel(this.modelSelect.value);
+		}
+		catch (ex) {
+			if (this.IsCurrentSettings(controller)) this.SetSettingsError(ex.message ?? String(ex));
+		}
+		finally { this.FinishSettingsRequest(controller); }
+	}
+
+	async SelectModel(modelId) {
+		if (!this.canUse || this.isClosed || !this.modelCatalog) return;
+		const catalog = this.modelCatalog;
+		const controller = this.BeginSettingsRequest();
+		try {
+			const response = await fetch(`ares/models?id=${encodeURIComponent(catalog.agent.id)}&model=${encodeURIComponent(modelId)}`, {signal:controller.signal});
+			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
+			const current = await response.json();
+			if (current.error) throw new Error(current.error);
+			if (!this.IsCurrentSettings(controller)) return;
+			if (current.revision !== catalog.revision || current.agent.id !== catalog.agent.id) throw new Error("The agent settings changed. Close and reopen this menu to refresh the options.");
+			const model = current.models.find(entry=> entry.id === modelId);
+			if (!model) throw new Error("The selected model is no longer available. Close and reopen this menu to refresh the options.");
+			this.connection = Object.freeze({
+				agent:current.agent.id, agentName:current.agent.name, provider:current.agent.type,
+				model:model.id, modelName:model.name, revision:current.revision,
+				reasoning:Object.freeze(current.reasoning ?? [])
+			});
+			this.args.agent = this.connection.agent;
+			this.args.model = this.connection.model;
+			this.modelPreferences.set(this.connection.agent, this.connection.model);
+			this.ConfigureEffort();
+			this.args.reasoning = this.GetEffort();
+			this.SetSettingsError("");
+		}
+		catch (ex) {
+			if (this.IsCurrentSettings(controller)) this.SetSettingsError(ex.message ?? String(ex));
+		}
+		finally { this.FinishSettingsRequest(controller); }
 	}
 
 	Input_onkeydown(event) {
@@ -285,7 +331,7 @@ class Ares extends Window {
 	}
 
 	async Send() {
-		if (this.isClosed || !this.canUse || !this.connection || this.requestController) return;
+		if (this.isClosed || !this.canUse || !this.connection || this.settingsBusy || this.requestController) return;
 		if (this.input.innerHTML.length === 0) return;
 
 		if (this.input.innerHTML === "<br>") {
@@ -345,7 +391,7 @@ class Ares extends Window {
 			const response = await fetch(`ares/chat?id=${encodeURIComponent(connection.agent)}`, {
 				method:"POST",
 				headers:{"Content-Type":"application/json"},
-				body:JSON.stringify({model:connection.model, revision:connection.revision, messages}),
+				body:JSON.stringify({model:connection.model, revision:connection.revision, messages, reasoning:this.GetEffort() || undefined}),
 				signal:controller.signal
 			});
 
@@ -397,11 +443,11 @@ class Ares extends Window {
 			if (responseText.length > 0) errorBox.style.marginTop = "12px";
 			reply.append(errorBox);
 			if (follow) this.chatBox.scrollTop = this.chatBox.scrollHeight;
-			//this.input.textContent = text;
 		}
 		finally {
 			if (renderFrame !== null) cancelAnimationFrame(renderFrame);
 			this.requestController = null;
+			delete this.outgoing[id];
 			reply.classList.remove("ares-thinking");
 			reply.removeAttribute("aria-busy");
 			reply.removeAttribute("role");
@@ -409,7 +455,8 @@ class Ares extends Window {
 			this.chatBox.removeAttribute("aria-busy");
 			if (!this.isClosed) {
 				this.UpdateAuthorization();
-				if (this.canUse && !this.speech?.panel.contains(this.content.ownerDocument.activeElement) &&
+				if (this.canUse && !this.settingsMenu.contains(this.content.ownerDocument.activeElement) &&
+					!this.speech?.panel.contains(this.content.ownerDocument.activeElement) &&
 					(WIN.focused === this || this.popOutWindow?.document.hasFocus())) this.input.focus();
 			}
 		}
@@ -433,7 +480,6 @@ class Ares extends Window {
 		const hasText = Ares.GetSpeechSegments(response).length > 0;
 		button.hidden = !!response.querySelector('.ares-thinking, .ares-bubble[aria-busy="true"]') || !hasText;
 		button.disabled = !supported;
-		button.title = supported ? "Read response aloud" : "Read aloud is not supported by this browser";
 	}
 
 	static GetSpeechSegments(response) {
@@ -447,6 +493,10 @@ class Ares extends Window {
 			return Array.from(node.childNodes, InlineText).join("") + (["TH", "TD"].includes(node.tagName) ? " ": "");
 		};
 		const Visit = element=> {
+			if (element.tagName === "PRE") {
+				segments.push({element, text:"See code block"});
+				return;
+			}
 			let text = "";
 			const Flush = ()=> {
 				const content = text.replace(/\s+/g, " ").trim();
@@ -486,13 +536,13 @@ class Ares extends Window {
 			if (text.length > 0) text += " ";
 			segment.start = text.length;
 			text += segment.text;
+			if (!/[.!?…]["'’”)\]]*$/.test(segment.text)) text += ".";
 		}
 		const state = {response, button, segments, text, index:0, offset:0, boundary:0, paused:false, utterance:null, synth:window.speechSynthesis};
 		this.speech = state;
 		Ares.speechOwner = this;
 		button.setAttribute("aria-pressed", "true");
 		button.setAttribute("aria-label", "Stop reading response");
-		button.title = "Stop reading response";
 		this.CreateSpeechMenu(state);
 
 		//Scroll this chat only, once. Advancing, resuming and changing settings never scroll.
@@ -524,7 +574,6 @@ class Ares extends Window {
 			button.type = "button";
 			button.className = `ares-speech-control ares-speech-${icon}`;
 			button.setAttribute("aria-label", label);
-			button.title = label;
 			button.onclick = handler;
 			controls.appendChild(button);
 			return button;
@@ -575,32 +624,37 @@ class Ares extends Window {
 
 	CreateSpeechVoiceSelector(state) {
 		const doc = this.content.ownerDocument;
+
 		const label = doc.createElement("label");
 		label.className = "ares-speech-voice";
+
 		const caption = doc.createElement("span");
 		caption.textContent = "Voice";
+
 		const select = doc.createElement("select");
 		select.setAttribute("aria-label", "Voice");
 		state.updateVoices = ()=> {
 			if (this.speech !== state) return;
-			const voices = state.synth.getVoices()
-				.filter(voice=> /^en(?:-|$)/i.test(voice.lang))
-				.sort((a, b)=> a.lang.localeCompare(b.lang) || a.name.localeCompare(b.name));
+			const voices = state.synth.getVoices().filter(voice=> /^en(?:-|$)/i.test(voice.lang)).sort((a, b)=> a.lang.localeCompare(b.lang) || a.name.localeCompare(b.name));
+
 			const AddOption = (text, value)=> {
 				const option = doc.createElement("option");
 				option.textContent = text;
 				option.value = value;
 				select.appendChild(option);
 			};
+
 			select.replaceChildren();
 			AddOption("Browser default", "");
 			for (const voice of voices) {
 				AddOption(`${voice.name} (${voice.lang})${voice.default ? " · Default" : ""}`, Ares.SpeechVoiceId(voice));
 			}
+
 			if (voices.length > 0 && !voices.some(voice=> Ares.SpeechVoiceId(voice) === this.speechVoice)) this.speechVoice = "";
 			select.value = voices.length > 0 ? this.speechVoice : "";
 			select.disabled = voices.length === 0;
 		};
+
 		select.onchange = ()=> {
 			if (this.speech !== state) return;
 			this.speechVoice = select.value;
@@ -614,12 +668,16 @@ class Ares extends Window {
 
 	UpdateSpeechMenu(state) {
 		const label = state.paused ? "Resume" : "Pause";
-		state.playButton.classList.toggle("ares-speech-play", state.paused);
-		state.playButton.classList.toggle("ares-speech-pause", !state.paused);
-		state.playButton.setAttribute("aria-label", label);
-		state.playButton.title = label;
-		state.status.textContent = `${state.index + 1} / ${state.segments.length}`;
-		state.status.setAttribute("aria-label", `${state.paused ? "Paused" : "Reading"}, section ${state.index + 1} of ${state.segments.length}`);
+		if (state.playButton.getAttribute("aria-label") !== label) {
+			state.playButton.classList.toggle("ares-speech-play", state.paused);
+			state.playButton.classList.toggle("ares-speech-pause", !state.paused);
+			state.playButton.setAttribute("aria-label", label);
+		}
+
+		const count = `${state.index + 1} / ${state.segments.length}`;
+		const status = `${state.paused ? "Paused" : "Reading"}, section ${state.index + 1} of ${state.segments.length}`;
+		if (state.status.textContent !== count) state.status.textContent = count;
+		if (state.status.getAttribute("aria-label") !== status) state.status.setAttribute("aria-label", status);
 	}
 
 	HighlightSpeech(state, position) {
@@ -722,7 +780,6 @@ class Ares extends Window {
 		state.highlight?.classList.remove("ares-speaking");
 		state.button.setAttribute("aria-pressed", "false");
 		state.button.setAttribute("aria-label", "Read response aloud");
-		state.button.title = "Read response aloud";
 		const focusInput = state.panel.contains(state.panel.ownerDocument.activeElement);
 		state.panel.remove();
 		if (focusInput && !this.isClosed) this.input.focus({preventScroll:true});
@@ -782,7 +839,95 @@ class Ares extends Window {
 			checkbox.type = "checkbox";
 			checkbox.disabled = true;
 		}
+		Ares.AddCodeCopyButtons(fragment);
 		element.replaceChildren(fragment);
+	}
+
+	static AddCodeCopyButtons(fragment) {
+		const doc = fragment.ownerDocument;
+		for (const pre of fragment.querySelectorAll("pre")) {
+			const code = pre.querySelector("code");
+
+			if (!code) continue;
+
+			const wrapper = doc.createElement("div");
+			wrapper.className = "ares-code-block";
+
+			const button = doc.createElement("button");
+			button.type = "button";
+			button.className = "ares-code-copy";
+			button.setAttribute("aria-label", "Copy code");
+
+			let resetTimer = null;
+			const ResetFeedback = ()=> {
+				clearTimeout(resetTimer);
+				resetTimer = null;
+				button.textContent = "Copy";
+				button.setAttribute("aria-label", "Copy code");
+			};
+
+			ResetFeedback();
+			button.onclick = async ()=> {
+				ResetFeedback();
+				wrapper.querySelector(".ares-code-copy-error")?.remove();
+				button.disabled = true;
+
+				try {
+					await Ares.CopyCodeText(code);
+					button.textContent = "Copied";
+					button.setAttribute("aria-label", "Code copied");
+					resetTimer = setTimeout(ResetFeedback, 2000);
+				}
+				catch {
+					const error = doc.createElement("div");
+					error.className = "ares-error ares-code-copy-error";
+					error.setAttribute("role", "alert");
+					error.textContent = "Unable to copy. Select the code and copy it manually.";
+					wrapper.appendChild(error);
+				}
+				finally {
+					button.disabled = false;
+				}
+			};
+			pre.replaceWith(wrapper);
+			wrapper.append(pre, button);
+		}
+	}
+
+	static async CopyCodeText(code) {
+		const doc = code.ownerDocument;
+		const text = code.textContent;
+		try {
+			const clipboard = doc.defaultView?.navigator.clipboard;
+			if (clipboard?.writeText) {
+				await clipboard.writeText(text);
+				return;
+			}
+		}
+		catch { /*Try the selection-based fallback when clipboard access is unavailable.*/ }
+
+		const focused = doc.activeElement;
+		const selection = doc.getSelection();
+		const ranges = Array.from({length:selection.rangeCount}, (_, index)=> selection.getRangeAt(index).cloneRange());
+		const textarea = doc.createElement("textarea");
+		textarea.value = text;
+		textarea.readOnly = true;
+		textarea.tabIndex = -1;
+		textarea.style.cssText = "position:fixed;top:0;left:0;opacity:0;pointer-events:none";
+		doc.body.appendChild(textarea);
+
+		try {
+			textarea.select();
+			if (!doc.execCommand("copy")) throw new Error("Copy failed");
+		}
+		finally {
+			textarea.remove();
+			if (focused?.isConnected) focused.focus({preventScroll:true});
+			selection.removeAllRanges();
+			for (const range of ranges) {
+				if (range.commonAncestorContainer.isConnected) selection.addRange(range);
+			}
+		}
 	}
 
 	static async ReadChatStream(response, onEvent) {
