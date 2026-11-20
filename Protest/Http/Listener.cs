@@ -404,6 +404,11 @@ internal sealed class Listener {
         }
 
         byte[] buffer = await route.Handler(ctx, username);
+        if (route.StreamsResponse && buffer is null) {
+            ctx.Response.Close();
+            return true;
+        }
+
         ctx.Response.StatusCode = (int)HttpStatusCode.OK;
         ctx.Response.ContentLength64 = buffer?.Length ?? 0;
 

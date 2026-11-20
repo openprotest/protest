@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 namespace Protest.Http;
 
 internal static class Router {
-    internal readonly record struct Route(Func<HttpListenerContext, string, ValueTask<byte[]>> Handler, string RequiredMethod = null);
+    internal readonly record struct Route(Func<HttpListenerContext, string, ValueTask<byte[]>> Handler, string RequiredMethod = null, bool StreamsResponse = false);
 
     internal static readonly FrozenDictionary<string, Route> routes = new Dictionary<string, Route> {
         ["/logout"]                              = new Route((ctx, username) => new(Auth.RevokeAccess(ctx, username) ? Data.CODE_OK.Array : Data.CODE_FAILED.Array), "POST"),
@@ -193,7 +193,7 @@ internal static class Router {
 
         ["/ares/agents"]                         = new Route((ctx, username) => new(Tools.Ares.List(true))),
         ["/ares/models"]                         = new Route(async (ctx, username) => await Tools.Ares.GetModelsAsync(ctx, username)),
-        ["/ares/chat"]                           = new Route(async (ctx, username) => await Tools.Ares.ChatAsync(ctx), "POST"),
+        ["/ares/chat"]                           = new Route(async (ctx, username) => await Tools.Ares.ChatAsync(ctx), "POST", StreamsResponse:true),
 
         ["/config/cert/list"]                    = new Route((ctx, username) => new(Tools.Cert.List())),
         ["/config/cert/create"]                  = new Route((ctx, username) => new(Tools.Cert.Create(ctx, username)), "POST"),

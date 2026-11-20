@@ -35,9 +35,6 @@ class Ares extends Window {
 		this.canUse = KEEP.authorization.includes("*") || KEEP.authorization.includes("ares:write");
 		if (!this.canUse) this.requestController?.abort();
 		if (!this.input) return;
-		const ready = this.canUse && this.connection !== null && !this.requestController;
-		this.input.contentEditable = ready ? "true" : "false";
-		this.input.setAttribute("aria-disabled", !ready);
 
 		if (this.connection) {
 			//TODO: create a status box
@@ -64,7 +61,7 @@ class Ares extends Window {
 		this.content.appendChild(this.chatBox);
 
 		this.input = document.createElement("div");
-		this.input.contentEditable = "false";
+		this.input.contentEditable = "true";
 		this.input.setAttribute("role", "textbox");
 		this.input.setAttribute("aria-label", "Ask A.R.E.S.");
 		this.input.setAttribute("aria-multiline", "true");
@@ -75,7 +72,6 @@ class Ares extends Window {
 		this.input.onkeydown = event=> this.Input_onkeydown(event);
 		this.input.onpaste = event=> {
 			event.preventDefault();
-			if (!this.canUse || !this.connection || this.requestController) return;
 			const text = event.clipboardData?.getData("text/plain");
 			if (text) this.input.ownerDocument.execCommand("insertText", false, text);
 		};
@@ -320,6 +316,7 @@ class Ares extends Window {
 		const reply = this.CreateTextBubble("Thinking…", "in", `ares:${connection.agent}`, `${connection.agentName} · ${connection.modelName}`, "var(--clr-accent)", nowString);
 		reply.setAttribute("role", "status");
 		this.ClearInput();
+		let responseText = "";
 
 		try {
 			const response = await fetch(`ares/chat?id=${encodeURIComponent(connection.agent)}`, {
@@ -330,29 +327,54 @@ class Ares extends Window {
 			});
 
 			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
-			if (response.status === 200 && !this.isClosed && !controller.signal.aborted) {
-				bubble.style.color = "var(--clr-dark)";
-				bubble.style.backgroundColor = "var(--clr-pane)";
-				bubble.style.boxShadow = "none";
-				delete this.outgoing[id];
+			if (!response.headers.get("Content-Type")?.startsWith("application/x-ndjson")) {
+				const result = await response.json();
+				throw new Error(result.error ?? "The agent returned an invalid response.");
 			}
 
-			const result = await response.json();
-			if (this.isClosed) return;
-			if (controller.signal.aborted) throw new Error("A.R.E.S. access is required. Contact your administrator.");
-			if (result.error) throw new Error(result.error);
-			if (typeof result.text !== "string" || result.text.trim().length === 0) throw new Error("The agent returned no text response.");
-
-			const follow = this.IsScrolledToBottom();
-			reply.textContent = result.text;
-			this.messages = [...messages, {role:"assistant", content:result.text}];
-			if (follow) this.chatBox.scrollTop = this.chatBox.scrollHeight;
+			let accepted = false;
+			let completed = false;
+			await Ares.ReadChatStream(response, event=> {
+				if (this.isClosed || controller.signal.aborted) throw new Error("The request was canceled.");
+				if (completed) throw new Error("The agent returned an invalid response.");
+				if (event.type === "error") throw new Error(event.error ?? "Unable to get a response from this agent.");
+				if (event.type === "accepted" && !accepted) {
+					accepted = true;
+					bubble.style.color = "var(--clr-dark)";
+					bubble.style.backgroundColor = "var(--clr-pane)";
+					bubble.style.boxShadow = "none";
+					delete this.outgoing[id];
+				}
+				else if (event.type === "delta" && accepted && typeof event.text === "string") {
+					const follow = this.IsScrolledToBottom();
+					if (responseText.length === 0) reply.textContent = "";
+					responseText += event.text;
+					reply.append(reply.ownerDocument.createTextNode(event.text));
+					if (follow) this.chatBox.scrollTop = this.chatBox.scrollHeight;
+				}
+				else if (event.type === "done" && accepted && responseText.trim().length > 0) {
+					completed = true;
+				}
+				else {
+					throw new Error("The agent returned an invalid or empty text response.");
+				}
+			});
+			if (!completed) throw new Error("The response was interrupted. Try again.");
+			this.messages = [...messages, {role:"assistant", content:responseText}];
 		}
 		catch (ex) {
 			if (this.isClosed) return;
-			reply.textContent = controller.signal.aborted ? "A.R.E.S. access is required. Contact your administrator." : ex.message ?? String(ex);
-			reply.style.color = "var(--clr-critical)";
-			reply.setAttribute("role", "alert");
+			const follow = this.IsScrolledToBottom();
+			const error = controller.signal.aborted ? "A.R.E.S. access is required. Contact your administrator." : ex.message ?? String(ex);
+			reply.textContent = responseText;
+			reply.removeAttribute("role");
+			const errorBox = reply.ownerDocument.createElement("div");
+			errorBox.className = "ares-error";
+			errorBox.textContent = error;
+			errorBox.setAttribute("role", "alert");
+			if (responseText.length > 0) errorBox.style.marginTop = "12px";
+			reply.append(errorBox);
+			if (follow) this.chatBox.scrollTop = this.chatBox.scrollHeight;
 			//this.input.textContent = text;
 		}
 		finally {
@@ -362,6 +384,31 @@ class Ares extends Window {
 				this.UpdateAuthorization();
 				if (this.canUse && (WIN.focused === this || this.popOutWindow?.document.hasFocus())) this.input.focus();
 			}
+		}
+	}
+
+	static async ReadChatStream(response, onEvent) {
+		if (!response.body) throw new Error("The agent returned no response stream.");
+		const reader = response.body.getReader();
+		const decoder = new TextDecoder();
+		let pending = "";
+		try {
+			while (true) {
+				const {value, done} = await reader.read();
+				pending += done ? decoder.decode() : decoder.decode(value, {stream:true});
+				let newline;
+				while ((newline = pending.indexOf("\n")) !== -1) {
+					const line = pending.slice(0, newline).trim();
+					pending = pending.slice(newline + 1);
+					if (line.length > 0) onEvent(JSON.parse(line));
+				}
+				if (done) break;
+			}
+			if (pending.trim().length > 0) onEvent(JSON.parse(pending));
+		}
+		finally {
+			await reader.cancel().catch(()=> {});
+			reader.releaseLock();
 		}
 	}
 
@@ -406,9 +453,6 @@ class Ares extends Window {
 			avatar.className = "ares-avatar";
 			if (direction === "out") {
 				avatar.style.backgroundColor = color;
-			}
-			else {
-				avatar.setAttribute("tip-below", alias || "A.R.E.S.");
 			}
 
 			group.appendChild(avatar);

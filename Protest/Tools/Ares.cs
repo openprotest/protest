@@ -214,28 +214,63 @@ internal static class Ares {
         if (!agent.Enabled) return Error("The selected agent is disabled. Reopen A.R.E.S. and select an enabled agent.");
         if (GetString(root, "revision") != Revision(agent)) return Error("The agent settings changed. Reopen A.R.E.S. and confirm your selection.");
 
+        ctx.Response.ContentType = "application/x-ndjson; charset=utf-8";
+        ctx.Response.SendChunked = true;
+        ctx.Response.AddHeader("X-Accel-Buffering", "no");
+        using CancellationTokenSource timeout = new CancellationTokenSource(TimeSpan.FromMinutes(2));
+        string error;
         try {
-            string text = await FetchReplyAsync(agent.Type, ReadKey(agent), model, messages, httpClient, endpoint:agent.Endpoint);
+            //Acknowledge receipt before waiting for the provider, including its response headers.
+            await WriteChatEventAsync(ctx, new { type = "accepted" }, timeout.Token);
+            await FetchReplyAsync(agent.Type, ReadKey(agent), model, messages, httpClient, timeout.Token, agent.Endpoint,
+                delta => WriteChatEventAsync(ctx, new { type = "delta", text = delta }, timeout.Token));
+            bool changed;
             lock (mutex) {
-                if (ReadAgent(agent.Id) != agent) return Error("The agent settings changed. Reopen A.R.E.S. and confirm your selection.");
+                changed = ReadAgent(agent.Id) != agent;
             }
-            return JsonSerializer.SerializeToUtf8Bytes(new { text });
+            if (changed) {
+                await WriteChatEventAsync(ctx, new { type = "error", error = "The agent settings changed. Reopen A.R.E.S. and confirm your selection." }, timeout.Token);
+            }
+            else {
+                await WriteChatEventAsync(ctx, new { type = "done" }, timeout.Token);
+            }
+            return null;
         }
         catch (HttpRequestException ex) {
-            return Error(ex.StatusCode is null
+            error = ex.StatusCode is null
                 ? $"Cannot connect to {ProviderLabel(agent.Type)}"
-                : ex.Message);
+                : ex.Message;
         }
         catch (OperationCanceledException) {
-            return Error($"The request to {ProviderLabel(agent.Type)} timed out");
+            error = $"The request to {ProviderLabel(agent.Type)} timed out";
         }
         catch (JsonException) {
-            return Error($"{ProviderLabel(agent.Type)} returned an invalid or empty text response for the selected model");
+            error = $"{ProviderLabel(agent.Type)} returned an invalid, interrupted, or empty text response for the selected model";
+        }
+        catch (HttpListenerException) {
+            return null; //the browser disconnected; disposing the upstream response stops generation
+        }
+        catch (IOException) {
+            error = $"The response from {ProviderLabel(agent.Type)} was interrupted. Try again.";
         }
         catch (Exception ex) {
             Logger.Error(ex);
-            return Error("Unable to get a response from this agent");
+            error = "Unable to get a response from this agent";
         }
+
+        try {
+            await WriteChatEventAsync(ctx, new { type = "error", error });
+        }
+        catch (HttpListenerException) { }
+        catch (IOException) { }
+        catch (ObjectDisposedException) { }
+        return null;
+    }
+
+    private static async Task WriteChatEventAsync(HttpListenerContext ctx, object value, CancellationToken token = default) {
+        byte[] bytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(value, jsonOptions) + "\n");
+        await ctx.Response.OutputStream.WriteAsync(bytes, token);
+        await ctx.Response.OutputStream.FlushAsync(token);
     }
 
     internal static Message[] ReadMessages(JsonElement root) {
@@ -254,7 +289,7 @@ internal static class Ares {
         return messages.ToArray();
     }
 
-    internal static async Task<string> FetchReplyAsync(string type, string key, string model, Message[] messages, HttpClient client, CancellationToken token = default, string endpoint = null) {
+    internal static async Task<string> FetchReplyAsync(string type, string key, string model, Message[] messages, HttpClient client, CancellationToken token = default, string endpoint = null, Func<string, Task> onText = null) {
         string address = type switch {
             "openai" => "https://api.openai.com/v1/chat/completions",
             "anthropic" => "https://api.anthropic.com/v1/messages",
@@ -262,17 +297,17 @@ internal static class Ares {
             _ => throw new ArgumentException("Unsupported agent provider", nameof(type))
         };
         object payload = type switch {
-            "openai" => new { model, messages, store = false, max_completion_tokens = 4096 },
-            "ollama" => new { model, messages, stream = false },
-            _ => new { model, messages, max_tokens = 4096 }
+            "openai" => new { model, messages, store = false, max_completion_tokens = 4096, stream = onText is not null },
+            "ollama" => new { model, messages, stream = onText is not null },
+            _ => new { model, messages, max_tokens = 4096, stream = onText is not null }
         };
         using HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, address);
         if (!String.IsNullOrEmpty(key)) request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", key);
         if (type == "anthropic") request.Headers.Add("anthropic-version", "2026-10-21");
         request.Content = new StringContent(JsonSerializer.Serialize(payload, jsonOptions), Encoding.UTF8, "application/json");
-        using HttpResponseMessage response = await client.SendAsync(request, token);
-        string body = await response.Content.ReadAsStringAsync(token);
+        using HttpResponseMessage response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, token);
         if (!response.IsSuccessStatusCode) {
+            string body = await response.Content.ReadAsStringAsync(token);
             string code = null;
             string errorType = null;
             try {
@@ -286,7 +321,12 @@ internal static class Ares {
             catch (JsonException) { }
             throw new HttpRequestException(ProviderError(type, response.StatusCode, code, errorType), null, response.StatusCode);
         }
-        using JsonDocument doc = JsonDocument.Parse(body);
+        if (onText is not null) {
+            using Stream stream = await response.Content.ReadAsStreamAsync(token);
+            using StreamReader reader = new StreamReader(stream, Encoding.UTF8);
+            return await ReadReplyStreamAsync(type, reader, onText, token);
+        }
+        using JsonDocument doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync(token));
         JsonElement root = doc.RootElement;
         string text = null;
         if (type == "openai" && root.TryGetProperty("choices", out JsonElement choices) && choices.ValueKind == JsonValueKind.Array && choices.GetArrayLength() > 0) {
@@ -301,6 +341,74 @@ internal static class Ares {
         }
         if (String.IsNullOrWhiteSpace(text)) throw new JsonException("The provider returned no text response");
         return text;
+    }
+
+    private static async Task<string> ReadReplyStreamAsync(string type, StreamReader reader, Func<string, Task> onText, CancellationToken token) {
+        StringBuilder text = new StringBuilder();
+        StringBuilder eventData = new StringBuilder();
+        bool completed = false;
+        bool hasTextBlock = false;
+        while (!completed) {
+            string line = await reader.ReadLineAsync(token);
+            if (line is null) break;
+
+            string data;
+            if (type == "ollama") {
+                if (String.IsNullOrWhiteSpace(line)) continue;
+                data = line;
+            }
+            else {
+                //SSE events may span multiple data lines; comments and other fields carry no text.
+                if (line.StartsWith("data:", StringComparison.Ordinal)) {
+                    if (eventData.Length > 0) eventData.Append('\n');
+                    string value = line[5..];
+                    eventData.Append(value.StartsWith(' ') ? value[1..] : value);
+                }
+                if (line.Length != 0 || eventData.Length == 0) continue;
+                data = eventData.ToString();
+                eventData.Clear();
+                if (type == "openai" && data == "[DONE]") {
+                    completed = true;
+                    continue;
+                }
+            }
+
+            using JsonDocument doc = JsonDocument.Parse(data);
+            JsonElement root = doc.RootElement;
+            if (root.ValueKind != JsonValueKind.Object) throw new JsonException("Invalid stream event");
+            if (root.TryGetProperty("error", out _) || GetString(root, "type") == "error") {
+                throw new JsonException("The provider returned a streaming error");
+            }
+
+            string delta = null;
+            if (type == "openai" && root.TryGetProperty("choices", out JsonElement choices) && choices.ValueKind == JsonValueKind.Array && choices.GetArrayLength() > 0 &&
+                choices[0].TryGetProperty("delta", out JsonElement change) && change.ValueKind == JsonValueKind.Object) {
+                delta = GetString(change, "content") ?? GetString(change, "refusal");
+            }
+            else if (type == "anthropic") {
+                string eventType = GetString(root, "type");
+                if (eventType == "content_block_start" && root.TryGetProperty("content_block", out JsonElement block) && block.ValueKind == JsonValueKind.Object && GetString(block, "type") == "text") {
+                    delta = (hasTextBlock ? "\n" : String.Empty) + GetString(block, "text");
+                    hasTextBlock = true;
+                }
+                else if (eventType == "content_block_delta" && root.TryGetProperty("delta", out JsonElement blockDelta) && blockDelta.ValueKind == JsonValueKind.Object && GetString(blockDelta, "type") == "text_delta") {
+                    delta = GetString(blockDelta, "text");
+                }
+                completed = eventType == "message_stop";
+            }
+            else if (type == "ollama") {
+                if (root.TryGetProperty("message", out JsonElement message) && message.ValueKind == JsonValueKind.Object) delta = GetString(message, "content");
+                completed = root.TryGetProperty("done", out JsonElement done) && done.ValueKind == JsonValueKind.True;
+            }
+
+            if (!String.IsNullOrEmpty(delta)) {
+                text.Append(delta);
+                await onText(delta);
+            }
+        }
+
+        if (!completed || String.IsNullOrWhiteSpace(text.ToString())) throw new JsonException("The provider returned an incomplete or empty text response");
+        return text.ToString();
     }
 
     private static string ProviderError(string type, HttpStatusCode status, string code, string errorType) {

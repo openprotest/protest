@@ -44,8 +44,11 @@
 
 .ares-box .ares-group {
 	position: relative;
-	filter: drop-shadow(rgba(16,16,16,.5) 0 1px 2px);
 	animation: rise-in 1 .2s;
+}
+
+.ares-box .ares-group:has(.out) {
+	filter: drop-shadow(rgba(16,16,16,.5) 0 1px 2px);
 }
 
 .ares-box .ares-avatar {
@@ -81,7 +84,11 @@
 	visibility: visible;
 }
 
-.ares-box .ares-bubble {
+.ares-box > div .ares-bubble {
+	-webkit-user-select: text; user-select: text;
+}
+
+.ares-box > div > .out .ares-bubble {
 	display: inline-block;
 	text-align: start;
 	margin: 0 4px;
@@ -93,7 +100,16 @@
 	white-space: pre-wrap;
 	max-width: min(100%, 640px);
 	background-color: var(--clr-pane);
-	-webkit-user-select: text; user-select: text;
+}
+
+.ares-box > div > .out:last-child .ares-bubble::before {
+	content: "";
+	position: absolute;
+	bottom: 13px;
+	border-style: solid;
+	border-width: 9px;
+	right: 24px;
+	border-color: transparent transparent transparent var(--clr-pane);
 }
 
 .ares-box .ares-response {
@@ -115,6 +131,7 @@
 
 .ares-box .ares-response .ares-bubble {
 	display: block;
+	color: light-dark(var(--clr-dark), var(--clr-light));
 	box-sizing: border-box;
 	width: 100%;
 	max-width: 100%;
@@ -126,6 +143,18 @@
 	display: block;
 	position: static;
 	padding: 4px 16px 0;
+}
+
+.ares-box .ares-error {
+	box-sizing: border-box;
+	width: fit-content;
+	max-width: 100%;
+	padding: 4px 8px;
+	border-radius: 4px;
+	color: light-dark(color-mix(in srgb, var(--clr-critical) 80%, rgb(0,0,0)), var(--clr-critical));
+	background-color: rgb(0,0,0,.2);
+	white-space: pre-wrap;
+	overflow-wrap: anywhere;
 }
 
 @container ares-chat (max-width: 520px) {
