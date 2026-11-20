@@ -13,24 +13,29 @@ using Protest.Http;
 namespace Protest.Tools;
 
 internal static class Ares {
-    private sealed record Agent(string Id, string Type, string Name, bool Enabled, string Secret);
+    private sealed record Agent(string Id, string Type, string Name, bool Enabled, string Secret, string Endpoint = null);
     internal sealed record Model(string Id, string Name);
+    internal sealed record Message(string Role, string Content);
 
     private const int MAX_PAYLOAD = 64 * 1024;
+    private const int MAX_CHAT_PAYLOAD = 1024 * 1024;
+    private const int MAX_TEXT_LENGTH = 8192;
     private static readonly Lock mutex = new Lock();
     private static readonly Dictionary<string, string> errors = new Dictionary<string, string>();
     private static readonly JsonSerializerOptions jsonOptions = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
-    private static readonly HttpClient httpClient = new HttpClient(new HttpClientHandler { AllowAutoRedirect = false }) { Timeout = TimeSpan.FromSeconds(30) };
+    private static readonly HttpClient httpClient = new HttpClient(new HttpClientHandler { AllowAutoRedirect = false }) { Timeout = TimeSpan.FromMinutes(2) };
 
     private static string ProviderLabel(string type) => type switch {
         "openai" => "OpenAI",
         "anthropic" => "Anthropic",
+        "ollama" => "Ollama",
         _ => null
     };
 
     public static byte[] GetTypes() => JsonSerializer.SerializeToUtf8Bytes(new[] {
         new { type = "openai", label = "OpenAI" },
-        new { type = "anthropic", label = "Anthropic" }
+        new { type = "anthropic", label = "Anthropic" },
+        new { type = "ollama", label = "Ollama" }
     });
 
     public static byte[] List(bool enabledOnly = false) {
@@ -57,7 +62,8 @@ internal static class Ares {
                 id = agent.Id,
                 type = agent.Type,
                 name = agent.Name,
-                enabled = agent.Enabled
+                enabled = agent.Enabled,
+                endpoint = agent.Endpoint
             });
         }
     }
@@ -70,7 +76,8 @@ internal static class Ares {
         bool invalidId = root.TryGetProperty("id", out JsonElement idValue) && idValue.ValueKind is not (JsonValueKind.Null or JsonValueKind.String);
         bool invalidKey = root.TryGetProperty("key", out JsonElement keyValue) && keyValue.ValueKind != JsonValueKind.String;
         bool invalidEnabled = root.TryGetProperty("enabled", out JsonElement enabledValue) && enabledValue.ValueKind is not (JsonValueKind.True or JsonValueKind.False);
-        if (invalidId || invalidKey || invalidEnabled) {
+        bool invalidEndpoint = root.TryGetProperty("endpoint", out JsonElement endpointValue) && endpointValue.ValueKind is not (JsonValueKind.Null or JsonValueKind.String);
+        if (invalidId || invalidKey || invalidEnabled || invalidEndpoint) {
             return Data.CODE_INVALID_ARGUMENT.Array;
         }
 
@@ -88,18 +95,23 @@ internal static class Ares {
 
             string name = (GetString(root, "name") ?? String.Empty).Trim();
             string key = (GetString(root, "key") ?? String.Empty).Trim();
+            string endpoint = null;
+            if (type == "ollama") {
+                endpoint = NormalizeEndpoint(GetString(root, "endpoint") ?? existing?.Endpoint ?? "http://localhost:11434");
+                if (endpoint is null) return Error("Enter a valid HTTP or HTTPS Ollama server URL without credentials, a query, or a fragment");
+            }
             bool enabled = root.TryGetProperty("enabled", out JsonElement flag) ? flag.ValueKind == JsonValueKind.True : existing?.Enabled ?? true;
 
             if (name.Length == 0 || name.Length > 64 || name.Any(Char.IsControl)) return Error("Enter a name of up to 64 characters without control characters");
-            if (key.Length == 0 && existing is null) return Error("An API key is required");
+            if (key.Length == 0 && existing is null && type != "ollama") return Error("An API key is required");
             if (key.Length > 512 || key.Any(character => character < '!' || character > '~')) return Error("The API key is not valid");
             if (ReadAgents().Any(agent => agent.Id != existing?.Id && String.Equals(agent.Name, name, StringComparison.OrdinalIgnoreCase))) {
                 return Error("An agent with this name already exists");
             }
 
             try {
-                string secret = key.Length == 0 ? existing.Secret : Convert.ToBase64String(Cryptography.Encrypt(Encoding.UTF8.GetBytes(key), Configuration.DB_KEY, Configuration.DB_KEY_IV));
-                Agent agent = new Agent(existing?.Id ?? Guid.NewGuid().ToString(), type, name, enabled, secret);
+                string secret = key.Length == 0 ? existing?.Secret ?? String.Empty : Convert.ToBase64String(Cryptography.Encrypt(Encoding.UTF8.GetBytes(key), Configuration.DB_KEY, Configuration.DB_KEY_IV));
+                Agent agent = new Agent(existing?.Id ?? Guid.NewGuid().ToString(), type, name, enabled, secret, endpoint);
                 Directory.CreateDirectory(Data.DIR_ARES_AGENTS);
                 string path = PathOf(agent.Id);
                 string temporary = $"{path}.tmp";
@@ -148,14 +160,14 @@ internal static class Ares {
         string error = null;
         Model[] models = [];
         try {
-            byte[] plain = Cryptography.Decrypt(Convert.FromBase64String(agent.Secret), Configuration.DB_KEY, Configuration.DB_KEY_IV);
             using CancellationTokenSource timeout = new CancellationTokenSource(TimeSpan.FromSeconds(30));
-            models = await FetchModelsAsync(agent.Type, Encoding.UTF8.GetString(plain), httpClient, timeout.Token);
-            if (models.Length == 0) error = "The provider returned no available models for this API key";
+            models = await FetchModelsAsync(agent.Type, ReadKey(agent), httpClient, timeout.Token, agent.Endpoint);
+            if (models.Length == 0) error = "The provider returned no available models";
         }
         catch (HttpRequestException ex) {
             error = ex.StatusCode is null
                 ? $"Cannot connect to {ProviderLabel(agent.Type)}"
+                : agent.Type == "ollama" ? $"Ollama rejected the models request (HTTP {(int)ex.StatusCode}). Check the server URL and access settings."
                 : $"{ProviderLabel(agent.Type)} rejected the models request (HTTP {(int)ex.StatusCode}). Check the API key, permissions, and rate limits.";
         }
         catch (OperationCanceledException) {
@@ -179,15 +191,141 @@ internal static class Ares {
 
         return JsonSerializer.SerializeToUtf8Bytes(new {
             agent = new { id = agent.Id, type = agent.Type, name = agent.Name, label = ProviderLabel(agent.Type) },
-            revision = Convert.ToHexString(SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(agent, jsonOptions))),
+            revision = Revision(agent),
             models = models.Select(model => new { id = model.Id, name = model.Name }).ToArray()
         });
     }
 
-    internal static async Task<Model[]> FetchModelsAsync(string type, string key, HttpClient client, CancellationToken token = default) {
-        string endpoint = type switch {
+    public static async Task<byte[]> ChatAsync(HttpListenerContext ctx) {
+        using JsonDocument doc = ReadJsonBody(ctx, MAX_CHAT_PAYLOAD);
+        if (doc is null || doc.RootElement.ValueKind != JsonValueKind.Object) return Data.CODE_INVALID_ARGUMENT.Array;
+        JsonElement root = doc.RootElement;
+        string model = GetString(root, "model");
+        Message[] messages = ReadMessages(root);
+        if (String.IsNullOrWhiteSpace(model) || model.Length > 256 || model.Any(Char.IsControl) || messages is null) {
+            return Error("Enter a text message of up to 8192 characters. The conversation must fit within 1 MB.");
+        }
+
+        Agent agent;
+        lock (mutex) {
+            agent = ReadAgent(RequestId(ctx));
+        }
+        if (agent is null) return Data.CODE_NOT_FOUND.Array;
+        if (!agent.Enabled) return Error("The selected agent is disabled. Reopen A.R.E.S. and select an enabled agent.");
+        if (GetString(root, "revision") != Revision(agent)) return Error("The agent settings changed. Reopen A.R.E.S. and confirm your selection.");
+
+        try {
+            string text = await FetchReplyAsync(agent.Type, ReadKey(agent), model, messages, httpClient, endpoint:agent.Endpoint);
+            lock (mutex) {
+                if (ReadAgent(agent.Id) != agent) return Error("The agent settings changed. Reopen A.R.E.S. and confirm your selection.");
+            }
+            return JsonSerializer.SerializeToUtf8Bytes(new { text });
+        }
+        catch (HttpRequestException ex) {
+            return Error(ex.StatusCode is null
+                ? $"Cannot connect to {ProviderLabel(agent.Type)}"
+                : ex.Message);
+        }
+        catch (OperationCanceledException) {
+            return Error($"The request to {ProviderLabel(agent.Type)} timed out");
+        }
+        catch (JsonException) {
+            return Error($"{ProviderLabel(agent.Type)} returned an invalid or empty text response for the selected model");
+        }
+        catch (Exception ex) {
+            Logger.Error(ex);
+            return Error("Unable to get a response from this agent");
+        }
+    }
+
+    internal static Message[] ReadMessages(JsonElement root) {
+        if (!root.TryGetProperty("messages", out JsonElement entries) || entries.ValueKind != JsonValueKind.Array ||
+            entries.GetArrayLength() == 0 || entries.GetArrayLength() % 2 == 0) return null;
+
+        List<Message> messages = new List<Message>();
+        foreach (JsonElement entry in entries.EnumerateArray()) {
+            if (entry.ValueKind != JsonValueKind.Object) return null;
+            string role = GetString(entry, "role");
+            string text = GetString(entry, "content");
+            if (role != (messages.Count % 2 == 0 ? "user" : "assistant") || String.IsNullOrWhiteSpace(text) ||
+                (role == "user" && text.Length > MAX_TEXT_LENGTH)) return null;
+            messages.Add(new Message(role, text));
+        }
+        return messages.ToArray();
+    }
+
+    internal static async Task<string> FetchReplyAsync(string type, string key, string model, Message[] messages, HttpClient client, CancellationToken token = default, string endpoint = null) {
+        string address = type switch {
+            "openai" => "https://api.openai.com/v1/chat/completions",
+            "anthropic" => "https://api.anthropic.com/v1/messages",
+            "ollama" => $"{NormalizeEndpoint(endpoint ?? "http://localhost:11434") ?? throw new ArgumentException("Invalid Ollama server URL")}/api/chat",
+            _ => throw new ArgumentException("Unsupported agent provider", nameof(type))
+        };
+        object payload = type switch {
+            "openai" => new { model, messages, store = false, max_completion_tokens = 4096 },
+            "ollama" => new { model, messages, stream = false },
+            _ => new { model, messages, max_tokens = 4096 }
+        };
+        using HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, address);
+        if (!String.IsNullOrEmpty(key)) request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", key);
+        if (type == "anthropic") request.Headers.Add("anthropic-version", "2026-10-21");
+        request.Content = new StringContent(JsonSerializer.Serialize(payload, jsonOptions), Encoding.UTF8, "application/json");
+        using HttpResponseMessage response = await client.SendAsync(request, token);
+        string body = await response.Content.ReadAsStringAsync(token);
+        if (!response.IsSuccessStatusCode) {
+            string code = null;
+            string errorType = null;
+            try {
+                using JsonDocument failure = JsonDocument.Parse(body);
+                if (failure.RootElement.ValueKind == JsonValueKind.Object &&
+                    failure.RootElement.TryGetProperty("error", out JsonElement error) && error.ValueKind == JsonValueKind.Object) {
+                    code = GetString(error, "code");
+                    errorType = GetString(error, "type");
+                }
+            }
+            catch (JsonException) { }
+            throw new HttpRequestException(ProviderError(type, response.StatusCode, code, errorType), null, response.StatusCode);
+        }
+        using JsonDocument doc = JsonDocument.Parse(body);
+        JsonElement root = doc.RootElement;
+        string text = null;
+        if (type == "openai" && root.TryGetProperty("choices", out JsonElement choices) && choices.ValueKind == JsonValueKind.Array && choices.GetArrayLength() > 0) {
+            JsonElement message = choices[0].GetProperty("message");
+            text = GetString(message, "content") ?? GetString(message, "refusal");
+        }
+        else if (type == "anthropic" && root.TryGetProperty("content", out JsonElement content) && content.ValueKind == JsonValueKind.Array) {
+            text = String.Join("\n", content.EnumerateArray().Where(block => GetString(block, "type") == "text").Select(block => GetString(block, "text")));
+        }
+        else if (type == "ollama" && root.TryGetProperty("message", out JsonElement ollamaMessage)) {
+            text = GetString(ollamaMessage, "content");
+        }
+        if (String.IsNullOrWhiteSpace(text)) throw new JsonException("The provider returned no text response");
+        return text;
+    }
+
+    private static string ProviderError(string type, HttpStatusCode status, string code, string errorType) {
+        string provider = ProviderLabel(type);
+        if (type == "ollama") return $"Ollama rejected the message (HTTP {(int)status}). Check the selected model, server URL, and access settings.";
+        if (status == HttpStatusCode.TooManyRequests) {
+            if (code == "credit_balance_exhausted") return $"{provider} API credits are exhausted (HTTP 429). Check the API organization's billing and credit balance.";
+            if (code == "organization_spend_limit_exceeded") return $"{provider} API organization spending limit reached (HTTP 429). Check the organization's spending limits.";
+            if (code == "organization_usage_limit_exceeded") return $"{provider} API organization usage limit reached (HTTP 429). Check the organization's API Limits page.";
+            if (code == "insufficient_quota" || errorType == "insufficient_quota") {
+                return $"{provider} API quota is unavailable or exhausted (HTTP 429). Check API billing, credits, and spending limits for the organization/project that owns this key.";
+            }
+            if (code == "rate_limit_exceeded" || errorType == "rate_limit_error") {
+                return $"{provider} API rate limit reached (HTTP 429). Wait briefly and try again, or check the project's rate limits.";
+            }
+            return $"{provider} returned HTTP 429. Check API billing, credits, and request limits; the response did not identify a specific cause.";
+        }
+        return $"{provider} rejected the message (HTTP {(int)status}). Check the selected model, API key, quota, and rate limits.";
+    }
+
+    internal static async Task<Model[]> FetchModelsAsync(string type, string key, HttpClient client, CancellationToken token = default, string endpoint = null) {
+        string address = type switch {
             "openai" => "https://api.openai.com/v1/models",
             "anthropic" => "https://api.anthropic.com/v1/models?limit=1000",
+            "ollama" => $"{NormalizeEndpoint(endpoint ?? "http://localhost:11434") ?? throw new ArgumentException("Invalid Ollama server URL")}/api/tags",
             _ => throw new ArgumentException("Unsupported agent provider", nameof(type))
         };
         Dictionary<string, Model> models = new Dictionary<string, Model>();
@@ -195,16 +333,16 @@ internal static class Ares {
         string cursor = null;
 
         do {
-            string url = cursor is null ? endpoint : $"{endpoint}&after_id={Uri.EscapeDataString(cursor)}";
+            string url = cursor is null ? address : $"{address}&after_id={Uri.EscapeDataString(cursor)}";
             using HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, url);
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", key);
+            if (!String.IsNullOrEmpty(key)) request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", key);
             if (type == "anthropic") request.Headers.Add("anthropic-version", "2026-10-21");
             using HttpResponseMessage response = await client.SendAsync(request, token);
             response.EnsureSuccessStatusCode();
             using JsonDocument doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync(token));
             JsonElement root = doc.RootElement;
-            foreach (JsonElement entry in root.GetProperty("data").EnumerateArray()) {
-                string id = GetString(entry, "id");
+            foreach (JsonElement entry in root.GetProperty(type == "ollama" ? "models" : "data").EnumerateArray()) {
+                string id = type == "ollama" ? GetString(entry, "model") ?? GetString(entry, "name") : GetString(entry, "id");
                 if (String.IsNullOrWhiteSpace(id)) continue;
                 models[id] = new Model(id, GetString(entry, "display_name") ?? id);
             }
@@ -221,13 +359,24 @@ internal static class Ares {
 
     private static string PathOf(string id) => Path.Join(Data.DIR_ARES_AGENTS, $"{id}.json");
 
+    private static string Revision(Agent agent) => Convert.ToHexString(SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(agent, jsonOptions)));
+
+    private static string ReadKey(Agent agent) => String.IsNullOrEmpty(agent.Secret) ? String.Empty :
+        Encoding.UTF8.GetString(Cryptography.Decrypt(Convert.FromBase64String(agent.Secret), Configuration.DB_KEY, Configuration.DB_KEY_IV));
+
+    internal static string NormalizeEndpoint(string endpoint) =>
+        endpoint is not null && endpoint.Length <= 2048 && Uri.TryCreate(endpoint.Trim(), UriKind.Absolute, out Uri uri) &&
+        (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps) && !String.IsNullOrEmpty(uri.Host) &&
+        uri.UserInfo.Length == 0 && uri.Query.Length == 0 && uri.Fragment.Length == 0 ? uri.AbsoluteUri.TrimEnd('/') : null;
+
     private static Agent ReadAgent(string id) {
         if (id is null) return null;
         try {
             string path = PathOf(id);
             if (!File.Exists(path)) return null;
             Agent agent = JsonSerializer.Deserialize<Agent>(File.ReadAllBytes(path), jsonOptions);
-            return agent?.Id == id && ProviderLabel(agent.Type) is not null && !String.IsNullOrWhiteSpace(agent.Name) && !String.IsNullOrEmpty(agent.Secret) ? agent : null;
+            return agent?.Id == id && ProviderLabel(agent.Type) is not null && !String.IsNullOrWhiteSpace(agent.Name) &&
+                (agent.Type == "ollama" ? NormalizeEndpoint(agent.Endpoint) is not null : !String.IsNullOrEmpty(agent.Secret)) ? agent : null;
         }
         catch (Exception ex) {
             Logger.Error(ex);
@@ -254,12 +403,12 @@ internal static class Ares {
 
     private static byte[] Error(string message) => JsonSerializer.SerializeToUtf8Bytes(new { error = message });
 
-    private static JsonDocument ReadJsonBody(HttpListenerContext ctx) {
-        if (ctx.Request.ContentLength64 > MAX_PAYLOAD) return null;
+    private static JsonDocument ReadJsonBody(HttpListenerContext ctx, int limit = MAX_PAYLOAD) {
+        if (ctx.Request.ContentLength64 > limit) return null;
         using StreamReader reader = new StreamReader(ctx.Request.InputStream, ctx.Request.ContentEncoding);
-        char[] buffer = new char[MAX_PAYLOAD + 1];
+        char[] buffer = new char[limit + 1];
         int count = reader.ReadBlock(buffer, 0, buffer.Length);
-        if (count == 0 || count > MAX_PAYLOAD) return null;
+        if (count == 0 || count > limit) return null;
         try {
             return JsonDocument.Parse(new string(buffer, 0, count));
         }

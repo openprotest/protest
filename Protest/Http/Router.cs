@@ -193,6 +193,7 @@ internal static class Router {
 
         ["/ares/agents"]                         = new Route((ctx, username) => new(Tools.Ares.List(true))),
         ["/ares/models"]                         = new Route(async (ctx, username) => await Tools.Ares.GetModelsAsync(ctx, username)),
+        ["/ares/chat"]                           = new Route(async (ctx, username) => await Tools.Ares.ChatAsync(ctx), "POST"),
 
         ["/config/cert/list"]                    = new Route((ctx, username) => new(Tools.Cert.List())),
         ["/config/cert/create"]                  = new Route((ctx, username) => new(Tools.Cert.Create(ctx, username)), "POST"),

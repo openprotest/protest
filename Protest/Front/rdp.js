@@ -1307,7 +1307,7 @@ class Rdp extends Window {
 	//hands the local clipboard to the session, then presses ctrl+v there
 	async PasteToRemote(clipboardData) {
 		if (clipboardData) {
-			const types = {};
+			const types = Object.create(null);
 			for (const type of ["text/plain", "text/html"]) {
 				const value = clipboardData.getData(type);
 				if (value) types[type] = new Blob([value], { type:type });

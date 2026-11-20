@@ -6,6 +6,10 @@ class Ares extends Window {
 		this.connection = null;
 		this.connectionDialog = null;
 		this.canUse = false;
+		this.messages = [];
+		this.requestController = null;
+
+		this.outgoing = Object.create(null);
 
 		Window.AddCssDependencies("ares.css");
 
@@ -18,29 +22,20 @@ class Ares extends Window {
 	}
 
 	Close() { //overrides
+		this.requestController?.abort();
 		this.connectionDialog?.listController?.abort();
 		this.connectionDialog?.modelsController?.abort();
 		this.connectionDialog = null;
 		super.Close();
 	}
 
-	InitializeComponents() {
-		this.input = document.createElement("div");
-		this.input.contentEditable = "false";
-		this.input.setAttribute("role", "textbox");
-		this.input.setAttribute("aria-label", "Ask A.R.E.S.");
-		this.input.setAttribute("aria-multiline", "true");
-		this.input.className = "ares-input";
-		this.content.appendChild(this.input);
-		this.defaultElement = this.input;
-	}
-
 	UpdateAuthorization() { //overrides
 		super.UpdateAuthorization();
 		const previouslyAllowed = this.canUse;
 		this.canUse = KEEP.authorization.includes("*") || KEEP.authorization.includes("ares:write");
+		if (!this.canUse) this.requestController?.abort();
 		if (!this.input) return;
-		const ready = this.canUse && this.connection !== null;
+		const ready = this.canUse && this.connection !== null && !this.requestController;
 		this.input.contentEditable = ready ? "true" : "false";
 		this.input.setAttribute("aria-disabled", !ready);
 
@@ -56,19 +51,42 @@ class Ares extends Window {
 			state.agentSelect.disabled = true;
 			state.modelSelect.disabled = true;
 			state.okButton.disabled = true;
-			state.refreshButton.disabled = true;
 			state.status.textContent = "A.R.E.S. access is required. Contact your administrator.";
 		}
 		else if (!previouslyAllowed) {
-			state.reload();
+			state.loadAgents();
 		}
+	}
+
+	InitializeComponents() {
+		this.chatBox = document.createElement("div");
+		this.chatBox.className = "ares-box";
+		this.content.appendChild(this.chatBox);
+
+		this.input = document.createElement("div");
+		this.input.contentEditable = "false";
+		this.input.setAttribute("role", "textbox");
+		this.input.setAttribute("aria-label", "Ask A.R.E.S.");
+		this.input.setAttribute("aria-multiline", "true");
+		this.input.className = "ares-input";
+		this.content.appendChild(this.input);
+		this.defaultElement = this.input;
+
+		this.input.onkeydown = event=> this.Input_onkeydown(event);
+		this.input.onpaste = event=> {
+			event.preventDefault();
+			if (!this.canUse || !this.connection || this.requestController) return;
+			const text = event.clipboardData?.getData("text/plain");
+			if (text) this.input.ownerDocument.execCommand("insertText", false, text);
+		};
+		this.input.ondrop = event=> event.preventDefault();
 	}
 
 	ConnectDialog() {
 		if (this.isClosed || this.connection || this.connectionDialog) return;
-		const dialog = this.DialogBox("240px");
+		const dialog = this.DialogBox("210px");
 		if (dialog === null) return;
-		const {okButton, cancelButton, innerBox, buttonBox} = dialog;
+		const {okButton, cancelButton, innerBox} = dialog;
 		okButton.value = "Connect";
 		okButton.disabled = true;
 		innerBox.parentElement.style.maxWidth = "560px";
@@ -99,29 +117,29 @@ class Ares extends Window {
 		status.setAttribute("role", "status");
 		innerBox.append(agentLabel, agentSelect, modelLabel, modelSelect, status);
 
-		const refreshButton = document.createElement("input");
-		refreshButton.type = "button";
-		refreshButton.value = "Refresh";
-		buttonBox.insertBefore(refreshButton, okButton);
-
-		const state = {agentSelect, modelSelect, okButton, refreshButton, status, agents:[], selection:null};
+		const state = {agentSelect, modelSelect, okButton, status, agents:[], selection:null};
 		this.connectionDialog = state;
 		const IsCurrent = controller=> this.connectionDialog === state && !this.isClosed && !controller.signal.aborted;
+		const UpdateConnectState = ()=> {
+			okButton.disabled = !this.canUse || agentSelect.options.length === 0 || modelSelect.options.length === 0;
+		};
 
-		const ResetModels = label=> {
+		const ResetModels = ()=> {
 			state.selection = null;
-			modelSelect.replaceChildren(new Option(label, ""));
+			modelSelect.replaceChildren();
 			modelSelect.disabled = true;
-			okButton.disabled = true;
+			UpdateConnectState();
 		};
 
 		agentSelect.onchange = async ()=> {
 			state.modelsController?.abort();
-			ResetModels("Select a model");
+			ResetModels();
+			status.textContent = "";
 			const agent = state.agents.find(entry=> entry.id === agentSelect.value);
 			if (!agent || !this.canUse) return;
 			const controller = new AbortController();
 			state.modelsController = controller;
+			status.style.textAlign = "center";
 			status.textContent = "Loading models…";
 			try {
 				const response = await fetch(`ares/models?id=${encodeURIComponent(agent.id)}`, {signal:controller.signal});
@@ -130,41 +148,36 @@ class Ares extends Window {
 				if (selection.error) throw selection.error;
 				if (!IsCurrent(controller)) return;
 				if (selection.agent.id !== agent.id || selection.agent.name !== agent.name || selection.agent.type !== agent.type) {
-					throw new Error("The agent settings changed. Refresh the choices before continuing.");
+					throw new Error("The agent settings changed. Reopen A.R.E.S. to load the current agents.");
 				}
-				const placeholder = new Option("Select a model", "", true, true);
-				placeholder.disabled = true;
-				modelSelect.replaceChildren(placeholder);
 				for (const model of selection.models) {
 					modelSelect.add(new Option(model.name === model.id ? model.id : `${model.name} (${model.id})`, model.id));
 				}
 				if (selection.models.length === 0) throw new Error("No models are available for this agent");
+				modelSelect.selectedIndex = 0;
 				state.selection = selection;
 				modelSelect.disabled = false;
 				status.textContent = "";
+				UpdateConnectState();
 			}
 			catch (ex) {
 				if (!IsCurrent(controller)) return;
-				ResetModels("Unable to load models");
+				ResetModels();
 				status.textContent = ex.message ?? String(ex);
 			}
 		};
 
-		modelSelect.onchange = ()=> {
-			okButton.disabled = !this.canUse || !state.selection || !modelSelect.value;
-		};
-
-		state.reload = refreshButton.onclick = async ()=> {
+		state.loadAgents = async ()=> {
 			if (!this.canUse || this.isClosed) return;
 			state.listController?.abort();
 			state.modelsController?.abort();
+			
 			const controller = new AbortController();
 			state.listController = controller;
-			agentSelect.replaceChildren(new Option("Loading agents…", ""));
+			agentSelect.replaceChildren();
 			agentSelect.disabled = true;
-			ResetModels("Select an agent first");
-			refreshButton.disabled = true;
-			status.textContent = "";
+			ResetModels();
+			status.textContent = "Loading agents…";
 			try {
 				const response = await fetch("ares/agents", {signal:controller.signal});
 				if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
@@ -172,32 +185,28 @@ class Ares extends Window {
 				if (agents.error) throw agents.error;
 				if (!IsCurrent(controller)) return;
 				state.agents = agents;
-				const placeholder = new Option("Select an agent", "", true, true);
-				placeholder.disabled = true;
-				agentSelect.replaceChildren(placeholder);
 				for (const agent of agents) {
 					agentSelect.add(new Option(`${agent.name} (${agent.label})`, agent.id));
 				}
 				agentSelect.disabled = agents.length === 0;
-				if (agents.length === 0) status.textContent = "No enabled agents. Add an agent in Infrastructure → A.R.E.S., then refresh.";
+				status.textContent = "";
+				if (agents.length === 0) status.textContent = "No enabled agents. Add an agent in Infrastructure → A.R.E.S., then reopen A.R.E.S.";
+				if (agents.length > 0) await agentSelect.onchange();
 			}
 			catch (ex) {
 				if (!IsCurrent(controller)) return;
-				agentSelect.replaceChildren(new Option("Unable to load agents", ""));
+				agentSelect.replaceChildren();
 				status.textContent = ex.message ?? String(ex);
-			}
-			finally {
-				if (IsCurrent(controller)) refreshButton.disabled = !this.canUse;
 			}
 		};
 
 		okButton.onclick = async ()=> {
 			const selection = state.selection;
 			const model = selection?.models.find(entry=> entry.id === modelSelect.value);
-			if (!this.canUse || !selection || !model || okButton.disabled) return;
+			if (!this.canUse || !selection || !model || selection.agent.id !== agentSelect.value || okButton.disabled) return;
 			const controller = new AbortController();
 			state.modelsController = controller;
-			agentSelect.disabled = modelSelect.disabled = refreshButton.disabled = okButton.disabled = true;
+			agentSelect.disabled = modelSelect.disabled = okButton.disabled = true;
 			status.textContent = "Checking the selected agent and model…";
 			try {
 				const response = await fetch(`ares/models?id=${encodeURIComponent(selection.agent.id)}`, {signal:controller.signal});
@@ -205,8 +214,8 @@ class Ares extends Window {
 				const current = await response.json();
 				if (current.error) throw current.error;
 				if (!IsCurrent(controller)) return;
-				if (current.revision !== selection.revision) throw new Error("The agent settings changed. Refresh the choices and confirm your selection again.");
-				if (!current.models.some(entry=> entry.id === model.id)) throw new Error("The selected model is no longer available. Refresh and select a model.");
+				if (current.revision !== selection.revision) throw new Error("The agent settings changed. Reopen A.R.E.S. and confirm your selection.");
+				if (!current.models.some(entry=> entry.id === model.id)) throw new Error("The selected model is no longer available. Reopen A.R.E.S. to load its models.");
 
 				this.connection = Object.freeze({
 					agent:selection.agent.id,
@@ -224,14 +233,15 @@ class Ares extends Window {
 				this.input.focus();
 			}
 			catch (ex) {
-				if (IsCurrent(controller)) status.textContent = ex.message ?? String(ex);
+				if (!IsCurrent(controller)) return;
+				ResetModels();
+				status.textContent = ex.message ?? String(ex);
 			}
 			finally {
 				if (IsCurrent(controller)) {
 					agentSelect.disabled = !this.canUse;
-					modelSelect.disabled = !this.canUse;
-					refreshButton.disabled = !this.canUse;
-					modelSelect.onchange();
+					modelSelect.disabled = !this.canUse || !state.selection;
+					UpdateConnectState();
 				}
 			}
 		};
@@ -247,8 +257,210 @@ class Ares extends Window {
 			cancelButton.click();
 		}, true);
 
-		if (this.canUse) state.reload();
+		if (this.canUse) state.loadAgents();
 		else this.UpdateAuthorization();
+
+		setTimeout(()=>{agentSelect.focus()}, 200);
+	}
+
+	Input_onkeydown(event) {
+		if (event.isComposing) return;
+		if (event.key === "Enter" && !event.shiftKey) {
+			event.preventDefault();
+			this.Send();
+		}
+		else if (event.key === "Escape") {
+			this.ClearInput();
+		}
+	}
+
+	ClearInput() {
+		this.input.textContent = "";
+	}
+
+	async Send() {
+		if (this.isClosed || !this.canUse || !this.connection || this.requestController) return;
+		if (this.input.innerHTML.length === 0) return;
+
+		if (this.input.innerHTML === "<br>") {
+			this.ClearInput();
+			return;
+		}
+
+		const normalizedHtml = this.input.innerHTML.replaceAll(/<br\s*\/?>/gi, "\n").replaceAll(/<\/div>/gi, "\n");
+
+		//an inert document, unlike a detached div nothing in it loads
+		const text = new DOMParser().parseFromString(normalizedHtml, "text/html").body.textContent.replaceAll(" ", "\n").trim();
+
+		if (text.length > Chat.MAX_TEXT_LENGTH) {
+			this.ConfirmBox(`The message is too long, the limit is ${Chat.MAX_TEXT_LENGTH} characters.`, true, "mono/ares.svg");
+			return;
+		}
+
+		if (this.input.querySelector("img")) {
+			this.ConfirmBox("Only text messages are supported for now.", true, "mono/ares.svg");
+			return;
+		}
+		if (text.length === 0) return;
+
+		const connection = this.connection;
+		const messages = [...this.messages, {role:"user", content:text}];
+		const controller = new AbortController();
+		this.requestController = controller;
+		this.UpdateAuthorization();
+		this.chatBox.setAttribute("aria-busy", "true");
+
+		const nowString = new Date().toLocaleTimeString(UI.regionalFormat, {});
+		const id = `${KEEP.username}${UI.GenerateUuid()}`;
+		const bubble = this.CreateTextBubble(text, "out", KEEP.username, "", KEEP.color, nowString, id);
+		bubble.style.color = "var(--clr-pane)";
+		bubble.style.backgroundColor = "transparent";
+		bubble.style.boxShadow = "var(--clr-pane) 0 0 0 2px inset";
+		
+		const reply = this.CreateTextBubble("Thinking…", "in", `ares:${connection.agent}`, `${connection.agentName} · ${connection.modelName}`, "var(--clr-accent)", nowString);
+		reply.setAttribute("role", "status");
+		this.ClearInput();
+
+		try {
+			const response = await fetch(`ares/chat?id=${encodeURIComponent(connection.agent)}`, {
+				method:"POST",
+				headers:{"Content-Type":"application/json"},
+				body:JSON.stringify({model:connection.model, revision:connection.revision, messages}),
+				signal:controller.signal
+			});
+
+			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
+			if (response.status === 200 && !this.isClosed && !controller.signal.aborted) {
+				bubble.style.color = "var(--clr-dark)";
+				bubble.style.backgroundColor = "var(--clr-pane)";
+				bubble.style.boxShadow = "none";
+				delete this.outgoing[id];
+			}
+
+			const result = await response.json();
+			if (this.isClosed) return;
+			if (controller.signal.aborted) throw new Error("A.R.E.S. access is required. Contact your administrator.");
+			if (result.error) throw new Error(result.error);
+			if (typeof result.text !== "string" || result.text.trim().length === 0) throw new Error("The agent returned no text response.");
+
+			const follow = this.IsScrolledToBottom();
+			reply.textContent = result.text;
+			this.messages = [...messages, {role:"assistant", content:result.text}];
+			if (follow) this.chatBox.scrollTop = this.chatBox.scrollHeight;
+		}
+		catch (ex) {
+			if (this.isClosed) return;
+			reply.textContent = controller.signal.aborted ? "A.R.E.S. access is required. Contact your administrator." : ex.message ?? String(ex);
+			reply.style.color = "var(--clr-critical)";
+			reply.setAttribute("role", "alert");
+			//this.input.textContent = text;
+		}
+		finally {
+			this.requestController = null;
+			this.chatBox.removeAttribute("aria-busy");
+			if (!this.isClosed) {
+				this.UpdateAuthorization();
+				if (this.canUse && (WIN.focused === this || this.popOutWindow?.document.hasFocus())) this.input.focus();
+			}
+		}
+	}
+
+	IsScrolledToBottom() {
+		return this.chatBox.scrollTop + this.chatBox.clientHeight - this.chatBox.scrollHeight >= -96;
+	}
+
+	CreateBubble(direction, sender, alias, color, time) {
+		let group;
+
+		const wrapper = document.createElement("div");
+		wrapper.tabIndex = 0;
+		wrapper.className = direction;
+
+		const bubble = document.createElement("div");
+		bubble.className = "ares-bubble";
+
+		if (this.lastBubble && this.lastBubble.sender === sender) {
+			if (direction === "out") {
+				const timeLabel = document.createElement("div");
+				timeLabel.className = "ares-timestamp";
+				timeLabel.textContent = time;
+
+				this.lastBubble.bubble.style.borderBottomRightRadius = "2px";
+				bubble.style.borderTopRightRadius = "2px";
+
+				wrapper.append(timeLabel, bubble);
+			}
+			else if (direction === "in") {
+				this.lastBubble.bubble.style.borderBottomLeftRadius = "2px";
+				bubble.style.borderTopLeftRadius = "2px";
+				wrapper.append(bubble);
+			}
+
+			group = this.lastBubble.group;
+		}
+		else {
+			group = document.createElement("div");
+			group.className = direction === "in" ? "ares-group ares-response" : "ares-group";
+
+			const avatar = document.createElement("div");
+			avatar.className = "ares-avatar";
+			if (direction === "out") {
+				avatar.style.backgroundColor = color;
+			}
+			else {
+				avatar.setAttribute("tip-below", alias || "A.R.E.S.");
+			}
+
+			group.appendChild(avatar);
+
+			if (direction === "out") {
+				const timeLabel = document.createElement("div");
+				timeLabel.className = "ares-timestamp";
+				timeLabel.textContent = time;
+
+				group.style.textAlign = "right";
+				group.style.paddingRight = "36px";
+				avatar.style.right = "4px";
+
+				wrapper.append(timeLabel, bubble);
+			}
+			else {
+				wrapper.append(bubble);
+			}
+
+			this.chatBox.appendChild(group);
+		}
+
+		this.lastBubble = {
+			group: group,
+			bubble: bubble,
+			sender: sender
+		};
+
+		const isScrolledToBottom = this.IsScrolledToBottom();
+
+		group.appendChild(wrapper);
+
+		if (isScrolledToBottom) {
+			setTimeout(()=> wrapper.scrollIntoView({behavior:"smooth"}), 50);
+		}
+
+		return bubble;
+	}
+
+	CreateTextBubble(text, direction, sender, alias, color, time, id=null) {
+		if (text.length === 0) return;
+
+		const bubble = this.CreateBubble(direction, sender, alias, color, time);
+		bubble.textContent = text;
+
+		if (direction === "out") {
+			if (id && !(id in this.outgoing)) {
+				this.outgoing[id] = bubble;
+			}
+		}
+
+		return bubble;
 	}
 
 }

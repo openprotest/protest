@@ -354,7 +354,7 @@ class Scheduler extends List {
 		const rows = [];
 		const MIN_DAYS = 30;
 
-		let settingsByKey = {};
+		let settingsByKey = Object.create(null);
 		try {
 			const response = await fetch("config/dataretention/settings/list");
 			if (response.status === 200) {

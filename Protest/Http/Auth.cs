@@ -746,6 +746,7 @@ internal static class Auth {
             case "ares:write":
                 path.Add("/ares/agents");
                 path.Add("/ares/models");
+                path.Add("/ares/chat");
                 break;
 
             case "integration:write":

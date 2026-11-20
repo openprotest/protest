@@ -1220,14 +1220,10 @@ class Chat extends Window {
 			return;
 		}
 
-		const normalizedHtml = this.input.innerHTML
-			.replaceAll(/<br\s*\/?>/gi, "\n")
-			.replaceAll(/<\/div>/gi, "\n");
+		const normalizedHtml = this.input.innerHTML.replaceAll(/<br\s*\/?>/gi, "\n").replaceAll(/<\/div>/gi, "\n");
 
 		//an inert document, unlike a detached div nothing in it loads
-		const text = new DOMParser().parseFromString(normalizedHtml, "text/html").body.textContent
-			.replaceAll(" ", "\n")
-			.trim();
+		const text = new DOMParser().parseFromString(normalizedHtml, "text/html").body.textContent.replaceAll(" ", "\n").trim();
 
 		const images = this.input.querySelectorAll("img[src^='data:image/']");
 
@@ -1529,7 +1525,10 @@ class Chat extends Window {
 
 		const image = document.createElement("img");
 		image.src = src;
+		image.alt = "Chat image";
+		image.tabIndex = 0;
 		image.style.maxWidth = "200px";
+		image.style.cursor = "zoom-in";
 		bubble.appendChild(image);
 
 		if (direction === "out") {
@@ -1538,31 +1537,165 @@ class Chat extends Window {
 			}
 		}
 
-		image.onclick = ()=> {
-			const dialog = this.DialogBox("80%");
-			if (dialog === null) return;
+		let preview = null;
+		let transition = null;
 
-			const {okButton, cancelButton, innerBox} = dialog;
+		const Animate = Update=> {
+			const viewDocument = image.ownerDocument;
+			transition?.skipTransition();
+			if (typeof viewDocument.startViewTransition !== "function" ||
+				localStorage.getItem("animations") === "false" ||
+				viewDocument.defaultView.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+				Update();
+				return Promise.resolve();
+			}
+			const current = preview;
+			const view = viewDocument.defaultView;
+			const bounds = this.popOutWindow ?
+				{top:0, left:0, right:view.innerWidth, bottom:view.innerHeight} : this.win.getBoundingClientRect();
+			const root = viewDocument.documentElement;
+			const insets = [bounds.top, view.innerWidth - bounds.right, view.innerHeight - bounds.bottom, bounds.left]
+				.map(value=> `${Math.max(0, value)}px`).join(" ");
+			root.style.setProperty(`--${current.name}-clip`, `inset(${insets})`);
+			root.classList.add(current.name);
+			const activeTransition = viewDocument.startViewTransition(Update);
+			transition = activeTransition;
+			activeTransition.ready.catch(()=> {});
+			return activeTransition.finished.finally(()=> {
+				if (transition === activeTransition) current.clearTransition();
+			});
+		};
 
-			innerBox.style.margin = "20px 20px 0 20px";
-			innerBox.style.userSelect = "text";
-			innerBox.parentElement.style.top = "10%";
-			innerBox.parentElement.style.maxWidth = "80%";
+		const Close = (animate=true)=> {
+			const current = preview;
+			if (!current || (current.closing && animate)) return;
+			current.closing = true;
+			current.observer?.disconnect();
+			current.view.removeEventListener("pagehide", current.dismiss);
+			const Restore = ()=> {
+				current.placeholder.replaceWith(image);
+				image.style.cssText = current.imageStyle;
+				current.overlay.remove();
+				this.content.inert = current.contentInert;
+				if (this.toolbar) this.toolbar.inert = current.toolbarInert;
+			};
+			const Finish = ()=> {
+				if (preview !== current) return;
+				image.style.cssText = current.imageStyle;
+				current.clearTransition();
+				current.styles.remove();
+				preview = null;
+				transition = null;
+				if (!this.isClosed && image.isConnected) image.focus({preventScroll:true});
+			};
+			if (!animate) {
+				transition?.skipTransition();
+				Restore();
+				Finish();
+				return;
+			}
+			Animate(()=> {
+				if (preview !== current) return;
+				Restore();
+				image.style.viewTransitionName = current.name;
+			}).then(Finish, current.dismiss);
+		};
 
-			//an img, not a css url(), so the src can never be read as css
-			const fullImage = document.createElement("img");
-			fullImage.src = src;
-			fullImage.style.display = "block";
-			fullImage.style.width = "100%";
-			fullImage.style.height = "100%";
-			fullImage.style.objectFit = "contain";
-			innerBox.appendChild(fullImage);
+		const Open = ()=> {
+			const viewDocument = image.ownerDocument;
+			const host = this.popOutWindow ? viewDocument.body : this.win;
+			if (this.isClosed || !image.isConnected || this.content.inert || host.querySelector(".win-dim")) return;
+			const name = UI.GenerateUuid("chat-image");
+			const placeholder = viewDocument.createElement("span");
+			Object.assign(placeholder.style, {
+				display:"inline-block", width:`${image.offsetWidth}px`, height:`${image.offsetHeight}px`
+			});
+			const overlay = viewDocument.createElement("div");
+			overlay.className = "win-dim chat-image-preview";
+			overlay.tabIndex = 0;
+			overlay.setAttribute("role", "dialog");
+			overlay.setAttribute("aria-modal", "true");
+			overlay.setAttribute("aria-label", "Image preview. Click to close.");
+			Object.assign(overlay.style, {
+				display:"grid", placeItems:"center", padding:"16px", boxSizing:"border-box",
+				cursor:"zoom-out", animation:"none", zIndex:"10", viewTransitionName:`${name}-backdrop`
+			});
+			if (this.popOutWindow) overlay.style.top = "0";
+			const styles = viewDocument.createElement("style");
+			styles.textContent = `
+				:root.${name} { view-transition-name: none; }
+				:root.${name}::view-transition { clip-path: var(--${name}-clip); }
+				::view-transition-group(${name}) { z-index: 2; animation-duration: .2s; animation-timing-function: ease-in-out; }
+				::view-transition-group(${name}-backdrop) { z-index: 1; animation-duration: .2s; }
+				::view-transition-old(${name}), ::view-transition-new(${name}) { height: 100%; object-fit: contain; }
+			`;
+			viewDocument.head.appendChild(styles);
+			const current = {
+				name, overlay, placeholder, styles, view:viewDocument.defaultView,
+				imageStyle:image.style.cssText, contentInert:this.content.inert, toolbarInert:this.toolbar?.inert,
+				clearTransition:()=> {
+					viewDocument.documentElement.classList.remove(name);
+					viewDocument.documentElement.style.removeProperty(`--${name}-clip`);
+				},
+				dismiss:()=> {
+					if (preview === current) Close(false);
+				}
+			};
+			preview = current;
+			overlay.onmousedown = overlay.onmouseup = event=> {
+				event.stopPropagation();
+				this.BringToFront();
+			};
+			overlay.onclick = event=> {
+				event.stopPropagation();
+				if (event.button === 0) Close();
+			};
+			overlay.onkeydown = event=> {
+				if (event.key !== "Escape") return;
+				event.preventDefault();
+				event.stopPropagation();
+				Close();
+			};
+			this.BringToFront();
+			//Reserve the window while the transition's update callback is pending.
+			this.content.inert = true;
+			if (this.toolbar) this.toolbar.inert = true;
+			current.observer = new MutationObserver(()=> {
+				if (!image.isConnected || image.ownerDocument !== viewDocument) Close(false);
+			});
+			current.observer.observe(host, {childList:true});
+			current.observer.observe(host.parentNode, {childList:true});
+			current.view.addEventListener("pagehide", current.dismiss);
+			image.style.viewTransitionName = name;
+			Animate(()=> {
+				if (preview !== current || current.closing) return;
+				if (this.isClosed || !image.isConnected || image.ownerDocument !== viewDocument || host.querySelector(".win-dim")) {
+					Close(false);
+					return;
+				}
+				image.replaceWith(placeholder);
+				Object.assign(image.style, {
+					width:"100%", height:"100%", maxWidth:"100%", minWidth:"0", minHeight:"0",
+					objectFit:"contain", cursor:"zoom-out"
+				});
+				overlay.appendChild(image);
+				host.appendChild(overlay);
+				overlay.focus({preventScroll:true});
+			}).catch(current.dismiss);
+		};
 
-			okButton.style.display = "none";
-			cancelButton.value = "Close";
-
-			innerBox.parentElement.onclick = event=> event.stopPropagation();
-			innerBox.parentElement.parentElement.onclick = ()=> dialog.Close();
+		image.onclick = event=> {
+			if (event.button !== 0) return;
+			event.stopPropagation();
+			if (preview) Close();
+			else Open();
+		};
+		image.onkeydown = event=> {
+			if (event.key !== "Enter" && event.key !== " ") return;
+			event.preventDefault();
+			event.stopPropagation();
+			if (preview) Close();
+			else Open();
 		};
 
 		return bubble;

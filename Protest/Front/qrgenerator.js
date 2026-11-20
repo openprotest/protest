@@ -328,7 +328,7 @@ class QrGenerator extends Window {
 	BuildForm() {
 		const type = QrGenerator.TYPES.find(o=> o.name === this.args.type);
 		this.form.textContent = "";
-		this.fields = {};
+		this.fields = Object.create(null);
 
 		for (const field of type.fields) {
 			const pair = document.createElement("div");
@@ -400,7 +400,7 @@ class QrGenerator extends Window {
 	}
 
 	Values() {
-		const values = {};
+		const values = Object.create(null);
 		for (const key in this.fields) {
 			values[key] = this.fields[key].type === "checkbox" ? this.fields[key].checked : this.fields[key].value;
 		}

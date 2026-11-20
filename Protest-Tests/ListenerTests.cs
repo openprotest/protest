@@ -683,6 +683,10 @@ public class ListenerTests {
             Assert.That(opened.RootElement.GetProperty("name").GetString(), Is.EqualTo(name));
             Assert.That(opened.RootElement.TryGetProperty("description", out _), Is.False);
 
+            using JsonDocument staleChat = JsonDocument.Parse(Send($"/ares/chat?id={agentId}", HttpMethod.Post,
+                JsonSerializer.Serialize(new { model = "selected-model", revision = "stale", messages = new[] { new { role = "user", content = "Hello" } } })));
+            Assert.That(staleChat.RootElement.GetProperty("error").GetString(), Does.Contain("settings changed"));
+
             using JsonDocument available = JsonDocument.Parse(Send("/ares/agents", HttpMethod.Get));
             JsonElement enabledAgent = available.RootElement.EnumerateArray().Single(entry => entry.GetProperty("id").GetString() == agentId);
             Assert.That(enabledAgent.GetProperty("name").GetString(), Is.EqualTo(name));
@@ -716,6 +720,9 @@ public class ListenerTests {
             Assert.That(disabled.RootElement.EnumerateArray().Any(entry => entry.GetProperty("id").GetString() == agentId), Is.False);
             string models = Send($"/ares/models?id={agentId}", HttpMethod.Get);
             Assert.That(models, Does.Contain("disabled"));
+            string disabledChat = Send($"/ares/chat?id={agentId}", HttpMethod.Post,
+                JsonSerializer.Serialize(new { model = "selected-model", revision = "stale", messages = new[] { new { role = "user", content = "Hello" } } }));
+            Assert.That(disabledChat, Does.Contain("disabled"));
             string integration = Send($"/config/integration/get?id={agentId}", HttpMethod.Get);
             Assert.That(integration, Does.Contain("not found"));
 
@@ -723,6 +730,29 @@ public class ListenerTests {
             Assert.That(File.Exists(path), Is.False);
             using JsonDocument deleted = JsonDocument.Parse(Send($"/config/ares/get?id={agentId}", HttpMethod.Get));
             Assert.That(deleted.RootElement.GetProperty("error").GetString(), Is.EqualTo("not found"));
+
+            using JsonDocument ollama = JsonDocument.Parse(Send("/config/ares/save", HttpMethod.Post,
+                JsonSerializer.Serialize(new { type = "ollama", name = $"Ollama {Guid.NewGuid()}", enabled = true })));
+            agentId = ollama.RootElement.GetProperty("id").GetString();
+            using JsonDocument local = JsonDocument.Parse(Send($"/config/ares/get?id={agentId}", HttpMethod.Get));
+            Assert.That(local.RootElement.GetProperty("endpoint").GetString(), Is.EqualTo("http://localhost:11434"));
+            using JsonDocument localStored = JsonDocument.Parse(File.ReadAllText(Path.Join(Data.DIR_ARES_AGENTS, $"{agentId}.json")));
+            Assert.That(localStored.RootElement.GetProperty("secret").GetString(), Is.Empty);
+            string localName = local.RootElement.GetProperty("name").GetString()!;
+            using JsonDocument invalidEndpoint = JsonDocument.Parse(Send("/config/ares/save", HttpMethod.Post,
+                JsonSerializer.Serialize(new { id = agentId, name = localName, endpoint = "file:///tmp/ollama" })));
+            Assert.That(invalidEndpoint.RootElement.GetProperty("error").GetString(), Does.Contain("server URL"));
+            Send("/config/ares/save", HttpMethod.Post,
+                JsonSerializer.Serialize(new { id = agentId, name = localName, endpoint = "http://ollama-host:11434/", key = "optional-key" }));
+            Send("/config/ares/save", HttpMethod.Post,
+                JsonSerializer.Serialize(new { id = agentId, name = localName, key = "" }));
+            using JsonDocument updatedLocal = JsonDocument.Parse(Send($"/config/ares/get?id={agentId}", HttpMethod.Get));
+            Assert.That(updatedLocal.RootElement.GetProperty("endpoint").GetString(), Is.EqualTo("http://ollama-host:11434"));
+            Assert.That(updatedLocal.RootElement.TryGetProperty("secret", out _), Is.False);
+            using JsonDocument keyedLocal = JsonDocument.Parse(File.ReadAllText(Path.Join(Data.DIR_ARES_AGENTS, $"{agentId}.json")));
+            string localKey = Encoding.UTF8.GetString(Cryptography.Decrypt(Convert.FromBase64String(keyedLocal.RootElement.GetProperty("secret").GetString()!), Configuration.DB_KEY, Configuration.DB_KEY_IV));
+            Assert.That(localKey, Is.EqualTo("optional-key"));
+            Send($"/config/ares/delete?id={agentId}", HttpMethod.Post);
         }
         finally {
             Configuration.DB_KEY = originalKey;

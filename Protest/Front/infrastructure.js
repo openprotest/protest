@@ -681,7 +681,7 @@ class Infrastructure extends Tabs {
 		saveButton.onclick = async ()=> {
 			saveButton.disabled = true;
 
-			const settings = {};
+			const settings = Object.create(null);
 			for (const [name, section] of Object.entries(sections)) {
 				settings[name] = {
 					idServer   : section.idServer.value.trim(),
@@ -1381,7 +1381,8 @@ class Infrastructure extends Tabs {
 		}
 
 		if (this.isClosed || this.args !== "ares") return;
-		const dialog = this.DialogBox("300px");
+		const isOllama = provider.type === "ollama";
+		const dialog = this.DialogBox(isOllama ? "370px" : "300px");
 		if (dialog === null) return;
 		const {okButton, innerBox} = dialog;
 		okButton.value = "Save";
@@ -1425,11 +1426,21 @@ class Infrastructure extends Tabs {
 		nameInput.value = current?.name ?? "";
 		CreateRow("Name", nameInput);
 
+		const endpointInput = document.createElement("input");
+		if (isOllama) {
+			endpointInput.type = "text";
+			endpointInput.setAttribute("aria-label", "Server URL");
+			endpointInput.maxLength = 2048;
+			endpointInput.value = current?.endpoint ?? "http://localhost:11434";
+			endpointInput.title = "Ollama server URL, reached from the Pro-test server";
+			CreateRow("Server URL", endpointInput);
+		}
+
 		const keyInput = document.createElement("input");
 		keyInput.type = "password";
 		keyInput.maxLength = 512;
 		keyInput.autocomplete = "new-password";
-		keyInput.placeholder = current ? "unchanged" : "";
+		keyInput.placeholder = current ? "unchanged" : isOllama ? "optional" : "";
 		CreateRow("API key", keyInput);
 
 		const errorBox = document.createElement("div");
@@ -1446,7 +1457,7 @@ class Infrastructure extends Tabs {
 				return;
 			}
 			nameInput.required = false;
-			if (!current && keyInput.value.trim().length === 0) {
+			if (!current && !isOllama && keyInput.value.trim().length === 0) {
 				keyInput.required = true;
 				keyInput.focus();
 				return;
@@ -1461,6 +1472,7 @@ class Infrastructure extends Tabs {
 						type: provider.type,
 						name: nameInput.value,
 						enabled: enableToggle.checkbox.checked,
+						endpoint: isOllama ? endpointInput.value : undefined,
 						key: keyInput.value
 					})
 				});
@@ -2887,7 +2899,7 @@ class Infrastructure extends Tabs {
 
 			if (requiredFieldMissing) return;
 
-			const config = {};
+			const config = Object.create(null);
 			for (const o of fieldInputs) {
 				config[o.field.name] = o.input.value;
 			}
