@@ -12,6 +12,8 @@
 	padding: 8px 12px;
 	border-radius: 16px;
 	text-align: start;
+	white-space: pre-wrap;
+	overflow-wrap: anywhere;
 
 	color: var(--clr-dark);
 	background-color: var(--clr-pane);
@@ -145,6 +147,33 @@
 	padding: 4px 16px 0;
 }
 
+.ares-thinking > p {
+	-webkit-user-select: none; user-select: none;
+
+	background: linear-gradient(
+		90deg,
+		var(--clr-contrast) 0%,
+		var(--clr-contrast) 25%,
+		var(--clr-accent) 50%,
+		var(--clr-contrast) 75%,
+		var(--clr-contrast) 100%);
+
+	background-size: 200% auto;
+	color: transparent;
+
+	-webkit-background-clip: text;
+	background-clip: text;
+	animation: ares-thinking 3s linear infinite;
+}
+
+@keyframes ares-thinking {
+	to {background-position: 200% center; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.ares-box .ares-bubble.ares-thinking { animation: none; }
+}
+
 .ares-box .ares-error {
 	box-sizing: border-box;
 	width: fit-content;
@@ -156,6 +185,181 @@
 	white-space: pre-wrap;
 	overflow-wrap: anywhere;
 }
+
+.ares-box > div .ares-bubble.ares-markdown {
+	box-sizing: border-box;
+	white-space: normal;
+	overflow-wrap: anywhere;
+	line-height: 1.5;
+}
+
+.ares-markdown p,
+.ares-markdown ul,
+.ares-markdown ol,
+.ares-markdown blockquote,
+.ares-markdown pre {
+	margin: 0 0 .75em;
+}
+
+.ares-markdown > :first-child { margin-top: 0; }
+.ares-markdown > :last-child { margin-bottom: 0; }
+.ares-markdown li > :last-child { margin-bottom: 0; }
+.ares-markdown ul, .ares-markdown ol { padding-left: 1.75em; }
+.ares-markdown li > ul, .ares-markdown li > ol { margin-bottom: 0; }
+
+.ares-markdown h1, .ares-markdown h2, .ares-markdown h3,
+.ares-markdown h4, .ares-markdown h5, .ares-markdown h6 {
+	margin: 1em 0 .5em;
+	line-height: 1.25;
+}
+
+.ares-markdown h1 { font-size: 1.6em; }
+.ares-markdown h2 { font-size: 1.4em; }
+.ares-markdown h3 { font-size: 1.2em; }
+.ares-markdown h4, .ares-markdown h5, .ares-markdown h6 { font-size: 1em; }
+
+.ares-markdown a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
+.ares-markdown blockquote { border-left: 3px solid currentColor; padding-left: .75em; }
+
+.ares-markdown code {
+	font-family: monospace;
+	padding: .1em .3em;
+	border-radius: 4px;
+	background-color: rgb(0,0,0,.12);
+	white-space: pre-wrap;
+}
+
+.ares-markdown pre {
+	max-width: 100%;
+	overflow-x: auto;
+	padding: 12px;
+	border-radius: 6px;
+	background-color: rgb(0,0,0,.15);
+	white-space: pre;
+	overflow-wrap: normal;
+}
+
+.ares-markdown pre code { padding: 0; background: none; white-space: pre; }
+
+.ares-markdown table {
+	display: block;
+	max-width: 100%;
+	overflow-x: auto;
+	border-collapse: collapse;
+	margin: .75em 0;
+}
+
+.ares-markdown th, .ares-markdown td { padding: 6px 10px; border: 1px solid currentColor; }
+.ares-markdown hr { border: 0; border-top: 1px solid currentColor; margin: 1em 0; }
+
+.ares-box .ares-speak {
+	display: block;
+	width: 28px;
+	min-width: 28px;
+	height: 28px;
+	margin: 4px 16px 8px;
+	padding: 5px;
+	color: light-dark(var(--clr-dark), var(--clr-light));
+	background: transparent;
+	opacity: .65;
+	cursor: pointer;
+}
+
+.ares-box .ares-speak::before {
+	content: "";
+	display: block;
+	width: 18px;
+	height: 18px;
+	background-color: currentColor;
+	-webkit-mask: url(mono/listener.svg) center / contain no-repeat;
+	mask: url(mono/listener.svg) center / contain no-repeat;
+}
+
+.ares-box .ares-speak:hover,
+.ares-box .ares-speak[aria-pressed="true"] {
+	background-color: rgb(0,0,0,.15);
+	opacity: 1;
+}
+
+.ares-box .ares-speak[hidden] { display: none; }
+.ares-box .ares-speak:disabled { opacity: .3; cursor: default; }
+.ares-box .ares-speech-error { margin: 4px 16px 8px; }
+
+.ares-box .ares-speaking {
+	background-color: color-mix(in srgb, var(--clr-accent) 22%, transparent);
+	border-radius: 4px;
+	box-shadow: 0 0 0 2px color-mix(in srgb, var(--clr-accent) 65%, transparent);
+}
+
+.ares-speech-menu {
+	box-sizing: border-box;
+	position: absolute;
+	z-index: 5;
+	top: 12px;
+	right: 12px;
+	width: min(260px, calc(100% - 24px));
+	max-height: calc(100% - 112px);
+	padding: 10px;
+	overflow-y: auto;
+	border: 1px solid var(--clr-control);
+	border-radius: 10px;
+	color: var(--clr-dark);
+	background-color: var(--clr-pane);
+	box-shadow: 0 4px 18px rgb(0,0,0,.3);
+}
+
+.ares-speech-actions { display: flex; align-items: center; gap: 6px; }
+.ares-speech-status { margin-left: 4px; font-size: smaller; font-variant-numeric: tabular-nums; }
+
+.ares-speech-actions > .ares-speech-control {
+	flex: none;
+	width: 24px;
+	min-width: 24px;
+	height: 24px;
+	margin: 0;
+	padding: 5px;
+	color: var(--clr-dark);
+	background-color: transparent;
+	cursor: pointer;
+}
+
+.ares-speech-control::before {
+	content: "";
+	display: block;
+	width: 14px;
+	height: 14px;
+	background-color: currentColor;
+	-webkit-mask: var(--ares-speech-icon) center / contain no-repeat;
+	mask: var(--ares-speech-icon) center / contain no-repeat;
+}
+
+.ares-speech-play { --ares-speech-icon: url(mono/play.svg); }
+.ares-speech-pause { --ares-speech-icon: url(mono/pause.svg); }
+.ares-speech-stop { --ares-speech-icon: url(mono/stop.svg); }
+.ares-speech-actions > .ares-speech-control:hover { background-color: rgb(0,0,0,.15); }
+
+.ares-speech-voice {
+	display: grid;
+	grid-template-columns: 44px minmax(0, 1fr);
+	align-items: center;
+	gap: 8px;
+	margin-top: 8px;
+	font-size: smaller;
+}
+
+.ares-speech-voice > select { box-sizing: border-box; width: 100%; min-width: 0; height: 26px; margin: 0; font-size: inherit; }
+
+.ares-speech-setting {
+	display: grid;
+	grid-template-columns: 44px minmax(0, 1fr) 36px;
+	align-items: center;
+	gap: 8px;
+	margin-top: 8px;
+	font-size: smaller;
+}
+
+.ares-speech-setting > input { width: 100%; min-width: 0; margin: 0; }
+.ares-speech-setting > :last-child { text-align: right; font-variant-numeric: tabular-nums; }
 
 @container ares-chat (max-width: 520px) {
 	.ares-box .ares-timestamp,

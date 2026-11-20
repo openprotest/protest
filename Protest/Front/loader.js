@@ -96,11 +96,13 @@ const LOADER = {
 		"view.js",
 		"grid.js",
 		"console.js",
-		"xterm/xterm.js",
 		"ptyhost.js",
 		"listbox.js",
 		"fewbox.js",
-		"ipbox.js"
+		"ipbox.js",
+		"xterm/xterm.js",
+		"markdown/marked.js",
+		"markdown/purify.js"
 	],
 
 	tertiaryScripts: [

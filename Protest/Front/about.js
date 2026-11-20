@@ -157,6 +157,8 @@ class About extends Tabs {
 		CreateCredit("fzstd",                      "Arjun Barrett",   "https://github.com/101arrowz/fzstd");
 		CreateCredit("Xterm.js",                   "Xterm.js team",   "https://github.com/xtermjs");
 		CreateCredit("QRCode.js",                  "Sangmin, Shim",   "https://github.com/davidshimjs/qrcodejs");
+		CreateCredit("Marked",                     "MarkedJS",        "https://github.com/markedjs/marked");
+		CreateCredit("DOMPurify",                  "Cure53",          "https://github.com/cure53/DOMPurify");
 		CreateCredit("MAC addresses lookup table", "ieee",            "https://regauth.standards.ieee.org/standards-ra-web/pub/view.html");
 		CreateCredit("Open Sans typeface",         "Steve Matteson",  "");
 

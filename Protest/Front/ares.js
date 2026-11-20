@@ -1,5 +1,8 @@
 "use strict";
 class Ares extends Window {
+	static markdown = null;
+	static speechOwner = null;
+
 	constructor(args) {
 		super();
 		this.args = args ?? {agent:null, model:null};
@@ -8,6 +11,9 @@ class Ares extends Window {
 		this.canUse = false;
 		this.messages = [];
 		this.requestController = null;
+		this.speech = null;
+		this.speechSettings = {rate:1, volume:1};
+		this.speechVoice = "";
 
 		this.outgoing = Object.create(null);
 
@@ -22,6 +28,7 @@ class Ares extends Window {
 	}
 
 	Close() { //overrides
+		this.StopSpeech();
 		this.requestController?.abort();
 		this.connectionDialog?.listController?.abort();
 		this.connectionDialog?.modelsController?.abort();
@@ -33,7 +40,10 @@ class Ares extends Window {
 		super.UpdateAuthorization();
 		const previouslyAllowed = this.canUse;
 		this.canUse = KEEP.authorization.includes("*") || KEEP.authorization.includes("ares:write");
-		if (!this.canUse) this.requestController?.abort();
+		if (!this.canUse) {
+			this.requestController?.abort();
+			this.StopSpeech();
+		}
 		if (!this.input) return;
 
 		if (this.connection) {
@@ -283,10 +293,8 @@ class Ares extends Window {
 			return;
 		}
 
-		const normalizedHtml = this.input.innerHTML.replaceAll(/<br\s*\/?>/gi, "\n").replaceAll(/<\/div>/gi, "\n");
-
-		//an inert document, unlike a detached div nothing in it loads
-		const text = new DOMParser().parseFromString(normalizedHtml, "text/html").body.textContent.replaceAll(" ", "\n").trim();
+		//Preserve Markdown indentation and the editor's visual line breaks.
+		const text = this.input.innerText.replaceAll(" ", " ").replace(/\r\n?/g, "\n").replace(/^\n+|\n+$/g, "");
 
 		if (text.length > Chat.MAX_TEXT_LENGTH) {
 			this.ConfirmBox(`The message is too long, the limit is ${Chat.MAX_TEXT_LENGTH} characters.`, true, "mono/ares.svg");
@@ -297,7 +305,7 @@ class Ares extends Window {
 			this.ConfirmBox("Only text messages are supported for now.", true, "mono/ares.svg");
 			return;
 		}
-		if (text.length === 0) return;
+		if (text.trim().length === 0) return;
 
 		const connection = this.connection;
 		const messages = [...this.messages, {role:"user", content:text}];
@@ -314,9 +322,24 @@ class Ares extends Window {
 		bubble.style.boxShadow = "var(--clr-pane) 0 0 0 2px inset";
 		
 		const reply = this.CreateTextBubble("Thinking…", "in", `ares:${connection.agent}`, `${connection.agentName} · ${connection.modelName}`, "var(--clr-accent)", nowString);
+		reply.classList.add("ares-thinking");
 		reply.setAttribute("role", "status");
+		reply.setAttribute("aria-busy", "true");
+		this.UpdateSpeechButton(reply.closest(".ares-response"));
 		this.ClearInput();
 		let responseText = "";
+		let renderFrame = null;
+		const RenderReply = ()=> {
+			if (renderFrame !== null) cancelAnimationFrame(renderFrame);
+			renderFrame = null;
+			if (this.isClosed || (responseText.length === 0 && reply.classList.contains("ares-thinking"))) return;
+			const follow = this.IsScrolledToBottom();
+			const wasThinking = reply.classList.contains("ares-thinking");
+			reply.classList.remove("ares-thinking");
+			Ares.RenderMarkdown(reply, responseText);
+			if (wasThinking) this.UpdateSpeechButton(reply.closest(".ares-response"));
+			if (follow) this.chatBox.scrollTop = this.chatBox.scrollHeight;
+		};
 
 		try {
 			const response = await fetch(`ares/chat?id=${encodeURIComponent(connection.agent)}`, {
@@ -346,13 +369,11 @@ class Ares extends Window {
 					delete this.outgoing[id];
 				}
 				else if (event.type === "delta" && accepted && typeof event.text === "string") {
-					const follow = this.IsScrolledToBottom();
-					if (responseText.length === 0) reply.textContent = "";
 					responseText += event.text;
-					reply.append(reply.ownerDocument.createTextNode(event.text));
-					if (follow) this.chatBox.scrollTop = this.chatBox.scrollHeight;
+					if (renderFrame === null) renderFrame = requestAnimationFrame(RenderReply);
 				}
 				else if (event.type === "done" && accepted && responseText.trim().length > 0) {
+					RenderReply();
 					completed = true;
 				}
 				else {
@@ -366,7 +387,8 @@ class Ares extends Window {
 			if (this.isClosed) return;
 			const follow = this.IsScrolledToBottom();
 			const error = controller.signal.aborted ? "A.R.E.S. access is required. Contact your administrator." : ex.message ?? String(ex);
-			reply.textContent = responseText;
+			reply.classList.remove("ares-thinking");
+			RenderReply();
 			reply.removeAttribute("role");
 			const errorBox = reply.ownerDocument.createElement("div");
 			errorBox.className = "ares-error";
@@ -378,13 +400,389 @@ class Ares extends Window {
 			//this.input.textContent = text;
 		}
 		finally {
+			if (renderFrame !== null) cancelAnimationFrame(renderFrame);
 			this.requestController = null;
+			reply.classList.remove("ares-thinking");
+			reply.removeAttribute("aria-busy");
+			reply.removeAttribute("role");
+			this.UpdateSpeechButton(reply.closest(".ares-response"));
 			this.chatBox.removeAttribute("aria-busy");
 			if (!this.isClosed) {
 				this.UpdateAuthorization();
-				if (this.canUse && (WIN.focused === this || this.popOutWindow?.document.hasFocus())) this.input.focus();
+				if (this.canUse && !this.speech?.panel.contains(this.content.ownerDocument.activeElement) &&
+					(WIN.focused === this || this.popOutWindow?.document.hasFocus())) this.input.focus();
 			}
 		}
+	}
+
+	AddSpeechButton(response) {
+		const button = response.ownerDocument.createElement("button");
+		button.type = "button";
+		button.className = "ares-speak";
+		button.setAttribute("aria-label", "Read response aloud");
+		button.setAttribute("aria-pressed", "false");
+		button.hidden = true;
+		button.onclick = ()=> this.StartSpeech(response);
+		response.appendChild(button);
+	}
+
+	UpdateSpeechButton(response) {
+		const button = response?.querySelector(":scope > .ares-speak");
+		if (!button) return;
+		const supported = !!window.speechSynthesis && typeof window.SpeechSynthesisUtterance === "function";
+		const hasText = Ares.GetSpeechSegments(response).length > 0;
+		button.hidden = !!response.querySelector('.ares-thinking, .ares-bubble[aria-busy="true"]') || !hasText;
+		button.disabled = !supported;
+		button.title = supported ? "Read response aloud" : "Read aloud is not supported by this browser";
+	}
+
+	static GetSpeechSegments(response) {
+		const segments = [];
+		const blocks = new Set(["DIV", "P", "H1", "H2", "H3", "H4", "H5", "H6", "UL", "OL", "LI", "BLOCKQUOTE", "PRE", "TABLE", "THEAD", "TBODY", "TFOOT", "TR"]);
+		const Skip = element=> element.matches('.ares-error, button, input, script, style, [aria-hidden="true"]');
+		const InlineText = node=> {
+			if (node.nodeType === 3) return node.textContent;
+			if (node.nodeType !== 1 || Skip(node)) return "";
+			if (node.tagName === "BR") return "\n";
+			return Array.from(node.childNodes, InlineText).join("") + (["TH", "TD"].includes(node.tagName) ? " ": "");
+		};
+		const Visit = element=> {
+			let text = "";
+			const Flush = ()=> {
+				const content = text.replace(/\s+/g, " ").trim();
+				if (content) segments.push({element, text:content});
+				text = "";
+			};
+			for (const child of element.childNodes) {
+				if (child.nodeType === 1 && Skip(child)) continue;
+				if (child.nodeType === 1 && blocks.has(child.tagName)) {
+					Flush();
+					Visit(child);
+				}
+				else text += InlineText(child);
+			}
+			Flush();
+		};
+		for (const bubble of response.querySelectorAll('.ares-bubble:not([aria-busy="true"])')) Visit(bubble);
+		return segments;
+	}
+
+	StartSpeech(response) {
+		if (this.isClosed || !window.speechSynthesis || typeof window.SpeechSynthesisUtterance !== "function") return;
+		const button = response.querySelector(":scope > .ares-speak");
+		if (!button || button.disabled || button.hidden) return;
+		if (this.speech?.response === response) {
+			this.StopSpeech();
+			return;
+		}
+		const segments = Ares.GetSpeechSegments(response);
+		if (segments.length === 0) return;
+		//The browser's synthesis queue is shared by all A.R.E.S. windows.
+		Ares.speechOwner?.StopSpeech();
+		response.querySelector(":scope > .ares-speech-error")?.remove();
+		let text = "";
+		for (const segment of segments) {
+			//Keep native speech continuous; highlight offsets track sections separately.
+			if (text.length > 0) text += " ";
+			segment.start = text.length;
+			text += segment.text;
+		}
+		const state = {response, button, segments, text, index:0, offset:0, boundary:0, paused:false, utterance:null, synth:window.speechSynthesis};
+		this.speech = state;
+		Ares.speechOwner = this;
+		button.setAttribute("aria-pressed", "true");
+		button.setAttribute("aria-label", "Stop reading response");
+		button.title = "Stop reading response";
+		this.CreateSpeechMenu(state);
+
+		//Scroll this chat only, once. Advancing, resuming and changing settings never scroll.
+		const box = this.chatBox.getBoundingClientRect();
+		const first = segments[0].element.getBoundingClientRect();
+		this.chatBox.scrollTo({top:this.chatBox.scrollTop + first.top - box.top - 16, behavior:"smooth"});
+		try {
+			state.synth.resume();
+			this.SpeakResponse(state);
+		}
+		catch {
+			this.SpeechFailed(state);
+		}
+	}
+
+	CreateSpeechMenu(state) {
+		const doc = this.content.ownerDocument;
+		const panel = doc.createElement("div");
+		panel.className = "ares-speech-menu";
+		panel.setAttribute("role", "region");
+		panel.setAttribute("aria-label", "Read aloud controls");
+		const status = doc.createElement("div");
+		status.className = "ares-speech-status";
+		status.setAttribute("role", "status");
+		const controls = doc.createElement("div");
+		controls.className = "ares-speech-actions";
+		const AddButton = (icon, label, handler)=> {
+			const button = doc.createElement("button");
+			button.type = "button";
+			button.className = `ares-speech-control ares-speech-${icon}`;
+			button.setAttribute("aria-label", label);
+			button.title = label;
+			button.onclick = handler;
+			controls.appendChild(button);
+			return button;
+		};
+		state.playButton = AddButton("pause", "Pause", ()=> state.paused ? this.ResumeSpeech() : this.PauseSpeech());
+		AddButton("stop", "Stop", ()=> this.StopSpeech());
+		controls.appendChild(status);
+		panel.appendChild(controls);
+		panel.appendChild(this.CreateSpeechVoiceSelector(state));
+		const AddSlider = (name, key, min, max, step, Format)=> {
+			const label = doc.createElement("label");
+			label.className = "ares-speech-setting";
+			const caption = doc.createElement("span");
+			caption.textContent = name;
+			const slider = doc.createElement("input");
+			slider.type = "range";
+			slider.min = min;
+			slider.max = max;
+			slider.step = step;
+			slider.value = this.speechSettings[key];
+			slider.setAttribute("aria-label", name);
+			const value = doc.createElement("span");
+			const Update = ()=> {
+				this.speechSettings[key] = Number(slider.value);
+				value.textContent = Format(this.speechSettings[key]);
+				slider.setAttribute("aria-valuetext", value.textContent);
+			};
+			Update();
+			slider.oninput = Update;
+			slider.onchange = ()=> {
+				Update();
+				this.RestartSpeech(state);
+			};
+			label.append(caption, slider, value);
+			panel.appendChild(label);
+		};
+		AddSlider("Rate", "rate", .5, 2, .1, value=> `${value.toFixed(1)}×`);
+		AddSlider("Volume", "volume", 0, 1, .05, value=> `${Math.round(value * 100)}%`);
+		state.panel = panel;
+		state.status = status;
+		this.content.appendChild(panel);
+		this.UpdateSpeechMenu(state);
+	}
+
+	static SpeechVoiceId(voice) {
+		return JSON.stringify([voice.voiceURI, voice.lang, voice.name]);
+	}
+
+	CreateSpeechVoiceSelector(state) {
+		const doc = this.content.ownerDocument;
+		const label = doc.createElement("label");
+		label.className = "ares-speech-voice";
+		const caption = doc.createElement("span");
+		caption.textContent = "Voice";
+		const select = doc.createElement("select");
+		select.setAttribute("aria-label", "Voice");
+		state.updateVoices = ()=> {
+			if (this.speech !== state) return;
+			const voices = state.synth.getVoices()
+				.filter(voice=> /^en(?:-|$)/i.test(voice.lang))
+				.sort((a, b)=> a.lang.localeCompare(b.lang) || a.name.localeCompare(b.name));
+			const AddOption = (text, value)=> {
+				const option = doc.createElement("option");
+				option.textContent = text;
+				option.value = value;
+				select.appendChild(option);
+			};
+			select.replaceChildren();
+			AddOption("Browser default", "");
+			for (const voice of voices) {
+				AddOption(`${voice.name} (${voice.lang})${voice.default ? " · Default" : ""}`, Ares.SpeechVoiceId(voice));
+			}
+			if (voices.length > 0 && !voices.some(voice=> Ares.SpeechVoiceId(voice) === this.speechVoice)) this.speechVoice = "";
+			select.value = voices.length > 0 ? this.speechVoice : "";
+			select.disabled = voices.length === 0;
+		};
+		select.onchange = ()=> {
+			if (this.speech !== state) return;
+			this.speechVoice = select.value;
+			this.RestartSpeech(state);
+		};
+		state.synth.addEventListener("voiceschanged", state.updateVoices);
+		state.updateVoices();
+		label.append(caption, select);
+		return label;
+	}
+
+	UpdateSpeechMenu(state) {
+		const label = state.paused ? "Resume" : "Pause";
+		state.playButton.classList.toggle("ares-speech-play", state.paused);
+		state.playButton.classList.toggle("ares-speech-pause", !state.paused);
+		state.playButton.setAttribute("aria-label", label);
+		state.playButton.title = label;
+		state.status.textContent = `${state.index + 1} / ${state.segments.length}`;
+		state.status.setAttribute("aria-label", `${state.paused ? "Paused" : "Reading"}, section ${state.index + 1} of ${state.segments.length}`);
+	}
+
+	HighlightSpeech(state, position) {
+		while (state.index + 1 < state.segments.length && state.segments[state.index + 1].start <= position) state.index++;
+		const element = state.segments[state.index].element;
+		if (state.highlight !== element) {
+			state.highlight?.classList.remove("ares-speaking");
+			state.highlight = element;
+			element.classList.add("ares-speaking");
+		}
+		this.UpdateSpeechMenu(state);
+	}
+
+	SpeakResponse(state) {
+		if (this.speech !== state || state.paused) return;
+		if (state.offset >= state.text.length || !state.response.isConnected) {
+			this.StopSpeech(false);
+			return;
+		}
+		const offset = state.offset;
+		//Keep sections in one utterance: Firefox/macOS can click at utterance boundaries.
+		//Only split exceptionally long responses to stay below speech-engine text limits.
+		let end = Math.min(state.text.length, offset + 30000);
+		if (end < state.text.length) {
+			const space = state.text.lastIndexOf(" ", end);
+			if (space > offset + 20000) end = space;
+			if (/[\uD800-\uDBFF]/.test(state.text[end - 1])) end--;
+		}
+		const utterance = new window.SpeechSynthesisUtterance(state.text.slice(offset, end));
+		Object.assign(utterance, this.speechSettings);
+		const voice = state.synth.getVoices().find(candidate=> Ares.SpeechVoiceId(candidate) === this.speechVoice);
+		if (voice) {
+			utterance.voice = voice;
+			utterance.lang = voice.lang;
+		}
+		state.utterance = utterance; //Keep a reference while the browser is speaking.
+		state.boundary = offset;
+		const IsCurrent = ()=> this.speech === state && state.utterance === utterance;
+		utterance.onstart = ()=> {
+			if (IsCurrent()) this.HighlightSpeech(state, offset);
+		};
+		utterance.onboundary = event=> {
+			if (IsCurrent() && Number.isInteger(event.charIndex) && event.charIndex >= 0 && event.charIndex < utterance.text.length) {
+				state.boundary = offset + event.charIndex;
+				this.HighlightSpeech(state, state.boundary);
+			}
+		};
+		utterance.onend = ()=> {
+			if (!IsCurrent()) return;
+			state.utterance = null;
+			state.offset = state.boundary = end;
+			if (end >= state.text.length) this.StopSpeech(false);
+			else if (!state.paused) this.SpeakResponse(state);
+		};
+		utterance.onerror = ()=> { if (IsCurrent()) this.SpeechFailed(state); };
+		try {
+			state.synth.speak(utterance);
+		}
+		catch {
+			this.SpeechFailed(state);
+		}
+	}
+
+	PauseSpeech() {
+		const state = this.speech;
+		if (!state || state.paused) return;
+		state.paused = true;
+		state.synth.pause();
+		this.UpdateSpeechMenu(state);
+	}
+
+	ResumeSpeech() {
+		const state = this.speech;
+		if (!state || !state.paused) return;
+		state.paused = false;
+		state.synth.resume();
+		if (!state.utterance) this.SpeakResponse(state);
+		if (this.speech === state) this.UpdateSpeechMenu(state);
+	}
+
+	RestartSpeech(state) {
+		if (this.speech !== state) return;
+		//Apply settings to a new utterance at the last reported word boundary.
+		state.offset = state.boundary;
+		state.utterance = null; //Ignore cancellation events from the old utterance.
+		state.synth.cancel();
+		if (!state.paused) {
+			state.synth.resume();
+			this.SpeakResponse(state);
+		}
+	}
+
+	StopSpeech(cancel = true) {
+		const state = this.speech;
+		if (!state) return;
+		this.speech = null;
+		if (Ares.speechOwner === this) Ares.speechOwner = null;
+		state.synth.removeEventListener("voiceschanged", state.updateVoices);
+		if (cancel) state.synth.cancel();
+		state.highlight?.classList.remove("ares-speaking");
+		state.button.setAttribute("aria-pressed", "false");
+		state.button.setAttribute("aria-label", "Read response aloud");
+		state.button.title = "Read response aloud";
+		const focusInput = state.panel.contains(state.panel.ownerDocument.activeElement);
+		state.panel.remove();
+		if (focusInput && !this.isClosed) this.input.focus({preventScroll:true});
+	}
+
+	SpeechFailed(state) {
+		if (this.speech !== state) return;
+		this.StopSpeech();
+		const error = state.response.ownerDocument.createElement("div");
+		error.className = "ares-error ares-speech-error";
+		error.setAttribute("role", "alert");
+		error.textContent = "Unable to read this response aloud. Check your browser's speech voices and audio settings.";
+		state.response.insertBefore(error, state.button);
+	}
+
+	static RenderMarkdown(element, text) {
+		element.classList.add("ares-markdown");
+		//Keep messages readable if either bundled dependency failed to load.
+		if (typeof marked === "undefined" || typeof DOMPurify === "undefined" || !DOMPurify.isSupported) {
+			element.textContent = text;
+			element.style.whiteSpace = "pre-wrap";
+			return;
+		}
+		element.style.removeProperty("white-space");
+
+		Ares.markdown ??= new marked.Marked({
+			gfm:true,
+			breaks:true,
+			renderer: {
+				//Show HTML as text; Markdown images become explicit links instead of remote requests.
+				html({text}) { return WIN.EscapeHtml(text); },
+				image({href, text}) { return `<a href="${WIN.EscapeHtml(href)}">${WIN.EscapeHtml(text || "Image")}</a>`; }
+			}
+		});
+		const fragment = DOMPurify.sanitize(Ares.markdown.parse(text), {
+			ALLOWED_TAGS:["p", "br", "strong", "em", "del", "blockquote", "ul", "ol", "li", "pre", "code", "h1", "h2", "h3", "h4", "h5", "h6", "hr", "a", "table", "thead", "tbody", "tr", "th", "td", "input"],
+			ALLOWED_ATTR:["href", "title", "start", "align", "type", "checked", "disabled"],
+			ALLOW_DATA_ATTR:false,
+			ALLOW_ARIA_ATTR:false,
+			RETURN_DOM_FRAGMENT:true
+		});
+		for (const link of fragment.querySelectorAll("a")) {
+			const href = link.getAttribute("href");
+			if (!href) continue;
+			try {
+				const url = new URL(href, element.ownerDocument.baseURI);
+				if (!["http:", "https:", "mailto:"].includes(url.protocol)) throw new Error("Unsupported link");
+				link.href = url.href;
+				link.target = "_blank";
+				link.rel = "noopener noreferrer";
+			}
+			catch {
+				link.removeAttribute("href");
+			}
+		}
+		for (const checkbox of fragment.querySelectorAll("input")) {
+			checkbox.type = "checkbox";
+			checkbox.disabled = true;
+		}
+		element.replaceChildren(fragment);
 	}
 
 	static async ReadChatStream(response, onEvent) {
@@ -472,6 +870,7 @@ class Ares extends Window {
 				wrapper.append(bubble);
 			}
 
+			if (direction === "in") this.AddSpeechButton(group);
 			this.chatBox.appendChild(group);
 		}
 
@@ -483,7 +882,7 @@ class Ares extends Window {
 
 		const isScrolledToBottom = this.IsScrolledToBottom();
 
-		group.appendChild(wrapper);
+		group.insertBefore(wrapper, group.querySelector(":scope > .ares-speak"));
 
 		if (isScrolledToBottom) {
 			setTimeout(()=> wrapper.scrollIntoView({behavior:"smooth"}), 50);
@@ -496,7 +895,8 @@ class Ares extends Window {
 		if (text.length === 0) return;
 
 		const bubble = this.CreateBubble(direction, sender, alias, color, time);
-		bubble.textContent = text;
+		Ares.RenderMarkdown(bubble, text);
+		if (direction === "in") this.UpdateSpeechButton(bubble.closest(".ares-response"));
 
 		if (direction === "out") {
 			if (id && !(id in this.outgoing)) {
