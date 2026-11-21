@@ -197,7 +197,6 @@ class Ares extends Window {
 	}
 
 	LayoutComposer() {
-		this.UpdateSidebarLayout();
 		this.historyList.UpdateViewport();
 		this.settingsPanel.style.maxHeight = `${Math.max(48, Math.min(240, this.content.clientHeight - 160))}px`;
 
@@ -343,7 +342,7 @@ class Ares extends Window {
 
 	InitializeSidebar() {
 		const doc = this.content.ownerDocument;
-		this.sidebarOpen = typeof this.args.sidebarOpen === "boolean" ? this.args.sidebarOpen : !this.IsSidebarNarrow();
+		this.sidebarOpen = typeof this.args.sidebarOpen === "boolean" ? this.args.sidebarOpen : true;
 		this.sidebar = doc.createElement("nav");
 		this.sidebar.className = "ares-sidebar";
 		this.sidebar.id = `ares-sidebar-${UI.GenerateUuid()}`;
@@ -404,21 +403,13 @@ class Ares extends Window {
 		this.historyError.hidden = true;
 		this.sidebar.append(this.historyList.list, this.historyEmpty, this.historyError);
 
-		this.sidebarBackdrop = doc.createElement("div");
-		this.sidebarBackdrop.className = "ares-sidebar-backdrop";
-		this.sidebarBackdrop.setAttribute("aria-hidden", "true");
 		this.sidebarToggle = doc.createElement("button");
 		this.sidebarToggle.type = "button";
 		this.sidebarToggle.className = "ares-sidebar-toggle";
 		this.sidebarToggle.setAttribute("aria-controls", this.sidebar.id);
-		this.content.append(this.sidebarBackdrop, this.sidebar, this.sidebarToggle);
+		this.content.append(this.sidebar, this.sidebarToggle);
 
 		this.sidebarToggle.onclick = ()=> this.SetSidebarOpen(!this.sidebarOpen);
-
-		this.sidebarBackdrop.onclick = ()=> {
-			this.SetSidebarOpen(false);
-			this.sidebarToggle.focus({preventScroll:true});
-		};
 
 		this.content.addEventListener("keydown", event=> {
 			if (event.key === "Escape" && this.sidebarOpen && (this.sidebar.contains(event.target) || event.target === this.sidebarToggle)) {
@@ -429,20 +420,17 @@ class Ares extends Window {
 		});
 
 		this.content.addEventListener("focusin", event=> {
-			if (this.sidebarOpen && this.IsSidebarNarrow() && !this.sidebar.contains(event.target) && event.target !== this.sidebarToggle) {
+			if (this.sidebarOpen && !this.sidebar.contains(event.target) && event.target !== this.sidebarToggle) {
 				this.SetSidebarOpen(false);
 			}
 		});
 		this.UpdateSidebarLayout();
 	}
 
-	IsSidebarNarrow() { return this.content.clientWidth <= 680; }
-
 	UpdateSidebarLayout() {
 		this.content.classList.toggle("ares-sidebar-open", this.sidebarOpen);
 		this.sidebar.inert = !this.sidebarOpen;
 		this.sidebar.setAttribute("aria-hidden", String(!this.sidebarOpen));
-		this.sidebarBackdrop.hidden = !this.sidebarOpen || !this.IsSidebarNarrow();
 		this.sidebarToggle.setAttribute("aria-expanded", String(this.sidebarOpen));
 	}
 
@@ -559,7 +547,6 @@ class Ares extends Window {
 		this.SetTitle("A.R.E.S.");
 		this.UpdateHistoryControls();
 
-		if (this.IsSidebarNarrow()) this.SetSidebarOpen(false);
 		this.input.focus({preventScroll:true});
 	}
 
@@ -625,7 +612,6 @@ class Ares extends Window {
 				await this.LoadAgents();
 			}
 
-			if (this.IsSidebarNarrow()) this.SetSidebarOpen(false);
 			return true;
 		}
 		catch (ex) {
@@ -857,7 +843,7 @@ class Ares extends Window {
 			if (!this.isClosed) {
 				this.UpdateAuthorization();
 				if (this.canUse) this.LoadHistoryList();
-				if (this.canUse && !(this.sidebarOpen && this.IsSidebarNarrow()) && !this.sidebar.contains(this.content.ownerDocument.activeElement) && !this.settingsMenu.contains(this.content.ownerDocument.activeElement) &&
+				if (this.canUse && !this.sidebarOpen && !this.sidebar.contains(this.content.ownerDocument.activeElement) && !this.settingsMenu.contains(this.content.ownerDocument.activeElement) &&
 					!this.speech?.panel.contains(this.content.ownerDocument.activeElement) &&
 					(WIN.focused === this || this.popOutWindow?.document.hasFocus())) this.input.focus();
 			}

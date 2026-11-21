@@ -20,12 +20,11 @@
 	z-index: 7;
 	inset: 0 auto 0 0;
 	width: min(var(--ares-sidebar-width), calc(100% - 48px));
-	color: var(--clr-contrast);
+	color: var(--clr-dark);
 	flex-direction: column;
 	gap: 8px;
 	padding: 44px 0 0;
-	border-right: 1px solid var(--clr-control);
-	background-color: light-dark(rgb(192,192,192), rgb(48,48,48));
+	background-color: var(--clr-pane);
 	transform: translateX(-50%);
 	opacity: 0;
 	visibility: hidden;
@@ -175,14 +174,17 @@
 	padding: 6px;
 	color: var(--clr-contrast);
 	background: transparent;
+	box-shadow: none !important;
 }
 
 .ares-sidebar-toggle::before {
+	background-color: var(--clr-contrast);
 	-webkit-mask-image: url(mono/list.svg);
 	mask-image: url(mono/list.svg);
 }
 
 .ares-sidebar-toggle[aria-expanded="true"]::before {
+	background-color: var(--clr-dark);
 	-webkit-mask-image: url(mono/guitarpick.svg);
 	mask-image: url(mono/guitarpick.svg);
 	transform: rotate(90deg);
@@ -192,19 +194,15 @@
 	background-color: rgb(0,0,0,.12);
 }
 
-.ares-sidebar-backdrop {
-	position: absolute;
-	z-index: 6;
-	inset: 0;
-	background-color: rgb(0,0,0,.2);
-}
+@container ares-window (width < 560px) {
+	.ares-sidebar-toggle { display: none; }
+	.ares-layout > .ares-chat { left: 0; }
 
-.ares-sidebar-backdrop[hidden] {
-	display: none;
-}
-
-@container ares-window (max-width: 680px) {
-	.ares-sidebar-open > .ares-chat { left: 40px; }
+	.ares-sidebar {
+		transform: translateX(-50%) !important;
+		opacity: 0 !important;
+		visibility: hidden !important;
+	}
 }
 
 .ares-input {
@@ -531,6 +529,7 @@
 	color: light-dark(var(--clr-dark), var(--clr-light));
 	background: transparent;
 	opacity: .65;
+	box-shadow: none !important;
 }
 
 .ares-box .ares-speak::before {
