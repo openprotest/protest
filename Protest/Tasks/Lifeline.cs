@@ -569,7 +569,7 @@ internal static partial class Lifeline {
                 if (stpChangeCount == 0 && !dirExists) {
                     return;
                 }
-                
+
                 if (!dirExists) {
                     Directory.CreateDirectory(dirSwitchStpChanges);
                 }

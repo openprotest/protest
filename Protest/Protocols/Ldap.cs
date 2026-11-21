@@ -56,7 +56,7 @@ internal static class Ldap {
             using DirectorySearcher searcher = new DirectorySearcher(directoryEntry);
             searcher.Filter = "(objectClass=computer)";
             using SearchResultCollection result = searcher.FindAll();
-            
+
             if (result is null || result.Count == 0) return null;
 
             string[] array = new string[result.Count];
@@ -83,7 +83,7 @@ internal static class Ldap {
             using DirectoryEntry dir = new DirectoryEntry($"LDAP://{normalizedDomain}");
             using DirectorySearcher searcher = new DirectorySearcher(dir);
             searcher.Filter = "(&(objectClass=user)(objectCategory=person))";
-            
+
             using SearchResultCollection result = searcher.FindAll();
 
             if (result is null || result.Count == 0) return null;

@@ -24,9 +24,9 @@ public class ListenerTests {
             Assert.Fail("Could not determine repository root");
             return;
         }
-        
+
         front = new DirectoryInfo(Path.Combine(repoRoot.FullName, "Protest", "Front"));
-        
+
         if (!front.Exists) {
             Assert.Fail($"\"Front\" directory not found: {front.FullName}");
         }

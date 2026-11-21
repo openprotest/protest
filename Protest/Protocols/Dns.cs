@@ -640,7 +640,7 @@ internal static class Dns {
 
     public static string GetDomain() {
         try {
-            return OperatingSystem.IsWindows() 
+            return OperatingSystem.IsWindows()
                 ? System.DirectoryServices.ActiveDirectory.Domain.GetComputerDomain().ToString()
                 : String.Empty;
         }

@@ -303,7 +303,7 @@ internal sealed class Cache {
     private void HandleFile(string name, byte[] bytes, bool confirmedGZip) {
         name = name.Replace("\\", "/");
         name = name.Replace(".html", String.Empty).Replace(".htm", String.Empty);
-        
+
         if (name == "/index") {
             name = "/";
         }

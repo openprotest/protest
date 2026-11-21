@@ -28,6 +28,9 @@ class Ares extends Window {
 		this.historyListController = null;
 		this.conversations = [];
 		this.requestController = null;
+		this.pendingResponse = null;
+		this.pendingController = null;
+		this.pendingTimer = null;
 		this.speech = null;
 		this.speechSettings = {rate:1, volume:1};
 		this.speechVoice = "";
@@ -52,6 +55,7 @@ class Ares extends Window {
 		this.settingsController?.abort();
 		this.historyController?.abort();
 		this.historyListController?.abort();
+		this.StopHistoryPolling();
 		this.layoutObserver?.disconnect();
 		super.Close();
 	}
@@ -67,6 +71,7 @@ class Ares extends Window {
 			this.settingsController?.abort();
 			this.historyController?.abort();
 			this.historyListController?.abort();
+			this.StopHistoryPolling();
 			this.conversations = [];
 			if (this.historyList) this.RenderHistoryList();
 			this.StopSpeech();
@@ -77,8 +82,14 @@ class Ares extends Window {
 		this.UpdateSettingsControls();
 		this.UpdateHistoryControls();
 
-		if (!this.canUse) this.SetSettingsError("A.R.E.S. access is required. Contact your administrator.");
-		else if (!previouslyAllowed && this.settingsInitialized) { this.LoadAgents(); this.LoadHistoryList(); }
+		if (!this.canUse) {
+			this.SetSettingsError("A.R.E.S. access is required. Contact your administrator.");
+		}
+		else if (!previouslyAllowed && this.settingsInitialized) {
+			this.LoadAgents();
+			this.LoadHistoryList();
+			if (this.pendingResponse) this.ScheduleHistoryPoll();
+		}
 	}
 
 	InitializeComponents() {
@@ -156,7 +167,9 @@ class Ares extends Window {
 		this.effortRange.min = "0";
 		this.effortRange.step = "1";
 		this.effortRange.setAttribute("aria-label", "Effort");
+
 		this.effortValue = doc.createElement("output");
+		this.effortValue.style.fontWeight = "600";
 		effort.append(this.effortRange, this.effortValue);
 		this.settingsPanel.appendChild(effort);
 
@@ -180,12 +193,17 @@ class Ares extends Window {
 		};
 
 		this.settingsMenu.addEventListener("focusout", event=> {
-			if (!this.settingsMenu.contains(event.relatedTarget)) this.settingsMenu.open = false;
+			if (!this.settingsMenu.contains(event.relatedTarget)) {
+				this.settingsMenu.open = false;
+			}
 		});
 
 		let expanded = this.settingsMenu.open;
 		this.settingsMenu.ontoggle = ()=> {
-			if (this.settingsMenu.open) this.settingsSummary.focus({preventScroll:true});
+			if (this.settingsMenu.open) {
+				this.settingsSummary.focus({preventScroll:true});
+			}
+
 			this.LayoutComposer();
 			const opening = this.settingsMenu.open && !expanded;
 			expanded = this.settingsMenu.open;
@@ -222,22 +240,34 @@ class Ares extends Window {
 		this.UpdateSettingsControls();
 	}
 
-	GetEffort() { return this.effortValues[Number(this.effortRange.value)] ?? ""; }
+	GetEffort() {
+		return this.effortValues[Number(this.effortRange.value)] ?? "";
+	}
 
 	UpdateEffortLabel() {
 		const value = this.GetEffort();
 		const names = {"":"Default", false:"Off", true:"On", xhigh:"Extra high"};
 		const label = Object.hasOwn(names, value) ? names[value] : value.charAt(0).toUpperCase() + value.slice(1);
-		if (this.effortValue.textContent !== label) this.effortValue.textContent = label;
+
+		if (this.effortValue.textContent !== label) {
+			this.effortValue.textContent = label;
+		}
+
 		this.effortRange.setAttribute("aria-valuetext", label);
 		const model = this.connection?.modelName ?? this.connection?.model;
 		const summary = model ? `${model} · ${label}` : "Select model";
-		if (this.settingsSummary.textContent !== summary) this.settingsSummary.textContent = summary;
+
+		if (this.settingsSummary.textContent !== summary) {
+			this.settingsSummary.textContent = summary;
+		}
 	}
 
 	UpdateSettingsControls() {
 		const disabled = !this.canUse || this.settingsBusy;
-		if (disabled && this.settingsPanel.contains(this.content.ownerDocument.activeElement)) this.settingsSummary.focus({preventScroll:true});
+		if (disabled && this.settingsPanel.contains(this.content.ownerDocument.activeElement)) {
+			this.settingsSummary.focus({preventScroll:true});
+		}
+
 		this.agentSelect.disabled = disabled || this.agents.length === 0;
 		this.modelSelect.disabled = disabled || !this.modelCatalog || this.modelCatalog.agent.id !== this.agentSelect.value;
 		this.effortRange.disabled = disabled || !this.connection || this.effortValues.length <= 1;
@@ -360,7 +390,7 @@ class Ares extends Window {
 		this.sidebar.append(heading, this.newConversationButton);
 
 		this.historyList = new ListBox({onSelect: (id, element)=> {
-			if (!this.canUse || this.historyLoading || this.requestController) return;
+			if (!this.canUse || this.historyLoading || this.IsThinking()) return;
 			const saved = element._data;
 			if (saved.id !== this.args.conversationId || saved.revision !== this.args.conversationRevision || this.historyNeedsReload) this.OpenConversation(saved.id);
 			else this.UpdateHistoryControls();
@@ -370,7 +400,7 @@ class Ares extends Window {
 		this.historyList.list.classList.remove("no-results");
 		this.historyList.list.setAttribute("aria-label", "Your saved conversations");
 		this.historyList.list.addEventListener("keydown", event=> {
-			if (event.target === this.historyList.list && this.canUse && !this.historyLoading && !this.requestController) this.historyList.Keydown(event);
+			if (event.target === this.historyList.list && this.canUse && !this.historyLoading && !this.IsThinking()) this.historyList.Keydown(event);
 		});
 
 		this.historyList.inflate = (element, entry)=> {
@@ -382,13 +412,13 @@ class Ares extends Window {
 			remove.setAttribute("role", "button");
 			remove.className = "ares-conversation-remove";
 			remove.setAttribute("aria-label", `Remove conversation: ${entry.title}`);
-			remove.setAttribute("aria-disabled", String(!this.canUse || this.historyLoading || !!this.requestController));
+			remove.setAttribute("aria-disabled", String(!this.canUse || this.historyLoading || this.IsThinking()));
 			remove.onclick = event=> { event.stopPropagation(); this.DeleteConversation(entry.id); };
 			remove.ondblclick = event=> event.stopPropagation();
 
 			element.append(label, remove);
 			element.onclick = ()=> {
-				if (this.canUse && !this.historyLoading && !this.requestController) this.historyList.Select(element);
+				if (this.canUse && !this.historyLoading && !this.IsThinking()) this.historyList.Select(element);
 			};
 			element.ondblclick = element.onclick;
 		};
@@ -411,19 +441,6 @@ class Ares extends Window {
 
 		this.sidebarToggle.onclick = ()=> this.SetSidebarOpen(!this.sidebarOpen);
 
-		this.content.addEventListener("keydown", event=> {
-			if (event.key === "Escape" && this.sidebarOpen && (this.sidebar.contains(event.target) || event.target === this.sidebarToggle)) {
-				event.preventDefault();
-				event.stopPropagation();
-				this.SetSidebarOpen(false);
-			}
-		});
-
-		this.content.addEventListener("focusin", event=> {
-			if (this.sidebarOpen && !this.sidebar.contains(event.target) && event.target !== this.sidebarToggle) {
-				this.SetSidebarOpen(false);
-			}
-		});
 		this.UpdateSidebarLayout();
 	}
 
@@ -507,7 +524,7 @@ class Ares extends Window {
 	}
 
 	UpdateHistoryControls() {
-		const disabled = !this.canUse || this.historyLoading || !!this.requestController;
+		const disabled = !this.canUse || this.historyLoading || this.IsThinking();
 		this.newConversationButton.disabled = disabled;
 		this.sidebarToggle.disabled = !this.canUse;
 		this.historyList.list.setAttribute("aria-disabled", String(disabled));
@@ -533,7 +550,7 @@ class Ares extends Window {
 	}
 
 	NewConversation() {
-		if (this.isClosed || !this.canUse || this.historyLoading || this.requestController) return;
+		if (this.isClosed || !this.canUse || this.historyLoading || this.IsThinking()) return;
 
 		this.StopSpeech();
 		this.chatBox.replaceChildren();
@@ -550,8 +567,142 @@ class Ares extends Window {
 		this.input.focus({preventScroll:true});
 	}
 
+	IsThinking() { return !!this.requestController || !!this.pendingResponse; }
+
+	StopHistoryPolling() {
+		clearTimeout(this.pendingTimer);
+		this.pendingTimer = null;
+		this.pendingController?.abort();
+		this.pendingController = null;
+	}
+
+	ScheduleHistoryPoll() {
+		if (this.isClosed || !this.canUse || !this.pendingResponse) return;
+		clearTimeout(this.pendingTimer);
+		this.pendingTimer = setTimeout(()=> this.PollConversation(), 1500);
+	}
+
+	async PollConversation() {
+		if (this.isClosed || !this.canUse || !this.pendingResponse || this.pendingController) return;
+		this.pendingTimer = null;
+		const id = this.args.conversationId;
+		const pending = this.pendingResponse;
+		const controller = new AbortController();
+		this.pendingController = controller;
+		let timedOut = false;
+		const timeout = setTimeout(()=> { timedOut = true; controller.abort(); }, 10000);
+		try {
+			const response = await fetch(`ares/history/get?id=${encodeURIComponent(id)}`, {signal:controller.signal, cache:"no-store"});
+			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
+			const saved = await response.json();
+			if (controller.signal.aborted || this.isClosed || !this.canUse || this.args.conversationId !== id) return;
+			if (saved.error === "not found") {
+				this.PendingResponseFailed("This conversation is no longer available. Start a new chat to continue.");
+				return;
+			}
+			if (saved.error) throw new Error(saved.error);
+
+			pending.bubble.querySelector(".ares-pending-error")?.remove();
+			if (!saved.pending && saved.revision <= this.args.conversationRevision) {
+				this.PendingResponseFailed("The response ended but could not be saved. Reopen the conversation or start a new chat to continue.");
+				return;
+			}
+			if (saved.revision !== this.args.conversationRevision || saved.pending?.requestId !== pending.requestId) {
+				this.RestoreConversation(saved, this.IsScrolledToBottom());
+				this.LoadHistoryList();
+			}
+		}
+		catch (ex) {
+			if ((!controller.signal.aborted || timedOut) && this.pendingController === controller && !this.isClosed && this.canUse && this.pendingResponse === pending) {
+				let error = pending.bubble.querySelector(".ares-pending-error");
+				if (!error) {
+					error = pending.bubble.ownerDocument.createElement("div");
+					error.className = "ares-error ares-pending-error";
+					error.setAttribute("role", "alert");
+					pending.bubble.appendChild(error);
+				}
+				error.textContent = `${timedOut ? "Checking the response timed out." : ex.message ?? ex} Retrying…`;
+			}
+		}
+		finally {
+			clearTimeout(timeout);
+			if (this.pendingController === controller) {
+				this.pendingController = null;
+				this.ScheduleHistoryPoll();
+			}
+		}
+	}
+
+	PendingResponseFailed(text) {
+		const reply = this.pendingResponse.bubble;
+		reply.classList.remove("ares-thinking");
+		reply.removeAttribute("aria-busy");
+		reply.removeAttribute("role");
+		const error = reply.ownerDocument.createElement("div");
+		error.className = "ares-error";
+		error.setAttribute("role", "alert");
+		error.textContent = text;
+		reply.replaceChildren(error);
+		this.pendingResponse = null;
+		this.historyNeedsReload = true;
+		this.chatBox.removeAttribute("aria-busy");
+		this.UpdateSpeechButton(reply.closest(".ares-response"));
+		this.UpdateHistoryControls();
+	}
+
+	RestoreConversation(saved, follow = true) {
+		const scroll = this.chatBox.scrollTop;
+		this.StopSpeech();
+		this.chatBox.replaceChildren();
+		this.lastBubble = null;
+		this.messages = [];
+		this.restoringHistory = true;
+
+		try {
+			for (const message of saved.messages) {
+				const time = new Date(message.time).toLocaleTimeString(UI.regionalFormat, {});
+				const incoming = message.role === "assistant";
+				this.CreateTextBubble(message.content, incoming ? "in" : "out", incoming ? `ares:${message.agent}` : KEEP.username,
+					incoming ? `${message.agentName} · ${message.model}` : "", incoming ? "var(--clr-accent)" : KEEP.color, time);
+				if (message.status === "interrupted") {
+					const reply = this.CreateBubble("in", `ares:${message.agent}`, `${message.agentName} · ${message.model}`, "var(--clr-accent)", time);
+					const error = reply.ownerDocument.createElement("div");
+					error.className = "ares-error";
+					error.textContent = message.error ?? "The response was interrupted. Your message was saved.";
+					error.setAttribute("role", "alert");
+					reply.appendChild(error);
+					this.UpdateSpeechButton(reply.closest(".ares-response"));
+				}
+				else {
+					this.messages.push({role:message.role, content:message.content});
+				}
+			}
+			this.pendingResponse = saved.pending ?? null;
+			if (this.pendingResponse) {
+				const pending = this.pendingResponse;
+				const time = new Date(pending.time).toLocaleTimeString(UI.regionalFormat, {});
+				this.CreateTextBubble(pending.text, "out", KEEP.username, "", KEEP.color, time);
+				const reply = this.CreateThinkingBubble(pending.agent, pending.agentName, pending.model, time);
+				this.pendingResponse = {...pending, bubble:reply};
+				this.chatBox.setAttribute("aria-busy", "true");
+			}
+			else this.chatBox.removeAttribute("aria-busy");
+		}
+		finally {
+			this.restoringHistory = false;
+		}
+
+		this.args.conversationId = saved.id;
+		this.args.conversationRevision = saved.revision;
+		this.historyNeedsReload = false;
+		this.SetTitle(`A.R.E.S. - ${saved.title}`);
+		this.chatBox.scrollTop = follow ? this.chatBox.scrollHeight : scroll;
+
+		this.UpdateHistoryControls();
+	}
+
 	async OpenConversation(id) {
-		if (!this.canUse || this.requestController || this.isClosed) return false;
+		if (!this.canUse || this.IsThinking() || this.isClosed) return false;
 		this.historyController?.abort();
 
 		const controller = new AbortController();
@@ -560,50 +711,17 @@ class Ares extends Window {
 		this.UpdateHistoryControls();
 
 		try {
-			const response = await fetch(`ares/history/get?id=${encodeURIComponent(id)}`, {signal:controller.signal});
+			const response = await fetch(`ares/history/get?id=${encodeURIComponent(id)}`, {signal:controller.signal, cache:"no-store"});
 			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
 			const saved = await response.json();
 
 			if (saved.error) throw new Error(saved.error);
 			if (controller.signal.aborted || this.isClosed || !this.canUse) return false;
 
-			this.StopSpeech();
-			this.chatBox.replaceChildren();
-			this.lastBubble = null;
-			this.messages = [];
-			this.restoringHistory = true;
-	
-			try {
-				for (const message of saved.messages) {
-					const time = new Date(message.time).toLocaleTimeString(UI.regionalFormat, {});
-					const incoming = message.role === "assistant";
-					this.CreateTextBubble(message.content, incoming ? "in" : "out", incoming ? `ares:${message.agent}` : KEEP.username,
-						incoming ? `${message.agentName} · ${message.model}` : "", incoming ? "var(--clr-accent)" : KEEP.color, time);
-					if (message.status === "interrupted") {
-						const reply = this.CreateBubble("in", `ares:${message.agent}`, `${message.agentName} · ${message.model}`, "var(--clr-accent)", time);
-						const error = reply.ownerDocument.createElement("div");
-						error.className = "ares-error";
-						error.textContent = message.error ?? "The response was interrupted. Your message was saved.";
-						error.setAttribute("role", "alert");
-						reply.appendChild(error);
-						this.UpdateSpeechButton(reply.closest(".ares-response"));
-					}
-					else {
-						this.messages.push({role:message.role, content:message.content});
-					}
-				}
-			}
-			finally {
-				this.restoringHistory = false;
-			}
+			this.RestoreConversation(saved);
+			if (this.pendingResponse) this.ScheduleHistoryPoll();
 
-			this.args.conversationId = saved.id;
-			this.args.conversationRevision = saved.revision;
-			this.historyNeedsReload = false;
-			this.SetTitle(`${saved.title} — A.R.E.S.`);
-			this.chatBox.scrollTop = this.chatBox.scrollHeight;
-
-			const last = saved.messages.findLast(message=> message.agent);
+			const last = saved.pending ?? saved.messages.findLast(message=> message.agent);
 			if (last) {
 				this.args.agent = last.agent;
 				this.args.model = last.model;
@@ -631,7 +749,7 @@ class Ares extends Window {
 	}
 
 	DeleteConversation(id) {
-		if (this.isClosed || !this.canUse || this.historyLoading || this.requestController || !id) return;
+		if (this.isClosed || !this.canUse || this.historyLoading || this.IsThinking() || !id) return;
 
 		const saved = this.conversations.find(entry=> entry.id === id);
 		this.ConfirmBox(saved ? `Delete conversation "${saved.title}" permanently?` : "Delete this conversation permanently?", false, "mono/delete.svg")?.addEventListener("click", async ()=> {
@@ -680,7 +798,7 @@ class Ares extends Window {
 	}
 
 	async Send() {
-		if (this.isClosed || !this.canUse || !this.connection || this.settingsBusy || this.historyLoading || this.requestController) return;
+		if (this.isClosed || !this.canUse || !this.connection || this.settingsBusy || this.historyLoading || this.IsThinking()) return;
 		if (this.historyNeedsReload) { this.ConfirmBox("Reopen this conversation from the side menu or start a new chat before continuing.", true, "mono/error.svg"); return; }
 		if (this.input.innerHTML.length === 0) return;
 
@@ -726,11 +844,7 @@ class Ares extends Window {
 		bubble.style.backgroundColor = "transparent";
 		bubble.style.boxShadow = "var(--clr-pane) 0 0 0 2px inset";
 
-		const reply = this.CreateTextBubble("Thinking…", "in", `ares:${connection.agent}`, `${connection.agentName} · ${connection.modelName}`, "var(--clr-accent)", nowString);
-		reply.classList.add("ares-thinking");
-		reply.setAttribute("role", "status");
-		reply.setAttribute("aria-busy", "true");
-		this.UpdateSpeechButton(reply.closest(".ares-response"));
+		const reply = this.CreateThinkingBubble(connection.agent, connection.agentName, connection.modelName, nowString);
 		this.ClearInput();
 
 		let responseText = "";
@@ -752,10 +866,10 @@ class Ares extends Window {
 
 		try {
 			const response = await fetch(`ares/chat?id=${encodeURIComponent(connection.agent)}`, {
-				method:"POST",
-				headers:{"Content-Type":"application/json"},
-				body:JSON.stringify({model:connection.model, revision:connection.revision, text, conversationId:this.args.conversationId, conversationRevision:this.args.conversationRevision, requestId, reasoning:this.GetEffort() || undefined}),
-				signal:controller.signal
+				method: "POST",
+				headers: {"Content-Type":"application/json"},
+				body: JSON.stringify({model:connection.model, revision:connection.revision, text, conversationId:this.args.conversationId, conversationRevision:this.args.conversationRevision, requestId, reasoning:this.GetEffort() || undefined}),
+				signal: controller.signal
 			});
 
 			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
@@ -850,6 +964,15 @@ class Ares extends Window {
 		}
 	}
 
+	CreateThinkingBubble(agent, agentName, model, time) {
+		const reply = this.CreateTextBubble("Thinking...", "in", `ares:${agent}`, `${agentName} · ${model}`, "var(--clr-accent)", time);
+		reply.classList.add("ares-thinking");
+		reply.setAttribute("role", "status");
+		reply.setAttribute("aria-busy", "true");
+		this.UpdateSpeechButton(reply.closest(".ares-response"));
+		return reply;
+	}
+
 	AddSpeechButton(response) {
 		const button = response.ownerDocument.createElement("button");
 		button.type = "button";
@@ -933,7 +1056,7 @@ class Ares extends Window {
 			if (text.length > 0) text += " ";
 			segment.start = text.length;
 			text += segment.text;
-			if (!/[.!?…]["'’”)\]]*$/.test(segment.text)) text += ".";
+			if (!/[.!?]["'’”)\]]*$/.test(segment.text)) text += ".";
 		}
 
 		const state = {response, button, segments, text, index:0, offset:0, boundary:0, paused:false, utterance:null, synth:window.speechSynthesis};
@@ -1004,6 +1127,8 @@ class Ares extends Window {
 			slider.setAttribute("aria-label", name);
 
 			const value = doc.createElement("span");
+			value.style.fontWeight = "600";
+
 			const Update = ()=> {
 				this.speechSettings[key] = Number(slider.value);
 				value.textContent = Format(this.speechSettings[key]);
@@ -1011,6 +1136,7 @@ class Ares extends Window {
 			};
 
 			Update();
+
 			slider.oninput = Update;
 			slider.onchange = ()=> {
 				Update();
@@ -1045,6 +1171,7 @@ class Ares extends Window {
 
 		const select = doc.createElement("select");
 		select.setAttribute("aria-label", "Voice");
+
 		state.updateVoices = ()=> {
 			if (this.speech !== state) return;
 			const voices = state.synth.getVoices().filter(voice=> /^en(?:-|$)/i.test(voice.lang)).sort((a, b)=> a.lang.localeCompare(b.lang) || a.name.localeCompare(b.name));
@@ -1062,7 +1189,10 @@ class Ares extends Window {
 				AddOption(`${voice.name} (${voice.lang})${voice.default ? " · Default" : ""}`, Ares.SpeechVoiceId(voice));
 			}
 
-			if (voices.length > 0 && !voices.some(voice=> Ares.SpeechVoiceId(voice) === this.speechVoice)) this.speechVoice = "";
+			if (voices.length > 0 && !voices.some(voice=> Ares.SpeechVoiceId(voice) === this.speechVoice)) {
+				this.speechVoice = "";
+			}
+
 			select.value = voices.length > 0 ? this.speechVoice : "";
 			select.disabled = voices.length === 0;
 		};
@@ -1164,6 +1294,7 @@ class Ares extends Window {
 	PauseSpeech() {
 		const state = this.speech;
 		if (!state || state.paused) return;
+
 		state.paused = true;
 		state.synth.pause();
 		this.UpdateSpeechMenu(state);
@@ -1172,6 +1303,7 @@ class Ares extends Window {
 	ResumeSpeech() {
 		const state = this.speech;
 		if (!state || !state.paused) return;
+
 		state.paused = false;
 		state.synth.resume();
 		if (!state.utterance) this.SpeakResponse(state);
@@ -1181,8 +1313,10 @@ class Ares extends Window {
 	SkipSpeech(direction) {
 		const state = this.speech;
 		if (!state) return;
+
 		const index = state.index + direction;
 		if (index < 0 || index >= state.segments.length) return;
+
 		state.index = index;
 		state.boundary = state.segments[index].start;
 		this.HighlightSpeech(state, state.boundary);
@@ -1191,9 +1325,11 @@ class Ares extends Window {
 
 	RestartSpeech(state) {
 		if (this.speech !== state) return;
+
 		state.offset = state.boundary;
 		state.utterance = null; //Ignore cancellation events from the old utterance.
 		state.synth.cancel();
+
 		if (!state.paused) {
 			state.synth.resume();
 			this.SpeakResponse(state);
@@ -1220,22 +1356,27 @@ class Ares extends Window {
 
 	SpeechFailed(state) {
 		if (this.speech !== state) return;
+
 		this.StopSpeech();
+
 		const error = state.response.ownerDocument.createElement("div");
 		error.className = "ares-error ares-speech-error";
 		error.setAttribute("role", "alert");
 		error.textContent = "Unable to read this response aloud. Check your browser's speech voices and audio settings.";
+
 		state.response.insertBefore(error, state.button);
 	}
 
 	static RenderMarkdown(element, text) {
 		element.classList.add("ares-markdown");
+
 		//Keep messages readable if either bundled dependency failed to load.
 		if (typeof marked === "undefined" || typeof DOMPurify === "undefined" || !DOMPurify.isSupported) {
 			element.textContent = text;
 			element.style.whiteSpace = "pre-wrap";
 			return;
 		}
+
 		element.style.removeProperty("white-space");
 
 		Ares.markdown ??= new marked.Marked({
@@ -1258,6 +1399,7 @@ class Ares extends Window {
 		for (const link of fragment.querySelectorAll("a")) {
 			const href = link.getAttribute("href");
 			if (!href) continue;
+
 			try {
 				const url = new URL(href, element.ownerDocument.baseURI);
 				if (!["http:", "https:", "mailto:"].includes(url.protocol)) throw new Error("Unsupported link");

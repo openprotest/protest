@@ -217,7 +217,7 @@ internal static class Cert {
             String dnsNames = String.Join(", ", GetSanDnsNames(cert));
             if (String.IsNullOrEmpty(dnsNames)) {
                 dnsNames = "--";
-            } 
+            }
 
             return JsonSerializer.SerializeToUtf8Bytes(
                 new {

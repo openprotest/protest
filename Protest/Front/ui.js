@@ -396,7 +396,7 @@ const UI = {
 const MENU = {
 	items: [
 		{ t:"Devices",                      i:"mono/devices.svg?light",      g:"inventory", h:false, f:()=> new DevicesList() },
-		{ t:"Users",                        i:"mono/users.svg?light",        g:"inventory", h:false, f:()=> new UsersList() }, 
+		{ t:"Users",                        i:"mono/users.svg?light",        g:"inventory", h:false, f:()=> new UsersList() },
 		{ t:"Devices grid",                 i:"mono/griddevices.svg?light",  g:"inventory", h:true,  f:()=> new DevicesGrid(), k:"bulk" },
 		{ t:"Users grid",                   i:"mono/gridusers.svg?light",    g:"inventory", h:true,  f:()=> new UsersGrid(),   k:"bulk"},
 		{ t:"New device",                   i:"mono/newdevice.svg?light",    g:"inventory", h:true,  f:()=> new DeviceView({file:null}), k:"add" },

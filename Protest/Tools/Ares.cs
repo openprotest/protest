@@ -246,16 +246,23 @@ internal static partial class Ares {
         HistoryTurn turn;
         Message[] messages;
         try {
-            turn = history.Begin(owner, conversationId, conversationRevision, requestId, text);
+            turn = history.Begin(owner, conversationId, conversationRevision, requestId, text, agent.Id, agent.Name, model, reasoning);
         }
-        catch (Exception ex) when (ex is InvalidOperationException or ArgumentException) { return Error(ex.Message); }
-        catch (Exception ex) { Logger.Error(ex); return Error("Unable to open conversation history"); }
+        catch (Exception ex) when (ex is InvalidOperationException or ArgumentException) {
+            return Error(ex.Message);
+        }
+        catch (Exception ex) {
+            Logger.Error(ex);
+            return Error("Unable to open conversation history");
+        }
+
         List<Message> context = new List<Message>();
         for (int i = 0; i + 1 < turn.Conversation.Messages.Length; i++) {
             if (turn.Conversation.Messages[i].Role != "user" || turn.Conversation.Messages[i].Status != "completed" || turn.Conversation.Messages[i + 1].Role != "assistant" || turn.Conversation.Messages[i + 1].Status != "completed") continue;
             context.Add(new Message("user", turn.Conversation.Messages[i].Content));
             context.Add(new Message("assistant", turn.Conversation.Messages[++i].Content));
         }
+
         context.Add(new Message("user", text));
         messages = context.ToArray();
         if (JsonSerializer.SerializeToUtf8Bytes(messages, jsonOptions).Length > MAX_CHAT_PAYLOAD) {
@@ -266,12 +273,23 @@ internal static partial class Ares {
         ctx.Response.ContentType = "application/x-ndjson; charset=utf-8";
         ctx.Response.SendChunked = true;
         ctx.Response.AddHeader("X-Accel-Buffering", "no");
+
         using CancellationTokenSource timeout = new CancellationTokenSource(TimeSpan.FromMinutes(2));
         StringBuilder reply = new StringBuilder();
         string error = null;
         bool complete = false;
+        bool connected = true;
+
+        async Task SendEvent(object value, CancellationToken token = default) {
+            if (!connected) return;
+            try { await WriteChatEventAsync(ctx, value, token); }
+            catch (HttpListenerException) { connected = false; }
+            catch (IOException) { connected = false; }
+            catch (ObjectDisposedException) { connected = false; }
+        }
+
         try {
-            await WriteChatEventAsync(ctx, new { type = "accepted", conversationId = turn.Conversation.Id, conversationRevision = turn.Conversation.Revision, requestId = turn.RequestId }, timeout.Token);
+            await SendEvent(new { type = "accepted", conversationId = turn.Conversation.Id, conversationRevision = turn.Conversation.Revision, requestId = turn.RequestId }, timeout.Token);
             if (!String.IsNullOrEmpty(reasoning)) {
                 try {
                     using CancellationTokenSource validation = CancellationTokenSource.CreateLinkedTokenSource(timeout.Token);
@@ -284,13 +302,26 @@ internal static partial class Ares {
                 }
                 if (error is not null) throw new InvalidOperationException(error);
             }
+
             bool current;
-            lock (mutex) { current = ReadAgent(agent.Id) == agent; }
-            if (!current || !Auth.IsAuthorized(ctx, "/ares/chat")) throw new InvalidOperationException("The agent settings or your access changed. Reopen A.R.E.S.");
-            await FetchReplyAsync(agent.Type, ReadKey(agent), model, messages, httpClient, timeout.Token, agent.Endpoint,
-                async delta => { reply.Append(delta); await WriteChatEventAsync(ctx, new { type = "delta", text = delta }, timeout.Token); }, reasoning);
-            lock (mutex) { current = ReadAgent(agent.Id) == agent; }
-            if (!current) throw new InvalidOperationException("The agent settings changed. Reopen A.R.E.S. and confirm your selection.");
+            lock (mutex) {
+                current = ReadAgent(agent.Id) == agent;
+            }
+
+            if (!current || !Auth.IsAuthorized(ctx, "/ares/chat")) {
+                throw new InvalidOperationException("The agent settings or your access changed. Reopen A.R.E.S.");
+            }
+
+            await FetchReplyAsync(agent.Type, ReadKey(agent), model, messages, httpClient, timeout.Token, agent.Endpoint, async delta => { reply.Append(delta); await SendEvent(new { type = "delta", text = delta }, timeout.Token); }, reasoning);
+
+            lock (mutex) {
+                current = ReadAgent(agent.Id) == agent;
+            }
+
+            if (!current) {
+                throw new InvalidOperationException("The agent settings changed. Reopen A.R.E.S. and confirm your selection.");
+            }
+
             complete = true;
         }
         catch (InvalidOperationException ex) { error = ex.Message; }
@@ -305,15 +336,22 @@ internal static partial class Ares {
         try {
             saved = history.Complete(turn, reply.ToString(), complete ? "completed" : "interrupted", agent.Id, agent.Name, agent.Type, model, reasoning, error);
         }
-        catch (Exception ex) { Logger.Error(ex); error = "Unable to save conversation history. Reopen History or start a new conversation."; complete = false; }
-        finally { history.Release(turn); }
-        try {
-            if (complete) await WriteChatEventAsync(ctx, new { type = "done", conversationId = saved.Id, conversationRevision = saved.Revision });
-            else await WriteChatEventAsync(ctx, new { type = "error", error, conversationId = saved?.Id ?? turn.Conversation.Id, conversationRevision = saved?.Revision ?? turn.Conversation.Revision, historySaved = saved is not null });
+        catch (Exception ex) {
+            Logger.Error(ex);
+            error = "Unable to save conversation history. Reopen History or start a new conversation.";
+            complete = false;
         }
-        catch (HttpListenerException) { }
-        catch (IOException) { }
-        catch (ObjectDisposedException) { }
+        finally {
+            history.Release(turn);
+        }
+
+        if (complete) {
+            await SendEvent(new { type = "done", conversationId = saved.Id, conversationRevision = saved.Revision });
+        }
+        else {
+            await SendEvent(new { type = "error", error, conversationId = saved?.Id ?? turn.Conversation.Id, conversationRevision = saved?.Revision ?? turn.Conversation.Revision, historySaved = saved is not null });
+        }
+
         return null;
     }
 
@@ -324,18 +362,17 @@ internal static partial class Ares {
     }
 
     internal static Message[] ReadMessages(JsonElement root) {
-        if (!root.TryGetProperty("messages", out JsonElement entries) || entries.ValueKind != JsonValueKind.Array ||
-            entries.GetArrayLength() == 0 || entries.GetArrayLength() % 2 == 0) return null;
+        if (!root.TryGetProperty("messages", out JsonElement entries) || entries.ValueKind != JsonValueKind.Array || entries.GetArrayLength() == 0 || entries.GetArrayLength() % 2 == 0) return null;
 
         List<Message> messages = new List<Message>();
         foreach (JsonElement entry in entries.EnumerateArray()) {
             if (entry.ValueKind != JsonValueKind.Object) return null;
             string role = GetString(entry, "role");
             string text = GetString(entry, "content");
-            if (role != (messages.Count % 2 == 0 ? "user" : "assistant") || String.IsNullOrWhiteSpace(text) ||
-                (role == "user" && text.Length > MAX_TEXT_LENGTH)) return null;
+            if (role != (messages.Count % 2 == 0 ? "user" : "assistant") || String.IsNullOrWhiteSpace(text) || (role == "user" && text.Length > MAX_TEXT_LENGTH)) return null;
             messages.Add(new Message(role, text));
         }
+
         return messages.ToArray();
     }
 
@@ -350,9 +387,11 @@ internal static partial class Ares {
             "ollama" => $"{NormalizeEndpoint(endpoint ?? "http://localhost:11434") ?? throw new ArgumentException("Invalid Ollama server URL")}/api/chat",
             _ => throw new ArgumentException("Unsupported agent provider", nameof(type))
         };
+
         Dictionary<string, object> payload = new Dictionary<string, object> {
             ["model"] = model, ["messages"] = messages, ["stream"] = onText is not null
         };
+
         if (type == "openai") {
             payload["store"] = false;
             payload["max_completion_tokens"] = 4096;
@@ -369,10 +408,18 @@ internal static partial class Ares {
         else if (!String.IsNullOrEmpty(reasoning)) {
             payload["think"] = reasoning switch { "true" => (object)true, "false" => false, _ => reasoning };
         }
+
         using HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, address);
-        if (!String.IsNullOrEmpty(key)) request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", key);
-        if (type == "anthropic") request.Headers.Add("anthropic-version", "2026-10-21");
+        if (!String.IsNullOrEmpty(key)) {
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", key);
+        }
+
+        if (type == "anthropic") {
+            request.Headers.Add("anthropic-version", "2026-10-21");
+        }
+
         request.Content = new StringContent(JsonSerializer.Serialize(payload, jsonOptions), Encoding.UTF8, "application/json");
+
         using HttpResponseMessage response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, token);
         if (!response.IsSuccessStatusCode) {
             string body = await response.Content.ReadAsStringAsync(token);
@@ -389,11 +436,13 @@ internal static partial class Ares {
             catch (JsonException) { }
             throw new HttpRequestException(ProviderError(type, response.StatusCode, code, errorType), null, response.StatusCode);
         }
+
         if (onText is not null) {
             using Stream stream = await response.Content.ReadAsStreamAsync(token);
             using StreamReader reader = new StreamReader(stream, Encoding.UTF8);
             return await ReadReplyStreamAsync(type, reader, onText, token);
         }
+
         using JsonDocument doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync(token));
         JsonElement root = doc.RootElement;
         string text = null;
@@ -407,7 +456,9 @@ internal static partial class Ares {
         else if (type == "ollama" && root.TryGetProperty("message", out JsonElement ollamaMessage)) {
             text = GetString(ollamaMessage, "content");
         }
+
         if (String.IsNullOrWhiteSpace(text)) throw new JsonException("The provider returned no text response");
+
         return text;
     }
 
@@ -416,6 +467,7 @@ internal static partial class Ares {
         StringBuilder eventData = new StringBuilder();
         bool completed = false;
         bool hasTextBlock = false;
+
         while (!completed) {
             string line = await reader.ReadLineAsync(token);
             if (line is null) break;
@@ -432,9 +484,11 @@ internal static partial class Ares {
                     string value = line[5..];
                     eventData.Append(value.StartsWith(' ') ? value[1..] : value);
                 }
+
                 if (line.Length != 0 || eventData.Length == 0) continue;
                 data = eventData.ToString();
                 eventData.Clear();
+
                 if (IsOpenAiCompatible(type) && data == "[DONE]") {
                     completed = true;
                     continue;
@@ -475,23 +529,30 @@ internal static partial class Ares {
             }
         }
 
-        if (!completed || String.IsNullOrWhiteSpace(text.ToString())) throw new JsonException("The provider returned an incomplete or empty text response");
+        if (!completed || String.IsNullOrWhiteSpace(text.ToString())) {
+            throw new JsonException("The provider returned an incomplete or empty text response");
+        }
+
         return text.ToString();
     }
 
     private static string ProviderError(string type, HttpStatusCode status, string code, string errorType) {
         string provider = ProviderLabel(type);
         if (type == "ollama") return $"Ollama rejected the message (HTTP {(int)status}). Check the selected model, server URL, and access settings.";
+
         if (status == HttpStatusCode.TooManyRequests) {
             if (code == "credit_balance_exhausted") return $"{provider} API credits are exhausted (HTTP 429). Check the API organization's billing and credit balance.";
             if (code == "organization_spend_limit_exceeded") return $"{provider} API organization spending limit reached (HTTP 429). Check the organization's spending limits.";
             if (code == "organization_usage_limit_exceeded") return $"{provider} API organization usage limit reached (HTTP 429). Check the organization's API Limits page.";
+
             if (code == "insufficient_quota" || errorType == "insufficient_quota") {
                 return $"{provider} API quota is unavailable or exhausted (HTTP 429). Check API billing, credits, and spending limits for the organization/project that owns this key.";
             }
+
             if (code == "rate_limit_exceeded" || errorType == "rate_limit_error") {
                 return $"{provider} API rate limit reached (HTTP 429). Wait briefly and try again, or check the project's rate limits.";
             }
+
             return $"{provider} returned HTTP 429. Check API billing, credits, and request limits; the response did not identify a specific cause.";
         }
         return $"{provider} rejected the message (HTTP {(int)status}). Check the selected model, API key, quota, and rate limits.";
@@ -506,6 +567,7 @@ internal static partial class Ares {
             "ollama" => $"{NormalizeEndpoint(endpoint ?? "http://localhost:11434") ?? throw new ArgumentException("Invalid Ollama server URL")}/api/tags",
             _ => throw new ArgumentException("Unsupported agent provider", nameof(type))
         };
+
         Dictionary<string, Model> models = new Dictionary<string, Model>();
         HashSet<string> cursors = new HashSet<string>();
         string cursor = null;
@@ -515,10 +577,13 @@ internal static partial class Ares {
             using HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, url);
             if (!String.IsNullOrEmpty(key)) request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", key);
             if (type == "anthropic") request.Headers.Add("anthropic-version", "2026-10-21");
+
             using HttpResponseMessage response = await client.SendAsync(request, token);
             response.EnsureSuccessStatusCode();
+
             using JsonDocument doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync(token));
             JsonElement root = doc.RootElement;
+
             foreach (JsonElement entry in root.GetProperty(type == "ollama" ? "models" : "data").EnumerateArray()) {
                 string id = type == "ollama" ? GetString(entry, "model") ?? GetString(entry, "name") : GetString(entry, "id");
                 if (String.IsNullOrWhiteSpace(id)) continue;
@@ -549,12 +614,13 @@ internal static partial class Ares {
 
     private static Agent ReadAgent(string id) {
         if (id is null) return null;
+
         try {
             string path = PathOf(id);
             if (!File.Exists(path)) return null;
+
             Agent agent = JsonSerializer.Deserialize<Agent>(File.ReadAllBytes(path), jsonOptions);
-            return agent?.Id == id && ProviderLabel(agent.Type) is not null && !String.IsNullOrWhiteSpace(agent.Name) &&
-                (agent.Type == "ollama" ? NormalizeEndpoint(agent.Endpoint) is not null : !String.IsNullOrEmpty(agent.Secret)) ? agent : null;
+            return agent?.Id == id && ProviderLabel(agent.Type) is not null && !String.IsNullOrWhiteSpace(agent.Name) && (agent.Type == "ollama" ? NormalizeEndpoint(agent.Endpoint) is not null : !String.IsNullOrEmpty(agent.Secret)) ? agent : null;
         }
         catch (Exception ex) {
             Logger.Error(ex);
@@ -583,10 +649,13 @@ internal static partial class Ares {
 
     private static JsonDocument ReadJsonBody(HttpListenerContext ctx, int limit = MAX_PAYLOAD) {
         if (ctx.Request.ContentLength64 > limit) return null;
+
         using StreamReader reader = new StreamReader(ctx.Request.InputStream, ctx.Request.ContentEncoding);
         char[] buffer = new char[limit + 1];
         int count = reader.ReadBlock(buffer, 0, buffer.Length);
+
         if (count == 0 || count > limit) return null;
+
         try {
             return JsonDocument.Parse(new string(buffer, 0, count));
         }

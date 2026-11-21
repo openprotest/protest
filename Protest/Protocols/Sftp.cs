@@ -380,7 +380,7 @@ internal class Sftp {
                 downloadTokens.TryRemove(pair.Key, out _);
             }
         }
-        
+
         foreach (KeyValuePair<string, SftpToken> pair in uploadTokens) {
             if (now - pair.Value.timestamp > TOKEN_LIFETIME) {
                 uploadTokens.TryRemove(pair.Key, out _);

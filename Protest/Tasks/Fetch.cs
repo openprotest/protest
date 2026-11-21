@@ -630,7 +630,6 @@ internal static class Fetch {
 
         Dictionary<string, string> fetch = Protocols.Ldap.AdFetch(target);
         if (fetch is null) return null;
-        
 
         ConcurrentDictionary<string, string[]> data = new ConcurrentDictionary<string, string[]>();
 

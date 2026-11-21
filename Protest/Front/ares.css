@@ -95,7 +95,6 @@
 	right: 36px;
 	top: 0;
 	line-height: 32px;
-	font-size: small;
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
@@ -350,7 +349,10 @@
 	padding: 4px 16px 0;
 }
 
-.ares-box .ares-bubble.ares-thinking { -webkit-user-select: none; user-select: none; }
+.ares-box .ares-bubble.ares-thinking {
+	-webkit-user-select: none;
+	user-select: none;
+}
 
 .ares-thinking > p {
 	-webkit-user-select: none; user-select: none;
@@ -373,6 +375,30 @@
 
 @keyframes ares-thinking {
 	to {background-position: 200% center; }
+}
+
+@keyframes ares-thinking-text {
+	0%   { content: "Thinking..."; }
+	5%   { content: "Processing..."; }
+	10%  { content: "Analyzing..."; }
+	15%  { content: "Calculating..."; }
+	20%  { content: "Reasoning..."; }
+	25%  { content: "Evaluating..."; }
+	30%  { content: "Considering..."; }
+	35%  { content: "Examining..."; }
+	40%  { content: "Reviewing..."; }
+	45%  { content: "Assessing..."; }
+	50%  { content: "Exploring..."; }
+	55%  { content: "Investigating..."; }
+	60%  { content: "Researching..."; }
+	65%  { content: "Planning..."; }
+	70%  { content: "Preparing..."; }
+	75%  { content: "Formulating..."; }
+	80%  { content: "Determining..."; }
+	85%  { content: "Interpreting..."; }
+	90%  { content: "Reflecting..."; }
+	95%  { content: "Computing..."; }
+	100% { content: "Thinking..."; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -402,7 +428,7 @@
 	height: 20px;
 	padding: 2px 8px 2px 0;
 	background-color: light-dark(color-mix(in srgb, var(--clr-critical) 80%, rgb(0,0,0)), var(--clr-critical));
-	mask-image: url(mono/critical.svg);
+	mask-image: url(mono/warning.svg);
 	mask-size: 20px 20px;
 	mask-position: 50% 50%;
 	mask-repeat: no-repeat;
@@ -568,11 +594,12 @@
 	max-height: calc(100% - 144px);
 	padding: 10px;
 	overflow-y: auto;
-	border: var(--clr-accent) solid 1.5px;
+	border: var(--clr-pane) solid 1.5px;
 	border-radius: 8px;
 	color: var(--clr-dark);
+	text-shadow: var(--clr-pane) 0 0 4px;
 	opacity: .95;
-	background-color: var(--clr-transparent);
+	background-color: color-mix(in srgb, var(--clr-pane) 60%, transparent);
 	backdrop-filter: blur(8px) brightness(80%);
 	box-shadow: 0 4px 8px rgb(0,0,0,.2);
 }
@@ -711,12 +738,13 @@
 	max-height: 240px;
 	margin: 0;
 	padding: 12px;
-	border: var(--clr-accent) solid 1.5px;
+	border: var(--clr-pane) solid 1.5px;
 	border-radius: 8px;
 	box-shadow: 0 4px 12px rgb(0,0,0,.25);
 	color: var(--clr-dark);
+	text-shadow: var(--clr-pane) 0 0 4px;
 	opacity: .95;
-	background-color: var(--clr-transparent);
+	background-color: color-mix(in srgb, var(--clr-pane) 60%, transparent);
 	backdrop-filter: blur(8px) brightness(80%);
 	box-shadow: 0 4px 8px rgb(0,0,0,.2);
 	overflow-y: auto;

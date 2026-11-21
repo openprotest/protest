@@ -124,6 +124,143 @@ public class AresHistoryTests {
         }
     }
 
+    [Test]
+    public void PendingFirstTurnIsVisibleOnlyToItsOwnerWithoutDiskWrites() {
+        string id = Guid.NewGuid().ToString(), request = Guid.NewGuid().ToString();
+        var turn = store.Begin("alice", id, 0, request, "Pending question", "a", "Agent", "model", "high");
+        var state = store.GetState("alice", id.ToUpperInvariant());
+        Assert.Multiple(() => {
+            Assert.That(state.Conversation.Id, Is.EqualTo(id));
+            Assert.That(state.Conversation.Messages, Is.Empty);
+            Assert.That(state.Pending.RequestId, Is.EqualTo(request));
+            Assert.That(state.Pending.Text, Is.EqualTo("Pending question"));
+            Assert.That(state.Pending.Model, Is.EqualTo("model"));
+            Assert.That(state.Pending.Reasoning, Is.EqualTo("high"));
+            Assert.That(store.List("alice").Single().Id, Is.EqualTo(id));
+            Assert.That(store.GetState("bob", id), Is.Null);
+            Assert.That(store.List("bob"), Is.Empty);
+            Assert.That(store.GetState("alice", "../../file"), Is.Null);
+            Assert.That(Directory.Exists(directory), Is.False);
+        });
+        store.Release(turn);
+        Assert.That(store.GetState("alice", id), Is.Null);
+    }
+
+    [Test]
+    public void PendingStatePreservesPreviousHistoryAndClearsAfterCompletionOrFailure() {
+        var first = Begin(); var saved = Save(first); store.Release(first);
+        var next = store.Begin("alice", saved.Id, 1, Guid.NewGuid().ToString(), "Next question", "a", "Agent", "model");
+        var state = store.GetState("alice", saved.Id);
+        Assert.That(state.Conversation.Messages.Length, Is.EqualTo(2));
+        Assert.That(state.Pending.Text, Is.EqualTo("Next question"));
+        Assert.That(store.List("alice").Length, Is.EqualTo(1));
+        Save(next, "interrupted"); store.Release(next);
+        state = store.GetState("alice", saved.Id);
+        Assert.Multiple(() => {
+            Assert.That(state.Pending, Is.Null);
+            Assert.That(state.Conversation.Revision, Is.EqualTo(2));
+            Assert.That(state.Conversation.Messages.Last().Status, Is.EqualTo("interrupted"));
+            Assert.That(state.Conversation.Messages.Last().Role, Is.EqualTo("user"));
+        });
+    }
+
+    [Test]
+    public void ReleasedTurnCannotCompleteOrReleaseANewerPendingTurn() {
+        string id = Guid.NewGuid().ToString();
+        var abandoned = Begin(id:id);
+        store.Release(abandoned);
+        var current = Begin(id:id);
+        Assert.Throws<InvalidOperationException>(() => Save(abandoned));
+        store.Release(abandoned);
+        Assert.That(store.GetState("alice", id).Pending.RequestId, Is.EqualTo(current.RequestId));
+        var saved = Save(current); store.Release(current);
+        var next = Begin(id:id, revision:saved.Revision);
+        store.Release(current);
+        Assert.That(store.GetState("alice", id).Pending.RequestId, Is.EqualTo(next.RequestId));
+        Save(next); store.Release(next);
+        Assert.That(store.GetState("alice", id).Pending, Is.Null);
+    }
+
+    [Test, NonParallelizable]
+    public async Task PendingReplyCanBeRestoredAfterBrowserDisconnectAndCompletesInHistory() {
+        int providerPort = Port(), appPort = Port();
+        using HttpListener provider = new(); provider.Prefixes.Add($"http://127.0.0.1:{providerPort}/"); provider.Start();
+        var arrived = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var release = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        Task generation = Task.Run(async () => {
+            var ctx = await provider.GetContextAsync();
+            arrived.SetResult();
+            await release.Task;
+            ctx.Response.ContentType = "application/x-ndjson";
+            await ctx.Response.OutputStream.WriteAsync(Encoding.UTF8.GetBytes("{\"message\":{\"content\":\"Restored \"},\"done\":false}\n"));
+            await ctx.Response.OutputStream.FlushAsync();
+            await Task.Delay(100);
+            await ctx.Response.OutputStream.WriteAsync(Encoding.UTF8.GetBytes("{\"message\":{\"content\":\"answer\"},\"done\":true}\n"));
+            ctx.Response.Close();
+        });
+        string agentId = Guid.NewGuid().ToString(), owner = "pending-" + Guid.NewGuid(), session = Guid.NewGuid().ToString(), other = Guid.NewGuid().ToString(), conversation = Guid.NewGuid().ToString();
+        byte[] agent = JsonSerializer.SerializeToUtf8Bytes(new { id=agentId, type="ollama", name="Pending test", enabled=true, secret="", endpoint=$"http://127.0.0.1:{providerPort}" });
+        Directory.CreateDirectory(Data.DIR_ARES_AGENTS);
+        string agentPath = Path.Combine(Data.DIR_ARES_AGENTS, agentId + ".json"); File.WriteAllBytes(agentPath, agent);
+        string revision = Convert.ToHexString(SHA256.HashData(agent));
+        foreach (var (sid, username) in new[] { (session, owner), (other, owner + "-other") }) {
+            Auth.sessions[sid] = new Auth.Session { access=new Auth.AccessControl { username=username, authorization=["ares:write"], accessPath=Auth.PopulateAccessPath(["ares:write"]) }, ip=IPAddress.Loopback, sessionId=sid, loginDate=DateTime.UtcNow.Ticks, ttl=TimeSpan.FromHours(1).Ticks };
+        }
+        string front = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../Protest/Front"));
+        Listener listener = new("127.0.0.1", (ushort)appPort, front); _ = listener.StartAsync();
+        using HttpClient client = new();
+        HttpRequestMessage Request(string path, string sid, object? payload=null) {
+            HttpRequestMessage request = new(payload is null ? HttpMethod.Get : HttpMethod.Post, $"http://127.0.0.1:{appPort}/" + path);
+            request.Headers.Add("Cookie", $"{Auth.SESSION_COOKIE}={sid}"); request.Headers.Add("Origin", $"http://127.0.0.1:{appPort}");
+            if (payload is not null) request.Content = new StringContent(JsonSerializer.Serialize(payload));
+            return request;
+        }
+        async Task<string> Get(string path, string sid) {
+            using var request = Request(path, sid);
+            using var result = await client.SendAsync(request).WaitAsync(TimeSpan.FromSeconds(10));
+            return await result.Content.ReadAsStringAsync();
+        }
+        try {
+            using var request = Request("ares/chat?id=" + agentId, session, new { model="selected", revision, text="First pending question", conversationId=conversation, conversationRevision=0, requestId=Guid.NewGuid().ToString() });
+            using var result = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead).WaitAsync(TimeSpan.FromSeconds(10));
+            using var stream = await result.Content.ReadAsStreamAsync(); using var reader = new StreamReader(stream);
+            Assert.That(await reader.ReadLineAsync().WaitAsync(TimeSpan.FromSeconds(10)), Does.Contain("accepted"));
+            await arrived.Task.WaitAsync(TimeSpan.FromSeconds(10));
+            using (JsonDocument status = JsonDocument.Parse(await Get("ares/history/get?id=" + conversation, session))) {
+                Assert.That(status.RootElement.GetProperty("messages").GetArrayLength(), Is.Zero);
+                Assert.That(status.RootElement.GetProperty("pending").GetProperty("text").GetString(), Is.EqualTo("First pending question"));
+                Assert.That(status.RootElement.GetProperty("pending").GetProperty("agent").GetString(), Is.EqualTo(agentId));
+            }
+            Assert.That(await Get("ares/history/list", session), Does.Contain(conversation));
+            Assert.That(await Get("ares/history/list", other), Is.EqualTo("[]"));
+            Assert.That(await Get("ares/history/get?id=" + conversation, other), Does.Contain("not found"));
+            using (var duplicate = Request("ares/chat?id=" + agentId, session, new { model="selected", revision, text="Blocked duplicate", conversationId=conversation, conversationRevision=0, requestId=Guid.NewGuid().ToString() })) {
+                using var duplicateResult = await client.SendAsync(duplicate);
+                Assert.That(await duplicateResult.Content.ReadAsStringAsync(), Does.Contain("already being generated"));
+            }
+            result.Dispose(); stream.Dispose();
+            release.SetResult(); await generation.WaitAsync(TimeSpan.FromSeconds(10));
+            Ares.HistoryState? completed = null;
+            for (int i=0; i<100; i++) {
+                completed = Ares.history.GetState(owner, conversation);
+                if (completed?.Pending is null) break;
+                await Task.Delay(20);
+            }
+            Assert.That(completed, Is.Not.Null);
+            Assert.That(completed!.Pending, Is.Null);
+            Assert.That(completed.Conversation.Messages.Select(message => message.Content), Is.EqualTo(new[] { "First pending question", "Restored answer" }));
+            using JsonDocument final = JsonDocument.Parse(await Get("ares/history/get?id=" + conversation, session));
+            Assert.That(final.RootElement.GetProperty("pending").ValueKind, Is.EqualTo(JsonValueKind.Null));
+            Assert.That(final.RootElement.GetProperty("revision").GetInt32(), Is.EqualTo(1));
+        }
+        finally {
+            release.TrySetResult(); listener.Stop(); provider.Stop();
+            Auth.sessions.TryRemove(session, out _); Auth.sessions.TryRemove(other, out _); File.Delete(agentPath);
+            var pending = Ares.history.GetState(owner, conversation);
+            if (pending?.Pending is null) Ares.history.Delete(owner, conversation);
+        }
+    }
+
     private static int Port() { using TcpListener socket = new(IPAddress.Loopback, 0); socket.Start(); return ((IPEndPoint)socket.LocalEndpoint).Port; }
 
     [Test, NonParallelizable]
