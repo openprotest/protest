@@ -3905,7 +3905,7 @@ class DeviceView extends View {
 
 			const dialogBox = innerBox.parentElement;
 			dialogBox.style.maxWidth = "520px";
-			
+
 			innerBox.style.padding = "20px 32px";
 
 			const label = document.createElement("div");

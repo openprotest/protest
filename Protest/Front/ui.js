@@ -343,7 +343,7 @@ const UI = {
 
 		return compressedAddress.replace(":::", "::");
 	},
-	
+
 	PlayBeepSound: onComplete=> {
 		UI.audioContext ??= new window.AudioContext();
 		const ctx = UI.audioContext;
@@ -529,11 +529,11 @@ const MENU = {
 		}
 
 		MENU.Update();
-		
+
 		cap.inert = false;
 		MENU.isOpen = true;
 		MENU.UpdatePosition();
-		
+
 		setTimeout(()=> searchinput.focus(), 150);
 	},
 

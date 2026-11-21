@@ -2698,7 +2698,7 @@ class Infrastructure extends Tabs {
 
 		const dialogBox = innerBox.parentElement;
 		dialogBox.style.maxWidth = "480px";
-		
+
 		okButton.value = "Next";
 		innerBox.style.padding = "20px";
 

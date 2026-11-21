@@ -112,6 +112,7 @@ class Ares extends Window {
 			this.settingsPanel.appendChild(row);
 			return select;
 		};
+
 		this.agentSelect = AddSelect("Agent");
 		this.modelSelect = AddSelect("Model");
 
@@ -148,6 +149,7 @@ class Ares extends Window {
 		this.settingsMenu.addEventListener("focusout", event=> {
 			if (!this.settingsMenu.contains(event.relatedTarget)) this.settingsMenu.open = false;
 		});
+
 		let expanded = this.settingsMenu.open;
 		this.settingsMenu.ontoggle = ()=> {
 			if (this.settingsMenu.open) this.settingsSummary.focus({preventScroll:true});
@@ -156,6 +158,7 @@ class Ares extends Window {
 			expanded = this.settingsMenu.open;
 			if (opening) this.LoadAgents();
 		};
+
 		this.ConfigureEffort();
 		this.settingsInitialized = true;
 	}
@@ -188,10 +191,11 @@ class Ares extends Window {
 		const value = this.GetEffort();
 		const names = {"":"Default", false:"Off", true:"On", xhigh:"Extra high"};
 		const label = Object.hasOwn(names, value) ? names[value] : value.charAt(0).toUpperCase() + value.slice(1);
-		this.effortValue.textContent = label;
+		if (this.effortValue.textContent !== label) this.effortValue.textContent = label;
 		this.effortRange.setAttribute("aria-valuetext", label);
 		const model = this.connection?.modelName ?? this.connection?.model;
-		this.settingsSummary.textContent = model ? `${model} · ${label}` : "Select model";
+		const summary = model ? `${model} · ${label}` : "Select model";
+		if (this.settingsSummary.textContent !== summary) this.settingsSummary.textContent = summary;
 	}
 
 	UpdateSettingsControls() {
@@ -213,8 +217,7 @@ class Ares extends Window {
 		const controller = new AbortController();
 		this.settingsController = controller;
 		this.settingsBusy = true;
-		this.connection = null;
-		this.ConfigureEffort();
+		this.UpdateSettingsControls();
 		this.SetSettingsError();
 		return controller;
 	}
@@ -230,93 +233,79 @@ class Ares extends Window {
 		this.UpdateSettingsControls();
 	}
 
-	async LoadAgents() {
+	LoadAgents() { return this.LoadOptions(); }
+	LoadModels(agentId) { return this.LoadOptions(agentId); }
+	SelectModel(modelId) { return this.LoadOptions(this.agentSelect.value, modelId); }
+
+	async LoadOptions(agentId = null, modelId = null) {
 		if (!this.canUse || this.isClosed) return;
+
 		const controller = this.BeginSettingsRequest();
-		this.agents = [];
-		this.modelCatalog = null;
-		this.agentSelect.replaceChildren();
-		this.modelSelect.replaceChildren();
-		this.UpdateSettingsControls();
-		try {
-			const response = await fetch("ares/agents", {signal:controller.signal});
+		const ReadOptions = async url=> {
+			const response = await fetch(url, {signal:controller.signal});
 			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
-			const agents = await response.json();
-			if (agents.error) throw new Error(agents.error);
-			if (!this.IsCurrentSettings(controller)) return;
-			this.agents = agents;
-			for (const agent of agents) this.agentSelect.add(new Option(`${agent.name} (${agent.label})`, agent.id));
+			const result = await response.json();
+			if (!this.IsCurrentSettings(controller)) throw new Error("The request was canceled.");
+			if (result.error) throw new Error(result.error);
+			return result;
+		};
+
+		try {
+			const agents = agentId === null ? await ReadOptions("ares/agents") : this.agents;
 			if (!agents.length) throw new Error("No enabled agents. Add an agent in Infrastructure → A.R.E.S., then reopen this menu.");
-			this.agentSelect.value = agents.some(agent=> agent.id === this.args.agent) ? this.args.agent : agents[0].id;
-			await this.LoadModels(this.agentSelect.value);
-		}
-		catch (ex) {
-			if (this.IsCurrentSettings(controller)) this.SetSettingsError(ex.message ?? String(ex));
-		}
-		finally { this.FinishSettingsRequest(controller); }
-	}
 
-	async LoadModels(agentId) {
-		if (!this.canUse || this.isClosed) return;
-		const agent = this.agents.find(entry=> entry.id === agentId);
-		if (!agent) return;
-		const controller = this.BeginSettingsRequest();
-		this.modelCatalog = null;
-		this.modelSelect.replaceChildren();
-		this.UpdateSettingsControls();
-		try {
-			const response = await fetch(`ares/models?id=${encodeURIComponent(agentId)}`, {signal:controller.signal});
-			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
-			const catalog = await response.json();
-			if (catalog.error) throw new Error(catalog.error);
-			if (!this.IsCurrentSettings(controller)) return;
+			const agent = agents.find(entry=> entry.id === (agentId ?? this.args.agent)) ?? (agentId === null ? agents[0] : null);
+			if (!agent) throw new Error("The agent settings changed. Close and reopen this menu to refresh the options.");
+
+			const catalog = modelId !== null && this.modelCatalog?.agent.id === agent.id ? this.modelCatalog : await ReadOptions(`ares/models?id=${encodeURIComponent(agent.id)}`);
 			if (catalog.agent.id !== agent.id || catalog.agent.name !== agent.name || catalog.agent.type !== agent.type) throw new Error("The agent settings changed. Close and reopen this menu to refresh the options.");
-			this.modelCatalog = catalog;
-			for (const model of catalog.models) this.modelSelect.add(new Option(model.name === model.id ? model.id : `${model.name} (${model.id})`, model.id));
 			if (!catalog.models.length) throw new Error("No models are available for this agent.");
-			const preferred = this.modelPreferences.get(agentId) ?? (this.args.agent === agentId ? this.args.model : null);
-			this.modelSelect.value = catalog.models.some(model=> model.id === preferred) ? preferred : catalog.models[0].id;
-			await this.SelectModel(this.modelSelect.value);
-		}
-		catch (ex) {
-			if (this.IsCurrentSettings(controller)) this.SetSettingsError(ex.message ?? String(ex));
-		}
-		finally { this.FinishSettingsRequest(controller); }
-	}
 
-	async SelectModel(modelId) {
-		if (!this.canUse || this.isClosed || !this.modelCatalog) return;
-		const catalog = this.modelCatalog;
-		const controller = this.BeginSettingsRequest();
-		try {
-			const response = await fetch(`ares/models?id=${encodeURIComponent(catalog.agent.id)}&model=${encodeURIComponent(modelId)}`, {signal:controller.signal});
-			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
-			const current = await response.json();
-			if (current.error) throw new Error(current.error);
-			if (!this.IsCurrentSettings(controller)) return;
+			const preferred = this.modelPreferences.get(agent.id) ?? (this.args.agent === agent.id ? this.args.model : null);
+			modelId ??= catalog.models.some(model=> model.id === preferred) ? preferred : catalog.models[0].id;
+
+			const current = await ReadOptions(`ares/models?id=${encodeURIComponent(agent.id)}&model=${encodeURIComponent(modelId)}`);
 			if (current.revision !== catalog.revision || current.agent.id !== catalog.agent.id) throw new Error("The agent settings changed. Close and reopen this menu to refresh the options.");
+
 			const model = current.models.find(entry=> entry.id === modelId);
 			if (!model) throw new Error("The selected model is no longer available. Close and reopen this menu to refresh the options.");
+
+			const ReplaceOptions = (select, options)=> {
+				if (select.options.length !== options.length || options.some((option, index)=> option.value !== select.options[index].value || option.text !== select.options[index].text)) select.replaceChildren(...options);
+			};
+
+			ReplaceOptions(this.agentSelect, agents.map(entry=> new Option(`${entry.name} (${entry.label})`, entry.id)));
+			ReplaceOptions(this.modelSelect, current.models.map(entry=> new Option(entry.name === entry.id ? entry.id : `${entry.name} (${entry.id})`, entry.id)));
+
+			this.agentSelect.value = agent.id;
+			this.modelSelect.value = model.id;
+			this.agents = agents;
+			this.modelCatalog = current;
 			this.connection = Object.freeze({
 				agent:current.agent.id, agentName:current.agent.name, provider:current.agent.type,
 				model:model.id, modelName:model.name, revision:current.revision,
 				reasoning:Object.freeze(current.reasoning ?? [])
 			});
+
 			this.args.agent = this.connection.agent;
 			this.args.model = this.connection.model;
 			this.modelPreferences.set(this.connection.agent, this.connection.model);
 			this.ConfigureEffort();
 			this.args.reasoning = this.GetEffort();
-			this.SetSettingsError("");
+			this.SetSettingsError();
 		}
 		catch (ex) {
-			if (this.IsCurrentSettings(controller)) this.SetSettingsError(ex.message ?? String(ex));
+			if (this.IsCurrentSettings(controller)) {
+				this.connection = null;
+				this.SetSettingsError(ex.message ?? String(ex));
+			}
 		}
 		finally { this.FinishSettingsRequest(controller); }
 	}
 
 	Input_onkeydown(event) {
 		if (event.isComposing) return;
+
 		if (event.key === "Enter" && !event.shiftKey) {
 			event.preventDefault();
 			this.Send();
@@ -366,13 +355,14 @@ class Ares extends Window {
 		bubble.style.color = "var(--clr-pane)";
 		bubble.style.backgroundColor = "transparent";
 		bubble.style.boxShadow = "var(--clr-pane) 0 0 0 2px inset";
-		
+
 		const reply = this.CreateTextBubble("Thinking…", "in", `ares:${connection.agent}`, `${connection.agentName} · ${connection.modelName}`, "var(--clr-accent)", nowString);
 		reply.classList.add("ares-thinking");
 		reply.setAttribute("role", "status");
 		reply.setAttribute("aria-busy", "true");
 		this.UpdateSpeechButton(reply.closest(".ares-response"));
 		this.ClearInput();
+
 		let responseText = "";
 		let renderFrame = null;
 		const RenderReply = ()=> {
@@ -446,12 +436,14 @@ class Ares extends Window {
 		}
 		finally {
 			if (renderFrame !== null) cancelAnimationFrame(renderFrame);
+			const follow = !this.isClosed && this.IsScrolledToBottom();
 			this.requestController = null;
 			delete this.outgoing[id];
 			reply.classList.remove("ares-thinking");
 			reply.removeAttribute("aria-busy");
 			reply.removeAttribute("role");
 			this.UpdateSpeechButton(reply.closest(".ares-response"));
+			if (follow) this.chatBox.scrollTop = this.chatBox.scrollHeight;
 			this.chatBox.removeAttribute("aria-busy");
 			if (!this.isClosed) {
 				this.UpdateAuthorization();
@@ -492,6 +484,7 @@ class Ares extends Window {
 			if (node.tagName === "BR") return "\n";
 			return Array.from(node.childNodes, InlineText).join("") + (["TH", "TD"].includes(node.tagName) ? " ": "");
 		};
+
 		const Visit = element=> {
 			if (element.tagName === "PRE") {
 				segments.push({element, text:"See code block"});
@@ -513,21 +506,23 @@ class Ares extends Window {
 			}
 			Flush();
 		};
+
 		for (const bubble of response.querySelectorAll('.ares-bubble:not([aria-busy="true"])')) Visit(bubble);
 		return segments;
 	}
 
 	StartSpeech(response) {
 		if (this.isClosed || !window.speechSynthesis || typeof window.SpeechSynthesisUtterance !== "function") return;
+
 		const button = response.querySelector(":scope > .ares-speak");
 		if (!button || button.disabled || button.hidden) return;
 		if (this.speech?.response === response) {
 			this.StopSpeech();
 			return;
 		}
+
 		const segments = Ares.GetSpeechSegments(response);
 		if (segments.length === 0) return;
-		//The browser's synthesis queue is shared by all A.R.E.S. windows.
 		Ares.speechOwner?.StopSpeech();
 		response.querySelector(":scope > .ares-speech-error")?.remove();
 		let text = "";
@@ -538,6 +533,7 @@ class Ares extends Window {
 			text += segment.text;
 			if (!/[.!?…]["'’”)\]]*$/.test(segment.text)) text += ".";
 		}
+
 		const state = {response, button, segments, text, index:0, offset:0, boundary:0, paused:false, utterance:null, synth:window.speechSynthesis};
 		this.speech = state;
 		Ares.speechOwner = this;
@@ -545,7 +541,6 @@ class Ares extends Window {
 		button.setAttribute("aria-label", "Stop reading response");
 		this.CreateSpeechMenu(state);
 
-		//Scroll this chat only, once. Advancing, resuming and changing settings never scroll.
 		const box = this.chatBox.getBoundingClientRect();
 		const first = segments[0].element.getBoundingClientRect();
 		this.chatBox.scrollTo({top:this.chatBox.scrollTop + first.top - box.top - 16, behavior:"smooth"});
@@ -564,11 +559,14 @@ class Ares extends Window {
 		panel.className = "ares-speech-menu";
 		panel.setAttribute("role", "region");
 		panel.setAttribute("aria-label", "Read aloud controls");
+
 		const status = doc.createElement("div");
 		status.className = "ares-speech-status";
 		status.setAttribute("role", "status");
+
 		const controls = doc.createElement("div");
 		controls.className = "ares-speech-actions";
+
 		const AddButton = (icon, label, handler)=> {
 			const button = doc.createElement("button");
 			button.type = "button";
@@ -578,11 +576,16 @@ class Ares extends Window {
 			controls.appendChild(button);
 			return button;
 		};
+
 		state.playButton = AddButton("pause", "Pause", ()=> state.paused ? this.ResumeSpeech() : this.PauseSpeech());
 		AddButton("stop", "Stop", ()=> this.StopSpeech());
+		state.previousButton = AddButton("previous", "Previous section", ()=> this.SkipSpeech(-1));
+		state.nextButton = AddButton("next", "Next section", ()=> this.SkipSpeech(1));
+
 		controls.appendChild(status);
 		panel.appendChild(controls);
 		panel.appendChild(this.CreateSpeechVoiceSelector(state));
+
 		const AddSlider = (name, key, min, max, step, Format)=> {
 			const label = doc.createElement("label");
 			label.className = "ares-speech-setting";
@@ -595,21 +598,25 @@ class Ares extends Window {
 			slider.step = step;
 			slider.value = this.speechSettings[key];
 			slider.setAttribute("aria-label", name);
+
 			const value = doc.createElement("span");
 			const Update = ()=> {
 				this.speechSettings[key] = Number(slider.value);
 				value.textContent = Format(this.speechSettings[key]);
 				slider.setAttribute("aria-valuetext", value.textContent);
 			};
+
 			Update();
 			slider.oninput = Update;
 			slider.onchange = ()=> {
 				Update();
 				this.RestartSpeech(state);
 			};
+
 			label.append(caption, slider, value);
 			panel.appendChild(label);
 		};
+
 		AddSlider("Rate", "rate", .5, 2, .1, value=> `${value.toFixed(1)}×`);
 		AddSlider("Volume", "volume", 0, 1, .05, value=> `${Math.round(value * 100)}%`);
 		state.panel = panel;
@@ -667,6 +674,8 @@ class Ares extends Window {
 	}
 
 	UpdateSpeechMenu(state) {
+		state.previousButton.disabled = state.index === 0;
+		state.nextButton.disabled = state.index === state.segments.length - 1;
 		const label = state.paused ? "Resume" : "Pause";
 		if (state.playButton.getAttribute("aria-label") !== label) {
 			state.playButton.classList.toggle("ares-speech-play", state.paused);
@@ -697,15 +706,15 @@ class Ares extends Window {
 			this.StopSpeech(false);
 			return;
 		}
+
 		const offset = state.offset;
-		//Keep sections in one utterance: Firefox/macOS can click at utterance boundaries.
-		//Only split exceptionally long responses to stay below speech-engine text limits.
 		let end = Math.min(state.text.length, offset + 30000);
 		if (end < state.text.length) {
 			const space = state.text.lastIndexOf(" ", end);
 			if (space > offset + 20000) end = space;
 			if (/[\uD800-\uDBFF]/.test(state.text[end - 1])) end--;
 		}
+
 		const utterance = new window.SpeechSynthesisUtterance(state.text.slice(offset, end));
 		Object.assign(utterance, this.speechSettings);
 		const voice = state.synth.getVoices().find(candidate=> Ares.SpeechVoiceId(candidate) === this.speechVoice);
@@ -713,6 +722,7 @@ class Ares extends Window {
 			utterance.voice = voice;
 			utterance.lang = voice.lang;
 		}
+
 		state.utterance = utterance; //Keep a reference while the browser is speaking.
 		state.boundary = offset;
 		const IsCurrent = ()=> this.speech === state && state.utterance === utterance;
@@ -725,6 +735,7 @@ class Ares extends Window {
 				this.HighlightSpeech(state, state.boundary);
 			}
 		};
+
 		utterance.onend = ()=> {
 			if (!IsCurrent()) return;
 			state.utterance = null;
@@ -732,6 +743,7 @@ class Ares extends Window {
 			if (end >= state.text.length) this.StopSpeech(false);
 			else if (!state.paused) this.SpeakResponse(state);
 		};
+
 		utterance.onerror = ()=> { if (IsCurrent()) this.SpeechFailed(state); };
 		try {
 			state.synth.speak(utterance);
@@ -758,6 +770,17 @@ class Ares extends Window {
 		if (this.speech === state) this.UpdateSpeechMenu(state);
 	}
 
+	SkipSpeech(direction) {
+		const state = this.speech;
+		if (!state) return;
+		const index = state.index + direction;
+		if (index < 0 || index >= state.segments.length) return;
+		state.index = index;
+		state.boundary = state.segments[index].start;
+		this.HighlightSpeech(state, state.boundary);
+		this.RestartSpeech(state);
+	}
+
 	RestartSpeech(state) {
 		if (this.speech !== state) return;
 		//Apply settings to a new utterance at the last reported word boundary.
@@ -773,13 +796,16 @@ class Ares extends Window {
 	StopSpeech(cancel = true) {
 		const state = this.speech;
 		if (!state) return;
+
 		this.speech = null;
 		if (Ares.speechOwner === this) Ares.speechOwner = null;
 		state.synth.removeEventListener("voiceschanged", state.updateVoices);
+
 		if (cancel) state.synth.cancel();
 		state.highlight?.classList.remove("ares-speaking");
 		state.button.setAttribute("aria-pressed", "false");
 		state.button.setAttribute("aria-label", "Read response aloud");
+
 		const focusInput = state.panel.contains(state.panel.ownerDocument.activeElement);
 		state.panel.remove();
 		if (focusInput && !this.isClosed) this.input.focus({preventScroll:true});
@@ -809,11 +835,11 @@ class Ares extends Window {
 			gfm:true,
 			breaks:true,
 			renderer: {
-				//Show HTML as text; Markdown images become explicit links instead of remote requests.
 				html({text}) { return WIN.EscapeHtml(text); },
 				image({href, text}) { return `<a href="${WIN.EscapeHtml(href)}">${WIN.EscapeHtml(text || "Image")}</a>`; }
 			}
 		});
+
 		const fragment = DOMPurify.sanitize(Ares.markdown.parse(text), {
 			ALLOWED_TAGS:["p", "br", "strong", "em", "del", "blockquote", "ul", "ol", "li", "pre", "code", "h1", "h2", "h3", "h4", "h5", "h6", "hr", "a", "table", "thead", "tbody", "tr", "th", "td", "input"],
 			ALLOWED_ATTR:["href", "title", "start", "align", "type", "checked", "disabled"],
@@ -821,6 +847,7 @@ class Ares extends Window {
 			ALLOW_ARIA_ATTR:false,
 			RETURN_DOM_FRAGMENT:true
 		});
+
 		for (const link of fragment.querySelectorAll("a")) {
 			const href = link.getAttribute("href");
 			if (!href) continue;
@@ -839,6 +866,7 @@ class Ares extends Window {
 			checkbox.type = "checkbox";
 			checkbox.disabled = true;
 		}
+
 		Ares.AddCodeCopyButtons(fragment);
 		element.replaceChildren(fragment);
 	}
@@ -904,7 +932,7 @@ class Ares extends Window {
 				return;
 			}
 		}
-		catch { /*Try the selection-based fallback when clipboard access is unavailable.*/ }
+		catch {}
 
 		const focused = doc.activeElement;
 		const selection = doc.getSelection();
@@ -1051,5 +1079,4 @@ class Ares extends Window {
 
 		return bubble;
 	}
-
 }

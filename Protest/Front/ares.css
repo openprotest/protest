@@ -350,7 +350,7 @@
 	box-shadow: 0 4px 8px rgb(0,0,0,.2);
 }
 
-.ares-speech-actions { display: flex; align-items: center; gap: 6px; }
+.ares-speech-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
 .ares-speech-status { margin-left: 4px; font-size: smaller; font-variant-numeric: tabular-nums; }
 
 .ares-speech-actions > .ares-speech-control {
@@ -378,6 +378,9 @@
 .ares-speech-play { --ares-speech-icon: url(mono/play.svg); }
 .ares-speech-pause { --ares-speech-icon: url(mono/pause.svg); }
 .ares-speech-stop { --ares-speech-icon: url(mono/stop.svg); }
+.ares-speech-previous, .ares-speech-next { --ares-speech-icon: url(mono/skipback.svg); }
+.ares-speech-next::before { transform: scaleX(-1); }
+.ares-speech-actions > .ares-speech-control:disabled { cursor: default; }
 .ares-speech-actions > .ares-speech-control:hover { background-color: rgb(0,0,0,.15); }
 
 .ares-speech-voice {
@@ -427,7 +430,7 @@
 	right: min(64px, 10%);
 	bottom: 8px;
 	font-size: small;
-	color: var(--clr-contrast);
+	color: var(--clr-dark);
 }
 
 .ares-settings > summary {
@@ -439,13 +442,40 @@
 	text-overflow: ellipsis;
 	white-space: nowrap;
 	margin-left: auto;
-	padding: 5px 8px;
-	border-radius: 4px;
+	padding: 4px 8px;
+	border-radius: 16px;
+	background-color: var(--clr-pane);
 	cursor: pointer;
+	filter: drop-shadow(light-dark(rgba(16,16,16,.8), rgba(32,32,32,.5)) -1px 1px 1px);
 	-webkit-user-select: none; user-select: none;
+	transition: .2s;
 }
 
-.ares-settings > summary:hover { background-color: rgb(0,0,0,.12); }
+.ares-settings > summary::marker {
+	content: "";
+}
+
+.ares-settings > summary::before {
+	content: "";
+	display: inline-block;
+	width: 12px;
+	height: 12px;
+	padding-left: 8px;
+	background-image: url("mono/guitarpick.svg");
+	background-size: 12px 12px;
+	background-position: center;
+	background-repeat: no-repeat;
+	transform: translateY(2px) rotate(-90deg);
+	transition: .2s;
+}
+
+.ares-settings[open] > summary::before {
+	transform: translateY(2px) rotate(-180deg);
+}
+
+.ares-settings > summary:hover {
+	background-color: rgb(224,224,224);
+}
 
 .ares-settings-panel {
 	box-sizing: border-box;
