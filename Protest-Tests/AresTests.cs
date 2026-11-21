@@ -11,7 +11,7 @@ public class AresTests {
         using JsonDocument agents = JsonDocument.Parse(Ares.GetTypes());
         using JsonDocument integrations = JsonDocument.Parse(Integration.Integration.GetTypes());
         Assert.Multiple(() => {
-            Assert.That(agents.RootElement.EnumerateArray().Select(entry => entry.GetProperty("type").GetString()), Is.EquivalentTo(new[] { "openai", "anthropic", "ollama" }));
+            Assert.That(agents.RootElement.EnumerateArray().Select(entry => entry.GetProperty("type").GetString()), Is.EquivalentTo(new[] { "openai", "anthropic", "xai", "google", "ollama" }));
             Assert.That(integrations.RootElement.EnumerateArray().Select(entry => entry.GetProperty("type").GetString()), Does.Not.Contain("openai").And.Not.Contain("anthropic").And.Not.Contain("ollama"));
             Assert.That(Data.DIR_ARES_AGENTS, Is.Not.EqualTo(Data.DIR_INTEGRATION));
         });

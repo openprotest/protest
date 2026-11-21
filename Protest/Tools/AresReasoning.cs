@@ -23,8 +23,27 @@ internal static partial class Ares {
         };
     }
 
+    //Model-specific effort levels documented by the providers; unknown models use defaults.
+    //https://docs.x.ai/developers/model-capabilities/text/reasoning
+    //https://ai.google.dev/gemini-api/docs/openai#thinking
+    internal static string[] CompatibleReasoningOptions(string type, string model) {
+        string name = Regex.Replace(model, @"-\d{4}-\d{2}-\d{2}$", String.Empty);
+        return (type, name) switch {
+            ("xai", "grok-4.6" or "grok-4.7") => ["low", "medium", "high", "xhigh"],
+            ("xai", "grok-4.5") => ["low", "medium", "high"],
+            ("google", "gemini-4-neon" or "gemini-4-hydrogen") => ["low", "medium", "high", "xhigh"],
+            ("google", "gemini-4-carbon" or "gemini-4-argon" or "gemini-3.8-flash" or "gemini-3.1-pro-preview") => ["low", "medium", "high"],
+            ("google", "gemini-3.6-flash" or "gemini-3.5-flash-lite" or "gemini-3.1-flash-lite" or "gemini-3-flash-preview") => ["minimal", "low", "medium", "high"],
+            ("google", "gemini-3-pro-preview") => ["low", "high"],
+            ("google", "gemini-2.5-pro") => ["low", "medium", "high"],
+            ("google", "gemini-2.5-flash" or "gemini-2.5-flash-lite") => ["none", "low", "medium", "high"],
+            _ => []
+        };
+    }
+
     internal static async Task<string[]> FetchReasoningOptionsAsync(string type, string key, string model, HttpClient client, CancellationToken token = default, string endpoint = null) {
         if (type == "openai") return OpenAiReasoningOptions(model);
+        if (type is "xai" or "google") return CompatibleReasoningOptions(type, model);
         string address = type switch {
             "anthropic" => $"https://api.anthropic.com/v1/models/{Uri.EscapeDataString(model)}",
             "ollama" => $"{NormalizeEndpoint(endpoint ?? "http://localhost:11434") ?? throw new ArgumentException("Invalid Ollama server URL")}/api/show",

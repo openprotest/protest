@@ -10,11 +10,13 @@ namespace Protest.Tests;
 
 public class AresStreamingTests {
     [TestCase("openai")]
+    [TestCase("xai")]
+    [TestCase("google")]
     [TestCase("anthropic")]
     [TestCase("ollama")]
     public async Task ProviderStreamsEmitOnlyTextAndRequestStreaming(string provider) {
         string body = provider switch {
-            "openai" => ": keep-alive\r\ndata: {\"choices\":[{\"delta\":{\"role\":\"assistant\"}}]}\r\n\r\ndata: {\"choices\":\n" +
+            "openai" or "xai" or "google" => ": keep-alive\r\ndata: {\"choices\":[{\"delta\":{\"role\":\"assistant\"}}]}\r\n\r\ndata: {\"choices\":\n" +
                 "data: [{\"delta\":{\"content\":\"Hello 🌍\"}}]}\n\ndata: {\"choices\":[{\"delta\":{\"content\":\"!\"}}]}\n\ndata: [DONE]\n\n",
             "anthropic" => "event: content_block_start\ndata: {\"type\":\"content_block_start\",\"content_block\":{\"type\":\"text\",\"text\":\"Hello 🌍\"}}\n\n" +
                 "data: {\"type\":\"content_block_delta\",\"delta\":{\"type\":\"thinking_delta\",\"thinking\":\"private\"}}\n\n" +
@@ -40,6 +42,10 @@ public class AresStreamingTests {
     [TestCase("anthropic", "data: {\"type\":\"content_block_delta\",\"delta\":{\"type\":\"text_delta\",\"text\":\"Partial\"}}\n\n")]
     [TestCase("ollama", "{\"message\":{\"content\":\"Partial\"},\"done\":false}\n")]
     [TestCase("openai", "data: [DONE]\n\n")]
+    [TestCase("xai", "data: [DONE]\n\n")]
+    [TestCase("google", "data: [DONE]\n\n")]
+    [TestCase("xai", "data: {\"choices\":[{\"delta\":{\"content\":\"Partial\"}}]}\n\n")]
+    [TestCase("google", "data: {\"choices\":[{\"delta\":{\"content\":\"Partial\"}}]}\n\n")]
     [TestCase("anthropic", "data: {\"type\":\"message_stop\"}\n\n")]
     [TestCase("ollama", "{\"done\":true}\n")]
     [TestCase("anthropic", "data: {\"type\":\"error\",\"error\":{\"message\":\"sk-private\"}}\n\n")]

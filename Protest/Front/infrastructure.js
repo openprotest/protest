@@ -1316,7 +1316,7 @@ class Infrastructure extends Tabs {
 
 		const container = document.createElement("div");
 		container.style.position = "relative";
-		container.style.height = "160px";
+		container.style.height = "168px";
 		innerBox.appendChild(container);
 
 		let selectedType = null;
@@ -1440,7 +1440,9 @@ class Infrastructure extends Tabs {
 		keyInput.type = "password";
 		keyInput.maxLength = 512;
 		keyInput.autocomplete = "new-password";
-		keyInput.placeholder = current ? "unchanged" : isOllama ? "optional" : "";
+		const keyHints = { google:"Google AI Studio API key", xai:"xAI API key" };
+		keyInput.placeholder = current ? "unchanged" : isOllama ? "optional" : keyHints[provider.type] ?? "";
+		keyInput.title = keyHints[provider.type] ?? "API key";
 		CreateRow("API key", keyInput);
 
 		const errorBox = document.createElement("div");

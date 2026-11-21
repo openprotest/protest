@@ -26,16 +26,20 @@ internal static partial class Ares {
     private static readonly HttpClient httpClient = new HttpClient(new HttpClientHandler { AllowAutoRedirect = false }) { Timeout = TimeSpan.FromMinutes(2) };
 
     private static string ProviderLabel(string type) => type switch {
-        "openai" => "OpenAI",
+        "openai"    => "OpenAI",
         "anthropic" => "Anthropic",
-        "ollama" => "Ollama",
+        "xai"       => "xAI",
+        "google"    => "Google",
+        "ollama"    => "Ollama",
         _ => null
     };
 
     public static byte[] GetTypes() => JsonSerializer.SerializeToUtf8Bytes(new[] {
-        new { type = "openai", label = "OpenAI" },
-        new { type = "anthropic", label = "Anthropic" },
-        new { type = "ollama", label = "Ollama" }
+        new { type = "openai",    label = "OpenAI/ChatGPT" },
+        new { type = "anthropic", label = "Anthropic/Claude" },
+        new { type = "xai",       label = "xAI/Grok" },
+        new { type = "google",    label = "Google/Gemini" },
+        new { type = "ollama",    label = "Ollama" }
     });
 
     public static byte[] List(bool enabledOnly = false) {
@@ -325,9 +329,13 @@ internal static partial class Ares {
         return messages.ToArray();
     }
 
+    private static bool IsOpenAiCompatible(string type) => type is "openai" or "xai" or "google";
+
     internal static async Task<string> FetchReplyAsync(string type, string key, string model, Message[] messages, HttpClient client, CancellationToken token = default, string endpoint = null, Func<string, Task> onText = null, string reasoning = null) {
         string address = type switch {
             "openai" => "https://api.openai.com/v1/chat/completions",
+            "xai" => "https://api.x.ai/v1/chat/completions",
+            "google" => "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
             "anthropic" => "https://api.anthropic.com/v1/messages",
             "ollama" => $"{NormalizeEndpoint(endpoint ?? "http://localhost:11434") ?? throw new ArgumentException("Invalid Ollama server URL")}/api/chat",
             _ => throw new ArgumentException("Unsupported agent provider", nameof(type))
@@ -338,6 +346,10 @@ internal static partial class Ares {
         if (type == "openai") {
             payload["store"] = false;
             payload["max_completion_tokens"] = 4096;
+            if (!String.IsNullOrEmpty(reasoning)) payload["reasoning_effort"] = reasoning;
+        }
+        else if (type is "xai" or "google") {
+            payload["max_tokens"] = 4096;
             if (!String.IsNullOrEmpty(reasoning)) payload["reasoning_effort"] = reasoning;
         }
         else if (type == "anthropic") {
@@ -375,7 +387,7 @@ internal static partial class Ares {
         using JsonDocument doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync(token));
         JsonElement root = doc.RootElement;
         string text = null;
-        if (type == "openai" && root.TryGetProperty("choices", out JsonElement choices) && choices.ValueKind == JsonValueKind.Array && choices.GetArrayLength() > 0) {
+        if (IsOpenAiCompatible(type) && root.TryGetProperty("choices", out JsonElement choices) && choices.ValueKind == JsonValueKind.Array && choices.GetArrayLength() > 0) {
             JsonElement message = choices[0].GetProperty("message");
             text = GetString(message, "content") ?? GetString(message, "refusal");
         }
@@ -413,7 +425,7 @@ internal static partial class Ares {
                 if (line.Length != 0 || eventData.Length == 0) continue;
                 data = eventData.ToString();
                 eventData.Clear();
-                if (type == "openai" && data == "[DONE]") {
+                if (IsOpenAiCompatible(type) && data == "[DONE]") {
                     completed = true;
                     continue;
                 }
@@ -427,7 +439,7 @@ internal static partial class Ares {
             }
 
             string delta = null;
-            if (type == "openai" && root.TryGetProperty("choices", out JsonElement choices) && choices.ValueKind == JsonValueKind.Array && choices.GetArrayLength() > 0 &&
+            if (IsOpenAiCompatible(type) && root.TryGetProperty("choices", out JsonElement choices) && choices.ValueKind == JsonValueKind.Array && choices.GetArrayLength() > 0 &&
                 choices[0].TryGetProperty("delta", out JsonElement change) && change.ValueKind == JsonValueKind.Object) {
                 delta = GetString(change, "content") ?? GetString(change, "refusal");
             }
@@ -478,6 +490,8 @@ internal static partial class Ares {
     internal static async Task<Model[]> FetchModelsAsync(string type, string key, HttpClient client, CancellationToken token = default, string endpoint = null) {
         string address = type switch {
             "openai" => "https://api.openai.com/v1/models",
+            "xai" => "https://api.x.ai/v1/models",
+            "google" => "https://generativelanguage.googleapis.com/v1beta/openai/models",
             "anthropic" => "https://api.anthropic.com/v1/models?limit=1000",
             "ollama" => $"{NormalizeEndpoint(endpoint ?? "http://localhost:11434") ?? throw new ArgumentException("Invalid Ollama server URL")}/api/tags",
             _ => throw new ArgumentException("Unsupported agent provider", nameof(type))

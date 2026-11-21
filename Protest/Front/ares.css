@@ -179,6 +179,7 @@
 .ares-box .ares-error,
 .ares-settings .ares-error {
 	box-sizing: border-box;
+	line-height: 19px;
 	width: fit-content;
 	max-width: 100%;
 	padding: 4px 8px;
@@ -187,6 +188,20 @@
 	background-color: rgb(0,0,0,.2);
 	white-space: pre-wrap;
 	overflow-wrap: anywhere;
+}
+
+.ares-box .ares-error::before,
+.ares-settings .ares-error::before {
+	display: inline-block;
+	content: " ";
+	width: 20px;
+	height: 20px;
+	padding: 2px 8px 2px 0;
+	background-color: light-dark(color-mix(in srgb, var(--clr-critical) 80%, rgb(0,0,0)), var(--clr-critical));
+	mask-image: url(mono/critical.svg);
+	mask-size: 20px 20px;
+	mask-position: 50% 50%;
+	mask-repeat: no-repeat;
 }
 
 .ares-box > div .ares-bubble.ares-markdown {
