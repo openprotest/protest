@@ -301,7 +301,9 @@ class Ares extends Window {
 	}
 
 	LoadAgents() { return this.LoadOptions(); }
+
 	LoadModels(agentId) { return this.LoadOptions(agentId); }
+
 	SelectModel(modelId) { return this.LoadOptions(this.agentSelect.value, modelId); }
 
 	async LoadOptions(agentId = null, modelId = null) {
@@ -585,21 +587,27 @@ class Ares extends Window {
 	async PollConversation() {
 		if (this.isClosed || !this.canUse || !this.pendingResponse || this.pendingController) return;
 		this.pendingTimer = null;
+
 		const id = this.args.conversationId;
 		const pending = this.pendingResponse;
 		const controller = new AbortController();
 		this.pendingController = controller;
 		let timedOut = false;
+
 		const timeout = setTimeout(()=> { timedOut = true; controller.abort(); }, 10000);
+
 		try {
 			const response = await fetch(`ares/history/get?id=${encodeURIComponent(id)}`, {signal:controller.signal, cache:"no-store"});
+
 			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
+
 			const saved = await response.json();
 			if (controller.signal.aborted || this.isClosed || !this.canUse || this.args.conversationId !== id) return;
 			if (saved.error === "not found") {
 				this.PendingResponseFailed("This conversation is no longer available. Start a new chat to continue.");
 				return;
 			}
+
 			if (saved.error) throw new Error(saved.error);
 
 			pending.bubble.querySelector(".ares-pending-error")?.remove();
@@ -607,6 +615,7 @@ class Ares extends Window {
 				this.PendingResponseFailed("The response ended but could not be saved. Reopen the conversation or start a new chat to continue.");
 				return;
 			}
+	
 			if (saved.revision !== this.args.conversationRevision || saved.pending?.requestId !== pending.requestId) {
 				this.RestoreConversation(saved, this.IsScrolledToBottom());
 				this.LoadHistoryList();
@@ -621,6 +630,7 @@ class Ares extends Window {
 					error.setAttribute("role", "alert");
 					pending.bubble.appendChild(error);
 				}
+
 				error.textContent = `${timedOut ? "Checking the response timed out." : ex.message ?? ex} Retrying…`;
 			}
 		}
@@ -638,15 +648,19 @@ class Ares extends Window {
 		reply.classList.remove("ares-thinking");
 		reply.removeAttribute("aria-busy");
 		reply.removeAttribute("role");
+
 		const error = reply.ownerDocument.createElement("div");
 		error.className = "ares-error";
 		error.setAttribute("role", "alert");
 		error.textContent = text;
+
 		reply.replaceChildren(error);
+		reply._markdownText = "";
+
 		this.pendingResponse = null;
 		this.historyNeedsReload = true;
 		this.chatBox.removeAttribute("aria-busy");
-		this.UpdateSpeechButton(reply.closest(".ares-response"));
+		this.UpdateResponseButtons(reply.closest(".ares-response"));
 		this.UpdateHistoryControls();
 	}
 
@@ -664,6 +678,7 @@ class Ares extends Window {
 				const incoming = message.role === "assistant";
 				this.CreateTextBubble(message.content, incoming ? "in" : "out", incoming ? `ares:${message.agent}` : KEEP.username,
 					incoming ? `${message.agentName} · ${message.model}` : "", incoming ? "var(--clr-accent)" : KEEP.color, time);
+
 				if (message.status === "interrupted") {
 					const reply = this.CreateBubble("in", `ares:${message.agent}`, `${message.agentName} · ${message.model}`, "var(--clr-accent)", time);
 					const error = reply.ownerDocument.createElement("div");
@@ -671,7 +686,7 @@ class Ares extends Window {
 					error.textContent = message.error ?? "The response was interrupted. Your message was saved.";
 					error.setAttribute("role", "alert");
 					reply.appendChild(error);
-					this.UpdateSpeechButton(reply.closest(".ares-response"));
+					this.UpdateResponseButtons(reply.closest(".ares-response"));
 				}
 				else {
 					this.messages.push({role:message.role, content:message.content});
@@ -682,11 +697,14 @@ class Ares extends Window {
 				const pending = this.pendingResponse;
 				const time = new Date(pending.time).toLocaleTimeString(UI.regionalFormat, {});
 				this.CreateTextBubble(pending.text, "out", KEEP.username, "", KEEP.color, time);
+
 				const reply = this.CreateThinkingBubble(pending.agent, pending.agentName, pending.model, time);
 				this.pendingResponse = {...pending, bubble:reply};
 				this.chatBox.setAttribute("aria-busy", "true");
 			}
-			else this.chatBox.removeAttribute("aria-busy");
+			else {
+				this.chatBox.removeAttribute("aria-busy");
+			}
 		}
 		finally {
 			this.restoringHistory = false;
@@ -860,7 +878,7 @@ class Ares extends Window {
 			reply.classList.remove("ares-thinking");
 			Ares.RenderMarkdown(reply, responseText);
 
-			if (wasThinking) this.UpdateSpeechButton(reply.closest(".ares-response"));
+			if (wasThinking) this.UpdateResponseButtons(reply.closest(".ares-response"));
 			if (follow) this.chatBox.scrollTop = this.chatBox.scrollHeight;
 		};
 
@@ -949,7 +967,7 @@ class Ares extends Window {
 			reply.classList.remove("ares-thinking");
 			reply.removeAttribute("aria-busy");
 			reply.removeAttribute("role");
-			this.UpdateSpeechButton(reply.closest(".ares-response"));
+			this.UpdateResponseButtons(reply.closest(".ares-response"));
 
 			if (follow) {
 				this.chatBox.scrollTop = this.chatBox.scrollHeight;
@@ -972,11 +990,11 @@ class Ares extends Window {
 		reply.classList.add("ares-thinking");
 		reply.setAttribute("role", "status");
 		reply.setAttribute("aria-busy", "true");
-		this.UpdateSpeechButton(reply.closest(".ares-response"));
+		this.UpdateResponseButtons(reply.closest(".ares-response"));
 		return reply;
 	}
 
-	AddSpeechButton(response) {
+	AddResponseButtons(response) {
 		const button = response.ownerDocument.createElement("button");
 		button.type = "button";
 		button.className = "ares-speak";
@@ -984,17 +1002,67 @@ class Ares extends Window {
 		button.setAttribute("aria-pressed", "false");
 		button.hidden = true;
 		button.onclick = ()=> this.StartSpeech(response);
-		response.appendChild(button);
+
+		const copy = response.ownerDocument.createElement("button");
+		copy.type = "button";
+		copy.className = "ares-response-copy";
+		copy.hidden = true;
+
+		let resetTimer = null;
+
+		const ResetFeedback = ()=> {
+			clearTimeout(resetTimer);
+			resetTimer = null;
+			copy.classList.remove("ares-copied");
+			copy.setAttribute("aria-label", "Copy response");
+			copy.title = "Copy response";
+		};
+
+		ResetFeedback();
+
+		copy.onclick = async ()=> {
+			if (copy.hidden || copy.disabled) return;
+
+			ResetFeedback();
+			response.querySelector(":scope > .ares-response-copy-error")?.remove();
+			copy.disabled = true;
+
+			try {
+				await Ares.CopyText(Ares.GetResponseText(response), response.ownerDocument);
+				copy.classList.add("ares-copied");
+				copy.setAttribute("aria-label", "Response copied");
+				copy.title = "Response copied";
+				resetTimer = setTimeout(ResetFeedback, 2000);
+			}
+			catch {
+				const error = response.ownerDocument.createElement("div");
+				error.className = "ares-error ares-response-copy-error";
+				error.setAttribute("role", "alert");
+				error.textContent = "Unable to copy. Select the response and copy it manually.";
+				response.insertBefore(error, button);
+			}
+			finally {
+				copy.disabled = false;
+			}
+		};
+		response.append(button, copy);
 	}
 
-	UpdateSpeechButton(response) {
-		const button = response?.querySelector(":scope > .ares-speak");
-		if (!button) return;
+	static GetResponseText(response) {
+		return Array.from(response.querySelectorAll('.ares-bubble:not(.ares-thinking):not([aria-busy="true"])'), bubble=> bubble._markdownText ?? "")
+			.filter(text=> text.trim().length > 0).join("\n\n");
+	}
 
+	UpdateResponseButtons(response) {
+		const button = response?.querySelector(":scope > .ares-speak");
+		const copy = response?.querySelector(":scope > .ares-response-copy");
+		if (!button || !copy) return;
+
+		const busy = !!response.querySelector('.ares-thinking, .ares-bubble[aria-busy="true"]');
 		const supported = !!window.speechSynthesis && typeof window.SpeechSynthesisUtterance === "function";
-		const hasText = Ares.GetSpeechSegments(response).length > 0;
-		button.hidden = !!response.querySelector('.ares-thinking, .ares-bubble[aria-busy="true"]') || !hasText;
+		button.hidden = busy || Ares.GetSpeechSegments(response).length === 0;
 		button.disabled = !supported;
+		copy.hidden = busy || Ares.GetResponseText(response).length === 0;
 	}
 
 	static GetSpeechSegments(response) {
@@ -1374,6 +1442,7 @@ class Ares extends Window {
 	}
 
 	static RenderMarkdown(element, text) {
+		element._markdownText = text;
 		element.classList.add("ares-markdown");
 
 		//Keep messages readable if either bundled dependency failed to load.
@@ -1457,7 +1526,7 @@ class Ares extends Window {
 				button.disabled = true;
 
 				try {
-					await Ares.CopyCodeText(code);
+					await Ares.CopyText(code.textContent, code.ownerDocument);
 					button.textContent = "Copied";
 					button.setAttribute("aria-label", "Code copied");
 					resetTimer = setTimeout(ResetFeedback, 2000);
@@ -1479,9 +1548,7 @@ class Ares extends Window {
 		}
 	}
 
-	static async CopyCodeText(code) {
-		const doc = code.ownerDocument;
-		const text = code.textContent;
+	static async CopyText(text, doc) {
 		try {
 			const clipboard = doc.defaultView?.navigator.clipboard;
 			if (clipboard?.writeText) {
@@ -1604,7 +1671,7 @@ class Ares extends Window {
 				wrapper.append(bubble);
 			}
 
-			if (direction === "in") this.AddSpeechButton(group);
+			if (direction === "in") this.AddResponseButtons(group);
 			this.chatBox.appendChild(group);
 		}
 
@@ -1630,7 +1697,7 @@ class Ares extends Window {
 
 		const bubble = this.CreateBubble(direction, sender, alias, color, time);
 		Ares.RenderMarkdown(bubble, text);
-		if (direction === "in") this.UpdateSpeechButton(bubble.closest(".ares-response"));
+		if (direction === "in") this.UpdateResponseButtons(bubble.closest(".ares-response"));
 
 		if (direction === "out") {
 			if (id && !(id in this.outgoing)) {

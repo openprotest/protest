@@ -18,6 +18,7 @@ internal static partial class Core {
         StringBuilder output = new StringBuilder();
         string property = null;
         int copied = 0;
+
         try {
             while (reader.Read()) {
                 if (reader.TokenType == JsonTokenType.PropertyName) {

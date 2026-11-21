@@ -545,12 +545,16 @@
 .ares-markdown th, .ares-markdown td { padding: 6px 10px; border: 1px solid currentColor; }
 .ares-markdown hr { border: 0; border-top: 1px solid currentColor; margin: 1em 0; }
 
-.ares-box .ares-speak {
-	display: block;
+.ares-box .ares-speak,
+.ares-box .ares-response-copy {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	vertical-align: middle;
 	width: 28px;
 	min-width: 28px;
 	height: 28px;
-	margin: 4px 16px 8px;
+	margin: 4px 0 8px;
 	padding: 5px;
 	color: light-dark(var(--clr-dark), var(--clr-light));
 	background: transparent;
@@ -558,7 +562,10 @@
 	box-shadow: none !important;
 }
 
-.ares-box .ares-speak::before {
+.ares-box .ares-speak { margin-left: 16px; margin-right: 4px; }
+
+.ares-box .ares-speak::before,
+.ares-box .ares-response-copy::before {
 	content: "";
 	display: block;
 	width: 18px;
@@ -568,15 +575,29 @@
 	mask: url(mono/listener.svg) center / contain no-repeat;
 }
 
+.ares-box .ares-response-copy::before {
+	-webkit-mask-image: url(mono/copy.svg);
+	mask-image: url(mono/copy.svg);
+}
+
+.ares-box .ares-response-copy.ares-copied::before {
+	-webkit-mask-image: url(mono/checked.svg);
+	mask-image: url(mono/checked.svg);
+}
+
 .ares-box .ares-speak:hover,
-.ares-box .ares-speak[aria-pressed="true"] {
+.ares-box .ares-speak[aria-pressed="true"],
+.ares-box .ares-response-copy:hover {
 	background-color: rgb(0,0,0,.15);
 	opacity: 1;
 }
 
-.ares-box .ares-speak[hidden] { display: none; }
-.ares-box .ares-speak:disabled { opacity: .3; cursor: default; }
-.ares-box .ares-speech-error { margin: 4px 16px 8px; }
+.ares-box .ares-speak[hidden],
+.ares-box .ares-response-copy[hidden] { display: none; }
+.ares-box .ares-speak:disabled,
+.ares-box .ares-response-copy:disabled { opacity: .3; cursor: default; }
+.ares-box .ares-speech-error,
+.ares-box .ares-response-copy-error { margin: 4px 16px 8px; }
 
 .ares-box .ares-speaking {
 	background-color: color-mix(in srgb, var(--clr-accent) 22%, transparent);
