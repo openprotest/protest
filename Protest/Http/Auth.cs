@@ -747,6 +747,9 @@ internal static class Auth {
                 path.Add("/ares/agents");
                 path.Add("/ares/models");
                 path.Add("/ares/chat");
+                path.Add("/ares/history/list");
+                path.Add("/ares/history/get");
+                path.Add("/ares/history/delete");
                 break;
 
             case "integration:write":
@@ -818,6 +821,7 @@ internal static class Auth {
                 path.Add("/config/dataretention/watchdog");
                 path.Add("/config/dataretention/recordings");
                 path.Add("/config/dataretention/logs");
+                path.Add("/config/dataretention/ares");
                 path.Add("/config/dataretention/syslog");
                 path.Add("/config/dataretention/snmptraps");
                 path.Add("/config/dataretention/winevents");

@@ -260,6 +260,7 @@ class Infrastructure extends Tabs {
 			{ key: "snmptraps",      label: "SNMP traps",         icon: "mono/trap.svg",         endpoint: "config/dataretention/snmptraps",      defaultDays: 90,  description: "SNMP traps and informs received from devices." },
 			{ key: "winevents",      label: "Windows events",     icon: "mono/eventlogger.svg",  endpoint: "config/dataretention/winevents",      defaultDays: 90,  description: "Critical, error and warning events fetched from Windows devices." },
 			{ key: "recordings",     label: "Session recordings", icon: "mono/screenrecord.svg", endpoint: "config/dataretention/recordings",     defaultDays: 30,  description: "Recorded VNC, RDP, RustDesk, SSH, telnet, remote shell, serial console, and terminal sessions." },
+			{ key: "ares",           label: "A.R.E.S. history",    icon: "mono/ares.svg",         endpoint: "config/dataretention/ares",           defaultDays: 90, description: "Private A.R.E.S. conversations, based on their last message." },
 			{ key: "logs",           label: "Logs",               icon: "mono/log.svg",          endpoint: "config/dataretention/logs",           defaultDays: 90,  description: "Action log files." },
 		];
 

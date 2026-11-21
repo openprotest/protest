@@ -45,12 +45,12 @@ internal static partial class Ares {
     public static byte[] List(bool enabledOnly = false) {
         lock (mutex) {
             var list = ReadAgents().Where(agent => !enabledOnly || agent.Enabled).Select(agent => new {
-                id = agent.Id,
-                type = agent.Type,
-                label = ProviderLabel(agent.Type),
-                name = agent.Name,
+                id      = agent.Id,
+                type    = agent.Type,
+                label   = ProviderLabel(agent.Type),
+                name    = agent.Name,
                 enabled = agent.Enabled,
-                error = errors.GetValueOrDefault(agent.Id)
+                error   = errors.GetValueOrDefault(agent.Id)
             }).ToArray();
 
             return JsonSerializer.SerializeToUtf8Bytes(list);
@@ -215,10 +215,21 @@ internal static partial class Ares {
         if (doc is null || doc.RootElement.ValueKind != JsonValueKind.Object) return Data.CODE_INVALID_ARGUMENT.Array;
         JsonElement root = doc.RootElement;
         string model = GetString(root, "model");
-        Message[] messages = ReadMessages(root);
-        if (String.IsNullOrWhiteSpace(model) || model.Length > 256 || model.Any(Char.IsControl) || messages is null) {
-            return Error("Enter a text message of up to 8192 characters. The conversation must fit within 1 MB.");
+        string text = GetString(root, "text");
+        //Older clients may start a new conversation with one user message, never supply saved history.
+        if (text is null && ReadMessages(root) is Message[] legacy && legacy.Length == 1) text = legacy[0].Content;
+        if (String.IsNullOrWhiteSpace(model) || model.Length > 256 || model.Any(Char.IsControl) || String.IsNullOrWhiteSpace(text) || text.Length > MAX_TEXT_LENGTH) {
+            return Error("Enter a text message of up to 8192 characters.");
         }
+        string owner = Auth.GetPrincipal(ctx);
+        if (owner is null) return Data.CODE_NOT_FOUND.Array;
+        string conversationId = GetString(root, "conversationId");
+        string requestId = GetString(root, "requestId") ?? Guid.NewGuid().ToString();
+        int conversationRevision = 0;
+        if ((root.TryGetProperty("conversationId", out JsonElement conversationValue) && conversationValue.ValueKind is not (JsonValueKind.String or JsonValueKind.Null)) ||
+            (conversationId is not null && !Guid.TryParse(conversationId, out _)) || !Guid.TryParse(requestId, out _) ||
+            (root.TryGetProperty("requestId", out JsonElement requestValue) && requestValue.ValueKind != JsonValueKind.String) ||
+            (root.TryGetProperty("conversationRevision", out JsonElement revisionValue) && (revisionValue.ValueKind != JsonValueKind.Number || !revisionValue.TryGetInt32(out conversationRevision)))) return Data.CODE_INVALID_ARGUMENT.Array;
 
         Agent agent;
         lock (mutex) {
@@ -232,74 +243,73 @@ internal static partial class Ares {
         if (root.TryGetProperty("reasoning", out JsonElement effort) && effort.ValueKind is not (JsonValueKind.String or JsonValueKind.Null)) return Data.CODE_INVALID_ARGUMENT.Array;
         if (reasoning?.Length > 64 || reasoning?.Any(Char.IsControl) == true) return Data.CODE_INVALID_ARGUMENT.Array;
 
+        HistoryTurn turn;
+        Message[] messages;
+        try {
+            turn = history.Begin(owner, conversationId, conversationRevision, requestId, text);
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or ArgumentException) { return Error(ex.Message); }
+        catch (Exception ex) { Logger.Error(ex); return Error("Unable to open conversation history"); }
+        List<Message> context = new List<Message>();
+        for (int i = 0; i + 1 < turn.Conversation.Messages.Length; i++) {
+            if (turn.Conversation.Messages[i].Role != "user" || turn.Conversation.Messages[i].Status != "completed" || turn.Conversation.Messages[i + 1].Role != "assistant" || turn.Conversation.Messages[i + 1].Status != "completed") continue;
+            context.Add(new Message("user", turn.Conversation.Messages[i].Content));
+            context.Add(new Message("assistant", turn.Conversation.Messages[++i].Content));
+        }
+        context.Add(new Message("user", text));
+        messages = context.ToArray();
+        if (JsonSerializer.SerializeToUtf8Bytes(messages, jsonOptions).Length > MAX_CHAT_PAYLOAD) {
+            history.Release(turn);
+            return Error("This conversation is too long. Start a new conversation.");
+        }
+
         ctx.Response.ContentType = "application/x-ndjson; charset=utf-8";
         ctx.Response.SendChunked = true;
         ctx.Response.AddHeader("X-Accel-Buffering", "no");
         using CancellationTokenSource timeout = new CancellationTokenSource(TimeSpan.FromMinutes(2));
-        string error;
+        StringBuilder reply = new StringBuilder();
+        string error = null;
+        bool complete = false;
         try {
-            //Acknowledge receipt before waiting for the provider, including its response headers.
-            await WriteChatEventAsync(ctx, new { type = "accepted" }, timeout.Token);
+            await WriteChatEventAsync(ctx, new { type = "accepted", conversationId = turn.Conversation.Id, conversationRevision = turn.Conversation.Revision, requestId = turn.RequestId }, timeout.Token);
             if (!String.IsNullOrEmpty(reasoning)) {
-                string validationError = null;
                 try {
                     using CancellationTokenSource validation = CancellationTokenSource.CreateLinkedTokenSource(timeout.Token);
                     validation.CancelAfter(TimeSpan.FromSeconds(30));
                     string[] options = await FetchReasoningOptionsAsync(agent.Type, ReadKey(agent), model, httpClient, validation.Token, agent.Endpoint);
-                    if (!options.Contains(reasoning)) validationError = "The selected reasoning setting is not supported by this model. Select Default or reopen A.R.E.S.";
+                    if (!options.Contains(reasoning)) error = "The selected reasoning setting is not supported by this model. Select Default or reopen A.R.E.S.";
                 }
                 catch (Exception ex) when (ex is HttpRequestException or JsonException or OperationCanceledException) {
-                    validationError = "Unable to verify this model's reasoning settings. Select Default or try again.";
+                    error = "Unable to verify this model's reasoning settings. Select Default or try again.";
                 }
-                if (validationError is not null) {
-                    await WriteChatEventAsync(ctx, new { type = "error", error = validationError }, timeout.Token);
-                    return null;
-                }
+                if (error is not null) throw new InvalidOperationException(error);
             }
             bool current;
             lock (mutex) { current = ReadAgent(agent.Id) == agent; }
-            if (!current || !Auth.IsAuthorized(ctx, "/ares/chat")) {
-                await WriteChatEventAsync(ctx, new { type = "error", error = "The agent settings or your access changed. Reopen A.R.E.S." }, timeout.Token);
-                return null;
-            }
+            if (!current || !Auth.IsAuthorized(ctx, "/ares/chat")) throw new InvalidOperationException("The agent settings or your access changed. Reopen A.R.E.S.");
             await FetchReplyAsync(agent.Type, ReadKey(agent), model, messages, httpClient, timeout.Token, agent.Endpoint,
-                delta => WriteChatEventAsync(ctx, new { type = "delta", text = delta }, timeout.Token), reasoning);
-            bool changed;
-            lock (mutex) {
-                changed = ReadAgent(agent.Id) != agent;
-            }
-            if (changed) {
-                await WriteChatEventAsync(ctx, new { type = "error", error = "The agent settings changed. Reopen A.R.E.S. and confirm your selection." }, timeout.Token);
-            }
-            else {
-                await WriteChatEventAsync(ctx, new { type = "done" }, timeout.Token);
-            }
-            return null;
+                async delta => { reply.Append(delta); await WriteChatEventAsync(ctx, new { type = "delta", text = delta }, timeout.Token); }, reasoning);
+            lock (mutex) { current = ReadAgent(agent.Id) == agent; }
+            if (!current) throw new InvalidOperationException("The agent settings changed. Reopen A.R.E.S. and confirm your selection.");
+            complete = true;
         }
-        catch (HttpRequestException ex) {
-            error = ex.StatusCode is null
-                ? $"Cannot connect to {ProviderLabel(agent.Type)}"
-                : ex.Message;
-        }
-        catch (OperationCanceledException) {
-            error = $"The request to {ProviderLabel(agent.Type)} timed out";
-        }
-        catch (JsonException) {
-            error = $"{ProviderLabel(agent.Type)} returned an invalid, interrupted, or empty text response for the selected model";
-        }
-        catch (HttpListenerException) {
-            return null; //the browser disconnected; disposing the upstream response stops generation
-        }
-        catch (IOException) {
-            error = $"The response from {ProviderLabel(agent.Type)} was interrupted. Try again.";
-        }
-        catch (Exception ex) {
-            Logger.Error(ex);
-            error = "Unable to get a response from this agent";
-        }
+        catch (InvalidOperationException ex) { error = ex.Message; }
+        catch (HttpRequestException ex) { error = ex.StatusCode is null ? $"Cannot connect to {ProviderLabel(agent.Type)}" : ex.Message; }
+        catch (OperationCanceledException) { error = $"The request to {ProviderLabel(agent.Type)} timed out"; }
+        catch (JsonException) { error = $"{ProviderLabel(agent.Type)} returned an invalid, interrupted, or empty text response for the selected model"; }
+        catch (HttpListenerException) { error = "The response was interrupted because the browser disconnected."; }
+        catch (IOException) { error = $"The response from {ProviderLabel(agent.Type)} was interrupted. Try again."; }
+        catch (Exception ex) { Logger.Error(ex); error = "Unable to get a response from this agent"; }
 
+        Conversation saved = null;
         try {
-            await WriteChatEventAsync(ctx, new { type = "error", error });
+            saved = history.Complete(turn, reply.ToString(), complete ? "completed" : "interrupted", agent.Id, agent.Name, agent.Type, model, reasoning, error);
+        }
+        catch (Exception ex) { Logger.Error(ex); error = "Unable to save conversation history. Reopen History or start a new conversation."; complete = false; }
+        finally { history.Release(turn); }
+        try {
+            if (complete) await WriteChatEventAsync(ctx, new { type = "done", conversationId = saved.Id, conversationRevision = saved.Revision });
+            else await WriteChatEventAsync(ctx, new { type = "error", error, conversationId = saved?.Id ?? turn.Conversation.Id, conversationRevision = saved?.Revision ?? turn.Conversation.Revision, historySaved = saved is not null });
         }
         catch (HttpListenerException) { }
         catch (IOException) { }

@@ -191,6 +191,9 @@ internal static class Router {
         ["/config/ares/delete"]                  = new Route((ctx, username) => new(Tools.Ares.Delete(ctx, username)), "POST"),
         ["/config/ares/test"]                    = new Route(async (ctx, username) => await Tools.Ares.TestAsync(ctx, username), "POST"),
 
+        ["/ares/history/list"]                   = new Route((ctx, username) => new(Tools.Ares.ListHistory(ctx))),
+        ["/ares/history/get"]                    = new Route((ctx, username) => new(Tools.Ares.GetHistory(ctx))),
+        ["/ares/history/delete"]                 = new Route((ctx, username) => new(Tools.Ares.DeleteHistory(ctx)), "POST"),
         ["/ares/agents"]                         = new Route((ctx, username) => new(Tools.Ares.List(true))),
         ["/ares/models"]                         = new Route(async (ctx, username) => await Tools.Ares.GetModelsAsync(ctx, username)),
         ["/ares/chat"]                           = new Route(async (ctx, username) => await Tools.Ares.ChatAsync(ctx), "POST", StreamsResponse:true),
@@ -206,6 +209,7 @@ internal static class Router {
         ["/config/dataretention/lastseen"]       = new Route((ctx, username) => new(DataRetention.Handler(ctx, username, "lastseen")), "POST"),
         ["/config/dataretention/watchdog"]       = new Route((ctx, username) => new(DataRetention.Handler(ctx, username, "watchdog")), "POST"),
         ["/config/dataretention/recordings"]     = new Route((ctx, username) => new(DataRetention.Handler(ctx, username, "recordings")), "POST"),
+        ["/config/dataretention/ares"]           = new Route((ctx, username) => new(DataRetention.Handler(ctx, username, "ares")), "POST"),
         ["/config/dataretention/logs"]           = new Route((ctx, username) => new(DataRetention.Handler(ctx, username, "logs")), "POST"),
         ["/config/dataretention/syslog"]         = new Route((ctx, username) => new(DataRetention.Handler(ctx, username, "syslog")), "POST"),
         ["/config/dataretention/snmptraps"]      = new Route((ctx, username) => new(DataRetention.Handler(ctx, username, "snmptraps")), "POST"),

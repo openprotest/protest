@@ -58,6 +58,7 @@ class Scheduler extends List {
 			{ key: "snmptraps",      label: "SNMP traps",         icon: "mono/trap.svg",         defaultDays: 90 },
 			{ key: "winevents",      label: "Windows events",     icon: "mono/eventlogger.svg",  defaultDays: 90 },
 			{ key: "recordings",     label: "Session recordings", icon: "mono/screenrecord.svg", defaultDays: 30 },
+			{ key: "ares",           label: "A.R.E.S. history",    icon: "mono/ares.svg",         defaultDays: 90 },
 			{ key: "logs",           label: "Logs",               icon: "mono/log.svg",          defaultDays: 90 },
 		];
 

@@ -60,6 +60,7 @@ internal static class Data {
     public static readonly string DIR_REVERSE_PROXY  = Path.Join(DIR_DATA, "reverseproxy");
     public static readonly string DIR_INTEGRATION    = Path.Join(DIR_DATA, "integration");
     public static readonly string DIR_ARES_AGENTS    = Path.Join(DIR_DATA, "ares");
+    public static readonly string DIR_ARES_HISTORY   = Path.Join(DIR_DATA, "ares-history");
     public static readonly string DIR_SCRIPTS        = Path.Join(DIR_DATA, "scripts");
     public static readonly string DIR_RECORDINGS     = Path.Join(DIR_DATA, "recordings");
     public static readonly string DIR_SYSLOG         = Path.Join(DIR_DATA, "syslog");

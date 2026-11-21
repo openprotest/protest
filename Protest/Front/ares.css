@@ -1,5 +1,210 @@
+.ares-layout {
+	container-name: ares-window;
+	container-type: inline-size;
+	--ares-sidebar-width: 240px;
+}
+
 .ares-chat {
 	position: absolute;
+	inset: 0 0 0 40px;
+}
+
+.ares-sidebar-open > .ares-chat {
+	left: var(--ares-sidebar-width);
+}
+
+.ares-sidebar {
+	display: flex;
+	box-sizing: border-box;
+	position: absolute;
+	z-index: 7;
+	inset: 0 auto 0 0;
+	width: min(var(--ares-sidebar-width), calc(100% - 48px));
+	color: var(--clr-contrast);
+	flex-direction: column;
+	gap: 8px;
+	padding: 44px 0 0;
+	border-right: 1px solid var(--clr-control);
+	background-color: light-dark(rgb(192,192,192), rgb(48,48,48));
+	transform: translateX(-50%);
+	opacity: 0;
+	visibility: hidden;
+	transition: .2s;
+}
+
+.ares-sidebar-open > .ares-sidebar {
+	transform: none;
+	opacity: 1;
+	visibility: visible;
+}
+
+.ares-sidebar-heading {
+	position: absolute;
+	top: 8px;
+	left: 44px;
+	right: 8px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	font-weight: 600;
+}
+
+.ares-sidebar > .ares-new-chat {
+	margin: 0 56px;
+	padding: 0 0 0 32px;
+	flex: none;
+	text-align: left;
+}
+
+.ares-sidebar > .ares-history-list {
+	position: relative;
+	flex: 1;
+	min-height: 0;
+	top: 0;
+	bottom: 0;
+	background: transparent;
+	color: inherit;
+	overflow-y: auto;
+}
+
+.ares-history-list > .list-element {
+	border: 0 !important;
+	border-radius: 4px;
+	margin: 2px;
+}
+
+.ares-history-list > .list-element > div {
+	top: 0;
+}
+
+.ares-history-list > .list-element:hover {
+	background-color: rgb(0,0,0,.12);
+}
+
+.ares-history-list > .ares-current-conversation,
+.ares-history-list > .ares-current-conversation:hover {
+	background-color: var(--clr-select);
+	color: var(--clr-dark);
+}
+
+.ares-history-list[aria-disabled="true"] > .list-element {
+	cursor: default;
+}
+
+.ares-conversation-title {
+	left: 8px;
+	right: 36px;
+	top: 0;
+	line-height: 32px;
+	font-size: small;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.ares-history-list .ares-conversation-remove {
+	box-sizing: border-box;
+	top: 2px;
+	right: 2px;
+	width: 24px;
+	min-width: 24px;
+	height: 24px;
+	margin: 2px;
+	padding: 4px;
+	color: inherit;
+	border-radius: 2px;
+	background: transparent;
+	opacity: 0;
+	pointer-events: none;
+	cursor: pointer;
+}
+
+.ares-conversation-remove::before,
+.ares-sidebar-toggle::before {
+	content: "";
+	display: block;
+	width: 16px;
+	height: 16px;
+	background-color: currentColor;
+	-webkit-mask: url(mono/delete.svg) center / contain no-repeat;
+	mask: url(mono/delete.svg) center / contain no-repeat;
+}
+
+.ares-history-list > .list-element:hover > .ares-conversation-remove {
+	opacity: 1;
+	pointer-events: auto;
+}
+
+.ares-history-list .ares-conversation-remove[aria-disabled="false"]:hover {
+	background-color: rgb(0,0,0,.15);
+	opacity: 1;
+}
+
+.ares-history-list .ares-conversation-remove[aria-disabled="true"] {
+	cursor: default;
+}
+
+.ares-history-list .ares-conversation-remove[aria-disabled="true"]::before { opacity: .35; }
+
+.ares-history-empty {
+	position: absolute;
+	top: 96px;
+	left: 12px;
+	right: 12px;
+	font-size: small;
+	text-align: center;
+}
+
+.ares-sidebar > .ares-error {
+	flex: none;
+	max-height: 35%;
+	margin: 0;
+	overflow-y: auto;
+}
+
+.ares-sidebar-toggle {
+	box-sizing: border-box;
+	position: absolute;
+	z-index: 8;
+	top: 6px;
+	left: 6px;
+	width: 28px;
+	min-width: 28px;
+	height: 28px;
+	margin: 0;
+	padding: 6px;
+	color: var(--clr-contrast);
+	background: transparent;
+}
+
+.ares-sidebar-toggle::before {
+	-webkit-mask-image: url(mono/list.svg);
+	mask-image: url(mono/list.svg);
+}
+
+.ares-sidebar-toggle[aria-expanded="true"]::before {
+	-webkit-mask-image: url(mono/guitarpick.svg);
+	mask-image: url(mono/guitarpick.svg);
+	transform: rotate(90deg);
+}
+
+.ares-sidebar-toggle:hover {
+	background-color: rgb(0,0,0,.12);
+}
+
+.ares-sidebar-backdrop {
+	position: absolute;
+	z-index: 6;
+	inset: 0;
+	background-color: rgb(0,0,0,.2);
+}
+
+.ares-sidebar-backdrop[hidden] {
+	display: none;
+}
+
+@container ares-window (max-width: 680px) {
+	.ares-sidebar-open > .ares-chat { left: 40px; }
 }
 
 .ares-input {
@@ -177,7 +382,8 @@
 }
 
 .ares-box .ares-error,
-.ares-settings .ares-error {
+.ares-settings .ares-error,
+.ares-sidebar .ares-error {
 	box-sizing: border-box;
 	line-height: 19px;
 	width: fit-content;
@@ -279,8 +485,7 @@
 	background-color: var(--clr-pane);
 	opacity: 0;
 	pointer-events: none;
-	cursor: pointer;
-	transition: opacity .15s;
+	transition: opacity .2s;
 }
 
 .ares-code-copy::before {
@@ -292,8 +497,17 @@
 	mask: url(mono/copy.svg) center / contain no-repeat;
 }
 
-.ares-code-block:hover > .ares-code-copy { opacity: 1; pointer-events: auto; transition-delay: .4s; }
-.ares-code-copy:focus-visible { opacity: 1; pointer-events: auto; transition-delay: 0s; }
+.ares-code-block:hover > .ares-code-copy {
+	opacity: 1;
+	pointer-events: auto;
+	transition-delay: .4s;
+}
+
+.ares-code-copy:focus-visible {
+	opacity: 1; pointer-events: auto;
+	transition-delay: 0s;
+}
+
 .ares-code-copy-error { margin-top: 6px; }
 
 .ares-markdown table {
@@ -317,7 +531,6 @@
 	color: light-dark(var(--clr-dark), var(--clr-light));
 	background: transparent;
 	opacity: .65;
-	cursor: pointer;
 }
 
 .ares-box .ares-speak::before {
@@ -377,7 +590,6 @@
 	padding: 5px;
 	color: var(--clr-dark);
 	background-color: transparent;
-	cursor: pointer;
 }
 
 .ares-speech-control::before {
@@ -460,7 +672,6 @@
 	padding: 4px 8px;
 	border-radius: 16px;
 	background-color: var(--clr-pane);
-	cursor: pointer;
 	filter: drop-shadow(light-dark(rgba(16,16,16,.8), rgba(32,32,32,.5)) -1px 1px 1px);
 	-webkit-user-select: none; user-select: none;
 	transition: .2s;
