@@ -914,7 +914,7 @@ class Ares extends Window {
 					throw new Error("The agent returned an invalid or empty text response.");
 				}
 			});
-	
+
 			if (!completed) throw new Error("The response was interrupted. Try again.");
 			this.messages = [...messages, {role:"assistant", content:responseText}];
 		}
@@ -951,7 +951,10 @@ class Ares extends Window {
 			reply.removeAttribute("role");
 			this.UpdateSpeechButton(reply.closest(".ares-response"));
 
-			if (follow) this.chatBox.scrollTop = this.chatBox.scrollHeight;
+			if (follow) {
+				this.chatBox.scrollTop = this.chatBox.scrollHeight;
+			}
+
 			this.chatBox.removeAttribute("aria-busy");
 
 			if (!this.isClosed) {
@@ -1024,7 +1027,9 @@ class Ares extends Window {
 					Flush();
 					Visit(child);
 				}
-				else text += InlineText(child);
+				else {
+					text += InlineText(child);
+				}
 			}
 			Flush();
 		};
@@ -1041,6 +1046,7 @@ class Ares extends Window {
 
 		const button = response.querySelector(":scope > .ares-speak");
 		if (!button || button.disabled || button.hidden) return;
+
 		if (this.speech?.response === response) {
 			this.StopSpeech();
 			return;
@@ -1576,6 +1582,7 @@ class Ares extends Window {
 
 			const avatar = document.createElement("div");
 			avatar.className = "ares-avatar";
+
 			if (direction === "out") {
 				avatar.style.backgroundColor = color;
 			}

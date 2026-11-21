@@ -597,44 +597,50 @@
 	border: var(--clr-pane) solid 1.5px;
 	border-radius: 8px;
 	color: var(--clr-dark);
-	text-shadow: var(--clr-pane) 0 0 4px;
+	text-shadow: var(--clr-pane) 0 0 2px;
 	opacity: .95;
 	background-color: color-mix(in srgb, var(--clr-pane) 60%, transparent);
 	backdrop-filter: blur(8px) brightness(80%);
 	box-shadow: 0 4px 8px rgb(0,0,0,.2);
 }
 
-.ares-speech-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
-.ares-speech-status { margin-left: 4px; font-size: smaller; font-variant-numeric: tabular-nums; }
+.ares-speech-actions {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 6px;
+}
 
-.ares-speech-actions > .ares-speech-control {
+.ares-speech-status {
+	margin-left: 4px;
+	font-size: smaller;
+	font-variant-numeric: tabular-nums;
+}
+
+.ares-speech-control {
 	flex: none;
 	width: 24px;
 	min-width: 24px;
 	height: 24px;
 	margin: 0;
 	padding: 5px;
-	color: var(--clr-dark);
 	background-color: transparent;
+
+	background-size: 16px 16px;
+	background-position: center;
+	background-repeat: no-repeat;
 }
 
-.ares-speech-control::before {
-	content: "";
-	display: block;
-	width: 14px;
-	height: 14px;
-	background-color: currentColor;
-	-webkit-mask: var(--ares-speech-icon) center / contain no-repeat;
-	mask: var(--ares-speech-icon) center / contain no-repeat;
+.ares-speech-control:disabled {
+	background-color: transparent !important;
+	opacity: .6;
 }
 
-.ares-speech-play { --ares-speech-icon: url(mono/play.svg); }
-.ares-speech-pause { --ares-speech-icon: url(mono/pause.svg); }
-.ares-speech-stop { --ares-speech-icon: url(mono/stop.svg); }
-.ares-speech-previous, .ares-speech-next { --ares-speech-icon: url(mono/skipback.svg); }
-.ares-speech-next::before { transform: scaleX(-1); }
-.ares-speech-actions > .ares-speech-control:disabled { cursor: default; }
-.ares-speech-actions > .ares-speech-control:hover { background-color: rgb(0,0,0,.15); }
+.ares-speech-play { background-image: url(mono/play.svg); }
+.ares-speech-pause { background-image: url(mono/pause.svg); }
+.ares-speech-stop { background-image: url(mono/stop.svg); }
+.ares-speech-previous { background-image: url(mono/rewind.svg); }
+.ares-speech-next { background-image: url(mono/fastforward.svg); }
 
 .ares-speech-voice {
 	display: grid;
@@ -691,15 +697,15 @@
 	width: fit-content;
 	max-width: 100%;
 	height: 28px;
+	padding: 4px 12px;
+	margin-left: auto;
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
-	margin-left: auto;
-	padding: 4px 8px;
-	border-radius: 16px;
+	border-radius: 12px;
 	background-color: var(--clr-pane);
-	filter: drop-shadow(light-dark(rgba(16,16,16,.8), rgba(32,32,32,.5)) -1px 1px 1px);
 	-webkit-user-select: none; user-select: none;
+	filter: drop-shadow(light-dark(rgba(16,16,16,.8), rgba(32,32,32,.5)) -1px 1px 1px);
 	transition: .2s;
 }
 
@@ -707,26 +713,8 @@
 	content: "";
 }
 
-.ares-settings > summary::before {
-	content: "";
-	display: inline-block;
-	width: 12px;
-	height: 12px;
-	padding-left: 8px;
-	background-image: url("mono/guitarpick.svg");
-	background-size: 12px 12px;
-	background-position: center;
-	background-repeat: no-repeat;
-	transform: translateY(2px) rotate(-90deg);
-	transition: .2s;
-}
-
-.ares-settings[open] > summary::before {
-	transform: translateY(2px) rotate(-180deg);
-}
-
 .ares-settings > summary:hover {
-	background-color: rgb(224,224,224);
+	background-color: rgb(208,208,208);
 }
 
 .ares-settings-panel {
@@ -742,7 +730,7 @@
 	border-radius: 8px;
 	box-shadow: 0 4px 12px rgb(0,0,0,.25);
 	color: var(--clr-dark);
-	text-shadow: var(--clr-pane) 0 0 4px;
+	text-shadow: var(--clr-pane) 0 0 2px;
 	opacity: .95;
 	background-color: color-mix(in srgb, var(--clr-pane) 60%, transparent);
 	backdrop-filter: blur(8px) brightness(80%);

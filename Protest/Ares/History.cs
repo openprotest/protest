@@ -8,9 +8,9 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using Protest.Http;
 
-namespace Protest.Tools;
+namespace Protest.Ares;
 
-internal static partial class Ares {
+internal static partial class Core {
     internal sealed record HistoryMessage(string Id, string Role, string Content, long Time, string Status, string RequestId, string Agent = null, string AgentName = null, string Provider = null, string Model = null, string Reasoning = null, string Error = null);
     internal sealed record Conversation(int SchemaVersion, string Id, string Owner, string Title, long CreatedAt, long UpdatedAt, int Revision, HistoryMessage[] Messages);
     internal sealed record HistoryTurn(Conversation Conversation, string RequestId, string Text, long Time, string Agent = null, string AgentName = null, string Model = null, string Reasoning = null);

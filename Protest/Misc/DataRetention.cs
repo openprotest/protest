@@ -26,7 +26,7 @@ internal static class DataRetention {
         new("lifeline",       "lifeline",            Tasks.Lifeline.DeleteOlderThan, 365),
         new("lastseen",       "last-seen",           Tasks.LastSeen.DeleteOlderThan, 365),
         new("watchdog",       "watchdog",            Tasks.Watchdog.DeleteOlderThan, 90),
-        new("ares",           "A.R.E.S. history",    Tools.Ares.history.Purge, 90),
+        new("ares",           "A.R.E.S. history",    Ares.Core.history.Purge, 90),
         new("logs",           "log",                 Logger.DeleteOlderThan, 90),
         new("syslog",         "syslog",              Protocols.Syslog.DeleteOlderThan, 90),
         new("snmptraps",      "SNMP traps",          Protocols.Snmp.Traps.DeleteOlderThan, 90),

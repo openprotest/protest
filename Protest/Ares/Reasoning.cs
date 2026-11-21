@@ -5,9 +5,9 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Protest.Tools;
+namespace Protest.Ares;
 
-internal static partial class Ares {
+internal static partial class Core {
 
     [GeneratedRegex(@"-\d{4}-\d{2}-\d{2}$")]
     private static partial Regex MyRegex();
@@ -26,6 +26,8 @@ internal static partial class Ares {
             _ => []
         };
     }
+
+    internal static readonly string[] anthropicEffortLevelsArray = new string[] { "low", "medium", "high", "xhigh", "max" };
 
     //Model-specific effort levels documented by the providers; unknown models use defaults.
     //https://docs.x.ai/developers/model-capabilities/text/reasoning
@@ -81,8 +83,7 @@ internal static partial class Ares {
                 !capabilities.TryGetProperty("effort", out JsonElement effort) || effort.ValueKind != JsonValueKind.Object ||
                 !effort.TryGetProperty("supported", out JsonElement supported) || supported.ValueKind != JsonValueKind.True) return [];
 
-            return new string[] { "low", "medium", "high", "xhigh", "max" }
-                .Where(level => effort.TryGetProperty(level, out JsonElement capability) && capability.ValueKind == JsonValueKind.Object &&
+            return anthropicEffortLevelsArray.Where(level => effort.TryGetProperty(level, out JsonElement capability) && capability.ValueKind == JsonValueKind.Object &&
                     capability.TryGetProperty("supported", out JsonElement enabled) && enabled.ValueKind == JsonValueKind.True).ToArray();
         }
 
