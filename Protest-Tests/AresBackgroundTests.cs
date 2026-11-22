@@ -85,7 +85,7 @@ public class AresBackgroundTests {
         async Task Serve() {
             HttpListenerContext ctx = await provider.GetContextAsync();
             using JsonDocument payload = await JsonDocument.ParseAsync(ctx.Request.InputStream);
-            bool first = payload.RootElement.GetProperty("messages")[0].GetProperty("content").GetString() == "First";
+            bool first = payload.RootElement.GetProperty("messages")[1].GetProperty("content").GetString() == "First";
             ctx.Response.ContentType = "application/x-ndjson";
 
             if (first) {

@@ -39,8 +39,8 @@ public class AresCompatibleProviderTests {
             JsonElement body = doc.RootElement;
             Assert.Multiple(() => {
                 Assert.That(body.GetProperty("model").GetString(), Is.EqualTo("selected-model"));
-                Assert.That(body.GetProperty("messages").GetArrayLength(), Is.EqualTo(3));
-                Assert.That(body.GetProperty("messages")[1].GetProperty("role").GetString(), Is.EqualTo("assistant"));
+                Assert.That(body.GetProperty("messages").GetArrayLength(), Is.EqualTo(4));
+                Assert.That(body.GetProperty("messages")[2].GetProperty("role").GetString(), Is.EqualTo("assistant"));
                 Assert.That(body.GetProperty("max_tokens").GetInt32(), Is.EqualTo(4096));
                 Assert.That(body.GetProperty("stream").GetBoolean(), Is.False);
                 Assert.That(body.TryGetProperty("store", out _), Is.False);

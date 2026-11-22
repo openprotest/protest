@@ -445,8 +445,9 @@ internal static partial class Core {
             _ => throw new ArgumentException("Unsupported agent provider", nameof(type))
         };
 
+        Message[] requestMessages = type == "anthropic" ? messages : [new Message(PersonaRole(type, model), PERSONA), ..messages];
         Dictionary<string, object> payload = new Dictionary<string, object> {
-            ["model"] = model, ["messages"] = messages, ["stream"] = onText is not null
+            ["model"] = model, ["messages"] = requestMessages, ["stream"] = onText is not null
         };
 
         if (type == "openai") {
@@ -463,6 +464,7 @@ internal static partial class Core {
             }
         }
         else if (type == "anthropic") {
+            payload["system"] = PERSONA;
             payload["max_tokens"] = 4096;
             if (!String.IsNullOrEmpty(reasoning)) {
                 payload["output_config"] = new { effort = reasoning };
@@ -484,14 +486,14 @@ internal static partial class Core {
         string requestBody = JsonSerializer.Serialize(payload, jsonOptions);
         request.Content = new StringContent(requestBody, Encoding.UTF8, "application/json");
 #if DEBUG
-        LogProviderChatJson(type, requestBody, false);
+        LogProviderChatJson(requestBody, false);
 #endif
 
         using HttpResponseMessage response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, token);
         if (!response.IsSuccessStatusCode) {
             string body = await response.Content.ReadAsStringAsync(token);
 #if DEBUG
-            LogProviderChatJson(type, body, true);
+            LogProviderChatJson(body, true);
 #endif
             string code = null;
             string errorType = null;
@@ -516,7 +518,7 @@ internal static partial class Core {
 
         string responseBody = await response.Content.ReadAsStringAsync(token);
 #if DEBUG
-        LogProviderChatJson(type, responseBody, true);
+        LogProviderChatJson(responseBody, true);
 #endif
         using JsonDocument doc = JsonDocument.Parse(responseBody);
         JsonElement root = doc.RootElement;
@@ -569,7 +571,7 @@ internal static partial class Core {
             }
 
 #if DEBUG
-            LogProviderChatJson(type, data, true);
+            LogProviderChatJson(data, true);
 #endif
 
             if (IsOpenAiCompatible(type) && data == "[DONE]") {

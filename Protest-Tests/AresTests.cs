@@ -108,8 +108,8 @@ public class AresTests {
                 Assert.That(request.Content.Headers.ContentType?.MediaType, Is.EqualTo("application/json"));
                 Assert.That(root.GetProperty("model").GetString(), Is.EqualTo("ft:chosen:model"));
                 Assert.That(root.GetProperty("store").GetBoolean(), Is.False);
-                Assert.That(root.GetProperty("messages").EnumerateArray().Select(entry => entry.GetProperty("role").GetString()), Is.EqualTo(new[] { "user", "assistant", "user" }));
-                Assert.That(root.GetProperty("messages")[2].GetProperty("content").GetString(), Is.EqualTo("Follow up"));
+                Assert.That(root.GetProperty("messages").EnumerateArray().Select(entry => entry.GetProperty("role").GetString()), Is.EqualTo(new[] { "developer", "user", "assistant", "user" }));
+                Assert.That(root.GetProperty("messages")[3].GetProperty("content").GetString(), Is.EqualTo("Follow up"));
             });
             return """{"choices":[{"message":{"role":"assistant","content":"Plain <b>text</b>"}}]}""";
         }));
@@ -128,6 +128,7 @@ public class AresTests {
                 Assert.That(request.Headers.GetValues("anthropic-version"), Is.EqualTo(new[] { "2026-10-21" }));
                 Assert.That(body.RootElement.GetProperty("model").GetString(), Is.EqualTo("claude-selected"));
                 Assert.That(body.RootElement.GetProperty("max_tokens").GetInt32(), Is.GreaterThan(0));
+                Assert.That(body.RootElement.GetProperty("system").GetString(), Is.EqualTo(Ares.PERSONA));
                 Assert.That(body.RootElement.GetProperty("messages")[0].GetProperty("content").GetString(), Is.EqualTo("Hello"));
             });
             return """{"content":[{"type":"thinking","thinking":"internal"},{"type":"text","text":"Hello"},{"type":"text","text":"World"}]}""";
@@ -234,7 +235,8 @@ public class AresTests {
                 Assert.That(request.Headers.Authorization?.Parameter, Is.EqualTo(key.Length == 0 ? null : key));
                 Assert.That(body.RootElement.GetProperty("stream").GetBoolean(), Is.False);
                 Assert.That(body.RootElement.GetProperty("model").GetString(), Is.EqualTo("chosen:7b"));
-                Assert.That(body.RootElement.GetProperty("messages")[0].GetProperty("content").GetString(), Is.EqualTo("Hello"));
+                Assert.That(body.RootElement.GetProperty("messages")[0].GetProperty("content").GetString(), Is.EqualTo(Ares.PERSONA));
+                Assert.That(body.RootElement.GetProperty("messages")[1].GetProperty("content").GetString(), Is.EqualTo("Hello"));
             });
             return """{"message":{"role":"assistant","content":"Local reply"},"done":true}""";
         }));

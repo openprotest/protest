@@ -1259,15 +1259,21 @@ class Ares extends Window {
 		let text = "";
 
 		for (const segment of segments) {
+			//segment.text = segment.text.replace(/Pro-test/g, "Protest");
+			segment.text = segment.text.replace(/A\.R\.E\.S\./g, "Ares");
+
 			if (text.length > 0) text += " ";
 			segment.start = text.length;
+
 			text += segment.text;
 			if (!/[.!?]["'’”)\]]*$/.test(segment.text)) text += ".";
 		}
 
 		const state = {response, button, segments, text, index:0, offset:0, boundary:0, paused:false, utterance:null, synth:window.speechSynthesis};
 		this.speech = state;
+
 		Ares.speechOwner = this;
+
 		button.setAttribute("aria-pressed", "true");
 		button.setAttribute("aria-label", "Stop reading response");
 		button.title = "Stop reading aloud";
@@ -1276,6 +1282,7 @@ class Ares extends Window {
 		const box = this.chatBox.getBoundingClientRect();
 		const first = segments[0].element.getBoundingClientRect();
 		this.chatBox.scrollTo({top:this.chatBox.scrollTop + first.top - box.top - 16, behavior:"smooth"});
+
 		try {
 			state.synth.resume();
 			this.SpeakResponse(state);
@@ -1674,7 +1681,7 @@ class Ares extends Window {
 					const error = doc.createElement("div");
 					error.className = "ares-error ares-code-copy-error";
 					error.setAttribute("role", "alert");
-					error.textContent = "Unable to copy. Select the code and copy it manually.";
+					error.textContent = "Unable to copy.";
 					wrapper.appendChild(error);
 				}
 				finally {
