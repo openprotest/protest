@@ -677,4 +677,4 @@ internal static class WinEvents {
 [JsonSourceGenerationOptions(IncludeFields = true)]
 [JsonSerializable(typeof(WinEvents.DeviceState))]
 [JsonSerializable(typeof(string[]))]
-internal partial class WinEventsJsonContext : JsonSerializerContext {}
+internal partial class WinEventsJsonContext : JsonSerializerContext { }

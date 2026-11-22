@@ -248,8 +248,14 @@ internal static partial class Core {
         }
 
         if (agent is null) return Data.CODE_NOT_FOUND.Array;
-        if (!agent.Enabled) return Error("The selected agent is disabled. Reopen A.R.E.S. and select an enabled agent.");
-        if (GetString(root, "revision") != Revision(agent)) return Error("The agent settings changed. Reopen A.R.E.S. and confirm your selection.");
+
+        if (!agent.Enabled) {
+            return Error("The selected agent is disabled. Reopen A.R.E.S. and select an enabled agent.");
+        }
+
+        if (GetString(root, "revision") != Revision(agent)) {
+            return Error("The agent settings changed. Reopen A.R.E.S. and confirm your selection.");
+        }
 
         string reasoning = GetString(root, "reasoning");
         if (root.TryGetProperty("reasoning", out JsonElement effort) && effort.ValueKind is not (JsonValueKind.String or JsonValueKind.Null)) return Data.CODE_INVALID_ARGUMENT.Array;
@@ -258,7 +264,6 @@ internal static partial class Core {
         HistoryTurn turn;
         Message[] messages;
         try {
-            
             turn = history.Begin(owner, conversationId, conversationRevision, requestId, text, agent.Id, agent.Name, model, reasoning);
         }
         catch (Exception ex) when (ex is InvalidOperationException or ArgumentException) {
@@ -278,6 +283,7 @@ internal static partial class Core {
 
         context.Add(new Message("user", text));
         messages = context.ToArray();
+
         if (JsonSerializer.SerializeToUtf8Bytes(messages, jsonOptions).Length > MAX_CHAT_PAYLOAD) {
             history.Release(turn);
             return Error("This conversation is too long. Start a new conversation.");
@@ -296,10 +302,19 @@ internal static partial class Core {
 
         async Task SendEvent(object value, CancellationToken token = default) {
             if (!connected) return;
-            try { await WriteChatEventAsync(ctx, value, token); }
-            catch (HttpListenerException) { connected = false; }
-            catch (IOException) { connected = false; }
-            catch (ObjectDisposedException) { connected = false; }
+
+            try {
+                await WriteChatEventAsync(ctx, value, token);
+            }
+            catch (HttpListenerException) {
+                connected = false;
+            }
+            catch (IOException) {
+                connected = false;
+            }
+            catch (ObjectDisposedException) {
+                connected = false;
+            }
         }
 
         try {
@@ -308,14 +323,19 @@ internal static partial class Core {
                 try {
                     using CancellationTokenSource validation = CancellationTokenSource.CreateLinkedTokenSource(generation.Token);
                     validation.CancelAfter(TimeSpan.FromSeconds(30));
+
                     string[] options = await FetchReasoningOptionsAsync(agent.Type, ReadKey(agent), model, httpClient, validation.Token, agent.Endpoint);
-                    if (!options.Contains(reasoning)) error = "The selected reasoning setting is not supported by this model. Select Default or reopen A.R.E.S.";
+                    if (!options.Contains(reasoning)) {
+                        error = "The selected reasoning setting is not supported by this model. Select Default or reopen A.R.E.S.";
+                    }
                 }
                 catch (Exception ex) when (ex is HttpRequestException or JsonException or OperationCanceledException) {
                     error = "Unable to verify this model's reasoning settings. Select Default or try again.";
                 }
 
-                if (error is not null) throw new InvalidOperationException(error);
+                if (error is not null) {
+                    throw new InvalidOperationException(error);
+                }
             }
 
             bool current;
@@ -342,12 +362,24 @@ internal static partial class Core {
 
             complete = true;
         }
-        catch (InvalidOperationException ex) { error = ex.Message; }
-        catch (HttpRequestException ex) { error = ex.StatusCode is null ? $"Cannot connect to {ProviderLabel(agent.Type)}" : ex.Message; }
-        catch (OperationCanceledException) { error = $"The request to {ProviderLabel(agent.Type)} timed out"; }
-        catch (JsonException) { error = $"{ProviderLabel(agent.Type)} returned an invalid, interrupted, or empty text response for the selected model"; }
-        catch (HttpListenerException) { error = "The response was interrupted because the browser disconnected."; }
-        catch (IOException) { error = $"The response from {ProviderLabel(agent.Type)} was interrupted. Try again."; }
+        catch (InvalidOperationException ex) {
+            error = ex.Message;
+        }
+        catch (HttpRequestException ex) {
+            error = ex.StatusCode is null ? $"Cannot connect to {ProviderLabel(agent.Type)}" : ex.Message;
+        }
+        catch (OperationCanceledException) {
+            error = $"The request to {ProviderLabel(agent.Type)} timed out";
+        }
+        catch (JsonException) {
+            error = $"{ProviderLabel(agent.Type)} returned an invalid, interrupted, or empty text response for the selected model";
+        }
+        catch (HttpListenerException) {
+            error = "The response was interrupted because the browser disconnected.";
+        }
+        catch (IOException) {
+            error = $"The response from {ProviderLabel(agent.Type)} was interrupted. Try again.";
+        }
         catch (Exception ex) {
             Logger.Error(ex);
             error = "Unable to get a response from this agent";
@@ -390,7 +422,11 @@ internal static partial class Core {
             if (entry.ValueKind != JsonValueKind.Object) return null;
             string role = GetString(entry, "role");
             string text = GetString(entry, "content");
-            if (role != (messages.Count % 2 == 0 ? "user" : "assistant") || String.IsNullOrWhiteSpace(text) || (role == "user" && text.Length > MAX_TEXT_LENGTH)) return null;
+
+            if (role != (messages.Count % 2 == 0 ? "user" : "assistant") || String.IsNullOrWhiteSpace(text) || (role == "user" && text.Length > MAX_TEXT_LENGTH)) {
+                return null;
+            }
+
             messages.Add(new Message(role, text));
         }
 
@@ -416,15 +452,21 @@ internal static partial class Core {
         if (type == "openai") {
             payload["store"] = false;
             payload["max_completion_tokens"] = 4096;
-            if (!String.IsNullOrEmpty(reasoning)) payload["reasoning_effort"] = reasoning;
+            if (!String.IsNullOrEmpty(reasoning)) {
+                payload["reasoning_effort"] = reasoning;
+            }
         }
         else if (type is "xai" or "google") {
             payload["max_tokens"] = 4096;
-            if (!String.IsNullOrEmpty(reasoning)) payload["reasoning_effort"] = reasoning;
+            if (!String.IsNullOrEmpty(reasoning)) {
+                payload["reasoning_effort"] = reasoning;
+            }
         }
         else if (type == "anthropic") {
             payload["max_tokens"] = 4096;
-            if (!String.IsNullOrEmpty(reasoning)) payload["output_config"] = new { effort = reasoning };
+            if (!String.IsNullOrEmpty(reasoning)) {
+                payload["output_config"] = new { effort = reasoning };
+            }
         }
         else if (!String.IsNullOrEmpty(reasoning)) {
             payload["think"] = reasoning switch { "true" => (object)true, "false" => false, _ => reasoning };
@@ -478,6 +520,7 @@ internal static partial class Core {
 #endif
         using JsonDocument doc = JsonDocument.Parse(responseBody);
         JsonElement root = doc.RootElement;
+
         string text = null;
         if (IsOpenAiCompatible(type) && root.TryGetProperty("choices", out JsonElement choices) && choices.ValueKind == JsonValueKind.Array && choices.GetArrayLength() > 0) {
             JsonElement message = choices[0].GetProperty("message");
@@ -490,7 +533,9 @@ internal static partial class Core {
             text = GetString(ollamaMessage, "content");
         }
 
-        if (String.IsNullOrWhiteSpace(text)) throw new JsonException("The provider returned no text response");
+        if (String.IsNullOrWhiteSpace(text)) {
+            throw new JsonException("The provider returned no text response");
+        }
 
         return text;
     }
@@ -534,7 +579,10 @@ internal static partial class Core {
 
             using JsonDocument doc = JsonDocument.Parse(data);
             JsonElement root = doc.RootElement;
-            if (root.ValueKind != JsonValueKind.Object) throw new JsonException("Invalid stream event");
+            if (root.ValueKind != JsonValueKind.Object) {
+                throw new JsonException("Invalid stream event");
+            }
+
             if (root.TryGetProperty("error", out _) || GetString(root, "type") == "error") {
                 throw new JsonException("The provider returned a streaming error");
             }
@@ -556,7 +604,9 @@ internal static partial class Core {
                 completed = eventType == "message_stop";
             }
             else if (type == "ollama") {
-                if (root.TryGetProperty("message", out JsonElement message) && message.ValueKind == JsonValueKind.Object) delta = GetString(message, "content");
+                if (root.TryGetProperty("message", out JsonElement message) && message.ValueKind == JsonValueKind.Object) {
+                    delta = GetString(message, "content");
+                }
                 completed = root.TryGetProperty("done", out JsonElement done) && done.ValueKind == JsonValueKind.True;
             }
 
@@ -629,9 +679,12 @@ internal static partial class Core {
             }
 
             cursor = null;
+
             if (type == "anthropic" && root.TryGetProperty("has_more", out JsonElement more) && more.ValueKind == JsonValueKind.True) {
                 cursor = GetString(root, "last_id");
-                if (String.IsNullOrEmpty(cursor) || !cursors.Add(cursor)) throw new JsonException("Invalid model pagination cursor");
+                if (String.IsNullOrEmpty(cursor) || !cursors.Add(cursor)) {
+                    throw new JsonException("Invalid model pagination cursor");
+                }
             }
         } while (cursor is not null);
 
@@ -645,9 +698,9 @@ internal static partial class Core {
     private static string ReadKey(Agent agent) => String.IsNullOrEmpty(agent.Secret) ? String.Empty : Encoding.UTF8.GetString(Cryptography.Decrypt(Convert.FromBase64String(agent.Secret), Configuration.DB_KEY, Configuration.DB_KEY_IV));
 
     internal static string NormalizeEndpoint(string endpoint) =>
-        endpoint is not null && endpoint.Length <= 2048 && Uri.TryCreate(endpoint.Trim(), UriKind.Absolute, out Uri uri) &&
-        (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps) && !String.IsNullOrEmpty(uri.Host) &&
-        uri.UserInfo.Length == 0 && uri.Query.Length == 0 && uri.Fragment.Length == 0 ? uri.AbsoluteUri.TrimEnd('/') : null;
+        endpoint is not null && endpoint.Length <= 2048 && Uri.TryCreate(endpoint.Trim(), UriKind.Absolute, out Uri uri)
+            && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps) && !String.IsNullOrEmpty(uri.Host)
+            && uri.UserInfo.Length == 0 && uri.Query.Length == 0 && uri.Fragment.Length == 0 ? uri.AbsoluteUri.TrimEnd('/') : null;
 
     private static Agent ReadAgent(string id) {
         if (id is null) return null;
@@ -667,6 +720,7 @@ internal static partial class Core {
 
     private static Agent[] ReadAgents() {
         if (!Directory.Exists(Data.DIR_ARES_AGENTS)) return [];
+
         return Directory.EnumerateFiles(Data.DIR_ARES_AGENTS, "*.json")
             .Select(path => Guid.TryParse(Path.GetFileNameWithoutExtension(path), out Guid guid) ? ReadAgent(guid.ToString()) : null)
             .Where(agent => agent is not null)

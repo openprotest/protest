@@ -1577,4 +1577,4 @@ internal static partial class Traps {
 [JsonSerializable(typeof(Traps.TrapListener[]))]
 [JsonSerializable(typeof(Traps.EngineState))]
 [JsonSerializable(typeof(string[]))]
-internal partial class SnmpTrapsJsonContext : JsonSerializerContext {}
+internal partial class SnmpTrapsJsonContext : JsonSerializerContext { }

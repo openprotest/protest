@@ -9,7 +9,7 @@ internal sealed class UdpReverseProxy : ReverseProxyAbstract {
     private UdpClient udpListener;
     private IPEndPoint destinationEndPoint;
 
-    public UdpReverseProxy(Guid guid, IpFilter ipFilter) : base(guid, ipFilter) {}
+    public UdpReverseProxy(Guid guid, IpFilter ipFilter) : base(guid, ipFilter) { }
 
     public override bool Start(IPEndPoint listener, string destination, string certificate, string password, string origin) {
         try {

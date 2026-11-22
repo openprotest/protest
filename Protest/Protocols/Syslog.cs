@@ -1290,4 +1290,4 @@ internal static partial class Syslog {
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase, IncludeFields = true)]
 [JsonSerializable(typeof(Syslog.SyslogListener[]))]
 [JsonSerializable(typeof(string[]))]
-internal partial class SyslogJsonContext : JsonSerializerContext {}
+internal partial class SyslogJsonContext : JsonSerializerContext { }

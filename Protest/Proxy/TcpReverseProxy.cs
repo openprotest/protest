@@ -8,7 +8,7 @@ internal sealed class TcpReverseProxy : ReverseProxyAbstract {
     private TcpListener tcpListener;
     private IPEndPoint destinationEndPoint;
 
-    public TcpReverseProxy(Guid guid, IpFilter ipFilter) : base(guid, ipFilter) {}
+    public TcpReverseProxy(Guid guid, IpFilter ipFilter) : base(guid, ipFilter) { }
 
     public override bool Start(IPEndPoint listener, string destination, string certificate, string password, string origin) {
         try {

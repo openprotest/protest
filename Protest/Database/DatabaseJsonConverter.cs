@@ -36,7 +36,7 @@ internal sealed class DatabaseJsonConverter : JsonConverter<Database> {
                     database.version = version;
                 }
             }
-            //else if (propertyName == "length") {}
+            //else if (propertyName == "length") { }
             else if (propertyName == "data" && reader.TokenType == JsonTokenType.StartObject) {
                  while (reader.Read()) {
                      if (reader.TokenType == JsonTokenType.EndObject) break;
