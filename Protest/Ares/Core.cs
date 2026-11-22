@@ -44,16 +44,14 @@ internal static partial class Core {
 
     public static byte[] List(bool enabledOnly = false) {
         lock (mutex) {
-            var list = ReadAgents().Where(agent => !enabledOnly || agent.Enabled).Select(agent => new {
+            return JsonSerializer.SerializeToUtf8Bytes(ReadAgents().Where(agent => !enabledOnly || agent.Enabled).Select(agent => new {
                 id      = agent.Id,
                 type    = agent.Type,
                 label   = ProviderLabel(agent.Type),
                 name    = agent.Name,
                 enabled = agent.Enabled,
                 error   = errors.GetValueOrDefault(agent.Id)
-            }).ToArray();
-
-            return JsonSerializer.SerializeToUtf8Bytes(list);
+            }).ToArray());
         }
     }
 
@@ -291,7 +289,7 @@ internal static partial class Core {
 
         using CancellationTokenSource generation = new CancellationTokenSource();
 
-        StringBuilder reply = new StringBuilder();
+        StringBuilder reply = turn.Response;
         string error = null;
         bool complete = false;
         bool connected = true;
@@ -329,7 +327,10 @@ internal static partial class Core {
                 throw new InvalidOperationException("The agent settings or your access changed. Reopen A.R.E.S.");
             }
 
-            await FetchReplyAsync(agent.Type, ReadKey(agent), model, messages, httpClient, generation.Token, agent.Endpoint, async delta => { reply.Append(delta); await SendEvent(new { type = "delta", text = delta }, generation.Token); }, reasoning);
+            await FetchReplyAsync(agent.Type, ReadKey(agent), model, messages, httpClient, generation.Token, agent.Endpoint, async delta => {
+                history.Append(turn, delta);
+                await SendEvent(new { type = "delta", text = delta }, generation.Token);
+            }, reasoning);
 
             lock (mutex) {
                 current = ReadAgent(agent.Id) == agent;
@@ -347,7 +348,10 @@ internal static partial class Core {
         catch (JsonException) { error = $"{ProviderLabel(agent.Type)} returned an invalid, interrupted, or empty text response for the selected model"; }
         catch (HttpListenerException) { error = "The response was interrupted because the browser disconnected."; }
         catch (IOException) { error = $"The response from {ProviderLabel(agent.Type)} was interrupted. Try again."; }
-        catch (Exception ex) { Logger.Error(ex); error = "Unable to get a response from this agent"; }
+        catch (Exception ex) {
+            Logger.Error(ex);
+            error = "Unable to get a response from this agent";
+        }
 
         Conversation saved = null;
         try {

@@ -1,9 +1,10 @@
 using System.Net;
 using System.Text.Json;
 using Protest.Http;
-using Protest.Tools;
 
 namespace Protest.Tests;
+
+using Ares = global::Protest.Ares.Core;
 
 public class AresTests {
     [Test]
@@ -64,14 +65,17 @@ public class AresTests {
                 Assert.That(request.Headers.Authorization?.ToString(), Is.EqualTo("Bearer test-anthropic-key"));
                 Assert.That(request.Headers.GetValues("anthropic-version"), Is.EqualTo(new[] { "2026-10-21" }));
             });
+
             if (requests == 1) {
                 return """{"data":[{"id":"claude-b","display_name":"Claude B"}],"has_more":true,"last_id":"cursor/a&b"}""";
             }
+
             Assert.That(request.RequestUri?.Query, Does.Contain("after_id=cursor%2Fa%26b"));
             return """{"data":[{"id":"claude-a","display_name":"Claude A"}],"has_more":false}""";
         }));
 
         Ares.Model[] models = await Ares.FetchModelsAsync("anthropic", "test-anthropic-key", client);
+
         Assert.Multiple(() => {
             Assert.That(requests, Is.EqualTo(2));
             Assert.That(models.Select(model => model.Name), Is.EqualTo(new[] { "Claude A", "Claude B" }));
@@ -144,7 +148,10 @@ public class AresTests {
     [Test]
     public void RejectedMessagesAreNotRetriedWithAnotherModel() {
         int requests = 0;
-        using HttpClient client = new HttpClient(new ModelHandler(_ => { requests++; return "{}"; }, HttpStatusCode.TooManyRequests));
+        using HttpClient client = new HttpClient(new ModelHandler(_ => {
+            requests++;
+            return "{}";
+        }, HttpStatusCode.TooManyRequests));
         HttpRequestException? error = Assert.ThrowsAsync<HttpRequestException>(() => Ares.FetchReplyAsync("openai", "test-key", "selected-model", [new("user", "Hello")], client));
         Assert.Multiple(() => {
             Assert.That(requests, Is.EqualTo(1));
@@ -160,7 +167,13 @@ public class AresTests {
     [TestCase("rate_limit_exceeded", "requests", "API rate limit reached")]
     [TestCase("slow_down", "rate_limit_error", "API rate limit reached")]
     public void RateAndQuotaErrorsHaveDistinctMessages(string? code, string type, string expected) {
-        string body = JsonSerializer.Serialize(new { error = new { code, type, message = "Provider details including sk-secret must not be exposed" } });
+        string body = JsonSerializer.Serialize(new {
+            error = new {
+                code,
+                type,
+                message = "Provider details including sk-secret must not be exposed"
+            }
+        });
         using HttpClient client = new HttpClient(new ModelHandler(_ => body, HttpStatusCode.TooManyRequests));
         HttpRequestException? error = Assert.ThrowsAsync<HttpRequestException>(() => Ares.FetchReplyAsync("openai", "test-key", "selected-model", [new("user", "Hello")], client));
         Assert.Multiple(() => {
@@ -194,7 +207,9 @@ public class AresTests {
     public void ConversationValidationAcceptsFollowUpsAndRejectsOversizedUserMessages() {
         using JsonDocument valid = JsonDocument.Parse("""{"messages":[{"role":"user","content":"Hello"},{"role":"assistant","content":"Hi"},{"role":"user","content":"Follow up"}]}""");
         Assert.That(Ares.ReadMessages(valid.RootElement)?.Length, Is.EqualTo(3));
-        using JsonDocument oversized = JsonDocument.Parse(JsonSerializer.Serialize(new { messages = new[] { new { role = "user", content = new string('a', 8193) } } }));
+        using JsonDocument oversized = JsonDocument.Parse(JsonSerializer.Serialize(new {
+            messages = new[] { new { role = "user", content = new string('a', 8193) } }
+        }));
         Assert.That(Ares.ReadMessages(oversized.RootElement), Is.Null);
     }
 
@@ -223,7 +238,8 @@ public class AresTests {
             });
             return """{"message":{"role":"assistant","content":"Local reply"},"done":true}""";
         }));
-        Assert.That(await Ares.FetchReplyAsync("ollama", key, "chosen:7b", [new("user", "Hello")], client, endpoint:"https://ollama.example/proxy/"), Is.EqualTo("Local reply"));
+
+        Assert.That(await Ares.FetchReplyAsync("ollama", key, "chosen:7b", [new("user", "Hello")], client, endpoint: "https://ollama.example/proxy/"), Is.EqualTo("Local reply"));
     }
 
     [TestCase("file:///tmp/ollama")]

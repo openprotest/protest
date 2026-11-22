@@ -100,6 +100,22 @@
 	text-overflow: ellipsis;
 }
 
+.ares-conversation-pending > .ares-conversation-title::before {
+	content: "";
+	display: inline-block;
+	width: 6px;
+	height: 6px;
+	margin-right: 6px;
+	border-radius: 50%;
+	vertical-align: middle;
+	background-color: transparent;
+	border-left: 3px solid currentColor;
+	border-top: 3px solid currentColor;
+	border-right: 3px solid transparent;
+	border-bottom: 3px solid transparent;
+	animation: spin 4s linear infinite;
+}
+
 .ares-history-list .ares-conversation-remove {
 	box-sizing: border-box;
 	top: 2px;
@@ -524,7 +540,7 @@
 .ares-code-block:hover > .ares-code-copy {
 	opacity: 1;
 	pointer-events: auto;
-	transition-delay: .4s;
+	transition-delay: .2s;
 }
 
 .ares-code-copy:focus-visible {
@@ -542,8 +558,17 @@
 	margin: .75em 0;
 }
 
-.ares-markdown th, .ares-markdown td { padding: 6px 10px; border: 1px solid currentColor; }
-.ares-markdown hr { border: 0; border-top: 1px solid currentColor; margin: 1em 0; }
+.ares-markdown th,
+.ares-markdown td {
+	padding: 6px 10px;
+	border: 1px solid #777;
+}
+
+.ares-markdown hr {
+	border: 0;
+	border-top: 1px solid #777;
+	margin: 1em 0;
+}
 
 .ares-box .ares-speak,
 .ares-box .ares-response-copy {
@@ -600,9 +625,10 @@
 .ares-box .ares-response-copy-error { margin: 4px 16px 8px; }
 
 .ares-box .ares-speaking {
-	background-color: color-mix(in srgb, var(--clr-accent) 22%, transparent);
+	background-color: color-mix(in srgb, var(--clr-accent) 50%, transparent);
 	border-radius: 4px;
-	box-shadow: 0 0 0 2px color-mix(in srgb, var(--clr-accent) 65%, transparent);
+	box-shadow: 0 0 0 2px var(--clr-accent);
+	transition: background-color .4s, box-shadow .4s;
 }
 
 .ares-speech-menu {
@@ -660,8 +686,8 @@
 .ares-speech-play { background-image: url(mono/play.svg); }
 .ares-speech-pause { background-image: url(mono/pause.svg); }
 .ares-speech-stop { background-image: url(mono/stop.svg); }
-.ares-speech-previous { background-image: url(mono/rewind.svg); }
-.ares-speech-next { background-image: url(mono/fastforward.svg); }
+.ares-speech-previous { background-image: url(mono/backward.svg); }
+.ares-speech-next { background-image: url(mono/forward.svg); }
 
 .ares-speech-voice {
 	display: grid;
@@ -713,7 +739,7 @@
 	color: var(--clr-dark);
 }
 
-.ares-settings > summary {
+.ares-settings-summary {
 	box-sizing: border-box;
 	width: fit-content;
 	max-width: 100%;
@@ -730,11 +756,12 @@
 	transition: .2s;
 }
 
-.ares-settings > summary::marker {
-	content: "";
+.ares-settings-summary:focus-visible {
+	outline: 2px solid var(--clr-accent);
+	outline-offset: 2px;
 }
 
-.ares-settings > summary:hover {
+.ares-settings-summary:hover {
 	background-color: rgb(208,208,208);
 }
 

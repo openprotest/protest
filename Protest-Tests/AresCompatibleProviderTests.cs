@@ -1,9 +1,10 @@
 using System.Net;
 using System.Text;
 using System.Text.Json;
-using Protest.Tools;
 
 namespace Protest.Tests;
+
+using Ares = global::Protest.Ares.Core;
 
 public class AresCompatibleProviderTests {
     private static string BaseUrl(string provider) => provider == "xai" ? "https://api.x.ai/v1" : "https://generativelanguage.googleapis.com/v1beta/openai";
@@ -47,10 +48,11 @@ public class AresCompatibleProviderTests {
                 Assert.That(body.TryGetProperty("think", out _), Is.False);
                 Assert.That(body.TryGetProperty("reasoning_effort", out _), Is.EqualTo(effort is not null));
             });
-            if (effort is not null) Assert.That(body.GetProperty("reasoning_effort").GetString(), Is.EqualTo(effort));
+            if (effort is not null)
+                Assert.That(body.GetProperty("reasoning_effort").GetString(), Is.EqualTo(effort));
             return """{"choices":[{"message":{"content":"Answer","reasoning_content":"private"}}]}""";
         }));
-        Assert.That(await Ares.FetchReplyAsync(provider, "test-key", "selected-model", [new("user", "First"), new("assistant", "Previous"), new("user", "Next")], client, reasoning:effort!), Is.EqualTo("Answer"));
+        Assert.That(await Ares.FetchReplyAsync(provider, "test-key", "selected-model", [new("user", "First"), new("assistant", "Previous"), new("user", "Next")], client, reasoning: effort!), Is.EqualTo("Answer"));
     }
 
     [TestCase("xai", "grok-4.7", "low,medium,high,xhigh")]
@@ -86,7 +88,10 @@ public class AresCompatibleProviderTests {
         }));
         List<string> deltas = [];
         string result = await Ares.FetchReplyAsync(provider, "test-key", "selected-model", [new("user", "Hello")], client,
-            onText: text => { deltas.Add(text); return Task.CompletedTask; }, reasoning:"high");
+            onText: text => {
+                deltas.Add(text);
+                return Task.CompletedTask;
+            }, reasoning: "high");
         Assert.Multiple(() => {
             Assert.That(result, Is.EqualTo("Hello 🌍"));
             Assert.That(deltas, Is.EqualTo(new[] { "Hello 🌍" }));

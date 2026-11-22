@@ -8,7 +8,7 @@ internal static partial class Core {
     private static void LogProviderChatJson(string provider, string json, bool incoming) {
         string contentColor = incoming ? "\u001b[38;2;122;212;43m" : "\u001b[38;2;255;128;0m";
         string mutedColor = incoming ? "\u001b[38;2;85;140;55m" : "\u001b[38;2;166;100;33m";
-        string direction = incoming ? "<" : ">";
+        string direction = incoming ? "<-" : "->";
         Console.WriteLine($"{mutedColor}[{provider} {direction} provider chat]\n{ColorProviderChatJson(json, contentColor, mutedColor)}\u001b[0m");
     }
 

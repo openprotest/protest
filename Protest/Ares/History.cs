@@ -13,8 +13,10 @@ namespace Protest.Ares;
 internal static partial class Core {
     internal sealed record HistoryMessage(string Id, string Role, string Content, long Time, string Status, string RequestId, string Agent = null, string AgentName = null, string Provider = null, string Model = null, string Reasoning = null, string Error = null);
     internal sealed record Conversation(int SchemaVersion, string Id, string Owner, string Title, long CreatedAt, long UpdatedAt, int Revision, HistoryMessage[] Messages);
-    internal sealed record HistoryTurn(Conversation Conversation, string RequestId, string Text, long Time, string Agent = null, string AgentName = null, string Model = null, string Reasoning = null);
-    internal sealed record PendingResponse(string RequestId, string Text, long Time, string Agent, string AgentName, string Model, string Reasoning);
+    internal sealed record HistoryTurn(Conversation Conversation, string RequestId, string Text, long Time, string Agent = null, string AgentName = null, string Model = null, string Reasoning = null) {
+        internal StringBuilder Response { get; } = new StringBuilder();
+    }
+    internal sealed record PendingResponse(string RequestId, string Text, long Time, string Agent, string AgentName, string Model, string Reasoning, string Response);
     internal sealed record HistoryState(Conversation Conversation, PendingResponse Pending);
     internal static readonly HistoryStore history = new HistoryStore(Data.DIR_ARES_HISTORY);
 
@@ -48,16 +50,34 @@ internal static partial class Core {
             return conversation;
         }
 
-        internal Conversation Get(string owner, string id) { lock (gate) { return Read(owner, id); } }
+        internal Conversation Get(string owner, string id) {
+            lock (gate) {
+                return Read(owner, id);
+            }
+        }
 
         internal HistoryState GetState(string owner, string id) {
             if (String.IsNullOrEmpty(owner) || !Guid.TryParse(id, out Guid guid)) return null;
             lock (gate) {
                 if (active.TryGetValue(Key(owner, guid.ToString()), out HistoryTurn turn)) {
-                    return new HistoryState(turn.Conversation, new PendingResponse(turn.RequestId, turn.Text, turn.Time, turn.Agent, turn.AgentName, turn.Model, turn.Reasoning));
+                    return new HistoryState(turn.Conversation, new PendingResponse(turn.RequestId, turn.Text, turn.Time, turn.Agent, turn.AgentName, turn.Model, turn.Reasoning, turn.Response.ToString()));
                 }
                 Conversation value = Read(owner, guid.ToString());
                 return value is null ? null : new HistoryState(value, null);
+            }
+        }
+
+        internal bool IsActive(string owner, string id) {
+            if (String.IsNullOrEmpty(owner) || !Guid.TryParse(id, out Guid guid)) return false;
+            lock (gate) {
+                return active.ContainsKey(Key(owner, guid.ToString()));
+            }
+        }
+
+        internal void Append(HistoryTurn turn, string text) {
+            lock (gate) {
+                if (!active.TryGetValue(Key(turn.Conversation.Owner, turn.Conversation.Id), out HistoryTurn activeTurn) || !ReferenceEquals(activeTurn, turn)) throw new InvalidOperationException("This conversation is not active");
+                turn.Response.Append(text);
             }
         }
 
@@ -225,10 +245,11 @@ internal static partial class Core {
         if (owner is null) return Data.CODE_NOT_FOUND.Array;
 
         try {
-            return JsonSerializer.SerializeToUtf8Bytes(history.List(owner).Select(value => new { value.Id, value.Title, value.CreatedAt, value.UpdatedAt, value.Revision }), jsonOptions);
+            return JsonSerializer.SerializeToUtf8Bytes(history.List(owner).Select(value => new { value.Id, value.Title, value.CreatedAt, value.UpdatedAt, value.Revision, pending = history.IsActive(owner, value.Id) }), jsonOptions);
         }
         catch (Exception ex) {
-            Logger.Error(ex); return Error("Unable to load conversation history");
+            Logger.Error(ex);
+            return Error("Unable to load conversation history");
         }
     }
 
@@ -243,7 +264,8 @@ internal static partial class Core {
             return JsonSerializer.SerializeToUtf8Bytes(new { value.SchemaVersion, value.Id, value.Owner, value.Title, value.CreatedAt, value.UpdatedAt, value.Revision, value.Messages, state.Pending }, jsonOptions);
         }
         catch (Exception ex) {
-            Logger.Error(ex); return Error("Unable to load this conversation");
+            Logger.Error(ex);
+            return Error("Unable to load this conversation");
         }
     }
 

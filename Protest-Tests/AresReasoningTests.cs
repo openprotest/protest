@@ -1,8 +1,9 @@
 using System.Net;
 using System.Text.Json;
-using Protest.Tools;
 
 namespace Protest.Tests;
+
+using Ares = global::Protest.Ares.Core;
 
 public class AresReasoningTests {
     [TestCase("gpt-4.1", "")]
@@ -47,7 +48,7 @@ public class AresReasoningTests {
             Assert.That(request.Headers.GetValues("anthropic-version"), Is.EqualTo(new[] { "2026-10-21" }));
             return "{}";
         }));
-        _ = await Ares.FetchReasoningOptionsAsync(type, "test-key", "selected:latest", client, endpoint:"https://local.example/proxy");
+        _ = await Ares.FetchReasoningOptionsAsync(type, "test-key", "selected:latest", client, endpoint: "https://local.example/proxy");
     }
 
     [TestCase("openai", null)]
@@ -64,24 +65,43 @@ public class AresReasoningTests {
             JsonElement root = body.RootElement;
             Assert.That(root.GetProperty("model").GetString(), Is.EqualTo("selected"));
             Assert.That(root.GetProperty("stream").GetBoolean(), Is.False);
-            string field = type switch { "openai" => "reasoning_effort", "anthropic" => "output_config", _ => "think" };
-            if (reasoning is null) Assert.That(root.TryGetProperty(field, out _), Is.False);
+            string field = type switch {
+                "openai" => "reasoning_effort",
+                "anthropic" => "output_config",
+                _ => "think"
+            };
+            if (reasoning is null)
+                Assert.That(root.TryGetProperty(field, out _), Is.False);
             else {
                 JsonElement value = root.GetProperty(field);
-                if (type == "anthropic") Assert.That(value.GetProperty("effort").GetString(), Is.EqualTo(reasoning));
-                else if (type == "ollama" && reasoning is "true" or "false") Assert.That(value.GetBoolean(), Is.EqualTo(reasoning == "true"));
-                else Assert.That(value.GetString(), Is.EqualTo(reasoning));
+                if (type == "anthropic")
+                    Assert.That(value.GetProperty("effort").GetString(), Is.EqualTo(reasoning));
+                else if (type == "ollama" && reasoning is "true" or "false")
+                    Assert.That(value.GetBoolean(), Is.EqualTo(reasoning == "true"));
+                else
+                    Assert.That(value.GetString(), Is.EqualTo(reasoning));
             }
-            return type switch { "openai" => "{\"choices\":[{\"message\":{\"content\":\"OK\"}}]}", "anthropic" => "{\"content\":[{\"type\":\"text\",\"text\":\"OK\"}]}", _ => "{\"message\":{\"content\":\"OK\"}}" };
+            return type switch {
+                "openai" => "{\"choices\":[{\"message\":{\"content\":\"OK\"}}]}",
+                "anthropic" => "{\"content\":[{\"type\":\"text\",\"text\":\"OK\"}]}",
+                _ => "{\"message\":{\"content\":\"OK\"}}"
+            };
         }));
-        Assert.That(await Ares.FetchReplyAsync(type, "test", "selected", [new("user", "Hello")], client, reasoning:reasoning!), Is.EqualTo("OK"));
+        Assert.That(await Ares.FetchReplyAsync(type, "test", "selected", [new("user", "Hello")], client, reasoning: reasoning!), Is.EqualTo("OK"));
     }
 
     [Test]
     public async Task UnsupportedReasoningIsRejectedAfterImmediateAcknowledgementAndBeforeGeneration() {
-        static int Port() { using System.Net.Sockets.TcpListener socket = new(IPAddress.Loopback, 0); socket.Start(); return ((IPEndPoint)socket.LocalEndpoint).Port; }
-        int providerPort = Port(), appPort = Port();
-        using HttpListener provider = new(); provider.Prefixes.Add($"http://127.0.0.1:{providerPort}/"); provider.Start();
+        static int Port() {
+            using System.Net.Sockets.TcpListener socket = new(IPAddress.Loopback, 0);
+            socket.Start();
+            return ((IPEndPoint)socket.LocalEndpoint).Port;
+        }
+        int providerPort = Port();
+        int appPort = Port();
+        using HttpListener provider = new();
+        provider.Prefixes.Add($"http://127.0.0.1:{providerPort}/");
+        provider.Start();
         TaskCompletionSource release = new(TaskCreationOptions.RunContinuationsAsynchronously);
         Task metadata = Task.Run(async () => {
             HttpListenerContext context = await provider.GetContextAsync();
@@ -89,19 +109,36 @@ public class AresReasoningTests {
             await release.Task;
             byte[] body = System.Text.Encoding.UTF8.GetBytes("{\"thinking\":{\"values\":[true,false]}}");
             context.Response.ContentLength64 = body.Length;
-            await context.Response.OutputStream.WriteAsync(body); context.Response.Close();
+            await context.Response.OutputStream.WriteAsync(body);
+            context.Response.Close();
         });
-        string id = Guid.NewGuid().ToString(), session = Guid.NewGuid().ToString();
-        byte[] agent = JsonSerializer.SerializeToUtf8Bytes(new { id, type = "ollama", name = "Reasoning test", enabled = true, secret = "", endpoint = $"http://127.0.0.1:{providerPort}" });
-        Directory.CreateDirectory(Data.DIR_ARES_AGENTS); string agentPath = Path.Combine(Data.DIR_ARES_AGENTS, $"{id}.json"); File.WriteAllBytes(agentPath, agent);
+        string id = Guid.NewGuid().ToString();
+        string session = Guid.NewGuid().ToString();
+        byte[] agent = JsonSerializer.SerializeToUtf8Bytes(new {
+            id,
+            type = "ollama",
+            name = "Reasoning test",
+            enabled = true,
+            secret = "",
+            endpoint = $"http://127.0.0.1:{providerPort}"
+        });
+        Directory.CreateDirectory(Data.DIR_ARES_AGENTS);
+        string agentPath = Path.Combine(Data.DIR_ARES_AGENTS, $"{id}.json");
+        File.WriteAllBytes(agentPath, agent);
         Protest.Http.Auth.sessions[session] = new Protest.Http.Auth.Session { access = new Protest.Http.Auth.AccessControl { username = "reasoning-test", authorization = [], accessPath = ["/ares/chat"] }, sessionId = session, ip = IPAddress.Loopback, loginDate = DateTime.UtcNow.Ticks, ttl = TimeSpan.FromHours(1).Ticks };
         Protest.Http.Listener listener = new("127.0.0.1", (ushort)appPort, Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../Protest/Front")));
         _ = listener.StartAsync();
         try {
             using HttpClient client = new();
             using HttpRequestMessage request = new(HttpMethod.Post, $"http://127.0.0.1:{appPort}/ares/chat?id={id}");
-            request.Headers.Add("Cookie", $"{Protest.Http.Auth.SESSION_COOKIE}={session}"); request.Headers.Add("Origin", $"http://127.0.0.1:{appPort}");
-            request.Content = new StringContent(JsonSerializer.Serialize(new { model = "selected", revision = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(agent)), reasoning = "high", messages = new[] { new { role = "user", content = "Hello" } } }));
+            request.Headers.Add("Cookie", $"{Protest.Http.Auth.SESSION_COOKIE}={session}");
+            request.Headers.Add("Origin", $"http://127.0.0.1:{appPort}");
+            request.Content = new StringContent(JsonSerializer.Serialize(new {
+                model = "selected",
+                revision = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(agent)),
+                reasoning = "high",
+                messages = new[] { new { role = "user", content = "Hello" } }
+            }));
             using HttpResponseMessage response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead).WaitAsync(TimeSpan.FromSeconds(5));
             using StreamReader reader = new(await response.Content.ReadAsStreamAsync());
             using JsonDocument accepted = JsonDocument.Parse((await reader.ReadLineAsync().WaitAsync(TimeSpan.FromSeconds(5)))!);
@@ -113,7 +150,13 @@ public class AresReasoningTests {
             Assert.That(await reader.ReadLineAsync().WaitAsync(TimeSpan.FromSeconds(5)), Is.Null);
             await metadata;
         }
-        finally { release.TrySetResult(); listener.Stop(); provider.Stop(); Protest.Http.Auth.sessions.TryRemove(session, out _); File.Delete(agentPath); }
+        finally {
+            release.TrySetResult();
+            listener.Stop();
+            provider.Stop();
+            Protest.Http.Auth.sessions.TryRemove(session, out _);
+            File.Delete(agentPath);
+        }
     }
 
     private sealed class Handler(Func<HttpRequestMessage, string> respond) : HttpMessageHandler {
