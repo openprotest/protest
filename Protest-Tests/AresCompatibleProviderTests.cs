@@ -29,7 +29,7 @@ public class AresCompatibleProviderTests {
     [TestCase("xai", "high")]
     [TestCase("google", null)]
     [TestCase("google", "low")]
-    public async Task ChatPreservesHistoryAndUsesCompatibleParameters(string provider, string? effort) {
+    public async Task ChatPreservesHistoryAndUsesCompatibleParameters(string provider, string? reasoning) {
         using HttpClient client = new(new Handler(request => {
             Assert.Multiple(() => {
                 Assert.That(request.RequestUri!.AbsoluteUri, Is.EqualTo(BaseUrl(provider) + "/chat/completions"));
@@ -46,18 +46,18 @@ public class AresCompatibleProviderTests {
                 Assert.That(body.TryGetProperty("store", out _), Is.False);
                 Assert.That(body.TryGetProperty("max_completion_tokens", out _), Is.False);
                 Assert.That(body.TryGetProperty("think", out _), Is.False);
-                Assert.That(body.TryGetProperty("reasoning_effort", out _), Is.EqualTo(effort is not null));
+                Assert.That(body.TryGetProperty("reasoning_effort", out _), Is.EqualTo(reasoning is not null));
             });
-            if (effort is not null)
-                Assert.That(body.GetProperty("reasoning_effort").GetString(), Is.EqualTo(effort));
+            if (reasoning is not null)
+                Assert.That(body.GetProperty("reasoning_effort").GetString(), Is.EqualTo(reasoning));
             return """{"choices":[{"message":{"content":"Answer","reasoning_content":"private"}}]}""";
         }));
-        Assert.That(await Ares.FetchReplyAsync(provider, "test-key", "selected-model", [new("user", "First"), new("assistant", "Previous"), new("user", "Next")], client, reasoning: effort!), Is.EqualTo("Answer"));
+        Assert.That(await Ares.FetchReplyAsync(provider, "test-key", "selected-model", [new("user", "First"), new("assistant", "Previous"), new("user", "Next")], client, reasoning: reasoning!), Is.EqualTo("Answer"));
     }
 
     [TestCase("xai")]
     [TestCase("google")]
-    public async Task StreamsExcludePrivateReasoningAndApplyEffort(string provider) {
+    public async Task StreamsExcludePrivateReasoningAndApplyReasoning(string provider) {
         using HttpClient client = new(new Handler(request => {
             using JsonDocument doc = JsonDocument.Parse(request.Content!.ReadAsStringAsync().GetAwaiter().GetResult());
             Assert.Multiple(() => {

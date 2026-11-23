@@ -99,6 +99,7 @@ public class AresStreamingTests {
             }
             context.Response.SendChunked = true;
             context.Response.ContentType = "application/x-ndjson";
+            await context.Response.OutputStream.WriteAsync(Encoding.UTF8.GetBytes("{\"message\":{\"thinking\":\"Inspecting the input.\"},\"done\":false}\n"));
             await context.Response.OutputStream.WriteAsync(Encoding.UTF8.GetBytes("{\"message\":{\"content\":\"Hello 🌍\"},\"done\":false}\n"));
             await context.Response.OutputStream.FlushAsync();
             await finish.Task;
@@ -192,6 +193,13 @@ public class AresStreamingTests {
             }
 
             headers.SetResult();
+            using JsonDocument reasoning = JsonDocument.Parse((await reader.ReadLineAsync().WaitAsync(TimeSpan.FromSeconds(5)))!);
+            Assert.Multiple(() => {
+                Assert.That(reasoning.RootElement.GetProperty("type").GetString(), Is.EqualTo("reasoning"));
+                Assert.That(reasoning.RootElement.GetProperty("text").GetString(), Is.EqualTo("Inspecting the input."));
+                Assert.That(Ares.history.GetState(owner, conversationId).Pending.ReasoningText, Is.EqualTo("Inspecting the input."));
+                Assert.That(generation.IsCompleted, Is.False);
+            });
             using JsonDocument delta = JsonDocument.Parse((await reader.ReadLineAsync().WaitAsync(TimeSpan.FromSeconds(5)))!);
             Assert.Multiple(() => {
                 Assert.That(delta.RootElement.GetProperty("type").GetString(), Is.EqualTo("delta"));
@@ -213,6 +221,7 @@ public class AresStreamingTests {
             Assert.That(done.RootElement.GetProperty("type").GetString(), Is.EqualTo("done"));
             Assert.That(await reader.ReadLineAsync().WaitAsync(TimeSpan.FromSeconds(5)), Is.Null);
             await generation;
+            Assert.That(Ares.history.Get(owner, conversationId).Messages.Last().ReasoningText, Is.EqualTo("Inspecting the input."));
         }
         finally {
             headers.TrySetResult();

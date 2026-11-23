@@ -24,6 +24,7 @@ internal static partial class Core {
         string code = null;
         string errorType = null;
         string message = null;
+
         if (root.ValueKind == JsonValueKind.Object && root.TryGetProperty("error", out JsonElement error)) {
             if (error.ValueKind == JsonValueKind.Object) {
                 code = GetString(error, "code");
@@ -41,8 +42,10 @@ internal static partial class Core {
 
         if (!String.IsNullOrEmpty(message)) {
             message = String.Concat(message.Where(character => !Char.IsControl(character) || character is '\n' or '\t')).Trim();
+
             if (!String.IsNullOrEmpty(key)) message = message.Replace(key, "[redacted]", StringComparison.Ordinal);
             message = ProviderCredentialPattern().Replace(message, "[redacted]");
+
             if (message.Length > MAX_PROVIDER_ERROR_LENGTH) {
                 int length = Char.IsHighSurrogate(message[MAX_PROVIDER_ERROR_LENGTH - 1]) ? MAX_PROVIDER_ERROR_LENGTH - 1 : MAX_PROVIDER_ERROR_LENGTH;
                 message = message[..length] + "…";
@@ -54,8 +57,7 @@ internal static partial class Core {
 
     private static string FormatProviderError(string type, HttpStatusCode? status, string code, string errorType, string message) {
         bool hasDetails = !String.IsNullOrEmpty(message);
-        string summary = status is null ? $"{ProviderLabel(type)} stopped the response." :
-            ProviderErrorSummary(type, status.Value, code, errorType, hasDetails);
+        string summary = status is null ? $"{ProviderLabel(type)} stopped the response." : ProviderErrorSummary(type, status.Value, code, errorType, hasDetails);
         string detail = hasDetails ? $"{summary}\n{message}" : summary;
 #if DEBUG
         LogProviderChatJson(JsonSerializer.Serialize(new { error = new { message = detail } }), true);
@@ -80,11 +82,11 @@ internal static partial class Core {
                 return $"{provider} API rate limit reached (HTTP 429). Wait briefly and try again, or check the project's rate limits.";
             }
 
-            return hasDetails ? summary :
-                $"{provider} returned HTTP 429. Check API billing, credits, and request limits; the response did not identify a specific cause.";
+            return hasDetails ? summary : $"{provider} returned HTTP 429. Check API billing, credits, and request limits; the response did not identify a specific cause.";
         }
 
         if (hasDetails) return summary;
+
         return type == "ollama" ? $"{summary} Check the selected model, server URL, and access settings." :
             $"{summary} Check the selected model, API key, quota, and rate limits.";
     }

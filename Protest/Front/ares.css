@@ -385,6 +385,52 @@
 	padding: 12px 16px;
 }
 
+.ares-box .ares-reasoning {
+	width: fit-content;
+	margin: 0 16px;
+	padding: 4px 8px;
+	font-size: 14px;
+	color: var(--clr-contrast);
+	border-left: 2px solid var(--clr-contrast);
+	border-radius: 2px 4px 4px 2px;
+	background-color: light-dark(rgb(150,150,150), rgb(36,36,36));
+}
+
+.ares-box .ares-reasoning > summary {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	list-style: none;
+	cursor: pointer;
+}
+
+.ares-box .ares-reasoning > summary::-webkit-details-marker {
+	display: none;
+}
+
+.ares-box .ares-reasoning > summary::before {
+	content: "";
+	flex: none;
+	width: 12px;
+	height: 12px;
+	background-color: currentColor;
+	mask: url(mono/guitarpick.svg) center / contain no-repeat;
+	transform: rotate(-90deg);
+	transition: .2s;
+}
+
+.ares-box .ares-reasoning[open] > summary::before {
+	transform: none;
+}
+
+.ares-box .ares-reasoning-text {
+	max-height: 240px;
+	margin: 8px 0;
+	padding: 8px 12px;
+	overflow-y: auto;
+	overflow-wrap: anywhere;
+}
+
 .ares-box .ares-response .ares-timestamp {
 	display: block;
 	position: static;
@@ -405,17 +451,15 @@
 }
 
 .ares-box .ares-bubble.ares-thinking {
-	font-weight: 600;
-	-webkit-user-select: none;
-	user-select: none;
-}
-
-.ares-thinking {
-	width: fit-content !important;
-    padding: 8px !important;
+	box-sizing: border-box;
+	width: fit-content;
+	padding: 8px;
 	border-radius: 16px;
 	background-color: light-dark(rgba(168,168,168,.8), rgba(48,48,48,.8));
 	box-shadow: light-dark(rgba(168,168,168,.8), rgba(48,48,48,.8)) 0 0 12px 8px;
+	font-weight: 600;
+	-webkit-user-select: none;
+	user-select: none;
 }
 
 .ares-thinking > p {
@@ -431,9 +475,13 @@
 	font-weight: bold;
 
 	background-clip: text;
-	animation: ares-thinking 12s linear infinite;
-
 	-webkit-user-select: none; user-select: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+	.ares-thinking > p {
+		animation: ares-thinking 12s linear infinite;
+	}
 }
 
 @keyframes ares-thinking {
@@ -462,10 +510,6 @@
 	90%  { content: "Reflecting..."; }
 	95%  { content: "Computing..."; }
 	100% { content: "Thinking..."; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-	.ares-thinking > p { animation: none; }
 }
 
 .ares-box .ares-error,
@@ -848,8 +892,9 @@
 }
 
 .ares-setting {
+	--ares-setting-label-width: 5.25em;
 	display: grid;
-	grid-template-columns: 48px minmax(0, 1fr);
+	grid-template-columns: var(--ares-setting-label-width) minmax(0, 1fr);
 	align-items: center;
 	gap: 8px;
 	margin-bottom: 10px;
@@ -864,17 +909,17 @@
 	font-size: inherit;
 }
 
-.ares-effort {
-	--ares-effort-spinner-size: 14px;
-	grid-template-columns: 48px minmax(0, 1fr) var(--ares-effort-spinner-size) minmax(48px, 80px);
+.ares-reasoning-setting {
+	--ares-reasoning-spinner-size: 14px;
+	grid-template-columns: var(--ares-setting-label-width) minmax(0, 1fr) var(--ares-reasoning-spinner-size) minmax(48px, 80px);
 }
-.ares-effort-spinner {
+.ares-reasoning-spinner {
 	position: static;
-	width: var(--ares-effort-spinner-size);
-	height: var(--ares-effort-spinner-size);
+	width: var(--ares-reasoning-spinner-size);
+	height: var(--ares-reasoning-spinner-size);
 	border-color: var(--clr-accent) rgba(32,32,32,.1) rgba(32,32,32,.1) var(--clr-accent);
 	border-width: 3px;
 	animation: spin 4s linear infinite;
 }
-.ares-effort > input { width: 100%; min-width: 0; margin: 0; }
-.ares-effort > output { grid-column: 4; text-align: right; overflow-wrap: anywhere; }
+.ares-reasoning-setting > input { width: 100%; min-width: 0; margin: 0; }
+.ares-reasoning-setting > output { grid-column: 4; text-align: right; overflow-wrap: anywhere; }

@@ -264,7 +264,7 @@ internal static partial class Core {
         }
 
         string reasoning = GetString(root, "reasoning");
-        if (root.TryGetProperty("reasoning", out JsonElement effort) && effort.ValueKind is not (JsonValueKind.String or JsonValueKind.Null)) return Data.CODE_INVALID_ARGUMENT.Array;
+        if (root.TryGetProperty("reasoning", out JsonElement reasoningValue) && reasoningValue.ValueKind is not (JsonValueKind.String or JsonValueKind.Null)) return Data.CODE_INVALID_ARGUMENT.Array;
         if (reasoning?.Length > 64 || reasoning?.Any(Char.IsControl) == true) return Data.CODE_INVALID_ARGUMENT.Array;
 
         HistoryTurn turn;
@@ -334,7 +334,7 @@ internal static partial class Core {
                     string[] options = await FetchReasoningOptionsAsync(agent.Type, ReadKey(agent), model, httpClient, validation.Token, agent.Endpoint);
                     if (!options.Contains(reasoning)) {
                         refreshOptions = true;
-                        error = "The selected effort is unavailable for this model. Reopen the model menu to refresh the options.";
+                        error = "The selected reasoning level is unavailable for this model. Reopen the model menu to refresh the options.";
                     }
                 }
                 catch (Exception ex) when (ex is HttpRequestException or JsonException or OperationCanceledException) {
@@ -358,7 +358,10 @@ internal static partial class Core {
             await FetchReplyAsync(agent.Type, ReadKey(agent), model, messages, httpClient, generation, agent.Endpoint, async delta => {
                 history.Append(turn, delta);
                 await SendEvent(new { type = "delta", text = delta }, generation);
-            }, reasoning);
+            }, reasoning, onReasoning: async delta => {
+                history.AppendReasoning(turn, delta);
+                await SendEvent(new { type = "reasoning", text = delta }, generation);
+            });
 
             lock (mutex) {
                 current = ReadAgent(agent.Id) == agent;
@@ -446,7 +449,7 @@ internal static partial class Core {
 
     private static bool IsOpenAiCompatible(string type) => type is "openai" or "xai" or "google";
 
-    internal static async Task<string> FetchReplyAsync(string type, string key, string model, Message[] messages, HttpClient client, CancellationToken token = default, string endpoint = null, Func<string, Task> onText = null, string reasoning = null) {
+    internal static async Task<string> FetchReplyAsync(string type, string key, string model, Message[] messages, HttpClient client, CancellationToken token = default, string endpoint = null, Func<string, Task> onText = null, string reasoning = null, Func<string, Task> onReasoning = null) {
         string address = type switch {
             "openai"    => "https://api.openai.com/v1/chat/completions",
             "xai"       => "https://api.x.ai/v1/chat/completions",
@@ -478,7 +481,7 @@ internal static partial class Core {
             payload["system"] = PERSONA;
             payload["max_tokens"] = 4096;
             if (!String.IsNullOrEmpty(reasoning)) {
-                payload["output_config"] = new { effort = reasoning };
+                payload["output_config"] = new Dictionary<string, string> { ["effort"] = reasoning };
             }
         }
         else if (!String.IsNullOrEmpty(reasoning)) {
@@ -509,7 +512,7 @@ internal static partial class Core {
         if (onText is not null) {
             using Stream stream = await response.Content.ReadAsStreamAsync(token);
             using StreamReader reader = new StreamReader(stream, Encoding.UTF8);
-            return await ReadReplyStreamAsync(type, reader, onText, token, key);
+            return await ReadReplyStreamAsync(type, reader, onText, token, key, onReasoning);
         }
 
         string responseBody = await response.Content.ReadAsStringAsync(token);
@@ -522,15 +525,23 @@ internal static partial class Core {
 #endif
 
         string text = null;
+        string reasoningText = null;
         if (IsOpenAiCompatible(type) && root.TryGetProperty("choices", out JsonElement choices) && choices.ValueKind == JsonValueKind.Array && choices.GetArrayLength() > 0) {
             JsonElement message = choices[0].GetProperty("message");
             text = GetString(message, "content") ?? GetString(message, "refusal");
+            reasoningText = ReadReasoningText(message);
         }
         else if (type == "anthropic" && root.TryGetProperty("content", out JsonElement content) && content.ValueKind == JsonValueKind.Array) {
             text = String.Join("\n", content.EnumerateArray().Where(block => GetString(block, "type") == "text").Select(block => GetString(block, "text")));
+            reasoningText = String.Join("\n\n", content.EnumerateArray().Where(block => GetString(block, "type") == "thinking").Select(block => GetString(block, "thinking")));
         }
         else if (type == "ollama" && root.TryGetProperty("message", out JsonElement ollamaMessage)) {
             text = GetString(ollamaMessage, "content");
+            reasoningText = ReadReasoningText(ollamaMessage);
+        }
+
+        if (onReasoning is not null && !String.IsNullOrEmpty(reasoningText)) {
+            await onReasoning(reasoningText);
         }
 
         if (String.IsNullOrWhiteSpace(text)) {
@@ -540,11 +551,20 @@ internal static partial class Core {
         return text;
     }
 
-    private static async Task<string> ReadReplyStreamAsync(string type, StreamReader reader, Func<string, Task> onText, CancellationToken token, string key) {
+    private static string ReadReasoningText(JsonElement message) {
+        foreach (string field in new[] { "thinking", "reasoning_content", "reasoning" }) {
+            string value = GetString(message, field);
+            if (!String.IsNullOrEmpty(value)) return value;
+        }
+        return null;
+    }
+
+    private static async Task<string> ReadReplyStreamAsync(string type, StreamReader reader, Func<string, Task> onText, CancellationToken token, string key, Func<string, Task> onReasoning) {
         StringBuilder text = new StringBuilder();
         StringBuilder eventData = new StringBuilder();
         bool completed = false;
         bool hasTextBlock = false;
+        bool hasThinkingBlock = false;
 
         while (!completed) {
             string line = await reader.ReadLineAsync(token);
@@ -590,9 +610,11 @@ internal static partial class Core {
 #endif
 
             string delta = null;
+            string reasoningDelta = null;
             if (IsOpenAiCompatible(type) && root.TryGetProperty("choices", out JsonElement choices) && choices.ValueKind == JsonValueKind.Array && choices.GetArrayLength() > 0 &&
                 choices[0].TryGetProperty("delta", out JsonElement change) && change.ValueKind == JsonValueKind.Object) {
                 delta = GetString(change, "content") ?? GetString(change, "refusal");
+                reasoningDelta = ReadReasoningText(change);
             }
             else if (type == "anthropic") {
                 string eventType = GetString(root, "type");
@@ -603,13 +625,25 @@ internal static partial class Core {
                 else if (eventType == "content_block_delta" && root.TryGetProperty("delta", out JsonElement blockDelta) && blockDelta.ValueKind == JsonValueKind.Object && GetString(blockDelta, "type") == "text_delta") {
                     delta = GetString(blockDelta, "text");
                 }
+                if (eventType == "content_block_start" && root.TryGetProperty("content_block", out JsonElement thinkingBlock) && thinkingBlock.ValueKind == JsonValueKind.Object && GetString(thinkingBlock, "type") == "thinking") {
+                    reasoningDelta = (hasThinkingBlock ? "\n\n" : String.Empty) + GetString(thinkingBlock, "thinking");
+                    hasThinkingBlock = true;
+                }
+                else if (eventType == "content_block_delta" && root.TryGetProperty("delta", out JsonElement thinkingDelta) && thinkingDelta.ValueKind == JsonValueKind.Object && GetString(thinkingDelta, "type") == "thinking_delta") {
+                    reasoningDelta = GetString(thinkingDelta, "thinking");
+                }
                 completed = eventType == "message_stop";
             }
             else if (type == "ollama") {
                 if (root.TryGetProperty("message", out JsonElement message) && message.ValueKind == JsonValueKind.Object) {
                     delta = GetString(message, "content");
+                    reasoningDelta = ReadReasoningText(message);
                 }
                 completed = root.TryGetProperty("done", out JsonElement done) && done.ValueKind == JsonValueKind.True;
+            }
+
+            if (onReasoning is not null && !String.IsNullOrEmpty(reasoningDelta)) {
+                await onReasoning(reasoningDelta);
             }
 
             if (!String.IsNullOrEmpty(delta)) {

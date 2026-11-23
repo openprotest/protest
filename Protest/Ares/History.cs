@@ -11,14 +11,15 @@ using Protest.Http;
 namespace Protest.Ares;
 
 internal static partial class Core {
-    internal sealed record HistoryMessage(string Id, string Role, string Content, long Time, string Status, string RequestId, string Agent = null, string AgentName = null, string Provider = null, string Model = null, string Reasoning = null, string Error = null);
+    internal sealed record HistoryMessage(string Id, string Role, string Content, long Time, string Status, string RequestId, string Agent = null, string AgentName = null, string Provider = null, string Model = null, string Reasoning = null, string Error = null, string ReasoningText = null);
     internal sealed record Conversation(int SchemaVersion, string Id, string Owner, string Title, long CreatedAt, long UpdatedAt, int Revision, HistoryMessage[] Messages);
     internal sealed record HistoryTurn(Conversation Conversation, string RequestId, string Text, long Time, string Agent = null, string AgentName = null, string Model = null, string Reasoning = null) {
         internal StringBuilder Response { get; } = new StringBuilder();
+        internal StringBuilder ReasoningText { get; } = new StringBuilder();
         internal CancellationTokenSource Generation { get; } = new CancellationTokenSource();
         internal bool Saved { get; set; }
     }
-    internal sealed record PendingResponse(string RequestId, string Text, long Time, string Agent, string AgentName, string Model, string Reasoning, string Response);
+    internal sealed record PendingResponse(string RequestId, string Text, long Time, string Agent, string AgentName, string Model, string Reasoning, string Response, string ReasoningText);
     internal sealed record HistoryState(Conversation Conversation, PendingResponse Pending);
     internal static readonly HistoryStore history = new HistoryStore(Data.DIR_ARES_HISTORY);
 
@@ -62,7 +63,7 @@ internal static partial class Core {
             if (String.IsNullOrEmpty(owner) || !Guid.TryParse(id, out Guid guid)) return null;
             lock (gate) {
                 if (active.TryGetValue(Key(owner, guid.ToString()), out HistoryTurn turn)) {
-                    return new HistoryState(turn.Conversation, new PendingResponse(turn.RequestId, turn.Text, turn.Time, turn.Agent, turn.AgentName, turn.Model, turn.Reasoning, turn.Response.ToString()));
+                    return new HistoryState(turn.Conversation, new PendingResponse(turn.RequestId, turn.Text, turn.Time, turn.Agent, turn.AgentName, turn.Model, turn.Reasoning, turn.Response.ToString(), turn.ReasoningText.ToString()));
                 }
                 Conversation value = Read(owner, guid.ToString());
                 return value is null ? null : new HistoryState(value, null);
@@ -90,6 +91,13 @@ internal static partial class Core {
             lock (gate) {
                 if (!active.TryGetValue(Key(turn.Conversation.Owner, turn.Conversation.Id), out HistoryTurn activeTurn) || !ReferenceEquals(activeTurn, turn)) throw new InvalidOperationException("This conversation is not active");
                 turn.Response.Append(text);
+            }
+        }
+
+        internal void AppendReasoning(HistoryTurn turn, string text) {
+            lock (gate) {
+                if (!active.TryGetValue(Key(turn.Conversation.Owner, turn.Conversation.Id), out HistoryTurn activeTurn) || !ReferenceEquals(activeTurn, turn)) throw new InvalidOperationException("This conversation is not active");
+                turn.ReasoningText.Append(text);
             }
         }
 
@@ -172,7 +180,7 @@ internal static partial class Core {
                 HistoryMessage[] messages;
 
                 if (status == "completed") {
-                    HistoryMessage reply = new HistoryMessage(Guid.NewGuid().ToString(), "assistant", text, now, status, turn.RequestId, agent, agentName, provider, model, reasoning);
+                    HistoryMessage reply = new HistoryMessage(Guid.NewGuid().ToString(), "assistant", text, now, status, turn.RequestId, agent, agentName, provider, model, reasoning, ReasoningText: turn.ReasoningText.Length == 0 ? null : turn.ReasoningText.ToString());
                     messages = [..previous.Messages, user, reply];
                 }
                 else {

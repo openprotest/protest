@@ -207,7 +207,7 @@ public class AresTests {
     }
 
     [TestCase("openai", "{\"error\":{\"message\":\"Context window exceeded. Shorten the conversation.\"}}", "Context window exceeded")]
-    [TestCase("anthropic", "{\"error\":{\"type\":\"invalid_request_error\",\"message\":\"Choose a supported effort value.\"}}", "Choose a supported effort value")]
+    [TestCase("anthropic", "{\"error\":{\"type\":\"invalid_request_error\",\"message\":\"Choose a supported reasoning level.\"}}", "Choose a supported reasoning level")]
     [TestCase("google", "{\"error\":{\"code\":400,\"message\":\"Unsupported model parameter.\",\"status\":\"INVALID_ARGUMENT\"}}", "Unsupported model parameter")]
     [TestCase("xai", "{\"error\":{\"message\":\"This model does not support tools.\"}}", "This model does not support tools")]
     [TestCase("ollama", "{\"error\":\"Model not found. Pull it first.\"}", "Pull it first")]

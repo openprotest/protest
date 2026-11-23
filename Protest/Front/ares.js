@@ -12,11 +12,11 @@ class Ares extends Window {
 		this.settingsBusy = false;
 		this.agents = [];
 		this.modelCatalog = null;
-		this.effortPreferences = new Map();
+		this.reasoningPreferences = new Map();
 		this.modelPreferences = new Map();
 
 		if (this.args.agent && this.args.model) {
-			this.effortPreferences.set(JSON.stringify([this.args.agent, this.args.model]), this.args.reasoning ?? "");
+			this.reasoningPreferences.set(JSON.stringify([this.args.agent, this.args.model]), this.args.reasoning ?? "");
 			this.modelPreferences.set(this.args.agent, this.args.model);
 		}
 
@@ -195,28 +195,28 @@ class Ares extends Window {
 		this.agentSelect = AddSelect("Agent");
 		this.modelSelect = AddSelect("Model");
 
-		const effort = doc.createElement("label");
-		effort.className = "ares-setting ares-effort";
-		const effortCaption = doc.createElement("span");
-		effortCaption.textContent = "Effort";
+		const reasoningSetting = doc.createElement("label");
+		reasoningSetting.className = "ares-setting ares-reasoning-setting";
+		const reasoningCaption = doc.createElement("span");
+		reasoningCaption.textContent = "Reasoning";
 
-		this.effortRange = doc.createElement("input");
-		this.effortRange.type = "range";
-		this.effortRange.min = "0";
-		this.effortRange.step = "1";
-		this.effortRange.setAttribute("aria-label", "Effort");
+		this.reasoningRange = doc.createElement("input");
+		this.reasoningRange.type = "range";
+		this.reasoningRange.min = "0";
+		this.reasoningRange.step = "1";
+		this.reasoningRange.setAttribute("aria-label", "Reasoning");
 
-		this.effortSpinner = doc.createElement("span");
-		this.effortSpinner.className = "task-spinner ares-effort-spinner";
-		this.effortSpinner.setAttribute("role", "status");
-		this.effortSpinner.setAttribute("aria-label", "Loading effort levels");
-		this.effortSpinner.hidden = true;
+		this.reasoningSpinner = doc.createElement("span");
+		this.reasoningSpinner.className = "task-spinner ares-reasoning-spinner";
+		this.reasoningSpinner.setAttribute("role", "status");
+		this.reasoningSpinner.setAttribute("aria-label", "Loading reasoning levels");
+		this.reasoningSpinner.hidden = true;
 
-		this.effortValue = doc.createElement("output");
-		this.effortValue.style.fontWeight = "600";
+		this.reasoningValue = doc.createElement("output");
+		this.reasoningValue.style.fontWeight = "600";
 
-		effort.append(effortCaption, this.effortRange, this.effortSpinner, this.effortValue);
-		this.settingsPanel.appendChild(effort);
+		reasoningSetting.append(reasoningCaption, this.reasoningRange, this.reasoningSpinner, this.reasoningValue);
+		this.settingsPanel.appendChild(reasoningSetting);
 
 		this.settingsError = doc.createElement("div");
 		this.settingsError.className = "ares-error";
@@ -229,13 +229,13 @@ class Ares extends Window {
 
 		this.agentSelect.onchange = ()=> this.LoadModels(this.agentSelect.value);
 		this.modelSelect.onchange = ()=> this.SelectModel(this.modelSelect.value);
-		this.effortRange.oninput = ()=> {
-			this.UpdateEffortLabel();
+		this.reasoningRange.oninput = ()=> {
+			this.UpdateReasoningLabel();
 			if (!this.connection) return;
 
-			const value = this.GetEffort();
+			const value = this.GetReasoningLevel();
 			this.args.reasoning = value;
-			this.effortPreferences.set(this.ConnectionKey(), value);
+			this.reasoningPreferences.set(this.ConnectionKey(), value);
 		};
 
 		this.settingsMenu.addEventListener("focusout", event=> {
@@ -251,7 +251,7 @@ class Ares extends Window {
 			}
 		};
 
-		this.ConfigureEffort();
+		this.ConfigureReasoningLevels();
 		this.settingsInitialized = true;
 
 		if (!this.settingsPanel.hidden) {
@@ -286,43 +286,43 @@ class Ares extends Window {
 
 	ConnectionKey() { return JSON.stringify([this.connection.agent, this.connection.model]); }
 
-	ConfigureEffort() {
+	ConfigureReasoningLevels() {
 		const levels = [...new Set(this.connection?.reasoning ?? [])];
 
 		//Boolean thinking controls run from Off to On, regardless of discovery order.
 		if (levels.every(value=> value === "false" || value === "true")) levels.sort();
 		const values = ["", ...levels];
-		if (!this.effortValues || values.length !== this.effortValues.length || values.some((value, index)=> value !== this.effortValues[index])) {
-			this.effortValues = values;
+		if (!this.reasoningLevels || values.length !== this.reasoningLevels.length || values.some((value, index)=> value !== this.reasoningLevels[index])) {
+			this.reasoningLevels = values;
 		}
 
-		const saved = this.connection ? this.effortPreferences.get(this.ConnectionKey()) ?? "" : "";
-		const title = this.connection && !levels.length ? "No effort levels were provided for this model. The provider default is used." : "";
-		if (this.effortValue.title !== title) this.effortValue.title = title;
+		const saved = this.connection ? this.reasoningPreferences.get(this.ConnectionKey()) ?? "" : "";
+		const title = this.connection && !levels.length ? "No reasoning levels were provided for this model. The provider default is used." : "";
+		if (this.reasoningValue.title !== title) this.reasoningValue.title = title;
 
-		const max = String(this.effortValues.length - 1);
-		const value = String(Math.max(0, this.effortValues.indexOf(saved)));
-		if (this.effortRange.max !== max) this.effortRange.max = max;
-		if (this.effortRange.value !== value) this.effortRange.value = value;
+		const max = String(this.reasoningLevels.length - 1);
+		const value = String(Math.max(0, this.reasoningLevels.indexOf(saved)));
+		if (this.reasoningRange.max !== max) this.reasoningRange.max = max;
+		if (this.reasoningRange.value !== value) this.reasoningRange.value = value;
 
-		this.UpdateEffortLabel();
+		this.UpdateReasoningLabel();
 		this.UpdateSettingsControls();
 	}
 
-	GetEffort() {
-		return this.effortValues[Number(this.effortRange.value)] ?? "";
+	GetReasoningLevel() {
+		return this.reasoningLevels[Number(this.reasoningRange.value)] ?? "";
 	}
 
-	UpdateEffortLabel() {
-		const value = this.GetEffort();
+	UpdateReasoningLabel() {
+		const value = this.GetReasoningLevel();
 		const names = {"":"Default", false:"Off", true:"On", xhigh:"Extra high"};
 		const label = Object.hasOwn(names, value) ? names[value] : value.charAt(0).toUpperCase() + value.slice(1);
 
-		if (this.effortValue.textContent !== label) {
-			this.effortValue.textContent = label;
+		if (this.reasoningValue.textContent !== label) {
+			this.reasoningValue.textContent = label;
 		}
 
-		if (this.effortRange.getAttribute("aria-valuetext") !== label) this.effortRange.setAttribute("aria-valuetext", label);
+		if (this.reasoningRange.getAttribute("aria-valuetext") !== label) this.reasoningRange.setAttribute("aria-valuetext", label);
 		const model = this.connection?.modelName ?? this.connection?.model;
 		const summary = model ? `${model} · ${label}` : "Select model";
 
@@ -340,12 +340,12 @@ class Ares extends Window {
 		for (const [control, value] of [
 			[this.agentSelect, disabled || this.agents.length === 0],
 			[this.modelSelect, disabled || !this.modelCatalog || this.modelCatalog.agent.id !== this.agentSelect.value],
-			[this.effortRange, disabled || !this.connection || this.effortValues.length <= 1]
+			[this.reasoningRange, disabled || !this.connection || this.reasoningLevels.length <= 1]
 		]) {
 			if (control.disabled !== value) control.disabled = value;
 		}
 
-		if (this.effortSpinner.hidden !== !this.settingsBusy) this.effortSpinner.hidden = !this.settingsBusy;
+		if (this.reasoningSpinner.hidden !== !this.settingsBusy) this.reasoningSpinner.hidden = !this.settingsBusy;
 		const busy = String(this.settingsBusy);
 		if (this.settingsMenu.getAttribute("aria-busy") !== busy) this.settingsMenu.setAttribute("aria-busy", busy);
 	}
@@ -463,13 +463,13 @@ class Ares extends Window {
 			this.args.agent = this.connection.agent;
 			this.args.model = this.connection.model;
 			this.modelPreferences.set(this.connection.agent, this.connection.model);
-			this.ConfigureEffort();
-			this.args.reasoning = this.GetEffort();
+			this.ConfigureReasoningLevels();
+			this.args.reasoning = this.GetReasoningLevel();
 		}
 		catch (ex) {
 			if (this.IsCurrentSettings(controller)) {
 				this.connection = null;
-				this.ConfigureEffort();
+				this.ConfigureReasoningLevels();
 				this.SetSettingsError(ex.message ?? String(ex));
 			}
 		}
@@ -822,6 +822,7 @@ class Ares extends Window {
 				this.LoadHistoryList();
 			}
 			else if (saved.pending) {
+				this.RenderPendingReasoning(saved.pending.reasoningText ?? "");
 				this.RenderPendingResponse(saved.pending.response ?? "");
 			}
 		}
@@ -847,18 +848,73 @@ class Ares extends Window {
 		}
 	}
 
+	RenderReasoning(response, text) {
+		let section = response.querySelector(":scope > .ares-reasoning");
+		if (!text) {
+			section?.remove();
+			return;
+		}
+
+		const follow = this.IsScrolledToBottom();
+		if (!section) {
+			const doc = response.ownerDocument;
+			section = doc.createElement("details");
+			section.className = "ares-reasoning";
+
+			const summary = doc.createElement("summary");
+			summary.textContent = "Reasoning";
+
+			const content = doc.createElement("div");
+			content.className = "ares-reasoning-text";
+			section.append(summary, content);
+
+			const incoming = response.querySelector(":scope > .in");
+			const thinking = incoming.querySelector(":scope > .ares-thinking");
+			if (thinking) {
+				Ares.RenderMarkdown(thinking, "Reasoning...");
+				incoming.after(section);
+			}
+			else {
+				incoming.before(section);
+			}
+		}
+
+		const content = section.querySelector(".ares-reasoning-text");
+		if (content._markdownText === text) return;
+		const followReasoning = content.scrollTop + content.clientHeight >= content.scrollHeight - 32;
+		Ares.RenderMarkdown(content, text);
+		if (followReasoning) content.scrollTop = content.scrollHeight;
+		if (follow && !this.restoringHistory) this.chatBox.scrollTop = this.chatBox.scrollHeight;
+	}
+
+	RenderPendingReasoning(text) {
+		const pending = this.pendingResponse;
+		if (!pending || !text || text.length < (pending.reasoningText?.length ?? 0)) return;
+		pending.reasoningText = text;
+		this.RenderReasoning(pending.bubble.closest(".ares-response"), text);
+	}
+
 	RenderPendingResponse(text) {
 		const pending = this.pendingResponse;
 		if (!pending || !text || text.length < (pending.response?.length ?? 0)) return;
 		pending.response = text;
 
 		const reply = pending.bubble;
-		if (reply._markdownText === text) return;
+		const thinking = reply.classList.contains("ares-thinking");
+		if (reply._markdownText === text && !thinking) return;
 
 		const follow = this.IsScrolledToBottom();
-		reply.classList.remove("ares-thinking");
+		const response = reply.closest(".ares-response");
+		if (thinking) {
+			reply.classList.remove("ares-thinking");
+			const incoming = reply.parentElement;
+			const focused = incoming === incoming.ownerDocument.activeElement;
+			response.querySelector(":scope > .ares-reasoning")?.after(incoming);
+			if (focused) incoming.focus({preventScroll:true});
+		}
+
 		Ares.RenderMarkdown(reply, text);
-		this.UpdateResponseButtons(reply.closest(".ares-response"));
+		this.UpdateResponseButtons(response);
 		if (follow) this.chatBox.scrollTop = this.chatBox.scrollHeight;
 	}
 
@@ -871,6 +927,7 @@ class Ares extends Window {
 		reply.removeAttribute("role");
 
 		if (text !== null) {
+			this.RenderReasoning(response, "");
 			const error = reply.ownerDocument.createElement("div");
 			error.className = "ares-error";
 			error.setAttribute("role", "alert");
@@ -910,9 +967,10 @@ class Ares extends Window {
 			for (const message of saved.messages) {
 				const time = new Date(message.time).toLocaleTimeString(UI.regionalFormat, {});
 				const incoming = message.role === "assistant";
-				this.CreateTextBubble(message.content, incoming ? "in" : "out", incoming ? `ares:${message.agent}` : KEEP.username,
+				const bubble = this.CreateTextBubble(message.content, incoming ? "in" : "out", incoming ? `ares:${message.agent}` : KEEP.username,
 					incoming ? `${message.agentName} · ${message.model}` : "", incoming ? "var(--clr-accent)" : KEEP.color, time,
 					incoming && message.status === "completed" ? message.requestId : null);
+				if (incoming && message.reasoningText) this.RenderReasoning(bubble.closest(".ares-response"), message.reasoningText);
 
 				if (message.status === "interrupted") {
 					const reply = this.CreateBubble("in", `ares:${message.agent}`, `${message.agentName} · ${message.model}`, "var(--clr-accent)", time);
@@ -942,6 +1000,8 @@ class Ares extends Window {
 
 				const request = this.requests.get(saved.id);
 				const text = request?.requestId === pending.requestId && request.responseText.length > (pending.response?.length ?? 0) ? request.responseText : pending.response;
+				const reasoningText = request?.requestId === pending.requestId && request.reasoningText.length > (pending.reasoningText?.length ?? 0) ? request.reasoningText : pending.reasoningText;
+				this.RenderPendingReasoning(reasoningText ?? "");
 				this.RenderPendingResponse(text ?? "");
 			}
 			else {
@@ -989,7 +1049,7 @@ class Ares extends Window {
 			if (last) {
 				this.args.agent = last.agent;
 				this.args.model = last.model;
-				this.effortPreferences.set(JSON.stringify([last.agent, last.model]), last.reasoning ?? "");
+				this.reasoningPreferences.set(JSON.stringify([last.agent, last.model]), last.reasoning ?? "");
 				this.modelPreferences.set(last.agent, last.model);
 				await this.LoadAgents();
 			}
@@ -1145,10 +1205,10 @@ class Ares extends Window {
 
 		const conversationId = this.args.conversationId;
 		const conversationRevision = this.args.conversationRevision;
-		const reasoning = this.GetEffort();
+		const reasoning = this.GetReasoningLevel();
 		const requestId = UI.GenerateUuid();
 		const controller = new AbortController();
-		const request = {controller, requestId, responseText:"", accepted:false};
+		const request = {controller, requestId, responseText:"", reasoningText:"", accepted:false};
 		this.requests.set(conversationId, request);
 		this.UpdateHistoryControls();
 		this.chatBox.setAttribute("aria-busy", "true");
@@ -1162,7 +1222,7 @@ class Ares extends Window {
 		bubble.style.boxShadow = "var(--clr-pane) 0 0 0 2px inset";
 
 		const reply = this.CreateThinkingBubble(connection.agent, connection.agentName, connection.modelName, nowString);
-		this.pendingResponse = {requestId, text, time:now, agent:connection.agent, agentName:connection.agentName, model:connection.model, reasoning, response:"", bubble:reply};
+		this.pendingResponse = {requestId, text, time:now, agent:connection.agent, agentName:connection.agentName, model:connection.model, reasoning, response:"", reasoningText:"", bubble:reply};
 		this.ClearInput();
 
 		let terminal = false;
@@ -1172,7 +1232,10 @@ class Ares extends Window {
 		const RenderReply = ()=> {
 			if (renderFrame !== null) cancelAnimationFrame(renderFrame);
 			renderFrame = null;
-			if (!this.isClosed && IsVisible()) this.RenderPendingResponse(request.responseText);
+			if (!this.isClosed && IsVisible()) {
+				this.RenderPendingReasoning(request.reasoningText);
+				this.RenderPendingResponse(request.responseText);
+			}
 		};
 
 		try {
@@ -1213,6 +1276,10 @@ class Ares extends Window {
 					bubble.style.backgroundColor = "var(--clr-pane)";
 					bubble.style.boxShadow = "none";
 					this.LoadHistoryList();
+				}
+				else if (event.type === "reasoning" && request.accepted && typeof event.text === "string") {
+					request.reasoningText += event.text;
+					if (IsVisible() && renderFrame === null) renderFrame = requestAnimationFrame(RenderReply);
 				}
 				else if (event.type === "delta" && request.accepted && typeof event.text === "string") {
 					request.responseText += event.text;

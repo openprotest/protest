@@ -19,7 +19,7 @@ public class AresReasoningTests {
     [TestCase("google", "gemini-4-hydrogen", "low,medium,high,xhigh")]
     [TestCase("google", "gemini-4-hydrogen-2026-11-17", "low,medium,high,xhigh")]
     [TestCase("google", "future-model", "")]
-    public async Task ProvidersWithoutEffortMetadataUseModelFallbacksWithoutRequests(string type, string model, string expected) {
+    public async Task ProvidersWithoutReasoningMetadataUseModelFallbacksWithoutRequests(string type, string model, string expected) {
         using HttpClient client = new(new Handler(_ => throw new InvalidOperationException("No capability or inference request expected")));
         Assert.That(await Ares.FetchReasoningOptionsAsync(type, "test-key", model, client), Is.EqualTo(expected.Split(',', StringSplitOptions.RemoveEmptyEntries)));
     }
@@ -29,13 +29,13 @@ public class AresReasoningTests {
     [TestCase("""{"capabilities":{"reasoning_effort":["low","future"]}}""", "low,future")]
     [TestCase("""{"capabilities":{"reasoning_effort":[]}}""", "")]
     [TestCase("""{"capabilities":{"reasoning_effort":false}}""", "")]
-    public async Task XaiPrefersEffortMetadataOverKnownModelFallback(string metadata, string expected) {
+    public async Task XaiPrefersReasoningMetadataOverKnownModelFallback(string metadata, string expected) {
         using HttpClient client = new(new Handler(_ => metadata));
         Assert.That(await Ares.FetchReasoningOptionsAsync("xai", "test-key", "grok-4.7", client), Is.EqualTo(expected.Split(',', StringSplitOptions.RemoveEmptyEntries)));
     }
 
     [Test]
-    public void InvalidMetadataResponseIsNotTreatedAsAnEmptyEffortList() {
+    public void InvalidMetadataResponseIsNotTreatedAsAnEmptyReasoningList() {
         using HttpClient client = new(new Handler(_ => "[]"));
         Assert.ThrowsAsync<JsonException>(() => Ares.FetchReasoningOptionsAsync("xai", "test-key", "grok-4.7", client));
     }
@@ -178,7 +178,7 @@ public class AresReasoningTests {
             Assert.That(release.Task.IsCompleted, Is.False);
             release.SetResult();
             using JsonDocument error = JsonDocument.Parse((await reader.ReadLineAsync().WaitAsync(TimeSpan.FromSeconds(5)))!);
-            Assert.That(error.RootElement.GetProperty("error").GetString(), Does.Contain("selected effort is unavailable"));
+            Assert.That(error.RootElement.GetProperty("error").GetString(), Does.Contain("selected reasoning level is unavailable"));
             Assert.That(error.RootElement.GetProperty("refreshOptions").GetBoolean(), Is.True);
             Assert.That(await reader.ReadLineAsync().WaitAsync(TimeSpan.FromSeconds(5)), Is.Null);
             await metadata;

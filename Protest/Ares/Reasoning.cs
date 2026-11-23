@@ -10,12 +10,12 @@ namespace Protest.Ares;
 internal static partial class Core {
 
     //Presentation order for provider-advertised levels. Unfamiliar values are kept.
-    private static readonly string[] effortOrder = ["none", "minimal", "low", "medium", "high", "xhigh", "max"];
+    private static readonly string[] reasoningLevelOrder = ["none", "minimal", "low", "medium", "high", "xhigh", "max"];
 
     [GeneratedRegex(@"-\d{4}-\d{2}-\d{2}$")]
     private static partial Regex ModelSnapshotSuffix();
 
-    //Fallbacks for known models whose APIs do not return an effort list.
+    //Fallbacks for known models whose APIs do not return a list of reasoning levels.
     private static string[] FallbackReasoningOptions(string type, string model) {
         string name = ModelSnapshotSuffix().Replace(model, String.Empty);
         return (type, name) switch {
@@ -39,7 +39,7 @@ internal static partial class Core {
     }
 
     internal static async Task<string[]> FetchReasoningOptionsAsync(string type, string key, string model, HttpClient client, CancellationToken token = default, string endpoint = null) {
-        //These model APIs do not expose the accepted Chat Completions effort values.
+        //These model APIs do not expose the accepted Chat Completions reasoning levels.
         //https://developers.openai.com/api/reference/resources/models/methods/retrieve
         //https://aistudio.google.com/api-reference/models
         if (type is "openai" or "google") return FallbackReasoningOptions(type, model);
@@ -75,14 +75,14 @@ internal static partial class Core {
 
         if (type == "anthropic") {
             if (!root.TryGetProperty("capabilities", out JsonElement capabilities) || capabilities.ValueKind != JsonValueKind.Object ||
-                !capabilities.TryGetProperty("effort", out JsonElement effort) || effort.ValueKind != JsonValueKind.Object ||
-                !effort.TryGetProperty("supported", out JsonElement supported) || supported.ValueKind != JsonValueKind.True) return [];
+                !capabilities.TryGetProperty("effort", out JsonElement reasoningCapabilities) || reasoningCapabilities.ValueKind != JsonValueKind.Object ||
+                !reasoningCapabilities.TryGetProperty("supported", out JsonElement supported) || supported.ValueKind != JsonValueKind.True) return [];
 
-            return effort.EnumerateObject().Where(property => ValidEffort(property.Name) && property.Value.ValueKind == JsonValueKind.Object &&
+            return reasoningCapabilities.EnumerateObject().Where(property => IsValidReasoningLevel(property.Name) && property.Value.ValueKind == JsonValueKind.Object &&
                     property.Value.TryGetProperty("supported", out JsonElement enabled) && enabled.ValueKind == JsonValueKind.True)
                 .Select(property => property.Name).Distinct().OrderBy(level => {
-                    int index = Array.IndexOf(effortOrder, level);
-                    return index < 0 ? effortOrder.Length : index;
+                    int index = Array.IndexOf(reasoningLevelOrder, level);
+                    return index < 0 ? reasoningLevelOrder.Length : index;
                 }).ToArray();
         }
 
@@ -91,11 +91,11 @@ internal static partial class Core {
             //Null signals missing metadata. An explicitly empty list must override the fallback.
             if (!root.TryGetProperty("capabilities", out JsonElement xaiCapabilities) || xaiCapabilities.ValueKind == JsonValueKind.Null) return null;
             if (xaiCapabilities.ValueKind != JsonValueKind.Object) return [];
-            if (!xaiCapabilities.TryGetProperty("reasoning_effort", out JsonElement efforts) || efforts.ValueKind == JsonValueKind.Null) return null;
-            if (efforts.ValueKind != JsonValueKind.Array) return [];
+            if (!xaiCapabilities.TryGetProperty("reasoning_effort", out JsonElement reasoningLevels) || reasoningLevels.ValueKind == JsonValueKind.Null) return null;
+            if (reasoningLevels.ValueKind != JsonValueKind.Array) return [];
 
-            return efforts.EnumerateArray().Where(value => value.ValueKind == JsonValueKind.String).Select(value => value.GetString())
-                .Where(ValidEffort).Distinct().ToArray();
+            return reasoningLevels.EnumerateArray().Where(value => value.ValueKind == JsonValueKind.String).Select(value => value.GetString())
+                .Where(IsValidReasoningLevel).Distinct().ToArray();
         }
 
         if (type == "ollama" && root.TryGetProperty("thinking", out JsonElement thinking) && thinking.ValueKind == JsonValueKind.Object &&
@@ -103,7 +103,7 @@ internal static partial class Core {
 
             string[] options = values.EnumerateArray().Select(value => value.ValueKind switch {
                 JsonValueKind.True => "true", JsonValueKind.False => "false", JsonValueKind.String => value.GetString(), _ => null
-            }).Where(ValidEffort).Distinct().ToArray();
+            }).Where(IsValidReasoningLevel).Distinct().ToArray();
 
             return options.Length == 1 && options[0] == "false" ? [] : options;
         }
@@ -111,5 +111,5 @@ internal static partial class Core {
         return [];
     }
 
-    private static bool ValidEffort(string value) => !String.IsNullOrWhiteSpace(value) && value.Length <= 64 && !value.Any(Char.IsControl);
+    private static bool IsValidReasoningLevel(string value) => !String.IsNullOrWhiteSpace(value) && value.Length <= 64 && !value.Any(Char.IsControl);
 }
