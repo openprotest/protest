@@ -243,6 +243,35 @@
 	color: rgb(96,96,96);
 }
 
+.ares-chat:has(> .ares-stop:not([hidden])) > .ares-input {
+	padding-right: 48px;
+}
+
+.ares-stop {
+	position: absolute;
+	z-index: 1;
+	right: calc(min(64px, 10%) + 8px);
+	display: grid;
+	place-items: center;
+	width: 32px;
+	min-width: 32px;
+	height: 32px;
+	padding: 0;
+	border-radius: 50%;
+	color: var(--clr-dark);
+	background-color: var(--clr-control);
+}
+
+.ares-stop::before {
+	content: "";
+	width: 16px;
+	height: 16px;
+	background-color: currentColor;
+	mask: url(mono/stop.svg) center / contain no-repeat;
+}
+
+.ares-stop[hidden] { display: none; }
+
 .ares-box {
 	container-name: ares-chat;
 	container-type: inline-size;

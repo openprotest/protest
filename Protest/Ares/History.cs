@@ -15,6 +15,8 @@ internal static partial class Core {
     internal sealed record Conversation(int SchemaVersion, string Id, string Owner, string Title, long CreatedAt, long UpdatedAt, int Revision, HistoryMessage[] Messages);
     internal sealed record HistoryTurn(Conversation Conversation, string RequestId, string Text, long Time, string Agent = null, string AgentName = null, string Model = null, string Reasoning = null) {
         internal StringBuilder Response { get; } = new StringBuilder();
+        internal CancellationTokenSource Generation { get; } = new CancellationTokenSource();
+        internal bool Saved { get; set; }
     }
     internal sealed record PendingResponse(string RequestId, string Text, long Time, string Agent, string AgentName, string Model, string Reasoning, string Response);
     internal sealed record HistoryState(Conversation Conversation, PendingResponse Pending);
@@ -71,6 +73,16 @@ internal static partial class Core {
             if (String.IsNullOrEmpty(owner) || !Guid.TryParse(id, out Guid guid)) return false;
             lock (gate) {
                 return active.ContainsKey(Key(owner, guid.ToString()));
+            }
+        }
+
+        internal bool Stop(string owner, string id, string requestId) {
+            if (String.IsNullOrEmpty(owner) || !Guid.TryParse(id, out Guid conversation) || !Guid.TryParse(requestId, out Guid request)) return false;
+
+            lock (gate) {
+                if (!active.TryGetValue(Key(owner, conversation.ToString()), out HistoryTurn turn) || turn.RequestId != request.ToString() || turn.Saved) return false;
+                turn.Generation.Cancel();
+                return true;
             }
         }
 
@@ -150,6 +162,11 @@ internal static partial class Core {
                 if (!active.TryGetValue(Key(previous.Owner, previous.Id), out HistoryTurn activeTurn) || !ReferenceEquals(activeTurn, turn)) throw new InvalidOperationException("This conversation is not active");
                 if (status is not ("completed" or "interrupted")) throw new ArgumentException("Invalid conversation status");
 
+                if (turn.Generation.IsCancellationRequested) {
+                    status = "interrupted";
+                    error = "Response stopped.";
+                }
+
                 long now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
                 HistoryMessage user = new HistoryMessage(Guid.NewGuid().ToString(), "user", turn.Text, turn.Time, status, turn.RequestId);
                 HistoryMessage[] messages;
@@ -165,6 +182,7 @@ internal static partial class Core {
 
                 Conversation saved = previous with { UpdatedAt = now, Revision = previous.Revision + 1, Messages = messages };
                 Write(saved);
+                turn.Saved = true;
                 return saved;
             }
         }
@@ -213,7 +231,9 @@ internal static partial class Core {
         internal void Release(HistoryTurn turn) {
             lock (gate) {
                 string key = Key(turn.Conversation.Owner, turn.Conversation.Id);
-                if (active.TryGetValue(key, out HistoryTurn activeTurn) && ReferenceEquals(activeTurn, turn)) active.Remove(key);
+                if (!active.TryGetValue(key, out HistoryTurn activeTurn) || !ReferenceEquals(activeTurn, turn)) return;
+                active.Remove(key);
+                turn.Generation.Dispose();
             }
         }
 
@@ -290,6 +310,13 @@ internal static partial class Core {
             Logger.Error(ex);
             return Error("Unable to load this conversation");
         }
+    }
+
+    public static byte[] StopHistory(HttpListenerContext ctx) {
+        string owner = Auth.GetPrincipal(ctx);
+        if (owner is null) return Data.CODE_NOT_FOUND.Array;
+
+        return JsonSerializer.SerializeToUtf8Bytes(new { stopping = history.Stop(owner, ctx.Request.QueryString["id"], ctx.Request.QueryString["requestId"]) });
     }
 
     public static byte[] BranchHistory(HttpListenerContext ctx) {

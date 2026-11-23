@@ -71,8 +71,11 @@ public class AresStreamingTests {
         Assert.That(error?.Message, Does.Contain("stopped the response").And.Contain("Overloaded. Try again.").And.Not.Contain("sk-private").And.Not.Contain("test-key"));
     }
 
-    [Test, NonParallelizable]
-    public async Task ChatAcknowledgesBeforeProviderHeadersAndFlushesTextBeforeGenerationFinishes() {
+    [TestCase(null)]
+    [TestCase("thinking")]
+    [TestCase("streaming")]
+    [NonParallelizable]
+    public async Task ChatAcknowledgesImmediatelyAndCanStopAnActiveResponse(string? stopAt) {
         int providerPort = FreePort();
         int appPort = FreePort();
 
@@ -82,18 +85,24 @@ public class AresStreamingTests {
 
         TaskCompletionSource headers = new(TaskCreationOptions.RunContinuationsAsynchronously);
         TaskCompletionSource finish = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        TaskCompletionSource upstreamStarted = new(TaskCreationOptions.RunContinuationsAsynchronously);
         Task generation = Task.Run(async () => {
             HttpListenerContext context = await provider.GetContextAsync();
             using StreamReader input = new StreamReader(context.Request.InputStream);
             using JsonDocument payload = JsonDocument.Parse(await input.ReadToEndAsync());
             Assert.That(payload.RootElement.GetProperty("stream").GetBoolean(), Is.True);
+            upstreamStarted.SetResult();
             await headers.Task;
+            if (stopAt == "thinking") {
+                context.Response.Close();
+                return;
+            }
             context.Response.SendChunked = true;
             context.Response.ContentType = "application/x-ndjson";
             await context.Response.OutputStream.WriteAsync(Encoding.UTF8.GetBytes("{\"message\":{\"content\":\"Hello 🌍\"},\"done\":false}\n"));
             await context.Response.OutputStream.FlushAsync();
             await finish.Task;
-            await context.Response.OutputStream.WriteAsync(Encoding.UTF8.GetBytes("{\"message\":{\"content\":\"!\"},\"done\":true}\n"));
+            if (stopAt is null) await context.Response.OutputStream.WriteAsync(Encoding.UTF8.GetBytes("{\"message\":{\"content\":\"!\"},\"done\":true}\n"));
             context.Response.Close();
         });
 
@@ -113,8 +122,11 @@ public class AresStreamingTests {
 
         string revision = Convert.ToHexString(SHA256.HashData(agent));
         string sessionId = Guid.NewGuid().ToString();
+        string owner = $"stream-test-{id}";
+        string conversationId = Guid.NewGuid().ToString();
+        string requestId = Guid.NewGuid().ToString();
         Auth.sessions[sessionId] = new Auth.Session {
-            access = new Auth.AccessControl { username = "stream-test", authorization = [], accessPath = ["/ares/chat"] },
+            access = new Auth.AccessControl { username = owner, authorization = ["ares:write"], accessPath = Auth.PopulateAccessPath(["ares:write"]) },
             ip = IPAddress.Loopback,
             sessionId = sessionId,
             loginDate = DateTime.UtcNow.Ticks,
@@ -132,6 +144,8 @@ public class AresStreamingTests {
             request.Content = new StringContent(JsonSerializer.Serialize(new {
                 model = "selected",
                 revision,
+                conversationId,
+                requestId,
                 messages = new[] { new { role = "user", content = "Hello" } }
             }));
 
@@ -147,6 +161,36 @@ public class AresStreamingTests {
             using JsonDocument accepted = JsonDocument.Parse((await reader.ReadLineAsync().WaitAsync(TimeSpan.FromSeconds(5)))!);
             Assert.That(accepted.RootElement.GetProperty("type").GetString(), Is.EqualTo("accepted"));
             Assert.That(headers.Task.IsCompleted, Is.False, "Acceptance must not wait for upstream headers");
+            await upstreamStarted.Task.WaitAsync(TimeSpan.FromSeconds(5));
+
+            async Task<bool> Stop(string target) {
+                using HttpRequestMessage stop = new(HttpMethod.Post, $"http://127.0.0.1:{appPort}/ares/history/stop?id={conversationId}&requestId={target}");
+                stop.Headers.Add("Cookie", $"{Auth.SESSION_COOKIE}={sessionId}");
+                stop.Headers.Add("Origin", $"http://127.0.0.1:{appPort}");
+                using HttpResponseMessage result = await client.SendAsync(stop).WaitAsync(TimeSpan.FromSeconds(5));
+                Assert.That(result.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+                using JsonDocument body = JsonDocument.Parse(await result.Content.ReadAsStringAsync());
+                return body.RootElement.GetProperty("stopping").GetBoolean();
+            }
+
+            async Task VerifyStop() {
+                Assert.That(Ares.history.Stop(owner + "-other", conversationId, requestId), Is.False);
+                Assert.That(await Stop(Guid.NewGuid().ToString()), Is.False);
+                Assert.That(await Stop(requestId), Is.True);
+
+                using JsonDocument stopped = JsonDocument.Parse((await reader.ReadLineAsync().WaitAsync(TimeSpan.FromSeconds(5)))!);
+                Assert.That(stopped.RootElement.GetProperty("type").GetString(), Is.EqualTo("error"));
+                Assert.That(stopped.RootElement.GetProperty("error").GetString(), Is.EqualTo("Response stopped."));
+                Assert.That(stopped.RootElement.GetProperty("historySaved").GetBoolean(), Is.True);
+                Assert.That(Ares.history.Get(owner, conversationId).Messages.Single().Status, Is.EqualTo("interrupted"));
+                Assert.That(await Stop(requestId), Is.False, "The completed cancellation must release the active turn");
+            }
+
+            if (stopAt == "thinking") {
+                await VerifyStop();
+                return;
+            }
+
             headers.SetResult();
             using JsonDocument delta = JsonDocument.Parse((await reader.ReadLineAsync().WaitAsync(TimeSpan.FromSeconds(5)))!);
             Assert.Multiple(() => {
@@ -154,6 +198,11 @@ public class AresStreamingTests {
                 Assert.That(delta.RootElement.GetProperty("text").GetString(), Is.EqualTo("Hello 🌍"));
                 Assert.That(generation.IsCompleted, Is.False, "Text must arrive before generation finishes");
             });
+
+            if (stopAt == "streaming") {
+                await VerifyStop();
+                return;
+            }
 
             finish.SetResult();
 
@@ -171,6 +220,7 @@ public class AresStreamingTests {
             listener.Stop();
             Auth.sessions.TryRemove(sessionId, out _);
             File.Delete(agentPath);
+            if (!Ares.history.IsActive(owner, conversationId)) Ares.history.Delete(owner, conversationId);
         }
     }
 

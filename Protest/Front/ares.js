@@ -131,6 +131,15 @@ class Ares extends Window {
 		this.chatPane.appendChild(this.input);
 		this.defaultElement = this.input;
 
+		this.stopButton = this.content.ownerDocument.createElement("button");
+		this.stopButton.type = "button";
+		this.stopButton.className = "ares-stop";
+		this.stopButton.setAttribute("aria-label", "Stop response");
+		this.stopButton.title = "Stop response";
+		this.stopButton.hidden = true;
+		this.stopButton.onclick = ()=> this.StopResponse();
+		this.chatPane.appendChild(this.stopButton);
+
 		this.InitializeSettings();
 
 		this.layoutObserver = new ResizeObserver(()=> this.LayoutComposer());
@@ -270,6 +279,7 @@ class Ares extends Window {
 
 		const height = this.settingsMenu.offsetHeight;
 		this.input.style.bottom = `${height + 16}px`;
+		this.stopButton.style.bottom = `${height + 24}px`;
 		this.input.style.maxHeight = `${Math.max(60, this.content.clientHeight - height - 56)}px`;
 		this.chatBox.style.bottom = `${height + this.input.offsetHeight + 24}px`;
 	}
@@ -639,6 +649,7 @@ class Ares extends Window {
 	}
 
 	UpdateHistoryControls() {
+		this.UpdateStopButton();
 		const disabled = !this.canUse || this.historyDeleting;
 		this.newConversationButton.disabled = disabled;
 		this.sidebarToggle.disabled = !this.canUse;
@@ -720,6 +731,39 @@ class Ares extends Window {
 
 	IsThinking() { return this.requests.has(this.args.conversationId) || !!this.pendingResponse; }
 
+	UpdateStopButton() {
+		const pending = this.pendingResponse;
+		const request = this.requests.get(this.args.conversationId);
+		this.stopButton.hidden = !this.canUse || !pending?.requestId || (request?.requestId === pending.requestId && !request.accepted);
+		this.stopButton.disabled = !!pending?.stopping;
+	}
+
+	async StopResponse() {
+		const pending = this.pendingResponse;
+		const id = this.args.conversationId;
+		if (this.isClosed || !this.canUse || !pending || this.stopButton.hidden || pending.stopping) return;
+
+		pending.stopping = true;
+		this.UpdateStopButton();
+
+		try {
+			const response = await fetch(`ares/history/stop?id=${encodeURIComponent(id)}&requestId=${encodeURIComponent(pending.requestId)}`, {method:"POST"});
+			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
+			const result = await response.json();
+			if (result.error) throw new Error(result.error);
+			if (this.pendingResponse === pending && this.args.conversationId === id) this.PollConversation();
+		}
+		catch (ex) {
+			if (!this.isClosed && this.canUse && this.pendingResponse === pending) {
+				this.ConfirmBox(`Unable to stop response: ${ex.message ?? ex}`, true, "mono/error.svg");
+			}
+		}
+		finally {
+			pending.stopping = false;
+			if (!this.isClosed) this.UpdateStopButton();
+		}
+	}
+
 	StopHistoryPolling() {
 		clearTimeout(this.pendingTimer);
 		this.pendingTimer = null;
@@ -735,6 +779,7 @@ class Ares extends Window {
 
 	async PollConversation() {
 		if (this.isClosed || !this.canUse || !this.pendingResponse || this.pendingController || this.requests.has(this.args.conversationId)) return;
+		clearTimeout(this.pendingTimer);
 		this.pendingTimer = null;
 
 		const id = this.args.conversationId;
@@ -1103,7 +1148,7 @@ class Ares extends Window {
 		const reasoning = this.GetEffort();
 		const requestId = UI.GenerateUuid();
 		const controller = new AbortController();
-		const request = {controller, requestId, responseText:""};
+		const request = {controller, requestId, responseText:"", accepted:false};
 		this.requests.set(conversationId, request);
 		this.UpdateHistoryControls();
 		this.chatBox.setAttribute("aria-busy", "true");
@@ -1120,7 +1165,6 @@ class Ares extends Window {
 		this.pendingResponse = {requestId, text, time:now, agent:connection.agent, agentName:connection.agentName, model:connection.model, reasoning, response:"", bubble:reply};
 		this.ClearInput();
 
-		let accepted = false;
 		let terminal = false;
 		let recovering = false;
 		let renderFrame = null;
@@ -1162,18 +1206,19 @@ class Ares extends Window {
 					throw new Error(event.error ?? "Unable to get a response from this agent.");
 				}
 
-				if (event.type === "accepted" && !accepted) {
-					accepted = true;
+				if (event.type === "accepted" && !request.accepted) {
+					request.accepted = true;
+					if (IsVisible()) this.UpdateStopButton();
 					bubble.style.color = "var(--clr-dark)";
 					bubble.style.backgroundColor = "var(--clr-pane)";
 					bubble.style.boxShadow = "none";
 					this.LoadHistoryList();
 				}
-				else if (event.type === "delta" && accepted && typeof event.text === "string") {
+				else if (event.type === "delta" && request.accepted && typeof event.text === "string") {
 					request.responseText += event.text;
 					if (IsVisible() && renderFrame === null) renderFrame = requestAnimationFrame(RenderReply);
 				}
-				else if (event.type === "done" && accepted && request.responseText.trim().length > 0) {
+				else if (event.type === "done" && request.accepted && request.responseText.trim().length > 0) {
 					RenderReply();
 					completed = true;
 					terminal = true;
@@ -1193,7 +1238,7 @@ class Ares extends Window {
 		catch (ex) {
 			if (this.isClosed) return;
 
-			recovering = accepted && !terminal && !controller.signal.aborted;
+			recovering = request.accepted && !terminal && !controller.signal.aborted;
 			if (IsVisible() && !recovering) {
 				const error = controller.signal.aborted ? "A.R.E.S. access is required. Contact your administrator." : ex.message ?? String(ex);
 				this.CompletePendingResponse(error);

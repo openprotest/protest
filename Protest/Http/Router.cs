@@ -194,6 +194,7 @@ internal static class Router {
         ["/ares/history/list"]                   = new Route((ctx, username) => new(Ares.Core.ListHistory(ctx))),
         ["/ares/history/get"]                    = new Route((ctx, username) => new(Ares.Core.GetHistory(ctx))),
         ["/ares/history/branch"]                 = new Route((ctx, username) => new(Ares.Core.BranchHistory(ctx)), "POST"),
+        ["/ares/history/stop"]                   = new Route((ctx, username) => new(Ares.Core.StopHistory(ctx)), "POST"),
         ["/ares/history/delete"]                 = new Route((ctx, username) => new(Ares.Core.DeleteHistory(ctx)), "POST"),
         ["/ares/agents"]                         = new Route((ctx, username) => new(Ares.Core.List(true))),
         ["/ares/models"]                         = new Route(async (ctx, username) => await Ares.Core.GetModelsAsync(ctx, username)),

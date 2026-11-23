@@ -299,7 +299,7 @@ internal static partial class Core {
         ctx.Response.SendChunked = true;
         ctx.Response.AddHeader("X-Accel-Buffering", "no");
 
-        using CancellationTokenSource generation = new CancellationTokenSource();
+        CancellationToken generation = turn.Generation.Token;
 
         StringBuilder reply = turn.Response;
         string error = null;
@@ -325,10 +325,10 @@ internal static partial class Core {
         }
 
         try {
-            await SendEvent(new { type = "accepted", conversationId = turn.Conversation.Id, conversationRevision = turn.Conversation.Revision, requestId = turn.RequestId }, generation.Token);
+            await SendEvent(new { type = "accepted", conversationId = turn.Conversation.Id, conversationRevision = turn.Conversation.Revision, requestId = turn.RequestId }, generation);
             if (!String.IsNullOrEmpty(reasoning)) {
                 try {
-                    using CancellationTokenSource validation = CancellationTokenSource.CreateLinkedTokenSource(generation.Token);
+                    using CancellationTokenSource validation = CancellationTokenSource.CreateLinkedTokenSource(generation);
                     validation.CancelAfter(TimeSpan.FromSeconds(30));
 
                     string[] options = await FetchReasoningOptionsAsync(agent.Type, ReadKey(agent), model, httpClient, validation.Token, agent.Endpoint);
@@ -355,9 +355,9 @@ internal static partial class Core {
                 throw new InvalidOperationException("The agent settings or your access changed. Reopen A.R.E.S.");
             }
 
-            await FetchReplyAsync(agent.Type, ReadKey(agent), model, messages, httpClient, generation.Token, agent.Endpoint, async delta => {
+            await FetchReplyAsync(agent.Type, ReadKey(agent), model, messages, httpClient, generation, agent.Endpoint, async delta => {
                 history.Append(turn, delta);
-                await SendEvent(new { type = "delta", text = delta }, generation.Token);
+                await SendEvent(new { type = "delta", text = delta }, generation);
             }, reasoning);
 
             lock (mutex) {
@@ -397,6 +397,8 @@ internal static partial class Core {
         Conversation saved = null;
         try {
             saved = history.Complete(turn, reply.ToString(), complete ? "completed" : "interrupted", agent.Id, agent.Name, agent.Type, model, reasoning, error);
+            complete = saved.Messages[^1].Status == "completed";
+            if (!complete) error = saved.Messages[^1].Error;
         }
         catch (Exception ex) {
             Logger.Error(ex);
