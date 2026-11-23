@@ -22,6 +22,7 @@ internal static partial class Core {
     private const int MAX_TEXT_LENGTH = 8192;
     private static readonly Lock mutex = new Lock();
     private static readonly Dictionary<string, string> errors = new Dictionary<string, string>();
+    private static readonly string[] reasoningTextFields = ["thinking", "reasoning_content", "reasoning"];
     private static readonly JsonSerializerOptions jsonOptions = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
     private static readonly HttpClient httpClient = new HttpClient(new HttpClientHandler { AllowAutoRedirect = false }) { Timeout = Timeout.InfiniteTimeSpan };
 
@@ -552,7 +553,7 @@ internal static partial class Core {
     }
 
     private static string ReadReasoningText(JsonElement message) {
-        foreach (string field in new[] { "thinking", "reasoning_content", "reasoning" }) {
+        foreach (string field in reasoningTextFields) {
             string value = GetString(message, field);
             if (!String.IsNullOrEmpty(value)) return value;
         }
@@ -618,19 +619,29 @@ internal static partial class Core {
             }
             else if (type == "anthropic") {
                 string eventType = GetString(root, "type");
-                if (eventType == "content_block_start" && root.TryGetProperty("content_block", out JsonElement block) && block.ValueKind == JsonValueKind.Object && GetString(block, "type") == "text") {
-                    delta = (hasTextBlock ? "\n" : String.Empty) + GetString(block, "text");
-                    hasTextBlock = true;
+                if (eventType == "content_block_start" && root.TryGetProperty("content_block", out JsonElement block) && block.ValueKind == JsonValueKind.Object) {
+                    switch (GetString(block, "type")) {
+                        case "text":
+                            delta = (hasTextBlock ? "\n" : String.Empty) + GetString(block, "text");
+                            hasTextBlock = true;
+                            break;
+
+                        case "thinking":
+                            reasoningDelta = (hasThinkingBlock ? "\n\n" : String.Empty) + GetString(block, "thinking");
+                            hasThinkingBlock = true;
+                            break;
+                    }
                 }
-                else if (eventType == "content_block_delta" && root.TryGetProperty("delta", out JsonElement blockDelta) && blockDelta.ValueKind == JsonValueKind.Object && GetString(blockDelta, "type") == "text_delta") {
-                    delta = GetString(blockDelta, "text");
-                }
-                if (eventType == "content_block_start" && root.TryGetProperty("content_block", out JsonElement thinkingBlock) && thinkingBlock.ValueKind == JsonValueKind.Object && GetString(thinkingBlock, "type") == "thinking") {
-                    reasoningDelta = (hasThinkingBlock ? "\n\n" : String.Empty) + GetString(thinkingBlock, "thinking");
-                    hasThinkingBlock = true;
-                }
-                else if (eventType == "content_block_delta" && root.TryGetProperty("delta", out JsonElement thinkingDelta) && thinkingDelta.ValueKind == JsonValueKind.Object && GetString(thinkingDelta, "type") == "thinking_delta") {
-                    reasoningDelta = GetString(thinkingDelta, "thinking");
+                else if (eventType == "content_block_delta" && root.TryGetProperty("delta", out JsonElement blockDelta) && blockDelta.ValueKind == JsonValueKind.Object) {
+                    switch (GetString(blockDelta, "type")) {
+                        case "text_delta":
+                            delta = GetString(blockDelta, "text");
+                            break;
+
+                        case "thinking_delta":
+                            reasoningDelta = GetString(blockDelta, "thinking");
+                            break;
+                    }
                 }
                 completed = eventType == "message_stop";
             }

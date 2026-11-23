@@ -394,6 +394,7 @@
 	border-left: 2px solid var(--clr-contrast);
 	border-radius: 2px 4px 4px 2px;
 	background-color: light-dark(rgb(150,150,150), rgb(36,36,36));
+	-webkit-user-select: text; user-select: text;
 }
 
 .ares-box .ares-reasoning > summary {
@@ -401,7 +402,7 @@
 	align-items: center;
 	gap: 6px;
 	list-style: none;
-	cursor: pointer;
+	cursor: default;
 }
 
 .ares-box .ares-reasoning > summary::-webkit-details-marker {
@@ -411,8 +412,8 @@
 .ares-box .ares-reasoning > summary::before {
 	content: "";
 	flex: none;
-	width: 12px;
-	height: 12px;
+	width: 10px;
+	height: 10px;
 	background-color: currentColor;
 	mask: url(mono/guitarpick.svg) center / contain no-repeat;
 	transform: rotate(-90deg);
@@ -458,8 +459,7 @@
 	background-color: light-dark(rgba(168,168,168,.8), rgba(48,48,48,.8));
 	box-shadow: light-dark(rgba(168,168,168,.8), rgba(48,48,48,.8)) 0 0 12px 8px;
 	font-weight: 600;
-	-webkit-user-select: none;
-	user-select: none;
+	-webkit-user-select: none; user-select: none;
 }
 
 .ares-thinking > p {
@@ -486,30 +486,6 @@
 
 @keyframes ares-thinking {
 	to {background-position: 400% center; }
-}
-
-@keyframes ares-thinking-text {
-	0%   { content: "Thinking..."; }
-	5%   { content: "Processing..."; }
-	10%  { content: "Analyzing..."; }
-	15%  { content: "Calculating..."; }
-	20%  { content: "Reasoning..."; }
-	25%  { content: "Evaluating..."; }
-	30%  { content: "Considering..."; }
-	35%  { content: "Examining..."; }
-	40%  { content: "Reviewing..."; }
-	45%  { content: "Assessing..."; }
-	50%  { content: "Exploring..."; }
-	55%  { content: "Investigating..."; }
-	60%  { content: "Researching..."; }
-	65%  { content: "Planning..."; }
-	70%  { content: "Preparing..."; }
-	75%  { content: "Formulating..."; }
-	80%  { content: "Determining..."; }
-	85%  { content: "Interpreting..."; }
-	90%  { content: "Reflecting..."; }
-	95%  { content: "Computing..."; }
-	100% { content: "Thinking..."; }
 }
 
 .ares-box .ares-error,

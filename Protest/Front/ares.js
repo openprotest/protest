@@ -284,7 +284,9 @@ class Ares extends Window {
 		this.chatBox.style.bottom = `${height + this.input.offsetHeight + 24}px`;
 	}
 
-	ConnectionKey() { return JSON.stringify([this.connection.agent, this.connection.model]); }
+	ConnectionKey() {
+		return JSON.stringify([this.connection.agent, this.connection.model]);
+	}
 
 	ConfigureReasoningLevels() {
 		const levels = [...new Set(this.connection?.reasoning ?? [])];
@@ -414,11 +416,14 @@ class Ares extends Window {
 			const requestedAgent = agentId ?? this.args.agent;
 			const agent = requestedAgent ? agents.find(entry=> entry.id === requestedAgent) : agents[0];
 			this.agents = agents;
+
 			SetOptions(this.agentSelect, agents, entry=> `${entry.name} (${entry.label})`, agent?.id ?? "");
+			
 			if (!agent || this.modelCatalog?.agent.id !== agent.id) {
 				this.modelCatalog = null;
 				if (this.modelSelect.options.length) this.modelSelect.replaceChildren();
 			}
+
 			if (!agents.length) {
 				throw new Error("No enabled agents. Add an agent in Infrastructure → A.R.E.S., then reopen this menu.");
 			}
@@ -428,7 +433,9 @@ class Ares extends Window {
 			const preferred = this.modelPreferences.get(agent.id) ?? (this.args.agent === agent.id ? this.args.model : null);
 			const reuseOptions = agentId === null && this.modelCatalog?.reasoningLoaded && this.connection?.agent === agent.id &&
 				this.connection.model === preferred && this.connection.revision === agent.revision;
-			let current = this.modelCatalog;
+
+				let current = this.modelCatalog;
+
 			if (reuseOptions) {
 				modelId = preferred;
 			}
@@ -452,7 +459,9 @@ class Ares extends Window {
 			if (!reuseOptions) {
 				SetOptions(this.modelSelect, current.models, entry=> entry.name === entry.id ? entry.id : `${entry.name} (${entry.id})`, model?.id ?? "");
 				this.modelCatalog = current;
+
 				if (!model) throw new Error("The selected model is no longer available. Choose another model.");
+
 				this.connection = Object.freeze({
 					agent:current.agent.id, agentName:current.agent.name, provider:current.agent.type,
 					model:model.id, modelName:model.name, revision:current.revision,
@@ -463,6 +472,7 @@ class Ares extends Window {
 			this.args.agent = this.connection.agent;
 			this.args.model = this.connection.model;
 			this.modelPreferences.set(this.connection.agent, this.connection.model);
+
 			this.ConfigureReasoningLevels();
 			this.args.reasoning = this.GetReasoningLevel();
 		}
@@ -498,6 +508,7 @@ class Ares extends Window {
 
 		this.historyList = new ListBox({onSelect: (id, element)=> {
 			if (!this.canUse || this.historyDeleting) return;
+
 			const saved = element._data;
 			if (saved.id !== this.args.conversationId || saved.revision !== this.args.conversationRevision || this.historyNeedsReload || this.historyController) {
 				this.OpenConversation(saved.id);
@@ -650,6 +661,7 @@ class Ares extends Window {
 
 	UpdateHistoryControls() {
 		this.UpdateStopButton();
+
 		const disabled = !this.canUse || this.historyDeleting;
 		this.newConversationButton.disabled = disabled;
 		this.sidebarToggle.disabled = !this.canUse;
@@ -818,7 +830,9 @@ class Ares extends Window {
 			}
 
 			if (saved.revision !== this.args.conversationRevision || saved.pending?.requestId !== pending.requestId) {
-				this.RestoreConversation(saved, this.IsScrolledToBottom());
+				const response = pending.bubble.closest(".ares-response");
+				const expandedReasoning = response.querySelector(":scope > .ares-reasoning[open]");
+				this.RestoreConversation(saved, this.IsScrolledToBottom(), expandedReasoning ? pending.requestId : null);
 				this.LoadHistoryList();
 			}
 			else if (saved.pending) {
@@ -848,30 +862,31 @@ class Ares extends Window {
 		}
 	}
 
-	RenderReasoning(response, text) {
-		let section = response.querySelector(":scope > .ares-reasoning");
-		if (!text) {
-			section?.remove();
-			return;
-		}
+	RenderReasoning(reply, text, open = false) {
+		if (!text) return;
 
-		const follow = this.IsScrolledToBottom();
+		const response = reply.closest(".ares-response");
+		let section = response.querySelector(":scope > .ares-reasoning");
+		let content = section?.querySelector(".ares-reasoning-text");
+		if (content?._markdownText === text || !text.trim()) return;
+
+		const follow = !this.restoringHistory && this.IsScrolledToBottom();
 		if (!section) {
 			const doc = response.ownerDocument;
 			section = doc.createElement("details");
 			section.className = "ares-reasoning";
+			section.open = open;
 
 			const summary = doc.createElement("summary");
-			summary.textContent = "Reasoning";
+			summary.textContent = "Model reasoning";
 
-			const content = doc.createElement("div");
+			content = doc.createElement("div");
 			content.className = "ares-reasoning-text";
 			section.append(summary, content);
 
-			const incoming = response.querySelector(":scope > .in");
-			const thinking = incoming.querySelector(":scope > .ares-thinking");
-			if (thinking) {
-				Ares.RenderMarkdown(thinking, "Reasoning...");
+			const incoming = reply.parentElement;
+			if (reply.classList.contains("ares-thinking")) {
+				Ares.RenderMarkdown(reply, "Reasoning...");
 				incoming.after(section);
 			}
 			else {
@@ -879,19 +894,17 @@ class Ares extends Window {
 			}
 		}
 
-		const content = section.querySelector(".ares-reasoning-text");
-		if (content._markdownText === text) return;
 		const followReasoning = content.scrollTop + content.clientHeight >= content.scrollHeight - 32;
 		Ares.RenderMarkdown(content, text);
 		if (followReasoning) content.scrollTop = content.scrollHeight;
-		if (follow && !this.restoringHistory) this.chatBox.scrollTop = this.chatBox.scrollHeight;
+		if (follow) this.chatBox.scrollTop = this.chatBox.scrollHeight;
 	}
 
 	RenderPendingReasoning(text) {
 		const pending = this.pendingResponse;
 		if (!pending || !text || text.length < (pending.reasoningText?.length ?? 0)) return;
 		pending.reasoningText = text;
-		this.RenderReasoning(pending.bubble.closest(".ares-response"), text);
+		this.RenderReasoning(pending.bubble, text);
 	}
 
 	RenderPendingResponse(text) {
@@ -901,16 +914,20 @@ class Ares extends Window {
 
 		const reply = pending.bubble;
 		const thinking = reply.classList.contains("ares-thinking");
-		if (reply._markdownText === text && !thinking) return;
+		if (thinking && !text.trim()) return;
+		if (!thinking && reply._markdownText === text) return;
 
 		const follow = this.IsScrolledToBottom();
 		const response = reply.closest(".ares-response");
 		if (thinking) {
 			reply.classList.remove("ares-thinking");
-			const incoming = reply.parentElement;
-			const focused = incoming === incoming.ownerDocument.activeElement;
-			response.querySelector(":scope > .ares-reasoning")?.after(incoming);
-			if (focused) incoming.focus({preventScroll:true});
+			const reasoning = response.querySelector(":scope > .ares-reasoning");
+			if (reasoning) {
+				const incoming = reply.parentElement;
+				const focused = incoming === incoming.ownerDocument.activeElement;
+				reasoning.after(incoming);
+				if (focused) incoming.focus({preventScroll:true});
+			}
 		}
 
 		Ares.RenderMarkdown(reply, text);
@@ -927,7 +944,7 @@ class Ares extends Window {
 		reply.removeAttribute("role");
 
 		if (text !== null) {
-			this.RenderReasoning(response, "");
+			response.querySelector(":scope > .ares-reasoning")?.remove();
 			const error = reply.ownerDocument.createElement("div");
 			error.className = "ares-error";
 			error.setAttribute("role", "alert");
@@ -954,7 +971,7 @@ class Ares extends Window {
 		this.LoadHistoryList();
 	}
 
-	RestoreConversation(saved, follow = true) {
+	RestoreConversation(saved, follow = true, expandedRequestId = null) {
 		const scroll = this.chatBox.scrollTop;
 
 		this.StopSpeech();
@@ -970,7 +987,10 @@ class Ares extends Window {
 				const bubble = this.CreateTextBubble(message.content, incoming ? "in" : "out", incoming ? `ares:${message.agent}` : KEEP.username,
 					incoming ? `${message.agentName} · ${message.model}` : "", incoming ? "var(--clr-accent)" : KEEP.color, time,
 					incoming && message.status === "completed" ? message.requestId : null);
-				if (incoming && message.reasoningText) this.RenderReasoning(bubble.closest(".ares-response"), message.reasoningText);
+				if (incoming && bubble && message.reasoningText) {
+					const expanded = expandedRequestId !== null && message.requestId === expandedRequestId;
+					this.RenderReasoning(bubble, message.reasoningText, expanded);
+				}
 
 				if (message.status === "interrupted") {
 					const reply = this.CreateBubble("in", `ares:${message.agent}`, `${message.agentName} · ${message.model}`, "var(--clr-accent)", time);
@@ -1216,6 +1236,7 @@ class Ares extends Window {
 		const messages = [...this.messages, {role:"user", content:text}];
 		const now = Date.now();
 		const nowString = new Date(now).toLocaleTimeString(UI.regionalFormat, {});
+
 		const bubble = this.CreateTextBubble(text, "out", KEEP.username, "", KEEP.color, nowString);
 		bubble.style.color = "var(--clr-pane)";
 		bubble.style.backgroundColor = "transparent";
