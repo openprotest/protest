@@ -55,13 +55,20 @@ public class AresStreamingTests {
     [TestCase("google", "data: {\"choices\":[{\"delta\":{\"content\":\"Partial\"}}]}\n\n")]
     [TestCase("anthropic", "data: {\"type\":\"message_stop\"}\n\n")]
     [TestCase("ollama", "{\"done\":true}\n")]
-    [TestCase("anthropic", "data: {\"type\":\"error\",\"error\":{\"message\":\"sk-private\"}}\n\n")]
-    [TestCase("ollama", "{\"error\":\"sk-private\"}\n")]
-    public void EmptyInterruptedAndFailedStreamsAreRejected(string provider, string body) {
+    public void EmptyAndInterruptedStreamsAreRejected(string provider, string body) {
         using HttpClient client = new HttpClient(new StreamHandler(_ => body));
-        JsonException? error = Assert.ThrowsAsync<JsonException>(() => Ares.FetchReplyAsync(provider, "test-key", "selected-model", [new("user", "Hello")], client,
+        Assert.ThrowsAsync<JsonException>(() => Ares.FetchReplyAsync(provider, "test-key", "selected-model", [new("user", "Hello")], client,
             onText: _ => Task.CompletedTask));
-        Assert.That(error?.Message, Does.Not.Contain("sk-private"));
+    }
+
+    [TestCase("anthropic", "data: {\"type\":\"error\",\"error\":{\"message\":\"Overloaded. Try again. sk-private test-key\"}}\n\n")]
+    [TestCase("xai", "data: {\"type\":\"error\",\"message\":\"Overloaded. Try again. sk-private test-key\"}\n\n")]
+    [TestCase("ollama", "{\"error\":\"Overloaded. Try again. sk-private test-key\"}\n")]
+    public void StreamingErrorsKeepProviderDetailsWithoutCredentials(string provider, string body) {
+        using HttpClient client = new(new StreamHandler(_ => body));
+        InvalidOperationException? error = Assert.ThrowsAsync<InvalidOperationException>(() => Ares.FetchReplyAsync(provider, "test-key", "selected-model", [new("user", "Hello")], client,
+            onText: _ => Task.CompletedTask));
+        Assert.That(error?.Message, Does.Contain("stopped the response").And.Contain("Overloaded. Try again.").And.Not.Contain("sk-private").And.Not.Contain("test-key"));
     }
 
     [Test, NonParallelizable]

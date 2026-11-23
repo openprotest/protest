@@ -55,25 +55,6 @@ public class AresCompatibleProviderTests {
         Assert.That(await Ares.FetchReplyAsync(provider, "test-key", "selected-model", [new("user", "First"), new("assistant", "Previous"), new("user", "Next")], client, reasoning: effort!), Is.EqualTo("Answer"));
     }
 
-    [TestCase("xai", "grok-4.7", "low,medium,high,xhigh")]
-    [TestCase("xai", "grok-4.6", "low,medium,high,xhigh")]
-    [TestCase("xai", "grok-4.5", "low,medium,high")]
-    [TestCase("xai", "grok-4", "")]
-    [TestCase("google", "gemini-4-hydrogen", "low,medium,high,xhigh")]
-    [TestCase("google", "gemini-4-carbon", "low,medium,high")]
-    [TestCase("google", "gemini-3.8-flash", "low,medium,high")]
-    [TestCase("google", "gemini-3.6-flash", "minimal,low,medium,high")]
-    [TestCase("google", "gemini-3.1-flash-lite", "minimal,low,medium,high")]
-    [TestCase("google", "gemini-3-pro-preview", "low,high")]
-    [TestCase("google", "gemini-3-flash-preview", "minimal,low,medium,high")]
-    [TestCase("google", "gemini-2.5-pro", "low,medium,high")]
-    [TestCase("google", "gemini-2.5-flash", "none,low,medium,high")]
-    [TestCase("google", "gemini-unknown", "")]
-    public async Task EffortIsModelSpecificAndUnknownModelsUseDefaults(string provider, string model, string expected) {
-        using HttpClient client = new(new Handler(_ => throw new InvalidOperationException("No capability request expected")));
-        Assert.That(await Ares.FetchReasoningOptionsAsync(provider, "test-key", model, client), Is.EqualTo(expected.Length == 0 ? [] : expected.Split(',')));
-    }
-
     [TestCase("xai")]
     [TestCase("google")]
     public async Task StreamsExcludePrivateReasoningAndApplyEffort(string provider) {

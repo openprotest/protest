@@ -45,12 +45,13 @@ internal static partial class Core {
     public static byte[] List(bool enabledOnly = false) {
         lock (mutex) {
             return JsonSerializer.SerializeToUtf8Bytes(ReadAgents().Where(agent => !enabledOnly || agent.Enabled).Select(agent => new {
-                id      = agent.Id,
-                type    = agent.Type,
-                label   = ProviderLabel(agent.Type),
-                name    = agent.Name,
-                enabled = agent.Enabled,
-                error   = errors.GetValueOrDefault(agent.Id)
+                id       = agent.Id,
+                type     = agent.Type,
+                label    = ProviderLabel(agent.Type),
+                name     = agent.Name,
+                enabled  = agent.Enabled,
+                revision = Revision(agent),
+                error    = errors.GetValueOrDefault(agent.Id)
             }).ToArray());
         }
     }
@@ -168,19 +169,23 @@ internal static partial class Core {
         string error = null;
         Model[] models = [];
         string[] reasoning = [];
+        bool reasoningLoaded = false;
         try {
             using CancellationTokenSource timeout = new CancellationTokenSource(TimeSpan.FromSeconds(30));
-            models = await FetchModelsAsync(agent.Type, ReadKey(agent), httpClient, timeout.Token, agent.Endpoint);
+            string key = ReadKey(agent);
+            models = await FetchModelsAsync(agent.Type, key, httpClient, timeout.Token, agent.Endpoint);
 
             if (models.Length == 0) error = "The provider returned no available models";
             string selectedModel = ctx.Request.QueryString["model"];
 
             if (!test && models.Any(model => model.Id == selectedModel)) {
                 try {
-                    reasoning = await FetchReasoningOptionsAsync(agent.Type, ReadKey(agent), selectedModel, httpClient, timeout.Token, agent.Endpoint);
+                    reasoning = await FetchReasoningOptionsAsync(agent.Type, key, selectedModel, httpClient, timeout.Token, agent.Endpoint);
+                    reasoningLoaded = true;
                 }
-                catch (HttpRequestException) { /*Optional metadata is unavailable; retain provider defaults.*/ }
-                catch (JsonException) { /*Unknown metadata must not enable unsupported controls.*/ }
+                catch (Exception ex) when (ex is HttpRequestException or JsonException or OperationCanceledException) {
+                    //Optional metadata is unavailable. Allow Default and retry on the next load.
+                }
             }
         }
         catch (HttpRequestException ex) {
@@ -212,6 +217,7 @@ internal static partial class Core {
             agent = new { id = agent.Id, type = agent.Type, name = agent.Name, label = ProviderLabel(agent.Type) },
             revision = Revision(agent),
             reasoning,
+            reasoningLoaded,
             models = models.Select(model => new { id = model.Id, name = model.Name }).ToArray()
         });
     }
@@ -299,6 +305,7 @@ internal static partial class Core {
         string error = null;
         bool complete = false;
         bool connected = true;
+        bool refreshOptions = false;
 
         async Task SendEvent(object value, CancellationToken token = default) {
             if (!connected) return;
@@ -326,7 +333,8 @@ internal static partial class Core {
 
                     string[] options = await FetchReasoningOptionsAsync(agent.Type, ReadKey(agent), model, httpClient, validation.Token, agent.Endpoint);
                     if (!options.Contains(reasoning)) {
-                        error = "The selected reasoning setting is not supported by this model. Select Default or reopen A.R.E.S.";
+                        refreshOptions = true;
+                        error = "The selected effort is unavailable for this model. Reopen the model menu to refresh the options.";
                     }
                 }
                 catch (Exception ex) when (ex is HttpRequestException or JsonException or OperationCanceledException) {
@@ -366,6 +374,7 @@ internal static partial class Core {
             error = ex.Message;
         }
         catch (HttpRequestException ex) {
+            refreshOptions = ex.StatusCode == HttpStatusCode.NotFound;
             error = ex.StatusCode is null ? $"Cannot connect to {ProviderLabel(agent.Type)}" : ex.Message;
         }
         catch (OperationCanceledException) {
@@ -402,7 +411,7 @@ internal static partial class Core {
             await SendEvent(new { type = "done", conversationId = saved.Id, conversationRevision = saved.Revision });
         }
         else {
-            await SendEvent(new { type = "error", error, conversationId = saved?.Id ?? turn.Conversation.Id, conversationRevision = saved?.Revision ?? turn.Conversation.Revision, historySaved = saved is not null });
+            await SendEvent(new { type = "error", error, conversationId = saved?.Id ?? turn.Conversation.Id, conversationRevision = saved?.Revision ?? turn.Conversation.Revision, historySaved = saved is not null, refreshOptions });
         }
 
         return null;
@@ -492,36 +501,23 @@ internal static partial class Core {
         using HttpResponseMessage response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, token);
         if (!response.IsSuccessStatusCode) {
             string body = await response.Content.ReadAsStringAsync(token);
-#if DEBUG
-            LogProviderChatJson(body, true);
-#endif
-            string code = null;
-            string errorType = null;
-            try {
-                using JsonDocument failure = JsonDocument.Parse(body);
-                if (failure.RootElement.ValueKind == JsonValueKind.Object &&
-                    failure.RootElement.TryGetProperty("error", out JsonElement error) && error.ValueKind == JsonValueKind.Object) {
-                    code = GetString(error, "code");
-                    errorType = GetString(error, "type");
-                }
-            }
-            catch (JsonException) { }
-
-            throw new HttpRequestException(ProviderError(type, response.StatusCode, code, errorType), null, response.StatusCode);
+            throw new HttpRequestException(ReadProviderError(type, response.StatusCode, body, key), null, response.StatusCode);
         }
 
         if (onText is not null) {
             using Stream stream = await response.Content.ReadAsStreamAsync(token);
             using StreamReader reader = new StreamReader(stream, Encoding.UTF8);
-            return await ReadReplyStreamAsync(type, reader, onText, token);
+            return await ReadReplyStreamAsync(type, reader, onText, token, key);
         }
 
         string responseBody = await response.Content.ReadAsStringAsync(token);
+        using JsonDocument doc = JsonDocument.Parse(responseBody);
+        JsonElement root = doc.RootElement;
+        if (root.ValueKind != JsonValueKind.Object) throw new JsonException("Invalid provider response");
+        if (IsProviderError(root)) throw new InvalidOperationException(ReadProviderError(type, null, root, key));
 #if DEBUG
         LogProviderChatJson(responseBody, true);
 #endif
-        using JsonDocument doc = JsonDocument.Parse(responseBody);
-        JsonElement root = doc.RootElement;
 
         string text = null;
         if (IsOpenAiCompatible(type) && root.TryGetProperty("choices", out JsonElement choices) && choices.ValueKind == JsonValueKind.Array && choices.GetArrayLength() > 0) {
@@ -542,7 +538,7 @@ internal static partial class Core {
         return text;
     }
 
-    private static async Task<string> ReadReplyStreamAsync(string type, StreamReader reader, Func<string, Task> onText, CancellationToken token) {
+    private static async Task<string> ReadReplyStreamAsync(string type, StreamReader reader, Func<string, Task> onText, CancellationToken token, string key) {
         StringBuilder text = new StringBuilder();
         StringBuilder eventData = new StringBuilder();
         bool completed = false;
@@ -570,11 +566,10 @@ internal static partial class Core {
                 eventData.Clear();
             }
 
-#if DEBUG
-            LogProviderChatJson(data, true);
-#endif
-
             if (IsOpenAiCompatible(type) && data == "[DONE]") {
+#if DEBUG
+                LogProviderChatJson(data, true);
+#endif
                 completed = true;
                 continue;
             }
@@ -585,9 +580,12 @@ internal static partial class Core {
                 throw new JsonException("Invalid stream event");
             }
 
-            if (root.TryGetProperty("error", out _) || GetString(root, "type") == "error") {
-                throw new JsonException("The provider returned a streaming error");
+            if (IsProviderError(root)) {
+                throw new InvalidOperationException(ReadProviderError(type, null, root, key));
             }
+#if DEBUG
+            LogProviderChatJson(data, true);
+#endif
 
             string delta = null;
             if (IsOpenAiCompatible(type) && root.TryGetProperty("choices", out JsonElement choices) && choices.ValueKind == JsonValueKind.Array && choices.GetArrayLength() > 0 &&
@@ -623,29 +621,6 @@ internal static partial class Core {
         }
 
         return text.ToString();
-    }
-
-    private static string ProviderError(string type, HttpStatusCode status, string code, string errorType) {
-        string provider = ProviderLabel(type);
-        if (type == "ollama") return $"Ollama rejected the message (HTTP {(int)status}). Check the selected model, server URL, and access settings.";
-
-        if (status == HttpStatusCode.TooManyRequests) {
-            if (code == "credit_balance_exhausted") return $"{provider} API credits are exhausted (HTTP 429). Check the API organization's billing and credit balance.";
-            if (code == "organization_spend_limit_exceeded") return $"{provider} API organization spending limit reached (HTTP 429). Check the organization's spending limits.";
-            if (code == "organization_usage_limit_exceeded") return $"{provider} API organization usage limit reached (HTTP 429). Check the organization's API Limits page.";
-
-            if (code == "insufficient_quota" || errorType == "insufficient_quota") {
-                return $"{provider} API quota is unavailable or exhausted (HTTP 429). Check API billing, credits, and spending limits for the organization/project that owns this key.";
-            }
-
-            if (code == "rate_limit_exceeded" || errorType == "rate_limit_error") {
-                return $"{provider} API rate limit reached (HTTP 429). Wait briefly and try again, or check the project's rate limits.";
-            }
-
-            return $"{provider} returned HTTP 429. Check API billing, credits, and request limits; the response did not identify a specific cause.";
-        }
-
-        return $"{provider} rejected the message (HTTP {(int)status}). Check the selected model, API key, quota, and rate limits.";
     }
 
     internal static async Task<Model[]> FetchModelsAsync(string type, string key, HttpClient client, CancellationToken token = default, string endpoint = null) {

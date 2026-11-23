@@ -6,26 +6,50 @@ namespace Protest.Tests;
 using Ares = global::Protest.Ares.Core;
 
 public class AresReasoningTests {
-    [TestCase("gpt-4.1", "")]
-    [TestCase("unknown", "")]
-    [TestCase("gpt-5.1-chat-latest", "")]
-    [TestCase("gpt-5.1-codex", "")]
-    [TestCase("gpt-5", "minimal,low,medium,high")]
-    [TestCase("gpt-5.1", "none,low,medium,high")]
-    [TestCase("gpt-5.2-2025-12-11", "none,low,medium,high,xhigh")]
-    [TestCase("gpt-5.5", "none,low,medium,high,xhigh")]
-    [TestCase("gpt-6.2-astra", "low,medium,high,xhigh,max")]
-    [TestCase("o3-mini-2025-01-31", "low,medium,high")]
-    public void OpenAiControlsAreModelSpecific(string model, string expected) =>
-        Assert.That(Ares.OpenAiReasoningOptions(model), Is.EqualTo(expected.Length == 0 ? [] : expected.Split(',')));
+    [TestCase("openai", "gpt-5", "minimal,low,medium,high")]
+    [TestCase("openai", "o3-mini-2025-01-31", "low,medium,high")]
+    [TestCase("openai", "gpt-6-luna", "none,low,medium,high,xhigh")]
+    [TestCase("openai", "gpt-6-luna-2026-11-17", "none,low,medium,high,xhigh")]
+    [TestCase("openai", "gpt-6.2-sol", "low,medium,high,xhigh")]
+    [TestCase("openai", "gpt-6.2-sol-2026-11-17", "low,medium,high,xhigh")]
+    [TestCase("openai", "gpt-6.2-astra", "low,medium,high,xhigh")]
+    [TestCase("openai", "gpt-6.2-astra-2026-11-17", "low,medium,high,xhigh")]
+    [TestCase("openai", "future-model", "")]
+    [TestCase("google", "gemini-2.5-flash", "none,low,medium,high")]
+    [TestCase("google", "gemini-4-hydrogen", "low,medium,high,xhigh")]
+    [TestCase("google", "gemini-4-hydrogen-2026-11-17", "low,medium,high,xhigh")]
+    [TestCase("google", "future-model", "")]
+    public async Task ProvidersWithoutEffortMetadataUseModelFallbacksWithoutRequests(string type, string model, string expected) {
+        using HttpClient client = new(new Handler(_ => throw new InvalidOperationException("No capability or inference request expected")));
+        Assert.That(await Ares.FetchReasoningOptionsAsync(type, "test-key", model, client), Is.EqualTo(expected.Split(',', StringSplitOptions.RemoveEmptyEntries)));
+    }
+
+    [TestCase("{}", "low,medium,high,xhigh")]
+    [TestCase("""{"capabilities":{}}""", "low,medium,high,xhigh")]
+    [TestCase("""{"capabilities":{"reasoning_effort":["low","future"]}}""", "low,future")]
+    [TestCase("""{"capabilities":{"reasoning_effort":[]}}""", "")]
+    [TestCase("""{"capabilities":{"reasoning_effort":false}}""", "")]
+    public async Task XaiPrefersEffortMetadataOverKnownModelFallback(string metadata, string expected) {
+        using HttpClient client = new(new Handler(_ => metadata));
+        Assert.That(await Ares.FetchReasoningOptionsAsync("xai", "test-key", "grok-4.7", client), Is.EqualTo(expected.Split(',', StringSplitOptions.RemoveEmptyEntries)));
+    }
+
+    [Test]
+    public void InvalidMetadataResponseIsNotTreatedAsAnEmptyEffortList() {
+        using HttpClient client = new(new Handler(_ => "[]"));
+        Assert.ThrowsAsync<JsonException>(() => Ares.FetchReasoningOptionsAsync("xai", "test-key", "grok-4.7", client));
+    }
 
     [TestCase("anthropic", "{}", "")]
     [TestCase("anthropic", "{\"capabilities\":{\"effort\":{\"supported\":false,\"high\":{\"supported\":true}}}}", "")]
     [TestCase("anthropic", "{\"capabilities\":{\"effort\":{\"supported\":true,\"low\":{\"supported\":true},\"high\":{\"supported\":false},\"max\":{\"supported\":true}}}}", "low,max")]
+    [TestCase("anthropic", "{\"capabilities\":{\"effort\":{\"supported\":true,\"future\":{\"supported\":true},\"high\":{\"supported\":true},\"medium\":{\"supported\":true}}}}", "medium,high,future")]
+    [TestCase("xai", "{\"capabilities\":{\"reasoning_effort\":[\"low\",\"high\",\"future\",\"low\",23,null]}}", "low,high,future")]
+    [TestCase("xai", "{\"capabilities\":{\"reasoning_effort\":true}}", "")]
     [TestCase("ollama", "{\"capabilities\":[\"thinking\"]}", "")]
     [TestCase("ollama", "{\"thinking\":{\"values\":[false]}}", "")]
     [TestCase("ollama", "{\"thinking\":{\"values\":[true,false]}}", "true,false")]
-    [TestCase("ollama", "{\"thinking\":{\"values\":[\"low\",\"medium\",\"high\",\"low\",23,null]}}", "low,medium,high")]
+    [TestCase("ollama", "{\"thinking\":{\"values\":[\"low\",\"medium\",\"high\",\"future\",\"low\",23,null]}}", "low,medium,high,future")]
     public void OnlyAdvertisedCapabilitiesAreEnabled(string type, string metadata, string expected) {
         using JsonDocument doc = JsonDocument.Parse(metadata);
         Assert.That(Ares.ReadReasoningOptions(type, doc.RootElement), Is.EqualTo(expected.Length == 0 ? [] : expected.Split(',')));
@@ -33,9 +57,17 @@ public class AresReasoningTests {
 
     [TestCase("anthropic")]
     [TestCase("ollama")]
+    [TestCase("xai")]
     public async Task CapabilityDiscoveryUsesProviderEndpointAndCredentials(string type) {
         using HttpClient client = new HttpClient(new Handler(request => {
             Assert.That(request.Headers.Authorization?.ToString(), Is.EqualTo("Bearer test-key"));
+            if (type == "xai") {
+                Assert.That(request.Method, Is.EqualTo(HttpMethod.Get));
+                Assert.That(request.RequestUri!.AbsoluteUri, Is.EqualTo("https://api.x.ai/v1/language-models/selected%3Alatest"));
+                Assert.That(request.Content, Is.Null);
+                Assert.That(request.Headers.Contains("anthropic-version"), Is.False);
+                return "{\"capabilities\":{\"reasoning_effort\":[\"low\",\"high\"]}}";
+            }
             if (type == "ollama") {
                 Assert.That(request.Method, Is.EqualTo(HttpMethod.Post));
                 Assert.That(request.RequestUri!.AbsoluteUri, Is.EqualTo("https://local.example/proxy/api/show"));
@@ -146,7 +178,8 @@ public class AresReasoningTests {
             Assert.That(release.Task.IsCompleted, Is.False);
             release.SetResult();
             using JsonDocument error = JsonDocument.Parse((await reader.ReadLineAsync().WaitAsync(TimeSpan.FromSeconds(5)))!);
-            Assert.That(error.RootElement.GetProperty("error").GetString(), Does.Contain("not supported"));
+            Assert.That(error.RootElement.GetProperty("error").GetString(), Does.Contain("selected effort is unavailable"));
+            Assert.That(error.RootElement.GetProperty("refreshOptions").GetBoolean(), Is.True);
             Assert.That(await reader.ReadLineAsync().WaitAsync(TimeSpan.FromSeconds(5)), Is.Null);
             await metadata;
         }

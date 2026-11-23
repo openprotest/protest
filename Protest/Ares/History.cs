@@ -164,26 +164,49 @@ internal static partial class Core {
                 }
 
                 Conversation saved = previous with { UpdatedAt = now, Revision = previous.Revision + 1, Messages = messages };
-                byte[] bytes = JsonSerializer.SerializeToUtf8Bytes(saved, jsonOptions);
-
-                if (bytes.Length > 8 * 1024 * 1024) throw new IOException("Conversation exceeds the history size limit");
-
-                Directory.CreateDirectory(OwnerPath(saved.Owner));
-                string path = FilePath(saved.Owner, saved.Id), temporary = path + $".{Guid.NewGuid():N}.tmp";
-
-                try {
-                    using (FileStream stream = new FileStream(temporary, FileMode.CreateNew, FileAccess.Write, FileShare.None)) {
-                        stream.Write(bytes);
-                        stream.Flush(true);
-                    }
-
-                    File.Move(temporary, path, true);
-                }
-                finally {
-                    if (File.Exists(temporary)) File.Delete(temporary);
-                }
-
+                Write(saved);
                 return saved;
+            }
+        }
+
+        internal Conversation Branch(string owner, string id, string requestId) {
+            if (!Guid.TryParse(requestId, out Guid request)) return null;
+            string turnId = request.ToString();
+
+            lock (gate) {
+                Conversation source = Read(owner, id);
+                if (source is null) return null;
+
+                int index = Array.FindIndex(source.Messages, message =>
+                    message.RequestId == turnId && message.Role == "assistant" && message.Status == "completed");
+                if (index < 0) return null;
+
+                long now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                string title = $"Branch: {source.Title}";
+                Conversation branch = new Conversation(1, Guid.NewGuid().ToString(), owner, title[..Math.Min(title.Length, 80)],
+                    now, now, 1, source.Messages[..(index + 1)]);
+                Write(branch);
+                return branch;
+            }
+        }
+
+        private void Write(Conversation conversation) {
+            byte[] bytes = JsonSerializer.SerializeToUtf8Bytes(conversation, jsonOptions);
+            if (bytes.Length > 8 * 1024 * 1024) throw new IOException("Conversation exceeds the history size limit");
+
+            Directory.CreateDirectory(OwnerPath(conversation.Owner));
+            string path = FilePath(conversation.Owner, conversation.Id), temporary = path + $".{Guid.NewGuid():N}.tmp";
+
+            try {
+                using (FileStream stream = new FileStream(temporary, FileMode.CreateNew, FileAccess.Write, FileShare.None)) {
+                    stream.Write(bytes);
+                    stream.Flush(true);
+                }
+
+                File.Move(temporary, path, true);
+            }
+            finally {
+                if (File.Exists(temporary)) File.Delete(temporary);
             }
         }
 
@@ -266,6 +289,20 @@ internal static partial class Core {
         catch (Exception ex) {
             Logger.Error(ex);
             return Error("Unable to load this conversation");
+        }
+    }
+
+    public static byte[] BranchHistory(HttpListenerContext ctx) {
+        string owner = Auth.GetPrincipal(ctx);
+        if (owner is null) return Data.CODE_NOT_FOUND.Array;
+
+        try {
+            Conversation branch = history.Branch(owner, ctx.Request.QueryString["id"], ctx.Request.QueryString["requestId"]);
+            return branch is null ? Data.CODE_NOT_FOUND.Array : JsonSerializer.SerializeToUtf8Bytes(new { id = branch.Id });
+        }
+        catch (Exception ex) {
+            Logger.Error(ex);
+            return Error("Unable to branch this conversation");
         }
     }
 

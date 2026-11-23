@@ -749,6 +749,7 @@ internal static class Auth {
                 path.Add("/ares/chat");
                 path.Add("/ares/history/list");
                 path.Add("/ares/history/get");
+                path.Add("/ares/history/branch");
                 path.Add("/ares/history/delete");
                 break;
 

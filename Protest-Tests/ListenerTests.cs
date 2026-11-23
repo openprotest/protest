@@ -739,13 +739,24 @@ public class ListenerTests {
             using JsonDocument localStored = JsonDocument.Parse(File.ReadAllText(Path.Join(Data.DIR_ARES_AGENTS, $"{agentId}.json")));
             Assert.That(localStored.RootElement.GetProperty("secret").GetString(), Is.Empty);
             string localName = local.RootElement.GetProperty("name").GetString()!;
+
+            string ReadAgentRevision() {
+                using JsonDocument agents = JsonDocument.Parse(Send("/ares/agents", HttpMethod.Get));
+                return agents.RootElement.EnumerateArray().Single(entry => entry.GetProperty("id").GetString() == agentId).GetProperty("revision").GetString()!;
+            }
+
+            string localRevision = ReadAgentRevision();
+            Assert.That(ReadAgentRevision(), Is.EqualTo(localRevision));
             using JsonDocument invalidEndpoint = JsonDocument.Parse(Send("/config/ares/save", HttpMethod.Post,
                 JsonSerializer.Serialize(new { id = agentId, name = localName, endpoint = "file:///tmp/ollama" })));
             Assert.That(invalidEndpoint.RootElement.GetProperty("error").GetString(), Does.Contain("server URL"));
             Send("/config/ares/save", HttpMethod.Post,
                 JsonSerializer.Serialize(new { id = agentId, name = localName, endpoint = "http://ollama-host:11434/", key = "optional-key" }));
+            string updatedRevision = ReadAgentRevision();
+            Assert.That(updatedRevision, Is.Not.EqualTo(localRevision));
             Send("/config/ares/save", HttpMethod.Post,
                 JsonSerializer.Serialize(new { id = agentId, name = localName, key = "" }));
+            Assert.That(ReadAgentRevision(), Is.EqualTo(updatedRevision));
             using JsonDocument updatedLocal = JsonDocument.Parse(Send($"/config/ares/get?id={agentId}", HttpMethod.Get));
             Assert.That(updatedLocal.RootElement.GetProperty("endpoint").GetString(), Is.EqualTo("http://ollama-host:11434"));
             Assert.That(updatedLocal.RootElement.TryGetProperty("secret", out _), Is.False);

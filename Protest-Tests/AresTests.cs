@@ -193,6 +193,43 @@ public class AresTests {
         });
     }
 
+    [Test]
+    public void UnsupportedReasoningErrorIncludesAcceptedValues() {
+        const string detail = "Unsupported value: 'reasoning_effort' does not support 'max' with this model. Supported values are: 'low', 'medium', 'high', and 'xhigh'.";
+        string body = JsonSerializer.Serialize(new { error = new { message = detail, type = "invalid_request_error", param = "reasoning_effort", code = "unsupported_value" } });
+        using HttpClient client = new(new ModelHandler(_ => body, HttpStatusCode.BadRequest));
+        HttpRequestException? error = Assert.ThrowsAsync<HttpRequestException>(() => Ares.FetchReplyAsync("openai", "test-key", "gpt-6.2-sol", [new("user", "Hello")], client, reasoning:"max"));
+        Assert.Multiple(() => {
+            Assert.That(error?.StatusCode, Is.EqualTo(HttpStatusCode.BadRequest));
+            Assert.That(error?.Message, Is.EqualTo($"OpenAI rejected the message (HTTP 400).\n{detail}"));
+            Assert.That(error?.Message, Does.Not.Contain("Check the selected model, API key, quota"));
+        });
+    }
+
+    [TestCase("openai", "{\"error\":{\"message\":\"Context window exceeded. Shorten the conversation.\"}}", "Context window exceeded")]
+    [TestCase("anthropic", "{\"error\":{\"type\":\"invalid_request_error\",\"message\":\"Choose a supported effort value.\"}}", "Choose a supported effort value")]
+    [TestCase("google", "{\"error\":{\"code\":400,\"message\":\"Unsupported model parameter.\",\"status\":\"INVALID_ARGUMENT\"}}", "Unsupported model parameter")]
+    [TestCase("xai", "{\"error\":{\"message\":\"This model does not support tools.\"}}", "This model does not support tools")]
+    [TestCase("ollama", "{\"error\":\"Model not found. Pull it first.\"}", "Pull it first")]
+    public void ProviderErrorsPreserveActionableDetails(string provider, string body, string detail) {
+        using HttpClient client = new(new ModelHandler(_ => body, HttpStatusCode.BadRequest));
+        HttpRequestException? error = Assert.ThrowsAsync<HttpRequestException>(() => Ares.FetchReplyAsync(provider, "test-key", "selected-model", [new("user", "Hello")], client));
+        Assert.That(error?.Message, Does.Contain("HTTP 400").And.Contain(detail));
+    }
+
+    [Test]
+    public void ErrorDetailsRedactCredentialsAndLimitDisplayedLength() {
+        string body = JsonSerializer.Serialize(new { error = new { message = "Wrong parameter. actual-private-key actual-private-\u001bkey sk-secret xai-secret AIzaPrivateKey Bearer private-token " + new string('a', 5000) } });
+        using HttpClient client = new(new ModelHandler(_ => body, HttpStatusCode.BadRequest));
+        HttpRequestException? error = Assert.ThrowsAsync<HttpRequestException>(() => Ares.FetchReplyAsync("openai", "actual-private-key", "selected", [new("user", "Hello")], client));
+        Assert.That(error?.Message, Does.Contain("Wrong parameter").And.Contain("[redacted]"));
+        foreach (string credential in new[] { "actual-private-key", "sk-secret", "xai-secret", "AIzaPrivateKey", "private-token" }) {
+            Assert.That(error!.Message.Contains(credential, StringComparison.Ordinal), Is.False, "Credentials must be redacted");
+        }
+        Assert.That(error!.Message.Contains('\u001b'), Is.False);
+        Assert.That(error!.Message.Length, Is.LessThan(4200));
+    }
+
     [TestCase("[]")]
     [TestCase("[{\"role\":\"system\",\"content\":\"Unexpected\"}]")]
     [TestCase("[{\"role\":\"user\",\"content\":\" \"}]")]

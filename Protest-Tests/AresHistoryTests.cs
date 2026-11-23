@@ -127,10 +127,11 @@ public class AresHistoryTests {
         Assert.Multiple(() => {
             Assert.That(category.DefaultDays, Is.EqualTo(90));
             Assert.That(DataRetention.LoadSettings()["ares"].enable, Is.False);
-            Assert.That(user, Does.Contain("/ares/history/list").And.Contain("/ares/history/get").And.Contain("/ares/history/delete"));
+            Assert.That(user, Does.Contain("/ares/history/list").And.Contain("/ares/history/get").And.Contain("/ares/history/branch").And.Contain("/ares/history/delete"));
             Assert.That(user, Does.Not.Contain("/config/dataretention/ares"));
             Assert.That(retention, Does.Contain("/config/dataretention/ares"));
             Assert.That(Router.routes["/ares/history/delete"].RequiredMethod, Is.EqualTo("POST"));
+            Assert.That(Router.routes["/ares/history/branch"].RequiredMethod, Is.EqualTo("POST"));
         });
     }
 
@@ -445,6 +446,7 @@ public class AresHistoryTests {
             using HttpResponseMessage result = await client.SendAsync(request).WaitAsync(TimeSpan.FromSeconds(10));
             return await result.Content.ReadAsStringAsync();
         }
+        string? branchId = null;
         try {
             for (int i = 0; i < 3; i++) {
                 string result = await Send("ares/chat?id=" + id, session, new {
@@ -468,7 +470,18 @@ public class AresHistoryTests {
             Assert.That(await Send("ares/history/list", other), Is.EqualTo("[]"));
             Assert.That(await Send("ares/history/get?id=" + conversation, other), Does.Contain("not found"));
             Assert.That(await Send("ares/history/delete?id=" + conversation, other, new { }), Does.Contain("not found"));
-            Assert.That(Ares.history.Get(owner, conversation), Is.Not.Null);
+
+            string branchPath = $"ares/history/branch?id={conversation}&requestId={saved.Messages[1].RequestId}";
+            Assert.That(await Send(branchPath, other, new { }), Does.Contain("not found"));
+            Assert.That(await Send($"ares/history/branch?id={conversation}&requestId={saved.Messages[2].RequestId}", session, new { }), Does.Contain("not found"));
+            using JsonDocument branched = JsonDocument.Parse(await Send(branchPath, session, new { }));
+            branchId = branched.RootElement.GetProperty("id").GetString();
+            Assert.That(branchId, Is.Not.EqualTo(conversation));
+            using JsonDocument loadedBranch = JsonDocument.Parse(await Send($"ares/history/get?id={branchId}", session));
+            Assert.That(loadedBranch.RootElement.GetProperty("revision").GetInt32(), Is.EqualTo(1));
+            Assert.That(loadedBranch.RootElement.GetProperty("messages").EnumerateArray().Select(message => message.GetProperty("content").GetString()),
+                Is.EqualTo(new[] { "First", "Answer" }));
+            Assert.That(Ares.history.Get(owner, conversation).Messages, Is.EqualTo(saved.Messages));
             string conflict = await Send("ares/chat?id=" + id, session, new {
                 model = "selected",
                 revision,
@@ -487,6 +500,7 @@ public class AresHistoryTests {
             Auth.sessions.TryRemove(other, out _);
             File.Delete(agentPath);
             Ares.history.Delete(owner, conversation);
+            if (branchId is not null) Ares.history.Delete(owner, branchId);
         }
     }
 }

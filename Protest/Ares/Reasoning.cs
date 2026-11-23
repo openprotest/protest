@@ -9,32 +9,23 @@ namespace Protest.Ares;
 
 internal static partial class Core {
 
+    //Presentation order for provider-advertised levels. Unfamiliar values are kept.
+    private static readonly string[] effortOrder = ["none", "minimal", "low", "medium", "high", "xhigh", "max"];
+
     [GeneratedRegex(@"-\d{4}-\d{2}-\d{2}$")]
-    private static partial Regex MyRegex();
+    private static partial Regex ModelSnapshotSuffix();
 
-    //Chat Completions has no model-capability discovery endpoint. Unknown models use defaults.
-    //https://developers.openai.com/api/docs/guides/reasoning
-    internal static string[] OpenAiReasoningOptions(string model) {
-        string name = Regex.Replace(model, @"-\d{4}-\d{2}-\d{2}$", String.Empty);
-        return name switch {
-            "o1" or "o3" or "o3-mini" or "o4-mini" => ["low", "medium", "high"],
-            "gpt-5" or "gpt-5-mini" or "gpt-5-nano" => ["minimal", "low", "medium", "high"],
-            "gpt-5.1" => ["none", "low", "medium", "high"],
-            "gpt-5.2" or "gpt-5.4" or "gpt-5.5" => ["none", "low", "medium", "high", "xhigh"],
-            "gpt-6-astra" or "gpt-6.1-sol" or "gpt-6.2-astra" or "gpt-6.2-sol" => ["low", "medium", "high", "xhigh", "max"],
-            "gpt-6-sol" or "gpt-6-luna" => ["none", "low", "medium", "high", "xhigh", "max"],
-            _ => []
-        };
-    }
-
-    internal static readonly string[] anthropicEffortLevelsArray = new string[] { "low", "medium", "high", "xhigh", "max" };
-
-    //Model-specific effort levels documented by the providers; unknown models use defaults.
-    //https://docs.x.ai/developers/model-capabilities/text/reasoning
-    //https://ai.google.dev/gemini-api/docs/openai#thinking
-    internal static string[] CompatibleReasoningOptions(string type, string model) {
-        string name = MyRegex().Replace(model, String.Empty);
+    //Fallbacks for known models whose APIs do not return an effort list.
+    private static string[] FallbackReasoningOptions(string type, string model) {
+        string name = ModelSnapshotSuffix().Replace(model, String.Empty);
         return (type, name) switch {
+            ("openai", "o1" or "o3" or "o3-mini" or "o4-mini") => ["low", "medium", "high"],
+            ("openai", "gpt-5" or "gpt-5-mini" or "gpt-5-nano") => ["minimal", "low", "medium", "high"],
+            ("openai", "gpt-5.1") => ["none", "low", "medium", "high"],
+            ("openai", "gpt-5.2" or "gpt-5.4" or "gpt-5.5" or "gpt-6-luna") => ["none", "low", "medium", "high", "xhigh"],
+            ("openai", "gpt-6.2-astra" or "gpt-6.2-sol") => ["low", "medium", "high", "xhigh"],
+            ("openai", "gpt-6-astra" or "gpt-6.1-sol") => ["low", "medium", "high", "xhigh", "max"],
+            ("openai", "gpt-6-sol") => ["none", "low", "medium", "high", "xhigh", "max"],
             ("xai", "grok-4.6" or "grok-4.7") => ["low", "medium", "high", "xhigh"],
             ("xai", "grok-4.5") => ["low", "medium", "high"],
             ("google", "gemini-4-neon" or "gemini-4-hydrogen") => ["low", "medium", "high", "xhigh"],
@@ -48,11 +39,14 @@ internal static partial class Core {
     }
 
     internal static async Task<string[]> FetchReasoningOptionsAsync(string type, string key, string model, HttpClient client, CancellationToken token = default, string endpoint = null) {
-        if (type == "openai") return OpenAiReasoningOptions(model);
-        if (type is "xai" or "google") return CompatibleReasoningOptions(type, model);
+        //These model APIs do not expose the accepted Chat Completions effort values.
+        //https://developers.openai.com/api/reference/resources/models/methods/retrieve
+        //https://aistudio.google.com/api-reference/models
+        if (type is "openai" or "google") return FallbackReasoningOptions(type, model);
 
         string address = type switch {
             "anthropic" => $"https://api.anthropic.com/v1/models/{Uri.EscapeDataString(model)}",
+            "xai" => $"https://api.x.ai/v1/language-models/{Uri.EscapeDataString(model)}",
             "ollama" => $"{NormalizeEndpoint(endpoint ?? "http://localhost:11434") ?? throw new ArgumentException("Invalid Ollama server URL")}/api/show",
             _ => throw new ArgumentException("Unsupported agent provider", nameof(type))
         };
@@ -64,7 +58,7 @@ internal static partial class Core {
         if (type == "anthropic") {
             request.Headers.Add("anthropic-version", "2026-10-21");
         }
-        else {
+        else if (type == "ollama") {
             request.Content = new StringContent(JsonSerializer.Serialize(new { model }), Encoding.UTF8, "application/json");
         }
 
@@ -72,7 +66,8 @@ internal static partial class Core {
         response.EnsureSuccessStatusCode();
 
         using JsonDocument doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync(token));
-        return ReadReasoningOptions(type, doc.RootElement);
+        if (doc.RootElement.ValueKind != JsonValueKind.Object) throw new JsonException("Invalid model capability response");
+        return ReadReasoningOptions(type, doc.RootElement) ?? FallbackReasoningOptions(type, model);
     }
 
     internal static string[] ReadReasoningOptions(string type, JsonElement root) {
@@ -83,8 +78,24 @@ internal static partial class Core {
                 !capabilities.TryGetProperty("effort", out JsonElement effort) || effort.ValueKind != JsonValueKind.Object ||
                 !effort.TryGetProperty("supported", out JsonElement supported) || supported.ValueKind != JsonValueKind.True) return [];
 
-            return anthropicEffortLevelsArray.Where(level => effort.TryGetProperty(level, out JsonElement capability) && capability.ValueKind == JsonValueKind.Object &&
-                    capability.TryGetProperty("supported", out JsonElement enabled) && enabled.ValueKind == JsonValueKind.True).ToArray();
+            return effort.EnumerateObject().Where(property => ValidEffort(property.Name) && property.Value.ValueKind == JsonValueKind.Object &&
+                    property.Value.TryGetProperty("supported", out JsonElement enabled) && enabled.ValueKind == JsonValueKind.True)
+                .Select(property => property.Name).Distinct().OrderBy(level => {
+                    int index = Array.IndexOf(effortOrder, level);
+                    return index < 0 ? effortOrder.Length : index;
+                }).ToArray();
+        }
+
+        //https://docs.x.ai/developers/rest-api-reference/inference/models
+        if (type == "xai") {
+            //Null signals missing metadata. An explicitly empty list must override the fallback.
+            if (!root.TryGetProperty("capabilities", out JsonElement xaiCapabilities) || xaiCapabilities.ValueKind == JsonValueKind.Null) return null;
+            if (xaiCapabilities.ValueKind != JsonValueKind.Object) return [];
+            if (!xaiCapabilities.TryGetProperty("reasoning_effort", out JsonElement efforts) || efforts.ValueKind == JsonValueKind.Null) return null;
+            if (efforts.ValueKind != JsonValueKind.Array) return [];
+
+            return efforts.EnumerateArray().Where(value => value.ValueKind == JsonValueKind.String).Select(value => value.GetString())
+                .Where(ValidEffort).Distinct().ToArray();
         }
 
         if (type == "ollama" && root.TryGetProperty("thinking", out JsonElement thinking) && thinking.ValueKind == JsonValueKind.Object &&
@@ -92,11 +103,13 @@ internal static partial class Core {
 
             string[] options = values.EnumerateArray().Select(value => value.ValueKind switch {
                 JsonValueKind.True => "true", JsonValueKind.False => "false", JsonValueKind.String => value.GetString(), _ => null
-            }).Where(value => !String.IsNullOrWhiteSpace(value) && value.Length <= 64 && !value.Any(Char.IsControl)).Distinct().ToArray();
+            }).Where(ValidEffort).Distinct().ToArray();
 
             return options.Length == 1 && options[0] == "false" ? [] : options;
         }
 
         return [];
     }
+
+    private static bool ValidEffort(string value) => !String.IsNullOrWhiteSpace(value) && value.Length <= 64 && !value.Any(Char.IsControl);
 }
