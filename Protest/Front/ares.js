@@ -77,6 +77,7 @@ class Ares extends Window {
 			}
 
 			this.settingsController?.abort();
+			this.modelCatalog = null;
 			this.historyController?.abort();
 			this.historyListController?.abort();
 			this.StopHistoryPolling();
@@ -187,16 +188,25 @@ class Ares extends Window {
 
 		const effort = doc.createElement("label");
 		effort.className = "ares-setting ares-effort";
-		effort.textContent = "Effort";
+		const effortCaption = doc.createElement("span");
+		effortCaption.textContent = "Effort";
+
 		this.effortRange = doc.createElement("input");
 		this.effortRange.type = "range";
 		this.effortRange.min = "0";
 		this.effortRange.step = "1";
 		this.effortRange.setAttribute("aria-label", "Effort");
 
+		this.effortSpinner = doc.createElement("span");
+		this.effortSpinner.className = "task-spinner ares-effort-spinner";
+		this.effortSpinner.setAttribute("role", "status");
+		this.effortSpinner.setAttribute("aria-label", "Loading effort levels");
+		this.effortSpinner.hidden = true;
+
 		this.effortValue = doc.createElement("output");
 		this.effortValue.style.fontWeight = "600";
-		effort.append(this.effortRange, this.effortValue);
+
+		effort.append(effortCaption, this.effortRange, this.effortSpinner, this.effortValue);
 		this.settingsPanel.appendChild(effort);
 
 		this.settingsError = doc.createElement("div");
@@ -251,7 +261,7 @@ class Ares extends Window {
 
 		this.LayoutComposer();
 
-		if (open) this.LoadAgents();
+		if (open && !this.settingsController) this.LoadAgents();
 	}
 
 	LayoutComposer() {
@@ -267,15 +277,24 @@ class Ares extends Window {
 	ConnectionKey() { return JSON.stringify([this.connection.agent, this.connection.model]); }
 
 	ConfigureEffort() {
-		const supported = this.connection?.reasoning ?? [];
-		this.effortValues = ["", ...new Set(supported)];
+		const levels = [...new Set(this.connection?.reasoning ?? [])];
 
 		//Boolean thinking controls run from Off to On, regardless of discovery order.
-		if (supported.length && supported.every(value=> value === "false" || value === "true")) this.effortValues = ["", ...new Set(supported.slice().sort())];
+		if (levels.every(value=> value === "false" || value === "true")) levels.sort();
+		const values = ["", ...levels];
+		if (!this.effortValues || values.length !== this.effortValues.length || values.some((value, index)=> value !== this.effortValues[index])) {
+			this.effortValues = values;
+		}
 
 		const saved = this.connection ? this.effortPreferences.get(this.ConnectionKey()) ?? "" : "";
-		this.effortRange.max = String(this.effortValues.length - 1);
-		this.effortRange.value = String(Math.max(0, this.effortValues.indexOf(saved)));
+		const title = this.connection && !levels.length ? "No effort levels were provided for this model. The provider default is used." : "";
+		if (this.effortValue.title !== title) this.effortValue.title = title;
+
+		const max = String(this.effortValues.length - 1);
+		const value = String(Math.max(0, this.effortValues.indexOf(saved)));
+		if (this.effortRange.max !== max) this.effortRange.max = max;
+		if (this.effortRange.value !== value) this.effortRange.value = value;
+
 		this.UpdateEffortLabel();
 		this.UpdateSettingsControls();
 	}
@@ -293,7 +312,7 @@ class Ares extends Window {
 			this.effortValue.textContent = label;
 		}
 
-		this.effortRange.setAttribute("aria-valuetext", label);
+		if (this.effortRange.getAttribute("aria-valuetext") !== label) this.effortRange.setAttribute("aria-valuetext", label);
 		const model = this.connection?.modelName ?? this.connection?.model;
 		const summary = model ? `${model} · ${label}` : "Select model";
 
@@ -308,22 +327,29 @@ class Ares extends Window {
 			this.settingsSummary.focus({preventScroll:true});
 		}
 
-		this.agentSelect.disabled = disabled || this.agents.length === 0;
-		this.modelSelect.disabled = disabled || !this.modelCatalog || this.modelCatalog.agent.id !== this.agentSelect.value;
-		this.effortRange.disabled = disabled || !this.connection || this.effortValues.length <= 1;
-		this.settingsMenu.setAttribute("aria-busy", String(this.settingsBusy));
+		for (const [control, value] of [
+			[this.agentSelect, disabled || this.agents.length === 0],
+			[this.modelSelect, disabled || !this.modelCatalog || this.modelCatalog.agent.id !== this.agentSelect.value],
+			[this.effortRange, disabled || !this.connection || this.effortValues.length <= 1]
+		]) {
+			if (control.disabled !== value) control.disabled = value;
+		}
+
+		if (this.effortSpinner.hidden !== !this.settingsBusy) this.effortSpinner.hidden = !this.settingsBusy;
+		const busy = String(this.settingsBusy);
+		if (this.settingsMenu.getAttribute("aria-busy") !== busy) this.settingsMenu.setAttribute("aria-busy", busy);
 	}
 
 	SetSettingsError(text = "") {
-		this.settingsError.textContent = text;
-		this.settingsError.hidden = !text;
+		if (this.settingsError.textContent !== text) this.settingsError.textContent = text;
+		if (this.settingsError.hidden !== !text) this.settingsError.hidden = !text;
 	}
 
-	BeginSettingsRequest() {
+	BeginSettingsRequest(busy) {
 		this.settingsController?.abort();
 		const controller = new AbortController();
 		this.settingsController = controller;
-		this.settingsBusy = true;
+		this.settingsBusy = busy;
 		this.UpdateSettingsControls();
 		this.SetSettingsError();
 		return controller;
@@ -349,9 +375,9 @@ class Ares extends Window {
 	async LoadOptions(agentId = null, modelId = null) {
 		if (!this.canUse || this.isClosed) return;
 
-		const controller = this.BeginSettingsRequest();
+		const controller = this.BeginSettingsRequest(agentId !== null || !this.connection || !this.modelCatalog?.reasoningLoaded);
 		const ReadOptions = async url=> {
-			const response = await fetch(url, {signal:controller.signal});
+			const response = await fetch(url, {signal:controller.signal, cache:"no-store"});
 			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
 
 			const result = await response.json();
@@ -366,54 +392,74 @@ class Ares extends Window {
 			return result;
 		};
 
+		const SetOptions = (select, entries, label, value)=> {
+			if (select.options.length !== entries.length || entries.some((entry, index)=> entry.id !== select.options[index].value || label(entry) !== select.options[index].text)) {
+				select.replaceChildren(...entries.map(entry=> new Option(label(entry), entry.id)));
+			}
+			if (select.value !== value) select.value = value;
+		};
+
 		try {
 			const agents = agentId === null ? await ReadOptions("ares/agents") : this.agents;
-			if (!agents.length) throw new Error("No enabled agents. Add an agent in Infrastructure → A.R.E.S., then reopen this menu.");
+			const requestedAgent = agentId ?? this.args.agent;
+			const agent = requestedAgent ? agents.find(entry=> entry.id === requestedAgent) : agents[0];
+			this.agents = agents;
+			SetOptions(this.agentSelect, agents, entry=> `${entry.name} (${entry.label})`, agent?.id ?? "");
+			if (!agent || this.modelCatalog?.agent.id !== agent.id) {
+				this.modelCatalog = null;
+				if (this.modelSelect.options.length) this.modelSelect.replaceChildren();
+			}
+			if (!agents.length) {
+				throw new Error("No enabled agents. Add an agent in Infrastructure → A.R.E.S., then reopen this menu.");
+			}
 
-			const agent = agents.find(entry=> entry.id === (agentId ?? this.args.agent)) ?? (agentId === null ? agents[0] : null);
-			if (!agent) throw new Error("The agent settings changed. Close and reopen this menu to refresh the options.");
-
-			const catalog = modelId !== null && this.modelCatalog?.agent.id === agent.id ? this.modelCatalog : await ReadOptions(`ares/models?id=${encodeURIComponent(agent.id)}`);
-			if (catalog.agent.id !== agent.id || catalog.agent.name !== agent.name || catalog.agent.type !== agent.type) throw new Error("The agent settings changed. Close and reopen this menu to refresh the options.");
-			if (!catalog.models.length) throw new Error("No models are available for this agent.");
+			if (!agent) throw new Error("The selected agent is no longer available. Choose an enabled agent.");
 
 			const preferred = this.modelPreferences.get(agent.id) ?? (this.args.agent === agent.id ? this.args.model : null);
-			modelId ??= catalog.models.some(model=> model.id === preferred) ? preferred : catalog.models[0].id;
+			const reuseOptions = agentId === null && this.modelCatalog?.reasoningLoaded && this.connection?.agent === agent.id &&
+				this.connection.model === preferred && this.connection.revision === agent.revision;
+			let current = this.modelCatalog;
+			if (reuseOptions) {
+				modelId = preferred;
+			}
+			else {
+				if (!this.settingsBusy) {
+					this.settingsBusy = true;
+					this.UpdateSettingsControls();
+				}
+				const url = `ares/models?id=${encodeURIComponent(agent.id)}`;
+				const catalog = modelId !== null && this.modelCatalog?.agent.id === agent.id && this.modelCatalog.revision === agent.revision ? this.modelCatalog : await ReadOptions(url);
+				if (catalog.agent.id !== agent.id || catalog.agent.name !== agent.name || catalog.agent.type !== agent.type ||
+					(agent.revision && catalog.revision !== agent.revision)) throw new Error("The agent settings changed. Close and reopen this menu to refresh the options.");
+				if (!catalog.models.length) throw new Error("No models are available for this agent.");
 
-			const current = await ReadOptions(`ares/models?id=${encodeURIComponent(agent.id)}&model=${encodeURIComponent(modelId)}`);
-			if (current.revision !== catalog.revision || current.agent.id !== catalog.agent.id) throw new Error("The agent settings changed. Close and reopen this menu to refresh the options.");
+				modelId ??= preferred ?? catalog.models[0].id;
+				current = catalog.models.some(model=> model.id === modelId) ? await ReadOptions(`${url}&model=${encodeURIComponent(modelId)}`) : catalog;
+				if (current.revision !== catalog.revision || current.agent.id !== catalog.agent.id) throw new Error("The agent settings changed. Close and reopen this menu to refresh the options.");
+			}
 
 			const model = current.models.find(entry=> entry.id === modelId);
-			if (!model) throw new Error("The selected model is no longer available. Close and reopen this menu to refresh the options.");
-
-			const ReplaceOptions = (select, options)=> {
-				if (select.options.length !== options.length || options.some((option, index)=> option.value !== select.options[index].value || option.text !== select.options[index].text)) select.replaceChildren(...options);
-			};
-
-			ReplaceOptions(this.agentSelect, agents.map(entry=> new Option(`${entry.name} (${entry.label})`, entry.id)));
-			ReplaceOptions(this.modelSelect, current.models.map(entry=> new Option(entry.name === entry.id ? entry.id : `${entry.name} (${entry.id})`, entry.id)));
-
-			this.agentSelect.value = agent.id;
-			this.modelSelect.value = model.id;
-			this.agents = agents;
-			this.modelCatalog = current;
-
-			this.connection = Object.freeze({
-				agent:current.agent.id, agentName:current.agent.name, provider:current.agent.type,
-				model:model.id, modelName:model.name, revision:current.revision,
-				reasoning:Object.freeze(current.reasoning ?? [])
-			});
+			if (!reuseOptions) {
+				SetOptions(this.modelSelect, current.models, entry=> entry.name === entry.id ? entry.id : `${entry.name} (${entry.id})`, model?.id ?? "");
+				this.modelCatalog = current;
+				if (!model) throw new Error("The selected model is no longer available. Choose another model.");
+				this.connection = Object.freeze({
+					agent:current.agent.id, agentName:current.agent.name, provider:current.agent.type,
+					model:model.id, modelName:model.name, revision:current.revision,
+					reasoning:Object.freeze(current.reasoning ?? [])
+				});
+			}
 
 			this.args.agent = this.connection.agent;
 			this.args.model = this.connection.model;
 			this.modelPreferences.set(this.connection.agent, this.connection.model);
 			this.ConfigureEffort();
 			this.args.reasoning = this.GetEffort();
-			this.SetSettingsError();
 		}
 		catch (ex) {
 			if (this.IsCurrentSettings(controller)) {
 				this.connection = null;
+				this.ConfigureEffort();
 				this.SetSettingsError(ex.message ?? String(ex));
 			}
 		}
@@ -599,6 +645,10 @@ class Ares extends Window {
 		this.historyList.list.setAttribute("aria-disabled", String(disabled));
 		this.historyList.selected = null;
 
+		for (const button of this.chatBox.querySelectorAll(".ares-response-branch")) {
+			button.disabled = !this.canUse || this.historyLoading;
+		}
+
 		for (const element of this.historyList.list.children) {
 			const current = element._data.id === this.args.conversationId;
 			element.classList.toggle("ares-current-conversation", current);
@@ -626,14 +676,18 @@ class Ares extends Window {
 		if (this.isClosed || !this.canUse || this.historyDeleting) return;
 
 		this.SaveConversationView();
+
 		this.historyController?.abort();
 		this.historyController = null;
 		this.historyLoading = false;
+
 		this.StopHistoryPolling();
 		this.pendingResponse = null;
+
 		this.StopSpeech();
 		this.chatBox.replaceChildren();
 		this.chatBox.removeAttribute("aria-busy");
+
 		this.messages = [];
 		this.lastBubble = null;
 		this.historyNeedsReload = false;
@@ -765,6 +819,7 @@ class Ares extends Window {
 
 	CompletePendingResponse(text = null) {
 		const reply = this.pendingResponse.bubble;
+		const response = reply.closest(".ares-response");
 		const follow = this.IsScrolledToBottom();
 		reply.classList.remove("ares-thinking");
 		reply.removeAttribute("aria-busy");
@@ -778,10 +833,13 @@ class Ares extends Window {
 			reply.replaceChildren(error);
 			reply._markdownText = "";
 		}
+		else {
+			response._branchRequestId = this.pendingResponse.requestId;
+		}
 
 		this.pendingResponse = null;
 		this.chatBox.removeAttribute("aria-busy");
-		this.UpdateResponseButtons(reply.closest(".ares-response"));
+		this.UpdateResponseButtons(response);
 
 		if (follow) this.chatBox.scrollTop = this.chatBox.scrollHeight;
 
@@ -796,6 +854,7 @@ class Ares extends Window {
 
 	RestoreConversation(saved, follow = true) {
 		const scroll = this.chatBox.scrollTop;
+
 		this.StopSpeech();
 		this.chatBox.replaceChildren();
 		this.lastBubble = null;
@@ -807,7 +866,8 @@ class Ares extends Window {
 				const time = new Date(message.time).toLocaleTimeString(UI.regionalFormat, {});
 				const incoming = message.role === "assistant";
 				this.CreateTextBubble(message.content, incoming ? "in" : "out", incoming ? `ares:${message.agent}` : KEEP.username,
-					incoming ? `${message.agentName} · ${message.model}` : "", incoming ? "var(--clr-accent)" : KEEP.color, time);
+					incoming ? `${message.agentName} · ${message.model}` : "", incoming ? "var(--clr-accent)" : KEEP.color, time,
+					incoming && message.status === "completed" ? message.requestId : null);
 
 				if (message.status === "interrupted") {
 					const reply = this.CreateBubble("in", `ares:${message.agent}`, `${message.agentName} · ${message.model}`, "var(--clr-accent)", time);
@@ -823,7 +883,9 @@ class Ares extends Window {
 					this.messages.push({role:message.role, content:message.content});
 				}
 			}
+
 			this.pendingResponse = saved.pending ?? null;
+
 			if (this.pendingResponse) {
 				const pending = this.pendingResponse;
 				const time = new Date(pending.time).toLocaleTimeString(UI.regionalFormat, {});
@@ -848,9 +910,9 @@ class Ares extends Window {
 		this.args.conversationId = saved.id;
 		this.args.conversationRevision = saved.revision;
 		this.historyNeedsReload = false;
+
 		this.SetTitle(`A.R.E.S. - ${saved.title}`);
 		this.chatBox.scrollTop = follow ? this.chatBox.scrollHeight : scroll;
-
 		this.UpdateHistoryControls();
 	}
 
@@ -875,6 +937,7 @@ class Ares extends Window {
 			this.StopHistoryPolling();
 			this.RestoreConversation(saved);
 			this.RestoreConversationView(saved.id);
+
 			if (this.pendingResponse) this.ScheduleHistoryPoll();
 
 			const last = saved.pending ?? saved.messages.findLast(message=> message.agent);
@@ -904,6 +967,43 @@ class Ares extends Window {
 		}
 	}
 
+	async BranchConversation(requestId) {
+		const id = this.args.conversationId;
+		if (this.isClosed || !this.canUse || this.historyLoading || !id || !requestId) return;
+
+		const controller = new AbortController();
+		this.historyController = controller;
+		this.historyLoading = true;
+		this.UpdateHistoryControls();
+
+		try {
+			const response = await fetch(`ares/history/branch?id=${encodeURIComponent(id)}&requestId=${encodeURIComponent(requestId)}`, {
+				method: "POST",
+				signal: controller.signal
+			});
+			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
+
+			const result = await response.json();
+			if (result.error) throw new Error(result.error);
+			if (controller.signal.aborted || this.isClosed || !this.canUse) return;
+
+			this.LoadHistoryList();
+			await this.OpenConversation(result.id);
+		}
+		catch (ex) {
+			if (!controller.signal.aborted && !this.isClosed && this.canUse) {
+				this.ConfirmBox(`Unable to branch conversation: ${ex.message ?? ex}`, true, "mono/error.svg");
+			}
+		}
+		finally {
+			if (this.historyController === controller) {
+				this.historyController = null;
+				this.historyLoading = false;
+				this.UpdateHistoryControls();
+			}
+		}
+	}
+
 	DeleteConversation(id) {
 		if (this.isClosed || !this.canUse || this.historyLoading || this.IsConversationPending(id) || !id) return;
 
@@ -912,6 +1012,7 @@ class Ares extends Window {
 			if (this.isClosed || !this.canUse || this.historyLoading || this.IsConversationPending(id)) return;
 			this.historyLoading = true;
 			this.historyDeleting = true;
+
 			this.UpdateHistoryControls();
 
 			try {
@@ -1039,6 +1140,7 @@ class Ares extends Window {
 			});
 
 			if (response.status !== 200) LOADER.HttpErrorHandler(response.status);
+
 			if (!response.headers.get("Content-Type")?.startsWith("application/x-ndjson")) {
 				const result = await response.json();
 				throw new Error(result.error ?? "The agent returned an invalid response.");
@@ -1056,6 +1158,7 @@ class Ares extends Window {
 				if (event.type === "error") {
 					terminal = true;
 					if (IsVisible()) this.historyNeedsReload = event.historySaved === false;
+					if (event.refreshOptions && this.connection === connection && this.modelCatalog) this.modelCatalog.reasoningLoaded = false;
 					throw new Error(event.error ?? "Unable to get a response from this agent.");
 				}
 
@@ -1107,8 +1210,13 @@ class Ares extends Window {
 
 			if (!this.isClosed) {
 				this.UpdateHistoryControls();
-				if (this.canUse) this.LoadHistoryList();
-				if (recovering && IsVisible()) this.ScheduleHistoryPoll();
+				if (this.canUse) {
+					this.LoadHistoryList();
+				}
+
+				if (recovering && IsVisible()) {
+					this.ScheduleHistoryPoll();
+				}
 			}
 		}
 	}
@@ -1118,6 +1226,7 @@ class Ares extends Window {
 		reply.classList.add("ares-thinking");
 		reply.setAttribute("role", "status");
 		reply.setAttribute("aria-busy", "true");
+
 		this.UpdateResponseButtons(reply.closest(".ares-response"));
 		return reply;
 	}
@@ -1136,14 +1245,22 @@ class Ares extends Window {
 		copyButton.className = "ares-response-copy";
 		copyButton.hidden = true;
 
+		const branchButton = response.ownerDocument.createElement("button");
+		branchButton.type = "button";
+		branchButton.className = "ares-response-branch";
+		branchButton.title = "Branch";
+		branchButton.setAttribute("aria-label", "Branch conversation from this reply");
+		branchButton.hidden = true;
+		branchButton.onclick = ()=> this.BranchConversation(response._branchRequestId);
+
 		let resetTimer = null;
 
 		const ResetFeedback = ()=> {
 			clearTimeout(resetTimer);
 			resetTimer = null;
 			copyButton.classList.remove("ares-copied");
-			copyButton.setAttribute("aria-label", "Copy response");
-			copyButton.title = "Copy response";
+			copyButton.setAttribute("aria-label", "Copy");
+			copyButton.title = "Copy";
 		};
 
 		ResetFeedback();
@@ -1175,7 +1292,7 @@ class Ares extends Window {
 				copyButton.disabled = false;
 			}
 		};
-		response.append(readButton, copyButton);
+		response.append(readButton, copyButton, branchButton);
 	}
 
 	static GetResponseText(response) {
@@ -1186,14 +1303,17 @@ class Ares extends Window {
 	UpdateResponseButtons(response) {
 		const button = response?.querySelector(":scope > .ares-speak");
 		const copy = response?.querySelector(":scope > .ares-response-copy");
+		const branch = response?.querySelector(":scope > .ares-response-branch");
 
-		if (!button || !copy) return;
+		if (!button || !copy || !branch) return;
 
 		const busy = !!response.querySelector('.ares-thinking, .ares-bubble[aria-busy="true"]');
 		const supported = !!window.speechSynthesis && typeof window.SpeechSynthesisUtterance === "function";
 		button.hidden = busy || Ares.GetSpeechSegments(response).length === 0;
 		button.disabled = !supported;
 		copy.hidden = busy || Ares.GetResponseText(response).length === 0;
+		branch.hidden = busy || !response._branchRequestId;
+		branch.disabled = !this.canUse || this.historyLoading;
 	}
 
 	static GetSpeechSegments(response) {
@@ -1839,14 +1959,16 @@ class Ares extends Window {
 		return bubble;
 	}
 
-	CreateTextBubble(text, direction, sender, alias, color, time) {
+	CreateTextBubble(text, direction, sender, alias, color, time, branchRequestId = null) {
 		if (text.length === 0) return;
 
 		const bubble = this.CreateBubble(direction, sender, alias, color, time);
 		Ares.RenderMarkdown(bubble, text);
 
 		if (direction === "in") {
-			this.UpdateResponseButtons(bubble.closest(".ares-response"));
+			const response = bubble.closest(".ares-response");
+			if (branchRequestId) response._branchRequestId = branchRequestId;
+			this.UpdateResponseButtons(response);
 		}
 
 		return bubble;

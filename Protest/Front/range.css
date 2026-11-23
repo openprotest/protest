@@ -35,8 +35,11 @@ input[type="range"]:focus {
 	box-shadow: var(--clr-accent) 0 0 0 2px;
 }
 
-input[type="range"]:active::-webkit-slider-thumb,
-input[type="range"]:active::-moz-range-thumb {
+input[type="range"]:enabled:active::-webkit-slider-thumb {
+	filter: brightness(85%);
+}
+
+input[type="range"]:enabled:active::-moz-range-thumb {
 	filter: brightness(85%);
 }
 
