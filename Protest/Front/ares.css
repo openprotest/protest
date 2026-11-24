@@ -1,7 +1,6 @@
 .ares-layout {
 	container-name: ares-window;
 	container-type: inline-size;
-	--ares-sidebar-width: 240px;
 }
 
 .ares-chat {
@@ -10,7 +9,7 @@
 }
 
 .ares-sidebar-open > .ares-chat {
-	left: var(--ares-sidebar-width);
+	left: 240px;
 }
 
 .ares-sidebar {
@@ -19,7 +18,7 @@
 	position: absolute;
 	z-index: 7;
 	inset: 0 auto 0 0;
-	width: min(var(--ares-sidebar-width), calc(100% - 48px));
+	width: min(240px, calc(100% - 48px));
 	color: var(--clr-dark);
 	flex-direction: column;
 	gap: 8px;
@@ -494,11 +493,13 @@
 	box-sizing: border-box;
 	line-height: 19px;
 	width: fit-content;
+	font-size: small;
 	max-width: 100%;
 	padding: 4px 8px;
 	border-radius: 4px;
 	color: light-dark(color-mix(in srgb, var(--clr-critical) 80%, rgb(0,0,0)), var(--clr-critical));
 	background-color: rgba(0,0,0,.2);
+	text-shadow: var(--clr-dark) 0 0 1px;
 	white-space: pre-wrap;
 	overflow-wrap: anywhere;
 }
@@ -509,9 +510,9 @@
 	content: " ";
 	width: 20px;
 	height: 20px;
-	padding: 2px 8px 2px 0;
+	padding: 2px;
 	background-color: light-dark(color-mix(in srgb, var(--clr-critical) 80%, rgb(0,0,0)), var(--clr-critical));
-	mask-image: url(mono/warning.svg);
+	mask-image: url(mono/critical.svg);
 	mask-size: 20px 20px;
 	mask-position: 50% 50%;
 	mask-repeat: no-repeat;
@@ -583,26 +584,24 @@
 	display: inline-flex;
 	align-items: center;
 	gap: 4px;
-	min-width: 0;
-	height: 26px;
-	margin: 0;
-	padding: 0 6px;
+	min-width: 40px;
+	height: 24px;
+	padding: 2px 4px 2px 24px;
+
 	font-size: small;
 	color: var(--clr-dark);
 	background-color: var(--clr-pane);
 	opacity: 0;
 	pointer-events: none;
+
+	background-image: url(mono/copy.svg);
+	background-size: 16px 16px;
+	background-position: 4px 50%;
+	background-repeat: no-repeat;
+
 	transition: opacity .2s;
 }
 
-.ares-code-copy::before {
-	content: "";
-	width: 14px;
-	height: 14px;
-	background-color: currentColor;
-	-webkit-mask: url(mono/copy.svg) center / contain no-repeat;
-	mask: url(mono/copy.svg) center / contain no-repeat;
-}
 
 .ares-code-block:hover > .ares-code-copy {
 	opacity: 1;
@@ -649,7 +648,7 @@
 	height: 28px;
 	margin: 4px 0 8px;
 	padding: 5px;
-	color: light-dark(var(--clr-dark), var(--clr-light));
+	color: light-dark(rgb(64,64,64), rgb(168,168,168));
 	background: transparent;
 	box-shadow: none !important;
 }
@@ -827,8 +826,8 @@
 	white-space: nowrap;
 	border-radius: 12px;
 	background-color: var(--clr-pane);
-	-webkit-user-select: none; user-select: none;
 	filter: drop-shadow(light-dark(rgba(16,16,16,.8), rgba(32,32,32,.5)) -1px 1px 1px);
+	-webkit-user-select: none; user-select: none;
 	transition: .2s;
 }
 
@@ -844,8 +843,8 @@
 .ares-settings-panel {
 	box-sizing: border-box;
 	position: absolute;
-	right: 0;
-	bottom: 100%;
+	right: -4px;
+	bottom: calc(100% + 4px);
 	width: min(100%, 360px);
 	max-height: 240px;
 	margin: 0;
@@ -860,6 +859,27 @@
 	backdrop-filter: blur(8px) brightness(80%);
 	box-shadow: 0 4px 8px rgba(0,0,0,.2);
 	overflow-y: auto;
+	transition: .2s;
+}
+
+.ares-settings-panel[hidden] { display: none; }
+
+@media (prefers-reduced-motion: no-preference) {
+	.ares-settings-panel {
+		transition: opacity .2s ease, transform .2s ease, display .2s allow-discrete;
+	}
+
+	.ares-settings-panel[hidden] {
+		opacity: 0;
+		transform: translateY(16px);
+	}
+
+	@starting-style {
+		.ares-settings-panel:not([hidden]) {
+			opacity: 0;
+			transform: translateY(16px);
+		}
+	}
 }
 
 .ares-settings-panel select {
@@ -897,5 +917,4 @@
 	border-width: 3px;
 	animation: spin 4s linear infinite;
 }
-.ares-reasoning-setting > input { width: 100%; min-width: 0; margin: 0; }
 .ares-reasoning-setting > output { grid-column: 4; text-align: right; overflow-wrap: anywhere; }

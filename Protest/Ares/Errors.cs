@@ -48,7 +48,7 @@ internal static partial class Core {
 
             if (message.Length > MAX_PROVIDER_ERROR_LENGTH) {
                 int length = Char.IsHighSurrogate(message[MAX_PROVIDER_ERROR_LENGTH - 1]) ? MAX_PROVIDER_ERROR_LENGTH - 1 : MAX_PROVIDER_ERROR_LENGTH;
-                message = message[..length] + "…";
+                message = message[..length] + "...";
             }
         }
 
@@ -82,13 +82,16 @@ internal static partial class Core {
                 return $"{provider} API rate limit reached (HTTP 429). Wait briefly and try again, or check the project's rate limits.";
             }
 
-            return hasDetails ? summary : $"{provider} returned HTTP 429. Check API billing, credits, and request limits; the response did not identify a specific cause.";
+            return hasDetails
+                ? summary
+                : $"{provider} returned HTTP 429. Check API billing, credits, and request limits; the response did not identify a specific cause.";
         }
 
         if (hasDetails) return summary;
 
-        return type == "ollama" ? $"{summary} Check the selected model, server URL, and access settings." :
-            $"{summary} Check the selected model, API key, quota, and rate limits.";
+        return type == "ollama"
+            ? $"{summary} Check the selected model, server URL, and access settings."
+            : $"{summary} Check the selected model, API key, quota, and rate limits.";
     }
 
     [GeneratedRegex(@"\b(?:sk-|xai-)[A-Za-z0-9_-]+|\bAIza[A-Za-z0-9_-]+|\b(?i:Bearer|Basic)\s+[A-Za-z0-9._~+/=-]+", RegexOptions.CultureInvariant)]

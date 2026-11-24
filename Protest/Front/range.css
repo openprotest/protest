@@ -2,9 +2,22 @@ input[type="range"] {
 	appearance: none;
 	height: 10px;
 	border-radius: 4px;
-	background-color: rgb(96,96,96);
-	box-shadow: rgb(96,96,96) 0 0 0 1px;
+	background-color: transparent;
 	outline: 0;
+}
+
+input[type="range"]::-webkit-slider-runnable-track {
+	height: 10px;
+	border-radius: 4px;
+	background-color: rgb(96,96,96);
+	box-shadow: rgb(96,96,96) 0 0 0 1px
+}
+
+input[type="range"]::-moz-range-track {
+	height: 10px;
+	border-radius: 4px;
+	background-color: rgb(96,96,96);
+	box-shadow: rgb(96,96,96) 0 0 0 1px
 }
 
 input[type="range"]::-ms-slider-thumb {
@@ -15,6 +28,7 @@ input[type="range"]::-webkit-slider-thumb {
 	appearance: none;
 	width: 22px;
 	height: 20px;
+	margin-top: -5px;
 	border-radius: 4px;
 	background-color: var(--clr-accent);
 	box-shadow: rgba(0,0,0,.5) -1px 0 2px;
@@ -45,7 +59,6 @@ input[type="range"]:enabled:active::-moz-range-thumb {
 
 input[type="range"]:disabled {
 	background-color: transparent;
-	box-shadow: var(--clr-control) 0 0 0 2px inset !important;
 }
 
 input[type="range"]:disabled::-webkit-slider-thumb {
@@ -56,4 +69,33 @@ input[type="range"]:disabled::-webkit-slider-thumb {
 input[type="range"]:disabled::-moz-range-thumb {
 	background-color: var(--clr-control) !important;
 	box-shadow: none;
+}
+
+.range-with-ticks {
+	display: flex;
+	flex-direction: column;
+	gap: 7px;
+	min-width: 0;
+}
+
+.range-with-ticks > input[type="range"] {
+	width: 100%;
+	min-width: 0;
+	margin: 0;
+}
+
+.range-with-ticks > datalist {
+	display: flex;
+	justify-content: space-between;
+	margin: 0 10px;
+	pointer-events: none;
+}
+
+.range-with-ticks > datalist > option {
+	width: 2px;
+	height: 4px;
+	min-height: 0;
+	padding: 0;
+	font-size: 0;
+	background-color: rgb(96,96,96);
 }

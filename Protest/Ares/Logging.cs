@@ -42,6 +42,7 @@ internal static partial class Core {
         catch (JsonException) {
             return json; //Malformed responses and stream terminators remain visible without affecting parsing.
         }
+
         output.Append(Encoding.UTF8.GetString(bytes, copied, bytes.Length - copied));
         return output.ToString();
     }

@@ -174,6 +174,7 @@ class Ares extends Window {
 		this.settingsPanel.className = "ares-settings-panel";
 		this.settingsPanel.tabIndex = -1;
 		this.settingsPanel.hidden = !!(this.args.agent && this.args.model);
+		this.settingsPanel.inert = this.settingsPanel.hidden;
 
 		this.settingsSummary.setAttribute("aria-expanded", String(!this.settingsPanel.hidden));
 
@@ -206,6 +207,15 @@ class Ares extends Window {
 		this.reasoningRange.step = "1";
 		this.reasoningRange.setAttribute("aria-label", "Reasoning");
 
+		this.reasoningDatalist = doc.createElement("datalist");
+		this.reasoningDatalist.id = `ares-reasoning-${UI.GenerateUuid()}`;
+		this.reasoningDatalist.setAttribute("aria-hidden", "true");
+		this.reasoningRange.setAttribute("list", this.reasoningDatalist.id);
+
+		const reasoningSlider = doc.createElement("span");
+		reasoningSlider.className = "range-with-ticks";
+		reasoningSlider.append(this.reasoningRange, this.reasoningDatalist);
+
 		this.reasoningSpinner = doc.createElement("span");
 		this.reasoningSpinner.className = "task-spinner ares-reasoning-spinner";
 		this.reasoningSpinner.setAttribute("role", "status");
@@ -215,7 +225,7 @@ class Ares extends Window {
 		this.reasoningValue = doc.createElement("output");
 		this.reasoningValue.style.fontWeight = "600";
 
-		reasoningSetting.append(reasoningCaption, this.reasoningRange, this.reasoningSpinner, this.reasoningValue);
+		reasoningSetting.append(reasoningCaption, reasoningSlider, this.reasoningSpinner, this.reasoningValue);
 		this.settingsPanel.appendChild(reasoningSetting);
 
 		this.settingsError = doc.createElement("div");
@@ -262,6 +272,7 @@ class Ares extends Window {
 	SetSettingsOpen(open) {
 		if (this.settingsPanel.hidden === !open) return;
 		this.settingsPanel.hidden = !open;
+		this.settingsPanel.inert = !open;
 		this.settingsSummary.setAttribute("aria-expanded", String(open));
 
 		if (open) {
@@ -296,6 +307,13 @@ class Ares extends Window {
 		const values = ["", ...levels];
 		if (!this.reasoningLevels || values.length !== this.reasoningLevels.length || values.some((value, index)=> value !== this.reasoningLevels[index])) {
 			this.reasoningLevels = values;
+			const doc = this.reasoningDatalist.ownerDocument;
+			this.reasoningDatalist.replaceChildren(...values.map((level, index)=> {
+				const option = doc.createElement("option");
+				option.value = String(index);
+				option.label = this.GetReasoningLabel(level);
+				return option;
+			}));
 		}
 
 		const saved = this.connection ? this.reasoningPreferences.get(this.ConnectionKey()) ?? "" : "";
@@ -315,22 +333,40 @@ class Ares extends Window {
 		return this.reasoningLevels[Number(this.reasoningRange.value)] ?? "";
 	}
 
-	UpdateReasoningLabel() {
-		const value = this.GetReasoningLevel();
+	GetReasoningLabel(value) {
 		const names = {"":"Default", false:"Off", true:"On", xhigh:"Extra high"};
-		const label = Object.hasOwn(names, value) ? names[value] : value.charAt(0).toUpperCase() + value.slice(1);
+		return Object.hasOwn(names, value) ? names[value] : value.charAt(0).toUpperCase() + value.slice(1);
+	}
 
+	UpdateReasoningLabel() {
+		const label = this.GetReasoningLabel(this.GetReasoningLevel());
 		if (this.reasoningValue.textContent !== label) {
 			this.reasoningValue.textContent = label;
 		}
 
 		if (this.reasoningRange.getAttribute("aria-valuetext") !== label) this.reasoningRange.setAttribute("aria-valuetext", label);
 		const model = this.connection?.modelName ?? this.connection?.model;
-		const summary = model ? `${model} · ${label}` : "Select model";
+		const summary = model ? `${model} - ${label}` : "Select model";
+		this.SetSettingsSummary(summary);
+	}
 
-		if (this.settingsSummary.textContent !== summary) {
-			this.settingsSummary.textContent = summary;
-		}
+	SetSettingsSummary(text) {
+		const summary = this.settingsSummary;
+		if (summary.textContent === text) return;
+
+		const view = summary.ownerDocument.defaultView;
+		const animate = summary.textContent && localStorage.getItem("animations") !== "false" && !view.matchMedia("(prefers-reduced-motion: reduce)").matches;
+		const previousWidth = animate ? summary.offsetWidth : 0;
+
+		this.settingsSummaryAnimation?.cancel();
+		this.settingsSummaryAnimation = null;
+		summary.textContent = text;
+
+		if (!previousWidth) return;
+		const nextWidth = summary.offsetWidth;
+		if (!nextWidth || nextWidth === previousWidth) return;
+
+		this.settingsSummaryAnimation = summary.animate({width:[`${previousWidth}px`, `${nextWidth}px`]}, {duration:200, easing:"ease-out"});
 	}
 
 	UpdateSettingsControls() {
@@ -850,7 +886,7 @@ class Ares extends Window {
 					pending.bubble.appendChild(error);
 				}
 
-				error.textContent = `${timedOut ? "Checking the response timed out." : ex.message ?? ex} Retrying…`;
+				error.textContent = `${timedOut ? "Checking the response timed out." : ex.message ?? ex} Retrying...`;
 			}
 		}
 		finally {
@@ -985,7 +1021,7 @@ class Ares extends Window {
 				const time = new Date(message.time).toLocaleTimeString(UI.regionalFormat, {});
 				const incoming = message.role === "assistant";
 				const bubble = this.CreateTextBubble(message.content, incoming ? "in" : "out", incoming ? `ares:${message.agent}` : KEEP.username,
-					incoming ? `${message.agentName} · ${message.model}` : "", incoming ? "var(--clr-accent)" : KEEP.color, time,
+					incoming ? `${message.agentName} - ${message.model}` : "", incoming ? "var(--clr-accent)" : KEEP.color, time,
 					incoming && message.status === "completed" ? message.requestId : null);
 				if (incoming && bubble && message.reasoningText) {
 					const expanded = expandedRequestId !== null && message.requestId === expandedRequestId;
@@ -993,7 +1029,7 @@ class Ares extends Window {
 				}
 
 				if (message.status === "interrupted") {
-					const reply = this.CreateBubble("in", `ares:${message.agent}`, `${message.agentName} · ${message.model}`, "var(--clr-accent)", time);
+					const reply = this.CreateBubble("in", `ares:${message.agent}`, `${message.agentName} - ${message.model}`, "var(--clr-accent)", time);
 
 					const error = reply.ownerDocument.createElement("div");
 					error.className = "ares-error";
@@ -1355,7 +1391,7 @@ class Ares extends Window {
 	}
 
 	CreateThinkingBubble(agent, agentName, model, time) {
-		const reply = this.CreateTextBubble("Thinking...", "in", `ares:${agent}`, `${agentName} · ${model}`, "var(--clr-accent)", time);
+		const reply = this.CreateTextBubble("Thinking...", "in", `ares:${agent}`, `${agentName} - ${model}`, "var(--clr-accent)", time);
 		reply.classList.add("ares-thinking");
 		reply.setAttribute("role", "status");
 		reply.setAttribute("aria-busy", "true");
@@ -1653,7 +1689,7 @@ class Ares extends Window {
 			select.replaceChildren();
 			AddOption("Browser default", "");
 			for (const voice of voices) {
-				AddOption(`${voice.name} (${voice.lang})${voice.default ? " · Default" : ""}`, Ares.SpeechVoiceId(voice));
+				AddOption(`${voice.name} (${voice.lang})${voice.default ? " - Default" : ""}`, Ares.SpeechVoiceId(voice));
 			}
 
 			if (voices.length > 0 && !voices.some(voice=> Ares.SpeechVoiceId(voice) === this.speechVoice)) {
@@ -1696,11 +1732,13 @@ class Ares extends Window {
 	HighlightSpeech(state, position) {
 		while (state.index + 1 < state.segments.length && state.segments[state.index + 1].start <= position) state.index++;
 		const element = state.segments[state.index].element;
+
 		if (state.highlight !== element) {
 			state.highlight?.classList.remove("ares-speaking");
 			state.highlight = element;
 			element.classList.add("ares-speaking");
 		}
+
 		this.UpdateSpeechMenu(state);
 	}
 
@@ -1747,8 +1785,12 @@ class Ares extends Window {
 			if (!IsCurrent()) return;
 			state.utterance = null;
 			state.offset = state.boundary = end;
-			if (end >= state.text.length) this.StopSpeech(false);
-			else if (!state.paused) this.SpeakResponse(state);
+			if (end >= state.text.length) {
+				this.StopSpeech(false);
+			}
+			else if (!state.paused) {
+				 his.SpeakResponse(state);
+			}
 		};
 
 		utterance.onerror = ()=> { if (IsCurrent()) this.SpeechFailed(state); };
@@ -1863,11 +1905,11 @@ class Ares extends Window {
 		});
 
 		const fragment = DOMPurify.sanitize(Ares.markdown.parse(text), {
-			ALLOWED_TAGS:["p", "br", "strong", "em", "del", "blockquote", "ul", "ol", "li", "pre", "code", "h1", "h2", "h3", "h4", "h5", "h6", "hr", "a", "table", "thead", "tbody", "tr", "th", "td", "input"],
-			ALLOWED_ATTR:["href", "title", "start", "align", "type", "checked", "disabled"],
-			ALLOW_DATA_ATTR:false,
-			ALLOW_ARIA_ATTR:false,
-			RETURN_DOM_FRAGMENT:true
+			ALLOWED_TAGS: ["p", "br", "strong", "em", "del", "blockquote", "ul", "ol", "li", "pre", "code", "h1", "h2", "h3", "h4", "h5", "h6", "hr", "a", "table", "thead", "tbody", "tr", "th", "td", "input"],
+			ALLOWED_ATTR: ["href", "title", "start", "align", "type", "checked", "disabled"],
+			ALLOW_DATA_ATTR: false,
+			ALLOW_ARIA_ATTR: false,
+			RETURN_DOM_FRAGMENT: true
 		});
 
 		for (const link of fragment.querySelectorAll("a")) {
@@ -1915,6 +1957,7 @@ class Ares extends Window {
 				clearTimeout(resetTimer);
 				resetTimer = null;
 				button.textContent = "Copy";
+				button.style.backgroundImage = "url(mono/copy.svg)";
 				button.setAttribute("aria-label", "Copy code");
 			};
 
@@ -1927,6 +1970,7 @@ class Ares extends Window {
 				try {
 					await Ares.CopyText(code.textContent, code.ownerDocument);
 					button.textContent = "Copied";
+					button.style.backgroundImage = "url(mono/checked.svg)";
 					button.setAttribute("aria-label", "Code copied");
 					resetTimer = setTimeout(ResetFeedback, 2000);
 				}
@@ -1934,7 +1978,7 @@ class Ares extends Window {
 					const error = doc.createElement("div");
 					error.className = "ares-error ares-code-copy-error";
 					error.setAttribute("role", "alert");
-					error.textContent = "Unable to copy.";
+					error.textContent = "Unable to copy";
 					wrapper.appendChild(error);
 				}
 				finally {
@@ -1985,6 +2029,7 @@ class Ares extends Window {
 
 	static async ReadChatStream(response, onEvent) {
 		if (!response.body) throw new Error("The agent returned no response stream.");
+
 		const reader = response.body.getReader();
 		const decoder = new TextDecoder();
 
@@ -1994,12 +2039,14 @@ class Ares extends Window {
 			while (true) {
 				const {value, done} = await reader.read();
 				pending += done ? decoder.decode() : decoder.decode(value, {stream:true});
+
 				let newline;
 				while ((newline = pending.indexOf("\n")) !== -1) {
 					const line = pending.slice(0, newline).trim();
 					pending = pending.slice(newline + 1);
 					if (line.length > 0) onEvent(JSON.parse(line));
 				}
+
 				if (done) break;
 			}
 			if (pending.trim().length > 0) onEvent(JSON.parse(pending));
