@@ -6,7 +6,14 @@ usernameInput.onkeyup = event=> {
 };
 
 passwordInput.onkeyup = otpInput.onkeyup = event=> {
-	if (event.key==="Enter") Login();
+	if (event.key === "Enter") {
+		Login();
+		return;
+	}
+
+	if (otpInput.value.length === otpInput.maxLength) {
+		Login();
+	}
 };
 
 usernameInput.oninput = usernameInput.onchange = passwordInput.oninput = passwordInput.onchange = event=> {

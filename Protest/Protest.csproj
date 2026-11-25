@@ -53,7 +53,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.Diagnostics.EventLog" Version="11.0.0" />
     <PackageReference Include="System.DirectoryServices" Version="11.0.0" />
     <PackageReference Include="System.Management" Version="11.0.0" />
     <PackageReference Include="System.IO.Ports" Version="11.0.0" />

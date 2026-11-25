@@ -36,6 +36,7 @@ class Rdp extends Window {
 	static SHADOW_STYLE = `
 		:host > div, div:has(> .screen-wrapper) { width:100%; height:100%; }
 		.screen-wrapper:not(.hidden) { display:flex !important; width:100% !important; height:100% !important; overflow:auto !important; }
+		.screen-wrapper.capturing-inputs { outline:none !important; }
 		.screen-viewer {
 			flex:none; margin:auto;
 			width:var(--rdp-width) !important; min-width:var(--rdp-width) !important; max-width:var(--rdp-width) !important;
@@ -142,6 +143,7 @@ class Rdp extends Window {
 			if (this.pendingRemoteClipboard > 0) this.SyncClipboardToLocal();
 			this.SyncClipboardToRemote();
 		};
+
 		window.addEventListener("focus", this._clipboardSyncHandler);
 		document.addEventListener("visibilitychange", this._clipboardSyncHandler);
 
@@ -177,6 +179,12 @@ class Rdp extends Window {
 		);
 
 		return Rdp.loadPromise;
+	}
+
+	static CreateConfigBuilder(library, userInteraction) {
+		const builder = userInteraction.configBuilder();
+		//Keep graphics on the RDP I/O channel used by older IronRDP clients and session playback.
+		return typeof library.legacyGraphics === "function" ? builder.withExtension(library.legacyGraphics(true)) : builder;
 	}
 
 	async Connect() {
@@ -243,7 +251,7 @@ class Rdp extends Window {
 		const destination = host.includes(":") ? `[${host}]:${port}` : `${host}:${port}`;
 		const proxyAddress = `${KEEP.isSecure ? "wss" : "ws"}://${window.location.host}/ws/rdp${query ? `?${query}` : ""}`;
 
-		let builder = userInteraction.configBuilder()
+		let builder = Rdp.CreateConfigBuilder(library, userInteraction)
 			.withDestination(destination)
 			.withProxyAddress(proxyAddress)
 			.withAuthToken("protest") //the gateway authenticates the WebSocket by the session cookie, the token is unused
@@ -603,7 +611,7 @@ class Rdp extends Window {
 		okButton.focus();
 	}
 
-	//IronRDP 0.7.0 leaves the server's pointer updates unhandled, the gateway decodes them and they become the canvas cursor
+	//Applies the server pointer shape sent by the gateway as the canvas cursor.
 	SetPointer(pointer) {
 		if (!this.userInteraction) return;
 
@@ -1568,7 +1576,7 @@ class RdpRecording extends Rdp {
 		if (connectionId !== this.connectionId) return;
 
 		//the recording starts after CredSSP, the player connects with TLS only and placeholder credentials
-		const config = userInteraction.configBuilder()
+		const config = Rdp.CreateConfigBuilder(Rdp.library, userInteraction)
 			.withDestination(`${this.meta.host}:${this.meta.port}`)
 			.withProxyAddress(url)
 			.withAuthToken("protest")

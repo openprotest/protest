@@ -1587,10 +1587,9 @@ internal static class Rdp {
         }
     }
 
-    //IronRDP's web client (0.7.0) leaves the server's pointer updates unhandled, its canvas would always show the
-    //browser's arrow. The gateway follows the server's fast-path output and hands each pointer shape to the window as a
-    //text message, which the window applies as the canvas cursor. Everything before the client's first slow-path PDU is
-    //CredSSP and is not inspected.
+    //The gateway follows the server's fast-path output and sends pointer shapes to the window as text messages.
+    //The window applies each shape as the canvas cursor. Inspection starts with the client's first slow-path PDU,
+    //after CredSSP.
     internal sealed class PointerTracker {
         private const byte UPDATETYPE_PTR_NULL      = 0x5;
         private const byte UPDATETYPE_PTR_DEFAULT   = 0x6;

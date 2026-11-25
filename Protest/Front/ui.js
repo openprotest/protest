@@ -480,7 +480,7 @@ const MENU = {
 		{ t:"RBAC",           i:"mono/rbac.svg?light",        g:"manage", h:false, f:()=> new AccessControl("rbac"), k:"rbac acl role based users access control list permissions" },
 		{ t:"Open sessions",  i:"mono/hourglass.svg?light",   g:"manage", h:true,  f:()=> new AccessControl("sessions"), k:"alive connections" },
 
-		{ t:"API links",      i:"mono/carabiner.svg?light",   g:"manage", h:false, f:()=> new Api()},
+		{ t:"API links",      i:"mono/carabiner.svg?light",   g:"manage", h:false, f:()=> new Api() },
 		{ t:"Scheduler",      i:"mono/timeline.svg?light",    g:"manage", h:false, f:()=> new Scheduler(), k:"tasks automations jobs" },
 		{ t:"Certificates",   i:"mono/certificate.svg?light", g:"manage", h:false, f:()=> new Certificates(), k: "ssl tls" },
 		{ t:"Backup",         i:"mono/backup.svg?light",      g:"manage", h:false, f:()=> new Backup() },
@@ -621,6 +621,7 @@ const MENU = {
 			MENU.isAttached = false;
 			WIN.AlignIcon();
 		}
+
 		localStorage.setItem("menu_attached", false);
 	},
 

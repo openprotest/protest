@@ -20,6 +20,7 @@ internal static partial class Core {
     private const int MAX_PAYLOAD = 64 * 1024;
     private const int MAX_CHAT_PAYLOAD = 1024 * 1024;
     private const int MAX_TEXT_LENGTH = 8192;
+
     private static readonly Lock mutex = new Lock();
     private static readonly Dictionary<string, string> errors = new Dictionary<string, string>();
     private static readonly string[] reasoningTextFields = ["thinking", "reasoning_content", "reasoning"];

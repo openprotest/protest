@@ -619,7 +619,6 @@
 .ares-markdown table {
 	display: block;
 	max-width: 100%;
-	overflow-x: auto;
 	border-collapse: collapse;
 	margin: .75em 0;
 }
@@ -679,15 +678,13 @@
 	mask-image: url(mono/checked.svg);
 }
 
-.ares-box .ares-speak:hover,
-.ares-box .ares-response-copy:hover,
-.ares-box .ares-response-branch:hover {
+.ares-box :is(.ares-speak, .ares-response-copy, .ares-response-branch):enabled:is(:hover, :active) {
 	background-color: rgba(0,0,0,.2);
+	box-shadow: rgba(0,0,0,.4) 0 0 0 1px !important;
+	transition: none;
 }
 
-.ares-box .ares-speak:active,
-.ares-box .ares-response-copy:active,
-.ares-box .ares-response-branch:active {
+.ares-box :is(.ares-speak, .ares-response-copy, .ares-response-branch):enabled:active {
 	background-color: rgba(0,0,0,.25);
 }
 
@@ -696,12 +693,12 @@
 .ares-box .ares-response-branch[hidden] { display: none; }
 .ares-box .ares-speak:disabled,
 .ares-box .ares-response-copy:disabled,
-.ares-box .ares-response-branch:disabled { opacity: .3; cursor: default; }
+.ares-box .ares-response-branch:disabled { opacity: .5; cursor: default; }
 .ares-box .ares-speech-error,
 .ares-box .ares-response-copy-error { margin: 4px 16px 8px; }
 
 .ares-box .ares-speaking {
-	background-color: color-mix(in srgb, var(--clr-accent) 50%, transparent);
+	background-color: color-mix(in srgb, var(--clr-accent) 40%, transparent);
 	border-radius: 4px;
 	box-shadow: 0 0 0 2px var(--clr-accent);
 	transition: background-color .4s, box-shadow .4s;

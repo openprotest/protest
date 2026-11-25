@@ -88,7 +88,6 @@ internal static class Auth {
 
     internal static bool IsAuthorized(HttpListenerContext ctx, string path) => IsAuthenticatedAndAuthorized(ctx, path);
 
-    //"*" grants every path, including the ones no permission maps to
     internal static bool IsAuthorized(AccessControl access, string path) =>
         access.accessPath.Contains(path) || access.authorization.Contains("*");
 
@@ -640,8 +639,6 @@ internal static class Auth {
                 path.Add("/tools/ntp");
                 path.Add("/tools/locateip");
                 path.Add("/tools/maclookup");
-                path.Add("/speedtest");
-                path.Add("/ws/speedtest");
                 break;
 
             case "terminal:write":

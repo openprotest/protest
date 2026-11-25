@@ -115,52 +115,57 @@ class About extends Tabs {
 
 		center.appendChild(document.createElement("br"));
 
-		const CreateCredit = (name, linkText, linkUrl)=> {
+		const CreateCredit = (name, version, linkText, linkUrl)=> {
 			const container = document.createElement("div");
-			container.style.textAlign = "left";
-			container.style.paddingBottom = "4px";
+			container.style.display = "grid";
+			container.style.gridTemplateColumns = "repeat(2, minmax(0, 1fr))";
+			container.style.columnGap = "16px";
+			container.style.alignItems = "baseline";
+			container.style.overflowWrap = "anywhere";
+			container.style.paddingBottom = "8px";
 			container.style.userSelect = "text";
-			center.appendChild(container);
 
-			const nameBox  = document.createElement("div");
+			const nameBox = document.createElement("div");
 			nameBox.textContent = name;
-			nameBox.style.display = "inline-block";
-			nameBox.style.boxSizing = "border-box";
 			nameBox.style.textAlign = "right";
-			nameBox.style.marginRight = "8px";
-			nameBox.style.width = "50%";
 
-			const linkBox  = document.createElement("a");
-			linkBox.textContent = linkText;
-			if (linkUrl.length > 0) {
-				linkBox.href = linkUrl;
+			if (version) {
+				const versionBox = document.createElement("span");
+				versionBox.textContent = ` ${version}`;
+				versionBox.style.marginLeft = "4px";
+				versionBox.style.color = "rgb(64,64,64)"
+				versionBox.style.fontSize = "small";
+				nameBox.appendChild(versionBox);
 			}
-			linkBox.target = "_blank";
-			linkBox.style.display = "inline-block";
-			linkBox.style.boxSizing = "border-box";
+
+			const linkBox = document.createElement(linkUrl ? "a" : "span");
+			linkBox.textContent = linkText;
 			linkBox.style.textAlign = "left";
-			linkBox.style.marginLeft = "8px";
-			linkBox.style.padding = "0 2px";
-			linkBox.style.maxWidth = "50%";
-			linkBox.style.borderRadius = "2px";
+			linkBox.style.justifySelf = "start";
+
+			if (linkUrl) {
+				linkBox.href = linkUrl;
+				linkBox.target = "_blank";
+			}
 
 			container.append(nameBox, linkBox);
+			center.appendChild(container);
 		};
 
-		CreateCredit("SSH.NET",                    "Renci",           "https://github.com/sshnet/SSH.NET");
-		CreateCredit("SharpSnmpLib",               "Lextm",           "https://github.com/lextudio/sharpsnmplib");
-		CreateCredit("MailKit",                    "jstedfast ",      "https://github.com/jstedfast/mailkit");
-		CreateCredit("Otp.NET",                    "kspearrin",       "https://github.com/kspearrin/Otp.NET");
-		CreateCredit("Porta.Pty",                  "Laird McConnell", "https://github.com/tomlm/Porta.Pty");
-		CreateCredit("noVNC",                      "Joel Martin",     "https://github.com/novnc/noVNC");
-		CreateCredit("IronRDP",                    "Devolutions",     "https://github.com/Devolutions/IronRDP");
-		CreateCredit("fzstd",                      "Arjun Barrett",   "https://github.com/101arrowz/fzstd");
-		CreateCredit("Xterm.js",                   "Xterm.js team",   "https://github.com/xtermjs");
-		CreateCredit("QRCode.js",                  "Sangmin, Shim",   "https://github.com/davidshimjs/qrcodejs");
-		CreateCredit("Marked",                     "MarkedJS",        "https://github.com/markedjs/marked");
-		CreateCredit("DOMPurify",                  "Cure53",          "https://github.com/cure53/DOMPurify");
-		CreateCredit("MAC addresses lookup table", "ieee",            "https://regauth.standards.ieee.org/standards-ra-web/pub/view.html");
-		CreateCredit("Open Sans typeface",         "Steve Matteson",  "");
+		CreateCredit("SSH.NET",                    "2026.0.1",     "Renci",           "https://github.com/sshnet/SSH.NET");
+		CreateCredit("SharpSnmpLib",               "12.5.8",       "Lextm",           "https://github.com/lextudio/sharpsnmplib");
+		CreateCredit("Otp.NET",                    "1.4.1",        "kspearrin",       "https://github.com/kspearrin/Otp.NET");
+		CreateCredit("MailKit",                    "5.0.0",        "jstedfast",       "https://github.com/jstedfast/mailkit");
+		CreateCredit("Porta.Pty",                  "2.2.4",        "Laird McConnell", "https://github.com/tomlm/Porta.Pty");
+		CreateCredit("noVNC",                      "1.7.0",        "Joel Martin",     "https://github.com/novnc/noVNC");
+		CreateCredit("IronRDP",                    "0.12.0/0.8.0", "Devolutions",     "https://github.com/Devolutions/IronRDP");
+		CreateCredit("fzstd",                      "0.1.1",        "Arjun Barrett",   "https://github.com/101arrowz/fzstd");
+		CreateCredit("Xterm.js",                   "6.0.0",        "Xterm.js team",   "https://github.com/xtermjs");
+		CreateCredit("QRCode.js",                  "1.0.0",        "Sangmin, Shim",   "https://github.com/davidshimjs/qrcodejs");
+		CreateCredit("Marked",                     "18.3.0",       "MarkedJS",        "https://github.com/markedjs/marked");
+		CreateCredit("DOMPurify",                  "3.5.0",        "Cure53",          "https://github.com/cure53/DOMPurify");
+		CreateCredit("MAC addresses lookup table", "",             "ieee",            "https://regauth.standards.ieee.org/standards-ra-web/pub/view.html");
+		CreateCredit("Open Sans typeface",         "1.10",         "Steve Matteson",  "");
 
 		center.appendChild(document.createElement("br"));
 		center.appendChild(document.createElement("br"));

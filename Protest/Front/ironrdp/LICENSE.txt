@@ -1,9 +1,9 @@
 IronRDP web client
 https://github.com/Devolutions/IronRDP
 
-  iron-remote-desktop.js        @devolutions/iron-remote-desktop 0.11.0
-  iron-remote-desktop-rdp.js    @devolutions/iron-remote-desktop-rdp 0.7.0
-  iron-remote-desktop-rdp.wasm  @devolutions/iron-remote-desktop-rdp 0.7.0
+  iron-remote-desktop.js        @devolutions/iron-remote-desktop 0.12.0
+  iron-remote-desktop-rdp.js    @devolutions/iron-remote-desktop-rdp 0.8.0
+  iron-remote-desktop-rdp.wasm  @devolutions/iron-remote-desktop-rdp 0.8.0
 
 The package inlines its WebAssembly module as a base64 data URL. It is served here as its own file instead, and
 line 4 of iron-remote-desktop-rdp.js loads it by URL: Firefox attributes the module's URL to every WebAssembly stack

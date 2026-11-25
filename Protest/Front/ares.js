@@ -454,7 +454,7 @@ class Ares extends Window {
 			this.agents = agents;
 
 			SetOptions(this.agentSelect, agents, entry=> `${entry.name} (${entry.label})`, agent?.id ?? "");
-			
+
 			if (!agent || this.modelCatalog?.agent.id !== agent.id) {
 				this.modelCatalog = null;
 				if (this.modelSelect.options.length) this.modelSelect.replaceChildren();
@@ -1018,7 +1018,7 @@ class Ares extends Window {
 
 		try {
 			for (const message of saved.messages) {
-				const time = new Date(message.time).toLocaleTimeString(UI.regionalFormat, {});
+				const time = Ares.FormatTimestamp(message.time);
 				const incoming = message.role === "assistant";
 				const bubble = this.CreateTextBubble(message.content, incoming ? "in" : "out", incoming ? `ares:${message.agent}` : KEEP.username,
 					incoming ? `${message.agentName} - ${message.model}` : "", incoming ? "var(--clr-accent)" : KEEP.color, time,
@@ -1047,7 +1047,7 @@ class Ares extends Window {
 
 			if (this.pendingResponse) {
 				const pending = this.pendingResponse;
-				const time = new Date(pending.time).toLocaleTimeString(UI.regionalFormat, {});
+				const time = Ares.FormatTimestamp(pending.time);
 				this.CreateTextBubble(pending.text, "out", KEEP.username, "", KEEP.color, time);
 
 				const reply = this.CreateThinkingBubble(pending.agent, pending.agentName, pending.model, time);
@@ -1271,7 +1271,7 @@ class Ares extends Window {
 
 		const messages = [...this.messages, {role:"user", content:text}];
 		const now = Date.now();
-		const nowString = new Date(now).toLocaleTimeString(UI.regionalFormat, {});
+		const nowString = Ares.FormatTimestamp(now);
 
 		const bubble = this.CreateTextBubble(text, "out", KEEP.username, "", KEEP.color, nowString);
 		bubble.style.color = "var(--clr-pane)";
@@ -2059,6 +2059,13 @@ class Ares extends Window {
 
 	IsScrolledToBottom() {
 		return this.chatBox.scrollTop + this.chatBox.clientHeight - this.chatBox.scrollHeight >= -96;
+	}
+
+	static FormatTimestamp(time) {
+		const date = new Date(time);
+		return date.toDateString() === new Date().toDateString()
+			? date.toLocaleTimeString(UI.regionalFormat)
+			: date.toLocaleString(UI.regionalFormat);
 	}
 
 	CreateBubble(direction, sender, alias, color, time) {

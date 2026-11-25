@@ -58,8 +58,6 @@ internal sealed class Listener {
         while (listener.IsListening) {
             try {
                 HttpListenerContext ctx = await listener.GetContextAsync();
-                //an async method runs synchronously up to its first await that does not complete, called inline the synchronous handlers
-                //would run on this loop, and a slow one (a winevents/list page reads up to 256MB) would hold back every other request
                 _ = Task.Run(() => ListenerCallback(ctx));
             }
             catch (HttpListenerException) when (!listener.IsListening) {
@@ -85,15 +83,12 @@ internal sealed class Listener {
         {
             if (ctx.Request.HasEntityBody) ctx.Response.KeepAlive = false;
 
-            //the managed listener (Linux, macOS) hands every request of a keep-alive connection the same IPEndPoint,
-            //start from the socket peer, so the client of one request is never carried into the next
             IPEndPoint remoteEndPoint = ctx.Request.RemoteEndPoint;
             IPAddress remoteIp = peerAddresses.GetValue(remoteEndPoint, endPoint => endPoint.Address);
             remoteEndPoint.Address = remoteIp;
 
             string xForwardedForHeader = ctx.Request?.Headers?.Get("X-Forwarded-For");
             if (String.IsNullOrEmpty(xForwardedForHeader)) {
-                //a proxy on this host would pass the backdoor for every client it forwards
                 if (Configuration.backdoor && IPAddress.IsLoopback(remoteIp) && Configuration.trustedProxies.Contains(remoteIp)) {
                     Logger.Action("Unauthenticated", "AAA", $"Rejected request without X-Forwarded-For from trusted proxy {remoteIp}");
                     ctx.Response.StatusCode = 400;
@@ -258,12 +253,6 @@ internal sealed class Listener {
             }
 
             if (await WebSocketHandler(ctx, host, scheme)) return;
-
-            //streamed, outside the byte[] routing
-            if (String.Equals(ctx.Request.Url.AbsolutePath, "/speedtest", StringComparison.Ordinal)) {
-                await Tools.SpeedTest.Handler(ctx);
-                return;
-            }
 
             if (await DynamicHandler(ctx)) return;
 
@@ -483,7 +472,6 @@ internal sealed class Listener {
         case "/ws/portscan"         : await Tools.PortScan.WebSocketHandler(ctx);      return true;
         case "/ws/traceroute"       : await Tools.TraceRoute.WebSocketHandler(ctx);    return true;
         case "/ws/websitecheck"     : await Tools.WebsiteCheck.WebSocketHandler(ctx);  return true;
-        case "/ws/speedtest"        : await Tools.SpeedTest.WebSocketHandler(ctx);     return true;
         case "/ws/monitor"          : await Tools.Monitor.WebSocketHandler(ctx);       return true;
         case "/ws/topology"         : await Tools.Topology.WebSocketHandler(ctx);      return true;
         case "/ws/livestats/device" : await Tools.LiveStats.DeviceStats(ctx);          return true;

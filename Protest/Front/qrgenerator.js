@@ -133,6 +133,7 @@ class QrGenerator extends Window {
 		this.SetIcon("mono/qrcode.svg");
 
 		this.model = null;
+		this.generation = 0;
 
 		this.content.style.padding = "16px";
 
@@ -272,6 +273,7 @@ class QrGenerator extends Window {
 		this.saveButton = document.createElement("input");
 		this.saveButton.type = "button";
 		this.saveButton.value = "Save";
+		this.saveButton.disabled = true;
 		this.saveButton.className = "with-icon";
 		this.saveButton.style.backgroundImage = "url(mono/floppy.svg?light)";
 		buttons.append(this.formatInput, this.saveButton);
@@ -463,6 +465,7 @@ class QrGenerator extends Window {
 	}
 
 	async Generate() {
+		const generation = ++this.generation;
 		this.model = null;
 		this.UpdateFields();
 
@@ -477,19 +480,14 @@ class QrGenerator extends Window {
 
 		if (text.length > 0) {
 			try {
-				QrGenerator.LoadLibrary();
+				await QrGenerator.LoadLibrary();
 			}
 			catch (ex) {
-				this.ShowMessage(ex.message);
+				if (generation === this.generation) this.ShowMessage(ex.message);
 				return;
 			}
 
-			try {
-				if (text !== this.Encode()) return; //a newer input is already generating
-			}
-			catch {
-				return;
-			}
+			if (generation !== this.generation) return;
 
 			try {
 				this.model = QrGenerator.CreateModel(text, QRCode.CorrectLevel[this.args.level]);

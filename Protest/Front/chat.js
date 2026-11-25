@@ -892,7 +892,9 @@ class Chat extends Window {
 		}
 		else {
 			const time = new Date(message.time);
-			const timeString = time.toLocaleTimeString(UI.regionalFormat, {});
+			const timeString = time.toDateString() === new Date().toDateString()
+				? time.toLocaleTimeString(UI.regionalFormat)
+				: time.toLocaleString(UI.regionalFormat);
 			const direction = message.sender === KEEP.username ? "out" : "in";
 
 			switch (message.action) {
