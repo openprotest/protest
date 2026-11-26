@@ -5,11 +5,22 @@ using System.IO;
 using System.Net;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
+using System.Threading;
+using System.Threading.Tasks;
 using Protest.Http;
 
 namespace Protest.Tools;
 
 internal static class Cert {
+    private static readonly Lock filesLock = new Lock();
+    private static readonly string validityDirectory = Path.Join(Data.DIR_CERTIFICATES, ".validity");
+
+    private sealed record CertificateValidity(
+        [property: JsonRequired] string FileHash,
+        [property: JsonRequired] DateTime IssuedAt,
+        [property: JsonRequired] DateTime ExpiresAt);
+
     internal static byte[] Create(HttpListenerContext ctx, string origin) {
         using StreamReader reader = new StreamReader(ctx.Request.InputStream, ctx.Request.ContentEncoding);
         string payload = reader.ReadToEnd();
@@ -83,22 +94,25 @@ internal static class Cert {
         X509KeyUsageFlags keyUsageFlags = X509KeyUsageFlags.DigitalSignature | X509KeyUsageFlags.KeyEncipherment;
 
         try {
-            X509Certificate2 cert = CreateSelfSignedCertificate(
-            domain,
-            keySize,
-            hashAlgorithm,
-            validAfter,
-            validBefore,
-            subjectAlternativeNames,
-            keyUsageFlags,
-            name);
+            using X509Certificate2 cert = CreateSelfSignedCertificate(
+                domain,
+                keySize,
+                hashAlgorithm,
+                validAfter,
+                validBefore,
+                subjectAlternativeNames,
+                keyUsageFlags,
+                name);
 
             string filename = $"{name}.pfx";
-            foreach (char c in System.IO.Path.GetInvalidFileNameChars()) {
+            foreach (char c in Path.GetInvalidFileNameChars()) {
                 filename = filename.Replace(c, '_');
             }
 
-            ExportToPfx(cert, password, filename);
+            byte[] pfxBytes = cert.Export(X509ContentType.Pfx, password);
+            lock (filesLock) {
+                SaveCertificate(filename, pfxBytes, cert);
+            }
 
             Logger.Action(origin, "Certificate", "Create certificate");
 
@@ -109,34 +123,49 @@ internal static class Cert {
         }
     }
 
-    internal static byte[] Upload(HttpListenerContext ctx, string origin) {
+    internal static ValueTask<byte[]> Upload(HttpListenerContext ctx, string origin) =>
+        UploadAsync(ctx.Request.InputStream, ctx.Request.ContentType, origin);
+
+    private static async ValueTask<byte[]> UploadAsync(Stream body, string contentType, string origin) {
         try {
-            if (!Http.MultipartFileHelper.TryReadMultipartFile(ctx.Request, out string name, out byte[] fileContent)) {
+            MultipartFileHelper.Upload upload = await MultipartFileHelper.ReadAsync(body, contentType);
+            string name = upload?.Filename;
+
+            if (!Data.IsValidFilename(name) || !name.EndsWith(".pfx", StringComparison.OrdinalIgnoreCase)) {
                 return Data.CODE_INVALID_ARGUMENT.Array;
             }
 
             name = name.ToLowerInvariant();
-
-            if (!name.EndsWith(".pfx", StringComparison.OrdinalIgnoreCase)) {
-                return Data.CODE_INVALID_ARGUMENT.Array;
+            upload.Fields.TryGetValue("password", out string password);
+            X509Certificate2 certificate = null;
+            if (!String.IsNullOrEmpty(password)) {
+                try {
+                    certificate = X509CertificateLoader.LoadPkcs12(upload.Content, password, X509KeyStorageFlags.EphemeralKeySet);
+                }
+                catch (CryptographicException) {
+                    return "{\"error\":\"Could not open the certificate with the supplied password.\"}"u8.ToArray();
+                }
             }
 
-            name = name[..^4];
+            using (certificate) {
+                string newName = name;
+                lock (filesLock) {
+                    string baseName = name[..^4];
+                    int counter = 2;
+                    while (File.Exists(Path.Join(Data.DIR_CERTIFICATES, newName))) {
+                        newName = $"{baseName} {counter++}.pfx";
+                    }
 
-            int counter = 2;
-            string newName = $"{name}.pfx";
+                    SaveCertificate(newName, upload.Content, certificate);
+                }
 
-            while (File.Exists(Path.Join(Data.DIR_CERTIFICATES, newName))) {
-                newName = $"{name} {counter++}.pfx";
+                Logger.Action(origin, "Certificate", $"Upload certificate: {newName}");
             }
-
-            Directory.CreateDirectory(Data.DIR_CERTIFICATES);
-
-            File.WriteAllBytes(Path.Join(Data.DIR_CERTIFICATES, newName), fileContent);
-
-            Logger.Action(origin, "Certificate", $"Upload certificate: {newName}");
 
             return List();
+        }
+        catch (InvalidDataException) {
+            return Data.CODE_INVALID_ARGUMENT.Array;
         }
         catch (Exception ex) {
             Logger.Debug(ex);
@@ -144,49 +173,54 @@ internal static class Cert {
         }
     }
 
-    private static int IndexOf(byte[] buffer, byte[] pattern, int startIndex) {
-        for (int i = startIndex; i <= buffer.Length - pattern.Length; i++) {
+    internal static byte[] List() {
+        lock (filesLock) {
+            DirectoryInfo directory = new DirectoryInfo(Data.DIR_CERTIFICATES);
+            if (!directory.Exists) return "{\"data\":{},\"length\":0}"u8.ToArray();
 
-            bool match = true;
-
-            for (int j = 0; j < pattern.Length; j++) {
-                if (buffer[i + j] != pattern[j]) {
-                    match = false;
-                    break;
-                }
-            }
-
-            if (match) {
-                return i;
-            }
+            FileInfo[] files = directory.GetFiles();
+            return JsonSerializer.SerializeToUtf8Bytes(new {
+                data = files.ToDictionary(file => file.Name, GetListEntry),
+                length = files.Length
+            });
         }
-
-        return -1;
     }
 
-    internal static byte[] List() {
-        DirectoryInfo directory = new DirectoryInfo(Data.DIR_CERTIFICATES);
-        if (!directory.Exists) return "{\"data\":{},\"length\":0}"u8.ToArray();
+    private static Dictionary<string, object> GetListEntry(FileInfo file) {
+        Dictionary<string, object> entry = new Dictionary<string, object> {
+            ["name"] = new { v = file.Name },
+            ["date"] = new { v = file.CreationTimeUtc.Ticks },
+            ["size"] = new { v = file.Length }
+        };
 
-        FileInfo[] files = directory.GetFiles();
+        CertificateValidity validity = ReadValidity(file);
+        if (validity is not null) {
+            entry["issued at"] = new { v = validity.IssuedAt };
+            entry["expired at"] = new { v = validity.ExpiresAt };
+        }
 
-        return JsonSerializer.SerializeToUtf8Bytes(new {
-            data = files.ToDictionary(
-                file => Data.EscapeJsonText(file.Name),
-                file => new {
-                    name = new { v = Data.EscapeJsonText(file.Name) },
-                    date = new { v = file.CreationTimeUtc.Ticks },
-                    size = new { v = file.Length }
-                }
-            ),
-            length = files.Length
-        });
+        return entry;
+    }
+
+    private static CertificateValidity ReadValidity(FileInfo file, string fileHash = null) {
+        string path = Path.Join(validityDirectory, file.Name);
+        if (!File.Exists(path)) return null;
+
+        try {
+            CertificateValidity validity = JsonSerializer.Deserialize<CertificateValidity>(File.ReadAllBytes(path));
+            if (validity is null || validity.IssuedAt > validity.ExpiresAt) return null;
+
+            return validity.FileHash == (fileHash ?? GetFileHash(file)) ? validity : null;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException) {
+            Logger.Debug(ex);
+            return null;
+        }
     }
 
     internal static byte[] GetCertInfo(HttpListenerContext ctx) {
         Dictionary<string, string> parameters = Listener.ParseQuery(ctx);
-
-        parameters.TryGetValue("name", out string name);
+        if (parameters is null || !parameters.TryGetValue("name", out string name)) return Data.CODE_INVALID_ARGUMENT.Array;
 
         string password;
         try {
@@ -203,16 +237,11 @@ internal static class Cert {
     private static byte[] GetCertInfo(string name, string password) {
         if (!Data.IsValidFilename(name)) { return Data.CODE_INVALID_ARGUMENT.Array; }
 
-        string filename = Path.Join(Data.DIR_CERTIFICATES, name);
-
-        if (!File.Exists(filename)) {
-            throw new FileNotFoundException(filename);
-        }
-
-        byte[] pfxBytes = File.ReadAllBytes(filename);
-
         try {
+            byte[] pfxBytes = File.ReadAllBytes(Path.Join(Data.DIR_CERTIFICATES, name));
             using X509Certificate2 cert = X509CertificateLoader.LoadPkcs12(pfxBytes, password);
+            using RSA publicKey = cert.GetRSAPublicKey();
+            bool validitySaved = RememberValidity(name, pfxBytes, cert);
 
             String dnsNames = String.Join(", ", GetSanDnsNames(cert));
             if (String.IsNullOrEmpty(dnsNames)) {
@@ -229,6 +258,7 @@ internal static class Cert {
 
                     issuedAt      = cert.NotBefore,
                     expiresAt     = cert.NotAfter,
+                    validitySaved,
 
                     hasPrivateKey = cert.HasPrivateKey,
 
@@ -236,11 +266,14 @@ internal static class Cert {
                     publicKeyAlgorithm = cert.PublicKey.Oid.FriendlyName,
 
                     version = cert.Version,
-                    keySize = cert.GetRSAPublicKey()?.KeySize,
+                    keySize = publicKey?.KeySize,
 
                     dnsNames = dnsNames
                 }
             );
+        }
+        catch (Exception ex) when (ex is FileNotFoundException or DirectoryNotFoundException) {
+            return Data.CODE_FILE_NOT_FOUND.Array;
         }
         catch (Exception ex) {
             return Encoding.UTF8.GetBytes($"{{\"error\":\"{Data.EscapeJsonText(ex.Message)}\"}}");
@@ -274,16 +307,16 @@ internal static class Cert {
         if (!Data.IsValidFilename(name)) { return Data.CODE_INVALID_ARGUMENT.Array; }
 
         try {
-            string filename = Path.Join(Data.DIR_CERTIFICATES, name);
-            if (File.Exists(filename)) {
-                File.Delete(filename);
-                Logger.Action(origin, "Certificate", $"Delete certificate: {name}");
+            lock (filesLock) {
+                string filename = Path.Join(Data.DIR_CERTIFICATES, name);
+                if (!File.Exists(filename)) return Data.CODE_FILE_NOT_FOUND.Array;
 
-                return List();
+                File.Delete(filename);
+                TryDeleteFile(Path.Join(validityDirectory, name));
             }
-            else {
-                return Data.CODE_FILE_NOT_FOUND.Array;
-            }
+
+            Logger.Action(origin, "Certificate", $"Delete certificate: {name}");
+            return List();
         }
         catch {
             return Data.CODE_FAILED.Array;
@@ -345,15 +378,6 @@ internal static class Cert {
         X509KeyUsageFlags keyUsageFlags,
         string friendlyName) {
 
-        try {
-            DirectoryInfo directory = new DirectoryInfo(Data.DIR_CERTIFICATES);
-            if (!directory.Exists) {
-                directory.Create();
-            }
-        } catch (Exception) {
-            throw;
-        }
-
         using RSA rsa = RSA.Create(rsaKeySize);
 
         CertificateRequest request = new CertificateRequest($"CN={domain}", rsa, hashAlgorithm, RSASignaturePadding.Pkcs1);
@@ -385,8 +409,92 @@ internal static class Cert {
         return certificate;
     }
 
-    private static void ExportToPfx(X509Certificate2 certificate, string password, string filename) {
-        byte[] bytes = certificate.Export(X509ContentType.Pfx, password);
-        File.WriteAllBytes(Path.Join(Data.DIR_CERTIFICATES, filename), bytes);
+    private static void SaveCertificate(string name, byte[] bytes, X509Certificate2 certificate) {
+        Directory.CreateDirectory(validityDirectory);
+        string path = Path.Join(Data.DIR_CERTIFICATES, name);
+        string validityPath = Path.Join(validityDirectory, name);
+        string temporaryPath = Path.Join(validityDirectory, $"{Guid.NewGuid():N}.tmp");
+        byte[] previousValidity = File.Exists(validityPath) ? File.ReadAllBytes(validityPath) : null;
+
+        try {
+            File.WriteAllBytes(temporaryPath, bytes);
+            if (certificate is null) {
+                File.Delete(validityPath);
+            }
+            else {
+                CertificateValidity validity = GetCertificateValidity(bytes, certificate);
+                WriteValidityFile(validityPath, JsonSerializer.SerializeToUtf8Bytes(validity));
+            }
+
+            try {
+                File.Move(temporaryPath, path, true);
+            }
+            catch {
+                try {
+                    if (previousValidity is null) File.Delete(validityPath);
+                    else WriteValidityFile(validityPath, previousValidity);
+                }
+                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) {
+                    Logger.Debug(ex);
+                }
+                throw;
+            }
+        }
+        finally {
+            TryDeleteFile(temporaryPath);
+        }
+    }
+
+    private static void WriteValidityFile(string path, byte[] content) {
+        string temporaryPath = Path.Join(validityDirectory, $"{Guid.NewGuid():N}.tmp");
+        try {
+            File.WriteAllBytes(temporaryPath, content);
+            File.Move(temporaryPath, path, true);
+        }
+        finally {
+            TryDeleteFile(temporaryPath);
+        }
+    }
+
+    private static void TryDeleteFile(string path) {
+        try {
+            if (File.Exists(path)) File.Delete(path);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) {
+            Logger.Debug(ex);
+        }
+    }
+
+    private static CertificateValidity GetCertificateValidity(byte[] pfxBytes, X509Certificate2 certificate) {
+        return new CertificateValidity(
+            Convert.ToHexString(SHA256.HashData(pfxBytes)),
+            certificate.NotBefore.ToUniversalTime(),
+            certificate.NotAfter.ToUniversalTime());
+    }
+
+    private static string GetFileHash(FileInfo file) {
+        using FileStream stream = file.OpenRead();
+        return Convert.ToHexString(SHA256.HashData(stream));
+    }
+
+    private static bool RememberValidity(string name, byte[] pfxBytes, X509Certificate2 certificate) {
+        try {
+            lock (filesLock) {
+                FileInfo file = new FileInfo(Path.Join(Data.DIR_CERTIFICATES, name));
+                if (!file.Exists) return false;
+
+                CertificateValidity validity = GetCertificateValidity(pfxBytes, certificate);
+                if (validity.FileHash != GetFileHash(file)) return false;
+                if (ReadValidity(file, validity.FileHash) is not null) return true;
+
+                Directory.CreateDirectory(validityDirectory);
+                WriteValidityFile(Path.Join(validityDirectory, file.Name), JsonSerializer.SerializeToUtf8Bytes(validity));
+                return true;
+            }
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) {
+            Logger.Debug(ex);
+            return false;
+        }
     }
 }

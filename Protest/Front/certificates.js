@@ -3,19 +3,25 @@ class Certificates extends List {
 	constructor(args) {
 		super(args);
 
-		this.args = args ?? {filter:"", find:"", sort:"", select:null};
-
 		Window.AddCssDependencies("list.css");
 
 		this.SetTitle("Certificates");
 		this.SetIcon("mono/certificate.svg");
 
-		const columns = ["name", "date", "size"];
+		const columns = [
+			"name",
+			{label:"status", render:entry=> this.StyleStatusLabel(document.createElement("div"), entry.status?.v)},
+			{label:"issued at", value:entry=> this.FormatValidityDate(entry["issued at"]?.v)},
+			{label:"expired at", value:entry=> this.FormatValidityDate(entry["expired at"]?.v)}
+		];
+
+		if (this.args.sort === "date" || this.args.sort === "size") this.args.sort = "";
 		this.SetupColumns(columns);
 		this.columnsOptions.style.display = "none";
+		this.listBox.onDoubleClick = (entry, element)=> this.PasswordDialog(element.id);
 
 		this.SetupToolbar();
-		this.createButton = this.AddToolbarButton("Create task", "mono/add.svg?light");
+		this.createButton = this.AddToolbarButton("Create certificate", "mono/add.svg?light");
 		this.deleteButton = this.AddToolbarButton("Delete", "mono/delete.svg?light");
 		this.AddToolbarSeparator();
 		this.uploadButton = this.AddToolbarButton("Upload", "mono/upload.svg?light");
@@ -49,31 +55,51 @@ class Certificates extends List {
 			if (json.error) throw(json.error);
 
 			this.link = json;
-			this.ListCerts();
+			this.RefreshList();
 		}
 		catch (ex) {
 			this.ConfirmBox(ex, true, "mono/error.svg");
 		}
 	}
 
-	ListCerts() {
-		this.list.textContent = "";
-
-		for (let key in this.link.data) {
-			const element = document.createElement("div");
-			element.id = key;
-			element.className = "list-element";
-			this.list.appendChild(element);
-
-			this.InflateElement(element, this.link.data[key]);
-
-			if (this.args.select && this.args.select === key) {
-				this.selected = element;
-				element.style.backgroundColor = "var(--clr-select)";
+	RefreshList() { //overrides
+		if (this.link?.data) {
+			const now = Date.now();
+			for (const entry of Object.values(this.link.data)) {
+				const status = this.GetValidityStatus(entry["issued at"]?.v, entry["expired at"]?.v, now);
+				if (status) entry.status = {v:status};
+				else delete entry.status;
 			}
-
-			element.ondblclick = ()=> this.PasswordDialog(key);
 		}
+		super.RefreshList();
+	}
+
+	FormatValidityDate(value) {
+		const timestamp = Date.parse(value);
+		return Number.isFinite(timestamp) ? new Date(timestamp).toLocaleDateString(UI.regionalFormat) : "--";
+	}
+
+	GetValidityStatus(issuedAt, expiresAt, now = Date.now()) {
+		const start = Date.parse(issuedAt);
+		const end = Date.parse(expiresAt);
+		if (!Number.isFinite(start) || !Number.isFinite(end) || start > end) return null;
+
+		if (now < start) return "Not yet valid";
+		if (now > end) return "Expired";
+		return "Valid";
+	}
+
+	StyleStatusLabel(label, status) {
+		label.textContent = status ?? "";
+		label.style.fontWeight = "bold";
+
+		switch (status) {
+			case "Not yet valid": label.style.color = "hsl(from rgb(0,162,232) h s calc(l / 1.4))"; break;
+			case "Valid"        : label.style.color = `hsl(from ${UI.PingColor(0)} h s calc(l / 1.8))`; break;
+			case "Expired"      : label.style.color = "hsl(from var(--clr-critical) h s calc(l / 1.2))"; break;
+		}
+
+		return label;
 	}
 
 	PasswordDialog(name) {
@@ -119,6 +145,7 @@ class Certificates extends List {
 	}
 
 	async CertInto(name, password) {
+		const entry = this.link?.data[name];
 		const response = await fetch(`config/cert/info?name=${encodeURIComponent(name)}`, {
 			method: "POST",
 			body: JSON.stringify({password: password})
@@ -127,6 +154,13 @@ class Certificates extends List {
 
 		const json = await response.json();
 		if (json.error) throw(json.error);
+
+		const status = this.GetValidityStatus(json.issuedAt, json.expiresAt);
+		if (json.validitySaved && status && entry && this.link?.data[name] === entry) {
+			entry["issued at"] = {v:new Date(json.issuedAt).toISOString()};
+			entry["expired at"] = {v:new Date(json.expiresAt).toISOString()};
+			this.RefreshList();
+		}
 
 		const dialog = this.DialogBox("80%");
 		if (dialog === null) return;
@@ -161,6 +195,7 @@ class Certificates extends List {
 			valueLabel.style.textOverflow = "ellipsis";
 
 			container.append(nameLabel, valueLabel);
+			return valueLabel;
 		};
 
 		CreateLine("Subject", json.subject);
@@ -171,6 +206,7 @@ class Certificates extends List {
 
 		CreateLine("Issued at", json.issuedAt);
 		CreateLine("Expires at", json.expiresAt);
+		this.StyleStatusLabel(CreateLine("Status", ""), status);
 
 		CreateLine("Has private key", json.hasPrivateKey);
 
@@ -297,7 +333,7 @@ class Certificates extends List {
 				if (json.error) throw (json.error);
 
 				this.link = json;
-				this.ListCerts();
+				this.RefreshList();
 			}
 			catch (ex) {
 				this.ConfirmBox(ex, true, "mono/error.svg");
@@ -322,7 +358,7 @@ class Certificates extends List {
 				this.args.select = null;
 
 				this.link = json;
-				this.ListCerts();
+				this.RefreshList();
 			}
 			catch (ex) {
 				this.ConfirmBox(ex, true, "mono/error.svg");
@@ -331,12 +367,12 @@ class Certificates extends List {
 	}
 
 	UploadDialog() {
-		const dialog = this.DialogBox("200px");
+		const dialog = this.DialogBox("260px");
 		if (dialog === null) return;
 
 		const {okButton, cancelButton, innerBox} = dialog;
-		okButton.value = "Done";
-		cancelButton.style.display = "none";
+		okButton.value = "Upload";
+		okButton.disabled = true;
 
 		const dropArea = document.createElement("div");
 		dropArea.style.minHeight = "20px";
@@ -351,8 +387,23 @@ class Certificates extends List {
 		message.style.color = "var(--clr-dark)";
 		message.style.fontWeight = "600";
 		message.style.textAlign = "center";
+		message.style.overflowWrap = "anywhere";
+		message.setAttribute("aria-live", "polite");
 		dropArea.append(message);
 
+		const passwordLabel = document.createElement("label");
+		passwordLabel.textContent = "Certificate password (optional)";
+		passwordLabel.style.margin = "0 16px";
+		passwordLabel.style.display = "none";
+
+		const passwordInput = document.createElement("input");
+		passwordInput.type = "password";
+		passwordInput.autocomplete = "off";
+		passwordInput.style.display = "block";
+		passwordInput.style.width = "100%";
+		passwordLabel.appendChild(passwordInput);
+
+		let file = null;
 		let isBusy = false;
 
 		dropArea.ondragover = ()=> {
@@ -366,7 +417,7 @@ class Certificates extends List {
 			dropArea.style.backgroundColor = "";
 			dropArea.style.border = "2px dashed var(--clr-dark)";
 		};
-		dropArea.ondrop = async event=> {
+		dropArea.ondrop = event=> {
 			event.preventDefault();
 
 			if (isBusy) return;
@@ -374,34 +425,43 @@ class Certificates extends List {
 			dropArea.style.backgroundColor = "";
 			dropArea.style.border = "2px dashed var(--clr-dark)";
 
+			file = null;
+			passwordInput.value = "";
+			passwordLabel.style.display = "none";
+			okButton.disabled = true;
+
 			if (event.dataTransfer.files.length !== 1) {
 				message.textContent = "Please drop a single file.";
 				return;
 			}
 
-			let file = event.dataTransfer.files[0];
-			let extension = file.name.split(".");
-			extension = extension[extension.length-1].toLowerCase();
-
-			if (extension !== "pfx") {
+			const droppedFile = event.dataTransfer.files[0];
+			if (!droppedFile.name.toLowerCase().endsWith(".pfx")) {
 				message.textContent = "Unsupported file type.";
 				return;
 			}
 
+			file = droppedFile;
+			message.textContent = file.name;
+			passwordLabel.style.display = "block";
+			okButton.disabled = false;
+			passwordInput.focus();
+		};
+
+		passwordInput.onkeydown = event=> {
+			if (event.key === "Enter") okButton.click();
+		};
+
+		okButton.onclick = async ()=> {
+			if (!file || isBusy) return;
+
 			const formData = new FormData();
 			formData.append("file", file);
+			if (passwordInput.value) formData.append("password", passwordInput.value);
 
 			isBusy = true;
-			message.textContent = "Uploading file... This might take a second.";
-			dropArea.style.border = "2px solid var(--clr-dark)";
-
-			const spinner = document.createElement("div");
-			spinner.className = "spinner";
-			spinner.style.textAlign = "left";
-			spinner.style.marginTop = "32px";
-			spinner.style.marginBottom = "16px";
-			spinner.appendChild(document.createElement("div"));
-			dropArea.appendChild(spinner);
+			okButton.disabled = cancelButton.disabled = passwordInput.disabled = true;
+			message.textContent = "Uploading certificate...";
 
 			try {
 				const response = await fetch("config/cert/upload", {
@@ -415,20 +475,20 @@ class Certificates extends List {
 				if (json.error) throw (json.error);
 
 				this.link = json;
-				this.ListCerts();
+				this.RefreshList();
+				passwordInput.value = "";
+				dialog.Close();
 			}
 			catch (ex) {
-				this.ConfirmBox(ex, true, "mono/error.svg");
+				message.textContent = ex;
 			}
 			finally {
 				isBusy = false;
-				message.textContent = "Drop a certificate file here to upload it";
-				dropArea.style.border = "2px dashed var(--clr-dark)";
-				dropArea.removeChild(spinner);
+				okButton.disabled = cancelButton.disabled = passwordInput.disabled = false;
 			}
 		};
 
-		innerBox.appendChild(dropArea);
+		innerBox.append(dropArea, passwordLabel);
 	}
 
 	Download() {
@@ -440,41 +500,7 @@ class Certificates extends List {
 	}
 
 	InflateElement(element, entry) { //overrides
+		super.InflateElement(element, entry);
 		element.style.backgroundImage = "url(mono/certificate.svg)";
-
-		for (let i=0; i<this.columnsElements.length; i++) {
-			if (!(this.columnsElements[i].textContent in entry)) continue;
-
-			const newAttr = document.createElement("div");
-			element.appendChild(newAttr);
-
-			switch (this.columnsElements[i].textContent) {
-				case "name": newAttr.textContent = entry["name"].v; break;
-				case "date": newAttr.textContent = new Date(UI.TicksToUnixDate(entry["date"].v)).toLocaleDateString(UI.regionalFormat);break;
-				case "size": newAttr.textContent = UI.SizeToString(entry["size"].v); break;
-			}
-
-			if (i === 0) {
-				newAttr.style.top = "5px";
-				newAttr.style.left = "36px";
-				newAttr.style.width = `calc(${this.columnsElements[0].style.width} - 36px)`;
-				newAttr.style.whiteSpace = "nowrap";
-				newAttr.style.overflow = "hidden";
-				newAttr.style.textOverflow = "ellipsis";
-			}
-			else {
-				newAttr.style.left = this.columnsElements[i].style.left;
-				newAttr.style.width = this.columnsElements[i].style.width;
-			}
-		}
-
-		element.onclick = ()=> {
-			if (this.selected) this.selected.style.backgroundColor = "";
-
-			this.args.select = entry.name.v;
-
-			this.selected = element;
-			element.style.backgroundColor = "var(--clr-select)";
-		};
 	}
 }

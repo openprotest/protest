@@ -283,9 +283,10 @@ document.body.onbeforeunload = ()=> {
 
 	LOADER.StoreSession();
 
-	for (let i = 0; i < WIN.array.length; i++)
+	for (let i = 0; i < WIN.array.length; i++) {
 		if (WIN.array[i].popOutWindow)
 			WIN.array[i].popOutWindow.close();
+	}
 };
 
 taskbar.oncontextmenu = ()=> false;

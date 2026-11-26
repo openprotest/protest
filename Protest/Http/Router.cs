@@ -203,8 +203,8 @@ internal static class Router {
         ["/config/cert/list"]                    = new Route((ctx, username) => new(Tools.Cert.List())),
         ["/config/cert/create"]                  = new Route((ctx, username) => new(Tools.Cert.Create(ctx, username)), "POST"),
         ["/config/cert/delete"]                  = new Route((ctx, username) => new(Tools.Cert.Delete(ctx, username)), "POST"),
-        ["/config/cert/info"]                    = new Route((ctx, username) => new(Tools.Cert.GetCertInfo(ctx))),
-        ["/config/cert/upload"]                  = new Route((ctx, username) => new(Tools.Cert.Upload(ctx, username)), "POST"),
+        ["/config/cert/info"]                    = new Route((ctx, username) => new(Tools.Cert.GetCertInfo(ctx)), "POST"),
+        ["/config/cert/upload"]                  = new Route(Tools.Cert.Upload, "POST"),
         ["/config/cert/download"]                = new Route((ctx, username) => new(Tools.Cert.Download(ctx, username))),
 
         ["/config/dataretention/lifeline"]       = new Route((ctx, username) => new(DataRetention.Handler(ctx, username, "lifeline")), "POST"),
