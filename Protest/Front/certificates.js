@@ -86,18 +86,54 @@ class Certificates extends List {
 
 		if (now < start) return "Not yet valid";
 		if (now > end) return "Expired";
+		if (end < now + 14 * 24 * 60 * 60 * 1000) return "Expires soon";
 		return "Valid";
 	}
 
 	StyleStatusLabel(label, status) {
-		label.textContent = status ?? "";
+		label.replaceChildren();
 		label.style.fontWeight = "bold";
+		label.style.display = "inline-flex";
+		label.style.alignItems = "center";
+		label.style.gap = "4px";
+
+		const statusIcon = document.createElement("span");
+		statusIcon.style.display = "inline-block";
+		statusIcon.style.flex = "0 0 20px";
+		statusIcon.style.width = "20px";
+		statusIcon.style.height = "20px";
+		statusIcon.style.maskSize = "contain";
+		statusIcon.style.maskRepeat = "no-repeat";
+		statusIcon.style.maskPosition = "center";
+		label.appendChild(statusIcon);
+
+		const statusText = document.createElement("span");
+		statusText.textContent = status ?? "--";
+		label.appendChild(statusText);
 
 		switch (status) {
-			case "Not yet valid": label.style.color = "hsl(from rgb(0,162,232) h s calc(l / 1.4))"; break;
-			case "Valid"        : label.style.color = `hsl(from ${UI.PingColor(0)} h s calc(l / 1.8))`; break;
-			case "Expired"      : label.style.color = "hsl(from var(--clr-critical) h s calc(l / 1.2))"; break;
+		case "Not yet valid":
+			label.style.color = "oklch(from rgb(0,162,232) calc(l / 1.4) c h)";
+			statusIcon.style.maskImage = "url(mono/indeterminate.svg)";
+			break;
+
+		case "Expires soon":
+			label.style.color = "oklch(from var(--clr-warning) calc(l / 1.6) c h)";
+			statusIcon.style.maskImage = "url(mono/warning.svg)";
+			break;
+
+		case "Valid":
+			label.style.color = `oklch(from ${UI.PingColor(0)} calc(l / 1.8) c h)`;
+			statusIcon.style.maskImage = "url(mono/checked.svg)";
+			break;
+
+		case "Expired":
+			label.style.color = "oklch(from var(--clr-critical) calc(l / 1.2) c h)";
+			statusIcon.style.maskImage = "url(mono/critical.svg)";
+			break;
 		}
+
+		statusIcon.style.backgroundColor = label.style.color;
 
 		return label;
 	}
@@ -199,6 +235,7 @@ class Certificates extends List {
 		};
 
 		CreateLine("Subject", json.subject);
+		this.StyleStatusLabel(CreateLine("Status", ""), status);
 		CreateLine("Issuer", json.issuer);
 		CreateLine("Friendly name", json.friendlyName);
 		CreateLine("Thumbprint", json.thumbprint);
@@ -206,7 +243,6 @@ class Certificates extends List {
 
 		CreateLine("Issued at", json.issuedAt);
 		CreateLine("Expires at", json.expiresAt);
-		this.StyleStatusLabel(CreateLine("Status", ""), status);
 
 		CreateLine("Has private key", json.hasPrivateKey);
 
