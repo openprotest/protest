@@ -443,6 +443,7 @@ class PtyHost extends Window {
 			fontFamily: "monospace",
 			fontSize: 15,
 			scrollback: this.GetScrollbackLimit(),
+			allowTransparency: true,
 			cursorStyle: "bar",
 			cursorBlink: true,
 			convertEol: true,
@@ -538,7 +539,7 @@ class PtyHost extends Window {
 	BuildTheme() {
 		const accent = getComputedStyle(document.documentElement).getPropertyValue("--clr-accent").trim();
 		return Object.assign({
-			background: this.ResolveColor("light-dark(#ffffff, #1a1a1a)"),
+			background: "transparent",
 			foreground: this.ResolveColor("light-dark(#202020, #e0e0e0)"),
 			cursor: accent,
 			cursorAccent: this.ResolveColor("light-dark(#ffffff, #1a1a1a)"),
