@@ -124,6 +124,12 @@
 }
 
 @keyframes pty-blinking {
-	20%, 80% { border-left: 2px solid var(--clr-accent); }
-	50% { border-left: 2px solid color-mix(in srgb, var(--clr-accent) 20%, transparent); }
+	20%, 80% {
+		border-left: 2px solid var(--clr-accent);
+		box-shadow: 1px 0 0 var(--clr-accent) inset;
+	}
+	50% {
+		border-left: 2px solid color-mix(in srgb, var(--clr-accent) 50%, transparent);
+		box-shadow: 1px 0 0 color-mix(in srgb, var(--clr-accent) 50%, transparent) inset;
+	}
 }
